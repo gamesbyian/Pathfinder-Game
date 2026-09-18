@@ -25,7 +25,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 - **Class 5:** topology remains research-only; F3 population 14 pairs/7 parents. No raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 - **Card-E:** 17/156 reconstructable-unexposed; both tested descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
-- **Post-topology:** H1 vocabulary closed; DEAD-core population-limited; H3/H2 negative; behavioral quotient mixed/capability-memory only. H3 allocation-value remains positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md) · [`sim`](../reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md)
+- **Post-topology:** H1 vocabulary closed; DEAD-core size-1 clean negative on the fresh matched population; H3/H2 negative; behavioral quotient mixed/capability-memory only. H3 allocation-value remains positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md) · [`sim`](../reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md)
 
 ### Premise-acquisition lanes
 
@@ -72,7 +72,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 The frozen-map mining execution plan's three phases are complete. P201-P206 remain evidence/method premises; no additional solver-mechanism premise survives the bounded post-mining consumer-contract work.
 
-The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only D1 reaches a ready existing decision seam; A stops at compact representation, F3 at reliable decision-bearing opportunity, D1 at retained-evidence economics. Shared producer/consumer vocabulary is research discipline, not evidence for a runtime bus/blackboard/subsystem. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
+The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only D1 reaches a ready existing decision seam. A has advanced to a prespecified compact-contract falsifier but has no validated contract; F3 still stops at reliable decision-bearing opportunity; D1 stops at retained-evidence economics. Shared producer/consumer vocabulary is research discipline, not evidence for a runtime bus/blackboard/subsystem. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
 No immediate post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from the lane triggers above; do not recursively mine mining outputs merely to keep the program active.
 
