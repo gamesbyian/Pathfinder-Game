@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { buildMatchedGroups, DEFAULT_MATCH_DIMENSIONS } from './research-generation-match-lib.mjs';
@@ -20,6 +20,8 @@ Options:
   --anchor=<source-name>            default: smallest source
   --dimensions=<comma-separated>    default static puzzle descriptors
   --out=<file>                      required
+  --overwrite                       replace an existing selection artifact
+  --allow-cross-question            allow known source blocks from different question IDs
 
 The matcher never reads solver outcomes. It emits a selection artifact referencing existing
 parents; it does not copy levels into a new corpus or change their research-block identities.
@@ -58,6 +60,8 @@ function loadSource(spec) {
     levels,
     blockId: parsed.researchBlock?.blockId ?? null,
     populationIdentity: parsed.populationIdentity ?? null,
+    questionId: parsed.researchBlock?.questionId ?? null,
+    evidenceRole: parsed.researchBlock?.evidenceRole ?? null,
     sourceRegime: parsed.researchBlock?.sourceRegime ?? parsed.corpusName ?? null,
     contentIdentityById,
   };
@@ -69,7 +73,12 @@ function main() {
   if (sourceSpecs.length < 2) throw new Error('repeat --source at least twice');
   const out = values.get('--out');
   if (!out) throw new Error('--out is required');
+  if (existsSync(out) && !values.has('--overwrite')) throw new Error(`output already exists: ${out} (use --overwrite or choose a new path)`);
   const sources = sourceSpecs.map(loadSource);
+  const knownQuestionIds = [...new Set(sources.map(source => source.questionId).filter(Boolean))];
+  if (knownQuestionIds.length > 1 && !values.has('--allow-cross-question')) {
+    throw new Error(`source blocks belong to different questions: ${knownQuestionIds.join(', ')} (use --allow-cross-question only when intentional)`);
+  }
   const maxPossible = Math.min(...sources.map(source => source.levels.length));
   const count = Number(values.get('--count') || maxPossible);
   const maxDistance = values.has('--max-distance') ? Number(values.get('--max-distance')) : Infinity;
@@ -96,6 +105,7 @@ function main() {
       dimensions,
       tieBreak: 'lexicographic level id',
     },
+    questionId: knownQuestionIds.length === 1 ? knownQuestionIds[0] : null,
     evidenceBoundary: 'This artifact records selection provenance only. Source blocks remain authoritative and separate; matched rows are not a new independent population and solver outcomes must not be used to revise this selection without reclassifying evidence.',
     sources: sources.map(({ levels, contentIdentityById, ...source }) => ({ ...source, parentCount: levels.length, hasContentIdentities: Object.keys(contentIdentityById).length > 0 })),
     ...matched,
