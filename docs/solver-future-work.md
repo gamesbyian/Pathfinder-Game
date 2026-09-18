@@ -52,6 +52,9 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
 | Independent transfer / human-editor-envelope niches | A broad claim needs independent construction/locked parents or a stable omitted geometry is independently nominated |
+| Residual budget-response characterization | A live residual question cannot distinguish absent capability from underdose/threshold/non-monotone displacement; use a prespecified bounded work ladder rather than a standing full-corpus sweep |
+| Mechanism interaction residual | Specific evidence indicates one mechanism changes the opportunity population consumed by another; test control/A/B/A+B under matched total work rather than broad pairwise flag search |
+| Latent response-cluster follow-up | The offline ancestry-aware gain/loss analyzer finds a response cluster that survives protocol/ancestry controls and lacks an existing capability explanation; treat the cluster as a nomination only |
 
 ## Closed forms that stay closed
 
