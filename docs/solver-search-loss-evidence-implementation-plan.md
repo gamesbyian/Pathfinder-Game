@@ -1,4 +1,4 @@
-<!-- agent-context-budget: warn=60000 max=72000 -->
+<!-- agent-context-budget: warn=76000 max=90000 -->
 # Search-loss evidence implementation plan
 
 > **Status:** implementation plan; no production solver behavior is authorized by this document.
@@ -1360,7 +1360,7 @@ Initial producer should support a maximum of 3-5 selector classes, for example:
 - near-cutoff retained;
 - bounded frontier sample.
 
-Capture only on unsolved invocations for the first pilot unless solved controls are required for parity.
+Capture primarily on unsolved invocations for the first pilot, but include a small prespecified solved-parent control slice whenever the selected event can also occur during successful search. Parity canaries alone do not substitute for scientific solved-run controls.
 
 Producer must emit:
 
@@ -1920,6 +1920,12 @@ ordinary solver run
     |
     +--> production outcome / benchmark
     |
+    +--> compact failure-response telemetry
+    |       |
+    |       +--> progress/work response
+    |       +--> rejection/flow summaries
+    |       +--> recurrence/handoff descriptors
+    |
     +--> lifecycle telemetry
     |
     +--> bounded search-loss capture
@@ -1947,6 +1953,4 @@ The search-loss layer should stay deliberately thin.
 
 Lifecycle owns where work went. Decision observation owns decision shape. Exact/reference owns feasibility labels. First-loss taxonomy owns causal classification. Research blocks own selection/consumption lineage. Resource Contract owns evidentiary semantics. Research relations own read-time integration. Capability memory owns cross-policy capability history. Workstreams own priority.
 
-Search-loss evidence contributes one missing thing:
-
-> durable observations of what unsuccessful search actually did, selected cheaply enough that future research can start from evidence instead of reconstructing every failure from scratch.
+Search-loss evidence contributes two missing layers: cheap durable response telemetry describing how attempts fail or progress, plus bounded replayable observations of what search actually did. Together they let future research start from evidence instead of reconstructing every failure from scratch.
