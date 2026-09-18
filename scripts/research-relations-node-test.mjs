@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -106,6 +107,24 @@ try {
         artifactModel.relations.researchParents.map(row => row.parentId),
         ['R1', 'R2'],
     );
+
+    const cliBase = [
+        'scripts/research-relations.mjs',
+        `--artifact=${capturePath}`,
+        '--relation=researchBlocks',
+        '--eligibility-question=WS2-MUST-TURN-LATE-ADDITIVE',
+        '--eligibility-role=confirmation',
+    ];
+    const unknownLineageRun = spawnSync(process.execPath, cliBase, { cwd: process.cwd(), encoding: 'utf8' });
+    assert.equal(unknownLineageRun.status, 0, unknownLineageRun.stderr);
+    assert.equal(JSON.parse(unknownLineageRun.stdout).rows[0].eligibility.eligible, null);
+
+    const knownEmptyLineageRun = spawnSync(process.execPath, [...cliBase, '--related-questions='], {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+    });
+    assert.equal(knownEmptyLineageRun.status, 0, knownEmptyLineageRun.stderr);
+    assert.equal(JSON.parse(knownEmptyLineageRun.stdout).rows[0].eligibility.eligible, true);
 } finally {
     rmSync(artifactDir, { recursive: true, force: true });
 }
