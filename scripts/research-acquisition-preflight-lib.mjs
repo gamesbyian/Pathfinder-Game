@@ -1,3 +1,5 @@
+import { GENERATION_METHODS, GENERATION_SUITES } from './research-level-generation-lib.mjs';
+
 const ROUTES = Object.freeze({
     existing: 'REUSE_EXISTING',
     fresh: 'FRESH_SAME_SOURCE',
@@ -88,7 +90,7 @@ function searchTerms(question) {
         .filter(term => term.length >= 4);
 }
 
-export function rankCandidateAssets(question, assets, { limit = 8 } = {}) {
+export function rankCandidateAssets(question, assets, { limit = 8, evidenceRole = null } = {}) {
     const terms = [...new Set(searchTerms(question))];
     return (assets ?? [])
         .map(asset => {
@@ -103,13 +105,28 @@ export function rankCandidateAssets(question, assets, { limit = 8 } = {}) {
                 caveats: asset.caveats,
             }).toLowerCase();
             const matchedTerms = terms.filter(term => haystack.includes(term));
+            const audit = asset.auditedResourceContract ?? null;
             return {
                 id: asset.id,
                 name: asset.name,
                 score: matchedTerms.length,
                 matchedTerms,
                 queryEntryPoints: asset.queryEntryPoints ?? [],
-                independentUnit: asset.auditedResourceContract?.independentUnit ?? null,
+                evidenceRoles: asset.evidenceRoles ?? [],
+                roleFit: evidenceRole
+                    ? ((asset.evidenceRoles ?? []).includes(evidenceRole) ? 'declared' : 'not-declared')
+                    : null,
+                contractGrade: asset.contractGrade ?? (audit ? 'audited' : 'catalogue'),
+                independentUnit: audit?.independentUnit ?? null,
+                contractSignals: audit ? {
+                    selectionConditioning: audit.selectionConditioning ?? [],
+                    admissibleEvidencePurposes: audit.admissibleEvidencePurposes ?? [],
+                    dependenceModel: audit.dependenceModel ?? null,
+                    missingnessSemantics: audit.missingnessSemantics ?? [],
+                    freshnessRevisionContract: audit.freshnessRevisionContract ?? [],
+                    knownInformationLoss: audit.knownInformationLoss ?? [],
+                    prospectiveProducerFixes: audit.prospectiveProducerFixes ?? [],
+                } : null,
             };
         })
         .filter(row => row.score > 0)
@@ -127,4 +144,65 @@ export function acquisitionStopRule(route) {
         NO_LEVEL_GENERATION: 'stop before generation; resolve the telemetry, representation, exact/reference, candidate, dose, work, or economics blocker first',
     };
     return rules[route] ?? null;
+}
+
+
+export function generationGuidanceForRoute(route) {
+    const compactMethod = id => {
+        const method = GENERATION_METHODS[id];
+        return {
+            id: method.id,
+            label: method.label,
+            sourceFamily: method.sourceFamily,
+            distributionClass: method.distributionClass,
+            scientificUse: method.scientificUse,
+            independenceNote: method.independenceNote,
+        };
+    };
+    if (route === ROUTES.fresh) {
+        return {
+            automaticGeneration: false,
+            candidateMethods: [compactMethod('random')],
+            candidateSuites: [],
+            note: 'Random witness-first generation is the default candidate for fresh solver-blind parents; source-role entitlement still comes from the question/evidence plan, not the generator name.',
+        };
+    }
+    if (route === ROUTES.transfer) {
+        const suite = GENERATION_SUITES['transfer-pair'];
+        return {
+            automaticGeneration: false,
+            candidateMethods: suite.methods.map(compactMethod),
+            candidateSuites: [{
+                id: suite.id,
+                methods: [...suite.methods],
+                use: suite.use,
+                defaultEvidenceRoles: suite.defaultEvidenceRoles,
+            }],
+            note: 'Topology composition is the materially different full-level construction source; random witness-first is the natural same-question comparator. Preserve blocks and evidence roles separately.',
+        };
+    }
+    if (route === ROUTES.family) {
+        return {
+            automaticGeneration: false,
+            candidateMethods: [],
+            candidateSuites: [],
+            note: 'Use family:generate on prospectively frozen parents. Descendants are a causal microscope and do not increase the independent support count.',
+        };
+    }
+    if (route === ROUTES.human) {
+        return {
+            automaticGeneration: false,
+            candidateMethods: [],
+            candidateSuites: [],
+            note: 'Use the human/editor controlled-contrast path when human-origin structure is required; do not substitute a procedural generator.',
+        };
+    }
+    return {
+        automaticGeneration: false,
+        candidateMethods: [],
+        candidateSuites: [],
+        note: route === ROUTES.existing
+            ? 'Reuse eligible existing evidence; generation is not earned merely because another source is convenient.'
+            : 'No level generation is currently earned by this gate.',
+    };
 }
