@@ -92,6 +92,18 @@ assert.equal(withResearchBlock.researchQuestion.questionId, 'WS2-PORTAL-COARSE-D
 assert.equal(withResearchBlock.researchQuestion.measurementOpportunity, 'MO-004');
 assert.equal(withResearchBlock.population.researchBlock.blockId, researchBlock.blockId);
 assert.equal(withResearchBlock.population.corpusIdentity, populationIdentity);
+assert.equal(withResearchBlock.population.independentUnit, 'parent-level');
+
+assert.throws(() => buildContract({
+  configuration: { nodeBudget: 1 },
+  workflowFamily: 'x', producer: 'y', entrypoint: 'z',
+  population: {
+    kind: 'explicit-ids',
+    identityBasis: 'stable-level-id',
+    independentUnit: 'state-row',
+    researchBlock,
+  },
+}, { resolvedSha, populationSeal: { identityHash: populationIdentity, count: 1 } }), /population\.independentUnit disagrees/);
 
 assert.throws(() => buildContract({
   configuration: { nodeBudget: 1 },
