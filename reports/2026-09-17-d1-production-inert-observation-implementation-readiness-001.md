@@ -1,6 +1,6 @@
 # D1 production-inert observation implementation readiness 001
 
-> **Status:** implementation-ready / Stage-1 canary not yet executed
+> **Status:** active
 > **Last evidence:** 2026-09-17 — branch implementation on top of the canonical-work correction from PR #1867.
 > **Decision:** the D1 gate now has a two-phase execution path that freezes real beam decisions and eligibility before exact annotation. No D1 result is visible to search. The next legitimate action is a bounded development canary, not an independent pilot.
 > **Remaining gate:** execute the canary below, inspect parity/eligibility/query support/work attribution, and only then decide whether an independent multi-parent pilot is warranted.
