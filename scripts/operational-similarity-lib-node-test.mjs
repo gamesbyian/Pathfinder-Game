@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { compareBeamTraceBuckets, compareDeterministicDecisionTraces, compareSiblingRankings, createBoundedSignatureCollector, orderByAdmissibleSlack } from './operational-similarity-lib.mjs';
+import { compareBeamRetentionDecisions, compareBeamTraceBuckets, compareDeterministicDecisionTraces, compareSiblingRankings, createBoundedSignatureCollector, orderByAdmissibleSlack } from './operational-similarity-lib.mjs';
 
 for (const count of [2, 3, 4]) {
     const rows = Array.from({ length: count }, (_, id) => ({ id: String(id), score: count - id }));
@@ -60,5 +60,30 @@ assert.equal(censoredComparison.status, 'no-divergence-observed-within-censored-
 assert.equal(censoredComparison.censored, true);
 assert.equal(censoredComparison.left.retained, 2);
 assert.equal(censoredComparison.left.observed, 9);
+
+
+const beamEvent = (decisionKey, candidateIds, orderedCandidateIds, retainedCandidateIds) => ({
+    decisionKey, candidateIds, orderedCandidateIds, retainedCandidateIds,
+});
+const beamLeft = { observed: 2, retained: 2, truncated: false, events: [
+    beamEvent('beam@3', ['a', 'b', 'c'], ['a', 'b', 'c'], ['a', 'b']),
+    beamEvent('beam@4', ['d', 'e'], ['d', 'e'], ['d']),
+] };
+const beamRight = { observed: 2, retained: 2, truncated: false, events: [
+    beamEvent('beam@3', ['a', 'b', 'c'], ['a', 'c', 'b'], ['a', 'c']),
+    beamEvent('beam@4', ['x', 'y'], ['x', 'y'], ['x']),
+] };
+const beamComparison = compareBeamRetentionDecisions(beamLeft, beamRight);
+assert.equal(beamComparison.commonDecisionPrefix, 0);
+assert.equal(beamComparison.firstDivergence.reason, 'ranking');
+assert.equal(beamComparison.alignedRetention[0].retentionJaccard, 1 / 3);
+const beamRetentionOnly = compareBeamRetentionDecisions(beamLeft, {
+    ...beamLeft,
+    events: [
+        beamEvent('beam@3', ['a', 'b', 'c'], ['a', 'b', 'c'], ['a', 'c']),
+        beamLeft.events[1],
+    ],
+});
+assert.equal(beamRetentionOnly.firstDivergence.reason, 'retention');
 
 console.log('operational-similarity-lib-node-test: ok');
