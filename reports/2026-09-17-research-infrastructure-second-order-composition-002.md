@@ -1,4 +1,4 @@
-<!-- agent-context-budget: warn=9500 max=12500 -->
+<!-- agent-context-budget: warn=28000 max=36000 -->
 # Research infrastructure second-order composition 002
 
 > **Status:** concluded-positive
