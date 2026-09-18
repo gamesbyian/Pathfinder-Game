@@ -29,6 +29,7 @@ Build/query the disposable index with:
 npm run family:index -- --variant-family-dataset-root=../pathfinder-variant-research
 npm run family:show -- --variant-family-dataset-root=../pathfinder-variant-research --variant-id=F00110-01
 npm run family:query -- --variant-family-dataset-root=../pathfinder-variant-research --corpus=corpus2 --mode=symmetry
+npm run family:query -- --variant-family-dataset-root=../pathfinder-variant-research --question-id=<stable-question-id>
 npm run family:coverage -- --variant-family-dataset-root=../pathfinder-variant-research --corpus=corpus2
 ```
 
