@@ -96,3 +96,41 @@ export function summarizeDecisionObservations(snapshot) {
         totalObserverCost: observerCost,
     };
 }
+
+
+const CULL_STAGES = new Set(['score-width-culled', 'mechanic-bucket-culled', 'ints-bucket-culled']);
+
+function pathIdentity(path) {
+    return JSON.stringify(path);
+}
+
+/**
+ * Convert the solver's existing research-only beam cull record into the shared decision shape.
+ * Returns null for non-cull beam stages or legacy records without rankedPool context.
+ */
+export function beamResearchRecordToDecisionObservation(record, { parentId, decisionOrdinal = 0 } = {}) {
+    if (!CULL_STAGES.has(record?.stage)) return null;
+    const rankedPool = record.details?.rankedPool;
+    const culled = record.details?.culled;
+    if (!Array.isArray(rankedPool) || !Array.isArray(culled)) return null;
+    const candidateIds = rankedPool.map(row => pathIdentity(row.path));
+    const culledIds = new Set(culled.map(row => pathIdentity(row.path)));
+    const retainedCandidateIds = candidateIds.filter(id => !culledIds.has(id));
+    return validateDecisionObservation({
+        decisionId: `${record.stage}@${record.depth}#${decisionOrdinal}`,
+        parentId: String(parentId ?? 'UNKNOWN'),
+        stageId: record.stage,
+        candidateIds,
+        orderedCandidateIds: [...candidateIds],
+        retainedCandidateIds,
+        workSpentBefore: Number(record.work ?? 0),
+        workSpentAfter: Number(record.work ?? 0),
+        context: {
+            depth: record.depth,
+            beamWidth: record.details?.beamWidth ?? null,
+            cutoffScore: record.details?.cutoffScore ?? null,
+            firstCulledScore: record.details?.firstCulledScore ?? null,
+            stableOrderAdmission: record.details?.stableOrderAdmission ?? null,
+        },
+    });
+}
