@@ -76,7 +76,7 @@ The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only 
 
 No immediate post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from the lane triggers above; do not recursively mine mining outputs merely to keep the program active.
 
-**Execution gate:** run the bounded D1 production-inert observation preflight next: [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md). It authorizes shadow observation only, with parity, pilot, expansion and stop gates before any ranking change.
+**Execution gate:** [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md) Stage 1 (parity, R03147, 100K-5M nodes) and Stage 2 capture (frozen 8-parent confirmation population, 1,339 eligible decisions) are done. Exact annotation isn't run at scale: real CP-SAT cost is dominated by O(path-length) per-cell queries/candidate, not locally tractable; next step is GHA-sharded annotation, not local grinding. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md). No ranking change authorized yet.
 
 **Post-D1:** do not automatically fall through to A/F3. Use the smallest live discriminator: work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or 2x2 interaction only for a plausible producer/consumer pair. A/F3 retain their existing reopen gates.
 
@@ -88,7 +88,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / D1 EVIDENCE GATE** | Execute D1 observation; then use the smallest live discriminator / explicit A-F3 gates | `WS2-D1-PRODUCTION-INERT-OBSERVATION` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / D1 ANNOTATION EXECUTION GATE** | Capture done; run GHA-sharded exact annotation on the frozen population, then use the smallest live discriminator / explicit A-F3 gates | `WS2-D1-PRODUCTION-INERT-OBSERVATION` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
