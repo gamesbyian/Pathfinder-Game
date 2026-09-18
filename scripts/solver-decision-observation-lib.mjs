@@ -7,6 +7,8 @@ function finiteNonNegative(value) {
     return Number.isFinite(value) && value >= 0;
 }
 
+const cloneJsonRecord = value => JSON.parse(JSON.stringify(value));
+
 export function validateDecisionObservation(record) {
     for (const field of REQUIRED) if (!(field in record)) throw new Error(`decision observation missing ${field}`);
     for (const field of ['decisionId', 'parentId', 'stageId']) {
@@ -52,7 +54,7 @@ export function createDecisionObservationCollector(limit = 4096) {
         observe(record) {
             observed++;
             validateDecisionObservation(record);
-            if (records.length < limit) records.push(structuredClone(record));
+            if (records.length < limit) records.push(cloneJsonRecord(record));
         },
         snapshot() {
             return {
@@ -60,7 +62,7 @@ export function createDecisionObservationCollector(limit = 4096) {
                 observed,
                 retained: records.length,
                 truncated: observed > records.length,
-                records: structuredClone(records),
+                records: cloneJsonRecord(records),
             };
         },
     });
