@@ -26,6 +26,11 @@ import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 import { makeLevelProvenance, makeProvenanceEntry } from '../../modules/domain/level-provenance-types.js';
+import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.js';
+import { stableHash } from '../solver-experiment-contract.mjs';
+import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
+import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
+import { generatorImplementationProvenance } from '../generator-implementation-provenance.mjs';
 
 import {
     mulberry32, hashSeed, randInt, pick,
@@ -47,6 +52,17 @@ const COUNT_PER_BATCH = Number(args.get('--count-per-batch') || 25);
 const MASTER_SEED = Number(args.get('--master-seed') ?? 20260708);
 const OUT_FILE = args.get('--out') || 'data/stress/stress-levels.json';
 const VERBOSE = args.has('--verbose');
+const QUESTION_ID = args.get('--question-id') || null;
+const EVIDENCE_ROLE = args.get('--evidence-role') || 'development';
+const BLOCK_ID = args.get('--block-id') || null;
+const ID_PREFIX = args.get('--id-prefix') || 'S';
+
+if (!['development', 'confirmation', 'transfer'].includes(EVIDENCE_ROLE)) throw new Error('--evidence-role must be development, confirmation, or transfer');
+if (BLOCK_ID && !QUESTION_ID) throw new Error('--block-id requires --question-id');
+if (!/^[A-Za-z]+$/.test(ID_PREFIX)) throw new Error('--id-prefix must contain letters only');
+if (QUESTION_ID && !loadResearchQuestionRegistry(ROOT).questions.some(question => question.id === QUESTION_ID)) {
+    throw new Error(`unknown --question-id=${QUESTION_ID}`);
+}
 
 const MIN_NOVELTY = 0.15;
 const FALLBACK_NOVELTY = 0.10;
@@ -800,7 +816,7 @@ function deriveTags(features, witness, extras) {
 
 // ─── Main generation loop ────────────────────────────────────────────────────
 
-function main() {
+async function main() {
     console.log(`Stress-corpus generator v${GENERATOR_VERSION} — seed ${MASTER_SEED}, ${COUNT_PER_BATCH}/batch`);
     const pool = loadPublishedPool();
     console.log(`Published pool: ${pool.length} levels (novelty baseline).`);
@@ -894,6 +910,42 @@ function main() {
         levels: accepted,
     };
 
+    if (QUESTION_ID) {
+        const parentIds = accepted.map(level => String(level.id));
+        const parentContentIdentities = await Promise.all(accepted.map(level => getLevelFingerprint(level)));
+        const generatorImplementation = generatorImplementationProvenance(ROOT, 'scripts/stress/generate.mjs');
+        const challengeModelInput = readFileSync(path.join(ROOT, 'logs', 'solver-workflow', 'latest.json'), 'utf8');
+        const sourceRevision = stableHash({
+            producer: 'scripts/stress/generate.mjs',
+            generatorImplementation: {
+                sourcePath: generatorImplementation.sourcePath,
+                sourceSha256: generatorImplementation.sourceSha256 ?? null,
+                gitCommit: generatorImplementation.gitCommit ?? null,
+            },
+            generatorVersion: GENERATOR_VERSION,
+            masterSeed: MASTER_SEED,
+            countPerBatch: COUNT_PER_BATCH,
+            idPrefix: ID_PREFIX,
+            challengeModelInputSha256: stableHash(challengeModelInput),
+        });
+        const derivedBlockId = BLOCK_ID || `${QUESTION_ID}:${stableHash({ sourceRevision, evidenceRole: EVIDENCE_ROLE, parentIds, parentContentIdentities }).slice('sha256:'.length, 'sha256:'.length + 12)}`;
+        const lineage = buildResearchBlock({
+            blockId: derivedBlockId,
+            questionId: QUESTION_ID,
+            sourceRegime: 'hypothesis-targeted-witness-v1',
+            sourceRevision,
+            evidenceRole: EVIDENCE_ROLE,
+            parentIds,
+            parentContentIdentities,
+            sourceArtifactRefs: [OUT_FILE],
+            producer: 'scripts/stress/generate.mjs',
+            manifestRef: OUT_FILE,
+            generationRef: OUT_FILE,
+        });
+        out.populationIdentity = lineage.populationIdentity;
+        out.researchBlock = lineage.researchBlock;
+    }
+
     mkdirSync(path.dirname(path.resolve(ROOT, OUT_FILE)), { recursive: true });
     // One level per line — the enforced format for all 3 local corpora; see
     // stringifyCorpusJson's docstring and scripts/check-corpus-level-formatting.mjs.
@@ -914,7 +966,7 @@ function main() {
 }
 
 function acceptLevel(batch, i, candidate, accepted, noveltyPool) {
-    const id = `S${String(accepted.length + 1).padStart(5, '0')}`;
+    const id = `${ID_PREFIX}${String(accepted.length + 1).padStart(5, '0')}`;
     const { raw, pairs, features, novelty, challenge, complexity, notes, levelSeed, witness, extras } = candidate;
     const confidence = Math.max(0.1, (batch.confidence ?? 0.4) - (challenge.extrapolating ? 0.1 : 0));
     const level = {
@@ -965,4 +1017,4 @@ function summarizeWitness(wd) {
     };
 }
 
-main();
+main().catch(error => { console.error(error); process.exit(1); });
