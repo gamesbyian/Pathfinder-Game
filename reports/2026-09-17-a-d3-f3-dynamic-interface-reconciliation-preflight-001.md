@@ -1,9 +1,9 @@
 # A × D3 × F3 dynamic-interface reconciliation preflight 001
 
-> **Status:** active
+> **Status:** superseded
 > **Last evidence:** 2026-09-17 — initiated from merged research-integration substrate on current `main`.
-> **Decision:** reconcile only retained Lane A separator, Lane D3 commutativity, and Lane F3 topology evidence before authorizing new solver/decomposition compute.
-> **Remaining gate:** determine whether the retained evidence nominates a bounded dynamic separator-interface signature precise enough for a frozen legal-prefix falsifier.
+> **Decision:** completed by `reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md`; retained evidence earns a nested dynamic-interface contract falsifier, not decomposition implementation.
+> **Remaining gate:** execute the result report's frozen-prefix C0→C4 signature-collision falsifier when an appropriate exact-labelled interface population is available.
 
 ## Question
 
