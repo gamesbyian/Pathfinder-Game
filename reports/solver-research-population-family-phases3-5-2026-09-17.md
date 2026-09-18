@@ -38,7 +38,8 @@ When a question ID is supplied, the generated output embeds:
 - a validated `researchBlock`;
 - source regime and deterministic generator/config revision;
 - literal generated parent IDs;
-- content identities derived from the canonical structural fingerprint payload;
+- canonical v2 structural content identities, matching the family-manifest identity namespace;
+- source revision derived from generator implementation identity plus frozen generation config;
 - parent-level independence;
 - generation/source refs;
 - empty consumption lineage.
@@ -56,9 +57,9 @@ Normal generation without research arguments is unchanged.
 - parent exposure;
 - originating block ID + population identity.
 
-The context is recorded **per generation run**, not as one family-global research claim. This matters because a cumulative family can legitimately be reused by later questions while each run retains its own selection/exposure context.
+The context is recorded **per generation run**, not as one family-global research claim. Invocation-local requested/accepted/attempt/budget counters are also retained there, so append-safe cumulative manifests no longer blur the latest run with cumulative family totals. This matters because a cumulative family can legitimately be reused by later questions while each run retains its own selection/exposure context.
 
-The originating block is a reference only. Family descendants do not become a second parent block and do not inflate independent-parent support.
+The originating block is a reference only. When `--origin-block-artifact` is used, family generation validates the block/population contract, question ID, selected-parent membership, and canonical parent content identity before writing descendants. Family descendants do not become a second parent block and do not inflate independent-parent support.
 
 ### Human/editor wrapper
 
@@ -117,7 +118,9 @@ The preflight returns exactly one primary route:
 - `HUMAN_EDITOR`;
 - `NO_LEVEL_GENERATION`.
 
-Routing is deliberately conservative:
+Routing is deliberately conservative. The preflight also surfaces ranked candidate research assets as discovery hints, can consume an optional control-side report through the existing opportunity-audit logic, and returns an explicit stop rule so `route selected` is not mistaken for `broad compute authorized`.
+
+Routing rules:
 
 1. supplied mechanically eligible blocks win first as `REUSE_EXISTING`;
 2. explicit blocker semantics may select a generation/contrast route;
@@ -139,7 +142,11 @@ Added/extended coverage for:
 - generic frozen-block construction;
 - family run research lineage and originating-block references;
 - reference-only treatment enrichment joining;
-- acquisition-route decisions and reuse precedence.
+- acquisition-route decisions and reuse precedence;
+- acquisition CLI composition with eligible blocks + control-side opportunity sizing;
+- enrichment-link CLI behavior;
+- topology-generator frozen-block emission;
+- validated family ancestry and invocation-local generation counters.
 
 Existing D1 block/query tests remain intact.
 
@@ -158,7 +165,7 @@ This tranche does **not**:
 
 ## Validation
 
-The branch was prepared through the GitHub connector. The local scratch environment could not resolve github.com, so no local npm-run claim is made here. Repository CI remains the executable validation surface for this branch.
+The branch was prepared through the GitHub connector. The local scratch environment could not resolve github.com, so no local npm-run claim is made here. Repository CI remains the executable validation surface for this branch. `AGENTS.md` now routes agents asking whether new solver-research data should be generated through the acquisition preflight, while `tooling-census` discovers the new package-aliased/current-doc front doors automatically.
 
 ## Next
 
