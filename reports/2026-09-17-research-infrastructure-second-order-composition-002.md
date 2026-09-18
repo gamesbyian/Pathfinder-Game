@@ -108,9 +108,34 @@ Sizing can use either rows or independent units. The default remains rows for co
 
 This turns P206 from a methodological slogan into executable accounting.
 
+
+### 6. Question/block lineage -> off-main family resource
+
+Prospective `family-generate` runs already recorded stable question ID, evidence role, parent exposure, independent unit, and optional origin research-block identity inside each generation run. The disposable family index discarded that context.
+
+The index now preserves generation-run research context at family and variant granularity and supports `--question-id`, `--evidence-role`, and `--origin-block-id` filters. A question can therefore ask what controlled descendants already exist in the off-main family resource without scanning that multi-gigabyte dataset from the main research-relations layer.
+
+This is deliberately an index-boundary join. The large dataset remains off-main and the recorded evidence role remains provenance, not automatic inferential entitlement.
+
 ## Second-order seams worth exploiting next
 
 The items below are deliberately **not** all implemented here. They vary in semantic risk and should be earned by a live consumer or a general evidence-integrity need.
+
+### Decision observations × non-solve capability memory
+
+The capability-memory doctrine explicitly says a no-solve treatment can still preserve useful trajectory, retention, representation, or survivor-identity information. The current capability-memory implementation is much more outcome-shaped: its durable joins primarily encode solved-set gains/losses and historical gain/loss signatures.
+
+That creates a gap exactly where P003/P004 say solve count is too sparse. A future extension should allow a bounded, typed **mechanism signature** from decision-observation/exact/replay evidence to be preserved as a nomination without pretending it is a solve capability. Examples include repeated cutoff-crossing LIVE retention failures, a stable exact-discriminator disagreement, or a reproducible frontier-survival phenotype.
+
+Such signatures should remain separate from solve-set union/headroom calculations and require an explicit path to an actionable consumer.
+
+### Question registry × future-work reopen authority
+
+Deferred questions are structured in the question registry, while future-work entries are mostly prose/table concepts. The current authority audit checks discoverability through IDs/aliases, which is useful but still lexical.
+
+A stronger prospective link could give deferred rows a stable question reference or anchor without duplicating the reopen condition itself. That would make “this changed condition reopens exactly this deferred question” mechanically navigable while leaving `solver-future-work.md` as the deferred-work authority.
+
+Do not retrofit every historical idea or manufacture one-to-one mappings where the future-work entry is intentionally broader than a question.
 
 ### Capability memory × operational taxonomy × evidence integrity
 
