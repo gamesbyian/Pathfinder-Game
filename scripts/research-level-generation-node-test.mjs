@@ -4,9 +4,11 @@ import {
   crossConstructionStatus,
   normalizeMethodSelection,
   plannedParentCount,
+  suiteDescriptor,
 } from './research-level-generation-lib.mjs';
 
 assert.deepEqual(normalizeMethodSelection({ suite: 'transfer-pair' }), ['random', 'topology']);
+assert.deepEqual(suiteDescriptor('transfer-pair').defaultEvidenceRoles, { random: 'confirmation', topology: 'transfer' });
 assert.deepEqual(normalizeMethodSelection({ methods: ['random', 'random', 'topology'] }), ['random', 'topology']);
 assert.equal(crossConstructionStatus('targeted', 'random'), 'same-construction-family');
 assert.equal(crossConstructionStatus('random', 'topology'), 'cross-construction');
