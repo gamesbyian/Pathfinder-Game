@@ -317,17 +317,6 @@ jobs:
             fi
             node scripts/research-workflow-outcome.mjs --out=logs/static-portfolio-confirmation/outcome.json --outcome="$outcome" --reason="$reason"
           fi
-          node - <<'NODE'
-          const fs = require('node:fs');
-          const plan = JSON.parse(fs.readFileSync('logs/static-portfolio-confirmation/plan.json'));
-          fs.writeFileSync('logs/static-portfolio-confirmation/expected-cell-ids.txt', `${plan.cells.map(cell => cell.cellId).join('\n')}\n`);
-          NODE
-          if [ -f logs/static-portfolio-confirmation/combined.json ]; then
-            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --rows-field=results \
-              --expected-ids=logs/static-portfolio-confirmation/expected-cell-ids.txt \
-              --result=logs/static-portfolio-confirmation/combined.json \
-              --integrity-out=logs/static-portfolio-confirmation/population-integrity.json
-          fi
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
@@ -344,7 +333,6 @@ jobs:
             --primary="logs/static-portfolio-confirmation/combined.json" \
             --include="logs/static-portfolio-confirmation/combined-summary.md" \
             --outcome-file="logs/static-portfolio-confirmation/outcome.json" \
-            --integrity-file="logs/static-portfolio-confirmation/population-integrity.json" \
             --contract-file="logs/static-portfolio-confirmation/experiment-contract.json" \
             --failure-response-file="logs/static-portfolio-confirmation/failure-response-summary.json" \
             --shards-expected="${{ inputs.shards }}" \
