@@ -695,10 +695,10 @@ jobs:
             population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
             execution: { levelBlind: false, historyAware: true, historicalInputs: ['continuity baseline', 'prime winner', 'saved hints'], reproducibilityExpected: null, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
             limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: true },
-            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'none', reports: 'report-write' },
+            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
-          node scripts/publish-solver-sweep-result.mjs \
+          node scripts/sweep-publish.mjs \
             --primary="reports/stress/typical-budget-corpus1.json" \
             --include="reports/stress/typical-budget-corpus2.json" \
             --shards-expected="${{ inputs.shards }}" \
