@@ -1,6 +1,9 @@
 # Independent negative-space audit of the solver-research system
 
-> **Status:** independent conceptual audit from `main`, completed before reading PR #1921 or `docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md`.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-19 — independent audit frozen before PR #1921 exposure
+> **Decision:** preserve the independently derived findings and reconcile only the genuinely additive ones into PR #1921
+> **Remaining gate:** none
 > **Date:** 2026-09-19
 > **Evidence posture:** repository reconstruction + hostile conceptual audit. This report is not a queue, does not authorize solver implementation, and deliberately distinguishes strong repo-supported findings from hypotheses that need cheap discrimination.
 > **Priority authority:** `docs/solver-optimization-workstreams.md` remains authoritative.
