@@ -16,13 +16,13 @@ try {
                 identity: 'A:beam', parentId: 'A', actionKey: 'beam', stageId: 'main',
                 outcome: 'solved', participated: true, reached: true, workSpent: 10, nodesExpanded: 100, bestBadness: 4, finalBadness: 2,
                 solvedWithFailedAttempt: true, runId: 'r1', protocolHash: null, solverRef: null,
-                attempts: [{ outcome: 'failed', actionKey: 'repair', stageId: 'late' }, { outcome: 'solved', actionKey: 'beam', stageId: 'main' }],
+                attempts: [{ outcome: 'failed', actionKey: 'repair', stageId: 'late', workSpent: 6, nodesExpanded: 60 }, { outcome: 'solved', actionKey: 'beam', stageId: 'main', workSpent: 4, nodesExpanded: 40 }],
             },
             {
                 identity: 'B:beam', parentId: 'B', actionKey: 'beam', stageId: 'main',
                 outcome: 'nodeLimited', participated: true, reached: true, workSpent: 20, nodesExpanded: 200, bestBadness: 7, finalBadness: 7,
                 solvedWithFailedAttempt: null, runId: 'r1', protocolHash: 'p1',
-                attempts: [{ outcome: 'node-limited', actionKey: 'beam', stageId: 'main' }],
+                attempts: [{ outcome: 'node-limited', actionKey: 'beam', stageId: 'main', workSpent: 20, nodesExpanded: 200 }],
             },
         ],
         summary: { observed: 2 },
@@ -71,6 +71,10 @@ try {
     assert.equal(result.summary.attempts.records, 3);
     assert.equal(result.summary.attempts.actions.beam, 2);
     assert.equal(result.summary.attempts.actions.repair, 1);
+    assert.equal(result.summary.attempts.byAction.beam.work.total, 24);
+    assert.equal(result.summary.attempts.byAction.beam.nodes.total, 240);
+    assert.equal(result.summary.attempts.byAction.repair.work.total, 6);
+    assert.deepEqual(result.summary.attempts.byStage.late.outcomes, { failed: 1 });
     assert.equal(result.summary.protocolComparability.parentsWithUnknownProtocol, 1);
     assert.equal(result.rows.find(row => row.parentId === 'A').protocolHash, 'p1');
     assert.equal(result.rows.find(row => row.parentId === 'A').solverRef, 'solver-a');
