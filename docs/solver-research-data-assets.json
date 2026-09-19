@@ -190,7 +190,8 @@
         "solution-space-profiles",
         "production-benchmarks",
         "technique-census",
-        "level-structure-fingerprint"
+        "level-structure-fingerprint",
+        "hint-discovery-process"
       ],
       "affordances": [
         "Ask an explicit evidence-purpose question instead of treating every valid historical discovery as equivalent evidence.",
@@ -209,6 +210,66 @@
         "Old solver versions are not automatically stale, but current capability/performance use requires audited code/config/scheduler/work equivalence or bounded current replay.",
         "Technique-performance claims require originating-run denominators/failures and comparable work; success-selected hint events alone cannot establish solve rate or relative performance.",
         "Provenance is powerful offline evidence but must not become level-specific runtime steering."
+      ]
+    },
+    {
+      "id": "hint-discovery-process",
+      "name": "Run-linked hint discovery process evidence",
+      "status": "generated-interface",
+      "grain": [
+        "solver-run",
+        "parent-level",
+        "hint-path",
+        "attempt-sequence-through-winner"
+      ],
+      "locations": [
+        {
+          "kind": "generated",
+          "path": "outputs selected by scripts/hint-discovery-process.mjs"
+        }
+      ],
+      "authorities": [
+        "scripts/hint-discovery-process-lib.mjs",
+        "scripts/hint-discovery-process-evidence-lib.mjs",
+        "scripts/hint-discovery-process.mjs",
+        "docs/solver-evaluation-evidence.md"
+      ],
+      "queryEntryPoints": [
+        "node scripts/research-asset-query.mjs --id=hint-discovery-process",
+        "npm run research:hint-discovery-process -- --in=<solver-report.json> [--contract=<experiment-contract.json> --run-id=<id>]"
+      ],
+      "joinKeys": [
+        "parentId/levelId",
+        "exact complete hint path signature",
+        "runId",
+        "protocol/configuration hash",
+        "immutable solver ref",
+        "population identity"
+      ],
+      "evidenceRoles": [
+        "longitudinal-process",
+        "forensic",
+        "technique-performance-context",
+        "success-control"
+      ],
+      "relatedAssets": [
+        "hint-provenance",
+        "compact-failure-response",
+        "production-benchmarks",
+        "experiment-manifests"
+      ],
+      "affordances": [
+        "Recover which failed attempts and work preceded an exact stored solution-path discovery without bloating every persisted hint event.",
+        "Link success-selected hint history to the owning immutable experiment/run envelope when that envelope exists.",
+        "Compare successful discovery process with compact failed-attempt evidence under shared run/protocol/action identities."
+      ],
+      "caveats": [
+        "Binding to a hint requires exact complete path equality; no fuzzy level/config/path inference is allowed.",
+        "The owning experiment contract remains authoritative for protocol, population, execution and limit semantics; this asset stores only a bounded identity projection.",
+        "An unmatched solved row is unavailable join evidence, not a negative statement about hint validity or discovery.",
+        "Historical process evidence does not establish current capability merely because the path remains referee-valid.",
+        "Parent level remains the default independent unit unless the owning experiment contract declares a different independent unit.",
+        "This is offline research evidence and may not become exact-level production steering."
       ]
     },
     {
