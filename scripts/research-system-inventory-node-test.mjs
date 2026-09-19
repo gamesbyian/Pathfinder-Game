@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { buildResearchSystemInventory } from './research-system-inventory-lib.mjs';
+import { buildResearchSystemInventory, researchSystemInventoryView } from './research-system-inventory-lib.mjs';
 
 const inventory = buildResearchSystemInventory(process.cwd());
 
@@ -42,5 +42,15 @@ assert.equal(
     inventory.diagnostics.fragilePlanLifecycleCount,
     inventory.planLifecycle.filter(row => row.fragileProse).length,
 );
+
+const architectureView = researchSystemInventoryView(inventory, 'architecture');
+assert.ok(Array.isArray(architectureView.relations));
+assert.equal('planLifecycle' in architectureView, false);
+const lifecycleView = researchSystemInventoryView(inventory, 'lifecycle');
+assert.ok(Array.isArray(lifecycleView.planLifecycle));
+assert.equal('relations' in lifecycleView, false);
+const diagnosticsView = researchSystemInventoryView(inventory, 'diagnostics');
+assert.deepEqual(diagnosticsView.diagnostics, inventory.diagnostics);
+assert.throws(() => researchSystemInventoryView(inventory, 'parallel-authority'), /unknown research-system inventory view/);
 
 console.log('research-system inventory tests passed');
