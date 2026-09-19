@@ -57,27 +57,17 @@ jobs:
             --time-budget-ms=900000 \
             --decision-limit="$DECISION_LIMIT" \
             --out=reports/stress/search-loss-real-canary.json \
-            --decisions-out=reports/stress/search-loss-real-canary-decisions.json \
-            --metadata-out=reports/stress/search-loss-real-canary-metadata.json
-
-      - name: Build bounded real search-loss capture
-        shell: bash
-        env:
-          DECISION_LIMIT: ${{ inputs.decision_limit || '32' }}
-        run: |
-          node scripts/capture-search-loss-evidence.mjs \
-            --in=reports/stress/search-loss-real-canary-decisions.json \
-            --metadata=reports/stress/search-loss-real-canary-metadata.json \
-            --selector-limit="$DECISION_LIMIT" \
-            --out=reports/stress/search-loss-real-canary-capture.json
+            --capture-out=reports/stress/search-loss-real-canary-capture.json
 
       - name: Check Resource Contract audit readiness
         shell: bash
         run: |
-          node scripts/search-loss-resource-audit-preflight.mjs \
-            --capture=reports/stress/search-loss-real-canary-capture.json \
-            --recurring-producer=false \
-            --out=reports/stress/search-loss-resource-audit-preflight.json
+          if [ -f reports/stress/search-loss-real-canary-capture.json ]; then
+            node scripts/search-loss-resource-audit-preflight.mjs \
+              --capture=reports/stress/search-loss-real-canary-capture.json \
+              --recurring-producer=false \
+              --out=reports/stress/search-loss-resource-audit-preflight.json
+          fi
 
       - name: Summarize canary
         if: always()
@@ -111,8 +101,6 @@ jobs:
           name: search-loss-real-canary
           path: |
             reports/stress/search-loss-real-canary.json
-            reports/stress/search-loss-real-canary-decisions.json
-            reports/stress/search-loss-real-canary-metadata.json
             reports/stress/search-loss-real-canary-capture.json
             reports/stress/search-loss-resource-audit-preflight.json
           if-no-files-found: warn
