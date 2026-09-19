@@ -282,7 +282,8 @@
     "test:search-loss-pipeline": "node scripts/search-loss-pipeline-node-test.mjs",
     "research:capture-search-loss": "node scripts/capture-search-loss-evidence.mjs",
     "research:annotate-search-loss-exact": "node scripts/annotate-search-loss-exact.mjs",
-    "research:query-search-loss": "node scripts/search-loss-query.mjs"
+    "research:query-search-loss": "node scripts/search-loss-query.mjs",
+    "research:canary-search-loss": "node scripts/run-bundled.mjs scripts/search-loss-real-canary.mjs --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
