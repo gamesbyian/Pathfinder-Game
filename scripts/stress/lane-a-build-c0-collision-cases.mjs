@@ -47,20 +47,28 @@ for (const row of population.crossingRows) {
 const groups = [...groupsByCutSignature.values()].map((g) => ({ ...g, rows: [...g.rows.values()] }));
 const eligibleGroups = groups.filter((g) => g.rows.length >= MIN_GROUP_SIZE);
 
-const cases = eligibleGroups.flatMap((group) =>
-    group.rows.map((row) => ({
-        id: row.caseId,
+const cases = eligibleGroups.flatMap((group) => {
+    const cutSignature = `${group.levelId}:${group.cutCells.join(',')}`;
+    return group.rows.map((row) => ({
+        // row.caseId alone is not globally unique across groups: the same physical crossing
+        // prefix can legitimately cross two distinct chokepoints, so it appears as a member of
+        // two different cut-signature groups with the identical caseId. Each (cut, prefix) pair
+        // is still one query the analysis treats as belonging to its own signature group, so the
+        // dispatched id must disambiguate by cutSignature or the GHA combiner rejects the batch
+        // as containing duplicate case ids across shards.
+        id: `${cutSignature}::${row.caseId}`,
         levelId: row.levelId,
         prefix: row.prefix,
         // C0 signature metadata, carried through verbatim so the analysis pass can group results by
         // the real cut identity without re-deriving it from the geometry census a second time.
         source: {
-            cutSignature: `${group.levelId}:${group.cutCells.join(',')}`,
+            cutSignature,
             cutCells: group.cutCells,
             interfaceTarget: row.interfaceTarget,
             interfaceTargetKey: row.interfaceTargetKey,
         },
-    })));
+    }));
+});
 
 writeFileSync(path.resolve(ROOT, OUT), `${JSON.stringify({
     schemaVersion: 1,
