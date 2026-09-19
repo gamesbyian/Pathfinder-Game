@@ -733,29 +733,31 @@
       "id": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
       "question": "Does fixed stage-reserve allocation recurrently starve admissible-order fallback (or another later stage) that could solve within the existing total work budget if more of that fixed budget reached it?",
       "owner": "WS2",
-      "state": "active-diagnostic",
+      "state": "deferred-reopen",
       "aliases": [
         "reserve starvation",
         "admissible-order reserve starvation",
         "R00044 allocation-order artifact"
       ],
       "answeredBy": [
-        "reports/2026-09-19-expensive-success-divergence-microscope-001.md"
+        "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
+        "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md"
       ],
-      "result": "Nominated, not established at population scale. R00044 solved in admissible-order fallback after ~219.8M nodes at the 1.2B tier, which fits inside the original 300M total budget, but the 25% fallback reserve at 300M exposed only 75M nodes. R01000/R02974 were different: genuine primary-search underdose. This separates a narrow allocation-order premise from the broad 4x work-ladder economics question, which remains closed negative.",
+      "result": "Nominated, not established at population scale. R00044 solved in admissible-order fallback after ~219.8M nodes at the 1.2B tier, which fits inside the original 300M total budget, but the 25% fallback reserve at 300M exposed only 75M nodes. R01000/R02974 were different: genuine primary-search underdose. This separates a narrow allocation-order premise from the broad 4x work-ladder economics question, which remains closed negative. A retained-asset audit then found both committed technique-census generations cap isolated actions at 50M nodes, far below R00044's 219.8M fallback find cost; no existing census can size the relevant high-cost tail.",
       "triggeredBy": [
         "WS2-WORK-LADDER-ECONOMICS"
       ],
       "constrainedBy": [
         "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
-        "docs/solver-failure-evidence-research-integration-plan.md"
+        "docs/solver-failure-evidence-research-integration-plan.md",
+        "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md"
       ],
       "constrains": [
         "Do not reopen the closed-negative broad 4x escalation economics question from one allocation-order example.",
         "First size recurrence from existing/prospective compact attempt response: later-stage participation, allocated ceiling/work, censoring, and any comparable higher-budget or alternate-allocation evidence.",
         "Only if recurrent within-total-budget starvation is non-trivial should a matched-total-work A/B vary the existing admissibleOrderNodeReserveFractionOverride."
       ],
-      "reopensOn": "Not applicable while the zero/low-compute recurrence-sizing diagnostic is active. A treatment gate opens only after recurrent within-total-budget later-stage starvation is demonstrated on more than the nominating row.",
+      "reopensOn": "A prospective, precommitted isolated admissible-order-fallback cost sample on the current residual (or an outcome-blind subset sized from it) runs at a cap high enough to observe the R00044 range, with standard compact attempt/work/censoring/protocol evidence.",
       "premiseRefs": [],
       "measurementOpportunities": [
         "MO-004"
