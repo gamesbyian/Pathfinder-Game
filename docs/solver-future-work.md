@@ -27,9 +27,9 @@ Eligible only after the active premise gate above is positive.
 
 ## Deferred plan closeouts
 
-- **[Failure evidence](solver-failure-evidence-research-integration-plan.md):** P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; P4A -> `WS2-CLASS3-DOSE-EXPOSURE`; P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P7 needs repeated compatible populations.
+- **[Failure evidence](solver-failure-evidence-research-integration-plan.md):** P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; P4A -> `WS2-CLASS3-DOSE-EXPOSURE`;P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P7 needs repeated compatible populations.
 - **[Search loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurring rich production; P9 needs explicit first-loss selection.
-- **[Population/family](solver-research-population-family-integration-plan.md):** after two pilots, run P7 and retire.
+- **[Population/family](solver-research-population-family-integration-plan.md):** after two pilots, run P7.
 
 ## Hint/failure reopen hooks
 
