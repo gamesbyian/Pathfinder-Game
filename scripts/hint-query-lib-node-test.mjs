@@ -61,6 +61,11 @@ assert.equal(queryHintRecords([cold, replayable], {
 }).length, 1, 'replay-basis filtering uses the derived discovery-process contract');
 assert.equal(summarizeHintRecords([replayable]).discoveryReplayability
     .replayBasisCounts['configuration-reconstructable'], 1);
+assert.equal(summarizeHintRecords([replayable]).terminationSemantics.counts.solved, 1);
+assert.equal(queryHintRecords([replayable], { terminationClass: 'solved' }).length, 1);
+const exhaustiveHint = { path: [1, 6], provenance: [{ ...replayable.provenance[0], search: { ...replayable.provenance[0].search, termination: 'exhaustive' } }] };
+assert.equal(queryHintRecords([exhaustiveHint], { terminationClass: 'complete-enumeration' }).length, 1,
+    'exhaustive discovery remains positive completed-enumeration semantics, not exhausted failure');
 
 const unattributedAtlas = compactHintRecord({ path: [1, 4], provenance: [] }, 0, {
     evidencePurpose: 'solution-atlas',

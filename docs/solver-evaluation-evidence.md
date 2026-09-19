@@ -236,6 +236,10 @@ Rules:
 
 The executable authority is the shared provenance applicability/dependency helper surfaced through `hint-query --purpose=...` and `scripts/stress/hint-provenance-evidence-report.mjs`; the September 11 audit documents the measured legacy hazards and rationale. Do not reimplement these rules ad hoc in downstream analysis.
 
+Success-selected hint history may be joined back to process context without expanding the persisted Hint schema. `hint-discovery-process` binds only exact complete stored paths to solved result rows and, when a decision-grade experiment contract exists, carries a bounded run/protocol/population identity projection plus the failed attempts preceding the winner. `hint-harvest-selection-provenance` separately records how already-solved candidate rows entered, duplicated, or were quarantined from the hint store. Neither substitutes for the originating attempted population.
+
+Compact failure evidence is likewise purpose-specific. Use `failure-evidence-purpose-query` to distinguish forensic, mechanism-nomination, longitudinal-process, and population-prevalence uses; repeated records/runs on one parent remain one conservative support stratum. A row can therefore be admissible forensic evidence while still context-bound for longitudinal comparison or prevalence.
+
 - Missing production-baseline provenance is **unknown**, never implicitly “production-unsolved.” A census/frontier class that depends on production status must preserve the tri-state distinction until a real baseline is joined.
 - Timeout/deadline truncation and execution errors are indeterminate buckets, never ordinary failures.
 - Reuse benchmark/census rows only when the meaning-changing protocol identity matches: code/fingerprint schema, corpus/content identity, scheduler/config/flags, deterministic budgets and relevant execution mode.
