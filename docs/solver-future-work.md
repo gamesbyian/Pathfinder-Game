@@ -33,11 +33,11 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Hint/failure reopen hooks
 
-- Compatible repeated compact-response population -> run identity/novelty/saturation/frontier audits with parent dependence + solved controls; no pre-contract backfill.
+- Compatible repeated compact-response population -> run identity/novelty/saturation/frontier audits with parent dependence + controls; no pre-contract backfill.
 - Repeated compatible populations + live ambiguity -> recurrence/phenotype reducers; keep reason vs basin recurrence separate.
 - Genuine recurring rich producer -> search-loss P8 Resource Contract decision.
 - Workstreams select first-loss -> search-loss P9 using compact response, capsules, known-support extinction, traces and exact labels.
-- Persist run-envelope fields in Hint only if `hint-discovery-process` + experiment-contract joins cannot serve a concrete durable consumer.
+- Persist run-envelope fields in Hint only if the sibling process/contract join cannot serve a durable consumer.
 - Whole-solution-space extinction is not deferred work; sampled hints/families cannot prove it.
 
 ## Other deferred architectural questions
