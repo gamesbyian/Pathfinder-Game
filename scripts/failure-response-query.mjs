@@ -39,6 +39,8 @@ const documents = inputFiles.map(file => {
 });
 let rows = documents.flatMap(({ file, document }) => document.records.map(record => ({
     ...record,
+    protocolHash: record.protocolHash ?? document.protocolHash ?? null,
+    solverRef: record.solverRef ?? document.solverRef ?? null,
     __sourceFile: file,
 })));
 
