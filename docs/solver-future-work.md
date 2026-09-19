@@ -28,8 +28,8 @@ These become eligible only after the active premise gate immediately above them 
 ## Deferred plan closeouts
 
 - **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** retire once surviving descendants have durable owners; rich recurrence stays condition-gated.
-- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for genuine recurrence; Phase 9 waits for first-loss selection. No synthetic triggers.
-- **[Population/family](solver-research-population-family-integration-plan.md):** after two real distinct pilots, run Phase 7 consolidation and retire; no synthetic pilots.
+- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for genuine recurrence; Phase 9 waits for first-loss selection. No synthetic runs.
+- **[Population/family](solver-research-population-family-integration-plan.md):** after two distinct real pilots, run Phase 7 consolidation and retire; no synthetic pilots.
 
 ## Other deferred architectural questions
 
