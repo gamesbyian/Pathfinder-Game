@@ -1130,7 +1130,7 @@ Do not delete valuable evidence merely to make counts smaller. The objective is 
 
 The repository has already begun retiring completed plans. Generalize the process.
 
-Audit plans/preflights/handoffs from the recent eight-week period and classify each:
+Audit plans/preflights/handoffs from the recent eight-week period **together with the current-reference/index surfaces that route agents to them**, and classify each:
 
 - live authority;
 - active execution plan;
@@ -1726,7 +1726,7 @@ Do together:
 - Phase 1 architecture/dependency map;
 - Phase 10 documentation cognitive-role classification;
 - Phase 12 documentation-entropy diagnostics;
-- Phase 13 plan lifecycle classification;
+- Phase 13 plan/preflight/handoff lifecycle classification plus current-reference/index routing mismatches;
 - Phase 9.4 question/premise/capability/MO/queue consistency;
 - the inventory portion of Phase 11 research front door;
 - shared-implementation/dependency visibility needed by Phase 6.4-6.5.
@@ -1740,7 +1740,7 @@ Do not write four scanners that independently rediscover files, authorities and 
 Immediate outputs should include:
 
 1. duplicate/stale authority findings;
-2. plan/archive/lifecycle findings;
+2. plan/preflight/handoff archive/lifecycle findings, including concluded material still routed through current-reference indexes;
 3. dependency and shared-failure-mode findings;
 4. current-state fields the eventual the generated research brief can already consume;
 5. a list of information that still requires fragile prose parsing and therefore motivates structured closeout work.
