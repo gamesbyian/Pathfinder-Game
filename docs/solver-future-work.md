@@ -54,7 +54,7 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 | Automatic selector/profile calibration | A legal current-input relation predicts differentiated response; remaining length first needs one independent shared-budget transfer |
 | Cross-attempt basin overlap | A real handoff/allocation question exists; measure canonical action participation and solve-local rediscovery simultaneously |
 | Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates a concrete handoff value proposition |
-| Admissible-order retry repricing | `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` demonstrates recurrent within-total-budget later-stage starvation beyond the R00044 nomination; first size from compact attempt response, then use a matched-total-work reserve-fraction A/B |
+| Admissible-order retry repricing | `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` reopens on a prospective precommitted isolated fallback-cost sample at a cap high enough to observe the R00044 range; retained 50M censuses are insufficient. Only recurrent within-total-budget later-stage starvation can nominate a matched-total-work reserve-fraction A/B |
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
