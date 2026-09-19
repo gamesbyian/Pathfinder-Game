@@ -1063,7 +1063,7 @@ Completed plans, superseded authorities, old notebooks and handoffs should be fr
 
 Extend existing query infrastructure rather than creating a new store.
 
-A command such as `npm run research:brief` should synthesize a compact current-state briefing.
+A command such as a generated research-brief command should synthesize a compact current-state briefing.
 
 Candidate output:
 
@@ -1738,7 +1738,7 @@ Immediate outputs should include:
 1. duplicate/stale authority findings;
 2. plan/archive/lifecycle findings;
 3. dependency and shared-failure-mode findings;
-4. current-state fields the eventual `research:brief` can already consume;
+4. current-state fields the eventual the generated research brief can already consume;
 5. a list of information that still requires fragile prose parsing and therefore motivates structured closeout work.
 
 This bundle can start immediately and should run in parallel with Bundle B.
@@ -1803,7 +1803,7 @@ Do not generalize a kernel field until at least two real consumers need the same
 Build on Bundles A-C:
 
 - Phase 8.5 structured closeout capsules for new current-state reports;
-- Phase 11 compact `research:brief`;
+- Phase 11 compact the generated research brief;
 - Phase 9.5 already-earned composition views;
 - Phase 9.3 hint/failure semantic cleanup only where the common kernel proved real.
 
