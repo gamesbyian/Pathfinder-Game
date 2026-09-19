@@ -54,12 +54,12 @@ Mining many assets/features or historical regimes creates selection pressure; di
 | Raw logs/baselines | raw run/snapshot | What happened before interpretation? |
 | Research-status index | report/workstream/experiment | Has this been tested/renamed? |
 | Static descriptors | level × legal feature | Which geometry/mechanics stratify an effect? |
-| Compact failure response | run × parent × attempt/stage | Did a mechanism participate, how much work did it receive, and how did it terminate without retaining full state? |
+| Compact failure response | run × parent × attempt/stage | Participation, dose, censoring, termination, solved controls. |
 | Search-loss evidence | run × parent × selected event | Where did search lose or retain material, including solved-run controls? |
 
 ## High-value joins
 
-Useful joins include compact failure response × census/benchmark/capability memory, census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Human-parent joins preserve source/exposure and use parents as independent units. Use the smallest join that answers the gate.
+Useful joins include failure response × census/benchmarks, census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units. Use the smallest join that answers the gate.
 
 ### Four-resource lineage recipe
 
