@@ -14,6 +14,11 @@ assert.ok(inventory.relations.some(row =>
 assert.ok(inventory.relations.some(row =>
     row.relation === 'durableEvidence' && row.authorityKind === 'derived/composed'));
 assert.ok(inventory.commands.some(row => row.name === 'research:integration-audit'));
+assert.equal(
+    inventory.commands.find(row => row.name === 'research:canary-search-loss')?.entrypoint,
+    'scripts/search-loss-real-canary.mjs',
+    'inventory should map run-bundled aliases to the real producer rather than the wrapper',
+);
 assert.ok(inventory.planLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md' &&
     row.archived === false &&
