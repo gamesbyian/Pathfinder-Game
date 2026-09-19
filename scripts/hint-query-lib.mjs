@@ -13,6 +13,11 @@ import {
     classifyHintDiscoveryReplayability,
     summarizeHintDiscoveryReplayability,
 } from './hint-discovery-replayability-lib.mjs';
+import {
+    HINT_TERMINATION_CLASSES,
+    classifyHintTermination,
+    summarizeHintTerminationClasses,
+} from './hint-termination-semantics-lib.mjs';
 
 const sortedCounts = values => Object.fromEntries([...values.entries()]
     .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]))));
@@ -66,6 +71,7 @@ export function summarizeHintRecords(hints, { standard = 'strict' } = {}) {
         coldEvidenceStandard: standard,
         ...classes,
         discoveryReplayability: summarizeHintDiscoveryReplayability(hints),
+        terminationSemantics: summarizeHintTerminationClasses(hints),
         hintSources: sortedCounts(hintSources),
         entrySources: sortedCounts(entrySources),
         solverIds: sortedCounts(solverIds),
@@ -89,6 +95,7 @@ export function compactHintRecord(hint, index, {
     const workSpent = [];
     const replayBasisCounts = Object.fromEntries(HINT_DISCOVERY_REPLAY_BASES.map(key => [key, 0]));
     const replayReasons = new Set();
+    const terminationClasses = new Set();
     for (const entry of entries) {
         if (entry?.solver?.id) solverIds.add(entry.solver.id);
         if (entry?.solver?.technique) techniques.add(entry.solver.technique);
@@ -97,6 +104,7 @@ export function compactHintRecord(hint, index, {
         const replay = classifyHintDiscoveryReplayability(entry);
         replayBasisCounts[replay.replayBasis] += 1;
         replayReasons.add(replay.reason);
+        terminationClasses.add(classifyHintTermination(entry));
     }
     const result = {
         hintIndex: index + 1,
@@ -111,6 +119,7 @@ export function compactHintRecord(hint, index, {
             replayBasisCounts,
             reasons: [...replayReasons].sort(),
         },
+        terminationClasses: [...terminationClasses].sort(),
         workSpent: numericSummary(workSpent),
     };
     if (evidencePurpose) {
@@ -136,7 +145,7 @@ export function compactHintRecord(hint, index, {
 
 export function queryHintRecords(hints, options = {}) {
     const {
-        standard = 'strict', className, source, solverId, technique, retryTier, replayBasis, query,
+        standard = 'strict', className, source, solverId, technique, retryTier, replayBasis, terminationClass, query,
         evidencePurpose = null, evidenceApplicability = null, comparableSolverVersions = [],
     } = options;
     if (evidenceApplicability && !EVIDENCE_APPLICABILITY.includes(evidenceApplicability)) {
@@ -144,6 +153,9 @@ export function queryHintRecords(hints, options = {}) {
     }
     if (replayBasis && !HINT_DISCOVERY_REPLAY_BASES.includes(replayBasis)) {
         throw new Error(`unknown hint discovery replay basis: ${replayBasis}`);
+    }
+    if (terminationClass && !HINT_TERMINATION_CLASSES.includes(terminationClass)) {
+        throw new Error(`unknown hint termination class: ${terminationClass}`);
     }
     const needle = query?.toLowerCase();
     const out = [];
@@ -155,6 +167,7 @@ export function queryHintRecords(hints, options = {}) {
         if (technique && !compact.techniques.some(value => value === technique || value.includes(technique))) return;
         if (retryTier && !compact.retryTiers.includes(normalizeRetryTier(retryTier))) return;
         if (replayBasis && !compact.discoveryReplayability.replayBasisCounts[replayBasis]) return;
+        if (terminationClass && !compact.terminationClasses.includes(terminationClass)) return;
         if (evidenceApplicability && !compact.evidence?.applicabilityCounts?.[evidenceApplicability]) return;
         if (needle && !JSON.stringify(compact).toLowerCase().includes(needle)) return;
         out.push({ compact, hint });
