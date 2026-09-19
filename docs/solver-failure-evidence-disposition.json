@@ -4,16 +4,40 @@
   "catalogDocument": "docs/solver-search-loss-evidence-implementation-plan.md",
   "producers": [
     {
-      "id": "technique-census",
-      "workflow": ".github/workflows/technique-census.yml",
+      "id": "ci-solver-canary",
+      "workflow": ".github/workflows/ci.yml",
+      "disposition": "unsupported",
+      "reason": "Runs a tiny solver-bench capability regression canary, but solver-bench persists only solved/failed aggregate baseline data rather than attempt-shaped rows covered by the compact failure-response contract."
+    },
+    {
+      "id": "collect-prune-gap-labels",
+      "workflow": ".github/workflows/collect-prune-gap-labels.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT-oracle branch labelling; not a node/work-budget search-attempt producer this layer covers."
+    },
+    {
+      "id": "collect-variant-family-dataset",
+      "workflow": ".github/workflows/collect-variant-family-dataset.yml",
       "disposition": "standard",
       "reason": null
     },
     {
-      "id": "solver-stress-refresh",
-      "workflow": ".github/workflows/solver-stress-refresh.yml",
-      "disposition": "standard",
-      "reason": null
+      "id": "cpsat-explicit-prefix-reference",
+      "workflow": ".github/workflows/cpsat-explicit-prefix-reference.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT exact/reference tooling has no comparable node/work-budget attempt-response shape; it is a downstream annotator, not a search-attempt producer this layer covers."
+    },
+    {
+      "id": "cpsat-hint-harvest-sweep",
+      "workflow": ".github/workflows/cpsat-hint-harvest-sweep.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT --forced-grid hint harvest; not a node/work-budget search-attempt producer this layer covers."
+    },
+    {
+      "id": "main-push-solver-canary",
+      "workflow": ".github/workflows/main-push-validation.yml",
+      "disposition": "unsupported",
+      "reason": "Runs the same tiny solver-bench capability regression canary used by CI; it is a merge/push guard with aggregate solved/failed baseline data, not an attempt-shaped research telemetry producer."
     },
     {
       "id": "method-probe-sweep",
@@ -22,10 +46,28 @@
       "reason": null
     },
     {
+      "id": "solver-broad-confirmation",
+      "workflow": ".github/workflows/solver-broad-confirmation.yml",
+      "disposition": "standard",
+      "reason": null
+    },
+    {
       "id": "solver-combine-sweep-runs",
       "workflow": ".github/workflows/solver-combine-sweep-runs.yml",
       "disposition": "standard",
       "reason": null
+    },
+    {
+      "id": "solver-diagnostics",
+      "workflow": ".github/workflows/solver-diagnostics.yml",
+      "disposition": "standard",
+      "reason": null
+    },
+    {
+      "id": "solver-evidence-integrity-guard",
+      "workflow": ".github/workflows/solver-evidence-integrity-guard.yml",
+      "disposition": "unsupported",
+      "reason": "Audits already-published evidence integrity on pull requests; it does not run new solver attempts of its own."
     },
     {
       "id": "solver-highbudget-unsolved-sweep",
@@ -58,46 +100,22 @@
       "reason": null
     },
     {
+      "id": "solver-stress-refresh",
+      "workflow": ".github/workflows/solver-stress-refresh.yml",
+      "disposition": "standard",
+      "reason": null
+    },
+    {
       "id": "static-portfolio-confirmation",
       "workflow": ".github/workflows/static-portfolio-confirmation.yml",
       "disposition": "standard",
       "reason": null
     },
     {
-      "id": "solver-broad-confirmation",
-      "workflow": ".github/workflows/solver-broad-confirmation.yml",
+      "id": "technique-census",
+      "workflow": ".github/workflows/technique-census.yml",
       "disposition": "standard",
       "reason": null
-    },
-    {
-      "id": "collect-variant-family-dataset",
-      "workflow": ".github/workflows/collect-variant-family-dataset.yml",
-      "disposition": "standard",
-      "reason": null
-    },
-    {
-      "id": "cpsat-explicit-prefix-reference",
-      "workflow": ".github/workflows/cpsat-explicit-prefix-reference.yml",
-      "disposition": "unsupported",
-      "reason": "CP-SAT exact/reference tooling has no comparable node/work-budget attempt-response shape; it is a downstream annotator, not a search-attempt producer this layer covers."
-    },
-    {
-      "id": "cpsat-hint-harvest-sweep",
-      "workflow": ".github/workflows/cpsat-hint-harvest-sweep.yml",
-      "disposition": "unsupported",
-      "reason": "CP-SAT --forced-grid hint harvest; not a node/work-budget search-attempt producer this layer covers."
-    },
-    {
-      "id": "collect-prune-gap-labels",
-      "workflow": ".github/workflows/collect-prune-gap-labels.yml",
-      "disposition": "unsupported",
-      "reason": "CP-SAT-oracle branch labelling; not a node/work-budget search-attempt producer this layer covers."
-    },
-    {
-      "id": "solver-evidence-integrity-guard",
-      "workflow": ".github/workflows/solver-evidence-integrity-guard.yml",
-      "disposition": "unsupported",
-      "reason": "Audits already-published evidence integrity on pull requests; it does not run new solver attempts of its own."
     }
   ]
 }
