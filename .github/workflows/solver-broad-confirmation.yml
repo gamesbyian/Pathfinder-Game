@@ -561,6 +561,7 @@ jobs:
           node scripts/summarize-solver-failure-response.mjs \
             --in="reports/stress/broad-confirmation-control.json,reports/stress/broad-confirmation-treatment.json" \
             --rows-key=levels \
+            --contract-file="logs/solver-broad-confirmation/experiment-contract.json" \
             --out="logs/solver-broad-confirmation/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/broad-confirmation-control.json" \
