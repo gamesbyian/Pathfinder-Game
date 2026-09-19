@@ -96,6 +96,20 @@ run: |
     fs.rmSync(root, { recursive: true, force: true });
 }
 
+
+// --- legacy solver-bench canaries are discovered even without experiment-publisher plumbing ---
+{
+    const root = makeRoot();
+    writeWorkflow(root, 'canary.yml', `
+name: solver-canary
+run: node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check
+`);
+    writeRegistry(root, []);
+    const failures = validateFailureEvidenceDisposition(root);
+    assert.ok(failures.some(f => f.includes('canary.yml') && f.includes('no docs/solver-failure-evidence-disposition.json entry')));
+    fs.rmSync(root, { recursive: true, force: true });
+}
+
 // --- opt-out/unsupported without a reason is rejected ---
 {
     const root = makeRoot();
