@@ -11,6 +11,7 @@ import {
     validateSearchLossCapsule,
     validateSearchLossCapture,
 } from './solver-search-loss-evidence-lib.mjs';
+import { knownHintSupportForPrefix, joinSearchLossToKnownHintSupport } from './search-loss-known-support-lib.mjs';
 
 const PROTOCOL_HASH = `sha256:${'a'.repeat(64)}`;
 const CONFIG_HASH = `sha256:${'b'.repeat(64)}`;
@@ -188,5 +189,31 @@ assert.equal(summary.capsules, 2);
 assert.equal(summary.independentParentsObserved, 2);
 assert.equal(summary.byEventKind['score-width-cull'], 2);
 assert.equal(summary.byReplayBasis['identity-only'], 2);
+
+// --- Hint-atlas positive-support join ---
+
+const knownHints = [
+    { path: [1, 2, 3, 4], provenance: [] },
+    { path: [1, 2, 5, 6], provenance: [] },
+];
+const knownSupport = knownHintSupportForPrefix([1, 2], knownHints);
+assert.equal(knownSupport.support, 'PRESENT');
+assert.deepEqual(knownSupport.knownNextSteps, [3, 5]);
+assert.equal(knownSupport.distinctKnownNextSteps, 2);
+assert.equal(knownHintSupportForPrefix([1, 9], knownHints).support, 'NOT_OBSERVED',
+    'zero atlas matches remain one-sided NOT_OBSERVED, never DEAD');
+
+const supportJoin = joinSearchLossToKnownHintSupport({
+    capsules: [
+        { capsuleId: 'support-a', parentId: 'R00046', replayBasis: 'replayable', prefix: [1, 2] },
+        { capsuleId: 'support-b', parentId: 'R00046', replayBasis: 'identity-only' },
+    ],
+}, {
+    resolvePrefix: row => row.prefix ?? null,
+    resolveHints: () => knownHints,
+});
+assert.equal(supportJoin.summary.observed, 1);
+assert.equal(supportJoin.summary.withKnownSupport, 1);
+assert.equal(supportJoin.rows[1].reason, 'capsule-not-replayable');
 
 console.log('solver search-loss evidence lib tests passed');

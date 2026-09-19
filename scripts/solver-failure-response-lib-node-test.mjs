@@ -4,6 +4,11 @@ import {
     compactFailureResponseRow,
     summarizeFailureResponse,
 } from './solver-failure-response-lib.mjs';
+import { auditFailureResponseIdentity } from './failure-response-identity-audit-lib.mjs';
+import {
+    analyzeFailureResponseNovelty,
+    auditFailurePhenotypesAtFrontier,
+} from './failure-response-novelty-lib.mjs';
 
 // --- compactFailureResponseRow ---
 
@@ -96,5 +101,41 @@ assert.equal(identityRow.cellId, 'cell-A');
 assert.equal(identityRow.protocolHash, 'proto-1');
 assert.equal(identityRow.solverRef, 'abc123');
 assert.equal(identityRow.attempts[0].outcome, 'exhausted');
+
+// --- Cross-record identity-granularity audit ---
+
+const auditBase = compactFailureResponseRow({
+    id: 'AUDIT-1', ok: false, status: 'work-budget-reached', runId: 'run-a',
+    protocolHash: 'proto-a', solverRef: 'solver-a', workSpent: 100,
+});
+const exactRepeatAudit = auditFailureResponseIdentity([{
+    protocolHash: 'proto-a', solverRef: 'solver-a', records: [auditBase, { ...auditBase }],
+}]);
+assert.equal(exactRepeatAudit.exactRepeatKeys, 1);
+assert.equal(exactRepeatAudit.conflictingKeys, 0);
+
+const conflictingAudit = auditFailureResponseIdentity([{
+    protocolHash: 'proto-a', solverRef: 'solver-a',
+    records: [auditBase, { ...auditBase, workSpent: 200 }],
+}]);
+assert.equal(conflictingAudit.conflictingKeys, 1,
+    'same semantic observation key with incompatible compact payloads is surfaced for investigation');
+
+// --- Longitudinal phenotype novelty / evidence-frontier audit ---
+
+const noveltyDoc1 = { records: [
+    { ...auditBase, identity: 'N1', parentId: 'N1', runId: 'old', workSpent: 100 },
+] };
+const noveltyDoc2 = { records: [
+    { ...auditBase, identity: 'N2', parentId: 'N2', runId: 'new', workSpent: 999 },
+    { ...auditBase, identity: 'N3', parentId: 'N3', runId: 'new', outcome: 'exhaustedNegative' },
+] };
+const novelty = analyzeFailureResponseNovelty([noveltyDoc1, noveltyDoc2], { labels: ['old', 'new'] });
+assert.equal(novelty.steps[0].newPhenotypes, 1);
+assert.equal(novelty.steps[1].newPhenotypes, 1,
+    'same categorical failure at a different dose/run is not novel, while a changed outcome is');
+const frontier = auditFailurePhenotypesAtFrontier([noveltyDoc1, noveltyDoc2], 1, { labels: ['old', 'new'] });
+assert.equal(frontier.alreadyVisiblePhenotypes, 1);
+assert.equal(frontier.firstVisibleAtTargetPhenotypes, 1);
 
 console.log('solver failure response lib tests passed');

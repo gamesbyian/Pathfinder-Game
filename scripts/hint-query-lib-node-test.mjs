@@ -7,6 +7,7 @@
  */
 import assert from 'node:assert/strict';
 import { compactHintRecord, queryHintRecords, summarizeHintRecords } from './hint-query-lib.mjs';
+import { joinSolvedRowsToHintDiscoveryProcesses } from './hint-discovery-process-lib.mjs';
 
 const legacyHint = { path: [1, 2], provenance: [{ solver: { id: 's', forcing: { retryTier: 'repair-late-probe' } } }] };
 const canonicalHint = { path: [1, 2], provenance: [{ solver: { id: 's', forcing: { retryTier: 'late-repair-search' } } }] };
@@ -43,10 +44,41 @@ assert.equal(queryHintRecords([cold], {
     evidencePurpose: 'current-production-capability', evidenceApplicability: 'admissible',
 }).length, 0, 'capability query without a comparison regime fails closed');
 
+const replayable = {
+    path: [1, 5],
+    provenance: [{
+        solver: { id: 'pathfinder-solver', version: 'v3', technique: 'dfs', forcing: null },
+        search: { workSpent: 10, workBudget: 1000, termination: 'solved', randomSeed: null },
+        context: {
+            isolatedTechnique: false, hintGuided: false, usedExistingHints: false,
+            levelRevision: 'v2:replayable',
+        },
+        foundAt: '2026-09-19T00:00:00Z',
+    }],
+};
+assert.equal(queryHintRecords([cold, replayable], {
+    replayBasis: 'configuration-reconstructable',
+}).length, 1, 'replay-basis filtering uses the derived discovery-process contract');
+assert.equal(summarizeHintRecords([replayable]).discoveryReplayability
+    .replayBasisCounts['configuration-reconstructable'], 1);
+
 const unattributedAtlas = compactHintRecord({ path: [1, 4], provenance: [] }, 0, {
     evidencePurpose: 'solution-atlas',
 });
 assert.equal(unattributedAtlas.evidence.applicabilityCounts.admissible, 1,
     'an unattributed referee-valid path remains atlas evidence');
+
+const discoveryJoin = joinSolvedRowsToHintDiscoveryProcesses([{
+    id: 'P1', ok: true, status: 'success', solution: [1, 2, 3],
+    attempts: [
+        { ok: false, outcome: 'exhausted', stageId: 'dfs' },
+        { ok: true, outcome: 'solved', stageId: 'repair' },
+    ],
+}], {
+    resolveHints: () => [{ path: [1, 2, 3], provenance: [] }],
+});
+assert.equal(discoveryJoin.summary.exactHintMatchedRows, 1);
+assert.equal(discoveryJoin.joined[0].process.precedingAttemptCount, 1,
+    'exact-path hint join preserves the failed-attempt history preceding the winning discovery');
 
 console.log('hint-query-lib: all tests passed');
