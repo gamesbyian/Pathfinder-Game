@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active state; [`solver-research-operating-model.md`](solver-research-operating-model.md) method; [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) semantic gaps; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) tested-form vs premise closure.
+Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active state; [`solver-research-operating-model.md`](solver-research-operating-model.md) method; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) closure scope.
 
 **Level-blindness constrains provenance, not specificity:** generic cold procedures may derive exact current-input facts; cross-parent recurrence is required only for fixed reusable descriptor claims.
 
