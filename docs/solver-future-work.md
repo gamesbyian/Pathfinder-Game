@@ -27,9 +27,9 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Deferred plan closeouts
 
-- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** direct substrate complete. Resume Phase 3 on eligible post-contract compact rows, 4A on frozen current Class-3 + exact-action dose, 4B on the frozen R00044/40-parent probe. Rich recurrence remains condition-gated; retire once surviving descendants have durable owners.
-- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for genuine recurrence; Phase 9 waits for first-loss selection. No synthetic.
-- **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run Phase 7 and retire.
+- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** substrate complete. Resume P3 on post-contract compact rows, P4A on current Class-3 + exact-action dose, P4B on the frozen reserve probe; rich recurrence stays gated. Retire when descendants have durable owners.
+- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurrence; P9 needs first-loss selection. No synthetic recurrence.
+- **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run P7 and retire.
 
 ## Other deferred architectural questions
 
