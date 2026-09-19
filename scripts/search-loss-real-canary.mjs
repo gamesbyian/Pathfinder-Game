@@ -17,9 +17,11 @@ import { performance } from 'node:perf_hooks';
 
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import {
-  createDecisionObservationCollector,
-  beamResearchRecordToDecisionObservation,
-} from './solver-decision-observation-lib.mjs';
+  createSearchLossCollector,
+  decisionObservationToSearchLossCapsule,
+  searchLossCapsuleIdentity,
+  validateSearchLossCapture,
+} from './solver-search-loss-evidence-lib.mjs';
 import { stableHash } from './solver-experiment-contract.mjs';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.js';
 
@@ -35,8 +37,7 @@ const timeBudgetMs = Number(args.get('time-budget-ms') ?? 900000);
 const decisionLimit = Number(args.get('decision-limit') ?? 32);
 const maxProgressTransitions = Number(args.get('max-progress-transitions') ?? 16);
 const outFile = args.get('out') ?? 'reports/stress/search-loss-real-canary.json';
-const decisionsOut = args.get('decisions-out') ?? 'reports/stress/search-loss-real-canary-decisions.json';
-const metadataOut = args.get('metadata-out') ?? 'reports/stress/search-loss-real-canary-metadata.json';
+const captureOut = args.get('capture-out') ?? 'reports/stress/search-loss-real-canary-capture.json';
 for (const [name, value] of Object.entries({ sampleSize, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions })) {
   if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be positive`);
 }
@@ -118,9 +119,21 @@ const selected = sampleDeterministic(allRows, sampleSize, seed);
 
 const modes = ['off', 'compact', 'rich'];
 const rows = [];
-const richDecisionRecords = [];
 const levelRevisions = {};
 const richParentOutcomes = {};
+const protocol = { corpusFile, sampleSize, seed, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions, modes };
+const resolvedSha = /^[0-9a-f]{40}$/i.test(process.env.GITHUB_SHA ?? '') ? process.env.GITHUB_SHA : null;
+const runId = process.env.GITHUB_RUN_ID ? `gha-${process.env.GITHUB_RUN_ID}` : 'local-search-loss-real-canary';
+const protocolHash = stableHash({ kind: 'search-loss-real-canary-protocol', protocol });
+const captureProfileId = 'search-loss-real-canary-v1';
+const richCollector = createSearchLossCollector({
+  captureProfileId,
+  selectorLimits: {
+    'score-width-cull': decisionLimit,
+    'mechanic-bucket-cull': decisionLimit,
+    'ints-bucket-cull': decisionLimit,
+  },
+});
 for (let index = 0; index < selected.length; index++) {
   const raw = selected[index];
   levelRevisions[String(raw.id)] = await getLevelFingerprint(raw);
@@ -133,7 +146,6 @@ for (let index = 0; index < selected.length; index++) {
     const beamFlowCounters = {};
     const pruneDiagnostics = { reached: {}, rejected: {} };
     const progress = createProgressCollector(maxProgressTransitions);
-    const decisions = createDecisionObservationCollector(decisionLimit);
     let decisionOrdinal = 0;
 
     const solveOpts = {
@@ -150,11 +162,47 @@ for (let index = 0; index < selected.length; index++) {
     if (mode === 'rich') {
       solveOpts.beamResearchObserver = {
         observe(record) {
-          const observation = beamResearchRecordToDecisionObservation(record, {
+          if (!['score-width-culled', 'mechanic-bucket-culled', 'ints-bucket-culled'].includes(record?.stage)) return;
+          const rankedPool = record.details?.rankedPool;
+          const culled = record.details?.culled;
+          if (!Array.isArray(rankedPool) || !Array.isArray(culled) || culled.length === 0 || !Number.isFinite(record.workSpent)) return;
+          const selectedPath = culled[0]?.path;
+          if (!Array.isArray(selectedPath) || !selectedPath.every(Number.isSafeInteger)) return;
+          const selectedId = JSON.stringify(selectedPath);
+          const observation = {
+            decisionId: `${record.stage}@${record.depth}#${decisionOrdinal++}`,
             parentId: String(raw.id),
-            decisionOrdinal: decisionOrdinal++,
+            stageId: record.stage,
+            candidateIds: [selectedId],
+            orderedCandidateIds: [selectedId],
+            retainedCandidateIds: [],
+            workSpentBefore: record.workSpent,
+            workSpentAfter: record.workSpent,
+            context: {
+              depth: record.depth,
+              nodeProgress: Number.isFinite(record.work) ? record.work : null,
+              beamWidth: record.details?.beamWidth ?? null,
+              cutoffScore: record.details?.cutoffScore ?? null,
+            },
+          };
+          const capsule = decisionObservationToSearchLossCapsule(observation, {
+            levelRevision: levelRevisions[String(raw.id)],
+            runId,
+            solverRef: resolvedSha ?? 'local',
+            protocolHash,
+            captureReason: 'near-cutoff-culled',
+            disposition: 'culled',
+            replayBasis: 'identity-only',
           });
-          if (observation) decisions.observe(observation);
+          if (!capsule) return;
+          capsule.selection.observedAtSelection = rankedPool.length;
+          capsule.selection.retainedAtSelection = Math.max(0, rankedPool.length - culled.length);
+          capsule.selection.truncated = culled.length > 0;
+          capsule.pathIdentity = selectedId;
+          capsule.replayBasis = 'replayable';
+          capsule.reconstructability = { kind: 'inline-exact-prefix', path: selectedPath };
+          capsule.capsuleId = searchLossCapsuleIdentity(capsule);
+          richCollector.observe(capsule);
         },
       };
     }
@@ -167,22 +215,19 @@ for (let index = 0; index < selected.length; index++) {
       pruneDiagnostics,
       failureProgress: progress.snapshot(),
     };
-    const richPayload = mode === 'rich' ? decisions.snapshot() : null;
-    if (mode === 'rich') {
-      richDecisionRecords.push(...richPayload.records);
-      richParentOutcomes[String(raw.id)] = !!result.ok;
-    }
+    if (mode === 'rich') richParentOutcomes[String(raw.id)] = !!result.ok;
+    const richSnapshot = mode === 'rich' ? richCollector.snapshot() : null;
     byMode.set(mode, {
       mode,
       elapsedMs,
       parity: parityProjection(result),
       compactPayloadBytes: compactPayload ? jsonBytes(compactPayload) : 0,
-      richPayloadBytes: richPayload ? jsonBytes(richPayload) : 0,
+      richPayloadBytes: richSnapshot ? jsonBytes({ selectorSummaries: richSnapshot.selectorSummaries, capsules: richSnapshot.capsules }) : 0,
       compact: compactPayload,
-      rich: richPayload ? {
-        observed: richPayload.observed,
-        retained: richPayload.retained,
-        truncated: richPayload.truncated,
+      rich: richSnapshot ? {
+        observed: Object.values(richSnapshot.selectorSummaries).reduce((sum, x) => sum + x.observed, 0),
+        retained: richSnapshot.capsules.length,
+        truncated: Object.values(richSnapshot.selectorSummaries).some(x => x.truncated),
       } : null,
     });
   }
@@ -239,7 +284,6 @@ const summary = {
     observedProgressFamilies: Object.keys(progressFamilies).sort(),
   },
 };
-const protocol = { corpusFile, sampleSize, seed, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions, modes };
 const output = {
   schemaVersion: 1,
   kind: 'pathfinder-search-loss-real-canary',
@@ -250,30 +294,37 @@ const output = {
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, JSON.stringify(output, null, 2) + '\n');
 
-const decisionParents = [...new Set(richDecisionRecords.map(row => String(row.parentId)))].sort();
-const resolvedSha = /^[0-9a-f]{40}$/i.test(process.env.GITHUB_SHA ?? '') ? process.env.GITHUB_SHA : null;
-const runId = process.env.GITHUB_RUN_ID ? `gha-${process.env.GITHUB_RUN_ID}` : 'local-search-loss-real-canary';
-const metadata = {
+const richSnapshot = richCollector.snapshot();
+const decisionParents = [...new Set(richSnapshot.capsules.map(row => String(row.parentId)))].sort();
+const capture = validateSearchLossCapture({
+  schemaVersion: 1,
+  kind: 'pathfinder-search-loss-capture',
+  researchEnrichmentKind: 'observation',
   run: {
     runId,
     solverRef: resolvedSha ?? 'local',
     resolvedSha,
     producer: 'scripts/search-loss-real-canary.mjs',
-    protocolHash: stableHash({ kind: 'search-loss-real-canary-protocol', protocol }),
+    protocolHash,
     configurationHash: stableHash({ kind: 'search-loss-real-canary-configuration', corpusFile, seed, workBudget, timeBudgetMs }),
     levelBlind: true,
   },
   population: {
     source: `${corpusFile}#rich-decision-parents`,
     populationIdentity: stableHash({ kind: 'search-loss-real-canary-rich-population', parentIds: decisionParents }),
+    parentCount: decisionParents.length,
   },
-  captureProfileId: 'search-loss-real-canary-v1',
-  observerParityVerified: summary.semanticParity,
-  levelRevisions: Object.fromEntries(decisionParents.map(id => [id, levelRevisions[id]])),
-  parentOutcomes: Object.fromEntries(decisionParents.map(id => [id, richParentOutcomes[id]])),
-};
-fs.mkdirSync(path.dirname(decisionsOut), { recursive: true });
-fs.writeFileSync(decisionsOut, JSON.stringify({ schemaVersion: 1, records: richDecisionRecords }, null, 2) + '\n');
-fs.writeFileSync(metadataOut, JSON.stringify(metadata, null, 2) + '\n');
+  capture: {
+    captureProfileId,
+    observerParityVerified: summary.semanticParity,
+    selectorSummaries: richSnapshot.selectorSummaries,
+  },
+  capsules: richSnapshot.capsules.map(row => ({
+    ...row,
+    context: { ...row.context, parentSolved: richParentOutcomes[String(row.parentId)] ?? null },
+  })).sort((a, b) => a.capsuleId.localeCompare(b.capsuleId)),
+});
+fs.mkdirSync(path.dirname(captureOut), { recursive: true });
+fs.writeFileSync(captureOut, JSON.stringify(capture, null, 2) + '\n');
 console.log(JSON.stringify(summary, null, 2));
 if (parityFailures.length) process.exitCode = 1;
