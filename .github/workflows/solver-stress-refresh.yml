@@ -472,6 +472,67 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+      - name: Declare refresh contract and validate intended population
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p logs/solver-stress-refresh
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          const inputs = event.inputs ?? {};
+          const spec = {
+            configuration: inputs,
+            workflowFamily: 'level-blind-capability-refresh',
+            producer: 'solver-stress-refresh.yml',
+            entrypoint: 'scripts/level-blind-capability-sweep.mjs',
+            population: { kind: 'canonical-stress-corpora', identityBasis: 'corpus-label-and-stable-level-id' },
+            execution: {
+              levelBlind: true, historyAware: false, historicalInputs: [],
+              reproducibilityExpected: inputs.deterministic === 'true',
+              producerFamily: 'level-blind-capability-sweep', schedulerMode: 'production-ladder',
+            },
+            limits: {
+              cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null,
+              wallSafetyDeadlineMs: null, wallDeadlineBinding: inputs.deterministic !== 'true',
+            },
+            sideEffects: {
+              hints: 'harvest-permitted',
+              canonicalBaseline: inputs.deterministic === 'true' ? 'none' : 'canonical-refresh',
+              telemetry: 'compact',
+              reports: 'report-write',
+            },
+          };
+          fs.writeFileSync('logs/solver-stress-refresh/experiment-contract-spec.json', JSON.stringify(spec, null, 2) + '\n');
+          for (const [source, out] of [
+            ['data/stress/stress-levels.json', 'logs/solver-stress-refresh/expected-corpus1-ids.txt'],
+            ['data/stress/stress-levels-random.json', 'logs/solver-stress-refresh/expected-corpus2-ids.txt'],
+          ]) {
+            const raw = JSON.parse(fs.readFileSync(source, 'utf8'));
+            const rows = Array.isArray(raw) ? raw : raw.levels;
+            fs.writeFileSync(out, rows.map(row => row.id).join('\n') + '\n');
+          }
+          NODE
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/solver-stress-refresh/experiment-contract-spec.json \
+            --out=logs/solver-stress-refresh/experiment-contract.json
+          if [ -f reports/stress/solver-corpus1-latest.json ] && [ -f reports/stress/solver-corpus2-latest.json ]; then
+            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete \
+              --expected-ids=logs/solver-stress-refresh/expected-corpus1-ids.txt \
+              --result=reports/stress/solver-corpus1-latest.json \
+              --integrity-out=logs/solver-stress-refresh/corpus1-integrity.json
+            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete \
+              --expected-ids=logs/solver-stress-refresh/expected-corpus2-ids.txt \
+              --result=reports/stress/solver-corpus2-latest.json \
+              --integrity-out=logs/solver-stress-refresh/corpus2-integrity.json
+            node scripts/combine-population-integrity.mjs \
+              --input=corpus-1:logs/solver-stress-refresh/corpus1-integrity.json \
+              --input=corpus-2:logs/solver-stress-refresh/corpus2-integrity.json \
+              --kind=canonical-stress-corpora \
+              --identity-basis=corpus-label-and-stable-level-id \
+              --out=logs/solver-stress-refresh/population-integrity.json
+          fi
+
       - name: Summarize compact failure-response
         if: always()
         run: |
@@ -490,6 +551,8 @@ jobs:
             --shards-expected="${{ inputs.shard_count }}" \
             --shards-observed="$(find logs/solver-corpus2-batches -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
             --failure-response-file="logs/solver-sweep-result-inputs/failure-response-summary.json" \
+            --integrity-file="logs/solver-stress-refresh/population-integrity.json" \
+            --contract-file="logs/solver-stress-refresh/experiment-contract.json" \
             --provenance-out="reports/stress/capability-runs/${{ github.run_id }}/gha-source-run.json" \
             --source-artifact="solver-stress-refresh-combined"
 
