@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { buildResearchRelations, RESEARCH_RELATION_CONTRACTS } from './research-relations-lib.mjs';
+import { currentDocumentationReferences } from './documentation-index-lib.mjs';
 
 const normalize = value => value.split(path.sep).join('/');
 const isLocalImport = value => value.startsWith('./') || value.startsWith('../');
@@ -73,33 +74,12 @@ function dependencyClosure(root, entrypoint) {
     return [...seen].sort();
 }
 
-function currentReferenceRows(root) {
-    const indexPath = path.join(root, 'docs/README.md');
-    if (!existsSync(indexPath)) return [];
-    const source = readFileSync(indexPath, 'utf8');
-    const lines = source.split(/\r?\n/u);
-    const start = lines.findIndex(line => line.trim() === '## Current references');
-    if (start < 0) return [];
-    const section = [];
-    for (const line of lines.slice(start + 1)) {
-        if (line.startsWith('## ')) break;
-        section.push(line);
-    }
-    const rows = [];
-    for (const line of section) {
-        const match = /^\| \[\`([^\`]+)\`\]\(([^)]+)\) \| (.+) \|$/u.exec(line);
-        if (!match) continue;
-        rows.push({ label: match[1], path: normalize(path.join('docs', match[2])), ownership: match[3].trim() });
-    }
-    return rows;
-}
-
 function lifecycleCandidate(relative) {
     const name = path.basename(relative);
     return /(?:-plan|-preflight|-handoff)\.md$/u.test(name);
 }
 
-function planLifecycle(root, currentReferences = currentReferenceRows(root)) {
+function planLifecycle(root, currentReferences = currentDocumentationReferences(root)) {
     const currentReferencePaths = new Set(currentReferences.map(row => row.path));
     const files = [
         ...walk(root, 'docs', relative => lifecycleCandidate(normalize(relative))),
@@ -178,7 +158,7 @@ function currentState(model) {
 export function buildResearchSystemInventory(root = process.cwd()) {
     const model = buildResearchRelations(root, { discoverArtifacts: true });
     const commands = researchCommandRoots(root);
-    const currentReferences = currentReferenceRows(root);
+    const currentReferences = currentDocumentationReferences(root);
     const plans = planLifecycle(root, currentReferences);
     const fragilePlans = plans.filter(row => row.fragileProse);
     const currentReferenceLifecycleMismatches = plans.filter(row => row.currentReferenceMismatch);
