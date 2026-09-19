@@ -276,7 +276,8 @@ jobs:
             --plan=logs/static-portfolio-confirmation/plan.json \
             --out=logs/static-portfolio-confirmation/combined.json \
             --summary-out=logs/static-portfolio-confirmation/combined-summary.md \
-            --outcome-out=logs/static-portfolio-confirmation/outcome.json
+            --outcome-out=logs/static-portfolio-confirmation/outcome.json \
+            --failure-response-out=logs/static-portfolio-confirmation/failure-response-summary.json
 
       - name: Print the combined summary to the job log
         shell: bash
@@ -336,7 +337,7 @@ jobs:
             population: { kind: 'static-portfolio-cells', identityBasis: 'sealed-plan-cell-id' },
             execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'static-portfolio', schedulerMode: 'isolated-techniques' },
             limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: false },
-            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
+            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
           }, null, 2)}\n`);
           NODE
           node scripts/publish-solver-sweep-result.mjs \
@@ -345,6 +346,7 @@ jobs:
             --outcome-file="logs/static-portfolio-confirmation/outcome.json" \
             --integrity-file="logs/static-portfolio-confirmation/population-integrity.json" \
             --contract-file="logs/static-portfolio-confirmation/experiment-contract.json" \
+            --failure-response-file="logs/static-portfolio-confirmation/failure-response-summary.json" \
             --shards-expected="${{ inputs.shards }}" \
             --shards-observed="$(find logs/static-portfolio-confirmation -maxdepth 1 -name 'shard-*.json' | wc -l | tr -d ' ')" \
             --source-artifact="static-portfolio-combined"
