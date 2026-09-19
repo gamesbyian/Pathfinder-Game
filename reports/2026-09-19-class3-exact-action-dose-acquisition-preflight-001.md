@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-19 — standard compact failure-response now preserves exact attempt action/stage work and protocol identity; retained current boundary remains 531 residual / 23 primary Class-3 rows.
 > **Decision:** freeze the population from the canonical current residual-atlas regeneration, then measure exact known-rescuer participation and dose inside a production-shaped shared-budget run before interpreting any Class-3 row as exposed-and-failed.
-> **Remaining gate:** freeze the regenerated 23-row expectation artifact from committed census/boundary assets, then obtain protocol-compatible compact attempt telemetry from a maintained shared-production producer. Population derivation and downstream classification are mechanical and require no solver search.
+> **Remaining gate:** obtain protocol-compatible compact attempt telemetry from a maintained shared-production producer for the now-frozen 23-parent expectation map. Population derivation and downstream classification are complete and require no solver search.
 > **Research question:** `WS2-CLASS3-DOSE-EXPOSURE`
 > **Evidence role:** acquisition/analysis precommitment, not a treatment test.
 
@@ -79,7 +79,7 @@ The Class-3 population and exact rescuer identities can be rebuilt entirely from
 npm run research:freeze-current-class3-dose-expectations
 ```
 
-That command pins the canonical 35066677597 production/lifecycle boundary and 33717910218 technique census, rebuilds the current residual atlas, requires exactly **531 residual / 23 Class-3 parents**, then writes `reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json`.
+That command pins the canonical 35066677597 production/lifecycle boundary and 33717910218 technique census, rebuilds the current residual atlas, requires exactly **531 residual / 23 Class-3 parents**, then writes `reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json`. The artifact is now committed; the full rebuild remains available as `verify:class3-dose-expectations-current` when boundary freshness must be rechecked.
 
 The derived artifact retains each Class-3 parent, every Class-3 `t1Wins[].identity`, isolated census node cost, winning gate, and historical dispatch/reach/starvation support. Those census fields are acquisition context only; isolated node cost is not shared-production dose.
 
