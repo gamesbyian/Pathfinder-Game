@@ -34,6 +34,7 @@ try {
 
     const result = JSON.parse(fs.readFileSync(manifest, 'utf8'));
     assert.equal(result.kind, 'pathfinder-hint-harvest-selection-manifest');
+    assert.equal(result.source.harvester, 'harvest-level-blind-report-hints');
     assert.equal(result.source.reportsSeen, 1);
     assert.equal(result.source.sourceRowsSeen, 2);
     assert.equal(result.selection.solvedCandidateRowsSeen, 0);
