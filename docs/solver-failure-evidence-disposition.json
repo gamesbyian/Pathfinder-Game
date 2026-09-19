@@ -36,20 +36,20 @@
     {
       "id": "solver-level-blind-targeted-sweep",
       "workflow": ".github/workflows/solver-level-blind-targeted-sweep.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Wiring is a straightforward two-line addition (same pattern as solver-stress-refresh.yml), but the file is already at scripts/check-file-size-ratchet.mjs's grandfathered ceiling; the addition needs a script-extraction refactor to make room first rather than a ceiling bump for new growth. Tracked: Phase 3 follow-up."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "solver-production-replay-baseline",
       "workflow": ".github/workflows/solver-production-replay-baseline.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Wiring is a straightforward two-line addition (same pattern as solver-stress-refresh.yml), but the file is already at scripts/check-file-size-ratchet.mjs's grandfathered ceiling; the addition needs a script-extraction refactor to make room first rather than a ceiling bump for new growth. Tracked: Phase 3 follow-up."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "solver-residual-confirmation",
       "workflow": ".github/workflows/solver-residual-confirmation.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Wiring is a straightforward two-line addition (same pattern as solver-broad-confirmation.yml), but the file is already at scripts/check-file-size-ratchet.mjs's grandfathered ceiling; the addition needs a script-extraction refactor to make room first rather than a ceiling bump for new growth. Tracked: Phase 3 follow-up."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "solver-routing-regime-sample-ab",
