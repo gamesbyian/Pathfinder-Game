@@ -7,7 +7,7 @@ Deferred/reopen questions only. [Workstreams](solver-optimization-workstreams.md
 
 ## Promoted out of future work
 
-Only deferred descendants/reopen boundaries belong here; workstreams owns current dispositions.
+Only deferred descendants/reopen boundaries belong here.
 
 ## Deferred descendants of active premises
 
