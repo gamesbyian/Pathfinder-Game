@@ -70,7 +70,18 @@ Per-path records retain exact parent/path binding plus the attempt sequence thro
 
 This makes “repair found this path” distinguishable from “repair found this path after DFS and beam failed,” while preserving exact-path fail-closed binding.
 
-### 4. Existing all-known-support machinery made joinable
+### 4. Strict success/failure process join
+
+`scripts/hint-failure-process-join.mjs` provides the executable bridge between sibling evidence
+layers. It joins run-linked successful discovery-process records to compact failure observations only
+when parent identity, protocol/configuration hash, and immutable solver ref all match. Run IDs may
+differ for longitudinal comparison; repeated runs remain dependent observations within one parent.
+
+This enables direct questions such as whether an exact accepted path discovered after a characteristic
+failed-attempt sequence belongs to parents that show the same or different failure outcomes in
+comparable runs, without creating a combined persistence schema.
+
+### 5. Existing all-known-support machinery made joinable
 
 A deeper audit corrected an earlier premise from this session: Pathfinder's
 `KnownSolutionPrefixSurvivalObserver` already asks where the **final known support** disappears and already tracks structural-family counts. Building a second first-loss observer would duplicate authority.
@@ -86,7 +97,7 @@ A deeper audit corrected an earlier premise from this session: Pathfinder's
 
 The artifact repeats the existing epistemic boundary: zero **known** support does not establish whole-solution-space extinction, DEAD/UNSAT, or a causal first-loss class.
 
-### 5. Hint-harvest selection provenance
+### 6. Hint-harvest selection provenance
 
 `scripts/hint-harvest-selection-manifest-lib.mjs` defines a compact selection manifest for the funnel by which already-solved level-blind report rows become persisted hint/provenance evidence.
 
@@ -130,7 +141,8 @@ The practical transfers now implemented are:
 7. failure identity-collision auditing;
 8. parent-level failure novelty/saturation;
 9. retrospective “what was knowable when?” phenotype-frontier audits;
-10. explicit discovery-process replayability separate from path replayability.
+10. explicit discovery-process replayability separate from path replayability;
+11. a strict executable join between comparable successful discovery-process and failure-process evidence.
 
 The result is a joinable success/failure evidence model rather than one provenance mega-schema.
 
