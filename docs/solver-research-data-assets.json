@@ -1332,7 +1332,9 @@
         "docs/solver-failure-evidence-research-integration-plan.md",
         "scripts/solver-failure-response-lib.mjs",
         "scripts/summarize-solver-failure-response.mjs",
-        "scripts/failure-response-query.mjs"
+        "scripts/failure-response-query.mjs",
+        "scripts/failure-evidence-semantics-lib.mjs",
+        "scripts/failure-evidence-purpose-query.mjs"
       ],
       "queryEntryPoints": [
         "node scripts/research-asset-query.mjs --id=compact-failure-response",
@@ -1355,12 +1357,14 @@
         "production-benchmarks",
         "lifecycle-telemetry",
         "search-loss-evidence",
-        "solver-capability-memory"
+        "solver-capability-memory",
+        "hint-discovery-process"
       ],
       "affordances": [
         "Distinguish non-participation, stage exposure, work/dose, censoring/exhaustion, badness support, and failed attempts inside solved controls without retaining full paths/state.",
         "Provide the cheapest parent-aware reconnaissance layer before compact diagnostic observers, rich search-loss capsules, exact annotation, or causal interventions.",
-        "Preserve producer-supplied run/protocol identity so protocol-compatible repeated observations can be separated from descriptive-only joins."
+        "Preserve producer-supplied run/protocol identity so protocol-compatible repeated observations can be separated from descriptive-only joins.",
+        "Classify the same stored row differently for forensic, mechanism-nomination, longitudinal-process, or population-prevalence purposes while collapsing repeated rows/runs to conservative parent-level support strata."
       ],
       "caveats": [
         "Independent prevalence defaults to parent level; multiple attempts/records from one parent are dependent support observations.",
