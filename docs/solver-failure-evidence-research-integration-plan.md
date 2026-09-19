@@ -21,7 +21,8 @@
 - **Phase 4B — dispatch-ready:** frozen 40-parent default admissible-order probe plus mechanical reducer; only GHA measurement remains.
 - **Phase 4C/4D — independently live:** H3/Lane G keep their existing designs; failure evidence is secondary/optional.
 - **Phase 4E — complete:** capability memory accepts protocol-compatible failure-response joins as derived premise/capability evidence, not production policy.
-- **Phases 5-8 — condition-gated:** no synthetic recurring rich producer or first-loss selection.
+- **Phase 5 — audited / condition-gated:** no recurring rich producer is justified yet; if a repeated event/state consumer emerges, bounded targeted sweep is the preferred first host. See [producer-candidate audit](../reports/2026-09-19-recurring-rich-search-loss-producer-candidate-audit-001.md).
+- **Phases 6-8 — condition-gated:** Resource audit waits on real recurrence; phenotype mining waits on repeats; first-loss waits on WS2 selection.
 
 ## 1. Why this plan exists
 
