@@ -25,6 +25,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-separator-decomposition-census-preflight.md`](solver-separator-decomposition-census-preflight.md) | Static/mechanic-aware/portal-mediated/path-history separator census on the current Class-5 residual; concluded |
 | [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md) | Fresh exact LIVE/DEAD sibling population for DEAD-core/topology/relational microscopes; concluded, construction gap found |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
+| [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) | Proposed bounded consolidation plan for research-control-plane reliability, documentation/context reduction, and epistemic blind-spot coverage; not a priority authority |
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
 | [`solver-research-data-assets.json`](solver-research-data-assets.json) | Structured per-asset locations, authorities, joins, relationships, roles, and caveats |
