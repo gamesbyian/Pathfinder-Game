@@ -29,9 +29,11 @@ const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
 const sourceWorkflow = args.get('--source-workflow') || process.env.SOURCE_WORKFLOW || 'unknown';
-const selectionManifestOut = args.get('--selection-manifest-out') || (sourceRunId !== 'unknown'
-    ? path.join(root, 'reports/stress/hint-harvest-selection', `run-${sourceRunId}.json`)
-    : null);
+const selectionManifestArg = args.get('--selection-manifest-out');
+const selectionManifestOut = selectionManifestArg ? path.resolve(selectionManifestArg)
+    : (sourceRunId !== 'unknown'
+        ? path.join(root, 'reports/stress/hint-harvest-selection', `run-${sourceRunId}.json`)
+        : null);
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const ALLOWED_CORPORA = new Set([
