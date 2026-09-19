@@ -10,21 +10,22 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`architecture.md`](architecture.md) | Application structure and code ownership |
 | [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining authority/mutable-lifetime architecture debt |
 | [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes |
-| [`periodic-repository-hygiene.md`](periodic-repository-hygiene.md) | Recurring repository entropy-control procedure: docs/context, staleness, tooling, workflows, CI, validators, archives, research infrastructure, and anti-regression guards |
+| [`periodic-repository-hygiene.md`](periodic-repository-hygiene.md) | Recurring repository entropy-control procedure |
 | [`naming-and-vocabulary.md`](naming-and-vocabulary.md) | Canonical naming and vocabulary |
 | [`testing.md`](testing.md) | Validation and finish-line gates |
 | [`tooling-catalog.md`](tooling-catalog.md) | Broad tool/workflow discovery; query named tools first |
 | [`agent-context-routes.json`](agent-context-routes.json) | Required/optional agent-context routes and byte budgets |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
 | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority, workstream state, and next gates** |
-| [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Semantic map of solver reasoning primitives vs. Pathfinder demands; descriptive premise-generation aid, not a queue |
-| [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) | Reconciles historical negative/closed experiments against capability gaps so descriptor/form/cross-level closure is not mistaken for semantic-premise closure |
+| [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Solver reasoning capability map; not a queue |
+| [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) | Reconciles historical experiment closure against capability gaps |
 | [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md) | Bounded observer-first plan to measure repeated derivation and potential typed reuse of expensive current-instance facts within one cold solve |
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
 | [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md) | Observer-first test of whether DEAD near-misses trace to a compact dependency-defined commitment set, not path-distance rollback |
 | [`solver-separator-decomposition-census-preflight.md`](solver-separator-decomposition-census-preflight.md) | Static/mechanic-aware/portal-mediated/path-history separator census on the current Class-5 residual; concluded |
 | [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md) | Fresh exact LIVE/DEAD sibling population for DEAD-core/topology/relational microscopes; concluded, construction gap found |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
+| [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) | Research-system consolidation/epistemic-coverage plan; not priority authority |
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
 | [`solver-research-data-assets.json`](solver-research-data-assets.json) | Structured per-asset locations, authorities, joins, relationships, roles, and caveats |
