@@ -61,6 +61,7 @@ try {
     assert.equal(result.summary.solvedControlsWithFailedAttempts, 1);
     assert.equal(result.summary.work.totalWorkSpent, 30);
     assert.equal(result.summary.work.stats.mean, 15);
+    assert.equal(result.summary.work.stats.median, 15);
     assert.equal(result.summary.nodes.stats.total, 300);
     assert.equal(result.summary.badness.best.mean, 5.5);
     assert.equal(result.summary.badness.finalMinusBest.mean, -1);
@@ -72,6 +73,7 @@ try {
     assert.equal(result.summary.attempts.actions.beam, 2);
     assert.equal(result.summary.attempts.actions.repair, 1);
     assert.equal(result.summary.attempts.byAction.beam.work.total, 24);
+    assert.equal(result.summary.attempts.byAction.beam.work.median, 12);
     assert.equal(result.summary.attempts.byAction.beam.nodes.total, 240);
     assert.equal(result.summary.attempts.byAction.repair.work.total, 6);
     assert.deepEqual(result.summary.attempts.byStage.late.outcomes, { failed: 1 });
