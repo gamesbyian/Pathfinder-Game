@@ -43,6 +43,14 @@ try {
     const queried = JSON.parse(execFileSync('node', ['scripts/search-loss-query.mjs', `--in=${captureFile},${annotation}`, '--exact=LIVE'], { encoding: 'utf8' }));
     assert.equal(queried.rows.length, 1);
     assert.equal(queried.summary.independentParents, 1, 'prevalence denominator is parents, not raw capsule count');
+    assert.equal(queried.summary.annotatedRows, 1);
+    assert.equal(queried.summary.exactAnnotationValues.LIVE, 1);
+    assert.equal(queried.summary.inputSelectorDenominators['score-width-cull'].observed, 3);
+    const truncated = JSON.parse(execFileSync('node', ['scripts/search-loss-query.mjs', `--in=${captureFile},${annotation}`, '--truncated=true', '--max-depth=1'], { encoding: 'utf8' }));
+    assert.equal(truncated.rows.length, 2);
+    assert.ok(truncated.rows.every(row => row.selectorTruncated === true && row.depth <= 1));
+    const supported = JSON.parse(execFileSync('node', ['scripts/search-loss-query.mjs', `--in=${captureFile},${annotation}`, '--annotation-support=SUPPORTED'], { encoding: 'utf8' }));
+    assert.equal(supported.rows.length, 1);
     const bad = path.join(temp, 'bad.json');
     fs.writeFileSync(bad, JSON.stringify([{ capsuleId: hash('f'), value: 'DEAD' }]));
     assert.throws(() => execFileSync('node', ['scripts/annotate-search-loss-exact.mjs', `--capture=${captureFile}`, `--results=${bad}`, '--model=x', `--out=${annotation}`]));
