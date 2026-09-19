@@ -66,8 +66,8 @@ The system itself is justified only when it does one or more of the following:
 4. preserves evidence that would otherwise be lost;
 5. makes an important previously inaccessible question testable;
 6. exposes a solver capability gap that produces a productive intervention;
-7. reduces agent/human retrieval and coordination cost;
-8. improves the probability that solver-development effort creates additional solves.
+8. reduces agent/human retrieval and coordination cost;
+9. improves the probability that solver-development effort creates additional solves.
 
 Research-system elegance is not an independent objective.
 
@@ -549,6 +549,7 @@ When scientifically distinct, represent:
 
 - **observation unit** — what individual rows/events/states are observed;
 - **assignment/intervention unit** — what receives a treatment or perturbation;
+- **opportunity/exposure unit** — what unit actually had a causal opportunity for the treatment, instrument or decision to act; this can differ from both an observed row and an assigned parent;
 - **dependence/cluster unit** — what observations share causal/statistical dependence;
 - **analysis unit** — what is aggregated/compared for the primary inference;
 - **generalization unit** — what class of new object the claim purports to extend to.
@@ -606,6 +607,22 @@ Where the distinction matters, describe reproducibility as one or more of:
 For wall-time, memory, parallelism or runtime-sensitive evidence, preserve enough execution-environment identity to interpret the measurement, such as runner/runtime/toolchain class where material.
 
 Do not require heavyweight environment capture for node/work-normalized mechanistic evidence that is demonstrably environment-insensitive.
+
+### 6.7 Temporal validity and architecture-relative freshness
+
+An observation does not become false merely because the solver changes, but its entitlement to describe the **current** solver, residual, capability map or decision opportunity can decay or change after relevant revisions.
+
+Preserve this distinction:
+
+- **historical observation validity** — whether the original run/result remains a correct record of what happened under its recorded code, population, instrument and protocol;
+- **current applicability** — whether the same capability, prevalence, residual classification, cost relation or causal opportunity is still expected to hold under the current solver/population/instrument boundary;
+- **refresh/reopen trigger** — which material changes require a bounded freshness check before the evidence is reused for a current decision.
+
+Current repository examples already justify the distinction: frozen technique-census wins have changed materially across solver revisions, and residual class membership has changed when hint-provenance inputs were refreshed even while the historical production boundary stayed fixed.
+
+Do **not** implement generic time-based evidence expiry, automatic salience decay, or periodic full recomputation. Freshness is dependency- and decision-relative. Use cheap current-head spot checks, capability-memory freshness rules, changed-boundary triggers, and existing reopen semantics where they are sufficient.
+
+Where a claim depends on architecture-relative or population-relative facts, the common semantic envelope should be able to retain the relevant solver/instrument/source revision and a compact applicability/freshness condition or last-qualified boundary. Immutable historical facts, referee truth and proofs whose premises are unchanged need no artificial decay label.
 
 ## Phase 7 - Strengthen pre-outcome experimental design and analysis contracts
 
@@ -1169,8 +1186,8 @@ For important active/deferred questions, derive or state these layers where rele
 4. **reference answerability** — can exact/reference machinery adjudicate the needed fact, with support/abstention known?
 5. **population answerability** — do suitable independent units/opportunity populations exist?
 6. **economic answerability** — can enough information be acquired at sensible work/cost?
-7. **inferential answerability** — is the instrument calibrated and would the resulting evidence/analysis justify the intended claim rather than only a narrower one?
-8. **decision answerability** — would resolving the ambiguity change implementation, queue state, reopen logic, or the solver model?
+8. **inferential answerability** — is the instrument calibrated and would the resulting evidence/analysis justify the intended claim rather than only a narrower one?
+9. **decision answerability** — would resolving the ambiguity change implementation, queue state, reopen logic, or the solver model?
 
 Low answerability must not imply low scientific value.
 
@@ -1459,8 +1476,8 @@ For every proposed new observer, intervention, evidence layer or research primit
 4. **Estimate opportunity on independent units.**
 5. **Price acquisition.**
 6. **Build the smallest observer/intervention/query.**
-7. **Demonstrate a consumer that changes a useful decision.**
-8. **Only then generalize infrastructure.**
+8. **Demonstrate a consumer that changes a useful decision.**
+9. **Only then generalize infrastructure.**
 
 This applies premise-before-treatment discipline to research infrastructure itself.
 
@@ -1638,27 +1655,27 @@ Do first because these reduce correctness and inference risk with little solver 
 4. Phase 3: constructor-hardening audit.
 5. Phase 6.1: audit real emitted artifacts against declared schemas/contracts, beginning with the current v3 experiment-result split-brain.
 6. Phase 6.2-6.4: identify the minimum common semantic kernel, unit-topology needs and independence dimensions actually shared by current systems.
-7. Phase 4: expand the end-to-end research-transaction fixture around those semantics.
-8. Phase 5: recovery/recombine contract audit.
-9. Phase 9.4: question/premise/capability/MO/queue consistency audit.
-10. Phase 13: plan lifecycle audit.
+8. Phase 4: expand the end-to-end research-transaction fixture around those semantics.
+9. Phase 5: recovery/recombine contract audit.
+10. Phase 9.4: question/premise/capability/MO/queue consistency audit.
+11. Phase 13: plan lifecycle audit.
 
 ## Stage B - Prove the scientific middle layer on narrow real consumers
 
-11. Phase 7: add a lightweight analysis contract to one high-selection/expensive decision-bearing experiment path.
-12. Phase 8.1-8.2: emit one claim capsule that separates execution, scientific and decision disposition.
-13. Phase 8.3: preserve its transformation/analysis provenance.
-14. Phase 9.1: calibrate the primary instrument enough to state its support/abstention boundary.
-15. Phase 7.7: add a manipulation/contrast-fidelity check to the same pilot where applicable.
-16. Phase 9.2: add a small epistemic conformance/metamorphic fixture.
-17. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
-18. Report which common semantics proved reusable and which should remain specialist.
+12. Phase 7: add a lightweight analysis contract to one high-selection/expensive decision-bearing experiment path.
+13. Phase 8.1-8.2: emit one claim capsule that separates execution, scientific and decision disposition.
+14. Phase 8.3: preserve its transformation/analysis provenance.
+15. Phase 9.1: calibrate the primary instrument enough to state its support/abstention boundary.
+16. Phase 7.7: add a manipulation/contrast-fidelity check to the same pilot where applicable.
+17. Phase 9.2: add a small epistemic conformance/metamorphic fixture.
+18. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
+19. Report which common semantics proved reusable and which should remain specialist.
 
 Do not generalize a kernel field until at least two real consumers need the same meaning.
 
 ## Stage C - Measure the research portfolio before correcting it
 
-19. Phase 14: bounded MO-007 research-attention topology.
+20. Phase 14: bounded MO-007 research-attention topology.
 20. Phase 19: question-provenance join over the same bounded window.
 21. Phase 16: answerability decomposition on a small high-value question sample.
 22. Include dependence/independence information where apparent corroboration shares instruments, analysis code or ontology.
@@ -1672,26 +1689,26 @@ This stage deliberately precedes broad reflexivity infrastructure. Do not build 
 25. Phase 8.5: introduce structured closeout capsules for new current-state reports while preserving historical fallback.
 26. Phase 11: compact research front door.
 27. Phase 12: documentation-entropy diagnostics.
-28. Phase 9.5: highest-value already-earned composition views.
-29. Phase 9.3: hint/failure semantic interoperability cleanup only where meaning is genuinely shared.
+29. Phase 9.5: highest-value already-earned composition views.
+30. Phase 9.3: hint/failure semantic interoperability cleanup only where meaning is genuinely shared.
 
 ## Stage E - Earned rigor/reflexivity controls
 
 Only findings from Stages A-D should determine how much of this stage is needed.
 
-30. Phase 15: rival-set preservation in existing preflight/report contracts.
-31. Phase 17: answerability-gap/MO operational-coverage view.
-32. Phase 18: research-system capability audit.
-33. Phase 23: first negative-space intersection-mining pass.
-34. Phase 22: prospective expectation/surprise capture for new high-value investigations.
-35. Phase 7.6: pilot hard-blind confirmation only on a decision whose selection pressure justifies it.
-36. Phase 9.7: target/deployment-envelope audit before any new broad generalization claim.
-37. Phase 20: run one bounded triggered-exploration response if trigger conditions are actually met.
-38. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
+31. Phase 15: rival-set preservation in existing preflight/report contracts.
+32. Phase 17: answerability-gap/MO operational-coverage view.
+33. Phase 18: research-system capability audit.
+34. Phase 23: first negative-space intersection-mining pass.
+35. Phase 22: prospective expectation/surprise capture for new high-value investigations.
+36. Phase 7.6: pilot hard-blind confirmation only on a decision whose selection pressure justifies it.
+37. Phase 9.7: target/deployment-envelope audit before any new broad generalization claim.
+38. Phase 20: run one bounded triggered-exploration response if trigger conditions are actually met.
+39. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
 
 ## Stage F - Blind-spot-driven scientific work
 
-39. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
+40. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
 40. Phase 24: one adversarial semantic challenge population for a high-value capability gap where source construction is the missing discriminator.
 41. Phase 26: bounded external semantic-operation review only when it illuminates a live blind spot.
 42. Use Phase 27 for any new research primitive.
@@ -1757,7 +1774,8 @@ Verify:
 - actual emitted decision-bearing artifacts conform to their claimed schema/contract or the stale contract is retired;
 - shared scientific concepts use compatible canonical meanings across at least two producer families;
 - specialist detail remains specialist rather than being squeezed into a false common abstraction;
-- unit topology is explicit where observation/assignment/dependence/analysis/generalization units differ;
+- unit topology is explicit where observation/assignment/opportunity/dependence/analysis/generalization units differ;
+- architecture/population-relative evidence can distinguish original historical validity from current applicability and identify the material boundary that would require a freshness check;
 - shared implementation dependencies are visible when they weaken apparent replication independence.
 
 ### 27.8 Design/analysis/claim audit
@@ -1812,39 +1830,40 @@ This plan is successful when the following are true.
 4. Composite research identities have explicit domains/codecs and end-to-end regression coverage.
 5. Expensive evidence survives recoverable combine/report/control-plane failures without unnecessary recompute.
 6. Active/deferred/concluded question state cannot silently disappear between queue, question relations, future work and plans.
-7. Completed plans are easy to retire while surviving obligations remain discoverable.
-8. Existing research subsystems compose at decision boundaries without requiring a researcher to remember undocumented joins.
-9. Rich evidence remains selective; compact evidence remains cheap and automatic where justified.
-10. The system can say why an important question is currently unanswerable.
-11. Low answerability is not conflated with low scientific value.
-12. Independent/tool-blind question generation periodically produces proposals outside the current observer/tool vocabulary.
-13. At least some of those proposals can be tested through small new measurements, adversarial populations or offline surrogates without immediately building full architectures.
-14. New research-system primitives become rarer and better justified.
-15. Research-system work increasingly shows concrete returns in avoided compute, better closures, new capability premises, implementations, or solve gains.
-16. Direct solver acquisition work continues while the control plane moves into maintenance mode.
-17. A bounded attention-topology view can show where research effort is concentrated without pretending to rank productivity.
-18. Important causal investigations preserve their live rival set long enough that instrument availability cannot silently redefine the question.
-19. Exploration is triggered by evidence of concentration, ontology escape, anomaly or shared-negative assumptions rather than by a standing moonshot quota.
+8. Completed plans are easy to retire while surviving obligations remain discoverable.
+9. Existing research subsystems compose at decision boundaries without requiring a researcher to remember undocumented joins.
+10. Rich evidence remains selective; compact evidence remains cheap and automatic where justified.
+11. The system can say why an important question is currently unanswerable.
+12. Low answerability is not conflated with low scientific value.
+13. Independent/tool-blind question generation periodically produces proposals outside the current observer/tool vocabulary.
+14. At least some of those proposals can be tested through small new measurements, adversarial populations or offline surrogates without immediately building full architectures.
+15. New research-system primitives become rarer and better justified.
+16. Research-system work increasingly shows concrete returns in avoided compute, better closures, new capability premises, implementations, or solve gains.
+17. Direct solver acquisition work continues while the control plane moves into maintenance mode.
+18. A bounded attention-topology view can show where research effort is concentrated without pretending to rank productivity.
+19. Important causal investigations preserve their live rival set long enough that instrument availability cannot silently redefine the question.
+20. Exploration is triggered by evidence of concentration, ontology escape, anomaly or shared-negative assumptions rather than by a standing moonshot quota.
 20. Independent inquiry probes can be used as a saturation check without creating a second premise-map authority.
 21. Prospective surprise conditions make genuinely model-changing results distinguishable from hindsight narrative.
 22. Clusters of closed forms can be mined for shared untested assumptions without automatically reopening them.
 23. The system distinguishes evidence deficits, measurement deficits and ontology escapes using existing vocabulary.
 24. The system can act on decision-sufficient evidence while preserving wider unresolved conceptual uncertainty.
 25. Decision-bearing producers project into a small compatible scientific semantic kernel without forcing specialist payloads into one mega-schema.
-26. Experiments with nontrivial clustering/assignment structure can distinguish observation, assignment, dependence, analysis and generalization units.
-27. Important corroborations can state what is and is not independent across data, source, instrument, analysis, analyst/model, ontology and critical code.
-28. High-selection experiments can freeze an analysis/decision contract before treatment outcomes are opened.
-29. Execution outcome, scientific disposition and decision disposition are machine-distinguishable.
-30. Important reusable results can emit local claim capsules with explicit estimand/discriminator, scope, limitations and decision consequence.
-31. Negative results preserve their resolving power/sensitivity instead of becoming stronger through citation.
-32. Reusable instruments expose support, abstention and calibration semantics.
-33. Derived decision-bearing claims preserve enough transformation provenance for a bounded reverse-invalidation query.
-34. Reproducibility-sensitive evidence states whether repeatability is deterministic, seed-conditioned, distributional, environment-sensitive or historical/observational as appropriate.
-35. Causal comparisons verify treatment/contrast fidelity so nonparticipation or uncontrolled perturbation cannot masquerade as a scientific null.
-36. New current-state reports can expose structured closeout metadata without depending on fragile Markdown regex reconstruction.
-37. Epistemic conformance tests catch pseudoreplication, censoring errors, unsupported-reference promotion and semantically incompatible workflow outputs.
-38. The system distinguishes benchmark progress, deployment envelope, confirmation/transfer evidence and adversarial semantic challenge evidence.
-39. Scientific interoperability preserves useful independent implementations and heterogeneous disagreement rather than manufacturing false consensus.
+26. Experiments with nontrivial clustering/assignment structure can distinguish observation, assignment, opportunity/exposure, dependence, analysis and generalization units.
+27. Architecture/population-relative evidence can remain historically valid while being explicitly stale or unqualified for a current decision, without automatic time-based expiry.
+29. Important corroborations can state what is and is not independent across data, source, instrument, analysis, analyst/model, ontology and critical code.
+29. High-selection experiments can freeze an analysis/decision contract before treatment outcomes are opened.
+30. Execution outcome, scientific disposition and decision disposition are machine-distinguishable.
+31. Important reusable results can emit local claim capsules with explicit estimand/discriminator, scope, limitations and decision consequence.
+32. Negative results preserve their resolving power/sensitivity instead of becoming stronger through citation.
+33. Reusable instruments expose support, abstention and calibration semantics.
+34. Derived decision-bearing claims preserve enough transformation provenance for a bounded reverse-invalidation query.
+35. Reproducibility-sensitive evidence states whether repeatability is deterministic, seed-conditioned, distributional, environment-sensitive or historical/observational as appropriate.
+36. Causal comparisons verify treatment/contrast fidelity so nonparticipation or uncontrolled perturbation cannot masquerade as a scientific null.
+37. New current-state reports can expose structured closeout metadata without depending on fragile Markdown regex reconstruction.
+38. Epistemic conformance tests catch pseudoreplication, censoring errors, unsupported-reference promotion and semantically incompatible workflow outputs.
+39. The system distinguishes benchmark progress, deployment envelope, confirmation/transfer evidence and adversarial semantic challenge evidence.
+40. Scientific interoperability preserves useful independent implementations and heterogeneous disagreement rather than manufacturing false consensus.
 
 # Part X - Explicit non-goals
 
@@ -1886,20 +1905,21 @@ Recommended first tranche:
 3. perform the identity/serialization audit and add the Lane A regressions;
 4. audit actual emitted decision-bearing artifacts against declared schemas/contracts and resolve the current v3 experiment-result schema/artifact split-brain;
 5. identify the smallest genuinely shared semantic kernel for population/source identity, evidence role, termination/censoring, work and derivation, explicitly refusing false unification;
-6. prototype unit topology on one family/state-heavy experiment and document where the current single `independentUnit` field loses information;
-7. classify recent validator/control-plane failures into constructor-fix versus consumer/context-validation classes and fix obvious constructor-owned cases;
-8. expand one tiny end-to-end research-transaction fixture into epistemic conformance cases covering pseudoreplication, censoring/unsupported outcomes and recombination invariance;
-9. audit expensive workflows for recoverable recombination semantics;
-10. pilot a lightweight pre-outcome analysis contract on one high-selection/expensive experiment path, including live rivals, estimand, censoring, decision and stopping rules;
-11. emit one local claim capsule from that path and preserve its transformation/analysis provenance through durable evidence;
-12. run one bounded reverse-invalidation drill from an upstream producer/normalizer/instrument to dependent evidence/claims/decisions;
-13. run the question/premise/capability/MO/queue consistency audit;
-14. run the recent-plan lifecycle audit;
-15. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
-16. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
-17. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
-18. audit one important "replicated" result for independence across data/source/instrument/analysis/model/ontology/code rather than merely independent units;
-19. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
+6. prototype unit topology on one family/state-heavy experiment and document where the current single `independentUnit` field loses information, including whether opportunity/exposure is distinct from observed or assigned units;
+8. audit one architecture-relative current-decision input (for example a frozen capability/census/residual view) for historical validity versus current applicability and define the smallest freshness trigger needed;
+9. classify recent validator/control-plane failures into constructor-fix versus consumer/context-validation classes and fix obvious constructor-owned cases;
+9. expand one tiny end-to-end research-transaction fixture into epistemic conformance cases covering pseudoreplication, censoring/unsupported outcomes and recombination invariance;
+10. audit expensive workflows for recoverable recombination semantics;
+11. pilot a lightweight pre-outcome analysis contract on one high-selection/expensive experiment path, including live rivals, estimand, censoring, decision and stopping rules;
+12. emit one local claim capsule from that path and preserve its transformation/analysis provenance through durable evidence;
+13. run one bounded reverse-invalidation drill from an upstream producer/normalizer/instrument to dependent evidence/claims/decisions;
+14. run the question/premise/capability/MO/queue consistency audit;
+15. run the recent-plan lifecycle audit;
+16. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
+17. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
+18. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
+19. audit one important "replicated" result for independence across data/source/instrument/analysis/model/ontology/code rather than merely independent units;
+20. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
 
 The first tranche should answer six meta-questions before more infrastructure is built:
 
