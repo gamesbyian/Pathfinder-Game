@@ -4,7 +4,7 @@
 > **Last evidence:** 2026-09-19 — compact failure-response query/protocol surface merged; readiness audit found no suitable accumulated post-instrumentation population yet.
 > **Decision:** freeze the Stage-A/Stage-B analysis and routing rules now so the first eligible compact-response population is interpreted mechanically rather than mined post hoc.
 > **Remaining gate:** one maintained producer emits an eligible protocol-compatible population under `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; then execute this analysis before commissioning first-loss, rejection-counterfactual, or 2x2 compute.
-> **Research question:** `WS2-FAILURE-RESPONSE-RECONNAISSANCE`.
+> **Research question:** `WS2-FAILURE-RESPONSE-RECONNAISSANCE`
 > **Evidence role:** precommitment / discriminator selection, not solver efficacy evidence.
 
 ## Purpose
