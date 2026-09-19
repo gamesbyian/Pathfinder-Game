@@ -692,23 +692,27 @@
       "id": "WS2-WORK-LADDER-ECONOMICS",
       "question": "Given a 15% (3/20) recovery rate at 4x node-budget escalation (300M->1.2B) on a level-blind current-commit sample, does a matched-work counterfactual show spending that extra budget on already-ceiling-bound levels beats spending the same total work elsewhere (more levels at normal budget, or a different technique), enough to justify a bounded production node-budget change?",
       "owner": "WS2",
-      "state": "active-diagnostic",
+      "state": "concluded-negative",
       "aliases": [
         "work-ladder economics",
         "node-budget matched-work economics"
       ],
-      "answeredBy": [],
-      "result": null,
+      "answeredBy": [
+        "reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md"
+      ],
+      "result": "Zero-new-compute costing (reusing the confirmation slice's own per-level workSpent telemetry at 300M/1.2B plus EW1's already-published per-action cost-per-solve table, same canonical work currency) found the 4x escalation costs ~14.1B work units per marginally recovered solve, 24x-635x more expensive than every EW1-catalogued cheap-technique alternative, and still >=3.6x more expensive even under a maximally generous (factually false) 20/20-solved assumption. Closes negative: spending the same total extra compute on already-known cheap technique screens beats escalating node budget on ceiling-bound residual levels. Does not dispute that genuine recoverable capacity exists at 4x budget -- only its economics relative to cheaper known alternatives closes negative.",
       "constrainedBy": [
         "reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md",
         "reports/2026-09-18-ws2-work-ladder-economics-preflight-001.md",
+        "reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md",
         "docs/solver-optimization-workstreams.md"
       ],
       "constrains": [
         "No production node-budget change before a matched-work economics comparison, not a raw recovery-rate comparison.",
-        "The 600M shape check (2026-09-19) found a threshold response (0/20 at 300M and 600M, 3/20 at 1.2B): the useful escalation on this population is the full 4x, not a cheaper 2x. Cost the 4x-only case against the 390-row Class-5 residual next."
+        "The 600M shape check (2026-09-19) found a threshold response (0/20 at 300M and 600M, 3/20 at 1.2B): the useful escalation on this population is the full 4x, not a cheaper 2x.",
+        "Closed negative (2026-09-19): the 4x-only case is 24x-635x more expensive per solve than already-published cheap-technique alternatives. WS2 falls through to the parent report's remaining candidate discriminators (operational divergence, rejection counterfactuals, 2x2 interaction)."
       ],
-      "reopensOn": null,
+      "reopensOn": "New evidence that the 390-row Class-5-specific residual's cost-per-solve at 4x differs by more than ~1-2 orders of magnitude from the mixed-class 20-id sample used here, or a proposed alternative technique cheaper than this report's EW1 comparators that still beats the work-ladder escalation's cost.",
       "premiseRefs": [],
       "measurementOpportunities": []
     }

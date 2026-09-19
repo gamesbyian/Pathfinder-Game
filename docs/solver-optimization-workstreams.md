@@ -80,7 +80,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` -- cost the 4x-only case against the 390-row Class-5 residual as a matched-work counterfactual (extra budget on ceiling-bound levels vs. same total work spent elsewhere), not a raw recovery-rate read. Do not fall through to A/F3 automatically. If that closes negative, remaining candidates: operational divergence/first-loss survey, rejection counterfactuals, 2x2 interaction; A/F3 keep existing reopen gates.
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**: 4x escalation costs ~14.1B work/marginal solve, 24x-635x pricier than EW1's already-published cheap-technique costs, zero new compute. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md) Falls through to remaining candidates: operational divergence/first-loss survey, rejection counterfactuals, 2x2 interaction; A/F3 keep existing reopen gates.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -90,7 +90,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / WORK-LADDER POSITIVE-NARROW, ECONOMICS NEXT** | 4x-only matched-work costing vs. 390-row residual, or remaining discriminators, or explicit A-F3 gates | `WS2-WORK-LADDER-ECONOMICS` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Remaining discriminators (op. divergence, rejection, 2x2), or explicit A-F3 gates | `WS2-WORK-LADDER-ECONOMICS` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
