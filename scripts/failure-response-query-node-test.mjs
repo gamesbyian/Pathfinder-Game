@@ -16,13 +16,13 @@ try {
                 identity: 'A:beam', parentId: 'A', actionKey: 'beam', stageId: 'main',
                 outcome: 'solved', participated: true, reached: true, workSpent: 10,
                 solvedWithFailedAttempt: true, runId: 'r1', protocolHash: 'p1',
-                attempts: [{ outcome: 'failed' }, { outcome: 'solved' }],
+                attempts: [{ outcome: 'failed', actionKey: 'repair', stageId: 'late' }, { outcome: 'solved', actionKey: 'beam', stageId: 'main' }],
             },
             {
                 identity: 'B:beam', parentId: 'B', actionKey: 'beam', stageId: 'main',
                 outcome: 'nodeLimited', participated: true, reached: true, workSpent: 20,
                 solvedWithFailedAttempt: null, runId: 'r1', protocolHash: 'p1',
-                attempts: [{ outcome: 'node-limited' }],
+                attempts: [{ outcome: 'node-limited', actionKey: 'beam', stageId: 'main' }],
             },
         ],
         summary: { observed: 2 },
@@ -59,6 +59,8 @@ try {
     assert.equal(result.summary.solvedControlsWithFailedAttempts, 1);
     assert.equal(result.summary.work.totalWorkSpent, 30);
     assert.equal(result.summary.attempts.records, 3);
+    assert.equal(result.summary.attempts.actions.beam, 2);
+    assert.equal(result.summary.attempts.actions.repair, 1);
     assert.equal(result.summary.protocolComparability.parentsWithUnknownProtocol, 1);
     assert.equal(result.summary.protocolComparability.parentsWithMultipleKnownProtocols, 0);
     assert.equal(result.summary.actions.beam, 2);
@@ -71,6 +73,13 @@ try {
     assert.equal(filtered.summary.records, 1);
     assert.equal(filtered.rows[0].parentId, 'B');
     assert.equal(filtered.summary.independentParents, 1);
+
+    const exactAction = JSON.parse(execFileSync('node', [
+        'scripts/failure-response-query.mjs', '--in=' + doc1 + ',' + doc2,
+        '--attempt-action=repair', '--attempt-stage=late',
+    ], { cwd: process.cwd(), encoding: 'utf8' }));
+    assert.equal(exactAction.summary.records, 1);
+    assert.equal(exactAction.rows[0].parentId, 'A');
 
     console.log('failure response query tests passed');
 } finally {
