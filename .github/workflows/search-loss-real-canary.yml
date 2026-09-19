@@ -52,7 +52,18 @@ jobs:
             --work-budget="$WORK_BUDGET" \
             --time-budget-ms=900000 \
             --decision-limit="$DECISION_LIMIT" \
-            --out=reports/stress/search-loss-real-canary.json
+            --out=reports/stress/search-loss-real-canary.json \
+            --decisions-out=reports/stress/search-loss-real-canary-decisions.json \
+            --metadata-out=reports/stress/search-loss-real-canary-metadata.json
+
+      - name: Build bounded real search-loss capture
+        shell: bash
+        run: |
+          node scripts/capture-search-loss-evidence.mjs \
+            --in=reports/stress/search-loss-real-canary-decisions.json \
+            --metadata=reports/stress/search-loss-real-canary-metadata.json \
+            --selector-limit="$DECISION_LIMIT" \
+            --out=reports/stress/search-loss-real-canary-capture.json
 
       - name: Summarize canary
         if: always()
@@ -84,6 +95,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: search-loss-real-canary
-          path: reports/stress/search-loss-real-canary.json
+          path: |
+            reports/stress/search-loss-real-canary.json
+            reports/stress/search-loss-real-canary-decisions.json
+            reports/stress/search-loss-real-canary-metadata.json
+            reports/stress/search-loss-real-canary-capture.json
           if-no-files-found: warn
           retention-days: 30
