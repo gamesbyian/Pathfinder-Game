@@ -91,7 +91,7 @@ A residual or participant cohort supports the conditional question it was select
 
 ### Solution profiles are sample profiles
 
-Profile fields summarize stored known solutions with explicit support. Missing/unsupported axes remain unavailable. `observedSingleOrder` is sampled agreement, not structural rigidity. `hasExhaustiveSearchEvent` records an event, not unrestricted whole-space enumeration/persistence. Saturation/plateau claims require adequate dated chronology. Sparse nearest-profile identity is exploratory even under schema v3 and needs independent calibration before decision-bearing use. See [`solver-solution-profile.md`](solver-solution-profile.md) and the [`profile audit`](../reports/2026-09-13-solution-profile-resource-audit-001.md).
+Profile fields summarize stored known solutions with explicit support; missing axes stay unavailable. `observedSingleOrder` is sampled agreement, not rigidity. `hasExhaustiveSearchEvent` records an event, not whole-space enumeration. Saturation needs dated chronology; sparse nearest-profile identity remains exploratory. See [`solver-solution-profile.md`](solver-solution-profile.md) and the [`profile audit`](../reports/2026-09-13-solution-profile-resource-audit-001.md).
 
 ### Independence, missingness, and hint provenance
 
