@@ -68,6 +68,21 @@ run: echo hello
     fs.rmSync(root, { recursive: true, force: true });
 }
 
+
+// --- combiner-produced summary passed to publisher is also standard transport ---
+{
+    const root = makeRoot();
+    writeWorkflow(root, 'combined.yml', `
+name: combined-standard-producer
+run: |
+  node scripts/publish-solver-sweep-result.mjs --primary=combined.json --failure-response-file=failure.json
+  echo '{"sideEffects": {"telemetry": "compact"}}'
+`);
+    writeRegistry(root, [{ id: 'combined', workflow: '.github/workflows/combined.yml', disposition: 'standard', reason: null }]);
+    assert.deepEqual(validateFailureEvidenceDisposition(root), []);
+    fs.rmSync(root, { recursive: true, force: true });
+}
+
 // --- an undeclared solver-running workflow fails validation (open-set enumeration) ---
 {
     const root = makeRoot();
