@@ -38,7 +38,7 @@ Eligible only after the active premise gate above is positive.
 - Genuine recurring rich producer -> search-loss P8 Resource Contract decision.
 - Workstreams select first-loss -> search-loss P9 using compact response, capsules, known-support extinction, traces and exact labels.
 - Persist run-envelope fields in Hint only if the sibling process/contract join cannot serve a durable consumer.
-- Whole-solution-space extinction is not deferred work; sampled hints/families cannot prove it.
+- Whole-solution-space extinction is not deferred work; sampled hints cannot prove it.
 
 ## Other deferred architectural questions
 
