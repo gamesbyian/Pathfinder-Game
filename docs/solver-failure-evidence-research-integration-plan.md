@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=30000 max=36000 -->
 # Solver failure-evidence research integration plan
 
-> **Status:** implementation plan; subordinate to current solver-research authorities.
+> **Status:** direct implementation complete; remaining acquisition/condition-gated execution is durably routed through current solver-research authorities.
 > **Created:** 2026-09-19.
 > **Purpose:** turn the newly implemented failure-response/search-loss infrastructure into a low-cost discriminator and reusable research input without creating a second queue, causal taxonomy, database, or production steering channel.
 > **Priority authority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
@@ -711,6 +711,19 @@ This plan is successful when:
 ## 12. Closeout and durable resumption
 
 This document is a temporary integration plan, not a permanent authority.
+
+As of 2026-09-19, every remaining condition-gated descendant has a durable owner outside this plan:
+
+- Phase 3: `WS2-FAILURE-RESPONSE-RECONNAISSANCE` in the research-question map and active workstream authority;
+- Phase 4A: `WS2-CLASS3-DOSE-EXPOSURE`;
+- Phase 4B: `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`;
+- Phase 5/6 recurring-rich producer and Resource Contract decision: `solver-future-work.md` plus search-loss Phase 8;
+- Phase 7 recurrence/identity/novelty/saturation/phenotype work: `solver-future-work.md`, reopened only on repeated compatible real populations and a live ambiguity;
+- Phase 8 first-loss consumer: workstream explicit selection plus search-loss Phase 9;
+- direct Hint run-envelope persistence: `solver-future-work.md`, only if a concrete consumer cannot be served by the sibling discovery-process/experiment-contract join.
+
+Whole-solution-space extinction is deliberately not a descendant: known-hint/family extinction cannot prove it.
+
 
 Close it when:
 
