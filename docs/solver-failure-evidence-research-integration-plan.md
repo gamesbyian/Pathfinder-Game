@@ -712,15 +712,7 @@ This plan is successful when:
 
 This document is a temporary integration plan, not a permanent authority.
 
-As of 2026-09-19, every remaining condition-gated descendant has a durable owner outside this plan:
-
-- Phase 3: `WS2-FAILURE-RESPONSE-RECONNAISSANCE` in the research-question map and active workstream authority;
-- Phase 4A: `WS2-CLASS3-DOSE-EXPOSURE`;
-- Phase 4B: `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`;
-- Phase 5/6 recurring-rich producer and Resource Contract decision: `solver-future-work.md` plus search-loss Phase 8;
-- Phase 7 recurrence/identity/novelty/saturation/phenotype work: `solver-future-work.md`, reopened only on repeated compatible real populations and a live ambiguity;
-- Phase 8 first-loss consumer: workstream explicit selection plus search-loss Phase 9;
-- direct Hint run-envelope persistence: `solver-future-work.md`, only if a concrete consumer cannot be served by the sibling discovery-process/experiment-contract join.
+As of 2026-09-19, remaining gates have durable owners: P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; P4A -> `WS2-CLASS3-DOSE-EXPOSURE`; P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P5-7 -> `solver-future-work.md` plus search-loss P8 where applicable; P8 first-loss -> explicit workstream selection plus search-loss P9; direct Hint run-envelope persistence -> `solver-future-work.md` only if the sibling join proves insufficient.
 
 Whole-solution-space extinction is deliberately not a descendant: known-hint/family extinction cannot prove it.
 
