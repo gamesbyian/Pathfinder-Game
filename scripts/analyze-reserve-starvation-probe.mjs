@@ -7,6 +7,7 @@
  * parent is missing, protocol identity is unknown, or a row is censored/otherwise non-interpretable.
  */
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 
@@ -134,7 +135,7 @@ const result = {
 };
 const text = JSON.stringify(result, null, 2) + '\n';
 if (outFile) {
-    fs.mkdirSync(new URL('.', new URL(`file://${process.cwd()}/${outFile}`)).pathname, { recursive: true });
+    fs.mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
     fs.writeFileSync(outFile, text);
 } else {
     process.stdout.write(text);
