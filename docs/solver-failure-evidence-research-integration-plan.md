@@ -569,7 +569,7 @@ Primary output remains a parent-level distribution of causal uncertainty, not a 
 
 ## 7. Experiment interpretation rules
 
-### 6.1 Intermediate movement is secondary evidence
+### 7.1 Intermediate movement is secondary evidence
 
 For an A/B whose primary solve/work outcome is negative:
 
@@ -579,7 +579,7 @@ For an A/B whose primary solve/work outcome is negative:
 
 If an intermediate endpoint will influence a decision-bearing branch, predeclare it before that experiment.
 
-### 6.2 Participation before failure
+### 7.2 Participation before failure
 
 Configured-but-never-reached is not a negative for the mechanism.
 
@@ -593,13 +593,13 @@ Always distinguish:
 - solved;
 - errored/unknown.
 
-### 6.3 Protocol compatibility before longitudinal claims
+### 7.3 Protocol compatibility before longitudinal claims
 
 Do not merge repeated rows merely because they share a level ID.
 
 Require the meaning-changing protocol identity needed by the claim: code/revision, scheduler/config/flags, budget/work semantics, corpus/population identity, deterministic/execution mode, and relevant capture profile.
 
-### 6.4 Parent-level denominators
+### 7.4 Parent-level denominators
 
 Multiple attempts, capsules, sibling variants, or repeated states from one parent are dependent observations.
 
