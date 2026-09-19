@@ -15,7 +15,7 @@ try {
             {
                 identity: 'A:beam', parentId: 'A', actionKey: 'beam', stageId: 'main',
                 outcome: 'solved', participated: true, reached: true, workSpent: 10,
-                solvedWithFailedAttempt: true, runId: 'r1', protocolHash: 'p1',
+                solvedWithFailedAttempt: true, runId: 'r1', protocolHash: null, solverRef: null,
                 attempts: [{ outcome: 'failed', actionKey: 'repair', stageId: 'late' }, { outcome: 'solved', actionKey: 'beam', stageId: 'main' }],
             },
             {
@@ -26,6 +26,8 @@ try {
             },
         ],
         summary: { observed: 2 },
+        protocolHash: 'p1',
+        solverRef: 'solver-a',
         populationIntegrity: null,
         sourceFiles: [],
         missingSourceFiles: [],
@@ -62,6 +64,8 @@ try {
     assert.equal(result.summary.attempts.actions.beam, 2);
     assert.equal(result.summary.attempts.actions.repair, 1);
     assert.equal(result.summary.protocolComparability.parentsWithUnknownProtocol, 1);
+    assert.equal(result.rows.find(row => row.parentId === 'A').protocolHash, 'p1');
+    assert.equal(result.rows.find(row => row.parentId === 'A').solverRef, 'solver-a');
     assert.equal(result.summary.protocolComparability.parentsWithMultipleKnownProtocols, 0);
     assert.equal(result.summary.actions.beam, 2);
     assert.equal(result.summary.actions.repair, 1);
