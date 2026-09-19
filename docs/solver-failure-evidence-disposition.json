@@ -18,62 +18,62 @@
     {
       "id": "method-probe-sweep",
       "workflow": ".github/workflows/method-probe-sweep.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Isolated single-method diagnostic probe; not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "solver-combine-sweep-runs",
       "workflow": ".github/workflows/solver-combine-sweep-runs.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Cross-run reconciliation glue that merges already-published solver-sweep-result artifacts; it inherits whatever disposition its source runs declared rather than declaring its own."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "solver-highbudget-unsolved-sweep",
       "workflow": ".github/workflows/solver-highbudget-unsolved-sweep.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Production-path high-budget sweep over currently-unsolved levels; not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "solver-level-blind-targeted-sweep",
       "workflow": ".github/workflows/solver-level-blind-targeted-sweep.yml",
       "disposition": "specialized-opt-out",
-      "reason": "On-demand targeted sweep sharing solver-stress-refresh's row shape; not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "reason": "Wiring is a straightforward two-line addition (same pattern as solver-stress-refresh.yml), but the file is already at scripts/check-file-size-ratchet.mjs's grandfathered ceiling; the addition needs a script-extraction refactor to make room first rather than a ceiling bump for new growth. Tracked: Phase 3 follow-up."
     },
     {
       "id": "solver-production-replay-baseline",
       "workflow": ".github/workflows/solver-production-replay-baseline.yml",
       "disposition": "specialized-opt-out",
-      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "reason": "Wiring is a straightforward two-line addition (same pattern as solver-stress-refresh.yml), but the file is already at scripts/check-file-size-ratchet.mjs's grandfathered ceiling; the addition needs a script-extraction refactor to make room first rather than a ceiling bump for new growth. Tracked: Phase 3 follow-up."
     },
     {
       "id": "solver-residual-confirmation",
       "workflow": ".github/workflows/solver-residual-confirmation.yml",
       "disposition": "specialized-opt-out",
-      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "reason": "Wiring is a straightforward two-line addition (same pattern as solver-broad-confirmation.yml), but the file is already at scripts/check-file-size-ratchet.mjs's grandfathered ceiling; the addition needs a script-extraction refactor to make room first rather than a ceiling bump for new growth. Tracked: Phase 3 follow-up."
     },
     {
       "id": "solver-routing-regime-sample-ab",
       "workflow": ".github/workflows/solver-routing-regime-sample-ab.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "static-portfolio-confirmation",
       "workflow": ".github/workflows/static-portfolio-confirmation.yml",
       "disposition": "specialized-opt-out",
-      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "reason": "scripts/combine-static-portfolio-shards.mjs discards raw per-cell rows into arm-level aggregates only (statusCounts/solvedWorkStats); no levels/results row array survives past combine. Wiring the standard layer needs either persisting raw rows or a bespoke arm-aware projection, out of scope for this pass."
     },
     {
       "id": "solver-broad-confirmation",
       "workflow": ".github/workflows/solver-broad-confirmation.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "collect-variant-family-dataset",
       "workflow": ".github/workflows/collect-variant-family-dataset.yml",
       "disposition": "specialized-opt-out",
-      "reason": "Runs real solver attempts across generated structural variants; not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+      "reason": "Runs real solver attempts across generated structural variants, but shard results are per-shard JSONL summaries (logs/family-census/wide-shard-*-summary.jsonl); no combined JSON row array exists for the standard summarizer to read. Tracked: Phase 3 follow-up (needs either a JSONL-aware summarizer or a combined row-array export)."
     },
     {
       "id": "cpsat-explicit-prefix-reference",

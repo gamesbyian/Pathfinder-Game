@@ -489,10 +489,14 @@ jobs:
             execution: { levelBlind: false, historyAware: true, historicalInputs: ['frozen prior-unsolved IDs', 'saved hints', 'production baseline'], reproducibilityExpected: false, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
             limits: { cumulativeNodeCeiling: configuration.nodeBudget, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: configuration.budgetMs, wallDeadlineBinding: null },
             sideEffects: gapFill
-              ? { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only-pending-reconciliation' }
-              : { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'telemetry-update', reports: 'report-write' },
+              ? { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only-pending-reconciliation' }
+              : { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
+          node scripts/summarize-solver-failure-response.mjs \
+            --in="reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json,reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json" \
+            --rows-key=levels \
+            --out="logs/solver-highbudget-sweep/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json" \
             --include="reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json" \
@@ -500,6 +504,7 @@ jobs:
             --shards-observed="$(find logs/solver-highbudget-sweep -maxdepth 1 -name 'corpus2-batch-*.json' | wc -l | tr -d ' ')" \
             --integrity-file="logs/solver-highbudget-sweep/population-integrity.json" \
             --contract-file="logs/solver-highbudget-sweep/experiment-contract.json" \
+            --failure-response-file="logs/solver-highbudget-sweep/failure-response-summary.json" \
             --provenance-out="reports/stress/highbudget-unsolved-sweep-source-run-${{ github.run_id }}.json" \
             --source-artifact="committed high-budget combined reports"
 
