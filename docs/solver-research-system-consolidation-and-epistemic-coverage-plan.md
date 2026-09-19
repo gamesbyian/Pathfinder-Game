@@ -3,7 +3,7 @@
 
 > **Status:** proposed implementation plan; not an execution-priority authority.
 > **Created:** 2026-09-19.
-> **Purpose:** consolidate the September 2026 solver-research infrastructure expansion; repair control-plane weaknesses exposed by recent execution; reduce documentation and agent-context burden; make invalid research artifacts harder to construct; and add a bounded research-portfolio/reflexivity layer that can detect instrument-shaped attention, preserve live rival explanations, expose answerability gaps and ontology escapes, and trigger independent exploration without displacing the solve-directed objective.
+> **Purpose:** consolidate the September 2026 solver-research infrastructure expansion; repair control-plane weaknesses exposed by recent execution; establish a small common scientific-semantic kernel across otherwise specialist research machinery; strengthen pre-outcome design, analysis, claim formation, provenance and invalidation; reduce documentation and agent-context burden; and add a bounded research-portfolio/reflexivity layer that can detect instrument-shaped attention, preserve live rival explanations, expose answerability gaps and ontology escapes, and trigger independent exploration without displacing the solve-directed objective.
 > **Priority authority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Method authority:** [`solver-research-operating-model.md`](solver-research-operating-model.md).
 > **Evidence authority:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
@@ -73,17 +73,26 @@ Research-system elegance is not an independent objective.
 
 ### 2.1 The target: a bounded research operating system
 
-The standard is not "maximum scientific completeness." Pathfinder is an engineering-research program with a concrete objective: more or cheaper correct cold solves on unseen editor levels. The target is therefore a **bounded research operating system** with five coupled functions:
+The standard is not "maximum scientific completeness." Pathfinder is an engineering-research program with a concrete objective: more or cheaper correct cold solves on unseen editor levels. The target is therefore a **bounded research operating system** with six coupled functions:
 
 1. **State** — preserve what is currently believed, with scope, evidence role, ancestry and authority.
-2. **Execution** — acquire valid evidence reproducibly, economically and recoverably.
-3. **Inquiry** — preserve live questions, rival explanations, missing semantic operations and ontology escapes.
-4. **Portfolio** — make visible where research attention is going, why it is going there, and which high-value uncertainties are neglected because they are hard or poorly instrumented.
-5. **Reflexivity** — detect when the research system's own vocabulary, instruments, source distributions, historical expectations or local stop rules are shaping the agenda more than the solver problem itself.
+2. **Design and execution** — freeze the important experimental choices before outcomes, acquire valid evidence reproducibly, economically and recoverably, and preserve adaptive decisions when they occur.
+3. **Inference and claim** — make explicit what quantity was measured, what the instrument can support, what claim follows at what scope, and what decision changed.
+4. **Inquiry** — preserve live questions, rival explanations, missing semantic operations and ontology escapes.
+5. **Portfolio** — make visible where research attention is going, why it is going there, and which high-value uncertainties are neglected because they are hard or poorly instrumented.
+6. **Reflexivity** — detect when the research system's own vocabulary, instruments, source distributions, shared implementations, historical expectations or local stop rules are shaping the agenda more than the solver problem itself.
 
-The first two functions are already strong. Inquiry is substantially developed through the premise map, capability atlas, archaeology, question registry and measurement-opportunity work. The principal missing layer is persistent **portfolio/reflexivity control**.
+State and execution are already strong. Inquiry is substantially developed through the premise map, capability atlas, archaeology, question registry and measurement-opportunity work. The hostile 2026-09-19 pass showed that **inference/claim interoperability is less mature than the control plane makes it look**: different producers can be referentially joinable while still speaking subtly different dialects of population, unit, outcome, work, censoring, evidence role and decision meaning. Portfolio/reflexivity control is also still early.
 
-This layer must remain descriptive and decision-supporting. It must not become an automatic research scheduler, a numerical research score, or another priority authority.
+The plan therefore treats three distinct kinds of interoperability separately:
+
+1. **discoverability interoperability** — can one subsystem find another?
+2. **referential interoperability** — can identities, lineage and artifacts be joined without ambiguity?
+3. **semantic interoperability** — do producer and consumer mean the same scientific thing by population, unit, treatment, outcome, censoring, work, evidence role, scope and claim?
+
+Pathfinder is strong on the first, rapidly improving on the second, and patchier on the third.
+
+The portfolio/reflexivity layer must remain descriptive and decision-supporting. It must not become an automatic research scheduler, a numerical research score, or another priority authority.
 
 ### 2.2 Decision sufficiency is not inquiry-space completeness
 
@@ -251,6 +260,21 @@ Failure-response/search-loss work demonstrated that common evidence can be colle
 
 Implication: construction-time identity safety, recovery semantics and end-to-end fixtures are first-class research capabilities.
 
+### 4.8 September 19 hostile lesson: joins are not semantic interoperability
+
+A hostile cross-system pass found that the repository can have artifacts which are easy to discover and join while their scientific contracts still disagree.
+
+The concrete warning is already present: `docs/solver-experiment-result.schema.json` declares v3 experiment-result structure, while a checked-in durable v3 experiment manifest contains scientifically meaningful fields that the schema forbids or cannot express, including richer population/lineage fields, limit representation and the compact telemetry side-effect value.
+
+Implications:
+
+- do not treat a shared `schemaVersion` or common field name as proof of shared semantics;
+- audit actual emitted artifacts against declared contracts;
+- standardize the smallest scientific meanings, not every specialist payload;
+- prefer common value objects/vocabularies for cross-system semantics such as unit topology, outcome/censoring, work, evidence role and derivation;
+- preserve useful implementation independence where correlated bugs would make "integration" scientifically dangerous;
+- treat the path `design -> observation -> analysis -> claim -> decision` as a first-class integration boundary, not merely the files around it.
+
 # Part I - Stabilize and consolidate the existing control plane
 
 ## Phase 0 - Establish a bounded consolidation period
@@ -295,6 +319,10 @@ For every major subsystem record or derive:
 - production-policy authority, if any;
 - archive/retirement semantics;
 - primary join keys;
+- shared semantic concepts it consumes or emits;
+- schema/validator/constructor ownership;
+- transformation/derivation dependencies;
+- shared implementation dependencies whose bugs could correlate supposedly independent evidence;
 - known semantic caveats.
 
 Start from existing registries/tooling rather than hand-authoring another encyclopedic document.
@@ -306,7 +334,9 @@ A generated graph/table suitable for:
 - duplicate-authority detection;
 - orphan producer/consumer detection;
 - identifying manual multi-source joins that still exist only in researcher reasoning;
-- identifying concepts declared in several manually maintained locations.
+- identifying concepts declared in several manually maintained locations;
+- detecting multiple incompatible dialects for the same scientific concept;
+- identifying nominally independent evidence channels that share critical implementation dependencies.
 
 ### Explicit non-goal
 
@@ -328,6 +358,8 @@ At minimum:
 - selection/consumption identity;
 - evidence/bundle/resource identity;
 - generator/source identity.
+
+Do not conflate identity with experimental unit semantics. In parallel, identify where one string such as `independentUnit` is currently standing in for several scientifically distinct roles.
 
 For every identity establish:
 
@@ -443,21 +475,364 @@ Do not force workflows with materially different evidence semantics into a fake 
 
 A reporting, indexing or combine-layer bug does not automatically imply rerunning valid expensive acquisition.
 
-# Part II - Finish integration of systems already built
+# Part II - Establish scientific semantic interoperability and claim integrity
 
-## Phase 6 - Complete hint/failure evidence symmetry only where semantics are genuinely shared
+The hostile pass found that the repo's strongest remaining integration risk is not missing links. It is **different scientific dialects travelling across correct links**.
 
-The September 19 hint/failure cross-pollination work already added:
+The aim is not a universal research schema. It is a small common semantic envelope that every decision-bearing path can project into, while specialist tools retain their native detail and useful independent implementations.
 
-- replayability classes;
-- termination/censoring classes;
-- sibling discovery-process evidence;
-- purpose-aware failure queries;
-- search-loss/hint joins;
-- capability-memory integration;
-- durable future-work hooks.
+A common scientific envelope should answer, when applicable:
 
-Audit the combined systems for shared concepts that still diverge unnecessarily:
+`question/rivals -> target/claim scope -> population/selection -> unit topology -> treatment/comparator -> instrument -> execution/work/censoring -> analysis/estimand -> observation -> claim -> decision -> derivation/provenance`
+
+Historical evidence that lacks a field remains unknown. Do not fabricate retroactive semantics.
+
+## Phase 6 - Define and enforce the smallest common scientific semantic kernel
+
+### 6.1 Audit emitted reality against declared contracts
+
+Before designing new structure, inventory actual current producers and representative durable artifacts.
+
+Check:
+
+- experiment-result schemas against real emitted v3 manifests;
+- experiment-contract writers against manifest/result publishers;
+- family-run manifests versus general experiment manifests;
+- failure, hint, exact/reference, observation and treatment envelopes;
+- evidence-role vocabularies;
+- termination/censoring vocabularies;
+- work/cost fields and units;
+- population identity and selection fields;
+- report closeout/status fields;
+- decision-bearing flags and their implied purpose.
+
+Classify every mismatch as:
+
+1. true semantic conflict;
+2. compatible concepts represented differently;
+3. specialist detail that should remain specialist;
+4. stale/dead contract;
+5. historical compatibility surface.
+
+The current v3 schema/artifact split-brain is a required regression target.
+
+### 6.2 Common semantic kernel
+
+Where two or more real systems need the same scientific meaning, define or reuse one canonical value object/vocabulary rather than another prose convention.
+
+Priority candidates:
+
+- immutable subject/content identity;
+- population content identity versus population-selection identity;
+- source/generator regime and revision;
+- evidence role;
+- selection/conditioning declaration;
+- experiment/run/protocol identity;
+- outcome/termination/censoring class;
+- work/resource quantity and unit;
+- exact/reference support/abstention;
+- derivation/transformation identity;
+- claim/decision purpose.
+
+The kernel should be composable imports/helpers, not a master JSON document.
+
+### 6.3 Unit topology contract
+
+Replace the assumption that one `independentUnit` string always describes the design.
+
+When scientifically distinct, represent:
+
+- **observation unit** — what individual rows/events/states are observed;
+- **assignment/intervention unit** — what receives a treatment or perturbation;
+- **dependence/cluster unit** — what observations share causal/statistical dependence;
+- **analysis unit** — what is aggregated/compared for the primary inference;
+- **generalization unit** — what class of new object the claim purports to extend to.
+
+Most simple experiments may declare that these collapse to one unit. Family/state/frontier experiments must not silently do so.
+
+Existing `independentUnit` remains compatible shorthand where all relevant roles coincide.
+
+### 6.4 Independence vector
+
+Do not use "independent" as one-dimensional praise.
+
+For important corroboration/replication, support an explicit vector when relevant:
+
+- sample/data independence;
+- source/construction independence;
+- parent/family independence;
+- instrument-implementation independence;
+- analysis-method independence;
+- analyst/model independence;
+- ontology/vocabulary independence;
+- critical-library/code independence.
+
+This is descriptive metadata, not an "independence score."
+
+A replication may be strong on one axis and deliberately shared on another.
+
+### 6.5 Preserve implementation diversity where it buys scientific independence
+
+Integration should standardize contracts more aggressively than implementations.
+
+Do not force:
+
+- referee and exact/reference model through the same semantic implementation;
+- independent premise reconstruction through the canonical premise machinery;
+- control/validation analyzers through the exact same normalization path they are meant to check;
+
+when independent failure modes are scientifically valuable.
+
+The architecture map should make shared critical dependencies visible so apparent corroboration is not mistaken for independent confirmation.
+
+## Phase 7 - Strengthen pre-outcome experimental design and analysis contracts
+
+Current experiment contracts are increasingly strong on execution identity, population and work limits. The weak seam is the analysis/interpretation stage after outcomes exist.
+
+### 7.1 Decision-bearing purpose
+
+Replace bare `decisionBearing: true` as the end of the story.
+
+For new decision-bearing evidence, identify the purpose when applicable:
+
+- correctness/soundness;
+- baseline/capability measurement;
+- scientific question discrimination;
+- treatment/promotion;
+- scheduler/economics;
+- resource/instrument calibration;
+- regression/health;
+- evidence qualification.
+
+One artifact may serve more than one purpose, but the supported decisions must be explicit.
+
+### 7.2 Analysis contract
+
+For expensive, highly selected or otherwise important decision-bearing experiments, freeze a lightweight analysis contract before treatment outcomes are inspected.
+
+Capture as appropriate:
+
+- primary question and live rivals;
+- target/deployment claim scope;
+- treatment and comparator;
+- primary estimand/discriminating quantity;
+- analysis unit and aggregation rule;
+- exclusions/invalid-row rules;
+- censoring/abstention handling;
+- primary threshold or qualitative decision rule;
+- expansion/escalation rule;
+- stopping rule;
+- primary analysis implementation/ref/hash where practical;
+- explicitly exploratory secondary analyses.
+
+Do not require this ceremony for every diagnostic probe. Evidence intensity follows selection pressure here too.
+
+### 7.3 Adaptive-decision lineage
+
+When a design changes after partial results, preserve the decision path:
+
+- what was visible at each decision point;
+- what changed;
+- why;
+- which later evidence is now development rather than independent confirmation;
+- whether the adaptive path itself requires new confirmation.
+
+Do not disguise sequential peeking as a fixed design.
+
+### 7.4 Estimand/measurement declaration
+
+A prose `discriminatingObservable` is useful but not always sufficient for cross-experiment synthesis.
+
+Where a result may be reused, state what quantity/contrast is actually being estimated or tested, for example:
+
+- paired solve-set delta;
+- rescue fraction among opportunity units;
+- marginal work displacement;
+- stage participation rate;
+- exact-LIVE survival at a decision boundary;
+- first-loss rate;
+- rank disagreement;
+- prevalence of a structural opportunity.
+
+Do not force deterministic mechanistic falsifiers into inappropriate statistical notation.
+
+### 7.5 Negative-result resolution
+
+A negative result should say what it was capable of excluding.
+
+Depending on the design, record:
+
+- exact deterministic falsifier coverage;
+- independent opportunity count;
+- treatment participation count;
+- zero-event denominator;
+- sensitivity/minimum meaningful effect;
+- a simple upper bound/interval where useful;
+- or an explicit statement that the design was incapable of resolving a small/rare effect.
+
+This prevents a clean null from becoming stronger every time it is cited.
+
+### 7.6 Optional hard-blind confirmation
+
+Current consumption lineage records declared use, but it cannot prove an agent never inspected a supposedly untouched outcome.
+
+For heavily tuned/high-selection decisions where genuine holdout independence matters, support an optional hard-blind path:
+
+1. freeze candidate/ref and analysis contract;
+2. freeze/seal confirmation population;
+3. execute evaluation in a context unavailable to the designing process/agent;
+4. expose aggregate prespecified verdict first;
+5. freeze the decision/disposition;
+6. only then expose exact IDs/traces for forensic learning.
+
+Do not impose this on ordinary narrow experiments. It is a stronger confirmation mode for cases where procedural trust is not enough.
+
+## Phase 8 - Make evidence-to-claim derivation explicit and invalidatable
+
+### 8.1 Local claim capsules
+
+Do not build a global claim database.
+
+For important decision-bearing reports/evidence, emit a small machine-readable claim capsule beside or inside the durable artifact.
+
+Candidate fields:
+
+- question/premise refs;
+- claim type;
+- treatment/comparator if any;
+- estimand/discriminator;
+- population and selection scope;
+- unit topology;
+- observed result;
+- sensitivity/negative resolution;
+- evidence role;
+- inference scope;
+- limitations/unsupported extrapolations;
+- scientific disposition;
+- decision consequence.
+
+A report may contain multiple capsules if it makes materially different claims.
+
+### 8.2 Separate execution outcome, scientific disposition and decision disposition
+
+Do not overload "positive" and "negative."
+
+Keep distinct:
+
+- **execution outcome** — completed, timeout, harness error, invariant violation, etc.;
+- **scientific disposition** — supports tested rival, falsifies tested form, inconclusive, population-limited, instrument-limited, etc.;
+- **decision disposition** — promote, reject, defer, reopen, gather more data, no action, baseline update, etc.
+
+The current `completed-positive/completed-negative` workflow vocabulary may remain as execution-level compatibility where appropriate, but it must not silently stand in for the latter two concepts.
+
+### 8.3 Transformation provenance
+
+For derived decision-bearing outputs, preserve the activity that transformed inputs into conclusions:
+
+- input artifact/content hashes;
+- analysis/transform script identity and immutable ref/hash;
+- relevant configuration;
+- output hash;
+- parent derived artifacts;
+- claim capsule(s) produced.
+
+This should be a thin derivation spine, not a warehouse.
+
+### 8.4 Reverse invalidation
+
+Once derivation edges exist, support the inverse query:
+
+> if this producer, normalizer, oracle, schema interpretation or source artifact is later found invalid/stale, what evidence, reports, claims, premises, capability-memory entries or queue decisions depend on it?
+
+Implement at least one bounded invalidation drill before declaring this phase complete.
+
+Automation should identify affected descendants and their relation. It must not automatically rewrite scientific dispositions.
+
+### 8.5 Structured closeout capsule, rendered prose
+
+New current-state metadata should no longer depend primarily on Markdown regex reconstruction.
+
+Prefer:
+
+`machine-readable closeout capsule -> human report rendering/indexing`
+
+over:
+
+`human Markdown -> regex reconstruction of scientific state`.
+
+The capsule should carry only the compact volatile scientific state needed for indexing:
+
+- status;
+- question/premise/MO refs;
+- population/evidence role/selection;
+- inference scope;
+- claim capsules;
+- decision;
+- remaining gate;
+- expectation/surprise/anomaly if present;
+- source artifacts/derivation refs.
+
+The narrative report remains the explanation and history.
+
+Historical reports keep the existing parser/fallback.
+
+### 8.6 Reconcile scientific state outward
+
+A decisive claim/decision should be checked for consequences in:
+
+- question state/relations;
+- workstream gate;
+- future/reopen condition;
+- premise evidence state where applicable;
+- capability memory;
+- plan lifecycle;
+- evidence-integrity/durable bundle.
+
+Automation flags missing or contradictory propagation. It does not semantically close/reopen questions itself.
+
+## Phase 9 - Calibrate instruments, test epistemic conformance, and prove interoperability in real compositions
+
+### 9.1 Measurement/instrument calibration profiles
+
+For important reusable measurement primitives, surface through existing Resource Contract/MO infrastructure where possible:
+
+- construct/quantity measured;
+- support envelope;
+- abstention/unsupported conditions;
+- known failure modes;
+- positive controls;
+- negative controls;
+- observer effects;
+- calibration evidence;
+- instrumentation version/revision.
+
+A null result from an instrument with poor sensitivity must not become a scientific negative.
+
+### 9.2 Epistemic metamorphic/conformance tests
+
+Extend the end-to-end transaction fixture beyond structural JSON correctness.
+
+Synthetic known-truth cases should verify invariants such as:
+
+- shard/recombine order cannot change the scientific result;
+- arbitrary identity renaming cannot change inference;
+- duplicating many descendants/states inside one parent cannot create independent support;
+- deadline-truncated/harness/unknown rows cannot normalize into ordinary scientific negatives;
+- exact/reference `unsupported` or abstention cannot become DEAD;
+- treatment nonparticipation cannot become evidence of treatment failure;
+- opening/using a confirmation block for design makes it ineligible for descendant confirmation under the relevant lineage;
+- changing content under the same display ID changes content identity;
+- cross-source matching remains outcome-blind;
+- two workflow families expressing the same semantic experiment normalize to compatible common semantics;
+- a known upstream invalidation reaches all synthetic downstream claim/decision descendants.
+
+These are research-system property tests, not just schema tests.
+
+### 9.3 Hint/failure evidence as an interoperability proving ground
+
+Retain the completed September 19 cross-pollination work and audit it under the common semantic kernel.
+
+Shared concepts worth normalizing only where meaning is genuinely shared include:
 
 - source/run/protocol identity;
 - reconstruction/replayability;
@@ -468,157 +843,72 @@ Audit the combined systems for shared concepts that still diverge unnecessarily:
 - parent/family dependence;
 - exact/reference enrichment;
 - evidence-role transition;
-- novelty/saturation;
-- phenotype/recurrence derivation.
+- novelty/saturation.
 
-Where meaning is truly shared, prefer common helper/query vocabulary.
+Preserve separate specialist schemas and meanings where they differ.
 
-Where meaning differs, preserve separate schemas and document the boundary.
+Do not make rich search-loss capture universal or rewrite historical Hint semantics unsupported by the original record.
 
-Do not:
+### 9.4 Question/premise/capability/MO/queue reconciliation
 
-- make rich search-loss capture universal;
-- rewrite historical Hint records merely for symmetry;
-- create a universal "failure/hint" database;
-- backfill unsupported historical semantics.
+Perform the bidirectional audit already identified:
 
-Condition-gated phases in the existing failure/search-loss plans remain condition-gated.
+- every active/deferred question has one practical disposition;
+- every nontrivial live scientific gate has discoverable question/premise lineage;
+- every high-value capability gap maps to active/tested/future/non-investigation disposition;
+- every relevant MO maps to a live ambiguity and operational/missing path;
+- every decisive result propagates to the state surfaces it materially changes.
 
-## Phase 7 - Reconcile question, premise, capability-gap, MO and queue coverage
+### 9.5 Higher-order composition views already earned
 
-Perform a bidirectional derived audit.
+Implement only demonstrated consumers, prioritizing:
 
-### 7.1 Question -> authority
+- reopen-status view;
+- exact/reference campaign preflight;
+- MO implementation/answerability coverage;
+- prospective selection-provenance summary;
+- capability-memory × operational-taxonomy crosswalk.
 
-Every stable active/deferred question should resolve to exactly one practical state:
+### 9.6 Delay phenotype/mechanism memory until consumers earn it
 
-- live current workstream gate;
-- parallel active investigation;
-- blocked on data/acquisition/compute;
-- deferred with explicit reopen condition;
-- concluded/archived;
-- superseded/duplicate.
-
-### 7.2 Queue -> question/premise
-
-Every nontrivial scientific gate in the live queue should have discoverable question/premise lineage unless it is a straightforward correctness/performance implementation task.
-
-### 7.3 Capability gap -> research disposition
-
-Every high-value gap in the reasoning-capability atlas should resolve to one or more of:
-
-- active question;
-- tested closed form;
-- explicit surviving semantic route;
-- future trigger;
-- deliberate non-investigation with rationale.
-
-### 7.4 MO -> live ambiguity
-
-Measurement opportunities remain non-queue. For every currently relevant MO, show which live ambiguity it can discriminate, what primitive/resource/population can instantiate it, and what is missing if it cannot.
-
-### 7.5 Result -> outbound propagation
-
-A decisive result should be checked for material consequences in:
-
-- question state/relations;
-- workstream gate;
-- future/reopen condition;
-- capability memory;
-- plan lifecycle;
-- evidence-integrity/durable bundle where applicable.
-
-Automation may flag missing or contradictory state. It must not semantically close/reopen questions by itself.
-
-## Phase 8 - Implement selected higher-order composition views already identified
-
-The September 18 higher-order composition report already identified valuable larger joins. Implement only the ones with demonstrated current consumers.
-
-Priority candidates:
-
-### 8.1 Reopen-status view
-
-Compose:
-
-`reopensOn + archaeology disposition + evidence integrity + current production boundary + new measurement/support evidence + Resource Contract caveats`
-
-Return explanatory states such as:
-
-- trigger evidence absent;
-- trigger evidence present but historical evidence nonportable;
-- trigger evidence present and old evidence portable;
-- rerun required;
-- current source cannot support the intended claim.
-
-Never automatically reopen a question.
-
-### 8.2 Exact/reference campaign preflight
-
-Compose:
-
-`question mechanics + population mechanics + reference support envelope + expected abstention + label cost + independent units + decision value`
-
-Primary output:
-
-- unsupported mechanic fraction;
-- expected usable independent units;
-- expected abstention;
-- cost envelope;
-- whether the exact campaign can actually discriminate the live rivals.
-
-Never auto-launch labeling.
-
-### 8.3 MO implementation-coverage view
-
-Compose:
-
-`MO -> primitive -> required resource -> supported population -> live question consumers -> durable path -> blind spot`
-
-This is especially useful for differentiating "concept represented" from "operationally testable."
-
-### 8.4 Prospective selection-provenance summary
-
-At planning time, summarize structured facts already represented across existing systems:
-
-- prespecified vs mined;
-- candidate/config/threshold/seed search;
-- residual/cohort selection;
-- outcome-blind matching;
-- exact-label exposure before treatment freeze;
-- family exploration;
-- source selection after seeing outcomes.
-
-Do not compress these into a scalar "selection score."
-
-### 8.5 Capability-memory x operational-taxonomy crosswalk
-
-Use the canonical operational taxonomy to prevent clouds of configurations from appearing as independent capability mechanisms in derived analysis.
-
-Do not alter capability-memory's solve-set semantics.
-
-## Phase 9 - Delay phenotype/mechanism memory until consumers earn it
-
-The higher-order composition work correctly identified that non-solve phenomena can disappear into prose even when they may matter across investigations.
-
-Candidate recurring phenomena include:
-
-- exact-LIVE candidates repeatedly below cutoff;
-- decision-rank disagreement;
-- frontier survival/extinction;
-- dose-response shape;
-- structural response across family siblings;
-- representation-specific survival.
-
-However, do not implement a durable phenotype-memory schema merely because the gap is conceptually attractive.
-
-Promotion gate:
+Keep the existing promotion gate:
 
 1. at least two live consumers need the same bounded non-solve signature;
-2. existing reports/search-loss/failure-response queries cannot serve them economically;
-3. the proposed schema has clear conditioning, independent-unit and provenance semantics;
-4. it remains explicitly outside solve-capability union/headroom and production routing.
+2. current reports/search-loss/failure-response queries cannot serve them economically;
+3. conditioning, unit topology and provenance semantics are clear;
+4. the structure remains outside production routing/headroom authority.
 
 Until then, use derived analyses and reports.
+
+### 9.7 Target/deployment envelope audit
+
+The research system should not let "Corpus 2", "unseen editor levels", "all legal Pathfinder levels" and "synthetic semantic challenge populations" blur into one target.
+
+Make explicit, without inventing a fake probability distribution:
+
+- **benchmark objective** — what named benchmark progress operationally counts;
+- **deployment envelope** — what legal/editor level space production is expected to handle;
+- **development laboratory** — populations intentionally mined for mechanism/capability;
+- **confirmation population** — sample-independent evidence for a selected decision;
+- **transfer/challenge population** — different source/structure used for broader claims;
+- **adversarial semantic challenge** — constructed capability probe whose prevalence is not representative evidence.
+
+A broad generalization claim must name the target/envelope it actually reaches.
+
+### 9.8 Triangulation without forced consensus
+
+Where evidence channels disagree, preserve the disagreement and their dependence structure.
+
+Do not compress heterogeneous evidence into one confidence score.
+
+A useful synthesis should be able to state:
+
+- which channels support which claim;
+- which channels share data, code, oracle, analyst or ontology dependencies;
+- which channel has which support envelope;
+- why the disagreement remains unresolved.
+
+Scientific interoperability should make disagreement legible, not erase it.
 
 # Part III - Reduce documentation and context gravity
 
@@ -688,6 +978,8 @@ Candidate output:
 - recently concluded questions;
 - highest-value capability gaps and their dispositions;
 - relevant assets/Resource Contract/integrity warnings;
+- claim/inference-scope warnings and unresolved rival sets where material;
+- derivation/invalidation warnings affecting current evidence;
 - unfinished plan obligations;
 - next legal cheap action for each live gate;
 - changed-since summary.
@@ -725,6 +1017,7 @@ Candidate diagnostics:
 - orphan tools/scripts;
 - weekly report/document growth;
 - ratio of generated current-state views to hand-maintained volatile state;
+- ratio of new structured closeout capsules to Markdown-only current-state parsing;
 - agent context-budget warnings.
 
 Use these as warning signals, not score targets.
@@ -831,7 +1124,7 @@ For important active/deferred questions, derive or state these layers where rele
 4. **reference answerability** — can exact/reference machinery adjudicate the needed fact, with support/abstention known?
 5. **population answerability** — do suitable independent units/opportunity populations exist?
 6. **economic answerability** — can enough information be acquired at sensible work/cost?
-7. **inferential answerability** — would the resulting evidence justify the intended claim rather than only a narrower one?
+7. **inferential answerability** — is the instrument calibrated and would the resulting evidence/analysis justify the intended claim rather than only a narrower one?
 8. **decision answerability** — would resolving the ambiguity change implementation, queue state, reopen logic, or the solver model?
 
 Low answerability must not imply low scientific value.
@@ -1164,7 +1457,20 @@ The smallest-decisive-evidence rule is correct **after a question exists**.
 
 Use attention topology, provenance and answerability to detect the upstream bias where questions served by existing JSON joins, telemetry or exact models are generated more often than equally important poorly instrumented questions.
 
-### 28.7 Local-stop-rule aggregation blindness
+### 28.7 Target/envelope blindness
+
+A benchmark can become the de facto scientific target simply because it is measurable.
+
+Use Phase 9.7 to prevent:
+
+- Corpus-2 optimization from silently becoming a claim about future editor levels;
+- synthetic challenge success from becoming prevalence evidence;
+- broad "generalization" language without a named deployment/source envelope;
+- target-population uncertainty from being hidden by increasingly precise benchmark measurements.
+
+This is partly an intentional project choice: every current stress solve has operational value. The rigor requirement is to preserve the distinction between benchmark progress and the broader deployment claim.
+
+### 28.8 Local-stop-rule aggregation blindness
 
 A local stop rule can be correct while the collection of stopped forms reveals an untested shared assumption.
 
@@ -1230,56 +1536,74 @@ Preserve current separation between automatic compact response and selective ric
 
 # Part VII - Implementation order
 
-## Stage A - Immediate stabilization
+## Stage A - Immediate stabilization and semantic reality check
 
-Do first because these reduce correctness and coordination risk with little solver compute.
+Do first because these reduce correctness and inference risk with little solver compute.
 
 1. Phase 0: research-system extension gate.
-2. Phase 1: derived architecture map.
-3. Phase 2: identity audit and regression fixtures.
+2. Phase 1: derived architecture/dependency map.
+3. Phase 2: identity audit and Lane A regression fixtures.
 4. Phase 3: constructor-hardening audit.
-5. Phase 4: end-to-end research-transaction fixture.
-6. Phase 5: recovery/recombine contract audit.
-7. Phase 7: question/premise/capability/MO/queue consistency audit.
-8. Phase 13: plan lifecycle audit.
+5. Phase 6.1: audit real emitted artifacts against declared schemas/contracts, beginning with the current v3 experiment-result split-brain.
+6. Phase 6.2-6.4: identify the minimum common semantic kernel, unit-topology needs and independence dimensions actually shared by current systems.
+7. Phase 4: expand the end-to-end research-transaction fixture around those semantics.
+8. Phase 5: recovery/recombine contract audit.
+9. Phase 9.4: question/premise/capability/MO/queue consistency audit.
+10. Phase 13: plan lifecycle audit.
 
-## Stage B - Measure the portfolio before correcting it
+## Stage B - Prove the scientific middle layer on narrow real consumers
 
-9. Phase 14: bounded MO-007 research-attention topology.
-10. Phase 19: question-provenance join over the same bounded window.
-11. Phase 16: answerability decomposition on a small high-value question sample.
-12. Report whether the hypothesized instrument/attention bias is actually visible and which later epistemic phases remain earned.
+11. Phase 7: add a lightweight analysis contract to one high-selection/expensive decision-bearing experiment path.
+12. Phase 8.1-8.2: emit one claim capsule that separates execution, scientific and decision disposition.
+13. Phase 8.3: preserve its transformation/analysis provenance.
+14. Phase 9.1: calibrate the primary instrument enough to state its support/abstention boundary.
+15. Phase 9.2: add a small epistemic conformance/metamorphic fixture.
+16. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
+17. Report which common semantics proved reusable and which should remain specialist.
+
+Do not generalize a kernel field until at least two real consumers need the same meaning.
+
+## Stage C - Measure the research portfolio before correcting it
+
+18. Phase 14: bounded MO-007 research-attention topology.
+19. Phase 19: question-provenance join over the same bounded window.
+20. Phase 16: answerability decomposition on a small high-value question sample.
+21. Include dependence/independence information where apparent corroboration shares instruments, analysis code or ontology.
+22. Report whether the hypothesized instrument/attention bias is actually visible and which later epistemic phases remain earned.
 
 This stage deliberately precedes broad reflexivity infrastructure. Do not build a cure for an unmeasured pathology.
 
-## Stage C - Consolidation and retrieval
+## Stage D - Consolidation, closeout and retrieval
 
-13. Phase 10: documentation role classification.
-14. Phase 11: compact research front door.
-15. Phase 12: documentation-entropy diagnostics.
-16. Phase 8: highest-value existing composition views.
-17. Phase 6: hint/failure symmetry cleanup only where earned.
+23. Phase 10: documentation role classification.
+24. Phase 8.5: introduce structured closeout capsules for new current-state reports while preserving historical fallback.
+25. Phase 11: compact research front door.
+26. Phase 12: documentation-entropy diagnostics.
+27. Phase 9.5: highest-value already-earned composition views.
+28. Phase 9.3: hint/failure semantic interoperability cleanup only where meaning is genuinely shared.
 
-## Stage D - Earned epistemic/reflexivity controls
+## Stage E - Earned rigor/reflexivity controls
 
-Only the findings from Stages A-B should determine how much of this stage is needed.
+Only findings from Stages A-D should determine how much of this stage is needed.
 
-18. Phase 15: rival-set preservation in existing preflight/report contracts.
-19. Phase 17: answerability-gap/MO operational-coverage view.
-20. Phase 18: research-system capability audit.
-21. Phase 23: first negative-space intersection-mining pass.
-22. Phase 22: prospective expectation/surprise capture for new high-value investigations.
-23. Phase 20: run one bounded triggered-exploration response if the trigger conditions are actually met.
-24. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
+29. Phase 15: rival-set preservation in existing preflight/report contracts.
+30. Phase 17: answerability-gap/MO operational-coverage view.
+31. Phase 18: research-system capability audit.
+32. Phase 23: first negative-space intersection-mining pass.
+33. Phase 22: prospective expectation/surprise capture for new high-value investigations.
+34. Phase 7.6: pilot hard-blind confirmation only on a decision whose selection pressure justifies it.
+35. Phase 9.7: target/deployment-envelope audit before any new broad generalization claim.
+36. Phase 20: run one bounded triggered-exploration response if trigger conditions are actually met.
+37. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
 
-## Stage E - Blind-spot-driven scientific work
+## Stage F - Blind-spot-driven scientific work
 
-25. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
-26. Phase 24: one adversarial semantic challenge population for a high-value capability gap where source construction is the missing discriminator.
-27. Phase 26: bounded external semantic-operation review only when it illuminates a live blind spot.
-28. Use Phase 27 for any new research primitive.
-29. Revisit Phase 9 phenotype/mechanism memory only if two real consumers still require it.
-30. Maintain Phase 30 ROI review and Phase 29 protection of direct solver work.
+38. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
+39. Phase 24: one adversarial semantic challenge population for a high-value capability gap where source construction is the missing discriminator.
+40. Phase 26: bounded external semantic-operation review only when it illuminates a live blind spot.
+41. Use Phase 27 for any new research primitive.
+42. Revisit Phase 9.6 phenotype/mechanism memory only if two real consumers still require it.
+43. Maintain Phase 30 ROI review and Phase 29 protection of direct solver work.
 
 # Part VIII - Verification and closeout
 
@@ -1333,6 +1657,58 @@ Verify the consolidation has reduced at least one of:
 - manual multi-system reconciliation;
 - untracked unanswerable questions.
 
+### 27.7 Semantic interoperability audit
+
+Verify:
+
+- actual emitted decision-bearing artifacts conform to their claimed schema/contract or the stale contract is retired;
+- shared scientific concepts use compatible canonical meanings across at least two producer families;
+- specialist detail remains specialist rather than being squeezed into a false common abstraction;
+- unit topology is explicit where observation/assignment/dependence/analysis/generalization units differ;
+- shared implementation dependencies are visible when they weaken apparent replication independence.
+
+### 27.8 Design/analysis/claim audit
+
+For representative high-selection evidence, verify the chain:
+
+`frozen design -> execution -> analysis/estimand -> observation -> scientific claim -> decision`
+
+and ensure that:
+
+- post-outcome analytical changes are marked exploratory/adaptive;
+- execution outcome is not conflated with scientific or decision disposition;
+- negative evidence states what it could actually exclude;
+- claim scope does not exceed population/instrument support.
+
+### 27.9 Instrument and conformance audit
+
+Verify:
+
+- a reusable important instrument exposes support/abstention/calibration semantics;
+- metamorphic fixtures protect against pseudoreplication, censoring-to-negative conversion, unsupported-reference promotion, identity aliasing and recombination-order artifacts;
+- at least one semantically equivalent experiment represented through two workflow/tool paths normalizes compatibly.
+
+### 27.10 Derivation/invalidation drill
+
+Select one upstream producer/normalizer/instrument artifact and demonstrate that the system can enumerate material downstream evidence/claims/decisions that would require review if it were invalidated.
+
+The drill need not automatically change their state.
+
+### 27.11 Independence/triangulation audit
+
+For one important replicated/corroborated conclusion, document the relevant independence vector and shared failure modes.
+
+Verify the system can preserve disagreement among channels without collapsing them to one score.
+
+### 27.12 Confirmation-boundary audit
+
+For one high-selection decision, verify either:
+
+- procedural untouchedness is explicitly sufficient for the scoped decision; or
+- the optional hard-blind path can enforce stronger outcome isolation.
+
+Do not claim machine-verifiable untouchedness from consumption lineage alone.
+
 # Part IX - Success criteria
 
 This plan is successful when the following are true.
@@ -1361,12 +1737,29 @@ This plan is successful when the following are true.
 22. Clusters of closed forms can be mined for shared untested assumptions without automatically reopening them.
 23. The system distinguishes evidence deficits, measurement deficits and ontology escapes using existing vocabulary.
 24. The system can act on decision-sufficient evidence while preserving wider unresolved conceptual uncertainty.
+25. Decision-bearing producers project into a small compatible scientific semantic kernel without forcing specialist payloads into one mega-schema.
+26. Experiments with nontrivial clustering/assignment structure can distinguish observation, assignment, dependence, analysis and generalization units.
+27. Important corroborations can state what is and is not independent across data, source, instrument, analysis, analyst/model, ontology and critical code.
+28. High-selection experiments can freeze an analysis/decision contract before treatment outcomes are opened.
+29. Execution outcome, scientific disposition and decision disposition are machine-distinguishable.
+30. Important reusable results can emit local claim capsules with explicit estimand/discriminator, scope, limitations and decision consequence.
+31. Negative results preserve their resolving power/sensitivity instead of becoming stronger through citation.
+32. Reusable instruments expose support, abstention and calibration semantics.
+33. Derived decision-bearing claims preserve enough transformation provenance for a bounded reverse-invalidation query.
+34. New current-state reports can expose structured closeout metadata without depending on fragile Markdown regex reconstruction.
+35. Epistemic conformance tests catch pseudoreplication, censoring errors, unsupported-reference promotion and semantically incompatible workflow outputs.
+36. The system distinguishes benchmark progress, deployment envelope, confirmation/transfer evidence and adversarial semantic challenge evidence.
+37. Scientific interoperability preserves useful independent implementations and heterogeneous disagreement rather than manufacturing false consensus.
 
 # Part X - Explicit non-goals
 
 Do not use this plan to:
 
 - create a universal research database;
+- create one universal experiment/evidence mega-schema;
+- force independent validators/oracles/analyzers through a shared implementation merely for code reuse;
+- replace heterogeneous evidence with a scalar confidence/independence score;
+- require hard-blind confirmation or preregistration ceremony for every diagnostic experiment;
 - merge every evidence type into one schema;
 - create a second live solver queue;
 - create a second premise ontology;
@@ -1377,6 +1770,7 @@ Do not use this plan to:
 - impose a fixed exploration/moonshot percentage;
 - create a permanent anomaly database before recurring consumers earn it;
 - create a second hypothesis/rival registry;
+- create a global claim database when local claim capsules and derived joins are sufficient;
 - automatically close/reopen scientific questions;
 - make rich search-loss capture universal;
 - force specialist topology/exact/family tools through one generic format;
@@ -1393,24 +1787,34 @@ A future implementation session should begin with a bounded tranche rather than 
 Recommended first tranche:
 
 1. add the research-system extension gate and decision-sufficiency/inquiry-completeness distinction to the operating model;
-2. generate the architecture inventory from existing registries/tools;
+2. generate the architecture/dependency inventory from existing registries/tools, including shared critical implementation dependencies;
 3. perform the identity/serialization audit and add the Lane A regressions;
-4. classify recent validator/control-plane failures into constructor-fix versus consumer/context-validation classes and fix obvious constructor-owned cases;
-5. implement one tiny end-to-end research-transaction fixture;
-6. audit expensive workflows for recoverable recombination semantics;
-7. run the question/premise/capability/MO/queue consistency audit;
-8. run the recent-plan lifecycle audit;
-9. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
-10. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
-11. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
-12. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
+4. audit actual emitted decision-bearing artifacts against declared schemas/contracts and resolve the current v3 experiment-result schema/artifact split-brain;
+5. identify the smallest genuinely shared semantic kernel for population/source identity, evidence role, termination/censoring, work and derivation, explicitly refusing false unification;
+6. prototype unit topology on one family/state-heavy experiment and document where the current single `independentUnit` field loses information;
+7. classify recent validator/control-plane failures into constructor-fix versus consumer/context-validation classes and fix obvious constructor-owned cases;
+8. expand one tiny end-to-end research-transaction fixture into epistemic conformance cases covering pseudoreplication, censoring/unsupported outcomes and recombination invariance;
+9. audit expensive workflows for recoverable recombination semantics;
+10. pilot a lightweight pre-outcome analysis contract on one high-selection/expensive experiment path, including live rivals, estimand, censoring, decision and stopping rules;
+11. emit one local claim capsule from that path and preserve its transformation/analysis provenance through durable evidence;
+12. run one bounded reverse-invalidation drill from an upstream producer/normalizer/instrument to dependent evidence/claims/decisions;
+13. run the question/premise/capability/MO/queue consistency audit;
+14. run the recent-plan lifecycle audit;
+15. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
+16. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
+17. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
+18. audit one important "replicated" result for independence across data/source/instrument/analysis/model/ontology/code rather than merely independent units;
+19. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
 
-The first tranche should answer three meta-questions before more reflexivity infrastructure is built:
+The first tranche should answer six meta-questions before more infrastructure is built:
 
-1. **Is research attention measurably concentrated in ways not explained by current solver value?**
-2. **Are high-value questions being neglected primarily because they are poorly answerable with the present research substrate?**
-3. **Do multiple negative lines expose shared assumptions that the current premise map/queue is not treating as questions?**
+1. **Are our major research systems merely joinable, or do they actually share compatible scientific semantics?**
+2. **Where does one overloaded field such as `independentUnit`, `positive/negative` or `decisionBearing` hide materially different scientific meanings?**
+3. **Can a pre-outcome analysis/claim contract close a real researcher-degree-of-freedom seam without adding disproportionate ceremony?**
+4. **Can a discovered upstream defect be traced forward to every material dependent claim/decision without archaeology?**
+5. **Is research attention measurably concentrated in ways not explained by current solver value or answerability?**
+6. **Do multiple negative lines expose shared assumptions that the current premise map/queue is not treating as questions?**
 
-Only positive evidence on those questions should earn the corresponding heavier portfolio/reflexivity mechanisms.
+Only demonstrated seams should earn durable new kernel fields or workflows.
 
-This ordering intentionally makes the plan self-correcting: the first implementation work should reduce control-plane risk, measure the suspected research-portfolio pathology, and remove recommendations already satisfied by the repo before the plan is allowed to expand the architecture it is meant to simplify.
+This ordering makes the plan self-correcting in two directions: it prevents the research-control plane from proliferating unnecessarily, and it prevents a federation of locally valid tools from masquerading as a scientifically interoperable system merely because the joins work.
