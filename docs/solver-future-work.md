@@ -27,7 +27,7 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Deferred plan closeouts
 
-- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** retire once descendants have durable owners; rich recurrence stays condition-gated.
+- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** direct substrate is complete through Phases 0-2 and 4E; Phase 3 resumes on the first eligible post-contract compact-response population, Phase 4A on regenerated/frozen Class-3 membership plus shared-production exact-action dose, and Phase 4B on the frozen R00044 canary/40-parent probe. Rich recurrence stays condition-gated. Retire once those surviving descendants are completed/disposed and owned here, in question relations, or in workstreams.
 - **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for genuine recurrence; Phase 9 waits for first-loss selection. No synthetic.
 - **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run Phase 7 and retire.
 
