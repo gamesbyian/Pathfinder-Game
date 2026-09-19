@@ -7,7 +7,7 @@ Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-op
 
 ## Promoted out of future work
 
-Do not duplicate active/concluded lanes here. Current dispositions: A representation-stopped; D1 closed-negative (0/120 production disagreements, 2026-09-18); F3 discordance-stopped; C/E and DEAD-core size-1 negative; Class-3 dose gap; G1 candidate-completion-limited. Multi-pick removed the old no-LIVE and generic-constructor blocks.
+Do not duplicate active/concluded lanes here. Current dispositions are owned by workstreams; this file retains only deferred descendants and reopen boundaries.
 
 ## Deferred descendants of active premises
 
@@ -27,8 +27,8 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Deferred plan closeouts
 
-- **[Search-loss evidence](solver-search-loss-evidence-implementation-plan.md):** Phase 8 reopens only for a genuine recurring producer; then audit and explicitly promote or retain `contract-only`. Phase 9 runs only if workstreams selects first-loss. Retire after those obligations are completed or explicitly deferred/stopped. Never invent recurrence or priority for closeout.
-- **[Population/family integration](solver-research-population-family-integration-plan.md):** a Phase-6 pilot counts only when a live ranked question genuinely uses the end-to-end substrate. After two materially different pilots (family microscope + broad-population-first), run Phase 7 consolidation and retire the plan. Do not create synthetic closeout pilots.
+- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for a genuine recurring producer, then audit/promote-or-retain; Phase 9 waits for queue selection of first-loss. Retire when completed, deferred, or stopped. No synthetic triggers.
+- **[Population/family](solver-research-population-family-integration-plan.md):** Phase 6 counts only real end-to-end ranked-question use. After two distinct pilots (family-microscope and broad-population-first), run Phase 7 consolidation and retire. No synthetic pilots.
 
 ## Other deferred architectural questions
 
