@@ -1,5 +1,16 @@
 import assert from 'node:assert/strict';
-import { buildCaseIntegrity } from './cpsat-prefix-reference-integrity.mjs';
+import { buildCaseIntegrity, parseExpectedIdsFile } from './cpsat-prefix-reference-integrity.mjs';
+
+// Regression: ids may legitimately embed commas (e.g. a levelId:sortedCutCells.join(',')::caseId
+// disambiguator, since the same physical prefix can cross two distinct cuts -- see PR #1902's
+// case-id fix and the bug it left behind in this file's own expected-ids parsing). The file is
+// always one id per line; splitting on commas too shreds any such id into bogus fragments.
+const commaBearingIds = parseExpectedIdsFile(
+  'R00046:131081,196618::R00046:frontier-4758\nR00046:2,65537::R00046:frontier-4758\n');
+assert.deepEqual(commaBearingIds, [
+  'R00046:131081,196618::R00046:frontier-4758',
+  'R00046:2,65537::R00046:frontier-4758',
+], 'ids containing commas must survive as single tokens, not be split at the comma');
 
 const expected = ['a', 'b', 'c'];
 

@@ -4,7 +4,7 @@
 # Each individual case still runs through exactly one cpsat-reference-probe.py process and preserves
 # the same live/dead/timeout/referee semantics.
 name: cpsat-explicit-prefix-reference
-run-name: "CP-SAT prefix reference · ${{ inputs.cases_file }} · shards=${{ inputs.shard_count }}"
+run-name: "CP-SAT prefix reference · ${{ inputs.cases_file }} · shards=${{ inputs.shard_count }}${{ inputs.recombine_run_id != '' && format(' · recombine of {0}', inputs.recombine_run_id) || '' }}"
 
 on:
   workflow_dispatch:
@@ -37,6 +37,10 @@ on:
         description: 'Shard jobs allowed to run concurrently. Lower this to share Actions capacity without changing the selected case population.'
         required: false
         default: '20'
+      recombine_run_id:
+        description: 'Skip re-executing the (expensive) shards entirely and only re-run combine/integrity/publish against an earlier run id''s already-uploaded shard artifacts -- for recovering from a downstream post-processing bug without repaying solver compute. Leave blank for an ordinary fresh dispatch.'
+        required: false
+        default: ''
 
 concurrency:
   group: cpsat-explicit-prefix-reference
@@ -45,6 +49,7 @@ concurrency:
 jobs:
   plan:
     name: Validate tooling and plan shards
+    if: inputs.recombine_run_id == ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -80,6 +85,7 @@ jobs:
   reference-shards:
     name: Prefix reference shard ${{ matrix.shard }}/${{ inputs.shard_count }}
     needs: plan
+    if: inputs.recombine_run_id == ''
     runs-on: ubuntu-latest
     timeout-minutes: 350
     permissions:
@@ -160,6 +166,8 @@ jobs:
           pattern: cpsat-explicit-prefix-reference-shard-*
           path: artifact-staging
           merge-multiple: true
+          run-id: ${{ inputs.recombine_run_id != '' && inputs.recombine_run_id || github.run_id }}
+          github-token: ${{ github.token }}
 
       - name: Combine and verify complete shard coverage
         shell: bash
