@@ -6,10 +6,10 @@ import { spawnSync } from 'node:child_process';
 
 const root = new URL('..', import.meta.url);
 
-function runCase({ levels, workBudget = null, missing = false, missingExitCode = null }) {
+function runCase({ levels, workBudget = null, missing = false, missingExitCode = null, flat = false }) {
   const temp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-outcome-'));
   const staging = path.join(temp, 'staging');
-  const shard = path.join(staging, 'method-probe-shard-001');
+  const shard = flat ? staging : path.join(staging, 'method-probe-shard-001');
   const out = path.join(temp, 'out');
   const outcome = path.join(temp, 'outcome.json');
   mkdirSync(shard, { recursive: true });
@@ -59,5 +59,14 @@ assert.equal(run.outcome.outcome, 'timeout');
 run = runCase({ levels: [], missing: true, missingExitCode: 143, workBudget: 5000 });
 assert.equal(run.result.status, 2, run.result.stderr);
 assert.equal(run.outcome.outcome, 'timeout');
+
+// Regression: a shard_count=1 dispatch (e.g. a single-level execution-family canary) is the only
+// outer shard, so actions/download-artifact's pattern match downloads its files flat into the
+// staging directory with no per-artifact subdirectory. The combiner must still see this shard's
+// real result instead of silently reporting "0 tested, 0 missing" (observed in GHA run
+// 35465899667, where R00044 actually solved but the flat layout made combine.json report nothing).
+run = runCase({ levels: [{ id: 'R00044', ok: true, nodesExpanded: 219802423 }], flat: true });
+assert.equal(run.result.status, 0, run.result.stderr);
+assert.equal(run.outcome.outcome, 'completed-positive');
 
 console.log('combine method-probe shard outcome tests passed');
