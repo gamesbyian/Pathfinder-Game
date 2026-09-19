@@ -701,10 +701,12 @@
       "result": null,
       "constrainedBy": [
         "reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md",
+        "reports/2026-09-18-ws2-work-ladder-economics-preflight-001.md",
         "docs/solver-optimization-workstreams.md"
       ],
       "constrains": [
-        "No production node-budget change before a matched-work economics comparison, not a raw recovery-rate comparison."
+        "No production node-budget change before a matched-work economics comparison, not a raw recovery-rate comparison.",
+        "The 600M shape check (2026-09-19) found a threshold response (0/20 at 300M and 600M, 3/20 at 1.2B): the useful escalation on this population is the full 4x, not a cheaper 2x. Cost the 4x-only case against the 390-row Class-5 residual next."
       ],
       "reopensOn": null,
       "premiseRefs": [],
