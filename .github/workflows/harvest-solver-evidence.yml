@@ -167,8 +167,8 @@ jobs:
               --staging-dir=artifact-staging \
               --out-root=reports/stress/experiment-evidence
 
-            if git diff --quiet -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ 2>/dev/null; then
-              echo 'No new canonical hint/provenance or decision-bearing experiment evidence to persist.'
+            if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ 2>/dev/null)" ]; then
+              echo 'No new canonical hint/provenance, selection, pending, or decision-bearing experiment evidence to persist.'
               exit 0
             fi
 
