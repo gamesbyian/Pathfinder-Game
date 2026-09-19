@@ -25,6 +25,19 @@ These become eligible only after the active premise gate immediately above them 
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
 
+## Search-loss evidence plan closeout
+
+[`solver-search-loss-evidence-implementation-plan.md`](solver-search-loss-evidence-implementation-plan.md) is implemented through all currently executable infrastructure work. Its remaining work is condition-gated and must resume automatically when the relevant condition becomes true; do not require a new archaeology pass or this conversation to rediscover it.
+
+| Remaining obligation | Reopen / closeout condition |
+|---|---|
+| Phase 8 — Resource Contract audit and resource promotion decision | Reopen when a **genuine recurring search-loss producer population** exists. Then audit producer, conditioning/selection, independent unit, identity layers, missingness, dependence, freshness, irreversible information loss, durability, query discoverability, consumers, and historical blast radius; add/update `docs/solver-research-resource-contract-audits.json`; exercise normal asset/relation discovery; then either promote the asset from `contract-only` or record why it remains/returns contract-only. A one-off canary must never be relabeled “recurring” merely to clear this gate. |
+| Phase 9 — bounded operational-divergence / first-loss survey | Reopen only when `solver-optimization-workstreams.md` explicitly selects operational divergence / first-loss as the active WS2 discriminator. Then execute the plan's frozen parent-level survey and its cheapest-evidence-first procedure. Do not infer selection merely from the existence of search-loss tooling. |
+| Plan closeout | After Phase 8 has been completed once a recurring producer exists, and after Phase 9 has either been completed when authorized **or** explicitly retired/deferred by current workstream authority, mark the implementation plan complete/closed. Preserve any still-valid long-term descendants as separate future-work items rather than leaving the implementation plan perpetually open. |
+| Early retirement / simplification | If any stop condition in the plan fires first (existing-resource collapse, no useful opportunity, storage explosion, causal ambiguity not reduced, opaque selection semantics, or production perturbation), record the disposition and close/narrow the plan instead of mechanically pursuing later phases. |
+
+Until those triggers fire, no further implementation is owed merely to increase phase-count completeness. The real-capture empirical gate is already closed; the remaining blockers are recurrence for Phase 8 and queue selection for Phase 9.
+
 ## Other deferred architectural questions
 
 | Question | Reopen condition |
