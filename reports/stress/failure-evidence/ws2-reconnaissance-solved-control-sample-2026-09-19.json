@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-ws2-reconnaissance-solved-control-sample",
+  "createdAt": "2026-09-19",
+  "questionId": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
+  "sourceBoundary": {
+    "capabilityRunId": "35066677597",
+    "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "corpus": "data/stress/stress-levels-random.json",
+    "corpusSize": 1700,
+    "solved": 1169,
+    "residual": 531
+  },
+  "selection": {
+    "method": "uniform deterministic sample from current Corpus-2 solved set; FNV-1a seed -> mulberry32 -> Fisher-Yates",
+    "seed": "ws2-failure-response-reconnaissance-solved-control-2026-09-19",
+    "eligibleCount": 1169,
+    "sampleCount": 30
+  },
+  "ids": [
+    "R00544",
+    "R00592",
+    "R00989",
+    "R01691",
+    "R02017",
+    "R02052",
+    "R02110",
+    "R02127",
+    "R02158",
+    "R02331",
+    "R02341",
+    "R02355",
+    "R02357",
+    "R02362",
+    "R02423",
+    "R02474",
+    "R02572",
+    "R02584",
+    "R02617",
+    "R02657",
+    "R02679",
+    "R02706",
+    "R02837",
+    "R02960",
+    "R03014",
+    "R03023",
+    "R03277",
+    "R03299",
+    "R03312",
+    "R03363"
+  ]
+}
