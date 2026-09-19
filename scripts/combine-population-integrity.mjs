@@ -4,6 +4,12 @@ import path from 'node:path';
 import process from 'node:process';
 import { hashPopulation } from './solver-experiment-contract.mjs';
 
+export function encodeScopedPopulationIdentity(scope, subjectId) {
+  if (typeof scope !== 'string' || scope.length === 0) throw new Error('population identity scope must be a non-empty string');
+  if (typeof subjectId !== 'string' || subjectId.length === 0) throw new Error('population subject id must be a non-empty string');
+  return JSON.stringify([scope, subjectId]);
+}
+
 export function combinePopulationIntegrity(inputs, { kind = 'multi-population', identityBasis = 'population-label-and-subject-id' } = {}) {
   if (!Array.isArray(inputs) || inputs.length === 0) throw new Error('at least one labeled integrity input is required');
   const labels = new Set();
@@ -14,6 +20,8 @@ export function combinePopulationIntegrity(inputs, { kind = 'multi-population', 
     if (!input.integrity?.outcomes || typeof input.integrity.outcomes !== 'object') throw new Error(`${input.label}: integrity record lacks outcomes`);
   }
   const expectedIds = inputs.flatMap(({ label, integrity }) => integrity.expectedIds.map(id => `${label}:${id}`));
+  const canonicalExpectedIds = inputs.flatMap(({ label, integrity }) =>
+    integrity.expectedIds.map(id => encodeScopedPopulationIdentity(String(label), String(id))));
   const outcomeKeys = [...new Set(inputs.flatMap(({ integrity }) => Object.keys(integrity.outcomes)))].sort();
   const coverageComplete = inputs.every(({ integrity }) => (integrity.coverageComplete ?? integrity.complete) === true);
   const decisionValidComplete = inputs.every(({ integrity }) => {
@@ -33,8 +41,10 @@ export function combinePopulationIntegrity(inputs, { kind = 'multi-population', 
     unexpectedIds: inputs.flatMap(({ label, integrity }) => integrity.unexpectedIds.map(id => `${label}:${id}`)),
     missingIds: inputs.flatMap(({ label, integrity }) => integrity.missingIds.map(id => `${label}:${id}`)),
     expectedIds,
+    canonicalExpectedIds,
+    identityCodec: 'json-tuple-v1',
     outcomes: Object.fromEntries(outcomeKeys.map(key => [key, inputs.reduce((sum, { integrity }) => sum + (integrity.outcomes[key] ?? 0), 0)])),
-    populationIdentityHash: hashPopulation({ kind, identityBasis, identities: expectedIds }).identityHash,
+    populationIdentityHash: hashPopulation({ kind, identityBasis, identityCodec: 'json-tuple-v1', identities: canonicalExpectedIds }).identityHash,
     components: inputs.map(({ label, integrity }) => ({
       label,
       populationIdentityHash: integrity.populationIdentityHash ?? null,
