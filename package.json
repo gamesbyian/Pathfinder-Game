@@ -289,7 +289,9 @@
     "test:failure-response-query": "node scripts/failure-response-query-node-test.mjs",
     "test:method-probe-shard-plan": "node scripts/method-probe-shard-plan-node-test.mjs",
     "research:analyze-reserve-starvation": "node scripts/analyze-reserve-starvation-probe.mjs",
-    "test:reserve-starvation-probe": "node scripts/analyze-reserve-starvation-probe-node-test.mjs"
+    "test:reserve-starvation-probe": "node scripts/analyze-reserve-starvation-probe-node-test.mjs",
+    "research:analyze-class3-dose": "node scripts/analyze-class3-dose-exposure.mjs",
+    "test:class3-dose-exposure": "node scripts/analyze-class3-dose-exposure-node-test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
