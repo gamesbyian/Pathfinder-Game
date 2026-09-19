@@ -8,6 +8,11 @@ import {
     provenanceDependencyStratum,
 } from './stress/provenance-source-taxonomy.mjs';
 import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
+import {
+    HINT_DISCOVERY_REPLAY_BASES,
+    classifyHintDiscoveryReplayability,
+    summarizeHintDiscoveryReplayability,
+} from './hint-discovery-replayability-lib.mjs';
 
 const sortedCounts = values => Object.fromEntries([...values.entries()]
     .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]))));
@@ -60,6 +65,7 @@ export function summarizeHintRecords(hints, { standard = 'strict' } = {}) {
     return {
         coldEvidenceStandard: standard,
         ...classes,
+        discoveryReplayability: summarizeHintDiscoveryReplayability(hints),
         hintSources: sortedCounts(hintSources),
         entrySources: sortedCounts(entrySources),
         solverIds: sortedCounts(solverIds),
@@ -81,11 +87,16 @@ export function compactHintRecord(hint, index, {
     const techniques = new Set();
     const retryTiers = new Set();
     const workSpent = [];
+    const replayBasisCounts = Object.fromEntries(HINT_DISCOVERY_REPLAY_BASES.map(key => [key, 0]));
+    const replayReasons = new Set();
     for (const entry of entries) {
         if (entry?.solver?.id) solverIds.add(entry.solver.id);
         if (entry?.solver?.technique) techniques.add(entry.solver.technique);
         if (entry?.solver?.forcing?.retryTier) retryTiers.add(normalizeRetryTier(entry.solver.forcing.retryTier));
         if (Number.isFinite(entry?.search?.workSpent)) workSpent.push(entry.search.workSpent);
+        const replay = classifyHintDiscoveryReplayability(entry);
+        replayBasisCounts[replay.replayBasis] += 1;
+        replayReasons.add(replay.reason);
     }
     const result = {
         hintIndex: index + 1,
@@ -96,6 +107,10 @@ export function compactHintRecord(hint, index, {
         solverIds: [...solverIds].sort(),
         techniques: [...techniques].sort(),
         retryTiers: [...retryTiers].sort(),
+        discoveryReplayability: {
+            replayBasisCounts,
+            reasons: [...replayReasons].sort(),
+        },
         workSpent: numericSummary(workSpent),
     };
     if (evidencePurpose) {
@@ -121,11 +136,14 @@ export function compactHintRecord(hint, index, {
 
 export function queryHintRecords(hints, options = {}) {
     const {
-        standard = 'strict', className, source, solverId, technique, retryTier, query,
+        standard = 'strict', className, source, solverId, technique, retryTier, replayBasis, query,
         evidencePurpose = null, evidenceApplicability = null, comparableSolverVersions = [],
     } = options;
     if (evidenceApplicability && !EVIDENCE_APPLICABILITY.includes(evidenceApplicability)) {
         throw new Error(`unknown evidence applicability: ${evidenceApplicability}`);
+    }
+    if (replayBasis && !HINT_DISCOVERY_REPLAY_BASES.includes(replayBasis)) {
+        throw new Error(`unknown hint discovery replay basis: ${replayBasis}`);
     }
     const needle = query?.toLowerCase();
     const out = [];
@@ -136,6 +154,7 @@ export function queryHintRecords(hints, options = {}) {
         if (solverId && !compact.solverIds.includes(solverId)) return;
         if (technique && !compact.techniques.some(value => value === technique || value.includes(technique))) return;
         if (retryTier && !compact.retryTiers.includes(normalizeRetryTier(retryTier))) return;
+        if (replayBasis && !compact.discoveryReplayability.replayBasisCounts[replayBasis]) return;
         if (evidenceApplicability && !compact.evidence?.applicabilityCounts?.[evidenceApplicability]) return;
         if (needle && !JSON.stringify(compact).toLowerCase().includes(needle)) return;
         out.push({ compact, hint });
