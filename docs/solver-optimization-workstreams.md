@@ -80,7 +80,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**: 4x escalation costs ~14.1B work/marginal solve, 24x-635x pricier than EW1's already-published cheap-technique costs, zero new compute. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md) Falls through to remaining candidates: operational divergence/first-loss survey, rejection counterfactuals, 2x2 interaction; A/F3 keep existing reopen gates. The search-loss evidence implementation plan is complete through its currently executable infrastructure phases; its remaining obligations are durable reopen/closeout items in [`solver-future-work.md`](solver-future-work.md), not a reason to privilege first-loss over the other WS2 discriminators.
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**: 4x escalation costs ~14.1B work/marginal solve, 24x-635x pricier than EW1's already-published cheap-technique costs, zero new compute. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md) Falls through to operational divergence/first-loss, rejection counterfactuals, or 2x2 interaction; A/F3 retain their reopen gates. Deferred plan closeouts live in [`solver-future-work.md`](solver-future-work.md).
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -90,7 +90,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Select among remaining discriminators (op. divergence/first-loss, rejection, 2x2), or explicit A-F3 gates; if first-loss is selected, execute search-loss plan Phase 9 | `WS2-WORK-LADDER-ECONOMICS` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Select op. divergence/first-loss, rejection, 2x2, or an explicit A-F3 reopen; first-loss activates search-loss Phase 9 | `WS2-WORK-LADDER-ECONOMICS` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
