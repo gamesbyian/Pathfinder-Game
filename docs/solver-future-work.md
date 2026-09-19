@@ -27,9 +27,23 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Deferred plan closeouts
 
-- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** substrate complete. Resume P3 on compact rows, P4A on current Class-3 dose, P4B on frozen reserve probe; retire when descendants have owners.
-- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurrence; P9 needs first-loss selection. No synthetic recurrence.
+- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** substrate complete. Resume P3 through the existing `WS2-FAILURE-RESPONSE-RECONNAISSANCE` question when a maintained producer yields a relevant protocol-compatible compact-response population; resume P4A through `WS2-CLASS3-DOSE-EXPOSURE`; resume P4B through `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`. P7 recurrence/phenotype reducers become eligible only after repeated compatible real populations exist. Retire the plan once those descendants and the rich/first-loss gates below have durable owners/dispositions.
+- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** P8 resumes when a genuine recurring rich producer population exists; perform the Resource Contract audit and explicitly promote or remain contract-only. P9 resumes only when workstream authority selects operational divergence / first-loss. No synthetic recurrence or ceremonial first-loss run.
 - **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run P7 and retire.
+
+## Evidence-gated descendants from hint/failure cross-pollination
+
+These are durable reopen hooks from the September 19 success/failure evidence integration. They are not standing background campaigns.
+
+| Descendant | Reopen / completion condition |
+|---|---|
+| Current compact-response identity / novelty / saturation / phenotype-frontier audit | A maintained producer has accumulated a protocol-compatible post-instrumentation compact-response population with enough repeated parent-level observations to make collision, novelty, saturation, or “knowable-at-time” analysis meaningful. Run the existing failure-evidence identity/novelty/frontier tooling on that real population, preserve parent-level dependence and solved controls, and record the result as a dated report. Do not backfill from pre-contract native attempt arrays. |
+| Recurring failure phenotype reducers | Repeated compatible real populations exist and the basic WS2 reconnaissance still leaves an ambiguity that recurrence could reduce. Build only rebuildable coarse/reason/basin/exact-annotated views justified by available identities; keep reason recurrence distinct from state/basin recurrence. Close or narrow if recurrence does not reduce experiment-selection cost. |
+| Rich search-loss Resource Contract promotion decision | A genuine recurring producer/consumer population exists with observable selection conditioning, missingness, selector opportunity, solved/failed controls, protocol evolution and storage economics. Execute search-loss Phase 8, then make an explicit audited-resource vs contract-only decision. |
+| First-loss scientific study | `solver-optimization-workstreams.md` explicitly selects operational divergence / first-loss as the current WS2 discriminator. Reuse automatic response, compact diagnostics, search-loss capsules, known-support-extinction projection, traces and exact labels in the existing Phase-9 information-cost order. Output parent-level causal uncertainty rather than forcing a complete taxonomy. |
+| Persist run-envelope fields directly in Hint provenance | A concrete durable consumer cannot be served by the existing `hint-discovery-process` sibling resource plus experiment-contract join, and repeated use demonstrates that direct persistence would remove material ambiguity or fragility. Until then, keep Hint persistence unchanged and treat the sibling resource as authoritative process context. |
+
+Whole-solution-space extinction is **not** a deferred task. Stored hints/known families are sampled positive oracles; zero known-support survival cannot establish that every valid solution is extinct.
 
 ## Other deferred architectural questions
 
