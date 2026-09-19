@@ -571,10 +571,14 @@ For important corroboration/replication, support an explicit vector when relevan
 - instrument-implementation independence;
 - analysis-method independence;
 - analyst/model independence;
+- task-framing/prompt independence;
+- authority/context-exposure independence;
 - ontology/vocabulary independence;
 - critical-library/code independence.
 
 This is descriptive metadata, not an "independence score."
+
+In this repository, solver research is routinely executed through coding/research agents whose canonical entry point explicitly routes them through current workstream and method authorities. That is useful coordination, but it means two nominally different agents or models can still share the same framing, source exposure and authority-induced blind spots. Conversely, the same model under materially different frozen source bundles can provide meaningful framing/context independence. Treat agent/model identity and framing/context exposure as separate dimensions when independent reconstruction or corroboration actually matters.
 
 A replication may be strong on one axis and deliberately shared on another.
 
@@ -1285,7 +1289,7 @@ Candidate functions:
 - recover interrupted acquisition;
 - preserve prospective expectation/surprise;
 - support hard-blind confirmation when earned;
-- preserve implementation/analyst/ontology independence where scientifically useful.
+- preserve implementation/analyst/framing/context/ontology independence where scientifically useful.
 
 Classify each as:
 
@@ -1389,6 +1393,20 @@ When the specific question is whether canonical memory or vocabulary is anchorin
 - compare semantic deltas, ontology escapes and genuinely different discriminators, not wording or stylistic novelty.
 
 This is controlled **non-exposure**, not evidence deletion. Keep the full repository history intact. Do not turn every independent inquiry into a paired experiment; use this only when ontology/anchoring independence is itself decision-relevant.
+
+### Agent framing and context are part of the instrument
+
+For agent-executed high-leverage independent inquiry, record only the exposure distinctions needed to interpret independence, for example:
+
+- which canonical queue/plan/premise/capability authorities were visible;
+- whether prior conclusions and named lanes were visible;
+- which primary evidence/code surfaces were provided;
+- whether the task asked for confirmation, criticism, reconstruction or open-ended generation;
+- whether multiple agents shared the same prompt skeleton or source bundle.
+
+Do not archive every prompt or create an agent-performance registry. The point is narrower: **model independence is not framing independence**, and a fresh model reading the same authority stack may reproduce the same blind spot. Where independence is scientifically important, vary the relevant exposure/framing dimension deliberately and freeze it before reconciliation.
+
+This also means the ordinary agent router is itself part of Pathfinder's research architecture. Changes to `AGENTS.md`, compact front doors or mandatory authority order can alter what questions agents notice first. Treat major routing changes as research-system interventions whose observer effects may deserve a bounded before/after or paired check when they materially change inquiry behavior.
 
 ### Saturation interpretation
 
@@ -1885,7 +1903,7 @@ This plan is successful when the following are true.
 25. Decision-bearing producers project into a small compatible scientific semantic kernel without forcing specialist payloads into one mega-schema.
 26. Experiments with nontrivial clustering/assignment structure can distinguish observation, assignment, opportunity/exposure, dependence, analysis and generalization units.
 27. Architecture/population-relative evidence can remain historically valid while being explicitly stale or unqualified for a current decision, without automatic time-based expiry.
-28. Important corroborations can state what is and is not independent across data, source, instrument, analysis, analyst/model, ontology and critical code.
+28. Important corroborations can state what is and is not independent across data, source, instrument, analysis, analyst/model, task framing, authority/context exposure, ontology and critical code.
 29. High-selection experiments can freeze an analysis/decision contract before treatment outcomes are opened.
 30. Execution outcome, scientific disposition and decision disposition are machine-distinguishable.
 31. Important reusable results can emit local claim capsules with explicit estimand/discriminator, scope, limitations and decision consequence.
@@ -1927,7 +1945,8 @@ Do not use this plan to:
 - delete historical evidence merely to reduce documentation counts;
 - equate synthetic challenge prevalence with production prevalence;
 - promote a new research framework without a real consumer;
-- recurse indefinitely into research about research.
+- recurse indefinitely into research about research;
+- archive or score every agent prompt/session merely because agents are part of the research instrument.
 
 # Part XI - First implementation tranche recommendation
 
@@ -1954,7 +1973,7 @@ Recommended first tranche:
 17. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
 18. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
 19. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
-20. audit one important "replicated" result for independence across data/source/instrument/analysis/model/ontology/code rather than merely independent units;
+20. audit one important "replicated" result for independence across data/source/instrument/analysis/model/framing/context-exposure/ontology/code rather than merely independent units;
 21. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
 
 The first tranche should answer six meta-questions before more infrastructure is built:
