@@ -1,6 +1,6 @@
 # Search-loss instrumentation pilot
 
-> **Status:** representative instrumentation gate complete; Resource Contract promotion still blocked.
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-19 — 16-parent hosted real-search canary with solved controls, parity, overhead, bounded-capture, and audit-preflight evidence.
 > **Decision:** compact failure instrumentation is safe for ordinary collection at the measured cost; rich capsules remain selective/question-driven because their hosted wall overhead is about 10%.
 > **Remaining gate:** an actual recurring search-loss producer population before Resource Contract promotion/audit declaration. Do not manufacture recurrence from a one-off canary.
