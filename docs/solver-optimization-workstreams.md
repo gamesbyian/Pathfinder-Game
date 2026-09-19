@@ -5,7 +5,7 @@
 > **Reconciled:** 2026-09-19.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
-Method: [`solver-research-operating-model.md`](solver-research-operating-model.md) · Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md) · Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) · Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md) · Semantic gaps: [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) · Stops: [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md).
+Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability memory: [`capability memory`](solver-capability-memory.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
 
 Program lens: **composition** exposes demonstrated capability; **acquisition** creates missing generic capability. Emphasis: acquire.
 
@@ -33,7 +33,7 @@ Cheap premise tests may run in parallel; expensive treatments require a positive
 
 #### Lane A — separator / decomposition
 
-**BOUNDED POSITIVE; CONTRACT-FALSIFIER READY.** 121/390 Class-5 levels have balanced width<=4 interfaces. A×D3×F3 reconciliation now defines nested C0-C4 interface signatures; existing evidence already falsifies simpler contracts. **Next:** frozen-prefix exact signature-collision test only. [`reconciliation`](../reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md) · [`preflight`](solver-separator-dynamic-interface-contract-preflight.md)
+**C0 MIXED (expected); PROCEED TO C1.** 121/390 balanced width<=4 Class-5 levels. C0 falsifier (581 cases/144 groups): 2 groups mix live/dead, falsified. Next: precommit C1. [`preflight`](solver-separator-dynamic-interface-contract-preflight.md) · [`result`](../reports/2026-09-19-lane-a-c0-signature-collision-result-001.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
