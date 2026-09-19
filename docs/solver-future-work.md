@@ -3,7 +3,7 @@
 
 Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active state; [`solver-research-operating-model.md`](solver-research-operating-model.md) method; [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) semantic gaps; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) tested-form vs premise closure.
 
-**Level-blindness constrains provenance, not specificity.** A generic cold procedure may derive exact, board-specific facts, proofs, conflicts, decompositions, topology state, canonical forms, or search plans from current puzzle/current invocation inputs. Cross-parent recurrence is required for a fixed reusable descriptor claim, not for every generic per-instance derivation procedure.
+**Level-blindness constrains provenance, not specificity:** generic cold procedures may derive exact current-input facts; cross-parent recurrence is required only for fixed reusable descriptor claims.
 
 ## Promoted out of future work
 
