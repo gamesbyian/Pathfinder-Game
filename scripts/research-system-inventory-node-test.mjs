@@ -23,6 +23,20 @@ assert.ok(inventory.planLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md' &&
     row.archived === false &&
     row.status?.includes('proposed implementation plan')));
+assert.ok(inventory.documentation.currentReferenceCount > 0, 'inventory must derive the docs current-reference index');
+assert.ok(inventory.documentation.currentReferences.some(row =>
+    row.path === 'docs/solver-workflow-evidence-remediation-plan.md'));
+const completedCurrentRef = inventory.planLifecycle.find(row =>
+    row.path === 'docs/solver-workflow-evidence-remediation-plan.md');
+assert.equal(completedCurrentRef?.kind, 'plan');
+assert.equal(completedCurrentRef?.currentReference, true);
+assert.equal(completedCurrentRef?.appearsConcluded, true);
+assert.equal(completedCurrentRef?.currentReferenceMismatch, true,
+    'completed historical plans still routed as current references should be visible as retrieval-entropy findings');
+assert.ok(inventory.planLifecycle.some(row => row.kind === 'preflight'),
+    'lifecycle inventory must cover preflights, not only *-plan.md files');
+assert.ok(inventory.planLifecycle.some(row => row.kind === 'handoff'),
+    'lifecycle inventory must cover handoffs, not only *-plan.md files');
 assert.ok(Array.isArray(inventory.sharedImplementationDependencies));
 assert.equal(
     inventory.diagnostics.fragilePlanLifecycleCount,
