@@ -1540,7 +1540,7 @@ Never default to raw capsule count as prevalence.
 
 ### Phase 8 - resource audit
 
-> **Status (2026-09-19): not yet earned.** The registry remains `contract-only`: no representative real generic capture has cleared Phase 4 parity/overhead and no recurring producer population exists to audit for empirical missingness/conditioning. Do not register an audit-grade resource from synthetic fixtures.
+> **Status (2026-09-19): not yet earned; readiness is now mechanically checkable.** The registry remains `contract-only`: no representative real generic capture has yet cleared the Phase 4 parity/overhead gate and no recurring producer population exists to audit for empirical missingness/conditioning. `search-loss-resource-audit-preflight.mjs` now validates a real capture's parity, parent count, selector denominators, immutable run identity, solved/failed control presence, and recurring-producer declaration so promotion cannot happen by eyeballing a synthetic fixture.
 
 **Goal:** promote from catalogue-grade to audited-resource grade before broad recurring decision use.
 
