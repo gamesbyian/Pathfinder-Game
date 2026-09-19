@@ -17,7 +17,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / WORK-LADDER POSITIVE-NARROW, ECONOMICS NEXT; no implementation earned.
+**State:** ACTIVE / WORK-LADDER ECONOMICS CLOSED NEGATIVE; FAILURE-RESPONSE RECONNAISSANCE ELIGIBLE; no implementation earned.
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
@@ -42,7 +42,7 @@ Cheap retained/offline premise tests may run in parallel. Expensive treatments r
 
 #### Lane C — solve-local typed knowledge reuse
 
-**PHASE-0 NEGATIVE.** No new fact family earned an observer: class B is already shipped/audited infra, class C correctly unmemoized, class D showed no opportunistic recurrence. No generic blackboard. [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md)
+**PHASE-0 NEGATIVE.** No new fact family earned an observer: class B is already shipped/audited infra, class C correctly unmemoized, class D showed no opportunistic recurrence. No generic blackboard. Reopen evidence may now come from repeated typed reason/state recurrence in protocol-compatible compact/rich failure evidence, but recurrence must first be demonstrated rather than assumed. [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md)
 
 #### Lane D — per-instance relational feasibility
 
@@ -58,13 +58,13 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane F — bounded exposure / representation
 
-1. **Class-3 dose: EVIDENCE GAP.** MO-004 analysis exists, but historical per-technique dose telemetry does not. Reopen only from prospective exact-action participation/work data. [`result`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
+1. **Class-3 dose: EVIDENCE GAP.** MO-004 analysis exists, but historical per-technique dose telemetry does not. Reopen only from prospective protocol-compatible exact-action participation/work data; the standard compact failure-response document/query path is now the preferred acquisition seam. [`result`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
 2. **Card-E quotient: MIXED.** Board-independent signal survives Card-E permutation tests but is insufficient for canonicalization/classifier. [`result`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md)
 3. **F3 topology microscope: QUALIFIED POSITIVE; CONSUMER GATE STOPS AT DECISION-BEARING COVERAGE.** Cheap descriptor is 8/8 when closest point unique, but that subset has zero decision-relevant discordance. All 9 decisive-puncture discordant rows are tied; tied reliability is 7/9 and cheap tie refinement does not improve it. No selector/prune consumer earned. **Reopen:** fresh independent parents only if a reliable compact descriptor has non-zero decision-bearing discordance. [`result`](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md) · [`census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
 
 #### Lane G — independent search-object nursery
 
-**G1 complete-path LNS:** Stage 1 positive; naive Stage 2 method-limited. Real production-frontier sampling now exists, so the remaining gate is a fair full candidate derived from frozen real-search partials, then distance/local-repairability. No LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
+**G1 complete-path LNS:** Stage 1 positive; naive Stage 2 method-limited. Real production-frontier sampling now exists, so the remaining gate is a fair full candidate derived from frozen real-search partials, then distance/local-repairability. Rich search-loss capsules may supply additional production-real partials/basin context, but do not replace Lane G's specialist sampler or frozen candidate-construction gate. No LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
@@ -80,7 +80,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**: 4x escalation costs ~14.1B work/marginal solve, 24x-635x pricier than EW1's already-published cheap-technique costs, zero new compute. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md) Falls through to first-loss, rejection counterfactuals, or 2x2; A/F3 retain reopen gates. Deferred closeouts: [`solver-future-work.md`](solver-future-work.md).
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**: 4x escalation costs ~14.1B work/marginal solve, 24x-635x pricier than EW1's already-published cheap-technique costs, zero new compute. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md) Before choosing among first-loss, rejection counterfactuals, or 2x2, run the bounded failure-response reconnaissance in [`solver-failure-evidence-research-integration-plan.md`](solver-failure-evidence-research-integration-plan.md): existing compact response first, then compact diagnostics only if still unresolved. This is a selection aid, not a new competing workstream. A/F3 retain reopen gates. In parallel, `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` may size the R00044 allocation-order premise from existing/prospective compact attempt evidence; it does not reopen broad 4x economics. Deferred closeouts: [`solver-future-work.md`](solver-future-work.md).
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -90,7 +90,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Select op. divergence/first-loss, rejection, 2x2, or A-F3 reopen; first-loss activates search-loss Phase 9 | `WS2-WORK-LADDER-ECONOMICS` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Bounded failure-response reconnaissance, then select op. divergence/first-loss, rejection, 2x2, or A-F3 reopen; first-loss activates search-loss Phase 9 | `WS2-WORK-LADDER-ECONOMICS` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
