@@ -61,6 +61,11 @@ assert.deepEqual(cmp.gained, []);
 assert.deepEqual(cmp.lost, ['L2']); // full-menu solved L2, portfolio-11 did not
 assert.equal(cmp.workDelta, portfolio11.work - fullMenu.work);
 assert.equal(result.researchOutcome.outcome, 'completed-negative');
+assert.equal(result.failureResponse.observed, 6);
+assert.equal(result.failureResponse.outcomes.success, 3);
+assert.equal(result.populationIntegrity.expectedCount, 6);
+assert.equal(result.populationIntegrity.observedCount, 6);
+assert.equal(result.populationIntegrity.coverageComplete, true);
 
 const gainShard = { results: [
     cell('control-l1', 'L1', 'control', false, 100),
