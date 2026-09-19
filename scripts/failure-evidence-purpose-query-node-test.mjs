@@ -29,7 +29,7 @@ try {
             },
         ],
         summary: { observed: 3 },
-        populationIntegrity: { coverageComplete: true },
+        populationIntegrity: { coverageComplete: true, decisionValidComplete: true },
         protocolHash: 'proto',
         solverRef: 'solver',
         sourceFiles: [],
