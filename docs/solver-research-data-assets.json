@@ -191,7 +191,8 @@
         "production-benchmarks",
         "technique-census",
         "level-structure-fingerprint",
-        "hint-discovery-process"
+        "hint-discovery-process",
+        "hint-harvest-selection-provenance"
       ],
       "affordances": [
         "Ask an explicit evidence-purpose question instead of treating every valid historical discovery as equivalent evidence.",
@@ -270,6 +271,58 @@
         "Historical process evidence does not establish current capability merely because the path remains referee-valid.",
         "Parent level remains the default independent unit unless the owning experiment contract declares a different independent unit.",
         "This is offline research evidence and may not become exact-level production steering."
+      ]
+    },
+    {
+      "id": "hint-harvest-selection-provenance",
+      "name": "Hint harvest selection provenance",
+      "status": "generated-interface",
+      "grain": [
+        "source-run",
+        "harvest funnel",
+        "quarantine reason"
+      ],
+      "locations": [
+        {
+          "kind": "pattern",
+          "path": "reports/stress/hint-harvest-selection/run-<run-id>.json"
+        }
+      ],
+      "authorities": [
+        "scripts/hint-harvest-selection-manifest-lib.mjs",
+        "scripts/harvest-level-blind-report-hints.mjs",
+        ".github/workflows/harvest-solver-evidence.yml"
+      ],
+      "queryEntryPoints": [
+        "node scripts/research-asset-query.mjs --id=hint-harvest-selection-provenance",
+        "reports/stress/hint-harvest-selection/run-<run-id>.json"
+      ],
+      "joinKeys": [
+        "source runId",
+        "source workflow",
+        "harvested hint/provenance outputs"
+      ],
+      "evidenceRoles": [
+        "selection-audit",
+        "longitudinal-process",
+        "forensic"
+      ],
+      "relatedAssets": [
+        "hint-provenance",
+        "production-benchmarks",
+        "experiment-manifests",
+        "raw-logs-and-baselines"
+      ],
+      "affordances": [
+        "Measure how many already-solved source rows were observed, referee-accepted, persisted as new path/provenance evidence, already represented, or quarantined.",
+        "Preserve why solved evidence failed to enter the current hint store instead of silently losing the selection boundary.",
+        "Audit whether changes in the hint store reflect producer novelty, persistence deduplication, or reconciliation/quarantine behavior."
+      ],
+      "caveats": [
+        "The denominator is success-selected source rows, not the originating attempted solver population.",
+        "These manifests cannot estimate solve rate or relative technique performance without joining the originating experiment population/failures.",
+        "A referee-accepted row that makes no persistence change usually means equivalent evidence was already represented; it is not a failed discovery.",
+        "Quarantined evidence remains historical/forensic material and must not be silently reclassified as current capability."
       ]
     },
     {
@@ -1377,6 +1430,21 @@
     }
   ],
   "relationships": [
+    {
+      "id": "hint-provenance-to-harvest-selection",
+      "assets": [
+        "hint-provenance",
+        "hint-harvest-selection-provenance",
+        "experiment-manifests"
+      ],
+      "join": "source runId/workflow to harvested hint/provenance changes and owning experiment evidence",
+      "questions": [
+        "Did this run add genuinely new accepted paths/provenance or mostly rediscover already-represented evidence?",
+        "Were missing hint discoveries rejected by the referee, blocked by revision mismatch, or simply absent from the success-selected source artifacts?",
+        "Can harvest-selection effects be separated from solver performance effects before interpreting longitudinal hint counts?"
+      ],
+      "boundary": "Harvest manifests describe selection among already-solved candidate rows. They are not attempted-population denominators and cannot support solve-rate or technique-performance claims without the originating run population."
+    },
     {
       "id": "hint-provenance-to-discovery-process",
       "assets": [
