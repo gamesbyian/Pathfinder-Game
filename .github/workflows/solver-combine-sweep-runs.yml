@@ -178,6 +178,7 @@ jobs:
           node scripts/summarize-solver-failure-response.mjs \
             --in="logs/solver-combined/combined.json" \
             --rows-key=levels \
+            --contract-file="logs/solver-combined/experiment-contract.json" \
             --out="logs/solver-combined/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/solver-combined/combined.json" \
