@@ -119,6 +119,23 @@ function parentOutcome(list) {
     }
     return 'unknown';
 }
+function addAttemptGroup(map, key, attempt) {
+    const normalized = key == null || key === '' ? 'unknown' : String(key);
+    const group = map.get(normalized) ?? { attempts: 0, outcomes: new Map(), work: [], nodes: [] };
+    group.attempts += 1;
+    increment(group.outcomes, attempt.outcome);
+    if (Number.isFinite(attempt.workSpent)) group.work.push(attempt.workSpent);
+    if (Number.isFinite(attempt.nodesExpanded)) group.nodes.push(attempt.nodesExpanded);
+    map.set(normalized, group);
+}
+function finalizeAttemptGroups(map) {
+    return Object.fromEntries([...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([key, group]) => [key, {
+        attempts: group.attempts,
+        outcomes: objectFrom(group.outcomes),
+        work: numericStats(group.work),
+        nodes: numericStats(group.nodes),
+    }]));
+}
 const parentRows = new Map();
 for (const row of rows) {
     const parent = String(row.parentId ?? row.identity);
@@ -136,6 +153,8 @@ const parentOutcomeCounts = new Map();
 const attemptOutcomeCounts = new Map();
 const attemptActionCounts = new Map();
 const attemptStageCounts = new Map();
+const attemptGroupsByAction = new Map();
+const attemptGroupsByStage = new Map();
 let attemptRecords = 0;
 let rowsWithWork = 0;
 let totalWorkSpent = 0;
@@ -173,6 +192,8 @@ for (const row of rows) {
         increment(attemptOutcomeCounts, attempt.outcome);
         increment(attemptActionCounts, attempt.actionKey);
         increment(attemptStageCounts, attempt.stageId);
+        addAttemptGroup(attemptGroupsByAction, attempt.actionKey, attempt);
+        addAttemptGroup(attemptGroupsByStage, attempt.stageId, attempt);
     }
 }
 
@@ -234,7 +255,14 @@ const result = {
             finalMinusBest: numericStats(badnessDeltaValues),
             interpretation: 'Descriptive support only; no directionality or causal meaning is inferred from badness deltas.',
         },
-        attempts: { records: attemptRecords, outcomes: objectFrom(attemptOutcomeCounts), actions: objectFrom(attemptActionCounts), stages: objectFrom(attemptStageCounts) },
+        attempts: {
+            records: attemptRecords,
+            outcomes: objectFrom(attemptOutcomeCounts),
+            actions: objectFrom(attemptActionCounts),
+            stages: objectFrom(attemptStageCounts),
+            byAction: finalizeAttemptGroups(attemptGroupsByAction),
+            byStage: finalizeAttemptGroups(attemptGroupsByStage),
+        },
         denominatorNote: 'Parent-level counts are the default independent-unit denominator; record/attempt counts are support diagnostics.',
     },
 };
