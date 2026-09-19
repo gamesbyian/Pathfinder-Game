@@ -12,7 +12,7 @@ import path from 'node:path';
 
 export const DISPOSITION_REGISTRY_PATH = 'docs/solver-failure-evidence-disposition.json';
 const DISPOSITIONS = new Set(['standard', 'specialized-opt-out', 'unsupported']);
-const STANDARD_TRANSPORT_MARKER = 'summarize-solver-failure-response.mjs';
+const STANDARD_TRANSPORT_MARKERS = ['summarize-solver-failure-response.mjs', 'sweep-publish.mjs'];
 
 function nonEmptyString(value) {
     return typeof value === 'string' && value.trim().length > 0;
@@ -32,11 +32,12 @@ function listWorkflowFiles(root) {
 function isSolverRunningWorkflow(source) {
     return /sideEffects\s*:/u.test(source)
         || source.includes('write-solver-experiment-contract.mjs')
-        || source.includes('publish-solver-sweep-result.mjs');
+        || source.includes('publish-solver-sweep-result.mjs')
+        || source.includes('sweep-publish.mjs');
 }
 
 function declaresStandardTransport(source) {
-    return source.includes(STANDARD_TRANSPORT_MARKER);
+    return STANDARD_TRANSPORT_MARKERS.some(marker => source.includes(marker));
 }
 
 /**
@@ -99,7 +100,7 @@ export function validateFailureEvidenceDisposition(root = process.cwd()) {
         const source = readFileSync(path.join(root, producer.workflow), 'utf8');
         const transports = declaresStandardTransport(source);
         if (producer.disposition === 'standard' && !transports) {
-            failures.push(`${label} declares disposition "standard" but ${producer.workflow} does not invoke ${STANDARD_TRANSPORT_MARKER}`);
+            failures.push(`${label} declares disposition "standard" but ${producer.workflow} does not invoke a standard failure-response transport (${STANDARD_TRANSPORT_MARKERS.join(' or ')})`);
         }
         if (producer.disposition !== 'standard' && transports) {
             failures.push(`${label} declares disposition "${producer.disposition}" but ${producer.workflow} already invokes ${STANDARD_TRANSPORT_MARKER}; update its disposition to "standard"`);
