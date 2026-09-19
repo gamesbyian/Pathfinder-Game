@@ -4,6 +4,7 @@ import {
     compactFailureResponseRow,
     summarizeFailureResponse,
 } from './solver-failure-response-lib.mjs';
+import { auditFailureResponseIdentity } from './failure-response-identity-audit-lib.mjs';
 
 // --- compactFailureResponseRow ---
 
@@ -96,5 +97,24 @@ assert.equal(identityRow.cellId, 'cell-A');
 assert.equal(identityRow.protocolHash, 'proto-1');
 assert.equal(identityRow.solverRef, 'abc123');
 assert.equal(identityRow.attempts[0].outcome, 'exhausted');
+
+// --- Cross-record identity-granularity audit ---
+
+const auditBase = compactFailureResponseRow({
+    id: 'AUDIT-1', ok: false, status: 'work-budget-reached', runId: 'run-a',
+    protocolHash: 'proto-a', solverRef: 'solver-a', workSpent: 100,
+});
+const exactRepeatAudit = auditFailureResponseIdentity([{
+    protocolHash: 'proto-a', solverRef: 'solver-a', records: [auditBase, { ...auditBase }],
+}]);
+assert.equal(exactRepeatAudit.exactRepeatKeys, 1);
+assert.equal(exactRepeatAudit.conflictingKeys, 0);
+
+const conflictingAudit = auditFailureResponseIdentity([{
+    protocolHash: 'proto-a', solverRef: 'solver-a',
+    records: [auditBase, { ...auditBase, workSpent: 200 }],
+}]);
+assert.equal(conflictingAudit.conflictingKeys, 1,
+    'same semantic observation key with incompatible compact payloads is surfaced for investigation');
 
 console.log('solver failure response lib tests passed');
