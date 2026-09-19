@@ -759,7 +759,8 @@
       ],
       "queryEntryPoints": [
         "node scripts/stress/collect-known-solution-prefix-survival.mjs",
-        "node scripts/analyze-known-solution-prefix-survival.mjs"
+        "node scripts/analyze-known-solution-prefix-survival.mjs",
+        "npm run research:known-support-extinction -- --in=<survival.json> [--out=<json>]"
       ],
       "joinKeys": [
         "corpus",
@@ -778,12 +779,15 @@
         "exact-reference-labels",
         "solution-space-profiles",
         "variant-family-data",
-        "production-benchmarks"
+        "production-benchmarks",
+        "compact-failure-response",
+        "search-loss-evidence"
       ],
       "affordances": [
         "Locate where known-valid support disappears across generation, prune, dedup, scoring, width cull, and diversity selection.",
         "Distinguish failure to generate viable material from failure to retain or rank it.",
-        "Nominate exact-prefix and paired-trace follow-up at a concrete decision boundary."
+        "Nominate exact-prefix and paired-trace follow-up at a concrete decision boundary.",
+        "Project final known-support extinction into a compact parent-level row carrying path/family support immediately before loss for joins with failure/search-loss evidence."
       ],
       "caveats": [
         "Known-support extinction is not proof that every true solution is extinct.",
