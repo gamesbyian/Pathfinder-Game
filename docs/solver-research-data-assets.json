@@ -237,7 +237,8 @@
       ],
       "queryEntryPoints": [
         "node scripts/research-asset-query.mjs --id=hint-discovery-process",
-        "npm run research:hint-discovery-process -- --in=<solver-report.json> [--contract=<experiment-contract.json> --run-id=<id>]"
+        "npm run research:hint-discovery-process -- --in=<solver-report.json> [--contract=<experiment-contract.json> --run-id=<id>]",
+        "npm run research:join-hint-failure-process -- --discovery=<discovery-process.json> --failure=<failure-response.json>"
       ],
       "joinKeys": [
         "parentId/levelId",
@@ -262,7 +263,8 @@
       "affordances": [
         "Recover which failed attempts and work preceded an exact stored solution-path discovery without bloating every persisted hint event.",
         "Link success-selected hint history to the owning immutable experiment/run envelope when that envelope exists.",
-        "Compare successful discovery process with compact failed-attempt evidence under shared run/protocol/action identities."
+        "Compare successful discovery process with compact failed-attempt evidence under shared run/protocol/action identities.",
+        "Strictly join successful discovery processes to comparable failed observations by parent + protocol/configuration hash + immutable solver ref."
       ],
       "caveats": [
         "Binding to a hint requires exact complete path equality; no fuzzy level/config/path inference is allowed.",
