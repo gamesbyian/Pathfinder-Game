@@ -28,6 +28,12 @@ run: |
   node scripts/publish-solver-sweep-result.mjs --failure-response-file=summary.json
   echo '{"sideEffects": {"telemetry": "compact"}}'
 `;
+const WRAPPED_STANDARD_WORKFLOW = `
+name: wrapped-standard-producer
+run: |
+  node scripts/sweep-publish.mjs --primary=combined.json
+  echo '{"sideEffects": {"telemetry": "compact"}}'
+`;
 const LEGACY_NONE_WORKFLOW = `
 name: legacy-producer
 run: node scripts/publish-solver-sweep-result.mjs
@@ -48,6 +54,16 @@ run: echo hello
     const root = makeRoot();
     writeWorkflow(root, 'standard.yml', STANDARD_WORKFLOW);
     writeRegistry(root, [{ id: 'standard-producer', workflow: '.github/workflows/standard.yml', disposition: 'standard', reason: null }]);
+    assert.deepEqual(validateFailureEvidenceDisposition(root), []);
+    fs.rmSync(root, { recursive: true, force: true });
+}
+
+
+// --- extracted wrapper is also a standard transport ---
+{
+    const root = makeRoot();
+    writeWorkflow(root, 'wrapped.yml', WRAPPED_STANDARD_WORKFLOW);
+    writeRegistry(root, [{ id: 'wrapped', workflow: '.github/workflows/wrapped.yml', disposition: 'standard', reason: null }]);
     assert.deepEqual(validateFailureEvidenceDisposition(root), []);
     fs.rmSync(root, { recursive: true, force: true });
 }
@@ -100,7 +116,7 @@ run: echo hello
     writeWorkflow(root, 'unwired.yml', OPT_OUT_WORKFLOW);
     writeRegistry(root, [{ id: 'unwired', workflow: '.github/workflows/unwired.yml', disposition: 'standard', reason: null }]);
     const failures = validateFailureEvidenceDisposition(root);
-    assert.ok(failures.some(f => f.includes('does not invoke summarize-solver-failure-response.mjs')));
+    assert.ok(failures.some(f => f.includes('does not invoke a standard failure-response transport')));
     fs.rmSync(root, { recursive: true, force: true });
 }
 
