@@ -102,6 +102,19 @@ The wrapper may reduce shard count only if the selected population is smaller th
 
 Recover infrastructure/deadline-censored ids under the same commit, config, node ceiling, and wall deadline policy. Do not score missing/censored rows as failures.
 
+## Mechanical result reduction
+
+After the standard compact failure-response artifact is complete, run:
+
+```bash
+npm run research:analyze-reserve-starvation -- \
+  --in=<compact-failure-response.json> \
+  --sample=reports/stress/failure-evidence/reserve-starvation-default-profile-sample-2026-09-19.json \
+  --out=<reserve-starvation-analysis.json>
+```
+
+`scripts/analyze-reserve-starvation-probe.mjs` verifies the frozen population, protocol identity, exact retained action identity, censoring, and the prespecified 75M/300M thresholds. It refuses to apply the 0/1/>=2 decision rule while any expected parent is missing or non-interpretable.
+
 ## Primary derived quantity
 
 For each complete row, use the isolated default-profile `nodesExpanded` on a solve.

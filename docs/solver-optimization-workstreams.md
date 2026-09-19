@@ -2,12 +2,12 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-17.
+> **Reconciled:** 2026-09-19.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`solver-research-operating-model.md`](solver-research-operating-model.md) · Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md) · Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) · Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md) · Semantic gaps: [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) · Stops: [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md).
 
-Program lens: **composition** exposes/selects/allocates demonstrated capability; **acquisition** creates generic capability where none succeeds. Current emphasis: acquisition.
+Program lens: **composition** exposes/selects/allocates demonstrated capability; **acquisition** creates generic capability where none succeeds. Emphasis: acquire.
 
 ## Data-audit guardrail
 
@@ -80,7 +80,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Before first-loss/rejection/2x2, run bounded [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md). `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` is separately deferred pending a higher-cap isolated fallback-cost sample. A/F3 retain their reopen gates. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md)
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) before first-loss/rejection/2x2. Supporting: reserve starvation is **dispatch-ready** after R00044 canary (40-parent/300M + reducer); Class-3 is **data-blocked** pending population freeze + exact-action telemetry. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 

@@ -14,7 +14,7 @@
  *
  * Usage:
  *   node scripts/summarize-solver-failure-response.mjs \
- *     --in=<file1>[,<file2>,...] --out=<path> [--rows-key=levels|results]
+ *     --in=<file1>[,<file2>,...] --out=<path> [--rows-key=levels|results] [--contract-file=<path>]
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -30,8 +30,9 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--') && a.i
 const inList = args.get('in');
 const outFile = args.get('out');
 const rowsKey = args.get('rows-key') || 'auto';
+const contractFile = args.get('contract-file') || null;
 if (!inList || !outFile) {
-    console.error('Usage: node scripts/summarize-solver-failure-response.mjs --in=<file1>[,<file2>,...] --out=<path> [--rows-key=levels|results]');
+    console.error('Usage: node scripts/summarize-solver-failure-response.mjs --in=<file1>[,<file2>,...] --out=<path> [--rows-key=levels|results] [--contract-file=<path>]');
     process.exit(2);
 }
 
@@ -53,10 +54,16 @@ function sharedMetadataValue(values) {
     return known.length === 1 ? known[0] : null;
 }
 
-const protocolHash = sharedMetadataValue(documents.map(({ document }) =>
-    document.protocolHash ?? document.configurationHash ?? document.experiment?.configurationHash ?? null));
-const solverRef = sharedMetadataValue(documents.map(({ document }) =>
-    document.solverRef ?? document.commitSha ?? document.experiment?.resolvedSha ?? null));
+const contract = contractFile && existsSync(contractFile) ? JSON.parse(readFileSync(contractFile, 'utf8')) : null;
+const protocolHash = contract?.experiment?.configurationHash
+    ?? sharedMetadataValue(documents.map(({ document }) =>
+        document.protocolHash ?? document.configurationHash ?? document.experiment?.configurationHash ?? null));
+const solverRef = contract?.experiment?.resolvedSha
+    ?? contract?.solverRef
+    ?? sharedMetadataValue(documents.map(({ document }) =>
+        document.solverRef ?? document.commitSha ?? document.experiment?.resolvedSha ?? null))
+    ?? process.env.GITHUB_SHA
+    ?? null;
 
 // A caller-verified populationIntegrity is only reusable as-is from exactly one source document --
 // merging two independently computed coverage claims correctly is out of scope here, and silently

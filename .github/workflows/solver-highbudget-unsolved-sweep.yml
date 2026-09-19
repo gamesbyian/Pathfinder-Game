@@ -496,6 +496,7 @@ jobs:
           node scripts/summarize-solver-failure-response.mjs \
             --in="reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json,reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json" \
             --rows-key=levels \
+            --contract-file="logs/solver-highbudget-sweep/experiment-contract.json" \
             --out="logs/solver-highbudget-sweep/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json" \

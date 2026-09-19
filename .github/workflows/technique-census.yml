@@ -280,16 +280,6 @@ jobs:
           const plan = JSON.parse(fs.readFileSync('plan/technique-census-plan.json'));
           fs.writeFileSync('plan/expected-cell-ids.txt', `${plan.cells.map(cell => cell.cellId).join('\n')}\n`);
           NODE
-          if [ -f "reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" ]; then
-            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --rows-field=results \
-              --expected-ids=plan/expected-cell-ids.txt \
-              --result="reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" \
-              --integrity-out="reports/stress/technique-census/${{ github.run_id }}/population-integrity.json"
-            node scripts/summarize-solver-failure-response.mjs \
-              --in="reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" \
-              --rows-key=results \
-              --out="logs/solver-sweep-result-inputs/failure-response-summary.json"
-          fi
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
@@ -302,6 +292,17 @@ jobs:
             sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
+          if [ -f "reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" ]; then
+            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --rows-field=results \
+              --expected-ids=plan/expected-cell-ids.txt \
+              --result="reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" \
+              --integrity-out="reports/stress/technique-census/${{ github.run_id }}/population-integrity.json"
+            node scripts/summarize-solver-failure-response.mjs \
+              --in="reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" \
+              --rows-key=results \
+              --contract-file="plan/experiment-contract.json" \
+              --out="logs/solver-sweep-result-inputs/failure-response-summary.json"
+          fi
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/technique-census/${{ github.run_id }}" \
             --shards-expected="120" \

@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active state; [`solver-research-operating-model.md`](solver-research-operating-model.md) method; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) closure scope.
+Deferred/reopen questions only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) method; [gap reconciliation](solver-capability-gap-stop-condition-reconciliation.md) closure scope.
 
 **Level-blindness constrains provenance, not specificity:** generic cold procedures may derive exact current-input facts; cross-parent recurrence is required only for fixed reusable descriptor claims.
 
@@ -27,9 +27,9 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Deferred plan closeouts
 
-- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** retire once descendants have durable owners; rich recurrence stays condition-gated.
-- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for genuine recurrence; Phase 9 waits for first-loss selection. No synthetic.
-- **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run Phase 7 and retire.
+- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** substrate complete. Resume P3 on compact rows, P4A on current Class-3 dose, P4B on frozen reserve probe; retire when descendants have owners.
+- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurrence; P9 needs first-loss selection. No synthetic recurrence.
+- **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run P7 and retire.
 
 ## Other deferred architectural questions
 
