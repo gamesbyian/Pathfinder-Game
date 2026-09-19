@@ -1,9 +1,9 @@
 # Lane A: C0 signature-collision experiment preflight
 
 > **Status:** active
-> **Last evidence:** 2026-09-18 — zero-new-compute re-analysis of the already-frozen crossing population (`reports/stress/lane-a-frozen-prefix-population-2026-09-18.json`) against the geometry census, current HEAD.
-> **Decision:** not yet reached. This precommits the population, query volume, and decision rule for Lane A's C0 signature-collision falsifier (`docs/solver-separator-dynamic-interface-contract-preflight.md`) before any exact label at this scale is inspected, sized so it is ready to dispatch as soon as GHA capacity is free.
-> **Remaining gate:** dispatch the exact-labelling batch (local or GHA, sized below) and run the existing `signature-collision-analysis-lib.mjs` primitive against the resulting labelled rows.
+> **Last evidence:** 2026-09-19 — case batch built and verified against this report's own frozen numbers (144 groups, 98 levels, 581 cases; PR #1899), then dispatched via `cpsat-explicit-prefix-reference.yml` (GHA run [35416526866](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35416526866), `cases_file=reports/stress/lane-a-c0-signature-collision-cases-2026-09-19.json`, `case_format=cases`, `time_limit=45`, `max_cases=581`, `shard_count=20`). Not yet combined or labelled.
+> **Decision:** not yet reached. No outcome inspected before or during dispatch, per this report's own precommitment.
+> **Remaining gate:** combine the shard results once the GHA run completes and run the existing `signature-collision-analysis-lib.mjs` primitive against the resulting labelled rows.
 > **Evidence role:** population sizing / precommitment. No new exact labels are computed in this pass.
 > **Population identity:** derived from `reports/stress/lane-a-frozen-prefix-population-2026-09-18.json` (2,012 crossing rows, 118 levels, frozen 2026-09-18) and `reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json`. No new frontier sampling in this pass.
 
@@ -43,6 +43,6 @@ No outcome has been inspected before this precommitment.
 
 ## Handoff
 
-- Dispatch is deliberately deferred: as of this report, a work-ladder economics GHA run is already in flight for a separate WS2 gate, and this session's standing instruction is not to stack additional concurrent GHA dispatches on top of what is already running.
-- Once dispatched (GHA or a sized local batch) and labelled, run `signature-collision-analysis-lib.mjs` per the analysis section above and report the result as its own dated report, per this program's evidence-role conventions.
+- Dispatched: GHA run [35416526866](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35416526866) (queued 2026-09-19), the concurrent work-ladder run that previously justified deferral has since completed and been combined (PR #1898).
+- Once the run completes, combine shard results, run `signature-collision-analysis-lib.mjs` per the analysis section above, and report the result as its own dated report, per this program's evidence-role conventions.
 - If C0 is mixed (the expected outcome), the next precommitted step is C1, reusing this same frozen prefix/cut population -- no new frontier sampling needed unless C1's own analysis calls for more independent parents than the current 144 groups / ~100+ levels provide.
