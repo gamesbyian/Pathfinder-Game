@@ -526,6 +526,7 @@ jobs:
           node scripts/summarize-solver-failure-response.mjs \
             --in="reports/stress/routing-regime-ab-control.json,reports/stress/routing-regime-ab-treatment.json" \
             --rows-key=levels \
+            --contract-file="logs/solver-routing-regime-sample/experiment-contract.json" \
             --out="logs/solver-routing-regime-sample/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/routing-regime-ab-control.json" \
