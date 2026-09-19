@@ -730,6 +730,37 @@
       "measurementOpportunities": []
     },
     {
+      "id": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
+      "question": "What does protocol-compatible compact failure-response evidence say about the cheapest next WS2 discriminator: operational divergence/first-loss, rejection counterfactuals, a producer-consumer 2x2, or no expensive follow-on yet?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "aliases": [
+        "failure-response reconnaissance",
+        "failure data reconnaissance",
+        "post-work-ladder discriminator"
+      ],
+      "answeredBy": [
+        "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md"
+      ],
+      "result": "The query/reducer and authority routing are ready, but no suitable accumulated post-instrumentation compact-response population exists yet. The latest ordinary solver-dispatch artifacts inspected predate standard compact-response publication and are selected for other questions, so they must not be retrofitted into a representative prevalence corpus.",
+      "triggeredBy": [
+        "WS2-WORK-LADDER-ECONOMICS"
+      ],
+      "constrainedBy": [
+        "docs/solver-failure-evidence-research-integration-plan.md",
+        "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md",
+        "scripts/failure-response-query.mjs"
+      ],
+      "constrains": [
+        "Use already-published standard compact response first; enable compact diagnostic observers only if automatic response cannot discriminate the next instrument.",
+        "Do not estimate current failure-phenotype prevalence from selectively dispatched pre-contract native attempt arrays.",
+        "Parent is the default independent unit and solved controls are required where the producer population naturally supplies them."
+      ],
+      "reopensOn": "A maintained producer emits a protocol-compatible post-instrumentation compact failure-response population relevant to the current residual, with an honest population denominator and solved controls where naturally available.",
+      "premiseRefs": [],
+      "measurementOpportunities": []
+    },
+    {
       "id": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
       "question": "Does fixed stage-reserve allocation recurrently starve admissible-order fallback (or another later stage) that could solve within the existing total work budget if more of that fixed budget reached it?",
       "owner": "WS2",
