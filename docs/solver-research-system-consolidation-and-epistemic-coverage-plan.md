@@ -13,6 +13,7 @@
 > **Question authority:** [`solver-research-question-relations.json`](solver-research-question-relations.json).
 > **Resource authority:** [`solver-research-data-assets.json`](solver-research-data-assets.json), [`solver-research-resource-contract.md`](solver-research-resource-contract.md), and audit declarations.
 > **Historical rationale:** this plan extends rather than replaces the August process critique, September inference-audit/resource work, premise-map program, capability-atlas program, higher-order infrastructure composition work, search-loss/failure-evidence work, and planning-authority cleanup.
+> **Second-order audit:** [`2026-09-19-solver-research-system-prompt-overfit-second-order-audit-001.md`](../reports/2026-09-19-solver-research-system-prompt-overfit-second-order-audit-001.md) records the later prompt-overfit/contradiction-hunt pass that added conversion fidelity and framing/context independence.
 
 ## 1. Why this plan exists now
 
