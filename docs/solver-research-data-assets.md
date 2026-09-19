@@ -77,7 +77,7 @@ Use `scripts/cross-resource-observability-audit.mjs` when this ancestry matters.
 2. **Solution-space profile/fingerprint** (`solver-solution-profile.md`): offline summary of sampled accepted paths.
 3. **Solver determinism fingerprint** (`scripts/solver-fingerprint.mjs`): execution/search-behavior regression signature.
 
-Solver fingerprints are schema-bound (v1/v2 differ); only structural fingerprints identify puzzle structure; none permits per-level production steering.
+Only structural fingerprints identify puzzle structure; fingerprint/profile identities never permit per-level production steering.
 
 ## Scientific boundaries
 
@@ -89,7 +89,7 @@ Hints, known solutions, exact labels, census winners, historical costs, family o
 
 Solver-blind generation does not make later corpus membership independent. C1/C2 carry later solver-outcome selection history, so neither filename implies untouched transfer evidence. See [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md).
 
-A residual or participant cohort supports the conditional question it was selected for, not unconditional mechanic prevalence. Level-blindness alone does not establish sample or distributional generalization. Human/editor parents add a distinct source, not automatic independence: siblings remain correlated, preserved witnesses prove solvability only, and a parent whose outcomes influenced design is development evidence for descendants.
+Residual/participant cohorts answer the conditional question they were selected for, not unconditional prevalence. Level-blindness does not establish sampling independence; human/editor siblings remain correlated development evidence.
 
 ### Solution profiles are sample profiles
 
@@ -97,7 +97,7 @@ Solution profiles summarize stored samples with explicit support. Missing axes s
 
 ### Independence, missingness, and hint provenance
 
-Variant siblings, generator batches, rediscoveries, and multiple rows from one level are not automatically independent; hold out whole families/parents when needed. Missing provenance is unknown: an absent baseline/capability-memory row is no observation, not failure.
+Variant siblings, generator batches, rediscoveries, and repeated level rows are not automatically independent. Missing provenance is unknown, not failure.
 
 Declare the evidence purpose before consuming provenance: `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process`. Use shared applicability/dependency-stratum helpers rather than a local “trusted hint” predicate.
 
@@ -105,7 +105,7 @@ A referee-valid path remains useful oracle/atlas evidence regardless of producer
 
 ### Freshness and reuse are evidence-specific
 
-`latest` is a convenience pointer, not proof of compatibility. Reusable benchmark/census rows need matching meaning-changing provenance: solver/fingerprint schema, corpus/content identity, scheduler/config/flags, deterministic budget semantics, and execution mode. Across-level parallel comparisons must not mix incompatible contention regimes.
+`latest` is not proof of compatibility. Reusable rows need matching code/schema, population/content, scheduler/config, budget, and execution semantics.
 
 Historical capability may survive code drift as forensic nomination, but current-capability claims require reconciliation. After a material promotion/provenance reinterpretation changes residual membership, rebuild residual-derived views/counts.
 
