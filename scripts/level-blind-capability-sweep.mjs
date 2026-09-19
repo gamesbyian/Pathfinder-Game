@@ -243,7 +243,8 @@ function writeReport() {
         solverInputFields: PUZZLE_FIELDS, historicalInputs: [], budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         workBudget: Number.isFinite(workBudget) ? workBudget : null,
-        workers, enableFlags, disableFlags, strictTotalWorkBudget, attemptBudgetTelemetry, lifecycleTelemetry, runStartedAt,
+        workers, enableFlags, disableFlags, strictTotalWorkBudget, attemptBudgetTelemetry, lifecycleTelemetry,
+        failureInformationTelemetry: 'compact-v1', runStartedAt,
         experimentId, researchQuestion, preflight, declaredStageOrder,
         mainSearchLateReserveFraction: Number.isFinite(mainSearchLateReserveFraction) ? mainSearchLateReserveFraction : null,
         mainSearchLateReserveConfigCount: Number.isFinite(mainSearchLateReserveConfigCount) ? mainSearchLateReserveConfigCount : null,
@@ -293,6 +294,7 @@ try {
             const original = rawLevels[levelNumber - 1];
             const result = workerResult.result;
             const row = buildRow(levelNumber, original?.id ?? null, result, 'production');
+            if (workerResult.failureInformation) row.failureInformation = workerResult.failureInformation;
             const lateRepair = row.stageLifecycle?.['late-repair-search'];
             const lateMustTurn = row.stageLifecycle?.['late-repair-must-turn-biased-retry'];
             const lateRepairParticipated = lateRepair?.reached === true
