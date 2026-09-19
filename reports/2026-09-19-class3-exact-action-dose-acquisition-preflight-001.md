@@ -73,17 +73,17 @@ If no maintained producer can satisfy these fields without code changes, this pr
 
 ## Zero-compute current-population derivation
 
-The Class-3 population and exact rescuer identities can be rebuilt entirely from already-committed evidence. The canonical atlas command above performs evidence joining and current-policy classification but no solver search. After it writes the temporary atlas, derive the acquisition map with:
+The Class-3 population and exact rescuer identities can be rebuilt entirely from already-committed evidence with no solver search:
 
 ```bash
-npm run research:build-class3-dose-expectations -- \
-  --atlas=tmp/ws2-class3-current-atlas.json \
-  --out=reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
+npm run research:freeze-current-class3-dose-expectations
 ```
 
-The reducer retains each Class-3 parent, every Class-3 `t1Wins[].identity`, isolated census node cost, winning gate, and the historical dispatch/reach/starvation support carried by the atlas. These census fields are context for acquisition planning only; isolated node cost is not shared-production dose.
+That command pins the canonical 35066677597 production/lifecycle boundary and 33717910218 technique census, rebuilds the current residual atlas, requires exactly **531 residual / 23 Class-3 parents**, then writes `reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json`.
 
-`test:class3-dose-expectations-current` independently rebuilds the current atlas from the committed 35066677597 boundary + 33717910218 census and requires exactly 531 residual parents and 23 Class-3 parents before the map can be frozen.
+The derived artifact retains each Class-3 parent, every Class-3 `t1Wins[].identity`, isolated census node cost, winning gate, and historical dispatch/reach/starvation support. Those census fields are acquisition context only; isolated node cost is not shared-production dose.
+
+`test:class3-dose-expectations-current` exercises the same canonical freeze path and fails on boundary or Class-3 count drift.
 
 ## Mechanical acquisition artifact and reducer
 
