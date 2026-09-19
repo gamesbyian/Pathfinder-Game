@@ -1237,7 +1237,9 @@ Tests:
 
 **Exit gate:** a fresh agent can discover the resource through normal asset/relation tooling before any real capture exists.
 
-### Phase 3 - shared compact failure-response projection
+### Phase 3
+
+> **Promotion update (2026-09-19):** GHA run `35422485466` cleared exact parity and the <5% representative overhead gate for compact failure instrumentation. The common level-blind capability worker now retains bounded beam-flow counters, typed prune diagnostics, and capped repair/beam/DFS progress transitions automatically on every completed row. Rich capsules remain selective. - shared compact failure-response projection
 
 **Goal:** stop major solver-running workflows from discarding cheap failure-side information before adding rich path/state capture.
 
@@ -1360,7 +1362,7 @@ Record for each:
 
 ### Phase 4 - first production-inert rich capsule producer
 
-> **Status (2026-09-19): implemented but gated on real-run/parity evidence.** The shared decision-observation adapter plus `capture-search-loss-evidence.mjs` now produces bounded deterministic cull capsules with selector denominators and structural/run/population identity. It deliberately remains identity-only unless reconstructability is earned. Promotion into ordinary solver workflows waits for a representative multi-parent OFF/ON capture canary and storage/overhead evidence; synthetic contract tests are not that gate.
+> **Status (2026-09-19): Phase 4 exit gate cleared for production-inert selective capture.** The latest representative follow-up, GHA run `35423841173` on immutable head `cfd6d02ca6ff6cd6ade919e3be89d7be617ca777`, exercised 16 parents (12 hard Corpus-2 parents plus 4 solved controls) with exact solve/status/solution/node/work parity in compact and rich modes. Compact instrumentation measured +0.46% aggregate wall delta and 35,710 bytes across the sample; bounded rich cull observation measured +10.32% and remains explicitly research-only/selective rather than a universal default. The repaired capture preserved per-parent selector denominators, complete population count, solved/failed outcomes, immutable run identity, and replayable selected prefixes. The Resource Contract preflight reports `captureGateClear=true` and `empiricalConditioningReady=true`; Phase 4 no longer has an empirical gate open.
 
 **Goal:** prove cheap path/state observation against real solver execution while preserving exact behavior.
 
@@ -1421,7 +1423,7 @@ Measure:
 
 ### Phase 5 - capture CLI/publisher and durable bundle
 
-> **Status (2026-09-19): partially implemented and verified.** The capture CLI requires explicit observation input, metadata/population identity, structural revisions, profile, selector cap, and output; the standard publisher/durable entry mechanism recognizes included capture documents. Shard-local GHA collection is not yet wired because Phase 4 has not cleared its real-run overhead gate.
+> **Status (2026-09-19): substantially implemented and verified.** The capture CLI requires explicit observation input, metadata/population identity, structural revisions, profile, selector cap, and output; the standard publisher/durable entry mechanism recognizes included capture documents; and the hosted real-search canary emits a schema-valid bounded capture plus audit-preflight artifact with immutable run identity. Phase 4 has now cleared its real-run gate. Shard-local/recurring production-family capture is intentionally not wired yet: rich capture costs about 10% wall time in the representative canary and remains question-driven, so adding a recurring producer should be tied to a concrete durable consumer rather than enabled merely to satisfy a checklist.
 
 **Goal:** make captures reproducible and safe to retain when decision-bearing.
 
@@ -1457,7 +1459,7 @@ Tests:
 
 ### Phase 6 - annotation adapters
 
-> **Status (2026-09-19): exact/reference adapter implemented; later adapters not yet implemented.** `annotate-search-loss-exact.mjs` writes a separate identity-checked LIVE/DEAD/UNKNOWN/UNSUPPORTED artifact and preserves population/research-block lineage. Known-prefix adaptation remains future work; counterfactual adaptation waits for a concrete study.
+> **Status (2026-09-19): exact/reference adapter implemented; known-prefix adaptation explicitly identity-gated.** `annotate-search-loss-exact.mjs` writes a separate identity-checked LIVE/DEAD/UNKNOWN/UNSUPPORTED artifact and preserves population/research-block lineage. Current durable known-solution-prefix-survival summaries retain support/family counts and loss stages but do not retain enough exact prefix identity to bind a capsule without guessing, so no adapter is authorized from those summaries. Reopen known-prefix adaptation only for a capture/source pair that shares reconstructable exact prefix identity. Counterfactual adaptation waits for a concrete study.
 
 **Goal:** allow existing evidence systems to enrich capsules without mutating the original observation.
 
@@ -1497,7 +1499,7 @@ Tests:
 
 ### Phase 7 - query/reducer surface
 
-> **Status (2026-09-19): initial usable surface implemented.** `search-loss-query.mjs` joins compact records/capsules/exact annotations, filters common identity/outcome/work/badness/event/replay fields, and reports independent parents rather than presenting raw capsule count as prevalence. Progress/rejection/flow composition becomes queryable only after the gated pilot fields are promoted into durable records.
+> **Status (2026-09-19): usable core surface implemented and extended.** `search-loss-query.mjs` joins compact records/capsules/exact annotations, filters common identity/outcome/work/badness/event/replay/depth/selector-truncation/annotation-support fields, preserves input selector denominators, and reports independent parents, solved controls, annotation composition, and repeated-parent phenotypes rather than presenting raw capsule count as prevalence. Progress/rejection/flow composition becomes queryable only after the gated pilot fields are promoted into durable records.
 
 **Goal:** answer common research questions without bespoke JSON surgery.
 
@@ -1540,7 +1542,7 @@ Never default to raw capsule count as prevalence.
 
 ### Phase 8 - resource audit
 
-> **Status (2026-09-19): not yet earned.** The registry remains `contract-only`: no representative real generic capture has cleared Phase 4 parity/overhead and no recurring producer population exists to audit for empirical missingness/conditioning. Do not register an audit-grade resource from synthetic fixtures.
+> **Status (2026-09-19): empirical capture gate cleared; recurring-resource gate remains open.** GHA run `35423841173` now clears the real-capture prerequisites checked by `search-loss-resource-audit-preflight.mjs`: valid contract, observer parity, multi-parent population, non-empty bounded capsules, selector denominators, immutable run SHA, non-synthetic producer, solved controls, and failed parents. The preflight reports `captureGateClear=true`, `empiricalConditioningReady=true`, and `auditReady=false` solely because `recurringProducerDeclared=false`. The registry therefore correctly remains `contract-only`. Do not promote it or add a Resource Contract audit declaration until a genuine recurring producer population exists; a one-off canary is evidence for readiness, not permission to invent recurrence.
 
 **Goal:** promote from catalogue-grade to audited-resource grade before broad recurring decision use.
 
@@ -1575,7 +1577,7 @@ Add mechanical checks where practical.
 
 ### Phase 9 - first scientific consumer: bounded first-loss survey
 
-> **Status (2026-09-19): not currently authorized by workstream priority.** `solver-optimization-workstreams.md` currently owns `WS2-WORK-LADDER-ECONOMICS` as the next gate. Operational-divergence/first-loss becomes eligible only if that costing gate closes negative and the authority selects it among the remaining discriminators.
+> **Status (2026-09-19): eligible candidate, not yet selected.** `WS2-WORK-LADDER-ECONOMICS` has closed negative. Current workstream authority now lists operational divergence/first-loss, rejection counterfactuals, and a 2x2 interaction as the remaining discriminators. Phase 9 may execute only if the authority selects the first-loss/operational-divergence lane; the negative economics result removes the old reopen prerequisite but does not itself choose among those candidates.
 
 **Goal:** prove that the resource changes research decisions.
 
@@ -1940,6 +1942,19 @@ The implementation is successful when all of the following are true:
 13. production refresh, benchmark, and solver-evaluated family workflows have an explicit compact-failure-data disposition and reuse common semantics;
 14. one authorized first-loss study can reuse the resource and spend fewer bespoke search reruns to localize causal uncertainty;
 15. no production policy consumes stored historical capsule identity or annotations.
+
+## 18.1 Completion and closeout rule
+
+This plan is **implementation-complete through every currently executable phase** once Phases 0-7 and the Phase-4 real-capture gate are satisfied. Remaining work is condition-gated, not background debt.
+
+Durable resumption authority lives in [`solver-future-work.md`](solver-future-work.md):
+
+- Phase 8 resumes automatically when a genuine recurring search-loss producer population exists; complete the Resource Contract audit and make an explicit promote/remain-contract-only decision.
+- Phase 9 resumes only if [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) selects operational divergence / first-loss as the active WS2 discriminator.
+- When Phase 8 is complete and Phase 9 is either completed when authorized or explicitly retired/deferred by current workstream authority, change this document's status from implementation plan to completed/closed and move any surviving descendants to the appropriate future-work authority.
+- If a stop/simplification condition fires first, record that disposition and close or narrow the plan rather than preserving a zombie plan indefinitely.
+
+Do not manufacture a recurring producer or select the first-loss lane merely to satisfy closeout mechanics.
 
 ## 19. Intended end state
 

@@ -14,6 +14,26 @@ const { createSolver } = await import('../modules/solver.js');
 const Solver = createSolver();
 const corpusCache = new Map();
 
+function createFailureProgressCollector(limit = 16) {
+    const byFamily = new Map();
+    return {
+        observe(record) {
+            const state = byFamily.get(record.family) ?? { observed: 0, transitions: [] };
+            state.observed += 1;
+            if (state.transitions.length < limit) state.transitions.push({ ...record });
+            byFamily.set(record.family, state);
+        },
+        snapshot() {
+            return Object.fromEntries([...byFamily.entries()].map(([family, state]) => [family, {
+                observed: state.observed,
+                retained: state.transitions.length,
+                truncated: state.observed > state.transitions.length,
+                transitions: state.transitions,
+            }]));
+        },
+    };
+}
+
 function corpusAt(file) {
     let levels = corpusCache.get(file);
     if (!levels) {
@@ -25,15 +45,35 @@ function corpusAt(file) {
     return levels;
 }
 
-runWorkerMain(async ({ solveCorpusPath, levelIndex, solveOpts }) => {
+runWorkerMain(async ({ solveCorpusPath, levelIndex, solveOpts, failureInformationTelemetry = true }) => {
     const raw = corpusAt(solveCorpusPath)[levelIndex];
     if (!raw) throw new Error(`level-blind worker: missing level index ${levelIndex}`);
     // No opts.levelNumber / level id: normalized solver identity is constant/anonymous rather than
     // a corpus-position signal that a future seed/order policy could accidentally exploit.
     const prepared = Solver.prepareLevelForSolver(raw, { source: 'raw' });
-    const result = await Solver.solveLevel(prepared, solveOpts);
+    const effectiveSolveOpts = { ...solveOpts };
+    let failureInformation = null;
+    if (failureInformationTelemetry) {
+        const beamFlowCounters = {};
+        const pruneDiagnostics = { reached: {}, rejected: {} };
+        const progress = createFailureProgressCollector();
+        effectiveSolveOpts.beamFlowCounters = beamFlowCounters;
+        effectiveSolveOpts.pruneDiagnostics = pruneDiagnostics;
+        effectiveSolveOpts.failureProgressObserver = progress;
+        failureInformation = { beamFlowCounters, pruneDiagnostics, progress };
+    }
+    const result = await Solver.solveLevel(prepared, effectiveSolveOpts);
     if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
         result.refereeValid = Solver.validateCandidatePath(prepared, result.solution).ok;
     }
-    return { result, researchFeatures: { hasMustTurn: (prepared.mustPassTurnDirs?.size ?? 0) > 0 } };
+    return {
+        result,
+        researchFeatures: { hasMustTurn: (prepared.mustPassTurnDirs?.size ?? 0) > 0 },
+        failureInformation: failureInformation ? {
+            schemaVersion: 1,
+            beamFlowCounters: failureInformation.beamFlowCounters,
+            pruneDiagnostics: failureInformation.pruneDiagnostics,
+            progress: failureInformation.progress.snapshot(),
+        } : null,
+    };
 });

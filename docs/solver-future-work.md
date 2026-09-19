@@ -1,13 +1,13 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active state; [`solver-research-operating-model.md`](solver-research-operating-model.md) method; [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) semantic gaps; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) tested-form vs premise closure.
+Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active state; [`solver-research-operating-model.md`](solver-research-operating-model.md) method; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) closure scope.
 
-**Level-blindness constrains provenance, not specificity.** A generic cold procedure may derive exact, board-specific facts, proofs, conflicts, decompositions, topology state, canonical forms, or search plans from current puzzle/current invocation inputs. Cross-parent recurrence is required for a fixed reusable descriptor claim, not for every generic per-instance derivation procedure.
+**Level-blindness constrains provenance, not specificity:** generic cold procedures may derive exact current-input facts; cross-parent recurrence is required only for fixed reusable descriptor claims.
 
 ## Promoted out of future work
 
-Do not duplicate active/concluded lanes here. Current dispositions: A representation-stopped; D1 closed-negative (0/120 production disagreements, 2026-09-18); F3 discordance-stopped; C/E and DEAD-core size-1 negative; Class-3 dose gap; G1 candidate-completion-limited. Multi-pick removed the old no-LIVE and generic-constructor blocks.
+Do not duplicate active/concluded lanes here. Current dispositions are owned by workstreams; this file retains only deferred descendants and reopen boundaries.
 
 ## Deferred descendants of active premises
 
@@ -24,6 +24,11 @@ These become eligible only after the active premise gate immediately above them 
 | Dependency-conditioned repair neighborhood | Current exact-labelled/repair-retreat evidence shows rescue requires revising an interior/early commitment outside the append-only neighborhood; trace the coupled commitment before designing a new repair operator |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
+
+## Deferred plan closeouts
+
+- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for a genuine recurring producer, then audit/promote-or-retain; Phase 9 waits for queue selection of first-loss. Retire when completed, deferred, or stopped. No synthetic triggers.
+- **[Population/family](solver-research-population-family-integration-plan.md):** Phase 6 counts only real end-to-end ranked-question use. After two distinct pilots (family-microscope and broad-population-first), run Phase 7 consolidation and retire. No synthetic pilots.
 
 ## Other deferred architectural questions
 

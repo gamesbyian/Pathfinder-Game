@@ -86,6 +86,13 @@
       "retirementTrigger": "retire only if equivalent premise-map structural validation is absorbed into another maintained CI surface"
     },
     {
+      "workflow": "search-loss-real-canary.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "search-loss instrumentation parity/overhead gates",
+      "retirementTrigger": "retire when search-loss observation overhead is calibrated and an existing maintained solver workflow owns the equivalent canary"
+    },
+    {
       "workflow": "solver-broad-confirmation.yml",
       "role": "evidence-producing",
       "status": "maintained",

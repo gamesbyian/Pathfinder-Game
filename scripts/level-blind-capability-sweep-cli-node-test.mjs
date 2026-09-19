@@ -52,6 +52,15 @@ assert.ok(typeof report.summary.commit === 'string' && report.summary.commit.len
 assert.equal(report.summary.corpus, path.relative(ROOT, corpusPath),
     'maintained raw report wrapper must persist corpus identity');
 assert.equal(report.summary.lifecycleTelemetry, true);
+assert.equal(report.summary.failureInformationTelemetry, 'compact-v1');
+assert.equal(report.levels[0].failureInformation?.schemaVersion, 1);
+assert.ok(report.levels[0].failureInformation?.beamFlowCounters && typeof report.levels[0].failureInformation.beamFlowCounters === 'object');
+assert.ok(report.levels[0].failureInformation?.pruneDiagnostics && typeof report.levels[0].failureInformation.pruneDiagnostics === 'object');
+assert.ok(report.levels[0].failureInformation?.progress && typeof report.levels[0].failureInformation.progress === 'object');
+for (const state of Object.values(report.levels[0].failureInformation.progress)) {
+    assert.ok(Number.isSafeInteger(state.observed) && state.observed >= state.retained);
+    assert.ok(state.retained <= 16, 'ordinary compact progress telemetry must remain bounded');
+}
 assert.equal(report.summary.experimentId, 'fixture-experiment');
 assert.equal(report.summary.researchQuestion, 'fixture-question');
 assert.equal(report.summary.preflight, 'reports/fixture.md');
