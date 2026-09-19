@@ -1015,7 +1015,8 @@
         "variant-family-data",
         "solver-determinism-fingerprints",
         "raw-logs-and-baselines",
-        "solver-capability-memory"
+        "solver-capability-memory",
+        "hint-discovery-process"
       ],
       "affordances": [
         "Recover exactly what code, population, flags, workflow inputs, seeds, budgets, and output produced a result.",
@@ -1278,7 +1279,8 @@
       ],
       "queryEntryPoints": [
         "node scripts/research-asset-query.mjs --id=compact-failure-response",
-        "npm run research:query-failure-response -- --in=<failure-response.json>[,<...>]"
+        "npm run research:query-failure-response -- --in=<failure-response.json>[,<...>]",
+        "npm run research:query-failure-evidence-purpose -- --in=<failure-response.json>[,<...>] --purpose=<forensic|mechanism-nomination|longitudinal-process|population-prevalence>"
       ],
       "joinKeys": [
         "parentId/levelId plus record identity",
@@ -1375,6 +1377,22 @@
     }
   ],
   "relationships": [
+    {
+      "id": "hint-provenance-to-discovery-process",
+      "assets": [
+        "hint-provenance",
+        "hint-discovery-process",
+        "compact-failure-response",
+        "experiment-manifests"
+      ],
+      "join": "parentId/levelId + exact complete hint path signature + immutable run/protocol/solver identity",
+      "questions": [
+        "Which failed attempts and work preceded discovery of this exact accepted path?",
+        "Does a path attributed to a winning technique only appear after characteristic failures or handoffs from earlier attempts?",
+        "Can success-selected hint evidence be rejoined to its originating denominator/process context without embedding that context into every Hint record?"
+      ],
+      "boundary": "Exact path equality binds the success to the stored hint; the experiment contract owns protocol/population semantics. Historical process context is offline evidence and does not make the discovery current capability or legal runtime routing."
+    },
     {
       "id": "hint-provenance-to-solution-profiles",
       "assets": [
