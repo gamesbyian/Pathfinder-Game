@@ -9,7 +9,7 @@ import {
 const document = {
     protocolHash: 'proto',
     solverRef: 'solver',
-    populationIntegrity: { coverageComplete: true, decisionValidComplete: true },
+    populationIntegrity: { coverageComplete: true, decisionValidComplete: false },
     records: [
         {
             identity: 'A-1', parentId: 'A', runId: 'run-1', outcome: 'workLimited',
@@ -60,16 +60,18 @@ assert.deepEqual(
     classifyFailureEvidenceApplicability(document, document.records[0], 'population-prevalence', {
         populationSamplingDeclared: true,
     }),
-    { applicability: 'admissible', reason: 'declared-complete-parent-population' },
+    { applicability: 'context-bound', reason: 'population-includes-censored-or-indeterminate-outcomes' },
 );
+const decisionValidDocument = {
+    ...document,
+    populationIntegrity: { coverageComplete: true, decisionValidComplete: true },
+    records: document.records.slice(0, 2),
+};
 assert.deepEqual(
-    classifyFailureEvidenceApplicability({
-        ...document,
-        populationIntegrity: { coverageComplete: true, decisionValidComplete: false },
-    }, document.records[0], 'population-prevalence', {
+    classifyFailureEvidenceApplicability(decisionValidDocument, decisionValidDocument.records[0], 'population-prevalence', {
         populationSamplingDeclared: true,
     }),
-    { applicability: 'context-bound', reason: 'population-includes-censored-or-indeterminate-outcomes' },
+    { applicability: 'admissible', reason: 'declared-complete-parent-population' },
 );
 
 const summary = summarizeFailureEvidenceApplicability(document, 'forensic');
