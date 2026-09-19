@@ -156,6 +156,9 @@ function selfTest() {
     fs.mkdirSync(ignored, { recursive: true });
     const primary = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 12 }] }));
     fs.writeFileSync(path.join(artifact, 'result.json'), primary);
+    const compact = Buffer.from(JSON.stringify({ schemaVersion: 1, kind: 'pathfinder-compact-failure-response', records: [] }));
+    fs.mkdirSync(path.join(artifact, 'failure-response'));
+    fs.writeFileSync(path.join(artifact, 'failure-response', 'compact.json'), compact);
     const manifest = {
       schemaVersion: 3,
       kind: 'pathfinder-solver-experiment-result',
@@ -178,7 +181,10 @@ function selfTest() {
         measurementOpportunity: 'MO-002',
       },
       researchOutcome: { outcome: 'completed-positive' },
-      entries: [{ role: '../primary', source: 'fixture', published: 'result.json', missing: false }],
+      entries: [
+        { role: '../primary', source: 'fixture', published: 'result.json', missing: false },
+        { role: 'compact-failure-response', source: 'fixture-compact', published: 'failure-response/compact.json', missing: false },
+      ],
     };
     fs.writeFileSync(path.join(artifact, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
     fs.writeFileSync(path.join(ignored, 'manifest.json'), JSON.stringify({ ...manifest, decisionBearing: false }));
@@ -192,7 +198,7 @@ function selfTest() {
     assert.equal(bundle.researchQuestion.measurementOpportunity, 'MO-002');
     assert.equal(bundle.researchBlock.blockId, 'BLOCK-001');
     assert.equal(bundle.researchBlock.evidenceRole, 'development');
-    assert.equal(bundle.files.length, 2);
+    assert.equal(bundle.files.length, 3);
     const manifestRecord = bundle.files.find(file => file.source === 'manifest.json');
     assert.ok(manifestRecord);
     assert.equal(manifestRecord.compression, 'none');
@@ -203,6 +209,9 @@ function selfTest() {
     assert.equal(primaryRecord.compression, 'gzip');
     assert.ok(primaryRecord.stored.startsWith('evidence/primary/'));
     assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, primaryRecord.stored))), primary);
+    const compactRecord = bundle.files.find(file => file.source === 'failure-response/compact.json');
+    assert.ok(compactRecord, 'published compact response follows the ordinary durable evidence rail');
+    assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, compactRecord.stored))), compact);
     assert.equal(fs.existsSync(path.join(output, 'experiment__run-123__attempt-2')), false);
     console.log('persist decision-bearing experiment evidence self-test passed');
   } finally {

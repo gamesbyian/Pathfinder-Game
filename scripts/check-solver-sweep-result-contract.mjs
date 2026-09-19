@@ -15,11 +15,13 @@ for (const name of maintainedEvidenceWorkflows) {
     continue;
   }
   const source = fs.readFileSync(file, 'utf8');
-  if (!source.includes('publish-solver-sweep-result.mjs')) failures.push(`${name}: missing standard solver-sweep-result publisher`);
+  if (!['publish-solver-sweep-result.mjs', 'sweep-publish.mjs'].some(marker => source.includes(marker))) failures.push(`${name}: missing standard solver-sweep-result publisher`);
   if (!source.includes('name: solver-sweep-result')) failures.push(`${name}: missing standard solver-sweep-result artifact upload`);
 }
 
 const helper = fs.readFileSync('scripts/publish-solver-sweep-result.mjs', 'utf8');
+const wrapper = fs.readFileSync('scripts/sweep-publish.mjs', 'utf8');
+if (!wrapper.includes('publish-solver-sweep-result.mjs')) failures.push('shared sweep wrapper must delegate to the standard publisher');
 if (!helper.includes('GITHUB_EVENT_PATH')) failures.push('publisher must capture exact workflow_dispatch inputs from GITHUB_EVENT_PATH');
 if (!helper.includes('artifactCoverage')) failures.push('publisher must emit artifact coverage');
 if (!helper.includes('populationIntegrity')) failures.push('publisher must emit population integrity');

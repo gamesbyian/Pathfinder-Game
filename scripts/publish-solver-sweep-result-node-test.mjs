@@ -36,7 +36,8 @@ try {
       },
     },
     execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'fixture-family', schedulerMode: 'production' },
-    limits: { cumulativeNodeCeiling: 1, initialWorkAllocation: 1, totalWorkCeiling: 1, wallSafetyDeadlineMs: 1000, wallDeadlineBinding: false },
+    limits: { cumulativeNodeCeiling: 1, initialWorkAllocation: 1, totalWorkCeiling: 1, wallSafetyDeadlineMs: 1000, wallDeadlineBinding: false,
+      representation: { kind: 'heterogeneous-by-corpus', corpora: { fixture: { nodeCeiling: 1 } } } },
     sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
   }));
 
@@ -50,6 +51,7 @@ try {
   assert.match(manifest.experiment.configurationHash, /^sha256:[0-9a-f]{64}$/);
   assert.equal(manifest.experiment.resolvedSha, 'b'.repeat(40));
   assert.equal(manifest.execution.levelBlind, true);
+  assert.equal(manifest.limits.representation.kind, 'heterogeneous-by-corpus');
   assert.equal(manifest.researchQuestion.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
   assert.equal(manifest.researchQuestion.measurementOpportunity, 'MO-002');
   assert.equal(manifest.population.researchBlock.blockId, 'BLOCK-001');
@@ -113,8 +115,10 @@ try {
   // --- failure-evidence wiring ---
   const failureResponseFile = path.join(temp, 'failure-response-summary.json');
   fs.writeFileSync(failureResponseFile, JSON.stringify({
-    schemaVersion: 1, kind: 'pathfinder-compact-failure-response', observed: 3,
-    outcomes: { solved: 1, exhaustedNegative: 1, nodeLimited: 1, workLimited: 0, deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 },
+    schemaVersion: 1, kind: 'pathfinder-compact-failure-response',
+    records: ['A', 'B', 'C'].map((identity, index) => ({ identity, outcome: index === 0 ? 'solved' : 'nodeLimited', attempts: [] })),
+    summary: { observed: 3, outcomes: { solved: 1, exhaustedNegative: 0, nodeLimited: 2, workLimited: 0, deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 } },
+    sourceFiles: [primary], missingSourceFiles: [], invalidSourceFiles: [],
   }));
   const compactContractFile = path.join(temp, 'compact-contract.json');
   const compactContract = JSON.parse(fs.readFileSync(contractFile));
@@ -125,14 +129,38 @@ try {
   const compactManifest = JSON.parse(fs.readFileSync(path.join(compactOut, 'manifest.json')));
   assert.equal(compactManifest.failureEvidence.disposition, 'compact');
   assert.equal(compactManifest.failureEvidence.compactPresent, true);
+  assert.equal(compactManifest.failureEvidence.compactComplete, true);
   assert.equal(compactManifest.failureEvidence.summary.observed, 3);
+  assert.equal(compactManifest.failureEvidence.publishedPath, 'failure-response/compact.json');
+  assert.ok(compactManifest.entries.some(entry => entry.role === 'compact-failure-response'));
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(compactOut, 'failure-response/compact.json'))).populationIntegrity,
+    JSON.parse(fs.readFileSync(integrity)), 'published compact rows inherit the authoritative population integrity');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(compactOut, 'failure-response/compact.json'))).runEnvelopeRef, '../manifest.json');
   assert.equal(compactManifest.failureEvidence.sourceArtifact, failureResponseFile);
   assert.equal(compactManifest.failureEvidence.richCapturePresent, false);
 
   const missingFailureResponseOut = path.join(temp, 'missing-failure-response-out');
-  execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${contractFile}`, `--failure-response-file=${path.join(temp, 'does-not-exist.json')}`, `--out=${missingFailureResponseOut}`], { cwd: root });
+  execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${compactContractFile}`, `--failure-response-file=${path.join(temp, 'does-not-exist.json')}`, `--out=${missingFailureResponseOut}`], { cwd: root });
   const missingFailureResponseManifest = JSON.parse(fs.readFileSync(path.join(missingFailureResponseOut, 'manifest.json')));
   assert.equal(missingFailureResponseManifest.failureEvidence.compactPresent, false, 'a missing failure-response file must not fabricate a summary');
+  assert.equal(missingFailureResponseManifest.decisionBearing, false, 'declared compact telemetry without its document fails closed');
+
+  const malformedFailureResponse = path.join(temp, 'malformed-failure-response.json');
+  fs.writeFileSync(malformedFailureResponse, JSON.stringify({ schemaVersion: 1, kind: 'wrong', records: [] }));
+  const malformedOut = path.join(temp, 'malformed-failure-response-out');
+  execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${compactContractFile}`, `--failure-response-file=${malformedFailureResponse}`, `--out=${malformedOut}`], { cwd: root });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(malformedOut, 'manifest.json'))).decisionBearing, false);
+
+  const partialFailureResponse = path.join(temp, 'partial-failure-response.json');
+  const partialDocument = JSON.parse(fs.readFileSync(failureResponseFile));
+  partialDocument.missingSourceFiles = ['missing-shard.json'];
+  fs.writeFileSync(partialFailureResponse, JSON.stringify(partialDocument));
+  const partialOut = path.join(temp, 'partial-failure-response-out');
+  execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${compactContractFile}`, `--failure-response-file=${partialFailureResponse}`, `--out=${partialOut}`], { cwd: root });
+  const partialManifest = JSON.parse(fs.readFileSync(path.join(partialOut, 'manifest.json')));
+  assert.equal(partialManifest.failureEvidence.compactPresent, true, 'partial/red runs still publish their observed compact rows');
+  assert.equal(partialManifest.failureEvidence.compactComplete, false);
+  assert.equal(partialManifest.decisionBearing, false, 'partial compact telemetry cannot support a decision-bearing result');
 
   // a rich search-loss capture included alongside the primary result is detected generically
   const captureFile = path.join(temp, 'search-loss-capture.json');

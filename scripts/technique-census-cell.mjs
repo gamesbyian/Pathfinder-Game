@@ -62,6 +62,7 @@ import path from 'node:path';
 
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
+import { compactFailureAttempt } from './solver-failure-response-lib.mjs';
 
 export async function createCellRunner({ runAttemptForTesting } = {}) {
     installBrowserStubs();
@@ -225,6 +226,9 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             ok, status, refereeValid, winningConfigKey: winningKey, winningGate,
             gateSummaries: level.gateKeys.length > 1 ? gateSummaries : undefined,
             nodesExpanded, totalMs,
+            // Always retain the cheap response semantics while attempts are in memory. Full attempt
+            // telemetry remains opt-in for unsuccessful cells because it can contain large payloads.
+            compactAttempts: attempts.map(compactFailureAttempt),
             // Shadow scheduling pilots need the already-produced lifecycle outcome for an
             // unsuccessful, capped attempt. Keep the historical compact result by default; this
             // opt-in only exposes existing generic telemetry and does not alter execution.

@@ -103,6 +103,15 @@ function searchLossCapsuleIssues(row, index = null) {
     if (!(nonEmpty(row.stateIdentity) || nonEmpty(row.pathIdentity))) issues.push(`${base}.stateIdentity/pathIdentity`);
     if (!DISPOSITIONS.has(row.disposition)) issues.push(`${base}.disposition`);
     if (!REPLAY_BASES.has(row.replayBasis)) issues.push(`${base}.replayBasis`);
+    if (row.replayBasis === 'replayable') {
+        const descriptor = row.reconstructability;
+        if (!descriptor || typeof descriptor !== 'object' || Array.isArray(descriptor)) issues.push(`${base}.reconstructability`);
+        else if (descriptor.kind === 'inline-exact-prefix') {
+            if (!Array.isArray(descriptor.path) || !descriptor.path.every(Number.isSafeInteger)) issues.push(`${base}.reconstructability.path`);
+        } else if (descriptor.kind === 'durable-source-row') {
+            for (const field of ['artifact', 'rowId', 'pathField']) if (!nonEmpty(descriptor[field])) issues.push(`${base}.reconstructability.${field}`);
+        } else issues.push(`${base}.reconstructability.kind`);
+    } else if (row.reconstructability != null) issues.push(`${base}.reconstructability(non-replayable)`);
 
     if (!row.selection || typeof row.selection !== 'object' || Array.isArray(row.selection)) {
         issues.push(`${base}.selection`);
@@ -131,6 +140,18 @@ export function validateSearchLossCapsule(row) {
     const issues = [...new Set(searchLossCapsuleIssues(row))];
     if (issues.length) throw new Error(`invalid search-loss capsule: ${issues.join(', ')}`);
     return row;
+}
+
+export function reconstructSearchLossPath(row, { resolveDurableRow } = {}) {
+    validateSearchLossCapsule(row);
+    if (row.replayBasis !== 'replayable') throw new Error('search-loss capsule is not replayable');
+    const descriptor = row.reconstructability;
+    if (descriptor.kind === 'inline-exact-prefix') return [...descriptor.path];
+    if (typeof resolveDurableRow !== 'function') throw new Error('durable replay requires resolveDurableRow');
+    const source = resolveDurableRow(descriptor.artifact, descriptor.rowId);
+    const path = source?.[descriptor.pathField];
+    if (!Array.isArray(path) || !path.every(Number.isSafeInteger)) throw new Error('durable replay source did not resolve an exact path');
+    return [...path];
 }
 
 /** Throws with the full set of violations; returns the document unchanged when valid. */
@@ -196,6 +217,30 @@ export function validateSearchLossCapture(document) {
 
     const unique = [...new Set(issues)];
     if (unique.length) throw new Error(`invalid search-loss capture: ${unique.join(', ')}`);
+    return document;
+}
+
+export function validateSearchLossAnnotation(document, { capture = null } = {}) {
+    const issues = [];
+    if (!document || typeof document !== 'object' || Array.isArray(document)) return (() => { throw new Error('invalid search-loss annotation: document'); })();
+    if (document.schemaVersion !== 1) issues.push('schemaVersion');
+    if (document.kind !== SEARCH_LOSS_ANNOTATION_KIND) issues.push('kind');
+    if (document.researchEnrichmentKind !== 'exact') issues.push('researchEnrichmentKind');
+    if (!nonEmpty(document.sourceCapture)) issues.push('sourceCapture');
+    if (!SHA256_RE.test(String(document.populationIdentity ?? ''))) issues.push('populationIdentity');
+    if (!Array.isArray(document.annotations)) issues.push('annotations');
+    const capsuleIds = capture ? new Set(validateSearchLossCapture(capture).capsules.map(row => row.capsuleId)) : null;
+    for (const [index, row] of (document.annotations ?? []).entries()) {
+        const base = `annotations[${index}]`;
+        if (!SHA256_RE.test(String(row?.capsuleId ?? ''))) issues.push(`${base}.capsuleId`);
+        if (capsuleIds && !capsuleIds.has(row?.capsuleId)) issues.push(`${base}.capsuleId(mismatch)`);
+        if (row?.annotationKind !== 'exact-feasibility') issues.push(`${base}.annotationKind`);
+        if (!['SUPPORTED', 'UNKNOWN', 'UNSUPPORTED'].includes(row?.support)) issues.push(`${base}.support`);
+        if (!['LIVE', 'DEAD', 'UNKNOWN', 'UNSUPPORTED'].includes(row?.value)) issues.push(`${base}.value`);
+        if (!nonEmpty(row?.producer)) issues.push(`${base}.producer`);
+    }
+    if (capture && document.populationIdentity !== capture.population.populationIdentity) issues.push('populationIdentity(mismatch)');
+    if (issues.length) throw new Error(`invalid search-loss annotation: ${[...new Set(issues)].join(', ')}`);
     return document;
 }
 
@@ -307,6 +352,7 @@ export function decisionObservationToSearchLossCapsule(observation, {
     captureReason,
     disposition,
     replayBasis = 'identity-only',
+    reconstructability = null,
 } = {}) {
     validateDecisionObservation(observation);
     const eventKind = DECISION_STAGE_TO_EVENT_KIND[observation.stageId];
@@ -341,6 +387,7 @@ export function decisionObservationToSearchLossCapsule(observation, {
         },
         context: observation.context ?? {},
         replayBasis,
+        reconstructability,
     };
     row.capsuleId = searchLossCapsuleIdentity(row);
     return validateSearchLossCapsule(row);

@@ -514,7 +514,7 @@
     },
     {
       "id": "search-loss-evidence",
-      "name": "Search-loss observation capsules for unsolved solver attempts",
+      "name": "Search-loss observation capsules for solver attempts",
       "status": "contract-only",
       "grain": ["solver-run", "parent-level", "attempt/stage", "selected search event", "annotation event"],
       "locations": [
@@ -522,18 +522,18 @@
       ],
       "authorities": ["docs/solver-search-loss-evidence-implementation-plan.md", "scripts/solver-search-loss-evidence-lib.mjs"],
       "queryEntryPoints": ["node scripts/research-asset-query.mjs --id=search-loss-evidence"],
-      "joinKeys": ["levelId", "run/solver/protocol identity", "attempt/stage identity", "capsuleId"],
+      "joinKeys": ["capsule parentId plus canonical level identity/structural revision", "run/protocol identity", "attempt/stage identity", "capsuleId"],
       "evidenceRoles": ["forensic", "mechanism-nomination", "development"],
       "relatedAssets": ["lifecycle-telemetry", "exact-reference-labels", "operational-traces", "solver-capability-memory", "variant-family-data", "technique-census"],
       "affordances": [
-        "Localize where/why an unsolved attempt lost search without a bespoke rerun, once a producer emits captures.",
+        "Localize where/why a solver attempt lost search material without a bespoke rerun, once a producer emits captures.",
         "Nominate concrete states/decisions for exact annotation or richer operational-trace replay.",
         "Preserve selector observed/retained/truncated denominators alongside any retained capsule."
       ],
       "caveats": [
         "Contract- and registry-only as of this entry: no capsule producer is wired yet and no captures exist.",
         "A bounded selector intentionally drops most frontier/event material; absence of a capsule is unknown, not a negative observation.",
-        "Independent unit is parent level; within-parent capsules are repeated measures.",
+        "Independent unit is parent level; within-parent capsules are repeated measures, and solved-run controls are required when the same pruning, culling, or repetition event can occur during successful search.",
         "Offline capsules/annotations are forensic evidence and may not steer production solving."
       ]
     }

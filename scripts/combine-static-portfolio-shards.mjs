@@ -24,6 +24,7 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
+import { buildPopulationIntegrity } from './solver-experiment-contract.mjs';
 
 function findShardFiles(dir) {
     const out = [];
@@ -46,6 +47,7 @@ export function combine(shardOutputs, controlArm, plan = null) {
     const results = shardOutputs.flatMap((s) => s.results ?? []);
     if (results.length === 0) throw new Error('combine: no results found across any shard output');
 
+    let populationIntegrity;
     if (plan) {
         const expected = new Set(plan.cells.map((c) => c.cellId));
         const seen = new Map();
@@ -58,6 +60,17 @@ export function combine(shardOutputs, controlArm, plan = null) {
                 + `${missing.length} missing, ${duplicated.length} duplicated, ${unexpected.length} unexpected cellIds. `
                 + `First few missing: ${missing.slice(0, 5).join(', ')}`);
         }
+        populationIntegrity = buildPopulationIntegrity([...expected], results.map(row => ({ ...row, id: row.cellId })));
+    } else {
+        // Observed rows describe what arrived, never what was intended. Without the authored plan
+        // there is no authority from which to claim complete coverage.
+        populationIntegrity = {
+            expectedCount: null,
+            observedCount: results.length,
+            coverageComplete: null,
+            decisionValidComplete: null,
+            inferredExpectedPopulation: true,
+        };
     }
 
     const byArm = new Map();
@@ -134,7 +147,7 @@ export function combine(shardOutputs, controlArm, plan = null) {
             ? 'At least one candidate preserved control coverage while gaining solves or reducing work.'
             : 'No candidate preserved control coverage while gaining solves or reducing work.',
     };
-    return { schemaVersion: 1, controlArm, totalCells: results.length, armSummaries, comparisons, researchOutcome };
+    return { schemaVersion: 1, controlArm, totalCells: results.length, populationIntegrity, results, armSummaries, comparisons, researchOutcome };
 }
 
 function toMarkdown(result) {

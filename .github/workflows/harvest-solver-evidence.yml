@@ -17,6 +17,7 @@ on:
       - 'Solver two-phase residual confirmation'
       - 'Static portfolio confirmation A/B'
       - 'Solver combine sweep runs (cross-run reconciliation)'
+      - 'Solver diagnostics and hint capture'
     types: [completed]
   workflow_dispatch:
     inputs:

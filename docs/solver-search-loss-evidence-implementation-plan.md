@@ -197,17 +197,18 @@ The implementation does **not** initially authorize:
 
 ## 4. Conceptual data model
 
-The overall failure-information architecture has **three evidence layers**, not one.
+The overall failure-information architecture has **four distinct products**, not one.
 
-1. **Failure response** - cheap, ubiquitous, comparable attempt/search summaries.
-2. **Failure observations** - bounded selected state/decision/event capsules.
-3. **Failure annotations** - exact, known-support, counterfactual, or causal interpretation added later.
+1. **Compact failure-response records** - cheap, ubiquitous per-parent/cell rows and, where already available, compact per-attempt projections. These are the reusable join/stratification substrate.
+2. **Aggregate failure-response summaries** - counts, totals, and indexes derived from compact records for manifests and dashboards. They are not a substitute for the records.
+3. **Rich search-loss observations/capsules** - bounded selected state/decision/event evidence, explicitly enabled for a question and potentially replayable.
+4. **Annotations** - exact/reference, known-prefix, counterfactual, or causal interpretation added later without mutating capture.
 
-The first layer should become broadly available across solver-running workflows. The second is selective. The third is expensive and question-driven.
+The first two products should become broadly available across solver-running workflows. Rich capture is selective. Annotation is expensive and question-driven.
 
 ### 4.0 Failure-response layer
 
-A compact failure-response record should preserve cheap facts that already exist or can be aggregated with negligible cost.
+A versioned compact failure-response **document** preserves one lightweight record per natural parent/cell. Where a producer already has attempt information in memory, that record also carries a lightweight attempt projection even when the producer omits rich/full `attempts[]`. The document, not merely its aggregate, is the automatic Phase-3 deliverable.
 
 Common fields may include:
 
@@ -220,7 +221,13 @@ Common fields may include:
 - aggregate rejection/candidate-flow counts when the search family exposes them;
 - recurrence counters where a typed native identity already exists.
 
-This layer is not path/state evidence and does not require a capsule per event.
+Parent/cell identity, producer/run/config identity, reach/participation, outcome, allocation and consumption, censoring/error/referee state, attempt count, and solved-parent-with-failed-attempt state are retained when available. Compact attempts retain only stable stage/action/config/gate identity, outcome, allocated node/work ceilings, nodes/work consumed, best/final badness, deadline state, and already-produced stable mechanism flags. Unknown stays unknown; projection must not synthesize zero or false.
+
+This layer excludes solutions, paths, frontier neighborhoods, ranked pools, giant attempt objects, and incidental timing noise. It is not path/state evidence and does not require a capsule per event.
+
+The document also carries a derived aggregate summary. Manifests may embed that summary for quick inspection, but must publish and reference the compact document itself. Authoritative experiment population integrity is joined by the publisher; self-derived observed identities can describe rows but never prove completeness.
+
+The published document uses `runEnvelopeRef: "../manifest.json"` as the canonical route to producer, run, protocol, configuration, and research-block identity instead of duplicating that envelope on every row.
 
 Search-family-specific extensions are allowed. Do not force DFS, beam, repair, and admissible-order into a fake common frontier model.
 
@@ -502,7 +509,7 @@ Do not serialize production continuations merely for telemetry.
 - frontier ancestry plus selected prefix;
 - source artifact ref that owns the reconstructable row.
 
-A hash with no reconstructable source is sufficient for dedup/comparison but not later exact annotation.
+A hash with no reconstructable source is sufficient for dedup/comparison but not later exact annotation. `replayable` is therefore valid only with a fail-closed reconstructability descriptor: either an inline exact prefix/path or a durable artifact plus stable source-row identity and exact path field. Live beam continuations are not serialized merely to earn this label.
 
 Expose whether a capsule is `replayable`, `identity-only`, or `historical-unverified`.
 
@@ -1234,6 +1241,17 @@ Tests:
 
 **Goal:** stop major solver-running workflows from discarding cheap failure-side information before adding rich path/state capture.
 
+**Current reconciliation (2026-09-19):** earlier Phase-3 waves implemented a useful vocabulary, aggregate summaries, manifest embedding, and workflow dispositions, but the automatic output was weaker than this phase's intended record-level substrate. The repaired contract is:
+
+- **implemented and verified:** a versioned `pathfinder-compact-failure-response` document with parent/cell records and compact attempt projections; automatic technique-census compact attempts even on unsuccessful cells; publisher schema validation, a real published artifact entry, authoritative population-integrity join, and fail-closed decision-bearing semantics for declared compact telemetry; replayability requires reconstructable evidence; static-portfolio no-plan completeness remains unknown;
+- **implemented and verified:** durability disposition is explicit and exact-name checked against the standard harvester; arbitrary JSON inputs are rejected as failure populations; missing/invalid compact sources may publish partial evidence but block decision-bearing status;
+- **implemented and verified:** maintained evidence producers now use the canonical publisher directly or through `sweep-publish.mjs`; the lifecycle-led disposition inventory has no file-size-based specialized opt-outs, and the remaining unsupported canaries declare why attempt-response semantics do not apply;
+- **implemented and verified:** stress refresh publishes intended-population integrity and a `heterogeneous-by-corpus` limits representation, so null scalar fields no longer imply “no ceiling”; ordinary runs still require an explicit research outcome before they can be decision-bearing;
+- **implemented but gated on representative evidence:** bounded repair progress transitions, DFS/beam terminal badness, attempt-scoped typed prune counts, and counter-only beam flow pass deterministic parity; the fixture timing is too noisy to establish negligible overhead, so all remain specialist-only pending a multi-parent canary;
+- **implemented but gated on a representative real run:** the first bounded rich-capsule capture surface exists; Phases 5-7 have the partial statuses below, Phase 8 is not yet earned, and Phase 9 is not currently authorized.
+
+Aggregate counts/totals remain a derived index for manifests and dashboarding. A manifest containing only that index does not satisfy Phase 3.
+
 Add one shared projection/helper for unsuccessful attempt/cell response semantics.
 
 Recommended home:
@@ -1342,6 +1360,8 @@ Record for each:
 
 ### Phase 4 - first production-inert rich capsule producer
 
+> **Status (2026-09-19): implemented but gated on real-run/parity evidence.** The shared decision-observation adapter plus `capture-search-loss-evidence.mjs` now produces bounded deterministic cull capsules with selector denominators and structural/run/population identity. It deliberately remains identity-only unless reconstructability is earned. Promotion into ordinary solver workflows waits for a representative multi-parent OFF/ON capture canary and storage/overhead evidence; synthetic contract tests are not that gate.
+
 **Goal:** prove cheap path/state observation against real solver execution while preserving exact behavior.
 
 Choose the narrowest existing seam from Phase 0. Preference order:
@@ -1401,6 +1421,8 @@ Measure:
 
 ### Phase 5 - capture CLI/publisher and durable bundle
 
+> **Status (2026-09-19): partially implemented and verified.** The capture CLI requires explicit observation input, metadata/population identity, structural revisions, profile, selector cap, and output; the standard publisher/durable entry mechanism recognizes included capture documents. Shard-local GHA collection is not yet wired because Phase 4 has not cleared its real-run overhead gate.
+
 **Goal:** make captures reproducible and safe to retain when decision-bearing.
 
 Add a CLI, preferably under existing solver/stress conventions, such as:
@@ -1434,6 +1456,8 @@ Tests:
 - source manifest/run identity.
 
 ### Phase 6 - annotation adapters
+
+> **Status (2026-09-19): exact/reference adapter implemented; later adapters not yet implemented.** `annotate-search-loss-exact.mjs` writes a separate identity-checked LIVE/DEAD/UNKNOWN/UNSUPPORTED artifact and preserves population/research-block lineage. Known-prefix adaptation remains future work; counterfactual adaptation waits for a concrete study.
 
 **Goal:** allow existing evidence systems to enrich capsules without mutating the original observation.
 
@@ -1472,6 +1496,8 @@ Tests:
 **Exit gate:** one historical search capsule can be exact-annotated after the fact with auditable provenance.
 
 ### Phase 7 - query/reducer surface
+
+> **Status (2026-09-19): initial usable surface implemented.** `search-loss-query.mjs` joins compact records/capsules/exact annotations, filters common identity/outcome/work/badness/event/replay fields, and reports independent parents rather than presenting raw capsule count as prevalence. Progress/rejection/flow composition becomes queryable only after the gated pilot fields are promoted into durable records.
 
 **Goal:** answer common research questions without bespoke JSON surgery.
 
@@ -1514,6 +1540,8 @@ Never default to raw capsule count as prevalence.
 
 ### Phase 8 - resource audit
 
+> **Status (2026-09-19): not yet earned.** The registry remains `contract-only`: no representative real generic capture has cleared Phase 4 parity/overhead and no recurring producer population exists to audit for empirical missingness/conditioning. Do not register an audit-grade resource from synthetic fixtures.
+
 **Goal:** promote from catalogue-grade to audited-resource grade before broad recurring decision use.
 
 Create a focused dated audit report following Resource Contract conventions.
@@ -1546,6 +1574,8 @@ Add mechanical checks where practical.
 **Exit gate:** a fresh researcher sees the conditioning/dependence/missingness caveats before using the rows.
 
 ### Phase 9 - first scientific consumer: bounded first-loss survey
+
+> **Status (2026-09-19): not currently authorized by workstream priority.** `solver-optimization-workstreams.md` currently owns `WS2-WORK-LADDER-ECONOMICS` as the next gate. Operational-divergence/first-loss becomes eligible only if that costing gate closes negative and the authority selects it among the remaining discriminators.
 
 **Goal:** prove that the resource changes research decisions.
 

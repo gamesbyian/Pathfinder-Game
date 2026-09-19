@@ -10,7 +10,7 @@ import {
   declaredDecisionContractIssues,
   hashPopulation,
 } from './solver-experiment-contract.mjs';
-import { FAILURE_RESPONSE_SCHEMA_VERSION } from './solver-failure-response-lib.mjs';
+import { FAILURE_RESPONSE_SCHEMA_VERSION, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import { SEARCH_LOSS_CAPTURE_KIND } from './solver-search-loss-evidence-lib.mjs';
 
 const args = process.argv.slice(2);
@@ -89,15 +89,23 @@ function entryDocument(entry) {
 // entries is detected here for free, with no per-producer wiring.
 const richCapturePresent = entries.some(entry => entryDocument(entry)?.kind === SEARCH_LOSS_CAPTURE_KIND);
 
-let failureResponseSummary = null;
+let failureResponseDocument = null;
+let failureResponseError = null;
 if (failureResponseFile) {
   if (fs.existsSync(failureResponseFile)) {
-    try { failureResponseSummary = JSON.parse(fs.readFileSync(failureResponseFile, 'utf8')); }
-    catch (error) { console.warn(`publish-solver-sweep-result: invalid --failure-response-file=${failureResponseFile}: ${error.message}`); }
+    try { failureResponseDocument = validateFailureResponseDocument(JSON.parse(fs.readFileSync(failureResponseFile, 'utf8'))); }
+    catch (error) {
+      failureResponseError = error.message;
+      console.warn(`publish-solver-sweep-result: invalid --failure-response-file=${failureResponseFile}: ${error.message}`);
+    }
   } else {
+    failureResponseError = 'file does not exist';
     console.warn(`publish-solver-sweep-result: --failure-response-file=${failureResponseFile} does not exist`);
   }
 }
+const failureResponseComplete = Boolean(failureResponseDocument
+  && failureResponseDocument.missingSourceFiles.length === 0
+  && failureResponseDocument.invalidSourceFiles.length === 0);
 
 function collectJsonFiles(root, limit = 24) {
   const found = [];
@@ -238,6 +246,25 @@ const populationIdentity = populationIntegrity?.populationIdentityHash ?? (popul
       ...(!populationIntegrity.expectedIds ? (populationIntegrity.missingIds ?? []) : []),
     ].length ? [...(populationIntegrity.expectedIds ?? []), ...(populationIntegrity.missingIds ?? [])] : stats.flatMap(s => s.levels.map(row => row?.id ?? row?.levelId ?? row?.level).filter(x => x != null).map(String)) }).identityHash
   : null);
+let failureResponseEntry = null;
+if (failureResponseDocument) {
+  // The publisher owns the final coverage view. Observed compact rows cannot establish intended
+  // population completeness, so join the already-authoritative experiment integrity here.
+  failureResponseDocument.populationIntegrity = populationIntegrity;
+  failureResponseDocument.runEnvelopeRef = '../manifest.json';
+  failureResponseDocument.summary = {
+    ...failureResponseDocument.summary,
+    selfDerivedPopulation: !populationIntegrity,
+    coverageComplete: populationIntegrity?.coverageComplete ?? populationIntegrity?.complete ?? null,
+    decisionValidComplete: populationIntegrity?.decisionValidComplete ?? null,
+    outcomes: populationIntegrity?.outcomes ?? failureResponseDocument.summary.outcomes,
+  };
+  const published = 'failure-response/compact.json';
+  fs.mkdirSync(path.join(outDir, 'failure-response'), { recursive: true });
+  fs.writeFileSync(path.join(outDir, published), `${JSON.stringify(failureResponseDocument, null, 2)}\n`);
+  failureResponseEntry = { role: 'compact-failure-response', source: failureResponseFile, published, missing: false };
+  entries.push(failureResponseEntry);
+}
 const outcomeDecisionBearing = researchOutcome && ['completed-positive', 'completed-negative'].includes(researchOutcome.outcome);
 const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
 const contract = {
@@ -285,6 +312,7 @@ const contract = {
     totalWorkCeiling: declaredContract?.limits?.totalWorkCeiling ?? null,
     wallSafetyDeadlineMs: declaredContract?.limits?.wallSafetyDeadlineMs ?? null,
     wallDeadlineBinding: declaredContract?.limits?.wallDeadlineBinding ?? null,
+    representation: declaredContract?.limits?.representation ?? null,
   },
   outcomes: populationIntegrity?.outcomes ?? null,
   coverage: { artifact: artifactCoverage, populationIntegrity },
@@ -295,8 +323,11 @@ const contract = {
     reports: declaredContract?.sideEffects?.reports ?? 'unknown',
   },
 };
+const compactTelemetryIssue = contract.sideEffects.telemetry === 'compact' && !failureResponseComplete
+  ? [`sideEffects.telemetry compact requires complete valid failure response${failureResponseError ? ` (${failureResponseError})` : ''}`]
+  : [];
 const contractIssues = declaredContract
-  ? [...new Set([...declaredDecisionContractIssues(declaredContract), ...decisionContractIssues(contract)])]
+  ? [...new Set([...declaredDecisionContractIssues(declaredContract), ...decisionContractIssues(contract), ...compactTelemetryIssue])]
   : ['missing declared experiment contract'];
 const contractDecisionEligible = contractIssues.length === 0;
 
@@ -323,9 +354,12 @@ const manifest = {
   failureEvidence: {
     schemaVersion: FAILURE_RESPONSE_SCHEMA_VERSION,
     disposition: contract.sideEffects.telemetry,
-    compactPresent: Boolean(failureResponseSummary),
+    compactPresent: Boolean(failureResponseDocument),
+    compactComplete: failureResponseComplete,
     sourceArtifact: failureResponseFile,
-    summary: failureResponseSummary,
+    publishedPath: failureResponseEntry?.published ?? null,
+    validationError: failureResponseError,
+    summary: failureResponseDocument?.summary ?? null,
     richCapturePresent,
   },
   ...contract,
@@ -359,7 +393,7 @@ if (populationIntegrity) {
   lines.push(`- Decision-valid observations: ${integrityDecisionValid ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
 } else lines.push('- Population integrity: **unknown / non-decision-bearing** (no validated intended population supplied)');
 lines.push(`- Decision contract: ${contractDecisionEligible ? 'complete' : `**INCOMPLETE / NON-DECISION-BEARING** (${contractIssues.join(', ')})`}`);
-lines.push(`- Failure-evidence disposition: \`${manifest.failureEvidence.disposition}\`${failureResponseSummary ? ` (compact summary: ${failureResponseSummary.observed} row(s), ${JSON.stringify(failureResponseSummary.outcomes)})` : ''}${richCapturePresent ? '; rich search-loss capture present' : ''}`);
+lines.push(`- Failure-evidence disposition: \`${manifest.failureEvidence.disposition}\`${failureResponseDocument ? ` (compact records: ${failureResponseDocument.records.length}, ${JSON.stringify(failureResponseDocument.summary.outcomes)})` : ''}${richCapturePresent ? '; rich search-loss capture present' : ''}`);
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
 

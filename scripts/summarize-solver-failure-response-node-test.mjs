@@ -19,11 +19,12 @@ try {
     const out1 = path.join(temp, 'summary-1.json');
     execFileSync('node', ['scripts/summarize-solver-failure-response.mjs', `--in=${combinedCells}`, '--rows-key=results', `--out=${out1}`], { cwd: root });
     const summary1 = JSON.parse(fs.readFileSync(out1, 'utf8'));
-    assert.equal(summary1.observed, 3);
-    assert.equal(summary1.outcomes.solved, 1);
-    assert.equal(summary1.outcomes.nodeLimited, 1);
-    assert.equal(summary1.refereeInvalid, 1);
-    assert.equal(summary1.selfDerivedPopulation, true, 'no populationIntegrity was supplied in the fixture');
+    assert.equal(summary1.records.length, 3);
+    assert.equal(summary1.records[1].identity, 'b');
+    assert.equal(summary1.summary.outcomes.solved, 1);
+    assert.equal(summary1.summary.outcomes.nodeLimited, 1);
+    assert.equal(summary1.summary.refereeInvalid, 1);
+    assert.equal(summary1.summary.selfDerivedPopulation, true, 'no populationIntegrity was supplied in the fixture');
     assert.deepEqual(summary1.sourceFiles, [combinedCells]);
     assert.deepEqual(summary1.missingSourceFiles, []);
 
@@ -35,10 +36,10 @@ try {
     const out2 = path.join(temp, 'summary-2.json');
     execFileSync('node', ['scripts/summarize-solver-failure-response.mjs', `--in=${report1},${report2}`, '--rows-key=levels', `--out=${out2}`], { cwd: root });
     const summary2 = JSON.parse(fs.readFileSync(out2, 'utf8'));
-    assert.equal(summary2.observed, 2, 'rows are concatenated across multiple source files');
-    assert.equal(summary2.outcomes.solved, 1);
-    assert.equal(summary2.outcomes.exhaustedNegative, 1);
-    assert.equal(summary2.selfDerivedPopulation, true, 'multiple source files never adopt a single one\'s populationIntegrity as if it covered them all');
+    assert.equal(summary2.records.length, 2, 'rows are concatenated across multiple source files');
+    assert.equal(summary2.summary.outcomes.solved, 1);
+    assert.equal(summary2.summary.outcomes.exhaustedNegative, 1);
+    assert.equal(summary2.summary.selfDerivedPopulation, true, 'multiple source files never adopt a single one\'s populationIntegrity as if it covered them all');
 
     // a single source file's own externally-verified populationIntegrity is trusted as-is
     const reportWithIntegrity = path.join(temp, 'with-integrity.json');
@@ -50,15 +51,24 @@ try {
     const out3 = path.join(temp, 'summary-3.json');
     execFileSync('node', ['scripts/summarize-solver-failure-response.mjs', `--in=${reportWithIntegrity}`, '--rows-key=levels', `--out=${out3}`], { cwd: root });
     const summary3 = JSON.parse(fs.readFileSync(out3, 'utf8'));
-    assert.equal(summary3.selfDerivedPopulation, false);
-    assert.equal(summary3.coverageComplete, true);
+    assert.equal(summary3.summary.selfDerivedPopulation, false);
+    assert.equal(summary3.summary.coverageComplete, true);
 
     // a missing source file is reported explicitly rather than silently dropped
     const out4 = path.join(temp, 'summary-4.json');
     execFileSync('node', ['scripts/summarize-solver-failure-response.mjs', `--in=${report1},${path.join(temp, 'does-not-exist.json')}`, '--rows-key=levels', `--out=${out4}`], { cwd: root });
     const summary4 = JSON.parse(fs.readFileSync(out4, 'utf8'));
-    assert.equal(summary4.observed, 1);
+    assert.equal(summary4.records.length, 1);
     assert.equal(summary4.missingSourceFiles.length, 1);
+
+    // Explicit inputs remain ergonomic, but arbitrary JSON is never interpreted as observations.
+    const planFile = path.join(temp, 'plan.json');
+    fs.writeFileSync(planFile, JSON.stringify({ cells: [{ cellId: 'not-an-observation' }] }));
+    const out5 = path.join(temp, 'summary-5.json');
+    execFileSync('node', ['scripts/summarize-solver-failure-response.mjs', `--in=${report1},${planFile}`, `--out=${out5}`], { cwd: root });
+    const summary5 = JSON.parse(fs.readFileSync(out5, 'utf8'));
+    assert.equal(summary5.records.length, 1);
+    assert.deepEqual(summary5.invalidSourceFiles, [planFile]);
 
     console.log('summarize-solver-failure-response tests passed');
 } finally {

@@ -23,6 +23,9 @@ const shard2 = {
 const result = combine([shard1, shard2], 'full-menu');
 
 assert.equal(result.totalCells, 6);
+assert.equal(result.results.length, 6, 'combined output preserves natural cells for compact failure projection');
+assert.equal(result.populationIntegrity.coverageComplete, null, 'observed rows without a plan cannot establish completeness');
+assert.equal(result.populationIntegrity.inferredExpectedPopulation, true);
 assert.equal(result.armSummaries.length, 2);
 const fullMenu = result.armSummaries.find((a) => a.arm === 'full-menu');
 const portfolio11 = result.armSummaries.find((a) => a.arm === 'portfolio-11');
@@ -93,5 +96,8 @@ assert.throws(() => combine([shard1, shard2], 'full-menu', incompletePlan), /mis
 const dupedShard = { results: [cell('SP-c2-1-full-menu', 'L1', 'full-menu', true, 1, 'success')] };
 const planForDupeCheck = { cells: [{ cellId: 'SP-c2-1-full-menu' }] };
 assert.throws(() => combine([shard1, dupedShard], 'full-menu', planForDupeCheck), /duplicated/);
+
+const exactPlan = { cells: [...shard1.results, ...shard2.results].map(({ cellId }) => ({ cellId })) };
+assert.equal(combine([shard1, shard2], 'full-menu', exactPlan).populationIntegrity.coverageComplete, true);
 
 console.log('combine-static-portfolio-shards tests passed');

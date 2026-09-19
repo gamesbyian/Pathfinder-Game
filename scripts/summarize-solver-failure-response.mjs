@@ -20,7 +20,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { summarizeFailureResponse } from './solver-failure-response-lib.mjs';
+import { createFailureResponseDocument } from './solver-failure-response-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--') && a.includes('=')).map(a => {
     const eq = a.indexOf('=');
@@ -39,23 +39,26 @@ const inputPaths = inList.split(',').map(s => s.trim()).filter(Boolean);
 const documents = inputPaths.filter(p => existsSync(p)).map(p => ({ path: p, document: JSON.parse(readFileSync(p, 'utf8')) }));
 
 function rowsOf(document) {
-    if (rowsKey === 'levels') return Array.isArray(document.levels) ? document.levels : [];
-    if (rowsKey === 'results') return Array.isArray(document.results) ? document.results : [];
-    return Array.isArray(document.levels) ? document.levels : (Array.isArray(document.results) ? document.results : []);
+    if (rowsKey === 'levels') return Array.isArray(document.levels) ? document.levels : null;
+    if (rowsKey === 'results') return Array.isArray(document.results) ? document.results : null;
+    return Array.isArray(document.levels) ? document.levels : (Array.isArray(document.results) ? document.results : null);
 }
 
-const rows = documents.flatMap(({ document }) => rowsOf(document));
+const rowDocuments = documents.map(item => ({ ...item, rows: rowsOf(item.document) }));
+const invalidSourceFiles = rowDocuments.filter(item => item.rows === null).map(item => item.path);
+const rows = rowDocuments.flatMap(item => item.rows ?? []);
 // A caller-verified populationIntegrity is only reusable as-is from exactly one source document --
 // merging two independently computed coverage claims correctly is out of scope here, and silently
 // picking one would misrepresent the other's coverage.
 const populationIntegrity = documents.length === 1 ? (documents[0].document.populationIntegrity ?? null) : null;
 
-const summary = {
-    ...summarizeFailureResponse(rows, { populationIntegrity }),
+const summary = createFailureResponseDocument(rows, {
+    populationIntegrity,
     sourceFiles: inputPaths,
     missingSourceFiles: inputPaths.filter(p => !existsSync(p)),
-};
+    invalidSourceFiles,
+});
 
 mkdirSync(path.dirname(outFile), { recursive: true });
 writeFileSync(outFile, JSON.stringify(summary, null, 2) + '\n');
-console.log(`summarize-solver-failure-response: ${summary.observed} row(s) from ${documents.length}/${inputPaths.length} source file(s) -> ${outFile}`);
+console.log(`summarize-solver-failure-response: ${summary.records.length} row(s) from ${documents.length}/${inputPaths.length} source file(s) -> ${outFile}`);

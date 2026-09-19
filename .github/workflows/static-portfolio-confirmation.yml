@@ -336,10 +336,10 @@ jobs:
             population: { kind: 'static-portfolio-cells', identityBasis: 'sealed-plan-cell-id' },
             execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'static-portfolio', schedulerMode: 'isolated-techniques' },
             limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: false },
-            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
+            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
           }, null, 2)}\n`);
           NODE
-          node scripts/publish-solver-sweep-result.mjs \
+          node scripts/sweep-publish.mjs --failure-in=p \
             --primary="logs/static-portfolio-confirmation/combined.json" \
             --include="logs/static-portfolio-confirmation/combined-summary.md" \
             --outcome-file="logs/static-portfolio-confirmation/outcome.json" \

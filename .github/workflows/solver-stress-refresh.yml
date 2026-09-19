@@ -312,20 +312,26 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
+          mkdir -p logs/solver-sweep-result-inputs
           node - <<'NODE'
           const fs = require('node:fs');
-          const expected = [['reports/stress/solver-corpus1-latest.json', 102], ['reports/stress/solver-corpus2-latest.json', 1700]];
+          const expected = [['reports/stress/solver-corpus1-latest.json', 'data/stress/stress-levels.json', 'corpus-1'], ['reports/stress/solver-corpus2-latest.json', 'data/stress/stress-levels-random.json', 'corpus-2']];
           let ok = true;
-          for (const [file, total] of expected) {
+          for (const [file, corpus, label] of expected) {
             if (!fs.existsSync(file)) { console.error(`${file}: missing`); ok = false; continue; }
+            const source = JSON.parse(fs.readFileSync(corpus));
+            const levels = Array.isArray(source) ? source : source.levels;
+            fs.writeFileSync(`logs/solver-sweep-result-inputs/${label}-expected.txt`, `${levels.map(row => row.id).join('\n')}\n`);
             const report = JSON.parse(fs.readFileSync(file, 'utf8'));
             const rows = report.levels ?? [];
-            if (rows.length !== total) { console.error(`${file}: ${rows.length}/${total} levels; incomplete.`); ok = false; }
             if (rows.some(r => r.solvedByPrime)) { console.error(`${file}: solvedByPrime appeared in a capability report.`); ok = false; }
           }
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `complete=${ok ? 'true' : 'false'}\n`);
           if (!ok) process.exit(1);
           NODE
+          node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --expected-ids=logs/solver-sweep-result-inputs/corpus-1-expected.txt --result=reports/stress/solver-corpus1-latest.json --integrity-out=logs/solver-sweep-result-inputs/corpus-1-integrity.json
+          node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --expected-ids=logs/solver-sweep-result-inputs/corpus-2-expected.txt --result=reports/stress/solver-corpus2-latest.json --integrity-out=logs/solver-sweep-result-inputs/corpus-2-integrity.json
+          node scripts/combine-population-integrity.mjs --input=corpus-1:logs/solver-sweep-result-inputs/corpus-1-integrity.json --input=corpus-2:logs/solver-sweep-result-inputs/corpus-2-integrity.json --out=logs/solver-sweep-result-inputs/population-integrity.json
+          node -e "const fs=require('node:fs'),x=require('./logs/solver-sweep-result-inputs/population-integrity.json'); fs.appendFileSync(process.env.GITHUB_OUTPUT,'complete='+String(x.coverageComplete ?? x.complete)+'\n'); if (!(x.coverageComplete ?? x.complete)) process.exit(1)"
 
       - name: Verify canonical lifecycle evidence is present
         if: steps.coverage.outputs.complete == 'true' && inputs.deterministic != 'true'
@@ -472,26 +478,40 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Summarize compact failure-response
-        if: always()
-        run: |
-          node scripts/summarize-solver-failure-response.mjs \
-            --in="reports/stress/solver-corpus1-latest.json,reports/stress/solver-corpus2-latest.json" \
-            --rows-key=levels \
-            --out="logs/solver-sweep-result-inputs/failure-response-summary.json"
-
       - name: Publish standard solver sweep result
         if: always()
         shell: bash
         run: |
-          node scripts/publish-solver-sweep-result.mjs \
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
+          const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE), corpus2NodeBudget: Number(process.env.C2_NODE), corpus1DeadlineMs: Number(process.env.C1_MS), corpus2DeadlineMs: Number(process.env.C2_MS), strictTotalWorkBudget: process.env.STRICT === 'true', enableFlags: process.env.ENABLE, disableFlags: process.env.DISABLE };
+          fs.writeFileSync('logs/solver-sweep-result-inputs/experiment-contract.json', `${JSON.stringify({
+            experiment: { workflowFamily: 'solver-stress-refresh', producer: 'solver-stress-refresh.yml', entrypoint: 'scripts/level-blind-capability-sweep.mjs', configurationHash: hashConfiguration(configuration) },
+            population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
+            execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: process.env.DETERMINISTIC === 'true', producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
+            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: true, representation: { kind: 'heterogeneous-by-corpus', corpora: { 'corpus-1': { nodeCeiling: configuration.corpus1NodeBudget, wallSafetyDeadlineMs: configuration.corpus1DeadlineMs }, 'corpus-2': { nodeCeiling: configuration.corpus2NodeBudget, wallSafetyDeadlineMs: configuration.corpus2DeadlineMs } } } },
+            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: process.env.DETERMINISTIC === 'true' ? 'none' : 'refresh', telemetry: 'compact', reports: 'report-write' },
+          }, null, 2)}\n`);
+          NODE
+          node scripts/sweep-publish.mjs --failure-in=p,i \
             --primary="reports/stress/solver-corpus1-latest.json" \
             --include="reports/stress/solver-corpus2-latest.json" \
             --shards-expected="${{ inputs.shard_count }}" \
             --shards-observed="$(find logs/solver-corpus2-batches -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
-            --failure-response-file="logs/solver-sweep-result-inputs/failure-response-summary.json" \
+            --integrity-file="logs/solver-sweep-result-inputs/population-integrity.json" \
+            --contract-file="logs/solver-sweep-result-inputs/experiment-contract.json" \
             --provenance-out="reports/stress/capability-runs/${{ github.run_id }}/gha-source-run.json" \
             --source-artifact="solver-stress-refresh-combined"
+        env:
+          C1_NODE: ${{ inputs.corpus1_node_budget }}
+          C2_NODE: ${{ inputs.corpus2_node_budget }}
+          C1_MS: ${{ inputs.corpus1_budget_ms }}
+          C2_MS: ${{ inputs.corpus2_budget_ms }}
+          STRICT: ${{ inputs.strict_total_work_budget }}
+          ENABLE: ${{ inputs.enable_flags }}
+          DISABLE: ${{ inputs.disable_flags }}
+          DETERMINISTIC: ${{ inputs.deterministic }}
 
       - name: Upload standard solver sweep result
         if: always()
