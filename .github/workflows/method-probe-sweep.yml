@@ -321,7 +321,7 @@ jobs:
             --contract-file="logs/method-probe-shards/experiment-contract.json" \
             --failure-response-file="logs/method-probe-shards/failure-response-summary.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
-            --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
+            --shards-observed="$(node scripts/count-method-probe-shard-dirs.mjs --staging-dir=artifact-staging)" \
             --source-artifact="method-probe-combined"
 
       - name: Upload standard solver sweep result

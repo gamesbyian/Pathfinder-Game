@@ -247,6 +247,7 @@
     "solver:analyze-zero-t1-production-calibration": "node scripts/analyze-zero-t1-production-calibration.mjs",
     "test:zero-t1-production-calibration": "node scripts/analyze-zero-t1-production-calibration-node-test.mjs",
     "test:combine-method-probe-shards": "node scripts/combine-method-probe-shards-node-test.mjs",
+    "test:method-probe-staging-lib": "node scripts/method-probe-staging-lib-node-test.mjs",
     "test:classify-paired-solver-outcome": "node scripts/classify-paired-solver-outcome-node-test.mjs",
     "test:cpsat-explicit-prefix-reference-pipeline": "node scripts/cpsat-explicit-prefix-reference-pipeline-node-test.mjs",
     "test:cpsat-explicit-prefix-reference-lib": "node scripts/stress/cpsat-explicit-prefix-reference-lib-node-test.mjs",
