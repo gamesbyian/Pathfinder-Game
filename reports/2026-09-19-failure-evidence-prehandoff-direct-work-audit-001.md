@@ -1,10 +1,14 @@
 # Failure-evidence integration pre-handoff direct-work audit 001
 
-> **Status:** direct pre-handoff work exhausted
-> **Date:** 2026-09-19
-> **Scope:** `docs/solver-failure-evidence-research-integration-plan.md` on PR #1912
+> **Status:** active
+> **Last evidence:** 2026-09-19 — PR #1912 direct-work audit plus zero-compute Class-3 census derivation.
 > **Decision:** all presently useful implementation, authority wiring, reducers, and precommitments that do not require new solver evidence or a selected downstream scientific lane are now in the branch.
-> **Evidence role:** implementation/closeout audit; no solver-efficacy claim.
+> **Remaining gate:** complete/dispose the real acquisition gates in Phases 3-4 or retire them under current workstream authority.
+> **Evidence role:** forensic
+> **Selection:** observational
+> **Population identity:** PR #1912 implementation surface; no solver population is analyzed by this report.
+> **Selection history:** implementation closeout audit over the current branch.
+> **Inference scope:** implementation readiness and remaining dependency boundaries only; no solver-efficacy inference.
 
 ## Audit question
 
@@ -24,7 +28,7 @@ The answer after this pass is: **no material plan phase remains blocked only on 
 | 1 | complete | none; compact diagnostics remain research-only opt-in |
 | 2 | complete | none; common compact query/reducer is supported |
 | 3 | precommitted / tool-ready / data-blocked | first eligible post-contract compact-response population |
-| 4A | precommitted / reducer-ready / data-blocked | regenerate/freeze current Class-3 membership, then acquire shared-production exact-action telemetry |
+| 4A | zero-compute freeze ready / acquisition-blocked | freeze the census-derived 23-parent expectation artifact, then acquire shared-production exact-action telemetry |
 | 4B | precommitted / dispatch-ready | one-row R00044 execution-family canary, then frozen 40-parent probe |
 | 4C | independently owned | H3 execution under its existing authority, if/when run |
 | 4D | independently owned | Lane G execution under its existing authority, if/when run |
@@ -49,7 +53,7 @@ The answer after this pass is: **no material plan phase remains blocked only on 
 
 ### Class-3 analysis handoff
 
-Added:
+The earlier census opportunity is now explicit: current Class-3 membership and exact T1 rescuer identities are derivable from committed evidence without solver search. Added:
 
 - `scripts/analyze-class3-dose-exposure.mjs`;
 - `scripts/analyze-class3-dose-exposure-node-test.mjs`;
