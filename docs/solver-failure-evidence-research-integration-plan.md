@@ -1,4 +1,4 @@
-<!-- agent-context-budget: warn=15000 max=19000 -->
+<!-- agent-context-budget: warn=30000 max=36000 -->
 # Solver failure-evidence research integration plan
 
 > **Status:** implementation plan; subordinate to current solver-research authorities.
@@ -170,7 +170,56 @@ Generic failure evidence should join, not subsume:
 
 Reuse common identities/provenance where practical, but do not force every research object through search-loss capture.
 
-## 4. Information-cost ladder for new research
+## 4. Dependency, parallelism, and authority routing
+
+The phase numbers describe dependency where it exists; they are **not** a command to serialize unrelated work.
+
+```text
+Phase 0 authority integration
+    |
+    +--> Phase 1 compact-diagnostic disposition --> Phase 2 common reducer/query
+    |                                               |
+    |                                               +--> Phase 3 WS2 reconnaissance
+    |                                               +--> Phase 4A Class-3 dose
+    |                                               +--> Phase 4B reserve-starvation sizing
+    |                                               +--> Phase 4E capability-memory joins
+    |
+    +--> Phase 4C H3 transfer (independent; do not wait for Phases 1-3)
+    +--> Phase 4D Lane G work (independent; do not wait for Phases 1-3)
+    |
+    +--> Phase 5 genuine recurring rich producer --> Phase 6 Resource Contract audit
+                                                    |
+                                                    +--> Phase 7 recurrence reducers
+                                                    +--> Phase 8 first-loss only when WS2 authorizes
+```
+
+Rules:
+
+- Phase 0 should be small and early because discoverability prevents duplicate instrumentation.
+- Phase 1 must first reconcile whether run `35423841173` already clears the seam audit's representative-overhead gate for the proposed scope. Do not rerun equivalent calibration merely for ceremony.
+- Phase 2 depends on the Phase-1 durable-support decision only for fields whose persistence is being promoted. Automatic attempt-response reduction can advance independently.
+- Phase 3 must use current workstream authority at execution time; this plan cannot activate a discriminator.
+- Phase 4C H3 and 4D Lane G already have their own valid designs and should continue independently.
+- Phase 5 is condition-driven. Do not invent a recurring rich producer to unblock later phases.
+- Phase 6 is owned by the existing search-loss implementation plan once the recurrence condition is real.
+- Phase 8 is likewise owned by the existing search-loss Phase-9 procedure if WS2 selects first-loss.
+
+### Consumer/owner matrix
+
+| Consumer/question | Cheapest relevant failure layer | Owning authority | What failure evidence may do |
+|---|---|---|---|
+| WS2 discriminator choice | automatic response -> compact diagnostics | workstreams/question graph | choose the next expensive instrument |
+| Class-3 dose | automatic compact attempts | `WS2-CLASS3-DOSE-EXPOSURE` | distinguish non-exposure, dose, censoring |
+| fixed reserve starvation | automatic attempts, then compact progress if needed | new question only if admitted through question relations | size recurrence before A/B |
+| H3 transfer | telemetry already emitted by frozen design | H3 question/preflight | secondary explanation only |
+| Lane G | specialist frontier data; rich capsule opportunistically | `WS2-G1-COMPLETE-PATH-LNS` | join real-search partials/basin evidence |
+| capability memory | protocol-compatible compact/rich joins | capability-memory contract | preserve latent capability movement |
+| solve-local/conflict reuse | typed reason recurrence after enough data | Lane C/future-work owners | nominate reopen premise |
+| first-loss | full ladder through exact/replay | workstreams + search-loss Phase 9 | localize causal uncertainty |
+
+The existence of a measurement source is not itself a premise. When evidence creates a genuinely new research question or reopen condition, register it through the normal question/premise/measurement-opportunity machinery. Do not let this plan become the only place that question exists.
+
+## 5. Information-cost ladder for new research
 
 For a question plausibly informed by failure evidence, use the cheapest rung that can discriminate the next action.
 
@@ -227,7 +276,7 @@ Only after the preceding evidence nominates a mechanism:
 
 Follow normal independent confirmation and production-promotion rules.
 
-## 5. Phase plan
+## 6. Phase plan
 
 ### Phase 0 — authority and consumer reconciliation
 
@@ -236,10 +285,11 @@ Follow normal independent confirmation and production-promotion rules.
 Tasks:
 
 1. Reconcile current `main` after this plan lands.
-2. Explicitly connect the Class-3 dose reopen condition to prospective compact exact-action attempt telemetry rather than an unspecified future instrument.
-3. Record failure-response/search-loss as an available measurement source for the relevant H3, Lane G, capability-memory, repair/handoff, and solve-local recurrence questions where this is a discovery aid, without making those lines depend on it.
-4. Ensure `solver-future-work.md` retains the existing search-loss Phase 8/9 resume triggers rather than duplicating them here.
-5. Do not change WS2 priority merely because an instrument exists.
+2. Use the existing research-question/measurement-opportunity registry for all question-level links. Failure evidence is a measurement source, not a shadow question authority.
+3. Explicitly connect the Class-3 dose reopen condition to prospective compact exact-action attempt telemetry rather than an unspecified future instrument.
+4. Record failure-response/search-loss as an available measurement source for the relevant H3, Lane G, capability-memory, repair/handoff, and solve-local recurrence questions where this is a discovery aid, without making those lines depend on it.
+5. Ensure `solver-future-work.md` retains the existing search-loss Phase 8/9 resume triggers rather than duplicating them here.
+6. Do not change WS2 priority merely because an instrument exists.
 
 **Exit:** a fresh agent following the question/queue surfaces can discover the new evidence path without reading this session.
 
@@ -247,7 +297,9 @@ Tasks:
 
 **Goal:** decide whether the already-implemented prune/flow/progress profile should become durable standard telemetry for a bounded set of maintained solver producers.
 
-Start from run `35423841173`, then answer only what remains necessary:
+Start from run `35423841173`. First determine whether that completed canary already satisfies the seam audit's representative parity/overhead/byte-volume requirement for the proposed producer scope. Re-run calibration only for a materially different producer/search family or unresolved incremental-value question.
+
+Then answer only what remains necessary:
 
 - parity confidence;
 - representative overhead by relevant producer/search family;
@@ -358,9 +410,11 @@ The expensive-success microscope found two distinct mechanisms among the three 4
 
 Treat R00044 as premise nomination only.
 
-Open a narrow research question:
+If current authority agrees the nomination is worth tracking, admit a narrow stable research question through `solver-research-question-relations.json` (and a measurement opportunity only if it adds a reusable measurement seam rather than restating the question):
 
 > Does fixed stage-reserve allocation recurrently starve later stages that possess sufficient within-total-budget solving capability?
+
+Do not treat this plan text as the durable question record.
 
 First use existing compact response/high-budget evidence to estimate recurrence. Only if recurrence is non-trivial run a matched-total-work reserve-fraction A/B using the existing `admissibleOrderNodeReserveFractionOverride`.
 
@@ -513,7 +567,7 @@ Use the full information-cost ladder:
 
 Primary output remains a parent-level distribution of causal uncertainty, not a forced complete taxonomy.
 
-## 6. Experiment interpretation rules
+## 7. Experiment interpretation rules
 
 ### 6.1 Intermediate movement is secondary evidence
 
@@ -551,7 +605,7 @@ Multiple attempts, capsules, sibling variants, or repeated states from one paren
 
 Report parent-level prevalence unless a different independent unit is explicitly justified.
 
-## 7. Explicit non-goals
+## 8. Explicit non-goals
 
 This plan does **not** authorize:
 
@@ -567,7 +621,7 @@ This plan does **not** authorize:
 - inventing typed reasons for untyped exits;
 - synthetic recurrence merely to close the search-loss plan.
 
-## 8. Validation and merge boundaries
+## 9. Validation and merge boundaries
 
 Prefer small merge boundaries.
 
@@ -607,7 +661,7 @@ Phases 5-6 should remain distinct from the first scientific consumer. Resource r
 
 Phase 7 must be rebuildable from canonical underlying evidence and have tests proving missing/unknown semantics and parent-level accounting.
 
-## 9. Stop/simplification conditions
+## 10. Stop/simplification conditions
 
 Narrow or stop this program if:
 
@@ -620,7 +674,7 @@ Narrow or stop this program if:
 - a new aggregate store would duplicate existing resource/harvest/query machinery without demonstrated consumer need;
 - failure data begins creating research activity without changing which next experiment is justified.
 
-## 10. Success criteria
+## 11. Success criteria
 
 This plan is successful when:
 
@@ -637,7 +691,7 @@ This plan is successful when:
 11. The first authorized first-loss study can start from accumulated evidence and spend fewer bespoke reruns/exact queries.
 12. No production policy consumes stored historical failure identities or exact annotations.
 
-## 11. Closeout and durable resumption
+## 12. Closeout and durable resumption
 
 This document is a temporary integration plan, not a permanent authority.
 
