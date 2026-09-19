@@ -89,10 +89,12 @@ assert.equal(compactEmpty.attemptCount, null, 'an absent attempt array stays unk
 assert.equal(compactEmpty.attempts, null);
 assert.equal(compactFailureResponseRow({ id: 'known-empty', attempts: [] }).attemptCount, 0, 'a present empty attempt array is a known zero');
 
-const identityRow = compactFailureResponseRow({ cellId: 'cell-A', levelId: 'L1', attempts: [{ outcome: 'exhausted', configKey: 'dfs', gateKey: 7 }] });
+const identityRow = compactFailureResponseRow({ cellId: 'cell-A', levelId: 'L1', protocolHash: 'proto-1', solverRef: 'abc123', attempts: [{ outcome: 'exhausted', configKey: 'dfs', gateKey: 7 }] });
 assert.equal(identityRow.identity, 'cell-A');
 assert.equal(identityRow.parentId, 'L1');
 assert.equal(identityRow.cellId, 'cell-A');
+assert.equal(identityRow.protocolHash, 'proto-1');
+assert.equal(identityRow.solverRef, 'abc123');
 assert.equal(identityRow.attempts[0].outcome, 'exhausted');
 
 console.log('solver failure response lib tests passed');
