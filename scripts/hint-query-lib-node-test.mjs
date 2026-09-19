@@ -43,6 +43,24 @@ assert.equal(queryHintRecords([cold], {
     evidencePurpose: 'current-production-capability', evidenceApplicability: 'admissible',
 }).length, 0, 'capability query without a comparison regime fails closed');
 
+const replayable = {
+    path: [1, 5],
+    provenance: [{
+        solver: { id: 'pathfinder-solver', version: 'v3', technique: 'dfs', forcing: null },
+        search: { workSpent: 10, workBudget: 1000, termination: 'solved', randomSeed: null },
+        context: {
+            isolatedTechnique: false, hintGuided: false, usedExistingHints: false,
+            levelRevision: 'v2:replayable',
+        },
+        foundAt: '2026-09-19T00:00:00Z',
+    }],
+};
+assert.equal(queryHintRecords([cold, replayable], {
+    replayBasis: 'configuration-reconstructable',
+}).length, 1, 'replay-basis filtering uses the derived discovery-process contract');
+assert.equal(summarizeHintRecords([replayable]).discoveryReplayability
+    .replayBasisCounts['configuration-reconstructable'], 1);
+
 const unattributedAtlas = compactHintRecord({ path: [1, 4], provenance: [] }, 0, {
     evidencePurpose: 'solution-atlas',
 });
