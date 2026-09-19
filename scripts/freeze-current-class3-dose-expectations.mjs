@@ -24,16 +24,34 @@ const LIFECYCLE = 'reports/stress/capability-runs/35066677597/lifecycle-failure-
 const CENSUS = 'reports/stress/technique-census/33717910218/combined-cells.json';
 const HINTS = 'data/stress/hints-random';
 
+function materializeTracked(sourcePath, tempDir) {
+    if (fs.existsSync(sourcePath)) return sourcePath;
+    const target = path.join(tempDir, path.basename(sourcePath));
+    const bytes = execFileSync('git', ['show', `HEAD:${sourcePath}`], {
+        cwd: process.cwd(),
+        encoding: null,
+        maxBuffer: 128 * 1024 * 1024,
+    });
+    fs.writeFileSync(target, bytes);
+    return target;
+}
+
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'class3-dose-freeze-'));
 try {
+    // CI deliberately sparse-checks out large report JSON. Recover the exact tracked blobs from
+    // HEAD rather than widening ordinary checkout or treating absence from the working tree as
+    // absence from committed evidence.
+    const baselineInput = materializeTracked(BASELINE, temp);
+    const lifecycleInput = materializeTracked(LIFECYCLE, temp);
+    const censusInput = materializeTracked(CENSUS, temp);
     const atlas = path.join(temp, 'atlas.json');
     execFileSync('node', [
         'scripts/run-bundled.mjs',
         'scripts/stress/analyze-post-1029-residual-atlas.mjs',
         '--',
-        '--baseline=' + BASELINE,
-        '--lifecycle=' + LIFECYCLE,
-        '--census=' + CENSUS,
+        '--baseline=' + baselineInput,
+        '--lifecycle=' + lifecycleInput,
+        '--census=' + censusInput,
         '--hints-dir=' + HINTS,
         '--out=' + atlas,
     ], { cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
