@@ -71,6 +71,14 @@ jobs:
             --selector-limit="$DECISION_LIMIT" \
             --out=reports/stress/search-loss-real-canary-capture.json
 
+      - name: Check Resource Contract audit readiness
+        shell: bash
+        run: |
+          node scripts/search-loss-resource-audit-preflight.mjs \
+            --capture=reports/stress/search-loss-real-canary-capture.json \
+            --recurring-producer=false \
+            --out=reports/stress/search-loss-resource-audit-preflight.json
+
       - name: Summarize canary
         if: always()
         shell: bash
@@ -106,5 +114,6 @@ jobs:
             reports/stress/search-loss-real-canary-decisions.json
             reports/stress/search-loss-real-canary-metadata.json
             reports/stress/search-loss-real-canary-capture.json
+            reports/stress/search-loss-resource-audit-preflight.json
           if-no-files-found: warn
           retention-days: 30
