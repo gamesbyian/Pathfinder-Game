@@ -90,7 +90,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon, then smallest justified discriminator; first-loss activates Phase 9 | `WS2-WORK-LADDER-ECONOMICS` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon, then smallest justified discriminator; first-loss activates Phase 9 | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
