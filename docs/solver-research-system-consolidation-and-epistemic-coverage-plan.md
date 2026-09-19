@@ -1830,19 +1830,19 @@ This plan is successful when the following are true.
 4. Composite research identities have explicit domains/codecs and end-to-end regression coverage.
 5. Expensive evidence survives recoverable combine/report/control-plane failures without unnecessary recompute.
 6. Active/deferred/concluded question state cannot silently disappear between queue, question relations, future work and plans.
-8. Completed plans are easy to retire while surviving obligations remain discoverable.
-9. Existing research subsystems compose at decision boundaries without requiring a researcher to remember undocumented joins.
-10. Rich evidence remains selective; compact evidence remains cheap and automatic where justified.
-11. The system can say why an important question is currently unanswerable.
-12. Low answerability is not conflated with low scientific value.
-13. Independent/tool-blind question generation periodically produces proposals outside the current observer/tool vocabulary.
-14. At least some of those proposals can be tested through small new measurements, adversarial populations or offline surrogates without immediately building full architectures.
-15. New research-system primitives become rarer and better justified.
-16. Research-system work increasingly shows concrete returns in avoided compute, better closures, new capability premises, implementations, or solve gains.
-17. Direct solver acquisition work continues while the control plane moves into maintenance mode.
-18. A bounded attention-topology view can show where research effort is concentrated without pretending to rank productivity.
-19. Important causal investigations preserve their live rival set long enough that instrument availability cannot silently redefine the question.
-20. Exploration is triggered by evidence of concentration, ontology escape, anomaly or shared-negative assumptions rather than by a standing moonshot quota.
+7. Completed plans are easy to retire while surviving obligations remain discoverable.
+8. Existing research subsystems compose at decision boundaries without requiring a researcher to remember undocumented joins.
+9. Rich evidence remains selective; compact evidence remains cheap and automatic where justified.
+10. The system can say why an important question is currently unanswerable.
+11. Low answerability is not conflated with low scientific value.
+12. Independent/tool-blind question generation periodically produces proposals outside the current observer/tool vocabulary.
+13. At least some of those proposals can be tested through small new measurements, adversarial populations or offline surrogates without immediately building full architectures.
+14. New research-system primitives become rarer and better justified.
+15. Research-system work increasingly shows concrete returns in avoided compute, better closures, new capability premises, implementations, or solve gains.
+16. Direct solver acquisition work continues while the control plane moves into maintenance mode.
+17. A bounded attention-topology view can show where research effort is concentrated without pretending to rank productivity.
+18. Important causal investigations preserve their live rival set long enough that instrument availability cannot silently redefine the question.
+19. Exploration is triggered by evidence of concentration, ontology escape, anomaly or shared-negative assumptions rather than by a standing moonshot quota.
 20. Independent inquiry probes can be used as a saturation check without creating a second premise-map authority.
 21. Prospective surprise conditions make genuinely model-changing results distinguishable from hindsight narrative.
 22. Clusters of closed forms can be mined for shared untested assumptions without automatically reopening them.
@@ -1851,7 +1851,7 @@ This plan is successful when the following are true.
 25. Decision-bearing producers project into a small compatible scientific semantic kernel without forcing specialist payloads into one mega-schema.
 26. Experiments with nontrivial clustering/assignment structure can distinguish observation, assignment, opportunity/exposure, dependence, analysis and generalization units.
 27. Architecture/population-relative evidence can remain historically valid while being explicitly stale or unqualified for a current decision, without automatic time-based expiry.
-29. Important corroborations can state what is and is not independent across data, source, instrument, analysis, analyst/model, ontology and critical code.
+28. Important corroborations can state what is and is not independent across data, source, instrument, analysis, analyst/model, ontology and critical code.
 29. High-selection experiments can freeze an analysis/decision contract before treatment outcomes are opened.
 30. Execution outcome, scientific disposition and decision disposition are machine-distinguishable.
 31. Important reusable results can emit local claim capsules with explicit estimand/discriminator, scope, limitations and decision consequence.
@@ -1906,8 +1906,8 @@ Recommended first tranche:
 4. audit actual emitted decision-bearing artifacts against declared schemas/contracts and resolve the current v3 experiment-result schema/artifact split-brain;
 5. identify the smallest genuinely shared semantic kernel for population/source identity, evidence role, termination/censoring, work and derivation, explicitly refusing false unification;
 6. prototype unit topology on one family/state-heavy experiment and document where the current single `independentUnit` field loses information, including whether opportunity/exposure is distinct from observed or assigned units;
-8. audit one architecture-relative current-decision input (for example a frozen capability/census/residual view) for historical validity versus current applicability and define the smallest freshness trigger needed;
-9. classify recent validator/control-plane failures into constructor-fix versus consumer/context-validation classes and fix obvious constructor-owned cases;
+7. audit one architecture-relative current-decision input (for example a frozen capability/census/residual view) for historical validity versus current applicability and define the smallest freshness trigger needed;
+8. classify recent validator/control-plane failures into constructor-fix versus consumer/context-validation classes and fix obvious constructor-owned cases;
 9. expand one tiny end-to-end research-transaction fixture into epistemic conformance cases covering pseudoreplication, censoring/unsupported outcomes and recombination invariance;
 10. audit expensive workflows for recoverable recombination semantics;
 11. pilot a lightweight pre-outcome analysis contract on one high-selection/expensive experiment path, including live rivals, estimand, censoring, decision and stopping rules;
