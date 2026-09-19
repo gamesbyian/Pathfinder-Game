@@ -1,6 +1,9 @@
 # Independent audit of the Pathfinder solver-research system
 
-> **Status:** concluded
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-19 — independent audit frozen before PR #1921 exposure
+> **Decision:** preserve this audit as the primary independent record; its earned refinements are incorporated through the reconciliation report and plan
+> **Remaining gate:** none
 > **Date:** 2026-09-19
 > **Independence boundary:** this report was completed from current `main` before reading PR #1921, branch `chatgpt/research-system-consolidation-epistemic-coverage-2026-09-19`, or `docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md`.
 > **Purpose:** audit the coupled relationship among solver architecture, research infrastructure, research questions, and scientific method.
