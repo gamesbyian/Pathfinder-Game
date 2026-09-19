@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-19 — standard compact failure-response now preserves exact attempt action/stage work and protocol identity; retained current boundary remains 531 residual / 23 primary Class-3 rows.
 > **Decision:** freeze the population from the canonical current residual-atlas regeneration, then measure exact known-rescuer participation and dose inside a production-shaped shared-budget run before interpreting any Class-3 row as exposed-and-failed.
-> **Remaining gate:** regenerate/freeze the exact current 23-row Class-3 population, then obtain protocol-compatible compact attempt telemetry for those rows from a maintained shared-production producer. The downstream classification/reduction is already mechanical.
+> **Remaining gate:** freeze the regenerated 23-row expectation artifact from committed census/boundary assets, then obtain protocol-compatible compact attempt telemetry from a maintained shared-production producer. Population derivation and downstream classification are mechanical and require no solver search.
 > **Research question:** `WS2-CLASS3-DOSE-EXPOSURE`.
 > **Evidence role:** acquisition/analysis precommitment, not a treatment test.
 
@@ -70,6 +70,20 @@ Use a maintained solver producer that:
 Prefer piggybacking on an already-justified current-boundary targeted/confirmation run. Do not launch a broad corpus campaign merely to fill the table.
 
 If no maintained producer can satisfy these fields without code changes, this preflight hands off a narrowly specified telemetry gap to the coding agent rather than authorizing a bespoke scientific workaround.
+
+## Zero-compute current-population derivation
+
+The Class-3 population and exact rescuer identities can be rebuilt entirely from already-committed evidence. The canonical atlas command above performs evidence joining and current-policy classification but no solver search. After it writes the temporary atlas, derive the acquisition map with:
+
+```bash
+npm run research:build-class3-dose-expectations -- \
+  --atlas=tmp/ws2-class3-current-atlas.json \
+  --out=reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
+```
+
+The reducer retains each Class-3 parent, every Class-3 `t1Wins[].identity`, isolated census node cost, winning gate, and the historical dispatch/reach/starvation support carried by the atlas. These census fields are context for acquisition planning only; isolated node cost is not shared-production dose.
+
+`test:class3-dose-expectations-current` independently rebuilds the current atlas from the committed 35066677597 boundary + 33717910218 census and requires exactly 531 residual parents and 23 Class-3 parents before the map can be frozen.
 
 ## Mechanical acquisition artifact and reducer
 
