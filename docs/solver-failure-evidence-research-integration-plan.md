@@ -13,15 +13,15 @@
 
 ## Implementation status (2026-09-19)
 
-- **Phase 0 authority/consumer reconciliation:** substantially complete. The live queue now routes WS2 through bounded failure-response reconnaissance before selecting first-loss/rejection/2x2; Class-3, H3, Lane G, Lane C, future-work closeout, and the reserve-starvation nomination are connected to their existing owners rather than duplicated here.
-- **Phase 1 compact diagnostic promotion review:** calibration gate complete. GHA run `35423841173` clears representative semantic parity/overhead/byte-volume for the compact prune/beam-flow/progress bundle. Universal durable promotion remains **not earned** pending incremental-value and producer-scope evidence; see [the promotion review](../reports/2026-09-19-compact-failure-diagnostic-promotion-review-001.md).
-- **Phase 2 common reducer/query:** substantially complete for automatic compact response. The query now inherits document-level protocol/solver identity, reports parent termination/protocol partitions, work/nodes/badness support, and exact-attempt action/stage dose including medians. Diagnostic-field query expansion remains conditional on Phase-1 promotion.
-- **Phase 3 WS2 reconnaissance:** readiness audit and analysis preflight complete. Stage A waits only for a protocol-compatible post-instrumentation population; its parent/control metrics and route choices are frozen in `reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md`. Do not backfill prevalence from pre-contract native-attempt history.
-- **Phase 4A Class-3:** acquisition/analysis preflight complete. Regenerate/freeze the current primary Class-3 population, then obtain exact-action shared-production dose/censoring through a maintained compact-response producer; see `reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md`.
-- **Phase 4B reserve starvation:** zero-compute asset audit is complete and the prospective path is now frozen. The exact R00044 winner is `admissible-order|tieBreak=default|lds=off`; targeted method-probe workflow support now preserves explicit level subsets; a disjoint 40-parent current-residual sample and decision rule are precommitted in `reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md`. Remaining work is dispatch/measurement, not design.
-- **Phase 4C/4D H3/Lane G:** remain independently executable under their existing designs; failure evidence is secondary/optional.
-- **Phase 4E capability memory:** durable contract now explicitly permits protocol-compatible failure-response joins as derived premise/capability evidence while preserving the production verdict boundary; no new memory store was created.
-- **Phases 5-8:** condition-gated as specified below. No synthetic recurring producer or first-loss selection has been created.
+- **Phase 0 — complete:** authority/discoverability closed by [Phase-0 closeout](../reports/2026-09-19-failure-evidence-phase0-authority-closeout-001.md).
+- **Phase 1 — complete:** compact prune/flow/progress stays supported research-only opt-in; no durable default promotion is earned. See [Phase-1 disposition](../reports/2026-09-19-compact-failure-diagnostic-phase1-closeout-001.md) and [producer audit](../reports/2026-09-19-compact-failure-response-producer-suitability-audit-001.md).
+- **Phase 2 — complete for automatic compact response:** common query covers parent/protocol accounting, exact action/stage dose, censoring/outcome support, badness support and protocol-compatible repeats. See [Phase-2 closeout](../reports/2026-09-19-failure-response-query-phase2-closeout-001.md).
+- **Phase 3 — precommitted / data-blocked:** analyze the first eligible post-instrumentation population under [the WS2 reconnaissance preflight](../reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md); do not backfill prevalence from pre-contract runs.
+- **Phase 4A — precommitted / data-blocked:** regenerate/freeze current Class-3 membership, then acquire exact shared-production action dose under [the Class-3 preflight](../reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md).
+- **Phase 4B — dispatch-ready:** frozen 40-parent default admissible-order probe plus mechanical reducer; only GHA measurement remains.
+- **Phase 4C/4D — independently live:** H3/Lane G keep their existing designs; failure evidence is secondary/optional.
+- **Phase 4E — complete:** capability memory accepts protocol-compatible failure-response joins as derived premise/capability evidence, not production policy.
+- **Phases 5-8 — condition-gated:** no synthetic recurring rich producer or first-loss selection.
 
 ## 1. Why this plan exists
 
