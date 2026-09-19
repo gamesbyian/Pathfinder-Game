@@ -25,12 +25,10 @@ These become eligible only after the active premise gate immediately above them 
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
 
-## Deferred infrastructure-plan closeout
+## Deferred plan closeouts
 
-| Plan | Reopen / closeout condition |
-|---|---|
-| [Search-loss evidence](solver-search-loss-evidence-implementation-plan.md) | Phase 8: when a genuine recurring producer exists, perform the Resource Contract audit and explicit promote/remain-`contract-only` decision. Phase 9: only if workstreams selects operational divergence/first-loss. Close/retire the plan after Phase 8 plus completed-or-explicitly-deferred Phase 9, or earlier if a plan stop condition fires. Never manufacture recurrence or priority to clear the checklist. |
-| [Population/family integration](solver-research-population-family-integration-plan.md) | Count a live ranked-question use toward Phase 6 only when it genuinely exercises the end-to-end lineage/accounting substrate. After **two materially different pilots** (one family-microscope, one broad-population-first), run Phase 7 consolidation: remove superseded glue, reconcile durable docs/resources, and archive/retire the plan. Do not run synthetic pilots merely for closeout. |
+- **[Search-loss evidence](solver-search-loss-evidence-implementation-plan.md):** Phase 8 reopens only for a genuine recurring producer; then audit and explicitly promote or retain `contract-only`. Phase 9 runs only if workstreams selects first-loss. Retire after those obligations are completed or explicitly deferred/stopped. Never invent recurrence or priority for closeout.
+- **[Population/family integration](solver-research-population-family-integration-plan.md):** a Phase-6 pilot counts only when a live ranked question genuinely uses the end-to-end substrate. After two materially different pilots (family microscope + broad-population-first), run Phase 7 consolidation and retire the plan. Do not create synthetic closeout pilots.
 
 ## Other deferred architectural questions
 
