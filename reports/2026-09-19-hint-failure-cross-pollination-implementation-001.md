@@ -48,6 +48,7 @@ For each reconstructable prefix the tool records:
 - whether at least one stored accepted path shares the prefix;
 - number of supporting stored hints;
 - number/set of observed next steps;
+- number/counts of distinct known structural solution families using the canonical `structuralSolutionFamilySignature` plus level-specific `mustCrossKeysOf`;
 - terminal support;
 - minimum/maximum remaining path length;
 - a bounded preview of matching hint indices.
@@ -58,7 +59,9 @@ The semantic asymmetry is explicit:
 - `NOT_OBSERVED` is **not** DEAD/UNSAT and is not evidence that all solution basins are extinct.
 
 This is the first executable bridge toward the earlier all-known-basins/known-live-prefix research
-idea without creating a new causal label or pretending the sampled hint atlas is complete.
+idea without creating a new causal label or pretending the sampled hint atlas is complete. The CLI
+runs through `scripts/run-bundled.mjs` so the structural-family calculation reuses the TypeScript
+canonical helpers rather than duplicating them in plain Node.
 
 ### 3. Compact failure identity-granularity audit
 
@@ -74,6 +77,44 @@ identity and distinguishes:
 
 A conflicting key is an investigation lead for duplicate capture or under-resolved identity, not an
 automatic corruption verdict. The tool does not change the compact failure schema.
+
+### 4. Failure-information novelty and historical evidence frontier
+
+`scripts/failure-response-novelty-lib.mjs` and `scripts/failure-response-novelty.mjs` add
+parent-level longitudinal novelty accounting across explicitly ordered compact failure-response
+documents.
+
+The phenotype signature includes categorical outcome, action/stage/config identity, reach/
+participation/censoring state, and categorical attempt sequence. It deliberately excludes exact
+parent identity, run/protocol/solver identity, work/nodes/badness magnitudes, and timestamps. This
+prevents a different dose or rerun from manufacturing a new mechanism phenotype.
+
+The analyzer reports cumulative distinct phenotype count and per-document marginal novelty. Its
+frontier mode asks, retrospectively, which target-document phenotypes were already visible before
+that evidence frontier. The result is explicitly process-improvement evidence only: earlier
+categorical visibility does not prove that a later causal conclusion was already justified.
+
+### 5. Exact-path pre-success discovery-process reconstruction
+
+`scripts/hint-discovery-process-lib.mjs` and `scripts/hint-discovery-process.mjs` import one of
+the strongest ideas from compact failure evidence back into hint research without changing the hint
+schema.
+
+For solver result rows that retain both the exact winning `solution` and the invocation's
+`attempts[]`, the join binds a stored hint only when the complete solution path is exactly equal.
+It then exposes:
+
+- the winning attempt index;
+- every failed/unsuccessful compact attempt before the winner;
+- the compact winning attempt;
+- cumulative work/nodes/time when available;
+- whether the row lacks a reconstructable winning-attempt sequence.
+
+Attempts after the first winner are excluded from the discovery process. Rows without an exact stored
+hint match remain unmatched; no heuristic level/config/path inference is attempted.
+
+This gives hint research access to "what failed before this path was found" now, while leaving a
+future stable run/protocol reference as a separate persistence decision.
 
 ## Test integration
 
@@ -94,17 +135,19 @@ No package-script edit is required on this branch.
 The larger cross-pollination ideas remain useful but should be reconciled against merged #1912/current
 authority before implementation:
 
-1. all-known-basin first-loss/autopsy rather than exact-prefix support only;
-2. structural-basin rather than exact-path support grouping;
-3. marginal failure-information novelty/saturation by producer/profile/revision;
-4. historical "what was knowable when?" research-process audits;
-5. stable join from a successful hint discovery to its originating compact attempt family/run
-   envelope, preserving pre-success failures without bloating each hint event;
-6. richer hint-discovery process identity with immutable run/protocol/configuration references;
-7. failure-evidence purpose/applicability/dependency-stratum semantics where current Resource Contract
+1. all-known-basin first-loss/autopsy rather than positive-prefix support only; current tooling can
+   count known structural families behind a prefix but cannot prove the latent solution space is
+   exhausted;
+2. a durable stable join from successful hint provenance to an immutable originating run/protocol
+   envelope; the exact-path process join is deliberately derived from result artifacts instead;
+3. richer hint-discovery process identity with immutable run/protocol/configuration references if
+   current evidence shows enough value to justify a persistence migration;
+4. failure-evidence purpose/applicability/dependency-stratum semantics where current Resource Contract
    machinery does not already provide them;
-8. current-data audits using the new identity tool once PR #1912's latest compact producer identity
-   propagation is merged.
+5. current-data identity/novelty/frontier audits after PR #1912's producer-identity propagation is
+   merged, so the analysis uses the final current compact artifacts rather than a moving branch;
+6. any producer/profile-specific novelty attribution that cannot be answered cleanly from the ordered
+   document-level analyzer after the merged evidence corpus is inspected.
 
 Those items should not be forced into this PR merely to make it larger. The present slice creates the
 lowest-risk executable seams needed by later work.
