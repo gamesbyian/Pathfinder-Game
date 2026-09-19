@@ -80,7 +80,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) before first-loss/rejection/2x2. Supporting: reserve starvation is **dispatch-ready** after its R00044 canary (40-parent/300M sample + reducer); Class-3 dose is **data-blocked** pending population freeze + exact-action telemetry. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md)
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) before first-loss/rejection/2x2. Supporting: reserve starvation is **dispatch-ready** after R00044 canary (40-parent/300M + reducer); Class-3 dose is **data-blocked** pending population freeze + exact-action telemetry. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
