@@ -17,7 +17,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / ECONOMICS CLOSED NEGATIVE; failure-response recon next.
+**State:** ACTIVE / ECONOMICS CLOSED NEGATIVE; failure-response next.
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
