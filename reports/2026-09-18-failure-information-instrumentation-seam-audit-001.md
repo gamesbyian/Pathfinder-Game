@@ -1,10 +1,9 @@
 # Failure-information remaining instrumentation seam audit 001
 
-> **Status:** implementation-preflight / source audit
-> **Date:** 2026-09-18
-> **Scope:** the four search-loss plan sub-investigations left after automatic compact failure-response rollout: progress-over-work, rejection-reason seams, beam candidate-flow, and replayability.
-> **Decision:** none of the four should be made universal from source inspection alone. Reason and beam-flow collection have strong existing seams; progress-over-work requires genuinely new search-family instrumentation; replayability needs a stronger reconstructability contract before any capsule may claim `replayable`.
-> **Evidence role:** implementation planning. No solver policy, ordering, pruning, budget, or search instrumentation changed by this audit.
+> **Status:** active
+> **Last evidence:** 2026-09-18 — source audit identified existing seams and bounded the four remaining instrumentation pilots.
+> **Decision:** keep the four investigations as explicit parity/overhead-gated pilots; do not universalize them from source inspection alone.
+> **Remaining gate:** implement and measure progress-over-work, prune-reason counters, counter-only beam flow, and fail-closed replayability reconstruction.
 
 ## 1. Progress over work
 
