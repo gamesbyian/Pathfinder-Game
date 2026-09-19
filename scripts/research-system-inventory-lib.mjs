@@ -24,8 +24,11 @@ function packageScripts(root) {
 }
 
 function commandScriptPath(command) {
-    const match = String(command).match(/(?:^|\s)(?:node|tsx)\s+(?:--import\s+tsx\s+)?([^\s]+\.mjs)\b/u);
-    return match?.[1] ?? null;
+    const tokens = String(command).trim().split(/\s+/u);
+    const scriptTokens = tokens.filter(token => token.endsWith('.mjs'));
+    if (scriptTokens.length === 0) return null;
+    if (scriptTokens[0] === 'scripts/run-bundled.mjs' && scriptTokens[1]) return scriptTokens[1];
+    return scriptTokens[0];
 }
 
 function localImports(root, relative) {
@@ -33,6 +36,12 @@ function localImports(root, relative) {
     const source = readFileSync(path.join(root, relative), 'utf8');
     const imports = [];
     for (const match of source.matchAll(/(?:from\s+|import\s*\()(['"])([^'"]+)\1/gu)) {
+        const target = match[2];
+        if (!isLocalImport(target)) continue;
+        const resolved = normalize(path.relative(root, path.resolve(root, path.dirname(relative), target)));
+        imports.push(resolved);
+    }
+    for (const match of source.matchAll(/^\s*import\s+(['"])([^'"]+)\1/gu)) {
         const target = match[2];
         if (!isLocalImport(target)) continue;
         const resolved = normalize(path.relative(root, path.resolve(root, path.dirname(relative), target)));
