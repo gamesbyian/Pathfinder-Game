@@ -56,6 +56,7 @@ export function buildHintHarvestSelectionManifest({
         schemaVersion: HINT_HARVEST_SELECTION_MANIFEST_SCHEMA_VERSION,
         kind: HINT_HARVEST_SELECTION_MANIFEST_KIND,
         source: {
+            harvester: 'harvest-level-blind-report-hints',
             runId: sourceRunId ?? null,
             workflow: sourceWorkflow ?? null,
             reportsSeen: sourceReportsSeen,
@@ -73,7 +74,8 @@ export function buildHintHarvestSelectionManifest({
             quarantineReasons: countReasons(pending),
         },
         semantics: {
-            denominator: 'success-selected candidate rows observed in source report artifacts',
+            scope: 'level-blind report harvester only; sibling hint importers in the same source run have separate selection semantics',
+            denominator: 'success-selected candidate rows observed by the level-blind report harvester',
             notAttemptedPopulation: true,
             selectionInterpretation: 'describes hint-harvest retention/acceptance only; cannot estimate solve rate or technique performance',
             persistedChange: 'new path or new semantic provenance event appended to an existing path',
@@ -86,6 +88,7 @@ export function validateHintHarvestSelectionManifest(document) {
     const issues = [];
     if (document?.schemaVersion !== HINT_HARVEST_SELECTION_MANIFEST_SCHEMA_VERSION) issues.push('schemaVersion');
     if (document?.kind !== HINT_HARVEST_SELECTION_MANIFEST_KIND) issues.push('kind');
+    if (document?.source?.harvester !== 'harvest-level-blind-report-hints') issues.push('source.harvester');
     for (const field of ['reportsSeen', 'reportsHarvested', 'sourceRowsSeen']) {
         if (!Number.isSafeInteger(document?.source?.[field]) || document.source[field] < 0) issues.push(`source.${field}`);
     }
