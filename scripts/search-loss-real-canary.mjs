@@ -218,12 +218,12 @@ for (let index = 0; index < selected.length; index++) {
           capsule.replayBasis = 'replayable';
           capsule.reconstructability = { kind: 'inline-exact-prefix', path: selectedPath };
           capsule.capsuleId = searchLossCapsuleIdentity(capsule);
-          richCollectorFor(raw.id).observe(capsule);
+          richCollectorFor(parentId).observe(capsule);
         },
       };
     }
 
-    const parentRichCollector = mode === 'rich' ? richCollectorFor(raw.id) : null;
+    const parentRichCollector = mode === 'rich' ? richCollectorFor(parentId) : null;
     const richBefore = parentRichCollector ? parentRichCollector.snapshot() : null;
     const started = performance.now();
     const result = await Solver.solveLevel(level, solveOpts);
