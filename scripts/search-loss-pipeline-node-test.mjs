@@ -29,6 +29,16 @@ try {
     assert.equal(capture.capture.selectorSummaries['score-width-cull'].truncated, true);
     assert.equal(capture.capsules.length, 2);
     assert.ok(capture.capsules.every(row => row.replayBasis === 'replayable'));
+    const auditPreflight = JSON.parse(execFileSync('node', [
+        'scripts/search-loss-resource-audit-preflight.mjs',
+        `--capture=${captureFile}`,
+        '--recurring-producer=false',
+    ], { encoding: 'utf8' }));
+    assert.equal(auditPreflight.auditReady, false);
+    assert.equal(auditPreflight.checks.observerParityVerified, true);
+    assert.equal(auditPreflight.checks.multiParent, false);
+    assert.equal(auditPreflight.checks.nonSyntheticProducer, false);
+    assert.equal(auditPreflight.checks.recurringProducerDeclared, false);
 
     const exact = path.join(temp, 'exact.json');
     const annotation = path.join(temp, 'annotation.json');
