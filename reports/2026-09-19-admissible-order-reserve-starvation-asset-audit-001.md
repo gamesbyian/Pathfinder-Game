@@ -1,7 +1,9 @@
 # Admissible-order reserve starvation: zero-compute retained-asset audit
 
-> **Status:** concluded-evidence-gap / prospective measurement required.
-> **Date:** 2026-09-19.
+> **Status:** inconclusive
+> **Last evidence:** 2026-09-19 — retained technique-census cap audit against the R00044 fallback find cost.
+> **Decision:** existing 50M isolated-technique censuses cannot size the high-cost tail implicated by R00044.
+> **Remaining gate:** prospective higher-cap isolated default-profile measurement on a precommitted current-residual sample.
 > **Question:** Can existing committed technique-census assets size the R00044-style within-total-budget fallback starvation premise without new solver compute?
 > **Evidence role:** asset audit / acquisition gate; no solver efficacy claim.
 
