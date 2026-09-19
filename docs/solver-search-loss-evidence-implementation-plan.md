@@ -1943,6 +1943,19 @@ The implementation is successful when all of the following are true:
 14. one authorized first-loss study can reuse the resource and spend fewer bespoke search reruns to localize causal uncertainty;
 15. no production policy consumes stored historical capsule identity or annotations.
 
+## 18.1 Completion and closeout rule
+
+This plan is **implementation-complete through every currently executable phase** once Phases 0-7 and the Phase-4 real-capture gate are satisfied. Remaining work is condition-gated, not background debt.
+
+Durable resumption authority lives in [`solver-future-work.md`](solver-future-work.md):
+
+- Phase 8 resumes automatically when a genuine recurring search-loss producer population exists; complete the Resource Contract audit and make an explicit promote/remain-contract-only decision.
+- Phase 9 resumes only if [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) selects operational divergence / first-loss as the active WS2 discriminator.
+- When Phase 8 is complete and Phase 9 is either completed when authorized or explicitly retired/deferred by current workstream authority, change this document's status from implementation plan to completed/closed and move any surviving descendants to the appropriate future-work authority.
+- If a stop/simplification condition fires first, record that disposition and close or narrow the plan rather than preserving a zombie plan indefinitely.
+
+Do not manufacture a recurring producer or select the first-loss lane merely to satisfy closeout mechanics.
+
 ## 19. Intended end state
 
 The intended architecture is:
