@@ -205,17 +205,29 @@ let nonSolvedParents = 0;
 let solvedControlsWithFailedAttempts = 0;
 let parentsWithUnknownProtocol = 0;
 let parentsWithMultipleKnownProtocols = 0;
+let multiRecordParents = 0;
+let multiRunParents = 0;
+let protocolComparableMultiRunParents = 0;
+const recordsPerParent = [];
 const protocolPartitions = new Map();
 for (const list of parentRows.values()) {
+    recordsPerParent.push(list.length);
+    if (list.length > 1) multiRecordParents++;
     if (list.some(row => row.outcome === 'solved')) {
         solvedParents++;
         if (list.some(row => row.solvedWithFailedAttempt === true)) solvedControlsWithFailedAttempts++;
     } else nonSolvedParents++;
     increment(parentOutcomeCounts, parentOutcome(list));
     const known = new Set(list.map(row => row.protocolHash).filter(Boolean));
-    if (list.some(row => !row.protocolHash)) parentsWithUnknownProtocol++;
+    const knownRuns = new Set(list.map(row => row.runId).filter(Boolean));
+    const hasUnknownProtocol = list.some(row => !row.protocolHash);
+    if (hasUnknownProtocol) parentsWithUnknownProtocol++;
     if (known.size > 1) parentsWithMultipleKnownProtocols++;
-    const partition = known.size === 1 && !list.some(row => !row.protocolHash) ? [...known][0] : 'unknown-or-mixed';
+    if (knownRuns.size > 1) {
+        multiRunParents++;
+        if (known.size === 1 && !hasUnknownProtocol) protocolComparableMultiRunParents++;
+    }
+    const partition = known.size === 1 && !hasUnknownProtocol ? [...known][0] : 'unknown-or-mixed';
     const current = protocolPartitions.get(partition) ?? { parents: 0, solvedParents: 0, nonSolvedParents: 0 };
     current.parents += 1;
     if (list.some(row => row.outcome === 'solved')) current.solvedParents += 1;
@@ -247,6 +259,13 @@ const result = {
             parentsWithUnknownProtocol,
             parentsWithMultipleKnownProtocols,
             note: 'Only rows sharing a known protocolHash are protocol-comparable by this reducer; unknown or mixed protocol identity is descriptive only.',
+        },
+        repeatedObservations: {
+            multiRecordParents,
+            multiRunParents,
+            protocolComparableMultiRunParents,
+            recordsPerParent: numericStats(recordsPerParent),
+            note: 'Multi-record is not longitudinal recurrence. Multi-run parents require distinct known runId values; protocolComparableMultiRunParents additionally require one known shared protocolHash.',
         },
         participation: { true: participatedTrue, false: participatedFalse, unknown: rows.length - participatedTrue - participatedFalse },
         reached: { true: reachedTrue, false: reachedFalse, unknown: rows.length - reachedTrue - reachedFalse },
