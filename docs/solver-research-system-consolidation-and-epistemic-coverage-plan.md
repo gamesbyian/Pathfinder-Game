@@ -3,7 +3,7 @@
 
 > **Status:** proposed implementation plan; not an execution-priority authority.
 > **Created:** 2026-09-19.
-> **Purpose:** consolidate the September 2026 solver-research infrastructure expansion; repair control-plane weaknesses exposed by recent execution; establish a small common scientific-semantic kernel across otherwise specialist research machinery; strengthen pre-outcome design, analysis, claim formation, provenance and invalidation; reduce documentation and agent-context burden; and add a bounded research-portfolio/reflexivity layer that can detect instrument-shaped attention, preserve live rival explanations, expose answerability gaps and ontology escapes, and trigger independent exploration without displacing the solve-directed objective.
+> **Purpose:** consolidate the September 2026 solver-research infrastructure expansion; repair control-plane weaknesses exposed by recent execution; establish a small common scientific-semantic kernel across otherwise specialist research machinery; strengthen pre-outcome design, analysis, claim formation, provenance, invalidation and research-to-production conversion fidelity; reduce documentation and agent-context burden; and add a bounded research-portfolio/reflexivity layer that can detect instrument-shaped attention, preserve live rival explanations, expose answerability gaps and ontology escapes, and trigger independent exploration without displacing the solve-directed objective.
 > **Priority authority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Method authority:** [`solver-research-operating-model.md`](solver-research-operating-model.md).
 > **Evidence authority:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
@@ -81,6 +81,7 @@ The standard is not "maximum scientific completeness." Pathfinder is an engineer
 4. **Inquiry** — preserve live questions, rival explanations, missing semantic operations and ontology escapes.
 5. **Portfolio** — make visible where research attention is going, why it is going there, and which high-value uncertainties are neglected because they are hard or poorly instrumented.
 6. **Reflexivity** — detect when the research system's own vocabulary, instruments, source distributions, shared implementations, historical expectations or local stop rules are shaping the agenda more than the solver problem itself.
+7. **Conversion** — carry a justified scientific/engineering decision through implementation into the intended real production behavior, then verify that the behavior actually participates under the production entry points and envelopes the decision was meant to change.
 
 State and execution are already strong. Inquiry is substantially developed through the premise map, capability atlas, archaeology, question registry and measurement-opportunity work. The hostile 2026-09-19 pass showed that **inference/claim interoperability is less mature than the control plane makes it look**: different producers can be referentially joinable while still speaking subtly different dialects of population, unit, outcome, work, censoring, evidence role and decision meaning. Portfolio/reflexivity control is also still early.
 
@@ -847,6 +848,37 @@ A decisive claim/decision should be checked for consequences in:
 - evidence-integrity/durable bundle.
 
 Automation flags missing or contradictory propagation. It does not semantically close/reopen questions itself.
+
+### 8.7 Production-realization and conversion fidelity
+
+The central objective is not a correct research verdict in isolation. It is useful knowledge **converted into more or cheaper correct cold solves**. A scientifically justified promotion can still fail after the decision if the implementation, defaults, production call path, eligibility gate or budget semantics do not realize the tested treatment.
+
+The repository has already produced a concrete example. The Class-4 portal coarse-state dead-last-retry promotion had valid matched-work evidence, but promotion initially would have been a live no-op for ordinary production callers because the relevant reads used `cfg?.FLAG === true` while real callers omitted `ablation`. The default-on decision therefore required a production-call-path correction, not merely a ledger/default edit. That failure mode sits **after** treatment/contrast fidelity: the experiment can be valid and the decision correct while the knowledge-to-behavior conversion is wrong.
+
+For material solver-behavior decisions, distinguish:
+
+- **decision intent** — the exact behavior/configuration/change the evidence licenses;
+- **implementation realization** — the code/default/configuration that is supposed to enact it;
+- **production reachability** — whether real product/benchmark callers actually traverse that implementation under ordinary configuration;
+- **behavioral participation** — whether the promoted behavior activates on the intended opportunity population;
+- **envelope fidelity** — whether work budgets, ordering, fallback, eligibility and interaction semantics remain the ones the evidence licensed;
+- **post-realization qualification** — the smallest regression, parity, boundary refresh or matched-work check needed to establish that the realized production behavior still has the intended effect.
+
+Use production-shaped tests and existing telemetry before inventing a new deployment subsystem. For a default/policy promotion, at least one test should exercise the same omission/default path used by real callers rather than only an explicit research override.
+
+A decision is not fully converted merely because:
+
+- a flag moved from opt-in to default-on;
+- documentation/ledger state changed;
+- the tested implementation exists somewhere in the tree;
+- an explicit test configuration can force the behavior;
+- a report says “promote.”
+
+Where the distinction is material, the closeout/claim path should be able to say separately:
+
+`scientific decision -> implementation target -> production realization -> observed production participation -> current boundary/economics consequence`.
+
+Do not demand a new full-corpus A/B after every implementation edit. The strength of the realization check should match the semantic distance between the tested treatment and the shipped behavior. Pure wiring/default changes may need production-shaped parity/participation tests; changed search semantics may invalidate the original verdict and require new decision-bearing evidence.
 
 ## Phase 9 - Calibrate instruments, test epistemic conformance, and prove interoperability in real compositions
 
@@ -1671,6 +1703,8 @@ Do first because these reduce correctness and inference risk with little solver 
 17. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
 18. Report which common semantics proved reusable and which should remain specialist.
 
+Before leaving Stage B, apply Phase 8.7 to one already-promoted solver treatment: trace the evidence-backed decision through the real production caller/default path, verify actual participation under ordinary configuration, and record whether any implementation/configuration seam could have made the promotion inert or semantically different from the tested treatment.
+
 Do not generalize a kernel field until at least two real consumers need the same meaning.
 
 ## Stage C - Measure the research portfolio before correcting it
@@ -1782,7 +1816,7 @@ Verify:
 
 For representative high-selection evidence, verify the chain:
 
-`frozen design -> execution -> analysis/estimand -> observation -> scientific claim -> decision`
+`frozen design -> execution -> analysis/estimand -> observation -> scientific claim -> decision -> implementation realization -> observed production behavior`
 
 and ensure that:
 
@@ -1864,6 +1898,7 @@ This plan is successful when the following are true.
 38. Epistemic conformance tests catch pseudoreplication, censoring errors, unsupported-reference promotion and semantically incompatible workflow outputs.
 39. The system distinguishes benchmark progress, deployment envelope, confirmation/transfer evidence and adversarial semantic challenge evidence.
 40. Scientific interoperability preserves useful independent implementations and heterogeneous disagreement rather than manufacturing false consensus.
+41. A material promotion can distinguish a justified decision from its production realization and can verify that ordinary production callers actually activate the intended behavior under the licensed work/eligibility envelope.
 
 # Part X - Explicit non-goals
 
@@ -1912,14 +1947,15 @@ Recommended first tranche:
 10. audit expensive workflows for recoverable recombination semantics;
 11. pilot a lightweight pre-outcome analysis contract on one high-selection/expensive experiment path, including live rivals, estimand, censoring, decision and stopping rules;
 12. emit one local claim capsule from that path and preserve its transformation/analysis provenance through durable evidence;
-13. run one bounded reverse-invalidation drill from an upstream producer/normalizer/instrument to dependent evidence/claims/decisions;
-14. run the question/premise/capability/MO/queue consistency audit;
-15. run the recent-plan lifecycle audit;
-16. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
-17. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
-18. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
-19. audit one important "replicated" result for independence across data/source/instrument/analysis/model/ontology/code rather than merely independent units;
-20. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
+13. run one production-realization trace for a previously promoted treatment, exercising the ordinary caller/default path and verifying that the evidence-backed behavior actually participates under production configuration;
+14. run one bounded reverse-invalidation drill from an upstream producer/normalizer/instrument to dependent evidence/claims/decisions;
+15. run the question/premise/capability/MO/queue consistency audit;
+16. run the recent-plan lifecycle audit;
+17. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
+18. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
+19. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
+20. audit one important "replicated" result for independence across data/source/instrument/analysis/model/ontology/code rather than merely independent units;
+21. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
 
 The first tranche should answer six meta-questions before more infrastructure is built:
 
@@ -1929,6 +1965,7 @@ The first tranche should answer six meta-questions before more infrastructure is
 4. **Can a discovered upstream defect be traced forward to every material dependent claim/decision without archaeology?**
 5. **Is research attention measurably concentrated in ways not explained by current solver value or answerability?**
 6. **Do multiple negative lines expose shared assumptions that the current premise map/queue is not treating as questions?**
+7. **When evidence earns a solver change, can we prove the intended treatment survives the decision-to-code-to-production path rather than becoming an inert, partially wired or semantically changed promotion?**
 
 Only demonstrated seams should earn durable new kernel fields or workflows.
 
