@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-19 — standard compact failure-response now preserves exact attempt action/stage work and protocol identity; retained current boundary remains 531 residual / 23 primary Class-3 rows.
 > **Decision:** freeze the population from the canonical current residual-atlas regeneration, then measure exact known-rescuer participation and dose inside a production-shaped shared-budget run before interpreting any Class-3 row as exposed-and-failed.
-> **Remaining gate:** regenerate/freeze the exact current 23-row Class-3 population, then obtain protocol-compatible compact attempt telemetry for those rows from a maintained shared-production producer.
+> **Remaining gate:** regenerate/freeze the exact current 23-row Class-3 population, then obtain protocol-compatible compact attempt telemetry for those rows from a maintained shared-production producer. The downstream classification/reduction is already mechanical.
 > **Research question:** `WS2-CLASS3-DOSE-EXPOSURE`.
 > **Evidence role:** acquisition/analysis precommitment, not a treatment test.
 
@@ -70,6 +70,36 @@ Use a maintained solver producer that:
 Prefer piggybacking on an already-justified current-boundary targeted/confirmation run. Do not launch a broad corpus campaign merely to fill the table.
 
 If no maintained producer can satisfy these fields without code changes, this preflight hands off a narrowly specified telemetry gap to the coding agent rather than authorizing a bespoke scientific workaround.
+
+## Mechanical acquisition artifact and reducer
+
+Freeze the regenerated population before solver acquisition as a tracked JSON document:
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-class3-dose-expectations",
+  "parents": [
+    {
+      "parentId": "Rxxxxx",
+      "rescuers": [
+        { "actionKey": "exact canonical attempt identity", "stageId": "optional exact stage" }
+      ]
+    }
+  ]
+}
+```
+
+Then reduce one or more protocol-compatible compact-response documents with:
+
+```bash
+npm run research:analyze-class3-dose -- \
+  --in=<compact-failure-response.json>[,<more.json>] \
+  --expectations=<frozen-class3-expectations.json> \
+  --out=<class3-dose-analysis.json>
+```
+
+`scripts/analyze-class3-dose-exposure.mjs` fails closed unless all observed expected-parent rows share one known `protocolHash` and one known `solverRef`. It reports missing parents explicitly, preserves parent as the independent unit, and mechanically classifies every expected exact rescuer as not participated, dose unknown, censored, exhausted-negative, solved, or indeterminate. Error/unknown-only attempts stay indeterminate rather than being converted into negative evidence.
 
 ## Independent unit
 
@@ -182,7 +212,7 @@ The Class-3 dose question is answered for the current population when every one 
 - exact participation known;
 - work/node dose known when participated;
 - termination/censoring known;
-- one parent-level disposition among exposure-gap, censored-dose, exhausted-negative, or refreshed-current-solve.
+- one parent-level disposition among exposure-gap, censored-dose, exhausted-negative, refreshed-current-solve, or an explicit unresolved/indeterminate state that blocks closure.
 
 A few missing rows do not become negatives. Recover them under the same protocol or leave them unknown.
 
