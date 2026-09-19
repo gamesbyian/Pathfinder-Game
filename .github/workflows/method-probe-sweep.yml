@@ -311,6 +311,7 @@ jobs:
           node scripts/summarize-solver-failure-response.mjs \
             --in="logs/method-probe-shards/combined.json" \
             --rows-key=levels \
+            --contract-file="logs/method-probe-shards/experiment-contract.json" \
             --out="logs/method-probe-shards/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/method-probe-shards/combined.json" \
