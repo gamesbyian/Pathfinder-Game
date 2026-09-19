@@ -27,19 +27,18 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Deferred plan closeouts
 
-- **[Failure evidence](solver-failure-evidence-research-integration-plan.md):** P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; P4A -> `WS2-CLASS3-DOSE-EXPOSURE`; P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P7 only after repeated compatible populations.
-- **[Search loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurring rich production plus Resource Contract disposition; P9 needs explicit workstream first-loss selection.
-- **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run P7 and retire.
+- **[Failure evidence](solver-failure-evidence-research-integration-plan.md):** P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; P4A -> `WS2-CLASS3-DOSE-EXPOSURE`; P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P7 needs repeated compatible populations.
+- **[Search loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurring rich production; P9 needs explicit first-loss selection.
+- **[Population/family](solver-research-population-family-integration-plan.md):** after two pilots, run P7 and retire.
 
-## Evidence-gated hint/failure descendants
+## Hint/failure reopen hooks
 
-- **Identity/novelty/saturation/frontier audit:** when a maintained producer accumulates a compatible post-instrumentation population with repeated parent observations. Use existing tooling + solved controls; no pre-contract backfill.
-- **Recurring phenotypes:** when repeated compatible populations exist and recurrence can resolve a live ambiguity. Keep reason vs basin recurrence separate; stop if it does not reduce experiment cost.
-- **Rich search-loss promotion:** when a genuine recurring producer exposes selection, missingness, controls, freshness and storage economics. Execute search-loss P8 and choose audited vs contract-only.
-- **First loss:** only when workstreams explicitly select it. Execute search-loss P9 using compact response, selected capsules, known-support extinction, traces and exact labels.
-- **Persist run envelope in Hint:** only if a durable consumer cannot be served by `hint-discovery-process` + experiment-contract joins.
-
-Whole-solution-space extinction is a non-goal: sampled hints/families cannot prove it.
+- Compatible repeated compact-response population -> run identity/novelty/saturation/frontier audits with parent dependence + solved controls; no pre-contract backfill.
+- Repeated compatible populations + live ambiguity -> recurrence/phenotype reducers; keep reason vs basin recurrence separate.
+- Genuine recurring rich producer -> search-loss P8 Resource Contract decision.
+- Workstreams select first-loss -> search-loss P9 using compact response, capsules, known-support extinction, traces and exact labels.
+- Persist run-envelope fields in Hint only if `hint-discovery-process` + experiment-contract joins cannot serve a concrete durable consumer.
+- Whole-solution-space extinction is not deferred work; sampled hints/families cannot prove it.
 
 ## Other deferred architectural questions
 
