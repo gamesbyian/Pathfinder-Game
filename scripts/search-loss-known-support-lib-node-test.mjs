@@ -20,12 +20,19 @@ assert.deepEqual(knownHintSupportForPrefix([1, 2], hints), {
     terminalHintCount: 0,
     distinctKnownNextSteps: 2,
     knownNextSteps: [3, 5],
+    distinctKnownStructuralFamilies: null,
+    knownStructuralFamilyCounts: null,
     minRemainingMoves: 2,
     maxRemainingMoves: 2,
     matchedHintIndices: [1, 2],
     matchedHintIndicesTruncated: false,
 });
 assert.equal(knownHintSupportForPrefix([1, 7], hints).support, 'NOT_OBSERVED');
+const familySupport = knownHintSupportForPrefix([1, 2], hints, {
+    familySignature: path => path[2] === 3 ? 'family-a' : 'family-b',
+});
+assert.equal(familySupport.distinctKnownStructuralFamilies, 2);
+assert.deepEqual(familySupport.knownStructuralFamilyCounts, { 'family-a': 1, 'family-b': 1 });
 
 const capture = {
     capsules: [
