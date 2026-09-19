@@ -1,9 +1,9 @@
 # Hint/failure evidence cross-pollination continuation 001
 
-> **Status:** completed / merged to `main` in PR #1915 (`fc542d520f26c156f0fac71c37087c2550912123`).
-> **Last evidence:** 2026-09-19 — final CI passed deep verification, validators, lint, full Node/CLI tests, solver canary, production build, and premise-map hardening.
+> **Status:** superseded
+> **Last evidence:** 2026-09-19 — PR #1915 merged as `fc542d520f26c156f0fac71c37087c2550912123` after deep verification, validators, lint, full Node/CLI tests, solver canary, production build, and premise-map hardening passed.
 > **Decision:** keep success provenance, discovery-process evidence, harvest-selection provenance, compact failure response, and rich search-loss observations as sibling evidence layers joined by canonical path/parent/run/protocol identities; do not expand the persisted Hint schema with a duplicated experiment envelope.
-> **Durable resumption:** all surviving evidence-gated descendants are now owned by `solver-optimization-workstreams.md`, `solver-research-question-relations.json`, `solver-future-work.md`, and the search-loss Phase-8/9 reopen rules; this report is not a live queue.
+> **Remaining gate:** none owned by this report; surviving evidence-gated descendants are owned by `solver-optimization-workstreams.md`, `solver-research-question-relations.json`, `solver-future-work.md`, and search-loss Phase 8/9 reopen rules.
 
 ## Reconciliation
 
