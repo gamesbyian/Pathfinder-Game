@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-19 — reconciled current implementation and workflow inventory.
 > **Decision:** reuse typed prune, specialist reason, BeamResearch, repair-progress, and technique-census in-memory seams; do not add a second taxonomy.
-> **Remaining gate:** representative overhead evidence before universal telemetry promotion.
+> **Remaining gate:** representative parity/overhead/byte-volume is cleared by GHA run `35423841173`; universal durable promotion still requires incremental-value and producer-scope evidence. See [`2026-09-19-compact-failure-diagnostic-promotion-review-001.md`](2026-09-19-compact-failure-diagnostic-promotion-review-001.md).
 > **Evidence role:** architecture/seam audit only; no solver efficacy claim.
 
 ## Existing cheap seams
@@ -20,4 +20,4 @@ Terminal invalid-goal/fundamental beam rejection fallbacks and some natural exha
 
 ## Pilot disposition
 
-Attempt-scoped typed prune aggregation and counter-only beam flow are implemented behind research-only options. Repair new-best transitions and DFS/beam terminal badness feed the bounded progress pilot. None is enabled universally until representative real-run parity, overhead, byte-volume, and incremental-value gates pass.
+Attempt-scoped typed prune aggregation and counter-only beam flow are implemented behind research-only options. Repair new-best transitions and DFS/beam terminal badness feed the bounded progress pilot. GHA run `35423841173` cleared representative semantic-parity, overhead, byte-volume, and family-coverage conditioning for this compact bundle (about 0.46% aggregate wall overhead and 35.7 KB payload across 16 parents). The bundle remains research-only by default until incremental scientific value and recurring producer scope justify a durable promotion; do not rerun equivalent calibration merely for ceremony.
