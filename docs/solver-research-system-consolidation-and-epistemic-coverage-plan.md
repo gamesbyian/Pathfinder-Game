@@ -1654,7 +1654,7 @@ Do first because these reduce correctness and inference risk with little solver 
 3. Phase 2: identity audit and Lane A regression fixtures.
 4. Phase 3: constructor-hardening audit.
 5. Phase 6.1: audit real emitted artifacts against declared schemas/contracts, beginning with the current v3 experiment-result split-brain.
-6. Phase 6.2-6.4: identify the minimum common semantic kernel, unit-topology needs and independence dimensions actually shared by current systems.
+6. Phase 6.2-6.4 and 6.7: identify the minimum common semantic kernel, unit-topology needs, independence dimensions, and architecture/population-relative freshness semantics actually shared by current systems.
 7. Phase 4: expand the end-to-end research-transaction fixture around those semantics.
 8. Phase 5: recovery/recombine contract audit.
 9. Phase 9.4: question/premise/capability/MO/queue consistency audit.
