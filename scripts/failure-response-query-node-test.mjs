@@ -14,13 +14,13 @@ try {
         records: [
             {
                 identity: 'A:beam', parentId: 'A', actionKey: 'beam', stageId: 'main',
-                outcome: 'solved', participated: true, reached: true, workSpent: 10,
+                outcome: 'solved', participated: true, reached: true, workSpent: 10, nodesExpanded: 100, bestBadness: 4, finalBadness: 2,
                 solvedWithFailedAttempt: true, runId: 'r1', protocolHash: null, solverRef: null,
                 attempts: [{ outcome: 'failed', actionKey: 'repair', stageId: 'late' }, { outcome: 'solved', actionKey: 'beam', stageId: 'main' }],
             },
             {
                 identity: 'B:beam', parentId: 'B', actionKey: 'beam', stageId: 'main',
-                outcome: 'nodeLimited', participated: true, reached: true, workSpent: 20,
+                outcome: 'nodeLimited', participated: true, reached: true, workSpent: 20, nodesExpanded: 200, bestBadness: 7, finalBadness: 7,
                 solvedWithFailedAttempt: null, runId: 'r1', protocolHash: 'p1',
                 attempts: [{ outcome: 'node-limited', actionKey: 'beam', stageId: 'main' }],
             },
@@ -60,6 +60,14 @@ try {
     assert.equal(result.summary.solvedParents, 1);
     assert.equal(result.summary.solvedControlsWithFailedAttempts, 1);
     assert.equal(result.summary.work.totalWorkSpent, 30);
+    assert.equal(result.summary.work.stats.mean, 15);
+    assert.equal(result.summary.nodes.stats.total, 300);
+    assert.equal(result.summary.badness.best.mean, 5.5);
+    assert.equal(result.summary.badness.finalMinusBest.mean, -1);
+    assert.equal(result.summary.parentOutcomes.solved, 1);
+    assert.equal(result.summary.parentOutcomes.nodeLimited, 1);
+    assert.deepEqual(result.summary.protocolPartitions.p1, { parents: 1, solvedParents: 1, nonSolvedParents: 0 });
+    assert.deepEqual(result.summary.protocolPartitions['unknown-or-mixed'], { parents: 1, solvedParents: 0, nonSolvedParents: 1 });
     assert.equal(result.summary.attempts.records, 3);
     assert.equal(result.summary.attempts.actions.beam, 2);
     assert.equal(result.summary.attempts.actions.repair, 1);
