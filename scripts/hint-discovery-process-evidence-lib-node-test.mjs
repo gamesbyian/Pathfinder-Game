@@ -99,6 +99,18 @@ validateHintDiscoveryProcessEvidence(evidence);
 assert.equal(evidence.records.length, 1);
 assert.equal(evidence.records[0].parentId, 'P1');
 assert.match(evidence.records[0].evidenceId, /^sha256:/u);
+const reorderedEvidence = buildHintDiscoveryProcessEvidence({
+    ...joinResult,
+    joined: [{ ...joinResult.joined[0], rowIndex: 99 }],
+}, {
+    sourceReport: 'reports/run.json',
+    levels: 'data/stress/stress-levels-random.json',
+    contract,
+    runId: 'run-123',
+    contractRef: 'manifest.json#experimentContract',
+});
+assert.equal(reorderedEvidence.records[0].evidenceId, evidence.records[0].evidenceId,
+    'source row ordering must not alter semantic evidence identity');
 assert.equal(evidence.summary.unmatchedRowsRetainedAsCountOnly, 1,
     'unmatched successes remain counted without inventing a hint binding');
 
