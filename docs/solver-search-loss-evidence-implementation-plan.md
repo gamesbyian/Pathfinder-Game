@@ -1234,11 +1234,11 @@ Tests:
 
 The automatic compact layer is substantially implemented.
 
-- Ten solver-running GHA workflow families are now `standard` producers under `docs/solver-failure-evidence-disposition.json`, including the three workflows previously blocked by file-size ceilings.
+- Thirteen solver-running GHA workflow families are now `standard` producers under `docs/solver-failure-evidence-disposition.json`, including the formerly file-size-blocked workflows, static-portfolio confirmation, variant-family dataset collection, and solver diagnostics.
 - The shared `scripts/sweep-publish.mjs` wrapper keeps the standard summary/publisher path available without workflow-size growth.
 - `solver-stress-refresh.yml` now declares a native experiment contract and validates the intended two-corpus population before standard publication. Ordinary refreshes remain non-decision-bearing unless an explicit scientific outcome is supplied.
 - The remaining Phase-3 instrumentation work is bounded by `reports/2026-09-18-failure-information-instrumentation-seam-audit-001.md`: progress-over-work pilot, prune-reason counter pilot, counter-only beam-flow pilot, and replayability contract hardening.
-- `static-portfolio-confirmation` and `collect-variant-family-dataset` remain explicit specialized opt-outs because their combined outputs do not currently expose the standard row-array shape; they are not silently missing from the disposition contract.
+- No solver-running GHA workflow remains a `specialized-opt-out`. The remaining non-standard entries are explicit `unsupported` cases: CP-SAT/reference/oracle workflows, the evidence-integrity guard, and the tiny `solver-bench` CI/main-push canaries whose persisted output is aggregate regression-gate data rather than attempt-shaped failure-response rows.
 
 ### Phase 3 - shared compact failure-response projection
 
