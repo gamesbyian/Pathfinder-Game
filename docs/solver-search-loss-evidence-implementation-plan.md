@@ -1360,7 +1360,7 @@ Record for each:
 
 ### Phase 4 - first production-inert rich capsule producer
 
-> **Status (2026-09-19): implemented but gated on real-run/parity evidence.** The shared decision-observation adapter plus `capture-search-loss-evidence.mjs` now produces bounded deterministic cull capsules with selector denominators and structural/run/population identity. It deliberately remains identity-only unless reconstructability is earned. Promotion into ordinary solver workflows waits for a representative multi-parent OFF/ON capture canary and storage/overhead evidence; synthetic contract tests are not that gate.
+> **Status (2026-09-19): implemented; representative real-run gate now has a reusable harness.** The shared decision-observation adapter plus `capture-search-loss-evidence.mjs` produces bounded deterministic cull capsules with selector denominators and structural/run/population identity. It deliberately remains identity-only unless reconstructability is earned. `scripts/search-loss-real-canary.mjs` and `search-loss-real-canary.yml` now run the same real multi-parent population under observer-off, compact-counter, and bounded-rich modes, hard-failing semantic parity drift while recording wall/payload evidence. Promotion into ordinary solver workflows still waits for that representative canary evidence to clear the overhead/storage gate.
 
 **Goal:** prove cheap path/state observation against real solver execution while preserving exact behavior.
 
@@ -1575,7 +1575,7 @@ Add mechanical checks where practical.
 
 ### Phase 9 - first scientific consumer: bounded first-loss survey
 
-> **Status (2026-09-19): not currently authorized by workstream priority.** `solver-optimization-workstreams.md` currently owns `WS2-WORK-LADDER-ECONOMICS` as the next gate. Operational-divergence/first-loss becomes eligible only if that costing gate closes negative and the authority selects it among the remaining discriminators.
+> **Status (2026-09-19): eligible candidate, not yet selected.** `WS2-WORK-LADDER-ECONOMICS` has closed negative. Current workstream authority now lists operational divergence/first-loss, rejection counterfactuals, and a 2x2 interaction as the remaining discriminators. Phase 9 may execute only if the authority selects the first-loss/operational-divergence lane; the negative economics result removes the old reopen prerequisite but does not itself choose among those candidates.
 
 **Goal:** prove that the resource changes research decisions.
 
