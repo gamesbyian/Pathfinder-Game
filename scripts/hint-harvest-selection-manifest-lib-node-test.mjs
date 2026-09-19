@@ -23,6 +23,7 @@ const manifest = buildHintHarvestSelectionManifest({
 });
 
 validateHintHarvestSelectionManifest(manifest);
+assert.equal(manifest.source.harvester, 'harvest-level-blind-report-hints');
 assert.equal(manifest.selection.solvedCandidateRowsSeen, 7);
 assert.equal(manifest.selection.refereeAcceptedRows, 5);
 assert.equal(manifest.selection.persistedRecordChanges, 3);
