@@ -1,6 +1,6 @@
 # Lane A: C0 signature-collision experiment preflight
 
-> **Status:** active (dispatched)
+> **Status:** active
 > **Last evidence:** 2026-09-19 — case batch built and verified against this report's own frozen numbers (144 groups, 98 levels, 581 cases; PR #1899), then dispatched via `cpsat-explicit-prefix-reference.yml` (GHA run [35416526866](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35416526866), `cases_file=reports/stress/lane-a-c0-signature-collision-cases-2026-09-19.json`, `case_format=cases`, `time_limit=45`, `max_cases=581`, `shard_count=20`). Not yet combined or labelled.
 > **Decision:** not yet reached. No outcome inspected before or during dispatch, per this report's own precommitment.
 > **Remaining gate:** combine the shard results once the GHA run completes and run the existing `signature-collision-analysis-lib.mjs` primitive against the resulting labelled rows.
