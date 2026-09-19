@@ -1,8 +1,10 @@
 # Compact failure-diagnostic promotion review
 
-> **Status:** concluded-narrow-positive / scoped durable promotion not yet earned.
-> **Date:** 2026-09-19.
-> **Question:** Does the completed representative real-search canary clear the parity/overhead/byte-volume gate for the compact prune/beam-flow/progress observer bundle, and if so does that justify universal durable enablement?
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-19 — representative real-search canary run `35423841173`.
+> **Decision:** compact prune/beam-flow/progress observers clear the representative parity/overhead/byte-volume gate; universal durable promotion is not yet earned.
+> **Remaining gate:** demonstrate incremental scientific value and a justified recurring producer scope before durable default enablement.
+> **Question:** Does the completed representative real-search canary clear the parity/overhead/byte-volume gate for the compact observer bundle, and if so does that justify universal durable enablement?
 > **Evidence role:** infrastructure calibration; no solver efficacy claim.
 
 ## Evidence
