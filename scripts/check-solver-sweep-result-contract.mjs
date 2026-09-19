@@ -15,7 +15,7 @@ for (const name of maintainedEvidenceWorkflows) {
     continue;
   }
   const source = fs.readFileSync(file, 'utf8');
-  if (!source.includes('publish-solver-sweep-result.mjs')) failures.push(`${name}: missing standard solver-sweep-result publisher`);
+  if (!(source.includes('publish-solver-sweep-result.mjs') || source.includes('sweep-publish.mjs'))) failures.push(`${name}: missing standard solver-sweep-result publisher`);
   if (!source.includes('name: solver-sweep-result')) failures.push(`${name}: missing standard solver-sweep-result artifact upload`);
 }
 
