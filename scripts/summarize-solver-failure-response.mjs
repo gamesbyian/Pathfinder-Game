@@ -47,6 +47,17 @@ function rowsOf(document) {
 const rowDocuments = documents.map(item => ({ ...item, rows: rowsOf(item.document) }));
 const invalidSourceFiles = rowDocuments.filter(item => item.rows === null).map(item => item.path);
 const rows = rowDocuments.flatMap(item => item.rows ?? []);
+
+function sharedMetadataValue(values) {
+    const known = [...new Set(values.filter(value => typeof value === 'string' && value.length))];
+    return known.length === 1 ? known[0] : null;
+}
+
+const protocolHash = sharedMetadataValue(documents.map(({ document }) =>
+    document.protocolHash ?? document.configurationHash ?? document.experiment?.configurationHash ?? null));
+const solverRef = sharedMetadataValue(documents.map(({ document }) =>
+    document.solverRef ?? document.commitSha ?? document.experiment?.resolvedSha ?? null));
+
 // A caller-verified populationIntegrity is only reusable as-is from exactly one source document --
 // merging two independently computed coverage claims correctly is out of scope here, and silently
 // picking one would misrepresent the other's coverage.
@@ -57,6 +68,8 @@ const summary = createFailureResponseDocument(rows, {
     sourceFiles: inputPaths,
     missingSourceFiles: inputPaths.filter(p => !existsSync(p)),
     invalidSourceFiles,
+    protocolHash,
+    solverRef,
 });
 
 mkdirSync(path.dirname(outFile), { recursive: true });
