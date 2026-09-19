@@ -20,6 +20,8 @@ import {
   createDecisionObservationCollector,
   beamResearchRecordToDecisionObservation,
 } from './solver-decision-observation-lib.mjs';
+import { stableHash } from './solver-experiment-contract.mjs';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.js';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--') && a.includes('=')).map(a => {
   const i = a.indexOf('=');
@@ -33,6 +35,8 @@ const timeBudgetMs = Number(args.get('time-budget-ms') ?? 900000);
 const decisionLimit = Number(args.get('decision-limit') ?? 32);
 const maxProgressTransitions = Number(args.get('max-progress-transitions') ?? 16);
 const outFile = args.get('out') ?? 'reports/stress/search-loss-real-canary.json';
+const decisionsOut = args.get('decisions-out') ?? 'reports/stress/search-loss-real-canary-decisions.json';
+const metadataOut = args.get('metadata-out') ?? 'reports/stress/search-loss-real-canary-metadata.json';
 for (const [name, value] of Object.entries({ sampleSize, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions })) {
   if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be positive`);
 }
@@ -114,8 +118,12 @@ const selected = sampleDeterministic(allRows, sampleSize, seed);
 
 const modes = ['off', 'compact', 'rich'];
 const rows = [];
+const richDecisionRecords = [];
+const levelRevisions = {};
+const richParentOutcomes = {};
 for (let index = 0; index < selected.length; index++) {
   const raw = selected[index];
+  levelRevisions[String(raw.id)] = await getLevelFingerprint(raw);
   const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
   // Rotate execution order by parent to reduce systematic warmup/order bias.
   const order = [...modes.slice(index % modes.length), ...modes.slice(0, index % modes.length)];
@@ -160,6 +168,10 @@ for (let index = 0; index < selected.length; index++) {
       failureProgress: progress.snapshot(),
     };
     const richPayload = mode === 'rich' ? decisions.snapshot() : null;
+    if (mode === 'rich') {
+      richDecisionRecords.push(...richPayload.records);
+      richParentOutcomes[String(raw.id)] = !!result.ok;
+    }
     byMode.set(mode, {
       mode,
       elapsedMs,
@@ -227,14 +239,41 @@ const summary = {
     observedProgressFamilies: Object.keys(progressFamilies).sort(),
   },
 };
+const protocol = { corpusFile, sampleSize, seed, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions, modes };
 const output = {
   schemaVersion: 1,
   kind: 'pathfinder-search-loss-real-canary',
-  protocol: { corpusFile, sampleSize, seed, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions, modes },
+  protocol,
   summary,
   levels: rows,
 };
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, JSON.stringify(output, null, 2) + '\n');
+
+const decisionParents = [...new Set(richDecisionRecords.map(row => String(row.parentId)))].sort();
+const resolvedSha = /^[0-9a-f]{40}$/i.test(process.env.GITHUB_SHA ?? '') ? process.env.GITHUB_SHA : null;
+const runId = process.env.GITHUB_RUN_ID ? `gha-${process.env.GITHUB_RUN_ID}` : 'local-search-loss-real-canary';
+const metadata = {
+  run: {
+    runId,
+    solverRef: resolvedSha ?? 'local',
+    resolvedSha,
+    producer: 'scripts/search-loss-real-canary.mjs',
+    protocolHash: stableHash({ kind: 'search-loss-real-canary-protocol', protocol }),
+    configurationHash: stableHash({ kind: 'search-loss-real-canary-configuration', corpusFile, seed, workBudget, timeBudgetMs }),
+    levelBlind: true,
+  },
+  population: {
+    source: `${corpusFile}#rich-decision-parents`,
+    populationIdentity: stableHash({ kind: 'search-loss-real-canary-rich-population', parentIds: decisionParents }),
+  },
+  captureProfileId: 'search-loss-real-canary-v1',
+  observerParityVerified: summary.semanticParity,
+  levelRevisions: Object.fromEntries(decisionParents.map(id => [id, levelRevisions[id]])),
+  parentOutcomes: Object.fromEntries(decisionParents.map(id => [id, richParentOutcomes[id]])),
+};
+fs.mkdirSync(path.dirname(decisionsOut), { recursive: true });
+fs.writeFileSync(decisionsOut, JSON.stringify({ schemaVersion: 1, records: richDecisionRecords }, null, 2) + '\n');
+fs.writeFileSync(metadataOut, JSON.stringify(metadata, null, 2) + '\n');
 console.log(JSON.stringify(summary, null, 2));
 if (parityFailures.length) process.exitCode = 1;
