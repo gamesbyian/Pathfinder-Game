@@ -1696,77 +1696,207 @@ Preserve current separation between automatic compact response and selective ric
 
 # Part VII - Implementation order
 
-## Stage A - Immediate stabilization and semantic reality check
+## 26. How to read the numbered phases
 
-Do first because these reduce correctness and inference risk with little solver compute.
+The numbered phases above are a **requirement and design catalogue**, not 32 serial implementation jobs.
 
-1. Phase 0: research-system extension gate.
-2. Phase 1: derived architecture/dependency map.
-3. Phase 2: identity audit and Lane A regression fixtures.
-4. Phase 3: constructor-hardening audit.
-5. Phase 6.1: audit real emitted artifacts against declared schemas/contracts, beginning with the current v3 experiment-result split-brain.
-6. Phase 6.2-6.4 and 6.7: identify the minimum common semantic kernel, unit-topology needs, independence dimensions, and architecture/population-relative freshness semantics actually shared by current systems.
-7. Phase 4: expand the end-to-end research-transaction fixture around those semantics.
-8. Phase 5: recovery/recombine contract audit.
-9. Phase 9.4: question/premise/capability/MO/queue consistency audit.
-10. Phase 13: plan lifecycle audit.
+Several deliberately describe different scientific properties of the same artifact, experiment or derived view. Implementing each as a separate project would recreate the fragmentation this plan is intended to remove.
 
-## Stage B - Prove the scientific middle layer on narrow real consumers
+Use these execution rules:
 
-11. Phase 7: add a lightweight analysis contract to one high-selection/expensive decision-bearing experiment path.
-12. Phase 8.1-8.2: emit one claim capsule that separates execution, scientific and decision disposition.
-13. Phase 8.3: preserve its transformation/analysis provenance.
-14. Phase 9.1: calibrate the primary instrument enough to state its support/abstention boundary.
-15. Phase 7.7: add a manipulation/contrast-fidelity check to the same pilot where applicable.
-16. Phase 9.2: add a small epistemic conformance/metamorphic fixture.
-17. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
-18. Report which common semantics proved reusable and which should remain specialist.
+- **one producer, many obligations:** if one constructor, fixture, vertical slice or derived inventory can satisfy several phase requirements cleanly, prefer that over phase-specific implementations;
+- **one retrospective, many lenses:** portfolio, provenance, answerability, capability and negative-space analyses should share one bounded source dataset where scientifically valid rather than independently reconstructing overlapping histories;
+- **one experiment, full lifecycle:** prefer a single real decision-bearing experiment path that exercises design, unit semantics, instrument calibration, claim formation, provenance, invalidation and conversion over separate demonstration experiments;
+- **standing rules are not projects:** Phases 0, 27, 29, 30 and 31 primarily constrain other work and should not spawn standalone infrastructure merely to say they are complete;
+- **conditional methods are not backlog items:** Phases 20-26 and most of Phase 28 are methods to invoke when evidence earns them, not work that must all be executed;
+- **derived views share sources:** architecture mapping, documentation roles, lifecycle state, entropy diagnostics and the research front door should reuse one underlying inventory/composition path rather than maintaining parallel scans.
 
-Before leaving Stage B, apply Phase 8.7 to one already-promoted solver treatment: trace the evidence-backed decision through the real production caller/default path, verify actual participation under ordinary configuration, and record whether any implementation/configuration seam could have made the promotion inert or semantically different from the tested treatment.
+The execution bundles below are the authoritative implementation decomposition for this plan. Phase numbers remain stable cross-references for requirements and verification.
 
-Do not generalize a kernel field until at least two real consumers need the same meaning.
+## Bundle A - One research-system inventory, many current-state views
 
-## Stage C - Measure the research portfolio before correcting it
+**Purpose:** establish one derived picture of what exists, what owns what, what is live, and where contracts disagree.
 
-19. Phase 14: bounded MO-007 research-attention topology.
-20. Phase 19: question-provenance join over the same bounded window.
-21. Phase 16: answerability decomposition on a small high-value question sample.
-22. Include dependence/independence information where apparent corroboration shares instruments, analysis code or ontology.
-23. Report whether the hypothesized instrument/attention bias is actually visible and which later epistemic phases remain earned.
+Do together:
 
-This stage deliberately precedes broad reflexivity infrastructure. Do not build a cure for an unmeasured pathology.
+- Phase 1 architecture/dependency map;
+- Phase 10 documentation cognitive-role classification;
+- Phase 12 documentation-entropy diagnostics;
+- Phase 13 plan lifecycle classification;
+- Phase 9.4 question/premise/capability/MO/queue consistency;
+- the inventory portion of Phase 11 research front door;
+- shared-implementation/dependency visibility needed by Phase 6.4-6.5.
 
-## Stage D - Consolidation, closeout and retrieval
+Implementation principle:
 
-24. Phase 10: documentation role classification.
-25. Phase 8.5: introduce structured closeout capsules for new current-state reports while preserving historical fallback.
-26. Phase 11: compact research front door.
-27. Phase 12: documentation-entropy diagnostics.
-28. Phase 9.5: highest-value already-earned composition views.
-29. Phase 9.3: hint/failure semantic interoperability cleanup only where meaning is genuinely shared.
+> build one machine-derived inventory/composition layer, then render the architecture map, authority/lifecycle findings, entropy warnings and front-door inputs from it.
 
-## Stage E - Earned rigor/reflexivity controls
+Do not write four scanners that independently rediscover files, authorities and ownership.
 
-Only findings from Stages A-D should determine how much of this stage is needed.
+Immediate outputs should include:
 
-30. Phase 15: rival-set preservation in existing preflight/report contracts.
-31. Phase 17: answerability-gap/MO operational-coverage view.
-32. Phase 18: research-system capability audit.
-33. Phase 23: first negative-space intersection-mining pass.
-34. Phase 22: prospective expectation/surprise capture for new high-value investigations.
-35. Phase 7.6: pilot hard-blind confirmation only on a decision whose selection pressure justifies it.
-36. Phase 9.7: target/deployment-envelope audit before any new broad generalization claim.
-37. Phase 20: run one bounded triggered-exploration response if trigger conditions are actually met.
-38. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
+1. duplicate/stale authority findings;
+2. plan/archive/lifecycle findings;
+3. dependency and shared-failure-mode findings;
+4. current-state fields the eventual `research:brief` can already consume;
+5. a list of information that still requires fragile prose parsing and therefore motivates structured closeout work.
 
-## Stage F - Blind-spot-driven scientific work
+This bundle can start immediately and should run in parallel with Bundle B.
 
-39. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
-40. Phase 24: one adversarial semantic challenge population for a high-value capability gap where source construction is the missing discriminator.
-41. Phase 26: bounded external semantic-operation review only when it illuminates a live blind spot.
-42. Use Phase 27 for any new research primitive.
-43. Revisit Phase 9.6 phenotype/mechanism memory only if two real consumers still require it.
-44. Maintain Phase 30 ROI review and Phase 29 protection of direct solver work.
+## Bundle B - One transaction/conformance harness for control-plane hardening
+
+**Purpose:** turn recent plumbing failures into one executable scientific-lifecycle harness rather than a collection of validators.
+
+Do together:
+
+- Phase 2 identity/serialization audit and Lane A regressions;
+- Phase 3 constructor hardening;
+- Phase 4 end-to-end research transaction fixture;
+- Phase 5 recovery/recombine semantics;
+- Phase 6.1 actual-artifact versus declared-contract audit, including the v3 split-brain;
+- the structural portion of Phase 9.2 epistemic conformance testing.
+
+Use one tiny deterministic transaction fixture as the spine. Add adversarial cases to it for:
+
+- composite-ID collision/delimiter safety;
+- invalid constructor inputs;
+- partial/missing shards;
+- combine failure with valid raw acquisition;
+- recombination without new compute;
+- unsupported/abstain/censoring preservation;
+- family/state unit propagation;
+- treatment nonparticipation;
+- selected-development evidence;
+- supersession/closeout.
+
+Repair real constructors/schemas when the fixture exposes a defect. Do not create a separate harness for identity, another for recovery, and another for epistemic conformance unless a real implementation boundary requires it.
+
+## Bundle C - One scientific vertical slice from design to production realization
+
+**Purpose:** prove the scientific middle layer on a real high-value path and discover the genuinely reusable common kernel.
+
+Choose one high-selection or expensive decision-bearing experiment family with a real consumer. On that same path, exercise:
+
+- Phase 6.2-6.7 common semantics, unit topology, independence, reproducibility and freshness where material;
+- Phase 7 analysis contract, adaptive lineage, estimand, negative resolution and treatment fidelity;
+- Phase 8 claim capsule, execution/scientific/decision separation, derivation spine and reverse invalidation;
+- Phase 9.1 instrument support/abstention/calibration;
+- Phase 9.2 semantic/metamorphic conformance not already covered by Bundle B;
+- Phase 8.7 decision-to-production conversion fidelity.
+
+Then trace one already-promoted treatment through its ordinary caller/default path to verify that production realizes the evidence-backed behavior and work/eligibility envelope.
+
+This single vertical slice should answer:
+
+1. which proposed common fields are truly shared rather than merely similar;
+2. which specialist meanings must remain local;
+3. whether the analysis/claim contract is useful enough to keep;
+4. whether reverse invalidation can stay bounded;
+5. whether the tested treatment and shipped production behavior are actually the same intervention.
+
+Do not generalize a kernel field until at least two real consumers need the same meaning. A second consumer should validate reuse, not trigger a second architecture.
+
+## Bundle D - Closeout and retrieval from the artifacts already created
+
+**Purpose:** make current research state easier to retrieve without creating another source of truth.
+
+Build on Bundles A-C:
+
+- Phase 8.5 structured closeout capsules for new current-state reports;
+- Phase 11 compact `research:brief`;
+- Phase 9.5 already-earned composition views;
+- Phase 9.3 hint/failure semantic cleanup only where the common kernel proved real.
+
+The front door should consume the inventory from Bundle A and structured closeouts from Bundle C/B. Do not build the front door first and then separately invent another parser/metadata layer to feed it.
+
+Phase 12 diagnostics remain derived warnings from Bundle A, not a standalone dashboard project.
+
+## Bundle E - One bounded portfolio/answerability retrospective
+
+**Purpose:** determine whether the hypothesized research-attention pathology exists before adding reflexivity machinery.
+
+Use one frozen recent-window dataset and one analysis notebook/report to cover together:
+
+- Phase 14 research-attention topology;
+- Phase 19 question and candidate/proposal-set provenance;
+- Phase 16 decomposed answerability on a high-value sample;
+- Phase 17 answerability-gap/MO operational coverage for that same sample;
+- Phase 18 research-system capability coverage derived from the observed gaps;
+- Phase 23 negative-result intersection mining;
+- the independence/dependence dimensions needed to interpret apparent corroboration.
+
+These are different views of substantially the same research history. Reconstruct the history once.
+
+The output should primarily be a **decision report**, not six new permanent stores. It should say:
+
+- whether attention is measurably instrument-shaped;
+- which important questions are low-answerability and why;
+- which research capabilities are actually missing versus merely inconvenient;
+- whether candidate-set impoverishment is visible;
+- whether clusters of negatives expose shared assumptions;
+- which exploration triggers, if any, have fired.
+
+Only recurring consumers may earn persistent derived views from this bundle.
+
+## Bundle F - Fold lightweight prospective rigor into existing contracts
+
+**Purpose:** add small prospective protections only where Bundles C/E demonstrate value.
+
+Prefer amendments to existing experiment/preflight/report contracts for:
+
+- Phase 15 live rival sets;
+- Phase 22 expected outcome/surprise condition;
+- Phase 7.6 hard-blind confirmation when selection pressure warrants it;
+- Phase 9.7 target/deployment-envelope declaration for broad claims.
+
+These should usually be fields/sections in existing contracts, not standalone tools or phases of execution.
+
+If Bundle C shows that an item adds ceremony without changing decisions or interpretation, do not generalize it.
+
+## Bundle G - Triggered blind-spot exploration, one response at a time
+
+**Purpose:** explore outside the current research vocabulary only when the retrospective or live queue supplies a reason.
+
+Phase 20 owns the trigger rule. When a trigger fires, choose the **cheapest single appropriate response** rather than executing the entire Part V menu:
+
+- Phase 21 independent/paired reconstruction;
+- Phase 25 counterfactual archaeology;
+- Phase 24 adversarial semantic challenge construction;
+- Phase 26 external semantic-operation review;
+- a tiny Phase 28.9 completion-set/optionality discriminator;
+- another Phase 28 blind-spot-specific offline surrogate.
+
+Phase 27 governs any new research primitive that emerges.
+
+One exploration may combine methods when that is naturally cheaper, for example counterfactual archaeology nominating an adversarial construction. Do not run several methods merely for triangulation unless the first result leaves a decision-relevant ambiguity.
+
+## Standing guardrails - apply continuously, do not schedule as projects
+
+These requirements should be checked opportunistically during every bundle:
+
+- **Phase 0:** new research-system abstractions must earn themselves;
+- **Phase 27:** new primitives climb the missing-decision -> offline-surrogate -> opportunity -> consumer ladder;
+- **Phase 29:** direct solver-capability work continues in parallel;
+- **Phase 30:** periodically simplify/archive/delete research infrastructure that has not earned ongoing value;
+- **Phase 31:** recalibrate observer effects only when material instrumentation changes trigger it.
+
+## Recommended order and concurrency
+
+The efficient critical path is:
+
+`A + B in parallel -> C -> D and E in parallel -> F only where earned -> G only on trigger`
+
+More precisely:
+
+1. Start **A and B together**. They are mostly zero/low-compute and expose stale ownership/contracts early.
+2. Begin **C** as soon as B has enough stable semantics/fixtures to support one real vertical slice; do not wait for every A cleanup.
+3. Begin **D** from A's inventory and C's structured outputs; do not block solver research on documentation perfection.
+4. Run **E** once A can supply a stable recent-window topology and existing metadata can be joined without heroic archaeology.
+5. Apply **F** only to protections that C/E show are useful.
+6. Run **G** only when E or a live workstream actually fires an exploration trigger.
+7. Keep direct solver acquisition running throughout unless a discovered validity/correctness defect makes its evidence unsafe.
+
+This ordering deliberately converts many nominal phase boundaries into shared implementations and shared evidence passes.
 
 # Part VIII - Verification and closeout
 
@@ -1949,44 +2079,23 @@ Do not use this plan to:
 - recurse indefinitely into research about research;
 - archive or score every agent prompt/session merely because agents are part of the research instrument.
 
-# Part XI - First implementation tranche recommendation
+# Part XI - Initial implementation cut
 
-A future implementation session should begin with a bounded tranche rather than attempting the full plan.
+Do not maintain a second detailed checklist here. Part VII owns this plan's implementation decomposition.
 
-Recommended first tranche:
+The initial cut is:
 
-1. add the research-system extension gate and decision-sufficiency/inquiry-completeness distinction to the operating model;
-2. generate the architecture/dependency inventory from existing registries/tools, including shared critical implementation dependencies;
-3. perform the identity/serialization audit and add the Lane A regressions;
-4. audit actual emitted decision-bearing artifacts against declared schemas/contracts and resolve the current v3 experiment-result schema/artifact split-brain;
-5. identify the smallest genuinely shared semantic kernel for population/source identity, evidence role, termination/censoring, work and derivation, explicitly refusing false unification;
-6. prototype unit topology on one family/state-heavy experiment and document where the current single `independentUnit` field loses information, including whether opportunity/exposure is distinct from observed or assigned units;
-7. audit one architecture-relative current-decision input (for example a frozen capability/census/residual view) for historical validity versus current applicability and define the smallest freshness trigger needed;
-8. classify recent validator/control-plane failures into constructor-fix versus consumer/context-validation classes and fix obvious constructor-owned cases;
-9. expand one tiny end-to-end research-transaction fixture into epistemic conformance cases covering pseudoreplication, censoring/unsupported outcomes and recombination invariance;
-10. audit expensive workflows for recoverable recombination semantics;
-11. pilot a lightweight pre-outcome analysis contract on one high-selection/expensive experiment path, including live rivals, estimand, censoring, decision and stopping rules;
-12. emit one local claim capsule from that path and preserve its transformation/analysis provenance through durable evidence;
-13. run one production-realization trace for a previously promoted treatment, exercising the ordinary caller/default path and verifying that the evidence-backed behavior actually participates under production configuration;
-14. run one bounded reverse-invalidation drill from an upstream producer/normalizer/instrument to dependent evidence/claims/decisions;
-15. run the question/premise/capability/MO/queue consistency audit;
-16. run the recent-plan lifecycle audit;
-17. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
-18. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
-19. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
-20. audit one important "replicated" result for independence across data/source/instrument/analysis/model/framing/context-exposure/ontology/code rather than merely independent units;
-21. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
+1. start **Bundle A** and **Bundle B** in parallel;
+2. use their first stable outputs to select and begin **Bundle C**;
+3. stop and re-evaluate the remaining bundles after that vertical slice shows which proposed common semantics and controls actually earn reuse.
 
-The first tranche should answer six meta-questions before more infrastructure is built:
+Before expanding beyond that cut, answer:
 
-1. **Are our major research systems merely joinable, or do they actually share compatible scientific semantics?**
-2. **Where does one overloaded field such as `independentUnit`, `positive/negative` or `decisionBearing` hide materially different scientific meanings?**
-3. **Can a pre-outcome analysis/claim contract close a real researcher-degree-of-freedom seam without adding disproportionate ceremony?**
-4. **Can a discovered upstream defect be traced forward to every material dependent claim/decision without archaeology?**
-5. **Is research attention measurably concentrated in ways not explained by current solver value or answerability?**
-6. **Do multiple negative lines expose shared assumptions that the current premise map/queue is not treating as questions?**
-7. **When evidence earns a solver change, can we prove the intended treatment survives the decision-to-code-to-production path rather than becoming an inert, partially wired or semantically changed promotion?**
+1. Are our major research systems merely joinable, or do they actually share compatible scientific semantics?
+2. Can one transaction/conformance harness replace several independent validation/recovery/identity efforts?
+3. Can one scientific vertical slice carry design, unit semantics, calibration, claim, provenance, invalidation and production-realization obligations without excessive ceremony?
+4. Can one derived inventory support architecture mapping, lifecycle cleanup, documentation entropy and the research front door?
+5. Which later requirements are already satisfied by existing infrastructure once viewed through those integrated bundles?
 
-Only demonstrated seams should earn durable new kernel fields or workflows.
+If the answer to any of these reveals duplicated machinery, simplify the plan before building more.
 
-This ordering makes the plan self-correcting in two directions: it prevents the research-control plane from proliferating unnecessarily, and it prevents a federation of locally valid tools from masquerading as a scientifically interoperable system merely because the joins work.
