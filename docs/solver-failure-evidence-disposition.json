@@ -60,8 +60,8 @@
     {
       "id": "static-portfolio-confirmation",
       "workflow": ".github/workflows/static-portfolio-confirmation.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "scripts/combine-static-portfolio-shards.mjs discards raw per-cell rows into arm-level aggregates only (statusCounts/solvedWorkStats); no levels/results row array survives past combine. Wiring the standard layer needs either persisting raw rows or a bespoke arm-aware projection, out of scope for this pass."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "solver-broad-confirmation",
@@ -72,8 +72,8 @@
     {
       "id": "collect-variant-family-dataset",
       "workflow": ".github/workflows/collect-variant-family-dataset.yml",
-      "disposition": "specialized-opt-out",
-      "reason": "Runs real solver attempts across generated structural variants, but shard results are per-shard JSONL summaries (logs/family-census/wide-shard-*-summary.jsonl); no combined JSON row array exists for the standard summarizer to read. Tracked: Phase 3 follow-up (needs either a JSONL-aware summarizer or a combined row-array export)."
+      "disposition": "standard",
+      "reason": null
     },
     {
       "id": "cpsat-explicit-prefix-reference",
