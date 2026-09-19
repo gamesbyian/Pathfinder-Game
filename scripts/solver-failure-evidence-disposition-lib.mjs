@@ -106,7 +106,7 @@ export function validateFailureEvidenceDisposition(root = process.cwd()) {
             failures.push(`${label} declares disposition "standard" but ${producer.workflow} does not invoke a standard failure-response transport (${STANDARD_TRANSPORT_MARKERS.join(' or ')})`);
         }
         if (producer.disposition !== 'standard' && transports) {
-            failures.push(`${label} declares disposition "${producer.disposition}" but ${producer.workflow} already invokes ${STANDARD_TRANSPORT_MARKER}; update its disposition to "standard"`);
+            failures.push(`${label} declares disposition "${producer.disposition}" but ${producer.workflow} already invokes standard failure-response transport; update its disposition to "standard"`);
         }
         const telemetryLiterals = declaredTelemetryLiterals(source);
         if (producer.disposition === 'standard' && telemetryLiterals.includes('none')) {
