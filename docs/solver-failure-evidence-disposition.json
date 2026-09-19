@@ -4,28 +4,88 @@
   "catalogDocument": "docs/solver-search-loss-evidence-implementation-plan.md",
   "producers": [
     {
-      "id": "technique-census",
-      "workflow": ".github/workflows/technique-census.yml",
+      "id": "solver-bench-pr-canary",
+      "workflow": ".github/workflows/ci.yml",
+      "disposition": "unsupported",
+      "reason": "PR solver-bench regression canary checks a fixed baseline and does not publish attempt-response rows.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "Required CI status is the durable result; it is not a decision-bearing evidence producer."
+      }
+    },
+    {
+      "id": "collect-prune-gap-labels",
+      "workflow": ".github/workflows/collect-prune-gap-labels.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT-oracle branch labelling; not a node/work-budget search-attempt producer this layer covers.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "This workflow is non-decision-bearing or consumes/audits evidence; ordinary workflow artifacts are its intentional persistence class."
+      }
+    },
+    {
+      "id": "collect-variant-family-dataset",
+      "workflow": ".github/workflows/collect-variant-family-dataset.yml",
       "disposition": "standard",
       "reason": null,
+      "durability": {
+        "mode": "alternate-rail",
+        "reason": "The large research-branch dataset is retained through its dedicated off-main dataset/artifact workflow, not the main solver-evidence harvester."
+      }
+    },
+    {
+      "id": "cpsat-explicit-prefix-reference",
+      "workflow": ".github/workflows/cpsat-explicit-prefix-reference.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT exact/reference tooling has no comparable node/work-budget attempt-response shape; it is a downstream annotator, not a search-attempt producer this layer covers.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "This workflow is non-decision-bearing or consumes/audits evidence; ordinary workflow artifacts are its intentional persistence class."
+      }
+    },
+    {
+      "id": "cpsat-hint-harvest-sweep",
+      "workflow": ".github/workflows/cpsat-hint-harvest-sweep.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT --forced-grid hint harvest; not a node/work-budget search-attempt producer this layer covers.",
       "durability": {
         "mode": "automatic-harvest",
         "reason": null
       }
     },
     {
-      "id": "solver-stress-refresh",
-      "workflow": ".github/workflows/solver-stress-refresh.yml",
-      "disposition": "standard",
-      "reason": null,
+      "id": "solver-bench-main-canary",
+      "workflow": ".github/workflows/main-push-validation.yml",
+      "disposition": "unsupported",
+      "reason": "Main-push solver-bench regression canary checks a fixed baseline and does not publish attempt-response rows.",
       "durability": {
-        "mode": "automatic-harvest",
-        "reason": null
+        "mode": "artifact-only",
+        "reason": "Required validation status is the durable result; it is not a decision-bearing evidence producer."
       }
     },
     {
       "id": "method-probe-sweep",
       "workflow": ".github/workflows/method-probe-sweep.yml",
+      "disposition": "standard",
+      "reason": null,
+      "durability": {
+        "mode": "automatic-harvest",
+        "reason": null
+      }
+    },
+    {
+      "id": "search-loss-real-canary",
+      "workflow": ".github/workflows/search-loss-real-canary.yml",
+      "disposition": "unsupported",
+      "reason": "Dedicated parity/overhead calibration harness comparing observational modes. Its output is comparative canary evidence rather than an ordinary solver-result population covered by the automatic compact failure-response contract.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "The bounded canary artifact is intentionally retained as workflow evidence until promotion/retirement; it is not a decision-bearing solver experiment result."
+      }
+    },
+    {
+      "id": "solver-broad-confirmation",
+      "workflow": ".github/workflows/solver-broad-confirmation.yml",
       "disposition": "standard",
       "reason": null,
       "durability": {
@@ -41,6 +101,26 @@
       "durability": {
         "mode": "automatic-harvest",
         "reason": null
+      }
+    },
+    {
+      "id": "solver-diagnostics",
+      "workflow": ".github/workflows/solver-diagnostics.yml",
+      "disposition": "standard",
+      "reason": null,
+      "durability": {
+        "mode": "automatic-harvest",
+        "reason": null
+      }
+    },
+    {
+      "id": "solver-evidence-integrity-guard",
+      "workflow": ".github/workflows/solver-evidence-integrity-guard.yml",
+      "disposition": "unsupported",
+      "reason": "Audits already-published evidence integrity on pull requests; it does not run new solver attempts of its own.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "This workflow is non-decision-bearing or consumes/audits evidence; ordinary workflow artifacts are its intentional persistence class."
       }
     },
     {
@@ -94,6 +174,16 @@
       }
     },
     {
+      "id": "solver-stress-refresh",
+      "workflow": ".github/workflows/solver-stress-refresh.yml",
+      "disposition": "standard",
+      "reason": null,
+      "durability": {
+        "mode": "automatic-harvest",
+        "reason": null
+      }
+    },
+    {
       "id": "static-portfolio-confirmation",
       "workflow": ".github/workflows/static-portfolio-confirmation.yml",
       "disposition": "standard",
@@ -104,93 +194,13 @@
       }
     },
     {
-      "id": "solver-broad-confirmation",
-      "workflow": ".github/workflows/solver-broad-confirmation.yml",
+      "id": "technique-census",
+      "workflow": ".github/workflows/technique-census.yml",
       "disposition": "standard",
       "reason": null,
       "durability": {
         "mode": "automatic-harvest",
         "reason": null
-      }
-    },
-    {
-      "id": "collect-variant-family-dataset",
-      "workflow": ".github/workflows/collect-variant-family-dataset.yml",
-      "disposition": "standard",
-      "reason": null,
-      "durability": {
-        "mode": "alternate-rail",
-        "reason": "The large research-branch dataset is retained through its dedicated off-main dataset/artifact workflow, not the main solver-evidence harvester."
-      }
-    },
-    {
-      "id": "cpsat-explicit-prefix-reference",
-      "workflow": ".github/workflows/cpsat-explicit-prefix-reference.yml",
-      "disposition": "unsupported",
-      "reason": "CP-SAT exact/reference tooling has no comparable node/work-budget attempt-response shape; it is a downstream annotator, not a search-attempt producer this layer covers.",
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "This workflow is non-decision-bearing or consumes/audits evidence; ordinary workflow artifacts are its intentional persistence class."
-      }
-    },
-    {
-      "id": "cpsat-hint-harvest-sweep",
-      "workflow": ".github/workflows/cpsat-hint-harvest-sweep.yml",
-      "disposition": "unsupported",
-      "reason": "CP-SAT --forced-grid hint harvest; not a node/work-budget search-attempt producer this layer covers.",
-      "durability": {
-        "mode": "automatic-harvest",
-        "reason": null
-      }
-    },
-    {
-      "id": "collect-prune-gap-labels",
-      "workflow": ".github/workflows/collect-prune-gap-labels.yml",
-      "disposition": "unsupported",
-      "reason": "CP-SAT-oracle branch labelling; not a node/work-budget search-attempt producer this layer covers.",
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "This workflow is non-decision-bearing or consumes/audits evidence; ordinary workflow artifacts are its intentional persistence class."
-      }
-    },
-    {
-      "id": "solver-evidence-integrity-guard",
-      "workflow": ".github/workflows/solver-evidence-integrity-guard.yml",
-      "disposition": "unsupported",
-      "reason": "Audits already-published evidence integrity on pull requests; it does not run new solver attempts of its own.",
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "This workflow is non-decision-bearing or consumes/audits evidence; ordinary workflow artifacts are its intentional persistence class."
-      }
-    },
-    {
-      "id": "solver-diagnostics",
-      "workflow": ".github/workflows/solver-diagnostics.yml",
-      "disposition": "standard",
-      "reason": null,
-      "durability": {
-        "mode": "automatic-harvest",
-        "reason": null
-      }
-    },
-    {
-      "id": "solver-bench-pr-canary",
-      "workflow": ".github/workflows/ci.yml",
-      "disposition": "unsupported",
-      "reason": "PR solver-bench regression canary checks a fixed baseline and does not publish attempt-response rows.",
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "Required CI status is the durable result; it is not a decision-bearing evidence producer."
-      }
-    },
-    {
-      "id": "solver-bench-main-canary",
-      "workflow": ".github/workflows/main-push-validation.yml",
-      "disposition": "unsupported",
-      "reason": "Main-push solver-bench regression canary checks a fixed baseline and does not publish attempt-response rows.",
-      "durability": {
-        "mode": "artifact-only",
-        "reason": "Required validation status is the durable result; it is not a decision-bearing evidence producer."
       }
     }
   ]
