@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-reserve-starvation-confirmation-sample",
+  "createdAt": "2026-09-19",
+  "questionId": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
+  "sourceBoundary": {
+    "capabilityRunId": "35066677597",
+    "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "corpus": "data/stress/stress-levels-random.json",
+    "corpusSize": 1700,
+    "solved": 1169,
+    "residual": 531
+  },
+  "exclusion": {
+    "reason": "work-ladder discovery rows excluded from independent recurrence sizing",
+    "ids": [
+      "R00044",
+      "R01000",
+      "R02974"
+    ]
+  },
+  "selection": {
+    "method": "uniform deterministic sample from current Corpus-2 residual after exclusions; FNV-1a seed -> mulberry32 -> Fisher-Yates",
+    "seed": "failure-reserve-starvation-default-profile-2026-09-19",
+    "seedHash": 1682830276,
+    "eligibleCount": 528,
+    "sampleCount": 40
+  },
+  "ids": [
+    "R00050",
+    "R00142",
+    "R00306",
+    "R00479",
+    "R00563",
+    "R00647",
+    "R01044",
+    "R01132",
+    "R01154",
+    "R01290",
+    "R01577",
+    "R02029",
+    "R02032",
+    "R02054",
+    "R02206",
+    "R02210",
+    "R02272",
+    "R02318",
+    "R02325",
+    "R02347",
+    "R02387",
+    "R02397",
+    "R02432",
+    "R02561",
+    "R02622",
+    "R02664",
+    "R02733",
+    "R02768",
+    "R02780",
+    "R02890",
+    "R02918",
+    "R02949",
+    "R03046",
+    "R03092",
+    "R03212",
+    "R03216",
+    "R03270",
+    "R03287",
+    "R03291",
+    "R03330"
+  ]
+}

@@ -594,7 +594,8 @@
       "result": "Stage 1 is positive: accepted solutions cluster. Stage 2 was method-limited because three naive complete-path constructors failed. The later production-search multi-pick work established that real beam frontiers can yield rare exact-LIVE states and that one-pick sampling was the deeper statistical failure. The old generic 'production-quality constructor missing' blocker is therefore too broad; the remaining gap is converting frozen real-search partials into a fair complete relaxed candidate and measuring local repairability.",
       "constrains": [
         "Reuse production-search-derived frontier states rather than inventing another heuristic pseudo-state generator.",
-        "Do not build full LNS until the repaired Stage-2 falsifier is positive under a frozen candidate-construction method."
+        "Do not build full LNS until the repaired Stage-2 falsifier is positive under a frozen candidate-construction method.",
+        "Failure/search-loss evidence may supply additional real production partials or basin context, but it does not replace Lane G's specialist frontier sampler or frozen candidate-construction gate."
       ],
       "reopensOn": "A production-search-derived frontier/partial-state construction can be completed or relaxed into a fair full candidate without answer leakage, after which distance-to-solution and local repairability can be measured.",
       "premiseRefs": [
@@ -603,6 +604,9 @@
       ],
       "measurementOpportunities": [
         "MO-005"
+      ],
+      "constrainedBy": [
+        "docs/solver-failure-evidence-research-integration-plan.md"
       ]
     },
     {
@@ -624,7 +628,8 @@
       ],
       "constrains": [
         "Do not promote remaining length into a production selector from Card-E alone.",
-        "The next test should be one independent shared-budget completion/repair population, preferably with a bounded work ladder, before opening a WS1 policy gate."
+        "The next test should be one independent shared-budget completion/repair population, preferably with a bounded work ladder, before opening a WS1 policy gate.",
+        "Failure-response telemetry from the precommitted transfer may be analyzed only as secondary explanatory evidence; it must not alter the frozen primary transfer decision rule."
       ],
       "reopensOn": "An independent shared-budget population exposes the same legal current-input signal and a prespecified length-first order materially improves fixed-work outcome versus an unprioritized control.",
       "premiseRefs": [
@@ -633,6 +638,9 @@
       ],
       "measurementOpportunities": [
         "MO-004"
+      ],
+      "constrainedBy": [
+        "docs/solver-failure-evidence-research-integration-plan.md"
       ]
     },
     {
@@ -654,15 +662,20 @@
       ],
       "constrains": [
         "Do not treat Class-3 as exposed-and-failed or rerun broad capability work from atlas membership alone.",
-        "A future producer must record exact-action participation/work dose prospectively; the work-ladder reducer can analyze it once it exists."
+        "A future producer must record exact-action participation/work dose prospectively under a comparable protocol. The standard compact failure-response document now preserves attempt/action/work/censoring evidence and is the preferred acquisition path; use the work-ladder reducer once those rows exist."
       ],
-      "reopensOn": "A prospective run records per-technique exact-action participation/work tranche on the Class-3 question population under a comparable protocol.",
+      "reopensOn": "A prospective protocol-compatible run covering the Class-3 question population emits standard compact failure-response rows with exact-action participation/work dose for the implicated techniques.",
       "premiseRefs": [
         "P123",
         "P206"
       ],
       "measurementOpportunities": [
         "MO-004"
+      ],
+      "constrainedBy": [
+        "docs/solver-failure-evidence-research-integration-plan.md",
+        "scripts/solver-failure-response-lib.mjs",
+        "scripts/failure-response-query.mjs"
       ]
     },
     {
@@ -715,6 +728,72 @@
       "reopensOn": "New evidence that the 390-row Class-5-specific residual's cost-per-solve at 4x differs by more than ~1-2 orders of magnitude from the mixed-class 20-id sample used here, or a proposed alternative technique cheaper than this report's EW1 comparators that still beats the work-ladder escalation's cost.",
       "premiseRefs": [],
       "measurementOpportunities": []
+    },
+    {
+      "id": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
+      "question": "What does protocol-compatible compact failure-response evidence say about the cheapest next WS2 discriminator: operational divergence/first-loss, rejection counterfactuals, a producer-consumer 2x2, or no expensive follow-on yet?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "aliases": [
+        "failure-response reconnaissance",
+        "failure data reconnaissance",
+        "post-work-ladder discriminator"
+      ],
+      "answeredBy": [
+        "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md"
+      ],
+      "result": "The query/reducer and authority routing are ready, but no suitable accumulated post-instrumentation compact-response population exists yet. The latest ordinary solver-dispatch artifacts inspected predate standard compact-response publication and are selected for other questions, so they must not be retrofitted into a representative prevalence corpus.",
+      "triggeredBy": [
+        "WS2-WORK-LADDER-ECONOMICS"
+      ],
+      "constrainedBy": [
+        "docs/solver-failure-evidence-research-integration-plan.md",
+        "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md",
+        "scripts/failure-response-query.mjs"
+      ],
+      "constrains": [
+        "Use already-published standard compact response first; enable compact diagnostic observers only if automatic response cannot discriminate the next instrument.",
+        "Do not estimate current failure-phenotype prevalence from selectively dispatched pre-contract native attempt arrays.",
+        "Parent is the default independent unit and solved controls are required where the producer population naturally supplies them."
+      ],
+      "reopensOn": "A maintained producer emits a protocol-compatible post-instrumentation compact failure-response population relevant to the current residual, with an honest population denominator and solved controls where naturally available.",
+      "premiseRefs": [],
+      "measurementOpportunities": []
+    },
+    {
+      "id": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
+      "question": "Does fixed stage-reserve allocation recurrently starve admissible-order fallback (or another later stage) that could solve within the existing total work budget if more of that fixed budget reached it?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "aliases": [
+        "reserve starvation",
+        "admissible-order reserve starvation",
+        "R00044 allocation-order artifact"
+      ],
+      "answeredBy": [
+        "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
+        "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md"
+      ],
+      "result": "R00044 nominates a distinct allocation-order mechanism: default admissible-order fallback solved at 219,802,423 nodes, above the 75M reserve available under the existing 300M total node ceiling. R01000/R02974 were genuine primary-search underdose, so broad 4x economics remains closed negative. Existing 50M technique censuses cannot size this high-cost tail. A prospective independent 40-parent current-residual sample is now frozen around the exact demonstrated config `admissible-order|tieBreak=default|lds=off`.",
+      "triggeredBy": [
+        "WS2-WORK-LADDER-ECONOMICS"
+      ],
+      "constrainedBy": [
+        "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
+        "docs/solver-failure-evidence-research-integration-plan.md",
+        "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
+        "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md"
+      ],
+      "constrains": [
+        "Do not reopen the closed-negative broad 4x escalation economics question from one allocation-order example.",
+        "First size recurrence from existing/prospective compact attempt response: later-stage participation, allocated ceiling/work, censoring, and any comparable higher-budget or alternate-allocation evidence.",
+        "Only if recurrent within-total-budget starvation is non-trivial should a matched-total-work A/B vary the existing admissibleOrderNodeReserveFractionOverride."
+      ],
+      "reopensOn": "Dispatch and complete the frozen prospective probe in reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md after its R00044 execution-family canary clears.",
+      "premiseRefs": [],
+      "measurementOpportunities": [
+        "MO-004"
+      ]
     }
   ]
 }

@@ -95,6 +95,8 @@ export function compactFailureResponseRow(row) {
         levelId: row?.levelId ?? row?.id ?? row?.level ?? null,
         producer: row?.producer ?? null,
         runId: row?.runId ?? null,
+        protocolHash: row?.protocolHash ?? row?.protocol?.hash ?? null,
+        solverRef: row?.solverRef ?? row?.solverCommit ?? row?.commitSha ?? null,
         configurationKey: row?.configurationKey ?? row?.configKey ?? null,
         actionKey: row?.winningConfig ?? row?.winningConfigKey ?? row?.actionKey ?? techniqueKeys ?? null,
         stageId: row?.stageId ?? row?.winningStage ?? null,
@@ -122,7 +124,7 @@ export function compactFailureResponseRow(row) {
     };
 }
 
-export function createFailureResponseDocument(rows, { populationIntegrity = null, sourceFiles = [], missingSourceFiles = [], invalidSourceFiles = [] } = {}) {
+export function createFailureResponseDocument(rows, { populationIntegrity = null, sourceFiles = [], missingSourceFiles = [], invalidSourceFiles = [], protocolHash = null, solverRef = null } = {}) {
     const records = (Array.isArray(rows) ? rows : []).map(compactFailureResponseRow);
     return {
         schemaVersion: FAILURE_RESPONSE_SCHEMA_VERSION,
@@ -130,6 +132,8 @@ export function createFailureResponseDocument(rows, { populationIntegrity = null
         records,
         summary: summarizeFailureResponse(rows, { populationIntegrity }),
         populationIntegrity,
+        protocolHash: typeof protocolHash === 'string' && protocolHash.length ? protocolHash : null,
+        solverRef: typeof solverRef === 'string' && solverRef.length ? solverRef : null,
         sourceFiles,
         missingSourceFiles,
         invalidSourceFiles,
@@ -156,6 +160,8 @@ export function validateFailureResponseDocument(document) {
                 }
             }
         });
+        if (!(document.protocolHash == null || typeof document.protocolHash === 'string')) issues.push('protocolHash');
+        if (!(document.solverRef == null || typeof document.solverRef === 'string')) issues.push('solverRef');
         if (!Array.isArray(document.sourceFiles)) issues.push('sourceFiles');
         if (!Array.isArray(document.missingSourceFiles)) issues.push('missingSourceFiles');
         if (!Array.isArray(document.invalidSourceFiles)) issues.push('invalidSourceFiles');

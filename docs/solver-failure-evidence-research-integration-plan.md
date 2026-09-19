@@ -11,6 +11,18 @@
 > **Capability-history authority:** [`solver-capability-memory.md`](solver-capability-memory.md).
 > **Search-loss implementation authority:** [`solver-search-loss-evidence-implementation-plan.md`](solver-search-loss-evidence-implementation-plan.md).
 
+## Implementation status (2026-09-19)
+
+- **Phase 0 authority/consumer reconciliation:** substantially complete. The live queue now routes WS2 through bounded failure-response reconnaissance before selecting first-loss/rejection/2x2; Class-3, H3, Lane G, Lane C, future-work closeout, and the reserve-starvation nomination are connected to their existing owners rather than duplicated here.
+- **Phase 1 compact diagnostic promotion review:** calibration gate complete. GHA run `35423841173` clears representative semantic parity/overhead/byte-volume for the compact prune/beam-flow/progress bundle. Universal durable promotion remains **not earned** pending incremental-value and producer-scope evidence; see [the promotion review](../reports/2026-09-19-compact-failure-diagnostic-promotion-review-001.md).
+- **Phase 2 common reducer/query:** implemented for the automatic compact response layer as `scripts/failure-response-query.mjs` / `npm run research:query-failure-response --`. Producer-supplied `protocolHash` and solver ref are now preserved when present. Diagnostic-field query expansion remains conditional on Phase-1 promotion.
+- **Phase 3 WS2 reconnaissance:** readiness audit complete. The query/reducer is ready, but the latest ordinary solver-dispatch artifacts predate standard compact-response publication; Stage A therefore waits for a protocol-compatible post-instrumentation population. Do not backfill prevalence from selectively dispatched native-attempt history. See `reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md`.
+- **Phase 4A Class-3:** acquisition path is now explicit; still waits for a prospective producer covering the Class-3 population.
+- **Phase 4B reserve starvation:** zero-compute asset audit is complete and the prospective path is now frozen. The exact R00044 winner is `admissible-order|tieBreak=default|lds=off`; targeted method-probe workflow support now preserves explicit level subsets; a disjoint 40-parent current-residual sample and decision rule are precommitted in `reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md`. Remaining work is dispatch/measurement, not design.
+- **Phase 4C/4D H3/Lane G:** remain independently executable under their existing designs; failure evidence is secondary/optional.
+- **Phase 4E capability memory:** durable contract now explicitly permits protocol-compatible failure-response joins as derived premise/capability evidence while preserving the production verdict boundary; no new memory store was created.
+- **Phases 5-8:** condition-gated as specified below. No synthetic recurring producer or first-loss selection has been created.
+
 ## 1. Why this plan exists
 
 The September 18-19 failure-data work changed the research economics.

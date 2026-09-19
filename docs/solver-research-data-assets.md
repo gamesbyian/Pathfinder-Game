@@ -54,11 +54,12 @@ Mining many assets/features or historical regimes creates selection pressure; di
 | Raw logs/baselines | raw run/snapshot | What happened before interpretation? |
 | Research-status index | report/workstream/experiment | Has this been tested/renamed? |
 | Static descriptors | level × legal feature | Which geometry/mechanics stratify an effect? |
+| Compact failure response | run × parent × attempt/stage | Participation, dose, censoring, termination, solved controls. |
 | Search-loss evidence | run × parent × selected event | Where did search lose or retain material, including solved-run controls? |
 
 ## High-value joins
 
-Useful joins include census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Human-parent joins preserve source/exposure and use parents as independent units. Use the smallest join that answers the gate.
+Useful joins include failure response × census/benchmarks, census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units. Use the smallest useful join.
 
 ### Four-resource lineage recipe
 
@@ -90,7 +91,7 @@ A residual or participant cohort supports the conditional question it was select
 
 ### Solution profiles are sample profiles
 
-Profile fields summarize stored known solutions with explicit support. Missing/unsupported axes remain unavailable. `observedSingleOrder` is sampled agreement, not structural rigidity. `hasExhaustiveSearchEvent` records an event, not unrestricted whole-space enumeration/persistence. Saturation/plateau claims require adequate dated chronology. Sparse nearest-profile identity is exploratory even under schema v3 and needs independent calibration before decision-bearing use. See [`solver-solution-profile.md`](solver-solution-profile.md) and the [`profile audit`](../reports/2026-09-13-solution-profile-resource-audit-001.md).
+Profile fields summarize stored known solutions with explicit support; missing axes stay unavailable. `observedSingleOrder` is sampled agreement, not rigidity. `hasExhaustiveSearchEvent` records an event, not whole-space enumeration. Saturation needs dated chronology; sparse nearest-profile identity remains exploratory. See [`solver-solution-profile.md`](solver-solution-profile.md) and the [`profile audit`](../reports/2026-09-13-solution-profile-resource-audit-001.md).
 
 ### Independence, missingness, and hint provenance
 

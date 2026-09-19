@@ -414,7 +414,8 @@
         "operational-traces",
         "static-level-descriptors",
         "solver-capability-memory",
-        "search-loss-evidence"
+        "search-loss-evidence",
+        "compact-failure-response"
       ],
       "affordances": [
         "Expose rare/exclusive capability, substitutions, inversions, multiplicity, cap/tranche economics, and oracle-frontier headroom.",
@@ -483,7 +484,8 @@
         "raw-logs-and-baselines",
         "static-level-descriptors",
         "hint-provenance",
-        "solver-capability-memory"
+        "solver-capability-memory",
+        "compact-failure-response"
       ],
       "affordances": [
         "Provide the actual product-objective solve/work outcome that offline diagnostics must eventually explain or improve.",
@@ -550,7 +552,8 @@
         "operational-traces",
         "variant-family-data",
         "static-level-descriptors",
-        "search-loss-evidence"
+        "search-loss-evidence",
+        "compact-failure-response"
       ],
       "affordances": [
         "Preserve complementary gain/loss capability separately from an experiment's promotion disposition.",
@@ -1191,6 +1194,62 @@
       ]
     },
     {
+      "id": "compact-failure-response",
+      "name": "Compact solver failure-response documents",
+      "status": "generated-interface",
+      "grain": [
+        "solver-run",
+        "parent-level",
+        "attempt/stage"
+      ],
+      "locations": [
+        {
+          "kind": "pattern",
+          "path": "**/failure-response*.json"
+        }
+      ],
+      "authorities": [
+        "docs/solver-failure-evidence-disposition.json",
+        "docs/solver-failure-evidence-research-integration-plan.md",
+        "scripts/solver-failure-response-lib.mjs",
+        "scripts/summarize-solver-failure-response.mjs",
+        "scripts/failure-response-query.mjs"
+      ],
+      "queryEntryPoints": [
+        "node scripts/research-asset-query.mjs --id=compact-failure-response",
+        "npm run research:query-failure-response -- --in=<failure-response.json>[,<...>]"
+      ],
+      "joinKeys": [
+        "parentId/levelId plus record identity",
+        "run identity",
+        "protocolHash when produced",
+        "action/stage/configuration identity"
+      ],
+      "evidenceRoles": [
+        "development",
+        "mechanism-nomination",
+        "exposure-accounting"
+      ],
+      "relatedAssets": [
+        "technique-census",
+        "production-benchmarks",
+        "lifecycle-telemetry",
+        "search-loss-evidence",
+        "solver-capability-memory"
+      ],
+      "affordances": [
+        "Distinguish non-participation, stage exposure, work/dose, censoring/exhaustion, badness support, and failed attempts inside solved controls without retaining full paths/state.",
+        "Provide the cheapest parent-aware reconnaissance layer before compact diagnostic observers, rich search-loss capsules, exact annotation, or causal interventions.",
+        "Preserve producer-supplied run/protocol identity so protocol-compatible repeated observations can be separated from descriptive-only joins."
+      ],
+      "caveats": [
+        "Independent prevalence defaults to parent level; multiple attempts/records from one parent are dependent support observations.",
+        "Unknown protocolHash is descriptive only and must not be treated as longitudinally comparable.",
+        "Missing fields remain unknown rather than inferred false/zero; configured-but-unreached is not evidence that the mechanism failed.",
+        "Compact response records describe execution/outcome mechanics and do not assign causal failure classes or authorize production routing."
+      ]
+    },
+    {
       "id": "search-loss-evidence",
       "name": "Search-loss observation capsules for solver attempts",
       "status": "contract-only",
@@ -1238,7 +1297,8 @@
         "operational-traces",
         "solver-capability-memory",
         "variant-family-data",
-        "technique-census"
+        "technique-census",
+        "compact-failure-response"
       ],
       "affordances": [
         "Localize where/why a solver attempt lost search material without a bespoke rerun, once a producer emits captures.",

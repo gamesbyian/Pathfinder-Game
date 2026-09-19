@@ -23,6 +23,10 @@ on:
         description: 'Corpus file to test against'
         required: false
         default: 'data/stress/stress-levels-random.json'
+      levels:
+        description: 'Optional method-probe.mjs --levels selector. Supports full ids / id: / pos: syntax; default all. The wrapper shards only the selected rows.'
+        required: false
+        default: 'all'
       budget_ms:
         description: 'Per-attempt wall safety deadline. In work-budget mode keep this generously non-binding; blank work_budget preserves the legacy real-time search cap.'
         required: false
@@ -56,22 +60,42 @@ concurrency:
 
 jobs:
   plan:
-    name: Plan shard count
+    name: Plan selected-level shards
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       shards: ${{ steps.plan.outputs.shards }}
+      shard_count: ${{ steps.plan.outputs.shard_count }}
     steps:
-      - name: Compute the shard list
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Compute selected population and shard list
         id: plan
         shell: bash
         run: |
-          n="${{ inputs.shard_count }}"
+          selected=$(node scripts/method-probe-shard-plan.mjs --corpus="${{ inputs.corpus }}" --levels="${{ inputs.levels }}" --count=true)
+          requested="${{ inputs.shard_count }}"
+          n=$requested
+          if [ "$n" -gt "$selected" ]; then n=$selected; fi
+          if [ "$n" -lt 1 ]; then
+            echo "Selected population is empty" >&2
+            exit 2
+          fi
           shards=$(node -e "console.log(JSON.stringify(Array.from({length:Number(process.argv[1])},(_,i)=>i+1)))" "$n")
+          echo "selected=${selected}"
+          echo "shard_count=${n}" >> "$GITHUB_OUTPUT"
           echo "shards=${shards}" >> "$GITHUB_OUTPUT"
 
   probe-shards:
-    name: method-probe shard ${{ matrix.shard }}/${{ inputs.shard_count }}
+    name: method-probe shard ${{ matrix.shard }}/${{ needs.plan.outputs.shard_count }}
     needs: [plan]
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -97,18 +121,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Compute this shard's level range (floor-based even split, no gaps/overlaps)
+      - name: Compute this shard's selected level ids (floor-based even split, no gaps/overlaps)
         id: range
         shell: bash
         run: |
           nn=$(printf '%03d' "${{ matrix.shard }}")
-          total=$(node -e 'const d=require("./${{ inputs.corpus }}"); const rows=Array.isArray(d)?d:d.levels; if(!Array.isArray(rows)) process.exit(2); process.stdout.write(String(rows.length))')
-          n="${{ inputs.shard_count }}"
-          start=$(( ( (${{ matrix.shard }} - 1) * total ) / n + 1 ))
-          end=$(( ( ${{ matrix.shard }} * total ) / n ))
+          spec=$(node scripts/method-probe-shard-plan.mjs \
+            --corpus="${{ inputs.corpus }}" --levels="${{ inputs.levels }}" \
+            --shard="${{ matrix.shard }}" --shards="${{ needs.plan.outputs.shard_count }}")
+          count=$(node -e "const s=process.argv[1]; console.log(s ? s.split(',').filter(Boolean).length : 0)" "$spec")
+          if [ "$count" -lt 1 ]; then
+            echo "Empty shard selection" >&2
+            exit 2
+          fi
           echo "nn=${nn}" >> "$GITHUB_OUTPUT"
-          echo "start=${start}" >> "$GITHUB_OUTPUT"
-          echo "end=${end}" >> "$GITHUB_OUTPUT"
+          echo "spec=${spec}" >> "$GITHUB_OUTPUT"
+          echo "count=${count}" >> "$GITHUB_OUTPUT"
 
       - name: Run method-probe across this runner's CPUs
         id: probe
@@ -127,9 +155,8 @@ jobs:
             exit 0
           fi
 
-          outer_start=${{ steps.range.outputs.start }}
-          outer_end=${{ steps.range.outputs.end }}
-          count=$(( outer_end - outer_start + 1 ))
+          outer_spec="${{ steps.range.outputs.spec }}"
+          count="${{ steps.range.outputs.count }}"
           requested_workers=${{ inputs.workers }}
           if [ "$requested_workers" -lt 1 ]; then requested_workers=1; fi
           workers=$requested_workers
@@ -143,14 +170,15 @@ jobs:
           pids=()
           labels=()
           for ((w=0; w<workers; w++)); do
-            sub_start=$(( outer_start + (w * count) / workers ))
-            sub_end=$(( outer_start + ((w + 1) * count) / workers - 1 ))
+            sub_spec=$(node scripts/method-probe-shard-plan.mjs \
+              --corpus="${{ inputs.corpus }}" --levels="$outer_spec" \
+              --shard="$((w + 1))" --shards="$workers")
             label="${{ steps.range.outputs.nn }}-w$((w + 1))"
             labels+=("$label")
-            echo "worker $((w + 1))/$workers: pos:${sub_start}-${sub_end}"
+            echo "worker $((w + 1))/$workers: ${sub_spec}"
             timeout -k 30s --preserve-status 110m node "$bundle" \
               --corpus="${{ inputs.corpus }}" \
-              --levels="pos:${sub_start}-${sub_end}" \
+              --levels="${sub_spec}" \
               --only="${{ inputs.only }}" \
               --budget-ms="${{ inputs.budget_ms }}" \
               ${work_arg} \
@@ -192,7 +220,7 @@ jobs:
 
   combine:
     name: Combine shard results
-    needs: probe-shards
+    needs: [plan, probe-shards]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -237,6 +265,7 @@ jobs:
           BUDGET_MS: ${{ inputs.budget_ms }}
           WORK_BUDGET: ${{ inputs.work_budget }}
           NODE_BUDGET: ${{ inputs.node_budget }}
+          LEVELS: ${{ inputs.levels }}
         run: |
           if [ "${{ needs.probe-shards.result }}" != success ]; then
             if [ "${{ needs.probe-shards.result }}" = cancelled ]; then
@@ -257,11 +286,9 @@ jobs:
             fi
             node scripts/research-workflow-outcome.mjs --out=logs/method-probe-shards/outcome.json --outcome="$outcome" --reason="$reason"
           fi
-          node - <<'NODE'
-          const fs = require('node:fs');
-          const parsed = JSON.parse(fs.readFileSync(process.env.CORPUS));
-          fs.writeFileSync('logs/method-probe-shards/expected-ids.txt', `${(Array.isArray(parsed) ? parsed : parsed.levels).map(level => level.id).join('\n')}\n`);
-          NODE
+          node scripts/method-probe-shard-plan.mjs \
+            --corpus="$CORPUS" --levels="$LEVELS" --shard=1 --shards=1 \
+            | tr ',' '\n' > logs/method-probe-shards/expected-ids.txt
           if [ -f logs/method-probe-shards/combined.json ]; then
             node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete \
               --expected-ids=logs/method-probe-shards/expected-ids.txt \
@@ -272,10 +299,10 @@ jobs:
           import fs from 'node:fs';
           import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
           const number = value => value === '' ? null : Number(value);
-          const configuration = { only: process.env.ONLY, corpus: process.env.CORPUS, budgetMs: number(process.env.BUDGET_MS), workBudget: number(process.env.WORK_BUDGET), nodeBudget: number(process.env.NODE_BUDGET) };
+          const configuration = { only: process.env.ONLY, corpus: process.env.CORPUS, levels: process.env.LEVELS || 'all', budgetMs: number(process.env.BUDGET_MS), workBudget: number(process.env.WORK_BUDGET), nodeBudget: number(process.env.NODE_BUDGET) };
           fs.writeFileSync('logs/method-probe-shards/experiment-contract.json', `${JSON.stringify({
             experiment: { workflowFamily: 'isolated-method-probe', producer: 'method-probe-sweep.yml', entrypoint: 'scripts/method-probe.mjs', configurationHash: hashConfiguration(configuration) },
-            population: { kind: 'whole-supplied-corpus', identityBasis: 'stable-level-id' },
+            population: { kind: configuration.levels === 'all' ? 'whole-supplied-corpus' : 'explicit-selected-subset', identityBasis: 'stable-level-id', selector: configuration.levels },
             execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: configuration.workBudget != null, producerFamily: 'method-probe', schedulerMode: 'isolated-technique' },
             limits: { cumulativeNodeCeiling: configuration.nodeBudget, initialWorkAllocation: configuration.workBudget, totalWorkCeiling: configuration.workBudget, wallSafetyDeadlineMs: configuration.budgetMs, wallDeadlineBinding: configuration.workBudget == null },
             sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
@@ -292,7 +319,7 @@ jobs:
             --integrity-file="logs/method-probe-shards/population-integrity.json" \
             --contract-file="logs/method-probe-shards/experiment-contract.json" \
             --failure-response-file="logs/method-probe-shards/failure-response-summary.json" \
-            --shards-expected="${{ inputs.shard_count }}" \
+            --shards-expected="${{ needs.plan.outputs.shard_count }}" \
             --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
             --source-artifact="method-probe-combined"
 

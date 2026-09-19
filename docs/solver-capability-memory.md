@@ -66,6 +66,8 @@ Record, when known and worth preserving:
 
 A `+5/-12` treatment can therefore remain `CLOSED NEGATIVE` while also carrying a legitimate capability signature such as “five deterministic Corpus-2 rescues under repair turn bias.” The signature is a premise source, not a production recommendation.
 
+Protocol-compatible compact failure-response evidence can enrich this axis without creating a new durable memory store. For matched parents/policies, derived analysis may compare exposure, work/censoring, progress, prune/flow response, or rich loss locus where available. A zero-solve-delta treatment whose operational response moves remains negative on the production axis; the movement is only premise/capability evidence. Unknown protocol identity or unmatched populations abstain.
+
 ## Derived capability-memory view
 
 `scripts/solver-capability-memory.mjs` builds an ephemeral/rebuildable view from a baseline plus candidate evidence. It deliberately does **not** create a new permanent truth store.

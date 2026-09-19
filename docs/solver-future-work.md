@@ -27,8 +27,9 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Deferred plan closeouts
 
-- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for a genuine recurring producer, then audit/promote-or-retain; Phase 9 waits for queue selection of first-loss. Retire when completed, deferred, or stopped. No synthetic triggers.
-- **[Population/family](solver-research-population-family-integration-plan.md):** Phase 6 counts only real end-to-end ranked-question use. After two distinct pilots (family-microscope and broad-population-first), run Phase 7 consolidation and retire. No synthetic pilots.
+- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** retire once descendants have durable owners; rich recurrence stays condition-gated.
+- **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** Phase 8 waits for genuine recurrence; Phase 9 waits for first-loss selection. No synthetic.
+- **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run Phase 7 and retire.
 
 ## Other deferred architectural questions
 
@@ -53,7 +54,7 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 | Automatic selector/profile calibration | A legal current-input relation predicts differentiated response; remaining length first needs one independent shared-budget transfer |
 | Cross-attempt basin overlap | A real handoff/allocation question exists; measure canonical action participation and solve-local rediscovery simultaneously |
 | Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates a concrete handoff value proposition |
-| Admissible-order retry repricing | Residual again isolates ordered-systemic loss and a canary proves differentiated target-stage work |
+| Admissible-order retry repricing | Reopen `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` on a precommitted high-cap fallback sample; only recurrent starvation nominates a matched-work reserve A/B |
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |

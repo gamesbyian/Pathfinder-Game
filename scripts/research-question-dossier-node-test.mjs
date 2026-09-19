@@ -17,7 +17,7 @@ assert.ok(Array.isArray(dossier.resources.candidateJoins));
 assert.equal(dossier.conceptualContext.premiseDiscoveryHints.authority, 'lexical-discovery-only');
 assert.ok(dossier.conceptualContext.premiseDiscoveryHints.rows.length > 0);
 
-const activeQuestionId = 'WS2-WORK-LADDER-ECONOMICS';
+const activeQuestionId = 'WS2-FAILURE-RESPONSE-RECONNAISSANCE';
 const activeDossier = buildQuestionDossier(process.cwd(), { questionId: activeQuestionId });
 assert.ok(activeDossier.currentAuthorityMatches.queue.some(row => row.questionRef === activeQuestionId),
     'the current WS2 active gate must resolve to the queue row that names it as the stable question ref');
