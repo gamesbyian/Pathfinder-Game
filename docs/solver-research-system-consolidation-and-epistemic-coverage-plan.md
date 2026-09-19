@@ -16,6 +16,8 @@
 > **Second-order audit:** [`2026-09-19-solver-research-system-prompt-overfit-second-order-audit-001.md`](../reports/2026-09-19-solver-research-system-prompt-overfit-second-order-audit-001.md) records the later prompt-overfit/contradiction-hunt pass that added conversion fidelity and framing/context independence.
 
 > **Implementation progress (2026-09-19):** active on branch `chatgpt/research-system-consolidation-implementation-2026-09-19`. Initial cut is following Part VII exactly: Bundles A and B first, with Phase 0 applied as a standing guardrail. Progress updates below are execution notes, not a second checklist or priority authority.
+> **Execution note (2026-09-19, initial slice):** Phase 0 is applied in `solver-research-operating-model.md`. Bundle A now has one derived read-only inventory spine (`research:system-inventory`) over existing relation authorities, current package entrypoints, plan lifecycle signals, and shared implementation dependencies. Bundle B now has an emitted-v3-result/declared-schema audit plus delimiter-safe structured population identity hashing with adversarial regression coverage. Draft PR #1922 is the execution anchor; Bundles A and B remain in progress.
+
 
 ## 1. Why this plan exists now
 
