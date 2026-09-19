@@ -25,6 +25,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'n
 import path from 'node:path';
 import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 import { summarizeFailureResponse } from './solver-failure-response-lib.mjs';
+import { buildPopulationIntegrity, hashPopulation } from './solver-experiment-contract.mjs';
 
 function findShardFiles(dir) {
     const out = [];
@@ -135,8 +136,19 @@ export function combine(shardOutputs, controlArm, plan = null) {
             ? 'At least one candidate preserved control coverage while gaining solves or reducing work.'
             : 'No candidate preserved control coverage while gaining solves or reducing work.',
     };
+    const expectedIds = plan ? plan.cells.map((cell) => cell.cellId) : results.map((row) => row.cellId);
+    const normalizedIntegrity = buildPopulationIntegrity(expectedIds, results);
+    const populationIntegrity = {
+        ...normalizedIntegrity,
+        populationIdentityHash: hashPopulation({
+            kind: 'static-portfolio-cells',
+            identityBasis: 'sealed-plan-cell-id',
+            identities: expectedIds,
+        }).identityHash,
+        expectedIds,
+    };
     return { schemaVersion: 1, controlArm, totalCells: results.length, armSummaries, comparisons, researchOutcome,
-        failureResponse: summarizeFailureResponse(results) };
+        failureResponse: summarizeFailureResponse(results, { populationIntegrity }), populationIntegrity };
 }
 
 function toMarkdown(result) {
