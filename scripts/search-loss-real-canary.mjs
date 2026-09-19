@@ -126,14 +126,21 @@ const resolvedSha = /^[0-9a-f]{40}$/i.test(process.env.GITHUB_SHA ?? '') ? proce
 const runId = process.env.GITHUB_RUN_ID ? `gha-${process.env.GITHUB_RUN_ID}` : 'local-search-loss-real-canary';
 const protocolHash = stableHash({ kind: 'search-loss-real-canary-protocol', protocol });
 const captureProfileId = 'search-loss-real-canary-v1';
-const richCollector = createSearchLossCollector({
-  captureProfileId,
-  selectorLimits: {
-    'score-width-cull': decisionLimit,
-    'mechanic-bucket-cull': decisionLimit,
-    'ints-bucket-cull': decisionLimit,
-  },
-});
+const richCollectors = new Map();
+function richCollectorFor(parentId) {
+  const key = String(parentId);
+  if (!richCollectors.has(key)) {
+    richCollectors.set(key, createSearchLossCollector({
+      captureProfileId,
+      selectorLimits: {
+        'score-width-cull': decisionLimit,
+        'mechanic-bucket-cull': decisionLimit,
+        'ints-bucket-cull': decisionLimit,
+      },
+    }));
+  }
+  return richCollectors.get(key);
+}
 for (let index = 0; index < selected.length; index++) {
   const raw = selected[index];
   levelRevisions[String(raw.id)] = await getLevelFingerprint(raw);
@@ -202,12 +209,13 @@ for (let index = 0; index < selected.length; index++) {
           capsule.replayBasis = 'replayable';
           capsule.reconstructability = { kind: 'inline-exact-prefix', path: selectedPath };
           capsule.capsuleId = searchLossCapsuleIdentity(capsule);
-          richCollector.observe(capsule);
+          richCollectorFor(raw.id).observe(capsule);
         },
       };
     }
 
-    const richBefore = mode === 'rich' ? richCollector.snapshot() : null;
+    const parentRichCollector = mode === 'rich' ? richCollectorFor(raw.id) : null;
+    const richBefore = parentRichCollector ? parentRichCollector.snapshot() : null;
     const started = performance.now();
     const result = await Solver.solveLevel(level, solveOpts);
     const elapsedMs = performance.now() - started;
@@ -217,7 +225,7 @@ for (let index = 0; index < selected.length; index++) {
       failureProgress: progress.snapshot(),
     };
     if (mode === 'rich') richParentOutcomes[String(raw.id)] = !!result.ok;
-    const richSnapshot = mode === 'rich' ? richCollector.snapshot() : null;
+    const richSnapshot = parentRichCollector ? parentRichCollector.snapshot() : null;
     const priorCapsules = richBefore?.capsules.length ?? 0;
     const newCapsules = richSnapshot ? richSnapshot.capsules.slice(priorCapsules) : [];
     const richObserved = richSnapshot ? Object.entries(richSnapshot.selectorSummaries).reduce((sum, [selectorId, after]) => {
@@ -305,8 +313,20 @@ const output = {
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, JSON.stringify(output, null, 2) + '\n');
 
-const richSnapshot = richCollector.snapshot();
-const decisionParents = [...new Set(richSnapshot.capsules.map(row => String(row.parentId)))].sort();
+const combinedSelectorSummaries = {};
+const combinedCapsules = [];
+for (const collector of richCollectors.values()) {
+  const snapshot = collector.snapshot();
+  combinedCapsules.push(...snapshot.capsules);
+  for (const [selectorId, selector] of Object.entries(snapshot.selectorSummaries)) {
+    const state = combinedSelectorSummaries[selectorId] ?? { observed: 0, retained: 0, truncated: false };
+    state.observed += selector.observed;
+    state.retained += selector.retained;
+    state.truncated ||= selector.truncated;
+    combinedSelectorSummaries[selectorId] = state;
+  }
+}
+const decisionParents = [...new Set(combinedCapsules.map(row => String(row.parentId)))].sort();
 const capture = validateSearchLossCapture({
   schemaVersion: 1,
   kind: 'pathfinder-search-loss-capture',
@@ -328,9 +348,9 @@ const capture = validateSearchLossCapture({
   capture: {
     captureProfileId,
     observerParityVerified: summary.semanticParity,
-    selectorSummaries: richSnapshot.selectorSummaries,
+    selectorSummaries: combinedSelectorSummaries,
   },
-  capsules: richSnapshot.capsules.map(row => ({
+  capsules: combinedCapsules.map(row => ({
     ...row,
     context: { ...row.context, parentSolved: richParentOutcomes[String(row.parentId)] ?? null },
   })).sort((a, b) => a.capsuleId.localeCompare(b.capsuleId)),
