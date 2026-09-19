@@ -194,8 +194,10 @@ assert.deepEqual(idsFor({ query: 'topology', status: 'mixed' }), ['WS2-OPEN-PATH
     'topology discovery must route to the qualified F3 descriptor disposition after its microscope ran');
 assert(idsFor({ query: 'topology', status: 'concluded-positive' }).includes('WS2-OPEN-PATH-TOPOLOGY-SIGNATURE'),
     'the open-path topology signature question must remain discoverable as the concluded premise upstream of F3');
-assert.deepEqual(idsFor({ query: 'D1', status: 'active' }), ['WS2-WORK-LADDER-ECONOMICS'],
-    'D1 production-inert observation and its post-D1 discriminator selection are both closed; the work-ladder economics follow-on is the sole active D1-referencing research gate');
+assert.deepEqual(idsFor({ query: 'D1', status: 'active' }), [],
+    'D1 production-inert observation, its post-D1 discriminator selection, and the work-ladder economics follow-on are all closed; no D1-referencing research gate remains active');
+assert(idsFor({ query: 'D1', status: 'concluded-negative' }).includes('WS2-WORK-LADDER-ECONOMICS'),
+    'the work-ladder economics follow-on must remain discoverable as the concluded-negative D1-referencing result');
 assert(idsFor({ query: 'must turn', status: 'closed' }).includes('WS2-MUST-TURN-LATE-ADDITIVE'),
     'ordinary must-turn vocabulary must find the closed-negative economics result');
 
