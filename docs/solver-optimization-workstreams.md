@@ -80,7 +80,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) before first-loss/rejection/2x2. When a compatible post-instrumentation population exists, use the purpose-aware compact-response query plus parent-level identity/novelty/saturation checks before selecting an expensive discriminator; recurring phenotype work remains conditional on repeated real populations. First-loss remains dormant unless this authority explicitly selects it. Supporting: reserve starvation is **dispatch-ready** after R00044 canary (40-parent/300M + reducer); Class-3 is **data-blocked** pending population freeze + exact-action telemetry. Deferred descendants/reopen triggers live in [`solver-future-work.md`](solver-future-work.md). [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md)
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) on real compatible rows, including purpose/dependence and parent-level novelty/saturation checks, before first-loss/rejection/2x2. First-loss requires explicit selection here. Reserve starvation is **dispatch-ready** after the R00044 canary; Class-3 is **data-blocked** pending exact-action telemetry. Deferred triggers: [`solver-future-work.md`](solver-future-work.md). [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -90,7 +90,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on real compatible rows, including purpose/dependence + novelty/saturation audit; then smallest justified discriminator. First-loss activates only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
