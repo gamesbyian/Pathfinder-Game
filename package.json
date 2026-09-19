@@ -283,7 +283,8 @@
     "research:capture-search-loss": "node scripts/capture-search-loss-evidence.mjs",
     "research:annotate-search-loss-exact": "node scripts/annotate-search-loss-exact.mjs",
     "research:query-search-loss": "node scripts/search-loss-query.mjs",
-    "research:canary-search-loss": "node scripts/run-bundled.mjs scripts/search-loss-real-canary.mjs --"
+    "research:canary-search-loss": "node scripts/run-bundled.mjs scripts/search-loss-real-canary.mjs --",
+    "research:preflight-search-loss-audit": "node scripts/search-loss-resource-audit-preflight.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
