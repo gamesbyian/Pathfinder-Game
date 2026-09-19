@@ -17,7 +17,7 @@
 - **Phase 1 — complete:** compact prune/flow/progress stays supported research-only opt-in; no durable default promotion is earned. See [Phase-1 disposition](../reports/2026-09-19-compact-failure-diagnostic-phase1-closeout-001.md) and [producer audit](../reports/2026-09-19-compact-failure-response-producer-suitability-audit-001.md).
 - **Phase 2 — complete for automatic compact response:** common query covers parent/protocol accounting, exact action/stage dose, censoring/outcome support, badness support and protocol-compatible repeats. See [Phase-2 closeout](../reports/2026-09-19-failure-response-query-phase2-closeout-001.md).
 - **Phase 3 — precommitted / data-blocked:** analyze the first eligible post-instrumentation population under [the WS2 reconnaissance preflight](../reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md); do not backfill prevalence from pre-contract runs.
-- **Phase 4A — precommitted / data-blocked:** regenerate/freeze current Class-3 membership, then acquire exact shared-production action dose under [the Class-3 preflight](../reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md).
+- **Phase 4A — precommitted / reducer-ready / data-blocked:** regenerate/freeze current Class-3 membership, then acquire exact shared-production action dose under [the Class-3 preflight](../reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md). The expectation-map contract and mechanical exact-rescuer reducer are implemented; no later coding step is required to classify the acquired rows.
 - **Phase 4B — dispatch-ready:** frozen 40-parent default admissible-order probe plus mechanical reducer; only GHA measurement remains.
 - **Phase 4C/4D — independently live:** H3/Lane G keep their existing designs; failure evidence is secondary/optional.
 - **Phase 4E — complete:** capability memory accepts protocol-compatible failure-response joins as derived premise/capability evidence, not production policy.
@@ -411,6 +411,8 @@ At the next suitable prospective, protocol-compatible producer covering that que
 - reuse the existing work-ladder reducer where applicable.
 
 Answer `not exposed` vs `exposed and failed/indeterminate` before proposing new capability work.
+
+Use `research:analyze-class3-dose` with the frozen parent-to-exact-rescuer expectation map; do not hand-classify the acquired attempts.
 
 Do not launch a large bespoke campaign if the next normal census/targeted run can provide the rows.
 
