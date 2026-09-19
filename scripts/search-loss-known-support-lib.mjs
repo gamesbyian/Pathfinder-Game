@@ -16,7 +16,7 @@ export function pathHasPrefix(path, prefix) {
     return true;
 }
 
-export function knownHintSupportForPrefix(prefix, hints) {
+export function knownHintSupportForPrefix(prefix, hints, { familySignature = null } = {}) {
     if (!validPath(prefix)) throw new Error('knownHintSupportForPrefix requires a non-empty integer prefix');
 
     let supportedHintCount = 0;
@@ -24,6 +24,7 @@ export function knownHintSupportForPrefix(prefix, hints) {
     let minRemainingMoves = null;
     let maxRemainingMoves = null;
     const nextSteps = new Set();
+    const families = new Map();
     const matchedHintIndices = [];
 
     for (const [index, hint] of (hints ?? []).entries()) {
@@ -36,6 +37,10 @@ export function knownHintSupportForPrefix(prefix, hints) {
         maxRemainingMoves = maxRemainingMoves === null ? remaining : Math.max(maxRemainingMoves, remaining);
         if (remaining === 0) terminalHintCount += 1;
         else nextSteps.add(path[prefix.length]);
+        if (typeof familySignature === 'function') {
+            const family = familySignature(path);
+            if (family != null) families.set(String(family), (families.get(String(family)) ?? 0) + 1);
+        }
     }
 
     return {
@@ -44,6 +49,10 @@ export function knownHintSupportForPrefix(prefix, hints) {
         terminalHintCount,
         distinctKnownNextSteps: nextSteps.size,
         knownNextSteps: [...nextSteps].sort((a, b) => a - b),
+        distinctKnownStructuralFamilies: typeof familySignature === 'function' ? families.size : null,
+        knownStructuralFamilyCounts: typeof familySignature === 'function'
+            ? Object.fromEntries([...families.entries()].sort(([a], [b]) => a.localeCompare(b)))
+            : null,
         minRemainingMoves,
         maxRemainingMoves,
         matchedHintIndices,
@@ -56,7 +65,7 @@ export function knownHintSupportForPrefix(prefix, hints) {
  * null; callers decide whether durable-source replay is available. resolveHints returns the
  * canonical hint records for the capsule parent.
  */
-export function joinSearchLossToKnownHintSupport(capture, { resolvePrefix, resolveHints }) {
+export function joinSearchLossToKnownHintSupport(capture, { resolvePrefix, resolveHints, resolveFamilySignature = null }) {
     if (!capture || !Array.isArray(capture.capsules)) throw new Error('capture.capsules is required');
     if (typeof resolvePrefix !== 'function' || typeof resolveHints !== 'function') {
         throw new Error('resolvePrefix and resolveHints are required');
@@ -81,12 +90,15 @@ export function joinSearchLossToKnownHintSupport(capture, { resolvePrefix, resol
             };
         }
         const hints = resolveHints(capsule?.parentId, capsule) ?? [];
+        const familySignature = typeof resolveFamilySignature === 'function'
+            ? resolveFamilySignature(capsule?.parentId, capsule)
+            : null;
         return {
             capsuleId: capsule?.capsuleId ?? null,
             parentId: capsule?.parentId ?? null,
             status: 'OBSERVED',
             prefixLength: prefix.length,
-            ...knownHintSupportForPrefix(prefix, hints),
+            ...knownHintSupportForPrefix(prefix, hints, { familySignature }),
         };
     });
 
