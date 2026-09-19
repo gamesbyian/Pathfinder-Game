@@ -27,17 +27,17 @@ Eligible only after the active premise gate above is positive.
 
 ## Deferred plan closeouts
 
-- **[Failure evidence](solver-failure-evidence-research-integration-plan.md):** P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; P4A -> `WS2-CLASS3-DOSE-EXPOSURE`;P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P7 needs repeated compatible populations.
+- **[Failure evidence](solver-failure-evidence-research-integration-plan.md):** P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; P4A -> `WS2-CLASS3-DOSE-EXPOSURE`; P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P7 needs repeated compatible populations.
 - **[Search loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurring rich production; P9 needs explicit first-loss selection.
 - **[Population/family](solver-research-population-family-integration-plan.md):** after two pilots, run P7.
 
 ## Hint/failure reopen hooks
 
-- Repeated compatible compact-response rows -> identity/novelty/saturation/frontier audits with parent dependence + controls; no pre-contract backfill.
+- Repeated compatible compact-response rows -> identity/novelty/saturation/frontier audits with parent dependence + controls; never backfill pre-contract attempts.
 - Repeated compatible populations + live ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
 - Recurring rich producer -> search-loss P8 Resource Contract decision.
 - Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
-- Persist run-envelope fields in Hint only if the sibling process/contract join cannot serve a durable consumer.
+- Persist run-envelope fields in Hint only if the sibling join cannot serve a durable consumer.
 - Whole-solution-space extinction is not deferred; sampled hints cannot prove it.
 
 ## Other deferred architectural questions
