@@ -207,6 +207,7 @@ for (let index = 0; index < selected.length; index++) {
       };
     }
 
+    const richBefore = mode === 'rich' ? richCollector.snapshot() : null;
     const started = performance.now();
     const result = await Solver.solveLevel(level, solveOpts);
     const elapsedMs = performance.now() - started;
@@ -217,17 +218,27 @@ for (let index = 0; index < selected.length; index++) {
     };
     if (mode === 'rich') richParentOutcomes[String(raw.id)] = !!result.ok;
     const richSnapshot = mode === 'rich' ? richCollector.snapshot() : null;
+    const priorCapsules = richBefore?.capsules.length ?? 0;
+    const newCapsules = richSnapshot ? richSnapshot.capsules.slice(priorCapsules) : [];
+    const richObserved = richSnapshot ? Object.entries(richSnapshot.selectorSummaries).reduce((sum, [selectorId, after]) => {
+      const before = richBefore?.selectorSummaries?.[selectorId]?.observed ?? 0;
+      return sum + Math.max(0, after.observed - before);
+    }, 0) : 0;
+    const richTruncated = richSnapshot ? Object.entries(richSnapshot.selectorSummaries).some(([selectorId, after]) => {
+      const before = richBefore?.selectorSummaries?.[selectorId]?.retained ?? 0;
+      return after.truncated && after.retained === before;
+    }) : false;
     byMode.set(mode, {
       mode,
       elapsedMs,
       parity: parityProjection(result),
       compactPayloadBytes: compactPayload ? jsonBytes(compactPayload) : 0,
-      richPayloadBytes: richSnapshot ? jsonBytes({ selectorSummaries: richSnapshot.selectorSummaries, capsules: richSnapshot.capsules }) : 0,
+      richPayloadBytes: richSnapshot ? jsonBytes(newCapsules) : 0,
       compact: compactPayload,
       rich: richSnapshot ? {
-        observed: Object.values(richSnapshot.selectorSummaries).reduce((sum, x) => sum + x.observed, 0),
-        retained: richSnapshot.capsules.length,
-        truncated: Object.values(richSnapshot.selectorSummaries).some(x => x.truncated),
+        observed: richObserved,
+        retained: newCapsules.length,
+        truncated: richTruncated,
       } : null,
     });
   }
