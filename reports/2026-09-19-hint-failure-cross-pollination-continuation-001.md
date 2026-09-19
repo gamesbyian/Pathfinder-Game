@@ -1,9 +1,9 @@
 # Hint/failure evidence cross-pollination continuation 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-19 — PRs #1912/#1913 reconciled into main, followed by purpose-aware failure semantics, canonical hint termination semantics, run-linked discovery-process evidence, known-support extinction projection, and harvest-selection provenance on this continuation branch.
+> **Status:** superseded
+> **Last evidence:** 2026-09-19 — PR #1915 merged as `fc542d520f26c156f0fac71c37087c2550912123` after deep verification, validators, lint, full Node/CLI tests, solver canary, production build, and premise-map hardening passed.
 > **Decision:** keep success provenance, discovery-process evidence, harvest-selection provenance, compact failure response, and rich search-loss observations as sibling evidence layers joined by canonical path/parent/run/protocol identities; do not expand the persisted Hint schema with a duplicated experiment envelope.
-> **Remaining gate:** validate/merge this implementation, then wait for a genuine post-contract compact-response population or an explicitly selected first-loss study before making current prevalence/causal claims from the new joins.
+> **Remaining gate:** none owned by this report; surviving evidence-gated descendants are owned by `solver-optimization-workstreams.md`, `solver-research-question-relations.json`, `solver-future-work.md`, and search-loss Phase 8/9 reopen rules.
 
 ## Reconciliation
 
@@ -145,6 +145,20 @@ The practical transfers now implemented are:
 11. a strict executable join between comparable successful discovery-process and failure-process evidence.
 
 The result is a joinable success/failure evidence model rather than one provenance mega-schema.
+
+## Durable owner handoff
+
+The remaining conditions are intentionally not tracked by this report:
+
+- compatible compact-response reconnaissance -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`;
+- Class-3 exact-action dose -> `WS2-CLASS3-DOSE-EXPOSURE`;
+- reserve starvation -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`;
+- accumulated identity/novelty/saturation/phenotype-frontier work -> `solver-future-work.md`;
+- recurring rich search-loss audit/promotion -> search-loss Phase 8 + `solver-future-work.md`;
+- causal first loss -> explicit workstream selection + search-loss Phase 9;
+- direct Hint run-envelope persistence -> `solver-future-work.md` only if the sibling process join proves insufficient.
+
+Whole-solution-space extinction is a non-goal, not deferred work.
 
 ## Remaining evidence-gated work
 

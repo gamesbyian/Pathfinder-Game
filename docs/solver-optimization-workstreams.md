@@ -7,11 +7,11 @@
 
 Method: [`solver-research-operating-model.md`](solver-research-operating-model.md) · Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md) · Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) · Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md) · Semantic gaps: [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) · Stops: [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md).
 
-Program lens: **composition** exposes/selects/allocates demonstrated capability; **acquisition** creates generic capability where none succeeds. Emphasis: acquire.
+Program lens: **composition** exposes demonstrated capability; **acquisition** creates missing generic capability. Emphasis: acquire.
 
 ## Data-audit guardrail
 
-C1 is not cross-generator transfer; C2 is a mixed development laboratory; residual/participant claims are population-conditional. Level-blindness constrains provenance, not specificity: cold generic procedures may derive exact board facts, but may not consume historical identity/outcome/hints/capability-memory membership. Historical negatives close only the tested claim.
+C1 is not cross-generator transfer; C2 is a mixed development laboratory; residual claims are population-conditional. Level-blind cold procedures may derive exact board facts but may not consume historical identity/outcome/hints/capability-memory membership. Historical negatives close only the tested claim.
 
 ## Current execution priority
 
@@ -29,7 +29,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### Premise-acquisition lanes
 
-Cheap premise tests may run in parallel. Expensive treatments require a positive premise.
+Cheap premise tests may run in parallel; expensive treatments require a positive premise.
 
 #### Lane A — separator / decomposition
 
@@ -74,13 +74,13 @@ The frozen-map mining execution plan's three phases are complete. P201-P206 rema
 
 The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only D1 reaches a ready existing decision seam. A has advanced to a prespecified compact-contract falsifier but has no validated contract; F3 still stops at reliable decision-bearing opportunity; D1 stops at retained-evidence economics. Shared producer/consumer vocabulary is research discipline, not evidence for a runtime bus/blackboard/subsystem. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-No immediate post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from the lane triggers above; do not recursively mine mining outputs merely to keep the program active.
+No post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from lane triggers above.
 
 **D1 closed (2026-09-18):** [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md) Stages 1-2 ran to completion: parity canary, an 8-parent frozen capture, a GHA exact-annotation seam (`cpsat-explicit-prefix-reference.yml` + `pinRevisit`), and a 1,960-case independent confirmation slice — 0/120 candidates disagreed with production retention. **Closed-negative**, no ranking change earned. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
 
 **Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) before first-loss/rejection/2x2. Supporting: reserve starvation is **dispatch-ready** after R00044 canary (40-parent/300M + reducer); Class-3 is **data-blocked** pending population freeze + exact-action telemetry. [`costing`](../reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md)
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) on compatible rows, including purpose/dependence + novelty/saturation, before first-loss/rejection/2x2. First-loss needs explicit selection. Reserve starvation is **dispatch-ready**; Class-3 awaits exact-action telemetry. Deferred: [`solver-future-work.md`](solver-future-work.md).
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -90,7 +90,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon, then smallest justified discriminator; first-loss activates Phase 9 | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |

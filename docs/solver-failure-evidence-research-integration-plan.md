@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=30000 max=36000 -->
 # Solver failure-evidence research integration plan
 
-> **Status:** implementation plan; subordinate to current solver-research authorities.
+> **Status:** direct implementation complete; remaining acquisition/condition-gated execution is durably routed through current solver-research authorities.
 > **Created:** 2026-09-19.
 > **Purpose:** turn the newly implemented failure-response/search-loss infrastructure into a low-cost discriminator and reusable research input without creating a second queue, causal taxonomy, database, or production steering channel.
 > **Priority authority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
@@ -711,6 +711,11 @@ This plan is successful when:
 ## 12. Closeout and durable resumption
 
 This document is a temporary integration plan, not a permanent authority.
+
+As of 2026-09-19, remaining gates have durable owners: P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; P4A -> `WS2-CLASS3-DOSE-EXPOSURE`; P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P5-7 -> `solver-future-work.md` plus search-loss P8 where applicable; P8 first-loss -> explicit workstream selection plus search-loss P9; direct Hint run-envelope persistence -> `solver-future-work.md` only if the sibling join proves insufficient.
+
+Whole-solution-space extinction is deliberately not a descendant: known-hint/family extinction cannot prove it.
+
 
 Close it when:
 
