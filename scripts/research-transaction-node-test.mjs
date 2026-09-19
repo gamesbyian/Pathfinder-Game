@@ -4,6 +4,11 @@ import { buildPopulationIntegrity } from './solver-experiment-contract.mjs';
 import { combinePopulationIntegrity } from './combine-population-integrity.mjs';
 import { summarizeIndependentSupport } from './research-relations-lib.mjs';
 import { classifyProbeProcess } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
+import {
+    appendResearchConsumption,
+    buildResearchBlock,
+    researchBlockEligibility,
+} from './solver-research-block-lineage.mjs';
 
 const shardAExpected = ['case,1', 'case:2'];
 const shardBExpected = ['case,1', 'case:3'];
@@ -63,6 +68,55 @@ const support = summarizeIndependentSupport([
 assert.equal(support.rows, 4);
 assert.equal(support.independentUnits, 2);
 assert.equal(support.largestUnitRows, 3);
+
+// Changing content under the same display ID changes research population identity.
+const blockBase = {
+    blockId: 'BLOCK-TX-001',
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    sourceRegime: 'fixture',
+    sourceRevision: 'fixture-v1',
+    evidenceRole: 'confirmation',
+    independentUnit: 'parent-level',
+    parentIds: ['same-display-id'],
+    sourceArtifactRefs: ['fixture.json'],
+    producer: 'research-transaction-node-test',
+    manifestRef: 'fixture-manifest.json',
+};
+const firstBlock = buildResearchBlock({
+    ...blockBase,
+    parentContentIdentities: ['sha256:1111111111111111111111111111111111111111111111111111111111111111'],
+});
+const changedContentBlock = buildResearchBlock({
+    ...blockBase,
+    parentContentIdentities: ['sha256:2222222222222222222222222222222222222222222222222222222222222222'],
+});
+assert.notEqual(firstBlock.populationIdentity, changedContentBlock.populationIdentity,
+    'content changes under a stable display id must change population identity');
+
+// Opening/using a confirmation block for the same question makes it ineligible for descendant confirmation.
+const untouchedEligibility = researchBlockEligibility(firstBlock.researchBlock, {
+    questionId: blockBase.questionId,
+    evidenceRole: 'confirmation',
+    relatedQuestionIds: [blockBase.questionId],
+});
+assert.equal(untouchedEligibility.eligible, true);
+const consumedBlock = appendResearchConsumption(firstBlock.researchBlock, {
+    questionId: blockBase.questionId,
+    decisionRef: 'fixture-design-use',
+    scope: { kind: 'block', id: blockBase.blockId },
+    evidenceRole: 'confirmation',
+    conditioning: ['opened-for-design'],
+    openedOutcomeKinds: ['exact-label'],
+    runRef: null,
+    consumedAt: '2026-09-19T00:00:00.000Z',
+}, { populationIdentity: firstBlock.populationIdentity });
+const consumedEligibility = researchBlockEligibility(consumedBlock, {
+    questionId: blockBase.questionId,
+    evidenceRole: 'confirmation',
+    relatedQuestionIds: [blockBase.questionId],
+});
+assert.equal(consumedEligibility.eligible, false);
+assert.ok(consumedEligibility.reasons.includes('matching-consumption-recorded'));
 
 // Recovery reuses the immutable expected population and replaces only the failed/incomplete
 // acquisition component. No solver/reference recomputation is needed for shard A.
