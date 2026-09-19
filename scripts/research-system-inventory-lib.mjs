@@ -209,3 +209,40 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         },
     };
 }
+
+
+export function researchSystemInventoryView(inventory, view = 'all') {
+    if (view === 'all') return inventory;
+    if (view === 'architecture') {
+        return {
+            schemaVersion: inventory.schemaVersion,
+            authority: inventory.authority,
+            currentState: inventory.currentState,
+            relations: inventory.relations,
+            commands: inventory.commands,
+            sharedImplementationDependencies: inventory.sharedImplementationDependencies,
+        };
+    }
+    if (view === 'lifecycle') {
+        return {
+            schemaVersion: inventory.schemaVersion,
+            authority: inventory.authority,
+            documentation: inventory.documentation,
+            planLifecycle: inventory.planLifecycle,
+            diagnostics: {
+                fragilePlanLifecycleCount: inventory.diagnostics.fragilePlanLifecycleCount,
+                fragilePlanLifecyclePaths: inventory.diagnostics.fragilePlanLifecyclePaths,
+                currentReferenceLifecycleMismatchCount: inventory.diagnostics.currentReferenceLifecycleMismatchCount,
+                currentReferenceLifecycleMismatchPaths: inventory.diagnostics.currentReferenceLifecycleMismatchPaths,
+            },
+        };
+    }
+    if (view === 'diagnostics') {
+        return {
+            schemaVersion: inventory.schemaVersion,
+            authority: inventory.authority,
+            diagnostics: inventory.diagnostics,
+        };
+    }
+    throw new Error(`unknown research-system inventory view: ${view}`);
+}
