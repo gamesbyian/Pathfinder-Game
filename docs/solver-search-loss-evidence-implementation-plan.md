@@ -1497,7 +1497,7 @@ Tests:
 
 ### Phase 7 - query/reducer surface
 
-> **Status (2026-09-19): initial usable surface implemented.** `search-loss-query.mjs` joins compact records/capsules/exact annotations, filters common identity/outcome/work/badness/event/replay fields, and reports independent parents rather than presenting raw capsule count as prevalence. Progress/rejection/flow composition becomes queryable only after the gated pilot fields are promoted into durable records.
+> **Status (2026-09-19): usable core surface implemented and extended.** `search-loss-query.mjs` joins compact records/capsules/exact annotations, filters common identity/outcome/work/badness/event/replay/depth/selector-truncation/annotation-support fields, preserves input selector denominators, and reports independent parents, solved controls, annotation composition, and repeated-parent phenotypes rather than presenting raw capsule count as prevalence. Progress/rejection/flow composition becomes queryable only after the gated pilot fields are promoted into durable records.
 
 **Goal:** answer common research questions without bespoke JSON surgery.
 
