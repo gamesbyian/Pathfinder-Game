@@ -57,6 +57,10 @@ try {
   assert.equal(manifest.decisionBearing, true);
   assert.deepEqual(manifest.decisionContractIssues, []);
   assert.deepEqual(manifest.sideEffects, { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' });
+  assert.equal(manifest.failureEvidence.disposition, 'none');
+  assert.equal(manifest.failureEvidence.compactPresent, false);
+  assert.equal(manifest.failureEvidence.summary, null);
+  assert.equal(manifest.failureEvidence.richCapturePresent, false);
 
   const noContractOut = path.join(temp, 'no-contract');
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--out=${noContractOut}`], { cwd: root });
@@ -105,6 +109,37 @@ try {
   const omittedLimitManifest = JSON.parse(fs.readFileSync(path.join(omittedLimitOut, 'manifest.json')));
   assert.equal(omittedLimitManifest.decisionBearing, false, 'omitted limit declaration must not normalize into an explicit null');
   assert.ok(omittedLimitManifest.decisionContractIssues.includes('limits.totalWorkCeiling'));
+
+  // --- failure-evidence wiring ---
+  const failureResponseFile = path.join(temp, 'failure-response-summary.json');
+  fs.writeFileSync(failureResponseFile, JSON.stringify({
+    schemaVersion: 1, kind: 'pathfinder-compact-failure-response', observed: 3,
+    outcomes: { solved: 1, exhaustedNegative: 1, nodeLimited: 1, workLimited: 0, deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 },
+  }));
+  const compactContractFile = path.join(temp, 'compact-contract.json');
+  const compactContract = JSON.parse(fs.readFileSync(contractFile));
+  compactContract.sideEffects.telemetry = 'compact';
+  fs.writeFileSync(compactContractFile, JSON.stringify(compactContract));
+  const compactOut = path.join(temp, 'compact-out');
+  execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${compactContractFile}`, `--failure-response-file=${failureResponseFile}`, `--out=${compactOut}`], { cwd: root });
+  const compactManifest = JSON.parse(fs.readFileSync(path.join(compactOut, 'manifest.json')));
+  assert.equal(compactManifest.failureEvidence.disposition, 'compact');
+  assert.equal(compactManifest.failureEvidence.compactPresent, true);
+  assert.equal(compactManifest.failureEvidence.summary.observed, 3);
+  assert.equal(compactManifest.failureEvidence.sourceArtifact, failureResponseFile);
+  assert.equal(compactManifest.failureEvidence.richCapturePresent, false);
+
+  const missingFailureResponseOut = path.join(temp, 'missing-failure-response-out');
+  execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${contractFile}`, `--failure-response-file=${path.join(temp, 'does-not-exist.json')}`, `--out=${missingFailureResponseOut}`], { cwd: root });
+  const missingFailureResponseManifest = JSON.parse(fs.readFileSync(path.join(missingFailureResponseOut, 'manifest.json')));
+  assert.equal(missingFailureResponseManifest.failureEvidence.compactPresent, false, 'a missing failure-response file must not fabricate a summary');
+
+  // a rich search-loss capture included alongside the primary result is detected generically
+  const captureFile = path.join(temp, 'search-loss-capture.json');
+  fs.writeFileSync(captureFile, JSON.stringify({ kind: 'pathfinder-search-loss-capture', schemaVersion: 1 }));
+  const richCaptureOut = path.join(temp, 'rich-capture-out');
+  execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--include=${captureFile}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${contractFile}`, `--out=${richCaptureOut}`], { cwd: root });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(richCaptureOut, 'manifest.json'))).failureEvidence.richCapturePresent, true);
 
   console.log('publish solver sweep result tests passed');
 } finally {

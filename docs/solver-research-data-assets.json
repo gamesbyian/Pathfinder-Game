@@ -184,12 +184,14 @@
       "affordances": [
         "Expose rare/exclusive capability, substitutions, inversions, multiplicity, cap/tranche economics, and oracle-frontier headroom.",
         "Define response vectors that can be joined to solution structure, provenance, geometry, variants, or live production behavior.",
-        "Distinguish an unavailable capability from a capability that production simply fails to schedule."
+        "Distinguish an unavailable capability from a capability that production simply fails to schedule.",
+        "Stratify failed cells by exhausted/node-capped/work-capped/deadline-truncated/referee-invalid via the standard compact failure-response summary (manifest.json's failureEvidence.summary; see docs/solver-failure-evidence-disposition.json) instead of collapsing them to solve/no-solve."
       ],
       "caveats": [
         "Isolated success is nomination evidence, not automatic production value.",
         "The matrix is heavily mined development evidence and historical technique identities must normalize through current owners.",
-        "Raw nodes compare depth within a technique; cross-technique allocation uses workSpent."
+        "Raw nodes compare depth within a technique; cross-technique allocation uses workSpent.",
+        "The compact failure-response summary's coverageComplete is only trustworthy when built from an externally verified population; a self-derived population reports it as unknown."
       ]
     },
     {
@@ -210,7 +212,8 @@
       "affordances": [
         "Provide the actual product-objective solve/work outcome that offline diagnostics must eventually explain or improve.",
         "Support solved/unsolved, budget-edge, stability, regression, and cost-drift joins.",
-        "Anchor census/profile/variant associations to current production response."
+        "Anchor census/profile/variant associations to current production response.",
+        "Stratify failed levels by exhausted/node-capped/work-capped/deadline-truncated via the standard compact failure-response summary (manifest.json's failureEvidence.summary; see docs/solver-failure-evidence-disposition.json), including failed attempts inside an eventually-solved parent."
       ],
       "caveats": [
         "A latest pointer is a convenience, not timeless authority; inspect embedded commit/protocol metadata.",

@@ -472,6 +472,14 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+      - name: Summarize compact failure-response
+        if: always()
+        run: |
+          node scripts/summarize-solver-failure-response.mjs \
+            --in="reports/stress/solver-corpus1-latest.json,reports/stress/solver-corpus2-latest.json" \
+            --rows-key=levels \
+            --out="logs/solver-sweep-result-inputs/failure-response-summary.json"
+
       - name: Publish standard solver sweep result
         if: always()
         shell: bash
@@ -481,6 +489,7 @@ jobs:
             --include="reports/stress/solver-corpus2-latest.json" \
             --shards-expected="${{ inputs.shard_count }}" \
             --shards-observed="$(find logs/solver-corpus2-batches -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --failure-response-file="logs/solver-sweep-result-inputs/failure-response-summary.json" \
             --provenance-out="reports/stress/capability-runs/${{ github.run_id }}/gha-source-run.json" \
             --source-artifact="solver-stress-refresh-combined"
 
