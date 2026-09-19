@@ -72,6 +72,10 @@ console.log(JSON.stringify({
     rowsInMultiMemberGroups: output.rowsInMultiMemberGroups,
     rowsInMixedGroups: output.rowsInMixedGroups,
     largestGroupRows: output.largestGroupRows,
+    mixedGroupDetail: output.groups.filter(g => g.mixed),
+    independentUnitsAcrossMultiMemberGroups: new Set(
+        output.groups.filter(g => g.rows > 1).flatMap(g => g.members.map(m => m.independentUnit)),
+    ).size,
 }, null, 2));
 
 const OUT = arg('out', null);
