@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 3,
+  "kind": "pathfinder-solver-experiment-result",
+  "status": "published",
+  "workflow": "method-probe sweep (isolated single-method corpus test)",
+  "runId": "35467098808",
+  "runAttempt": "1",
+  "event": "workflow_dispatch",
+  "repository": "gamesbyian/Pathfinder-Game",
+  "ref": "refs/heads/claude/pathfinder-ws2-queue-rp338w",
+  "refName": "claude/pathfinder-ws2-queue-rp338w",
+  "sha": "ab68cf2f8b57b55655c1f9acac07d33df621c386",
+  "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35467098808",
+  "sourceArtifact": "method-probe-combined",
+  "dispatchInputs": {
+    "only": "admissible-order|tieBreak=default|lds=off",
+    "corpus": "data/stress/stress-levels-random.json",
+    "levels": "R00044",
+    "budget_ms": "600000",
+    "node_budget": "300000000",
+    "shard_count": "1",
+    "max_parallel": "1",
+    "workers": "1"
+  },
+  "artifactCoverage": {
+    "expected": 1,
+    "observed": 1,
+    "complete": true,
+    "basis": null
+  },
+  "populationIntegrity": {
+    "complete": true,
+    "coverageComplete": true,
+    "decisionValidComplete": true,
+    "expectedLevels": 1,
+    "observedLevels": 1,
+    "participation": null,
+    "expectedCount": 1,
+    "observedCount": 1,
+    "duplicateIds": [],
+    "unexpectedIds": [],
+    "missingIds": [],
+    "outcomes": {
+      "solved": 1,
+      "exhaustedNegative": 0,
+      "nodeLimited": 0,
+      "workLimited": 0,
+      "deadlineTruncated": 0,
+      "harnessError": 0,
+      "malformed": 0,
+      "missing": 0,
+      "unknown": 0
+    },
+    "populationIdentityHash": "sha256:6c514b28b289e952ec8c8c048c05189a51426b7214746a57e4152e81a5a6a54c",
+    "expectedIds": [
+      "R00044"
+    ]
+  },
+  "populationIdentityHash": "sha256:6c514b28b289e952ec8c8c048c05189a51426b7214746a57e4152e81a5a6a54c",
+  "decisionContractIssues": [],
+  "decisionBearing": true,
+  "failureEvidence": {
+    "schemaVersion": 1,
+    "disposition": "compact",
+    "compactPresent": true,
+    "compactComplete": true,
+    "sourceArtifact": "logs/method-probe-shards/failure-response-summary.json",
+    "publishedPath": "failure-response/compact.json",
+    "validationError": null,
+    "summary": {
+      "schemaVersion": 1,
+      "kind": "pathfinder-compact-failure-response",
+      "observed": 1,
+      "selfDerivedPopulation": false,
+      "coverageComplete": true,
+      "outcomes": {
+        "solved": 1,
+        "exhaustedNegative": 0,
+        "nodeLimited": 0,
+        "workLimited": 0,
+        "deadlineTruncated": 0,
+        "harnessError": 0,
+        "malformed": 0,
+        "missing": 0,
+        "unknown": 0
+      },
+      "refereeInvalid": 0,
+      "solvedParentsWithFailedAttempts": 0,
+      "work": {
+        "totalWorkSpent": 239078288,
+        "rowsWithWork": 1
+      },
+      "nodes": {
+        "totalNodesExpanded": 219802423,
+        "rowsWithNodes": 1
+      },
+      "badness": {
+        "rowsWithBestBadness": 0,
+        "rowsWithFinalBadness": 0
+      },
+      "decisionValidComplete": true
+    },
+    "richCapturePresent": false
+  },
+  "experiment": {
+    "experimentId": "35467098808",
+    "workflowFamily": "isolated-method-probe",
+    "producer": "method-probe-sweep.yml",
+    "entrypoint": "scripts/method-probe.mjs",
+    "requestedRef": "refs/heads/claude/pathfinder-ws2-queue-rp338w",
+    "resolvedSha": "ab68cf2f8b57b55655c1f9acac07d33df621c386",
+    "arms": null,
+    "workflowRunId": "35467098808",
+    "workflowRunAttempt": "1",
+    "sourceRuns": [],
+    "reconciliationRun": null,
+    "configurationHash": "sha256:cacd24b89e54f5e1020665455a4ba3714a221449c7aebbbaa6d104a16fcd70bf"
+  },
+  "researchQuestion": null,
+  "population": {
+    "kind": "explicit-selected-subset",
+    "identityBasis": "stable-level-id",
+    "corpusIdentity": null,
+    "selection": null,
+    "researchBlock": null,
+    "identityHash": "sha256:6c514b28b289e952ec8c8c048c05189a51426b7214746a57e4152e81a5a6a54c",
+    "expectedCount": 1,
+    "observedCount": 1,
+    "duplicateIds": [],
+    "unexpectedIds": [],
+    "missingIds": []
+  },
+  "execution": {
+    "levelBlind": true,
+    "historyAware": false,
+    "historicalInputs": [],
+    "reproducibilityExpected": false,
+    "producerFamily": "method-probe",
+    "schedulerMode": "isolated-technique"
+  },
+  "limits": {
+    "cumulativeNodeCeiling": 300000000,
+    "initialWorkAllocation": null,
+    "totalWorkCeiling": null,
+    "wallSafetyDeadlineMs": 600000,
+    "wallDeadlineBinding": true,
+    "representation": null
+  },
+  "outcomes": {
+    "solved": 1,
+    "exhaustedNegative": 0,
+    "nodeLimited": 0,
+    "workLimited": 0,
+    "deadlineTruncated": 0,
+    "harnessError": 0,
+    "malformed": 0,
+    "missing": 0,
+    "unknown": 0
+  },
+  "coverage": {
+    "artifact": {
+      "expected": 1,
+      "observed": 1,
+      "complete": true,
+      "basis": null
+    },
+    "populationIntegrity": {
+      "complete": true,
+      "coverageComplete": true,
+      "decisionValidComplete": true,
+      "expectedLevels": 1,
+      "observedLevels": 1,
+      "participation": null,
+      "expectedCount": 1,
+      "observedCount": 1,
+      "duplicateIds": [],
+      "unexpectedIds": [],
+      "missingIds": [],
+      "outcomes": {
+        "solved": 1,
+        "exhaustedNegative": 0,
+        "nodeLimited": 0,
+        "workLimited": 0,
+        "deadlineTruncated": 0,
+        "harnessError": 0,
+        "malformed": 0,
+        "missing": 0,
+        "unknown": 0
+      },
+      "populationIdentityHash": "sha256:6c514b28b289e952ec8c8c048c05189a51426b7214746a57e4152e81a5a6a54c",
+      "expectedIds": [
+        "R00044"
+      ]
+    }
+  },
+  "sideEffects": {
+    "hints": "none",
+    "canonicalBaseline": "none",
+    "telemetry": "compact",
+    "reports": "artifact-only"
+  },
+  "researchOutcome": {
+    "schemaVersion": 1,
+    "outcome": "completed-positive",
+    "reason": "1 level(s) were solved by the probed method."
+  },
+  "entries": [
+    {
+      "role": "primary",
+      "source": "logs/method-probe-shards/combined.json",
+      "published": "result.json",
+      "missing": false
+    },
+    {
+      "role": "include",
+      "source": "logs/method-probe-shards/solved-ids.txt",
+      "published": "files/solved-ids.txt",
+      "missing": false
+    },
+    {
+      "role": "compact-failure-response",
+      "source": "logs/method-probe-shards/failure-response-summary.json",
+      "published": "failure-response/compact.json",
+      "missing": false
+    }
+  ]
+}

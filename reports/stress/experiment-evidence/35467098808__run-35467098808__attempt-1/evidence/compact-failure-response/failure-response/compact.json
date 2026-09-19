@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-compact-failure-response",
+  "records": [
+    {
+      "identity": "R00044",
+      "parentId": "R00044",
+      "cellId": null,
+      "levelId": "R00044",
+      "producer": null,
+      "runId": null,
+      "protocolHash": null,
+      "solverRef": null,
+      "configurationKey": null,
+      "actionKey": "admissible-order|tieBreak=default|lds=off",
+      "stageId": null,
+      "outcome": "solved",
+      "refereeInvalid": null,
+      "participated": true,
+      "reached": null,
+      "exhausted": null,
+      "nodeCapped": null,
+      "workCapped": null,
+      "nodeCeiling": null,
+      "nodesExpanded": 219802423,
+      "workCeiling": null,
+      "workSpent": 239078288,
+      "bestBadness": null,
+      "finalBadness": null,
+      "deadlineTruncated": false,
+      "error": null,
+      "solvedWithFailedAttempt": false,
+      "attemptCount": 1,
+      "attempts": [
+        {
+          "stageId": "main-search",
+          "actionKey": null,
+          "configKey": "admissible-order|tieBreak=default|lds=off",
+          "gateKey": 327681,
+          "outcome": "solved",
+          "nodeCeiling": null,
+          "workCeiling": null,
+          "nodesExpanded": 219802423,
+          "workSpent": null,
+          "bestBadness": null,
+          "finalBadness": null,
+          "timedOut": null,
+          "deadlineTruncated": null,
+          "admissibleOrder": true
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "schemaVersion": 1,
+    "kind": "pathfinder-compact-failure-response",
+    "observed": 1,
+    "selfDerivedPopulation": false,
+    "coverageComplete": true,
+    "outcomes": {
+      "solved": 1,
+      "exhaustedNegative": 0,
+      "nodeLimited": 0,
+      "workLimited": 0,
+      "deadlineTruncated": 0,
+      "harnessError": 0,
+      "malformed": 0,
+      "missing": 0,
+      "unknown": 0
+    },
+    "refereeInvalid": 0,
+    "solvedParentsWithFailedAttempts": 0,
+    "work": {
+      "totalWorkSpent": 239078288,
+      "rowsWithWork": 1
+    },
+    "nodes": {
+      "totalNodesExpanded": 219802423,
+      "rowsWithNodes": 1
+    },
+    "badness": {
+      "rowsWithBestBadness": 0,
+      "rowsWithFinalBadness": 0
+    },
+    "decisionValidComplete": true
+  },
+  "populationIntegrity": {
+    "complete": true,
+    "coverageComplete": true,
+    "decisionValidComplete": true,
+    "expectedLevels": 1,
+    "observedLevels": 1,
+    "participation": null,
+    "expectedCount": 1,
+    "observedCount": 1,
+    "duplicateIds": [],
+    "unexpectedIds": [],
+    "missingIds": [],
+    "outcomes": {
+      "solved": 1,
+      "exhaustedNegative": 0,
+      "nodeLimited": 0,
+      "workLimited": 0,
+      "deadlineTruncated": 0,
+      "harnessError": 0,
+      "malformed": 0,
+      "missing": 0,
+      "unknown": 0
+    },
+    "populationIdentityHash": "sha256:6c514b28b289e952ec8c8c048c05189a51426b7214746a57e4152e81a5a6a54c",
+    "expectedIds": [
+      "R00044"
+    ]
+  },
+  "protocolHash": "sha256:cacd24b89e54f5e1020665455a4ba3714a221449c7aebbbaa6d104a16fcd70bf",
+  "solverRef": "ab68cf2f8b57b55655c1f9acac07d33df621c386",
+  "sourceFiles": [
+    "logs/method-probe-shards/combined.json"
+  ],
+  "missingSourceFiles": [],
+  "invalidSourceFiles": [],
+  "runEnvelopeRef": "../manifest.json"
+}
