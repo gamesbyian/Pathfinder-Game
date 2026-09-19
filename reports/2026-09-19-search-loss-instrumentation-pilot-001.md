@@ -1,11 +1,11 @@
 # Search-loss instrumentation pilot
 
-> **Status:** inconclusive
-> **Last evidence:** 2026-09-19 — deterministic unit-fixture parity and payload-size canary.
-> **Decision:** retain all three telemetry paths as specialist-only; semantic parity passed but representative overhead/value did not run.
-> **Remaining gate:** multi-parent real-search canary across repair and beam/DFS families with stable wall-time and byte measurements.
-> **Evidence role:** infrastructure pilot; no solver-policy or scientific claim.
-> **Population:** deterministic unit fixtures only; not representative performance evidence.
+> **Status:** representative instrumentation gate complete; Resource Contract promotion still blocked.
+> **Last evidence:** 2026-09-19 — 16-parent hosted real-search canary with solved controls, parity, overhead, bounded-capture, and audit-preflight evidence.
+> **Decision:** compact failure instrumentation is safe for ordinary collection at the measured cost; rich capsules remain selective/question-driven because their hosted wall overhead is about 10%.
+> **Remaining gate:** an actual recurring search-loss producer population before Resource Contract promotion/audit declaration. Do not manufacture recurrence from a one-off canary.
+> **Evidence role:** infrastructure/promotion-gate evidence; no solver-policy or causal scientific claim.
+> **Population:** latest canary = 12 deterministic Corpus-2 stress parents + 4 deterministic published-level solved controls.
 
 ## Implemented seams
 
@@ -21,10 +21,11 @@ On the deterministic beam fixture, observer-off, counter-only, and rich-observer
 
 ## Disposition
 
-- counter-only flow: implemented, specialist, representative overhead gate open;
-- typed rejection counts: implemented, specialist, representative overhead gate open;
-- repair progress transitions: implemented, specialist; DFS/beam terminal-only observations are not promoted as “progress over work”;
-- universal automatic persistence: deferred until a representative multi-parent canary shows negligible overhead and incremental value.
+- counter-only flow: implemented; representative overhead gate cleared as part of the compact instrumentation class;
+- typed rejection counts: implemented; representative overhead gate cleared as part of the compact instrumentation class;
+- repair progress transitions plus bounded beam/DFS progress observations: implemented and production-inert under the representative parity canary;
+- rich replayable cull capsules: implemented and parity-clean, but remain selective/question-driven because hosted overhead is materially higher than compact collection;
+- recurring rich-capture persistence: deferred until a concrete recurring research consumer justifies the cost and conditioning.
 
 
 ## Representative real-search follow-up — GHA run 35422485466
@@ -89,3 +90,27 @@ Resource Contract promotion still correctly remains blocked on:
 2. a recurring producer declaration.
 
 The canary population is being extended with a small published-level solved-control cohort, and control status is now evaluated from the population envelope rather than only from parents that happened to retain a cull capsule.
+
+
+## Solved-control closeout canary — GHA run 35423841173
+
+The latest run on immutable head `cfd6d02ca6ff6cd6ade919e3be89d7be617ca777` closes the remaining empirical Phase-4 conditioning gate by adding four solved controls to the same observer-off / compact / rich protocol.
+
+Observed aggregate wall time:
+
+| Mode | Aggregate wall ms | Delta vs observer-off |
+| --- | ---: | ---: |
+| observer off | 164,605.3 | — |
+| compact counters/progress | 165,357.2 | +0.46% |
+| bounded rich cull observation | 181,596.6 | +10.32% |
+
+Semantic parity was exact for all 16 parents in both observational modes. Compact payload was 35,710 bytes. Rich capture observed 551 cull decisions and retained bounded replayable evidence on 6 parents. Progress observation again exercised all three intended families: repair 160, beam 302, DFS 945.
+
+The Resource Contract preflight on the emitted real capture reports:
+
+- `captureGateClear=true`;
+- `empiricalConditioningReady=true`;
+- `auditReady=false`;
+- only remaining failed check: `recurringProducerDeclared`.
+
+That is the intended boundary. The capture format, selector denominators, parent population envelope, solved/failed controls, immutable run provenance, and non-synthetic producer are now empirically demonstrated. The asset remains `contract-only` because the repository does not yet have a genuine recurring search-loss producer population whose missingness, conditioning, dependence, durability, and consumers can be audited as a recurring resource.
