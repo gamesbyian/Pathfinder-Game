@@ -14,7 +14,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { readLevelHints } from './level-data-io.mjs';
+import { readLevelsWithHints } from './level-data-io.mjs';
+import { mustCrossKeysOf } from '../modules/domain/hint-novelty.ts';
+import { structuralSolutionFamilySignature } from '../modules/domain/path-features.ts';
 import { reconstructSearchLossPath, validateSearchLossCapture } from './solver-search-loss-evidence-lib.mjs';
 import { joinSearchLossToKnownHintSupport } from './search-loss-known-support-lib.mjs';
 
@@ -29,7 +31,7 @@ const parentFilter = args.get('parent') ?? null;
 const outFile = args.get('out') ?? null;
 
 if (!captureFile) {
-    console.error('Usage: node scripts/search-loss-known-support.mjs --capture=<capture.json> [--levels=<levels.json>] [--parent=<id>] [--out=<json>]');
+    console.error('Usage: node scripts/run-bundled.mjs scripts/search-loss-known-support.mjs -- --capture=<capture.json> [--levels=<levels.json>] [--parent=<id>] [--out=<json>]');
     process.exit(2);
 }
 
@@ -38,11 +40,23 @@ const filteredCapture = parentFilter
     ? { ...capture, capsules: capture.capsules.filter(row => String(row.parentId) === parentFilter) }
     : capture;
 
-const hintCache = new Map();
+const levels = readLevelsWithHints(levelsFile);
+const levelByKey = new Map();
+levels.forEach((level, index) => {
+    const key = String((typeof level?.id === 'string' && level.id) ? level.id : index + 1);
+    levelByKey.set(key, level);
+});
+function levelFor(parentId) {
+    return levelByKey.get(String(parentId)) ?? null;
+}
 function hintsFor(parentId) {
-    const key = String(parentId);
-    if (!hintCache.has(key)) hintCache.set(key, readLevelHints(levelsFile, key));
-    return hintCache.get(key);
+    return levelFor(parentId)?.hintRecords ?? [];
+}
+function familySignatureFor(parentId) {
+    const level = levelFor(parentId);
+    if (!level) return null;
+    const mcKeys = mustCrossKeysOf(level);
+    return path => structuralSolutionFamilySignature(path, mcKeys);
 }
 
 const joined = joinSearchLossToKnownHintSupport(filteredCapture, {
@@ -55,6 +69,7 @@ const joined = joinSearchLossToKnownHintSupport(filteredCapture, {
         }
     },
     resolveHints: hintsFor,
+    resolveFamilySignature: familySignatureFor,
 });
 
 const report = {
@@ -67,6 +82,7 @@ const report = {
         present: 'stored referee-valid hint path shares this exact prefix',
         notObserved: 'no stored hint shares this prefix; NOT evidence of DEAD or complete basin loss',
         independentUnit: 'parent level',
+        structuralFamily: 'canonical structuralSolutionFamilySignature(path, mustCrossKeysOf(level)); sampled atlas families, not exhaustive latent basins',
     },
     ...joined,
 };
