@@ -18,7 +18,7 @@
 - **Phase 2 common reducer/query:** implemented for the automatic compact response layer as `scripts/failure-response-query.mjs` / `npm run research:query-failure-response --`. Producer-supplied `protocolHash` and solver ref are now preserved when present. Diagnostic-field query expansion remains conditional on Phase-1 promotion.
 - **Phase 3 WS2 reconnaissance:** Stage A is authorized by the live queue but awaits a protocol-compatible accumulated compact-response population; do not fabricate one from pre-instrumentation history.
 - **Phase 4A Class-3:** acquisition path is now explicit; still waits for a prospective producer covering the Class-3 population.
-- **Phase 4B reserve starvation:** zero-compute retained-asset audit complete. Both committed technique censuses cap isolated actions at 50M nodes, below R00044's 219.8M fallback find cost, so the question is now `deferred-reopen` pending a prospective precommitted higher-cap fallback-cost sample.
+- **Phase 4B reserve starvation:** zero-compute asset audit is complete and the prospective path is now frozen. The exact R00044 winner is `admissible-order|tieBreak=default|lds=off`; targeted method-probe workflow support now preserves explicit level subsets; a disjoint 40-parent current-residual sample and decision rule are precommitted in `reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md`. Remaining work is dispatch/measurement, not design.
 - **Phase 4C/4D H3/Lane G:** remain independently executable under their existing designs; failure evidence is secondary/optional.
 - **Phases 5-8:** condition-gated as specified below. No synthetic recurring producer or first-loss selection has been created.
 
