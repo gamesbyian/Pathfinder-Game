@@ -12,6 +12,7 @@
  *   --parent=ID --outcome=VALUE --action=KEY --stage=ID --producer=ID --run=ID
  *   --protocol=HASH --participated=true|false --reached=true|false
  *   --solved-with-failed-attempt=true|false --attempt-outcome=VALUE
+ *   --attempt-action=KEY --attempt-stage=ID
  *   --min-work=N --max-work=N
  */
 import { existsSync, readFileSync } from 'node:fs';
@@ -71,6 +72,14 @@ if (args.has('attempt-outcome')) {
     const expected = args.get('attempt-outcome');
     rows = rows.filter(row => (row.attempts ?? []).some(attempt => attempt.outcome === expected));
 }
+if (args.has('attempt-action')) {
+    const expected = args.get('attempt-action');
+    rows = rows.filter(row => (row.attempts ?? []).some(attempt => String(attempt.actionKey ?? '') === expected));
+}
+if (args.has('attempt-stage')) {
+    const expected = args.get('attempt-stage');
+    rows = rows.filter(row => (row.attempts ?? []).some(attempt => String(attempt.stageId ?? '') === expected));
+}
 if (args.has('min-work')) {
     const min = Number(args.get('min-work'));
     if (!Number.isFinite(min)) throw new Error('--min-work must be numeric');
@@ -102,6 +111,8 @@ const stageCounts = new Map();
 const runCounts = new Map();
 const protocolCounts = new Map();
 const attemptOutcomeCounts = new Map();
+const attemptActionCounts = new Map();
+const attemptStageCounts = new Map();
 let attemptRecords = 0;
 let rowsWithWork = 0;
 let totalWorkSpent = 0;
@@ -109,7 +120,6 @@ let participatedTrue = 0;
 let participatedFalse = 0;
 let reachedTrue = 0;
 let reachedFalse = 0;
-let solvedControlsWithFailedAttempts = 0;
 for (const row of rows) {
     increment(outcomeCounts, row.outcome);
     increment(actionCounts, row.actionKey);
@@ -120,7 +130,6 @@ for (const row of rows) {
     else if (row.participated === false) participatedFalse++;
     if (row.reached === true) reachedTrue++;
     else if (row.reached === false) reachedFalse++;
-    if (row.solvedWithFailedAttempt === true) solvedControlsWithFailedAttempts++;
     if (Number.isFinite(row.workSpent)) {
         rowsWithWork++;
         totalWorkSpent += row.workSpent;
@@ -128,16 +137,21 @@ for (const row of rows) {
     for (const attempt of row.attempts ?? []) {
         attemptRecords++;
         increment(attemptOutcomeCounts, attempt.outcome);
+        increment(attemptActionCounts, attempt.actionKey);
+        increment(attemptStageCounts, attempt.stageId);
     }
 }
 
 let solvedParents = 0;
 let nonSolvedParents = 0;
+let solvedControlsWithFailedAttempts = 0;
 let parentsWithUnknownProtocol = 0;
 let parentsWithMultipleKnownProtocols = 0;
 for (const list of parentRows.values()) {
-    if (list.some(row => row.outcome === 'solved')) solvedParents++;
-    else nonSolvedParents++;
+    if (list.some(row => row.outcome === 'solved')) {
+        solvedParents++;
+        if (list.some(row => row.solvedWithFailedAttempt === true)) solvedControlsWithFailedAttempts++;
+    } else nonSolvedParents++;
     const known = new Set(list.map(row => row.protocolHash).filter(Boolean));
     if (list.some(row => !row.protocolHash)) parentsWithUnknownProtocol++;
     if (known.size > 1) parentsWithMultipleKnownProtocols++;
@@ -168,7 +182,7 @@ const result = {
         participation: { true: participatedTrue, false: participatedFalse, unknown: rows.length - participatedTrue - participatedFalse },
         reached: { true: reachedTrue, false: reachedFalse, unknown: rows.length - reachedTrue - reachedFalse },
         work: { rowsWithWork, totalWorkSpent },
-        attempts: { records: attemptRecords, outcomes: objectFrom(attemptOutcomeCounts) },
+        attempts: { records: attemptRecords, outcomes: objectFrom(attemptOutcomeCounts), actions: objectFrom(attemptActionCounts), stages: objectFrom(attemptStageCounts) },
         denominatorNote: 'Parent-level counts are the default independent-unit denominator; record/attempt counts are support diagnostics.',
     },
 };
