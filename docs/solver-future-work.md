@@ -11,7 +11,7 @@ Only deferred descendants/reopen boundaries belong here.
 
 ## Deferred descendants of active premises
 
-These become eligible only after the active premise gate immediately above them is positive.
+Eligible only after the active premise gate above is positive.
 
 | Descendant | Reopen / advancement condition |
 |---|---|
