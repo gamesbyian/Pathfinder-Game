@@ -7,7 +7,7 @@
 
 Method: [`solver-research-operating-model.md`](solver-research-operating-model.md) · Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md) · Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) · Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md) · Semantic gaps: [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) · Stops: [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md).
 
-Program lens: **composition** exposes/selects/allocates demonstrated capability; **acquisition** creates generic capability where none succeeds. Emphasis: acquire.
+Program lens: **composition** exposes demonstrated capability; **acquisition** creates missing generic capability. Emphasis: acquire.
 
 ## Data-audit guardrail
 
@@ -29,7 +29,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### Premise-acquisition lanes
 
-Cheap premise tests may run in parallel. Expensive treatments require a positive premise.
+Cheap premise tests may run in parallel; expensive treatments require a positive premise.
 
 #### Lane A — separator / decomposition
 
