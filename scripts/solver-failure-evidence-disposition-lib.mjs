@@ -33,7 +33,10 @@ function isSolverRunningWorkflow(source) {
     return /sideEffects\s*:/u.test(source)
         || source.includes('write-solver-experiment-contract.mjs')
         || source.includes('publish-solver-sweep-result.mjs')
-        || source.includes('sweep-publish.mjs');
+        || source.includes('sweep-publish.mjs')
+        || source.includes('solver:analyze-diagnostics')
+        || source.includes('analyze-solver-diagnostics.mjs')
+        || source.includes('solver-bench.mjs');
 }
 
 function declaresStandardTransport(source) {
