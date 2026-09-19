@@ -294,7 +294,8 @@
     "test:class3-dose-exposure": "node scripts/analyze-class3-dose-exposure-node-test.mjs",
     "research:build-class3-dose-expectations": "node scripts/build-class3-dose-expectations.mjs",
     "test:class3-dose-expectations": "node scripts/build-class3-dose-expectations-node-test.mjs",
-    "test:class3-dose-expectations-current": "node scripts/build-current-class3-dose-expectations-node-test.mjs"
+    "test:class3-dose-expectations-current": "node scripts/build-current-class3-dose-expectations-node-test.mjs",
+    "research:freeze-current-class3-dose-expectations": "node scripts/freeze-current-class3-dose-expectations.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
