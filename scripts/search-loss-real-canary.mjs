@@ -31,6 +31,8 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--') && a.i
 }));
 const corpusFile = args.get('corpus') ?? 'data/stress/stress-levels-random.json';
 const sampleSize = Number(args.get('sample') ?? 12);
+const controlCorpusFile = args.get('control-corpus') ?? 'data/levels.json';
+const controlSampleSize = Number(args.get('control-sample') ?? 4);
 const seed = args.get('seed') ?? 'search-loss-real-canary-v1';
 const workBudget = Number(args.get('work-budget') ?? 8000000);
 const timeBudgetMs = Number(args.get('time-budget-ms') ?? 900000);
@@ -38,7 +40,7 @@ const decisionLimit = Number(args.get('decision-limit') ?? 32);
 const maxProgressTransitions = Number(args.get('max-progress-transitions') ?? 16);
 const outFile = args.get('out') ?? 'reports/stress/search-loss-real-canary.json';
 const captureOut = args.get('capture-out') ?? 'reports/stress/search-loss-real-canary-capture.json';
-for (const [name, value] of Object.entries({ sampleSize, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions })) {
+for (const [name, value] of Object.entries({ sampleSize, controlSampleSize, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions })) {
   if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be positive`);
 }
 
@@ -115,13 +117,19 @@ const Solver = createSolver();
 const corpus = JSON.parse(fs.readFileSync(corpusFile, 'utf8'));
 const allRows = Array.isArray(corpus) ? corpus : corpus.levels;
 if (!Array.isArray(allRows) || allRows.length === 0) throw new Error('corpus has no levels');
-const selected = sampleDeterministic(allRows, sampleSize, seed);
+const controlCorpus = JSON.parse(fs.readFileSync(controlCorpusFile, 'utf8'));
+const controlRows = Array.isArray(controlCorpus) ? controlCorpus : controlCorpus.levels;
+if (!Array.isArray(controlRows) || controlRows.length === 0) throw new Error('control corpus has no levels');
+const selected = [
+  ...sampleDeterministic(allRows, sampleSize, seed).map(raw => ({ cohort: 'stress', raw })),
+  ...sampleDeterministic(controlRows, controlSampleSize, `${seed}-controls`).map(raw => ({ cohort: 'control', raw })),
+];
 
 const modes = ['off', 'compact', 'rich'];
 const rows = [];
 const levelRevisions = {};
 const richParentOutcomes = {};
-const protocol = { corpusFile, sampleSize, seed, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions, modes };
+const protocol = { corpusFile, sampleSize, controlCorpusFile, controlSampleSize, seed, workBudget, timeBudgetMs, decisionLimit, maxProgressTransitions, modes };
 const resolvedSha = /^[0-9a-f]{40}$/i.test(process.env.GITHUB_SHA ?? '') ? process.env.GITHUB_SHA : null;
 const runId = process.env.GITHUB_RUN_ID ? `gha-${process.env.GITHUB_RUN_ID}` : 'local-search-loss-real-canary';
 const protocolHash = stableHash({ kind: 'search-loss-real-canary-protocol', protocol });
@@ -142,8 +150,9 @@ function richCollectorFor(parentId) {
   return richCollectors.get(key);
 }
 for (let index = 0; index < selected.length; index++) {
-  const raw = selected[index];
-  levelRevisions[String(raw.id)] = await getLevelFingerprint(raw);
+  const { raw, cohort } = selected[index];
+  const parentId = `${cohort}:${raw.id}`;
+  levelRevisions[parentId] = await getLevelFingerprint(raw);
   const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
   // Rotate execution order by parent to reduce systematic warmup/order bias.
   const order = [...modes.slice(index % modes.length), ...modes.slice(0, index % modes.length)];
@@ -178,7 +187,7 @@ for (let index = 0; index < selected.length; index++) {
           const selectedId = JSON.stringify(selectedPath);
           const observation = {
             decisionId: `${record.stage}@${record.depth}#${decisionOrdinal++}`,
-            parentId: String(raw.id),
+            parentId: parentId,
             stageId: record.stage,
             candidateIds: [selectedId],
             orderedCandidateIds: [selectedId],
@@ -193,7 +202,7 @@ for (let index = 0; index < selected.length; index++) {
             },
           };
           const capsule = decisionObservationToSearchLossCapsule(observation, {
-            levelRevision: levelRevisions[String(raw.id)],
+            levelRevision: levelRevisions[parentId],
             runId,
             solverRef: resolvedSha ?? 'local',
             protocolHash,
@@ -224,7 +233,7 @@ for (let index = 0; index < selected.length; index++) {
       pruneDiagnostics,
       failureProgress: progress.snapshot(),
     };
-    if (mode === 'rich') richParentOutcomes[String(raw.id)] = !!result.ok;
+    if (mode === 'rich') richParentOutcomes[parentId] = !!result.ok;
     const richSnapshot = parentRichCollector ? parentRichCollector.snapshot() : null;
     const priorCapsules = richBefore?.capsules.length ?? 0;
     const newCapsules = richSnapshot ? richSnapshot.capsules.slice(priorCapsules) : [];
@@ -257,12 +266,14 @@ for (let index = 0; index < selected.length; index++) {
     parity[mode] = JSON.stringify(byMode.get(mode).parity) === JSON.stringify(baseline);
   }
   rows.push({
-    id: raw.id,
+    id: parentId,
+    sourceId: raw.id,
+    cohort,
     executionOrder: order,
     parity,
     modes: Object.fromEntries(modes.map(mode => [mode, byMode.get(mode)])),
   });
-  console.log(`${raw.id}: parity compact=${parity.compact} rich=${parity.rich}; `
+  console.log(`${parentId}: parity compact=${parity.compact} rich=${parity.rich}; `
     + `ms off=${byMode.get('off').elapsedMs.toFixed(1)} compact=${byMode.get('compact').elapsedMs.toFixed(1)} rich=${byMode.get('rich').elapsedMs.toFixed(1)}`);
 }
 
@@ -326,7 +337,7 @@ for (const collector of richCollectors.values()) {
     combinedSelectorSummaries[selectorId] = state;
   }
 }
-const selectedParentIds = selected.map(row => String(row.id)).sort();
+const selectedParentIds = selected.map(({ raw, cohort }) => `${cohort}:${raw.id}`).sort();
 const decisionParents = [...new Set(combinedCapsules.map(row => String(row.parentId)))].sort();
 const capture = validateSearchLossCapture({
   schemaVersion: 1,
@@ -338,14 +349,19 @@ const capture = validateSearchLossCapture({
     resolvedSha,
     producer: 'scripts/search-loss-real-canary.mjs',
     protocolHash,
-    configurationHash: stableHash({ kind: 'search-loss-real-canary-configuration', corpusFile, seed, workBudget, timeBudgetMs }),
+    configurationHash: stableHash({ kind: 'search-loss-real-canary-configuration', corpusFile, controlCorpusFile, seed, workBudget, timeBudgetMs }),
     levelBlind: true,
   },
   population: {
-    source: `${corpusFile}#deterministic-canary-sample`,
+    source: `${corpusFile}+${controlCorpusFile}#deterministic-canary-sample`,
     populationIdentity: stableHash({ kind: 'search-loss-real-canary-population', parentIds: selectedParentIds }),
     parentCount: selectedParentIds.length,
     observedCapsuleParentCount: decisionParents.length,
+    parentOutcomes: Object.fromEntries(selectedParentIds.map(id => [id, richParentOutcomes[id] ?? null])),
+    cohorts: {
+      stress: sampleSize,
+      control: controlSampleSize,
+    },
   },
   capture: {
     captureProfileId,
