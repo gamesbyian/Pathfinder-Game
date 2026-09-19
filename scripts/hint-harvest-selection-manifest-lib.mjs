@@ -9,13 +9,21 @@
 export const HINT_HARVEST_SELECTION_MANIFEST_KIND = 'pathfinder-hint-harvest-selection-manifest';
 export const HINT_HARVEST_SELECTION_MANIFEST_SCHEMA_VERSION = 1;
 
+function pendingWeight(item) {
+    return Array.isArray(item?.solvedRows) ? item.solvedRows.length : 1;
+}
+
 function countReasons(items) {
     const counts = new Map();
     for (const item of items ?? []) {
         const reason = String(item?.reason ?? 'unknown');
-        counts.set(reason, (counts.get(reason) ?? 0) + 1);
+        counts.set(reason, (counts.get(reason) ?? 0) + pendingWeight(item));
     }
     return Object.fromEntries([...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])));
+}
+
+function pendingRowCount(items) {
+    return (items ?? []).reduce((sum, item) => sum + pendingWeight(item), 0);
 }
 
 export function buildHintHarvestSelectionManifest({
@@ -61,7 +69,7 @@ export function buildHintHarvestSelectionManifest({
             refereeAcceptedRows,
             persistedRecordChanges,
             acceptedButAlreadyRepresented: refereeAcceptedRows - persistedRecordChanges,
-            quarantinedRows: pending.length,
+            quarantinedRows: pendingRowCount(pending),
             quarantineReasons: countReasons(pending),
         },
         semantics: {
