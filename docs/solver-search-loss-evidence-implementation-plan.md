@@ -1237,7 +1237,9 @@ Tests:
 
 **Exit gate:** a fresh agent can discover the resource through normal asset/relation tooling before any real capture exists.
 
-### Phase 3 - shared compact failure-response projection
+### Phase 3
+
+> **Promotion update (2026-09-19):** GHA run `35422485466` cleared exact parity and the <5% representative overhead gate for compact failure instrumentation. The common level-blind capability worker now retains bounded beam-flow counters, typed prune diagnostics, and capped repair/beam/DFS progress transitions automatically on every completed row. Rich capsules remain selective. - shared compact failure-response projection
 
 **Goal:** stop major solver-running workflows from discarding cheap failure-side information before adding rich path/state capture.
 
