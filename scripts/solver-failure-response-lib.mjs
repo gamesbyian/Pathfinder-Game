@@ -95,6 +95,8 @@ export function compactFailureResponseRow(row) {
         levelId: row?.levelId ?? row?.id ?? row?.level ?? null,
         producer: row?.producer ?? null,
         runId: row?.runId ?? null,
+        protocolHash: row?.protocolHash ?? row?.protocol?.hash ?? null,
+        solverRef: row?.solverRef ?? row?.solverCommit ?? row?.commitSha ?? null,
         configurationKey: row?.configurationKey ?? row?.configKey ?? null,
         actionKey: row?.winningConfig ?? row?.winningConfigKey ?? row?.actionKey ?? techniqueKeys ?? null,
         stageId: row?.stageId ?? row?.winningStage ?? null,
