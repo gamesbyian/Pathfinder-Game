@@ -29,7 +29,7 @@ try {
             },
         ],
         summary: { observed: 3 },
-        populationIntegrity: { coverageComplete: true, decisionValidComplete: true },
+        populationIntegrity: { coverageComplete: true, decisionValidComplete: false },
         protocolHash: 'proto',
         solverRef: 'solver',
         sourceFiles: [],
@@ -72,7 +72,39 @@ try {
         '--purpose=population-prevalence',
         '--population-sampling-declared=true',
     ], { cwd: process.cwd(), encoding: 'utf8' }));
-    assert.equal(prevalence.summary.applicabilityCounts.admissible, 3);
+    assert.equal(prevalence.summary.applicabilityCounts['context-bound'], 3);
+    assert.equal(prevalence.summary.applicabilityCounts.admissible, 0);
+
+    const validFile = path.join(temp, 'failure-response-valid.json');
+    fs.writeFileSync(validFile, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'pathfinder-compact-failure-response',
+        records: [
+            {
+                identity: 'A1', parentId: 'A', runId: 'run-1', outcome: 'workLimited',
+                actionKey: 'beam', stageId: 'main', protocolHash: 'proto', solverRef: 'solver', attempts: [],
+            },
+            {
+                identity: 'B1', parentId: 'B', runId: 'run-1', outcome: 'nodeLimited',
+                actionKey: 'dfs', stageId: 'main', protocolHash: 'proto', solverRef: 'solver', attempts: [],
+            },
+        ],
+        summary: { observed: 2 },
+        populationIntegrity: { coverageComplete: true, decisionValidComplete: true },
+        protocolHash: 'proto',
+        solverRef: 'solver',
+        sourceFiles: [],
+        missingSourceFiles: [],
+        invalidSourceFiles: [],
+    }));
+    const validPrevalence = JSON.parse(execFileSync('node', [
+        'scripts/failure-evidence-purpose-query.mjs',
+        '--in=' + validFile,
+        '--purpose=population-prevalence',
+        '--population-sampling-declared=true',
+    ], { cwd: process.cwd(), encoding: 'utf8' }));
+    assert.equal(validPrevalence.summary.applicabilityCounts.admissible, 2);
+    assert.equal(validPrevalence.summary.independentAdmissibleSupportStrata, 2);
 
     console.log('failure-evidence-purpose-query-node-test: ok');
 } finally {
