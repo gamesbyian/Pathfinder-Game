@@ -424,7 +424,7 @@ The unit of correctness is increasingly larger than one script.
 
 Create tiny deterministic fixtures that exercise:
 
-`question -> population/resource -> block -> experiment contract -> execution/shards -> combine -> durable evidence -> query/reducer -> report/result -> question/queue/future-work disposition`
+`question/rivals -> population/resource -> block -> experiment + analysis contract -> execution/shards -> combine -> calibrated observation -> analysis/estimand -> durable evidence -> claim capsule -> report/decision -> question/queue/future-work disposition`
 
 No expensive solver run is required. Use synthetic/tiny fixtures where possible.
 
@@ -439,7 +439,10 @@ Required cases:
 - solved controls;
 - cross-resource derived evidence;
 - superseded result/plan;
-- family/parent independent-unit propagation;
+- family/state unit-topology propagation without pseudoreplication;
+- treatment nonparticipation/manipulation failure;
+- analysis-contract identity surviving publication;
+- claim/decision separation;
 - archive/retirement transition;
 - stale evidence-integrity index;
 - report status creation;
@@ -461,7 +464,8 @@ Every expensive sharded evidence workflow should be able to declare, where appli
 - combine implementation/version;
 - validation stages;
 - durable-result stage;
-- whether combine/revalidation can be rerun without solver/reference compute;
+- whether combine/revalidation/reanalysis can be rerun without solver/reference compute;
+- analysis/transform identity needed to regenerate derived conclusions;
 - which failures leave raw evidence valid;
 - which failures invalidate the acquisition itself.
 
@@ -1103,6 +1107,9 @@ Where recoverable without heroic archaeology, classify activity by:
 - research function (encode, derive, generate, reject, prefer, retain, remember, allocate, select, transfer, recognize, measure, infer from evidence);
 - question source/provenance;
 - evidence family used;
+- measurement/instrument family used;
+- analysis/normalization family used;
+- material shared implementation dependencies among ostensibly separate evidence channels;
 - research cost proxies available without inventing false precision (PR/experiment count, solver/reference compute when recorded, repeated reopen/iteration cycles);
 - whether the work changed a research decision;
 - whether it created/refined a semantic premise;
@@ -1212,14 +1219,20 @@ Candidate functions:
 - generate controlled cases;
 - match/control;
 - estimate prevalence/opportunity;
-- preserve causal ancestry/independent units;
+- preserve causal ancestry/unit topology;
+- freeze and execute pre-outcome analysis contracts;
+- calibrate instruments and express support/abstention;
 - compare at matched work;
 - test transfer/source robustness;
 - reason across attempts/stages;
 - evaluate alternative search objects;
 - preserve durable evidence;
+- preserve transformation provenance and reverse-invalidate descendants;
+- distinguish execution/scientific/decision dispositions;
 - recover interrupted acquisition;
-- preserve prospective expectation/surprise.
+- preserve prospective expectation/surprise;
+- support hard-blind confirmation when earned;
+- preserve implementation/analyst/ontology independence where scientifically useful.
 
 Classify each as:
 
