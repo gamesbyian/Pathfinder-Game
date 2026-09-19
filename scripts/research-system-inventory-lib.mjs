@@ -73,23 +73,53 @@ function dependencyClosure(root, entrypoint) {
     return [...seen].sort();
 }
 
-function planLifecycle(root) {
+function currentReferenceRows(root) {
+    const indexPath = path.join(root, 'docs/README.md');
+    if (!existsSync(indexPath)) return [];
+    const source = readFileSync(indexPath, 'utf8');
+    const start = source.indexOf('## Current references');
+    if (start < 0) return [];
+    const section = source.slice(start).split(/^##\s+/mu).slice(0, 1).join('');
+    const rows = [];
+    for (const line of section.split(/\r?\n/u)) {
+        const match = /^\| \[\`([^\`]+)\`\]\(([^)]+)\) \| (.+) \|$/u.exec(line);
+        if (!match) continue;
+        rows.push({ label: match[1], path: normalize(path.join('docs', match[2])), ownership: match[3].trim() });
+    }
+    return rows;
+}
+
+function lifecycleCandidate(relative) {
+    const name = path.basename(relative);
+    return /(?:-plan|-preflight|-handoff)\.md$/u.test(name);
+}
+
+function planLifecycle(root, currentReferences = currentReferenceRows(root)) {
+    const currentReferencePaths = new Set(currentReferences.map(row => row.path));
     const files = [
-        ...walk(root, 'docs', relative => /(?:^|\/)solver-.+-plan\.md$/u.test(normalize(relative))),
-        ...walk(root, 'docs/archive', relative => relative.endsWith('.md')),
+        ...walk(root, 'docs', relative => lifecycleCandidate(normalize(relative))),
+        ...walk(root, 'docs/archive', relative => lifecycleCandidate(normalize(relative))),
     ];
     const unique = [...new Set(files)].sort();
     return unique.map(relative => {
         const source = readFileSync(path.join(root, relative), 'utf8');
         const status = /^> \*\*Status:\*\* (.+)$/mu.exec(source)?.[1]?.trim() ?? null;
         const implementationProgress = /^> \*\*Implementation progress[^:]*:\*\* (.+)$/mu.exec(source)?.[1]?.trim() ?? null;
+        const statusText = String(status ?? '').toLowerCase();
+        const appearsConcluded = /(?:complete|completed|concluded|superseded|historical|retired|cancelled)/u.test(statusText);
         return {
             path: relative,
+            kind: path.basename(relative).includes('-preflight') ? 'preflight'
+                : path.basename(relative).includes('-handoff') ? 'handoff'
+                    : 'plan',
             archived: relative.startsWith('docs/archive/'),
+            currentReference: currentReferencePaths.has(relative),
             status,
             implementationProgress,
             lifecycleBasis: status ? 'structured-status-line' : 'filename/path-only',
             fragileProse: !status,
+            appearsConcluded,
+            currentReferenceMismatch: currentReferencePaths.has(relative) && appearsConcluded,
         };
     });
 }
@@ -143,8 +173,10 @@ function currentState(model) {
 export function buildResearchSystemInventory(root = process.cwd()) {
     const model = buildResearchRelations(root, { discoverArtifacts: true });
     const commands = researchCommandRoots(root);
-    const plans = planLifecycle(root);
+    const currentReferences = currentReferenceRows(root);
+    const plans = planLifecycle(root, currentReferences);
     const fragilePlans = plans.filter(row => row.fragileProse);
+    const currentReferenceLifecycleMismatches = plans.filter(row => row.currentReferenceMismatch);
     const relations = relationInventory(model);
     return {
         schemaVersion: 1,
@@ -157,10 +189,16 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         relations,
         commands,
         sharedImplementationDependencies: sharedDependencies(root, commands),
+        documentation: {
+            currentReferences,
+            currentReferenceCount: currentReferences.length,
+        },
         planLifecycle: plans,
         diagnostics: {
             fragilePlanLifecycleCount: fragilePlans.length,
             fragilePlanLifecyclePaths: fragilePlans.map(row => row.path),
+            currentReferenceLifecycleMismatchCount: currentReferenceLifecycleMismatches.length,
+            currentReferenceLifecycleMismatchPaths: currentReferenceLifecycleMismatches.map(row => row.path),
             derivedRelationCount: relations.filter(row => row.authorityKind === 'derived/composed').length,
             structuredRelationCount: relations.filter(row => row.authorityKind === 'structured-source').length,
         },
