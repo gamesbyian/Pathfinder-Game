@@ -28,6 +28,23 @@ try {
     assert.deepEqual(summary1.sourceFiles, [combinedCells]);
     assert.deepEqual(summary1.missingSourceFiles, []);
 
+    // contract metadata may supply protocol/solver identity even when source rows do not
+    const contract = path.join(temp, 'experiment-contract.json');
+    fs.writeFileSync(contract, JSON.stringify({
+        experiment: { configurationHash: 'protocol-from-contract', resolvedSha: 'solver-from-contract' },
+    }));
+    const outContract = path.join(temp, 'summary-contract.json');
+    execFileSync('node', [
+        'scripts/summarize-solver-failure-response.mjs',
+        `--in=${combinedCells}`,
+        '--rows-key=results',
+        `--contract-file=${contract}`,
+        `--out=${outContract}`,
+    ], { cwd: root });
+    const summaryContract = JSON.parse(fs.readFileSync(outContract, 'utf8'));
+    assert.equal(summaryContract.protocolHash, 'protocol-from-contract');
+    assert.equal(summaryContract.solverRef, 'solver-from-contract');
+
     // solver-stress-refresh-shaped combined report, with its own populationIntegrity, across two files
     const report1 = path.join(temp, 'corpus1-latest.json');
     const report2 = path.join(temp, 'corpus2-latest.json');
