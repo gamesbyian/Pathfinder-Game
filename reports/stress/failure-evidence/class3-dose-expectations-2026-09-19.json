@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-class3-dose-expectations",
+  "evidenceRole": "frozen acquisition expectation map; isolated census cost is context, not shared-production dose",
+  "sources": {
+    "productionBoundaryRun": "35066677597",
+    "techniqueCensusRun": "33717910218",
+    "residualClassificationSchemaVersion": 2
+  },
+  "independentUnit": "parentId",
+  "parentCount": 23,
+  "expectationCount": 24,
+  "parents": [
+    {
+      "parentId": "R00306",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 20823229,
+          "isolatedWinningGate": 262145
+        }
+      ]
+    },
+    {
+      "parentId": "R01011",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 37210562,
+          "isolatedWinningGate": 589825
+        }
+      ]
+    },
+    {
+      "parentId": "R01086",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 2190036,
+          "isolatedWinningGate": 458758
+        }
+      ]
+    },
+    {
+      "parentId": "R01269",
+      "expectations": [
+        {
+          "actionIdentity": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 33782273,
+          "isolatedWinningGate": 524288
+        }
+      ]
+    },
+    {
+      "parentId": "R01724",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 20436729,
+          "isolatedWinningGate": 262156
+        }
+      ]
+    },
+    {
+      "parentId": "R02138",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 14583047,
+          "isolatedWinningGate": 524301
+        }
+      ]
+    },
+    {
+      "parentId": "R02160",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 37136975,
+          "isolatedWinningGate": 589824
+        },
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 13806334,
+          "isolatedWinningGate": 589824
+        }
+      ]
+    },
+    {
+      "parentId": "R02196",
+      "expectations": [
+        {
+          "actionIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "family": "beam",
+          "offered": true,
+          "dispatched": true,
+          "familyReached": null,
+          "familyStarved": null,
+          "observability": "dispatched-dose-unverified",
+          "isolatedCensusNodes": 293389,
+          "isolatedWinningGate": 327682
+        }
+      ]
+    },
+    {
+      "parentId": "R02206",
+      "expectations": [
+        {
+          "actionIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "family": "beam",
+          "offered": true,
+          "dispatched": true,
+          "familyReached": null,
+          "familyStarved": null,
+          "observability": "dispatched-dose-unverified",
+          "isolatedCensusNodes": 257117,
+          "isolatedWinningGate": 720900
+        }
+      ]
+    },
+    {
+      "parentId": "R02219",
+      "expectations": [
+        {
+          "actionIdentity": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 14300785,
+          "isolatedWinningGate": 262150
+        }
+      ]
+    },
+    {
+      "parentId": "R02258",
+      "expectations": [
+        {
+          "actionIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "family": "beam",
+          "offered": true,
+          "dispatched": true,
+          "familyReached": null,
+          "familyStarved": null,
+          "observability": "dispatched-dose-unverified",
+          "isolatedCensusNodes": 578195,
+          "isolatedWinningGate": 8
+        }
+      ]
+    },
+    {
+      "parentId": "R02277",
+      "expectations": [
+        {
+          "actionIdentity": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 31237421,
+          "isolatedWinningGate": 262152
+        }
+      ]
+    },
+    {
+      "parentId": "R02458",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 1730495,
+          "isolatedWinningGate": 131078
+        }
+      ]
+    },
+    {
+      "parentId": "R02561",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 38656658,
+          "isolatedWinningGate": 196615
+        }
+      ]
+    },
+    {
+      "parentId": "R02835",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 4084816,
+          "isolatedWinningGate": 589835
+        }
+      ]
+    },
+    {
+      "parentId": "R02844",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 27959034,
+          "isolatedWinningGate": 196609
+        }
+      ]
+    },
+    {
+      "parentId": "R02892",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 5503860,
+          "isolatedWinningGate": 917505
+        }
+      ]
+    },
+    {
+      "parentId": "R02979",
+      "expectations": [
+        {
+          "actionIdentity": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 48231138,
+          "isolatedWinningGate": 393223
+        }
+      ]
+    },
+    {
+      "parentId": "R02997",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 36458318,
+          "isolatedWinningGate": 720910
+        }
+      ]
+    },
+    {
+      "parentId": "R03109",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 12710452,
+          "isolatedWinningGate": 851972
+        }
+      ]
+    },
+    {
+      "parentId": "R03251",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 10547738,
+          "isolatedWinningGate": 4
+        }
+      ]
+    },
+    {
+      "parentId": "R03323",
+      "expectations": [
+        {
+          "actionIdentity": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 349380,
+          "isolatedWinningGate": 786434
+        }
+      ]
+    },
+    {
+      "parentId": "R03354",
+      "expectations": [
+        {
+          "actionIdentity": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedCensusNodes": 16076371,
+          "isolatedWinningGate": 2
+        }
+      ]
+    }
+  ]
+}

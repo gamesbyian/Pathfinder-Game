@@ -13,15 +13,18 @@
 
 ## Implementation status (2026-09-19)
 
-- **Phase 0 authority/consumer reconciliation:** substantially complete. The live queue now routes WS2 through bounded failure-response reconnaissance before selecting first-loss/rejection/2x2; Class-3, H3, Lane G, Lane C, future-work closeout, and the reserve-starvation nomination are connected to their existing owners rather than duplicated here.
+- **Phase 0 authority/consumer reconciliation:** complete. The live queue now routes WS2 through bounded failure-response reconnaissance before selecting first-loss/rejection/2x2; Class-3, H3, Lane G, Lane C, future-work closeout, and the reserve-starvation nomination are connected to their existing owners rather than duplicated here.
 - **Phase 1 compact diagnostic promotion review:** calibration gate complete. GHA run `35423841173` clears representative semantic parity/overhead/byte-volume for the compact prune/beam-flow/progress bundle. Universal durable promotion remains **not earned** pending incremental-value and producer-scope evidence; see [the promotion review](../reports/2026-09-19-compact-failure-diagnostic-promotion-review-001.md).
 - **Phase 2 common reducer/query:** implemented for the automatic compact response layer as `scripts/failure-response-query.mjs` / `npm run research:query-failure-response --`. Producer-supplied `protocolHash` and solver ref are now preserved when present. Diagnostic-field query expansion remains conditional on Phase-1 promotion.
-- **Phase 3 WS2 reconnaissance:** readiness audit complete. The query/reducer is ready, but the latest ordinary solver-dispatch artifacts predate standard compact-response publication; Stage A therefore waits for a protocol-compatible post-instrumentation population. Do not backfill prevalence from selectively dispatched native-attempt history. See `reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md`.
-- **Phase 4A Class-3:** acquisition path is now explicit; still waits for a prospective producer covering the Class-3 population.
+- **Phase 3 WS2 reconnaissance:** dispatch-ready but data-blocked. No eligible ordinary post-contract population is committed; the mechanical lane rule and maintained-producer handoff are frozen in [the analysis preflight](../reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md).
+- **Phase 4A Class-3:** dispatch-ready but data-blocked. The 23-parent/24-action expectation artifact and exact-dose reducer are frozen; only real shared-production telemetry remains. See [the acquisition preflight](../reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md).
 - **Phase 4B reserve starvation:** zero-compute asset audit is complete and the prospective path is now frozen. The exact R00044 winner is `admissible-order|tieBreak=default|lds=off`; targeted method-probe workflow support now preserves explicit level subsets; a disjoint 40-parent current-residual sample and decision rule are precommitted in `reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md`. Remaining work is dispatch/measurement, not design.
 - **Phase 4C/4D H3/Lane G:** remain independently executable under their existing designs; failure evidence is secondary/optional.
 - **Phase 4E capability memory:** durable contract now explicitly permits protocol-compatible failure-response joins as derived premise/capability evidence while preserving the production verdict boundary; no new memory store was created.
-- **Phases 5-8:** condition-gated as specified below. No synthetic recurring producer or first-loss selection has been created.
+- **Phase 5:** condition-gated; no repeated real consumer earns a recurring rich producer.
+- **Phase 6:** condition-gated on Phase 5 recurrence; no durable capsule machinery is authorized.
+- **Phase 7:** condition-gated on enough repeated parent-aware data for stable phenotypes.
+- **Phase 8:** authority-gated; WS2 has not selected first-loss/operational divergence.
 
 ## 1. Why this plan exists
 
@@ -400,18 +403,16 @@ These are independent consumers; do not block one on another.
 
 #### 4A. Class-3 dose exposure
 
-The 23 Class-3 rows are no longer blocked on inventing telemetry.
-
-At the next suitable prospective, protocol-compatible producer covering that question:
+The frozen 23-parent/24-action expectation map is `reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json`; do not regenerate it except to check boundary freshness. The exact-dose reducer is `npm run research:analyze-class3-dose`. At the next suitable prospective, protocol-compatible shared-ladder producer:
 
 - preserve exact action/technique identity;
 - prove participation;
 - retain work dose and termination/censor state;
-- reuse the existing work-ladder reducer where applicable.
+- run the exact-dose reducer mechanically; isolated census nodes remain context, not shared-production dose.
 
 Answer `not exposed` vs `exposed and failed/indeterminate` before proposing new capability work.
 
-Do not launch a large bespoke campaign if the next normal census/targeted run can provide the rows.
+The maintained targeted sweep is the smallest suitable GHA producer, but evidence has not been acquired. Do not launch a large bespoke campaign merely to finish the table. See [the preflight](../reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md).
 
 #### 4B. Fixed-reserve starvation premise
 
@@ -422,13 +423,7 @@ The expensive-success microscope found two distinct mechanisms among the three 4
 
 Treat R00044 as premise nomination only.
 
-If current authority agrees the nomination is worth tracking, admit a narrow stable research question through `solver-research-question-relations.json` (and a measurement opportunity only if it adds a reusable measurement seam rather than restating the question):
-
-> Does fixed stage-reserve allocation recurrently starve later stages that possess sufficient within-total-budget solving capability?
-
-Do not treat this plan text as the durable question record.
-
-First use existing compact response/high-budget evidence to estimate recurrence. Only if recurrence is non-trivial run a matched-total-work reserve-fraction A/B using the existing `admissibleOrderNodeReserveFractionOverride`.
+The durable question is already admitted as `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; do not create another record. Execute the frozen prospective preflight: R00044 at the 300M isolated ceiling is the execution-family canary, followed only on success by the disjoint 40-parent sample. Use the reducer’s precommitted 0/1/>=2 opportunity decision. Only recurrent starvation (`>=2`) earns design of a matched-total-work reserve-fraction A/B using `admissibleOrderNodeReserveFractionOverride`.
 
 Do not reopen the closed-negative broad 4x work-ladder economics question merely because this narrower allocation mechanism exists.
 
@@ -722,4 +717,4 @@ At closeout:
 - leave scientific outcomes in dated reports/question relations;
 - mark this plan completed/retired so future agents do not mistake it for another live queue.
 
-Do not keep the plan alive merely because more failure data could always be collected.
+Do not keep the plan alive merely because more failure data could always be collected. The current phase-by-phase hostile handoff is recorded in [the closeout audit](../reports/2026-09-19-failure-evidence-integration-hostile-closeout-audit-001.md); it explicitly separates remaining GHA/future evidence from coding work.

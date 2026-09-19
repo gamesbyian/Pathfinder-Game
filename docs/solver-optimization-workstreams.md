@@ -5,7 +5,7 @@
 > **Reconciled:** 2026-09-17.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
-Method: [`solver-research-operating-model.md`](solver-research-operating-model.md) · Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md) · Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) · Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md) · Semantic gaps: [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) · Stops: [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md).
+Method: [`solver-research-operating-model.md`](solver-research-operating-model.md) · Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md) · Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) · Stops: [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md).
 
 Program lens: **composition** exposes/selects/allocates demonstrated capability; **acquisition** creates generic capability where none succeeds. Current emphasis: acquisition.
 
@@ -58,7 +58,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane F — bounded exposure / representation
 
-1. **Class-3 dose: EVIDENCE GAP.** Historical per-technique dose telemetry does not exist. Reopen on prospective protocol-compatible compact exact-action participation/work evidence. [`result`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
+1. **Class-3 dose: EVIDENCE GAP.** Historical per-technique dose telemetry does not exist. Frozen 23-parent expectation map + reducer are ready; reopen on prospective protocol-compatible shared-ladder exact-action participation/work evidence. [`preflight`](../reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md) · [`result`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
 2. **Card-E quotient: MIXED.** Board-independent signal survives Card-E permutation tests but is insufficient for canonicalization/classifier. [`result`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md)
 3. **F3 topology microscope: QUALIFIED POSITIVE; CONSUMER GATE STOPS AT DECISION-BEARING COVERAGE.** Cheap descriptor is 8/8 when closest point unique, but that subset has zero decision-relevant discordance. All 9 decisive-puncture discordant rows are tied; tied reliability is 7/9 and cheap tie refinement does not improve it. No selector/prune consumer earned. **Reopen:** fresh independent parents only if a reliable compact descriptor has non-zero decision-bearing discordance. [`result`](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md) · [`census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
 
@@ -69,8 +69,6 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
 ### Post-mining premise-map handoff closeout
-
-The frozen-map mining execution plan's three phases are complete. P201-P206 remain evidence/method premises; no additional solver-mechanism premise survives the bounded post-mining consumer-contract work.
 
 The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only D1 reaches a ready existing decision seam. A has advanced to a prespecified compact-contract falsifier but has no validated contract; F3 still stops at reliable decision-bearing opportunity; D1 stops at retained-evidence economics. Shared producer/consumer vocabulary is research discipline, not evidence for a runtime bus/blackboard/subsystem. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 

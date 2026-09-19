@@ -654,9 +654,10 @@
         "dose reconciliation"
       ],
       "answeredBy": [
-        "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md"
+        "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md",
+        "reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md"
       ],
-      "result": "No current conclusion is possible: 23 Class-3 rows lack committed per-technique work-tranche telemetry. The bounded work-ladder reducer now exists, but analysis tooling cannot reconstruct dose that the producer never recorded.",
+      "result": "No scientific conclusion yet. The current 23-parent/24-rescuer expectation population is frozen and the exact-dose reducer is ready; committed evidence still lacks protocol-compatible shared-production exact-action participation/work telemetry.",
       "triggeredBy": [
         "WS2-CLASS123-CHEAP-HARVEST"
       ],
@@ -675,7 +676,9 @@
       "constrainedBy": [
         "docs/solver-failure-evidence-research-integration-plan.md",
         "scripts/solver-failure-response-lib.mjs",
-        "scripts/failure-response-query.mjs"
+        "scripts/failure-response-query.mjs",
+        "scripts/analyze-class3-dose-exposure.mjs",
+        "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json"
       ]
     },
     {
