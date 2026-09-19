@@ -24,9 +24,13 @@ const asset = registry.assets.find(row => row.id === 'search-loss-evidence');
 if (!asset) throw new Error('search-loss-evidence missing from resource registry');
 
 const selectorEntries = Object.entries(capture.capture.selectorSummaries ?? {});
-const parentSolvedValues = capture.capsules
+const populationOutcomes = capture.population?.parentOutcomes && typeof capture.population.parentOutcomes === 'object'
+  ? Object.values(capture.population.parentOutcomes)
+  : [];
+const capsuleOutcomes = capture.capsules
   .map(row => row.context?.parentSolved)
   .filter(value => typeof value === 'boolean');
+const parentSolvedValues = populationOutcomes.length ? populationOutcomes : capsuleOutcomes;
 const checks = {
   registeredAsset: true,
   validCapture: true,
