@@ -656,7 +656,7 @@
       "answeredBy": [
         "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md"
       ],
-      "result": "No current conclusion is possible: 23 Class-3 rows lack committed per-technique work-tranche telemetry. Standard compact failure response now preserves exact-action dose, and a dedicated mechanical reducer is ready; only prospective protocol-compatible rows remain missing.",
+      "result": "The current Class-3 population and exact T1 rescuer identities are now mechanically derivable from committed production/lifecycle/census assets with zero solver search. The remaining evidence gap is prospective protocol-compatible shared-production exact-action dose.",
       "triggeredBy": [
         "WS2-CLASS123-CHEAP-HARVEST"
       ],
@@ -664,7 +664,7 @@
         "Do not treat Class-3 as exposed-and-failed or rerun broad capability work from atlas membership alone.",
         "A future producer must record exact-action participation/work dose prospectively under a comparable protocol. The standard compact failure-response document now preserves attempt/action/work/censoring evidence and is the preferred acquisition path; use the work-ladder reducer once those rows exist."
       ],
-      "reopensOn": "Regenerate and freeze the current primary Class-3 population, then obtain protocol-compatible standard compact exact-action participation/work/censoring telemetry under the production-shaped shared ladder and analyze it under reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md.",
+      "reopensOn": "Freeze the current 23-parent expectation artifact with research:freeze-current-class3-dose-expectations, then obtain protocol-compatible standard compact exact-action participation/work/censoring telemetry under the production-shaped shared ladder and analyze it under reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md.",
       "premiseRefs": [
         "P123",
         "P206"
@@ -677,7 +677,9 @@
         "scripts/solver-failure-response-lib.mjs",
         "scripts/failure-response-query.mjs",
         "reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md",
-        "scripts/analyze-class3-dose-exposure.mjs"
+        "scripts/analyze-class3-dose-exposure.mjs",
+        "scripts/freeze-current-class3-dose-expectations.mjs",
+        "scripts/build-class3-dose-expectations.mjs"
       ]
     },
     {
