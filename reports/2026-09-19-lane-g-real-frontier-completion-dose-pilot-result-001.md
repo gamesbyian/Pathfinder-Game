@@ -1,6 +1,6 @@
 # Lane G real-frontier completion dose pilot result 001
 
-> **Status:** concluded — method-limited negative on tested dose range, not a feasibility proof.
+> **Status:** concluded-negative
 > **Last evidence:** 2026-09-19 — two matched tiers (2,000,000 and 16,000,000 close-gap node budget) over the identical frozen 45-attempt population.
 > **Decision:** completing real production beam-search frontier partials via the existing `searchCompletionFromPartialPath` repair operator produced **0/45 referee-valid solves at both a 2M and a 16M close-gap node ceiling**, with the outcome shape (which attempts fail vs. exhaust) **identical** across an 8x budget escalation. This is not proof that these partials are infeasible, but it rules out "just needs a bit more dose" as the explanation and is direct evidence against Lane G's premise that a relaxed real-search partial is cheaply/locally repairable.
 > **Remaining gate:** none newly opened. Lane G's "fair full candidate from frozen real-search partials" gate (`docs/solver-optimization-workstreams.md`) remains unmet; complete-path LNS is not earned. A further order-of-magnitude dose escalation is not recommended without a materially different reason to expect it would convert zero solves into a nonzero rate.
