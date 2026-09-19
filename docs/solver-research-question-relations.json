@@ -656,7 +656,7 @@
       "answeredBy": [
         "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md"
       ],
-      "result": "No current conclusion is possible: 23 Class-3 rows lack committed per-technique work-tranche telemetry. The bounded work-ladder reducer now exists, but analysis tooling cannot reconstruct dose that the producer never recorded.",
+      "result": "No current conclusion is possible: 23 Class-3 rows lack committed per-technique work-tranche telemetry. Standard compact failure response now preserves exact-action dose, and a dedicated mechanical reducer is ready; only prospective protocol-compatible rows remain missing.",
       "triggeredBy": [
         "WS2-CLASS123-CHEAP-HARVEST"
       ],
@@ -676,7 +676,8 @@
         "docs/solver-failure-evidence-research-integration-plan.md",
         "scripts/solver-failure-response-lib.mjs",
         "scripts/failure-response-query.mjs",
-        "reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md"
+        "reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md",
+        "scripts/analyze-class3-dose-exposure.mjs"
       ]
     },
     {
