@@ -35,11 +35,14 @@ const parents = class3Rows.map(row => {
         seen.add(key);
         rescuers.push({
             actionKey: win.identity,
-            isolatedNodesExpanded: Number.isFinite(win.nodes) ? win.nodes : null,
-            isolatedWinningGate: win.gate ?? null,
+            family: win.family ?? null,
+            offered: typeof win.offered === 'boolean' ? win.offered : null,
+            dispatched: typeof win.dispatched === 'boolean' ? win.dispatched : null,
             familyReached: typeof win.familyReached === 'boolean' ? win.familyReached : null,
             familyStarved: typeof win.familyStarved === 'boolean' ? win.familyStarved : null,
-            dispatched: typeof win.dispatched === 'boolean' ? win.dispatched : null,
+            observability: win.observability ?? null,
+            isolatedNodesExpanded: Number.isFinite(win.nodes) ? win.nodes : null,
+            isolatedWinningGate: win.gate ?? null,
         });
     }
     rescuers.sort((a, b) => a.actionKey.localeCompare(b.actionKey));
