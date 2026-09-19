@@ -1457,7 +1457,7 @@ Tests:
 
 ### Phase 6 - annotation adapters
 
-> **Status (2026-09-19): exact/reference adapter implemented; later adapters not yet implemented.** `annotate-search-loss-exact.mjs` writes a separate identity-checked LIVE/DEAD/UNKNOWN/UNSUPPORTED artifact and preserves population/research-block lineage. Known-prefix adaptation remains future work; counterfactual adaptation waits for a concrete study.
+> **Status (2026-09-19): exact/reference adapter implemented; known-prefix adaptation explicitly identity-gated.** `annotate-search-loss-exact.mjs` writes a separate identity-checked LIVE/DEAD/UNKNOWN/UNSUPPORTED artifact and preserves population/research-block lineage. Current durable known-solution-prefix-survival summaries retain support/family counts and loss stages but do not retain enough exact prefix identity to bind a capsule without guessing, so no adapter is authorized from those summaries. Reopen known-prefix adaptation only for a capture/source pair that shares reconstructable exact prefix identity. Counterfactual adaptation waits for a concrete study.
 
 **Goal:** allow existing evidence systems to enrich capsules without mutating the original observation.
 
