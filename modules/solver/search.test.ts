@@ -189,6 +189,36 @@ test('beam research observation is behaviorally inert and sees real boundaries',
     'opt-in expansion observation must not change canonical work');
 });
 
+test('beam counter-only flow and prune composition preserve outcome, work, and node order without rich records', async () => {
+  const level = makeLevel();
+  const run = async (mode: 'off' | 'counter' | 'rich') => {
+    const prep = prepLevel(level); prep._cfg = null; prep._metrics = { nodesExpanded: 0 };
+    const flow: Record<string, number> = {};
+    const prune: PruneDiagnostics = { reached: {}, rejected: {} };
+    const records: string[] = [];
+    if (mode === 'counter') { prep._beamFlowCounters = flow; prep._pruneDiagnostics = prune; }
+    if (mode === 'rich') prep._beamResearchObserver = { observe: record => records.push(record.stage) };
+    const started = performance.now();
+    const path = await beamSearchFromGate(PACK(0, 0), level, prep, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
+    return { path, nodes: prep._metrics.nodesExpanded, work: prep._workMeter.units, flow, prune, records, elapsedMs: performance.now() - started };
+  };
+  const off = await run('off');
+  const counter = await run('counter');
+  const rich = await run('rich');
+  assert.deepEqual(counter.path, off.path);
+  assert.deepEqual(rich.path, off.path);
+  assert.deepEqual([counter.nodes, counter.work], [off.nodes, off.work]);
+  assert.deepEqual([rich.nodes, rich.work], [off.nodes, off.work]);
+  assert.ok((counter.flow.incoming ?? 0) > 0);
+  assert.ok((counter.flow.generated ?? 0) > 0);
+  assert.ok(Object.keys(counter.prune.reached).length > 0, 'attempt-scoped typed prune reach is aggregated without per-node rows');
+  assert.equal(counter.records.length, 0);
+  assert.ok(rich.records.length > 0);
+  assert.ok(Buffer.byteLength(JSON.stringify(counter.flow)) < Buffer.byteLength(JSON.stringify(rich.records)));
+  console.log('beam-flow-pilot', JSON.stringify({ offMs: off.elapsedMs, counterMs: counter.elapsedMs, richMs: rich.elapsedMs,
+    counterBytes: Buffer.byteLength(JSON.stringify(counter.flow)), richStageBytes: Buffer.byteLength(JSON.stringify(rich.records)) }));
+});
+
 test('beam reconstruction scratch handles long, tiny, shifted, then long paths like fresh invariants', async () => {
   type N = { key: number; prev: N | null; depth: number };
   const chain = (keys: number[]): N => keys.reduce<N | null>((prev, key, depth) => ({ key, prev, depth }), null)!;
@@ -237,6 +267,8 @@ test('beamSearchFromGate credits nodesExpanded even when it times out mid-search
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
+  const progress: unknown[] = [];
+  prep._failureProgressObserver = { observe: record => progress.push(record) };
   const out: { timedOut?: boolean; finalBadness?: number } = {};
   const clock = vi.spyOn(Date, 'now');
   try {
@@ -248,6 +280,8 @@ test('beamSearchFromGate credits nodesExpanded even when it times out mid-search
     assert.equal(out.timedOut, true);
     assert.ok(prep._metrics.nodesExpanded > 0,
       `expected a timed-out attempt to credit completed search work, got ${prep._metrics.nodesExpanded}`);
+    assert.equal(progress.length, 1);
+    assert.equal((progress[0] as { family: string }).family, 'beam');
   } finally {
     clock.mockRestore();
   }
@@ -294,6 +328,8 @@ test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it 
   const prep = prepLevel(level);
   prep._cfg = { STRATEGY_LDS: false };
   prep._metrics = { nodesExpanded: 0 };
+  const progress: unknown[] = [];
+  prep._failureProgressObserver = { observe: record => progress.push(record) };
   const out: { timedOut?: boolean; finalBadness?: number } = {};
   const clock = vi.spyOn(Date, 'now').mockReturnValue(11);
   try {
@@ -302,6 +338,8 @@ test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it 
     assert.equal(out.timedOut, true);
     assert.ok(prep._metrics.nodesExpanded >= 256,
       `deadline check should occur only after real DFS work, got ${prep._metrics.nodesExpanded} nodes`);
+    assert.equal(progress.length, 1);
+    assert.equal((progress[0] as { family: string }).family, 'dfs');
   } finally {
     clock.mockRestore();
   }

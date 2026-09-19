@@ -814,7 +814,7 @@ jobs:
           "population": {"kind": "explicit-ids", "identityBasis": "stable-level-id"},
           "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $STRICT_TOTAL_WORK_BUDGET, "producerFamily": "level-blind-targeted-sweep", "schedulerMode": "level-blind-capability"},
           "limits": {"cumulativeNodeCeiling": $node_ceiling, "initialWorkAllocation": ${WORK_BUDGET:-null}, "totalWorkCeiling": $work_ceiling, "wallSafetyDeadlineMs": ${BUDGET_MS:-null}, "wallDeadlineBinding": false},
-          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
+          "sideEffects":{"hints":"none","canonicalBaseline":"none", "telemetry": "compact", "reports": "artifact-only"}}
           SPEC
           node scripts/write-solver-experiment-contract.mjs \
             --spec=logs/solver-targeted-sweep/experiment-contract-spec.json \
@@ -869,7 +869,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          node scripts/publish-solver-sweep-result.mjs \
+          node scripts/sweep-publish.mjs --failure-in=p \
             --primary="logs/solver-targeted-sweep/combined.json" \
             --include="artifact-staging/plan/ids.txt" \
             --include="artifact-staging/plan/shard-plan.json" \

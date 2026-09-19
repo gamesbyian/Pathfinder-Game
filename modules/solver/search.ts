@@ -228,7 +228,10 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
                 // per-node) but NOT a tracked best-ever minimum the way repair-search's
                 // bestBadness is; best-first ordering means it's usually a reasonable sample,
                 // not necessarily the best position this branch ever visited.
-                if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; out.finalBadness = computeBadness(state, level); }
+                if (out) {
+                    out.timedOut = true; out.nodesExpanded = nodesExpanded; out.finalBadness = computeBadness(state, level);
+                    prep._failureProgressObserver?.observe({ family: 'dfs', workSpent: prep._workMeter.units, badness: out.finalBadness, kind: 'terminal' });
+                }
                 _dbgFlushDfs('timeout');
                 return null;
             }
@@ -717,6 +720,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
+    const flow = prep._beamFlowCounters;
+    const countFlow = (stage: import('./types.js').BeamFlowStage, count: number): void => {
+        if (flow && count > 0) flow[stage] = (flow[stage] ?? 0) + count;
+    };
     const emit = (stage: import('./types.js').BeamResearchStage, nodes: BeamNode[], details?: Record<string, unknown>): void => {
         if (!research) return;
         research.observe({ stage, depth: nodes[0]?.depth ?? phasesCompleted,
@@ -898,7 +905,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // credits the correct cumulative total once, exactly like pauseAfterPhases below) and attach
             // the same continuation shape instead.
             if (out && captureContinuationOnBudgetExit) { _dbgFlush('pausedContinuation-budget'); out.pausedContinuation = captureBeamContinuation(frontier, phasesCompleted, nodesExpandedTotal, ws, _liveUndo, startKey, level, prep); return null; }
-            if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null;
+            if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); prep._failureProgressObserver?.observe({ family: 'beam', workSpent: prep._workMeter.units, badness: out.finalBadness, kind: 'terminal' }); } return null;
         }
         if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
         // pauseAfterPhases (research-only, see header comment): a clean, deterministic work-boundary
@@ -918,6 +925,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         const hardPruneContexts: Record<string, unknown>[] | null = research ? [] : null;
         const parentExpansionsForResearch: Record<string, unknown>[] | null =
             research?.includeParentExpansionWork ? [] : null;
+        countFlow('incoming', frontier.length);
         if (research) emit('incoming-frontier', frontier);
         if (_BEAM_DEBUG) _dbgPhases++;
 
@@ -961,7 +969,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // production behavior — every real timeout path — is completely unaffected).
                 if (!captureContinuationOnBudgetExit
                     && (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity))) {
-                    if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null;
+                    if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); prep._failureProgressObserver?.observe({ family: 'beam', workSpent: prep._workMeter.units, badness: out.finalBadness, kind: 'terminal' }); } return null;
                 }
                 await yieldIfNeeded();
             }
@@ -1013,7 +1021,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             if (_BEAM_DEBUG) { _dbgNeighborsNs += _hrtNow() - _t1; _dbgNeighborsCalls++; }
             if (pos === startKey) {
                 const beforeForced = research ? [...neighbors] : null;
-                const diagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} } : undefined;
+                const diagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} }
+                    : prep._pruneDiagnostics as PruneDiagnostics | undefined;
                 neighbors = pruneFirstStepNeighbors(startKey, neighbors, prep, diagnostics);
                 if (beforeForced && beforeForced.length !== neighbors.length) for (const removed of beforeForced) {
                     if (neighbors.includes(removed)) continue;
@@ -1040,7 +1049,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // ordering and verdicts come from the shared gauntlet so it cannot drift from DFS.
                 const runConnectivity = rSteps <= 20 || (realLen & 7) === 0;
                 const _tc = _BEAM_DEBUG && runConnectivity ? _hrtNow() : 0n;
-                const pruneDiagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} } : undefined;
+                const pruneDiagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} }
+                    : prep._pruneDiagnostics as PruneDiagnostics | undefined;
                 const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity,
                     { diagnostics: pruneDiagnostics });
                 if (_BEAM_DEBUG && runConnectivity) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
@@ -1054,6 +1064,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     return sol;
                 }
                 const ok = verdict === 'pass';
+                countFlow('generated', 1);
+                if (!ok) countFlow('hard-pruned', 1);
                 if (research) {
                     const diagnosticNode: BeamNode = { key: next, prev: node, depth: node.depth + 1, score: node.score,
                         ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0, usedPortalPairs: 0 };
@@ -1214,6 +1226,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     } else if (dm.size < cands.length) pool = [...dm.values()];
                 }
             }
+            countFlow('merge-removed', cands.length - pool.length);
             if (research) emit('post-production-coarse-state-merge', pool);
             if (_BEAM_DEBUG) { _dbgCoarseMergeNs += _hrtNow() - _t2; }
             const _t3 = _hrtNow();
@@ -1234,6 +1247,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 ? (retained ? pool.filter(c => !retained.has(c)) : pool.slice(beamWidth)) : null;
             const culledStage = effectiveMechanicBucketRetention ? 'mechanic-bucket-culled'
                 : effectiveIntsBucketRetention ? 'ints-bucket-culled' : 'score-width-culled';
+            countFlow(culledStage, Math.max(0, pool.length - frontier.length));
             if (actuallyCulled) emit(culledStage, actuallyCulled, {
                 beamWidth, cutoffScore: pool[beamWidth - 1]?.score ?? null,
                 firstCulledScore: pool[beamWidth]?.score ?? null,
@@ -1258,6 +1272,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 emit('post-score-width-cull', frontier);
             }
         }
+        countFlow('retained', frontier.length);
     }
     _dbgFlush('exhausted');
     if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex;

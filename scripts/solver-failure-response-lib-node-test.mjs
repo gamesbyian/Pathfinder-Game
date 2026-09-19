@@ -18,11 +18,11 @@ assert.equal(compactCell.actionKey, 'beam');
 assert.equal(compactCell.nodeCeiling, 50000000);
 assert.equal(compactCell.nodesExpanded, 4200);
 assert.equal(compactCell.workSpent, null, 'a field the row does not report stays null, never a fabricated 0');
-assert.equal(compactCell.refereeInvalid, false);
+assert.equal(compactCell.refereeInvalid, null, 'absence of referee evidence stays unknown');
 
 const refereeInvalidRow = { cellId: 'x', ok: false, status: 'referee-invalid' };
 assert.equal(compactFailureResponseRow(refereeInvalidRow).refereeInvalid, true);
-assert.equal(compactFailureResponseRow({ ...refereeInvalidRow, status: 'exhausted' }).refereeInvalid, false);
+assert.equal(compactFailureResponseRow({ ...refereeInvalidRow, status: 'exhausted' }).refereeInvalid, null);
 
 const solvedWithFailure = {
     id: 'R00001', ok: true, workSpent: 900,
@@ -85,5 +85,14 @@ const compactEmpty = compactFailureResponseRow(emptyRow);
 for (const field of ['nodeCeiling', 'nodesExpanded', 'workCeiling', 'workSpent', 'bestBadness', 'finalBadness', 'deadlineTruncated', 'error']) {
     assert.equal(compactEmpty[field], null, `${field} must stay null when the row does not report it`);
 }
+assert.equal(compactEmpty.attemptCount, null, 'an absent attempt array stays unknown');
+assert.equal(compactEmpty.attempts, null);
+assert.equal(compactFailureResponseRow({ id: 'known-empty', attempts: [] }).attemptCount, 0, 'a present empty attempt array is a known zero');
+
+const identityRow = compactFailureResponseRow({ cellId: 'cell-A', levelId: 'L1', attempts: [{ outcome: 'exhausted', configKey: 'dfs', gateKey: 7 }] });
+assert.equal(identityRow.identity, 'cell-A');
+assert.equal(identityRow.parentId, 'L1');
+assert.equal(identityRow.cellId, 'cell-A');
+assert.equal(identityRow.attempts[0].outcome, 'exhausted');
 
 console.log('solver failure response lib tests passed');

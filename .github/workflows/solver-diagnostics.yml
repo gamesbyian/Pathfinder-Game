@@ -66,6 +66,23 @@ jobs:
             logs/solver-workflow/*.json
           retention-days: 30
 
+      - name: Publish standard solver sweep result
+        if: always()
+        run: |
+          node scripts/sweep-publish.mjs \
+            --primary="logs/solver-workflow/latest.json" \
+            --failure-source="logs/solver-workflow/latest.json" \
+            --source-artifact="solver-diagnostics-${{ github.sha }}"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Commit audit history, captured hints and drift report
         run: |
           git config user.name "github-actions[bot]"

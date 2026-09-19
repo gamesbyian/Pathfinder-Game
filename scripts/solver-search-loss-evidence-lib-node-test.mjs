@@ -6,6 +6,7 @@ import {
     dedupeSearchLossCapsules,
     decisionObservationToSearchLossCapsule,
     searchLossCapsuleIdentity,
+    reconstructSearchLossPath,
     summarizeSearchLossCapture,
     validateSearchLossCapsule,
     validateSearchLossCapture,
@@ -81,6 +82,11 @@ assert.equal(validateSearchLossCapture(capture), capture, 'valid minimal capture
 assert.throws(() => validateSearchLossCapsule({ ...capsule, parentId: '' }), /parentId/, 'rejects malformed required identity');
 assert.throws(() => validateSearchLossCapsule({ ...capsule, workSpent: -1 }), /workSpent/, 'rejects invalid work');
 assert.throws(() => validateSearchLossCapsule({ ...capsule, workSpent: Number.NaN }), /workSpent/);
+const replayable = buildCapsule({ replayBasis: 'replayable', reconstructability: { kind: 'inline-exact-prefix', path: [1, 2, 3] } });
+assert.deepEqual(reconstructSearchLossPath(JSON.parse(JSON.stringify(replayable))), [1, 2, 3]);
+assert.throws(() => validateSearchLossCapsule(buildCapsule({ replayBasis: 'replayable' })), /reconstructability/);
+const durableReplay = buildCapsule({ replayBasis: 'replayable', reconstructability: { kind: 'durable-source-row', artifact: 'bundle/result.json', rowId: 'A', pathField: 'prefix' } });
+assert.deepEqual(reconstructSearchLossPath(durableReplay, { resolveDurableRow: (_artifact, rowId) => rowId === 'A' ? { prefix: [4, 5] } : null }), [4, 5]);
 
 const unknownCapsule = buildCapsule({ eventKind: 'best-progress-transition', captureReason: 'best-progress', workSpent: null });
 assert.throws(() => validateSearchLossCapsule(unknownCapsule), /workSpent/, 'UNKNOWN-shaped rows still require workSpent, never a fabricated number');

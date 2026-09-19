@@ -161,6 +161,9 @@ test('multi-technique cell: the first config gets the whole gate share, the seco
     // any other unsolved cell -- see runCell's own `attempts: ok ? attempts : undefined`.
     assert.equal(result.ok, false);
     assert.equal(result.attempts, undefined);
+    assert.equal(result.compactAttempts.length, 4, 'failed cells automatically retain compact attempt response');
+    assert.ok(result.compactAttempts.every(attempt => attempt.outcome === 'exhausted'));
+    assert.ok(result.compactAttempts.every(attempt => attempt.configKey && attempt.gateKey != null));
 });
 
 test('cell.perTechniqueWorkCap narrows each technique\'s own share without widening the gate ceiling', async () => {
@@ -383,7 +386,7 @@ test('real solver, work budget too small for a losing technique: work-budget-rea
     assert.ok(result.workSpent >= 50_000, `workSpent (${result.workSpent}) should have reached the 50,000 ceiling`);
 });
 
-test('collectAttemptTelemetry exposes losing attempt lifecycle without changing the compact default', async () => {
+test('compact failed attempts are automatic while full attempt telemetry remains opt-in', async () => {
     const { runAttemptForTesting } = stubRunner((call, prep) => {
         prep._metrics.nodesExpanded += 1;
         prep._workMeter.units += 10;
@@ -394,6 +397,9 @@ test('collectAttemptTelemetry exposes losing attempt lifecycle without changing 
     const observed = await runCell({ ...baseCell, workBudget: 100, collectAttemptTelemetry: true });
 
     assert.equal(compact.attempts, undefined);
+    assert.ok((compact.compactAttempts?.length ?? 0) >= 1);
+    assert.ok(compact.compactAttempts.every(attempt => attempt.outcome === 'exhausted'));
+    assert.ok(compact.compactAttempts.every(attempt => attempt.workSpent === null || Number.isFinite(attempt.workSpent)));
     assert.equal(observed.ok, false);
     assert.ok((observed.attempts?.length ?? 0) >= 1);
     assert.ok(observed.attempts?.every(attempt => attempt.outcome === 'exhausted'));

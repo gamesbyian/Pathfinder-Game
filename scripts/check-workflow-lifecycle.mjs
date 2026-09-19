@@ -15,7 +15,9 @@ for (const row of ledger.workflows) {
   if (!row.currentConsumer || !row.retirementTrigger) failures.push(`${row.workflow}: missing consumer or retirement trigger`);
   if (row.role === 'evidence-producing') {
     const source = fs.readFileSync(`.github/workflows/${row.workflow}`, 'utf8');
-    if (!source.includes('publish-solver-sweep-result.mjs')) failures.push(`${row.workflow}: evidence workflow lacks standard publisher`);
+    if (!source.includes('publish-solver-sweep-result.mjs') && !source.includes('sweep-publish.mjs')) {
+      failures.push(`${row.workflow}: evidence workflow lacks standard publisher`);
+    }
     if (!source.includes('name: solver-sweep-result')) failures.push(`${row.workflow}: evidence workflow lacks standard artifact`);
   }
 }

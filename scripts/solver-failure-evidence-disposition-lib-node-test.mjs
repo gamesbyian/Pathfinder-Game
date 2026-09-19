@@ -18,7 +18,9 @@ function writeWorkflow(root, name, source) {
 
 function writeRegistry(root, producers) {
     fs.writeFileSync(path.join(root, 'docs', 'solver-failure-evidence-disposition.json'),
-        JSON.stringify({ schemaVersion: 1, producers }));
+        JSON.stringify({ schemaVersion: 1, producers: producers.map(producer => ({
+            durability: { mode: 'artifact-only', reason: 'test fixture' }, ...producer,
+        })) }));
 }
 
 const STANDARD_WORKFLOW = `
@@ -27,6 +29,11 @@ run: |
   node scripts/summarize-solver-failure-response.mjs --in=combined.json --out=summary.json
   node scripts/publish-solver-sweep-result.mjs --failure-response-file=summary.json
   echo '{"sideEffects": {"telemetry": "compact"}}'
+`;
+const WRAPPED_STANDARD_WORKFLOW = `
+name: wrapped-producer
+run: node scripts/sweep-publish.mjs --failure-in=p --primary=combined.json
+sideEffects: {"telemetry": "compact"}
 `;
 const LEGACY_NONE_WORKFLOW = `
 name: legacy-producer
@@ -65,6 +72,15 @@ run: echo hello
     fs.rmSync(root, { recursive: true, force: true });
 }
 
+// --- the shared wrapper is a standard transport, not a specialized opt-out ---
+{
+    const root = makeRoot();
+    writeWorkflow(root, 'wrapped.yml', WRAPPED_STANDARD_WORKFLOW);
+    writeRegistry(root, [{ id: 'wrapped', workflow: '.github/workflows/wrapped.yml', disposition: 'standard', reason: null }]);
+    assert.deepEqual(validateFailureEvidenceDisposition(root), []);
+    fs.rmSync(root, { recursive: true, force: true });
+}
+
 // --- opt-out/unsupported without a reason is rejected ---
 {
     const root = makeRoot();
@@ -100,7 +116,7 @@ run: echo hello
     writeWorkflow(root, 'unwired.yml', OPT_OUT_WORKFLOW);
     writeRegistry(root, [{ id: 'unwired', workflow: '.github/workflows/unwired.yml', disposition: 'standard', reason: null }]);
     const failures = validateFailureEvidenceDisposition(root);
-    assert.ok(failures.some(f => f.includes('does not invoke summarize-solver-failure-response.mjs')));
+    assert.ok(failures.some(f => f.includes('does not invoke a standard compact failure transport')));
     fs.rmSync(root, { recursive: true, force: true });
 }
 
@@ -121,6 +137,30 @@ run: echo hello
     writeRegistry(root, [{ id: 'weird', workflow: '.github/workflows/weird.yml', disposition: 'sort-of', reason: 'x' }]);
     const failures = validateFailureEvidenceDisposition(root);
     assert.ok(failures.some(f => f.includes('disposition must be one of')));
+    fs.rmSync(root, { recursive: true, force: true });
+}
+
+// --- lifecycle authority catches evidence workflows with no textual solver markers ---
+{
+    const root = makeRoot();
+    writeWorkflow(root, 'quiet-evidence.yml', UNRELATED_WORKFLOW);
+    writeRegistry(root, []);
+    fs.writeFileSync(path.join(root, 'docs', 'solver-workflow-lifecycle.json'), JSON.stringify({ schemaVersion: 1, workflows: [
+        { workflow: 'quiet-evidence.yml', role: 'evidence-producing', status: 'maintained' },
+    ] }));
+    const failures = validateFailureEvidenceDisposition(root);
+    assert.ok(failures.some(f => f.includes('maintained evidence-producing lifecycle workflow')));
+    fs.rmSync(root, { recursive: true, force: true });
+}
+
+// --- automatic durability is keyed by the exact workflow name, preventing trigger drift ---
+{
+    const root = makeRoot();
+    writeWorkflow(root, 'standard.yml', STANDARD_WORKFLOW);
+    writeRegistry(root, [{ id: 'standard', workflow: '.github/workflows/standard.yml', disposition: 'standard', reason: null,
+        durability: { mode: 'automatic-harvest', reason: null } }]);
+    const failures = validateFailureEvidenceDisposition(root);
+    assert.ok(failures.some(f => f.includes('does not trigger on its exact workflow name')));
     fs.rmSync(root, { recursive: true, force: true });
 }
 

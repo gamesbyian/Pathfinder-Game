@@ -295,6 +295,12 @@ export interface PrepLevel {
      *  SolveResult.attempts insertion order for ordinary ladder execution. */
     _beamResearchAttemptContext?: BeamResearchAttemptContext | null;
     _beamResearchAttemptOrdinal?: number;
+    /** Research-only counter telemetry; no paths/pools and never read by policy. */
+    _beamFlowCounters?: Partial<Record<BeamFlowStage, number>> | null;
+    /** Research-only attempt-scoped aggregate prune counts; no per-node records. */
+    _pruneDiagnostics?: { reached: Partial<Record<string, number>>; rejected: Partial<Record<string, number>> } | null;
+    /** Research-only bounded progress sink. Observations never steer search. */
+    _failureProgressObserver?: { observe(record: { family: 'dfs' | 'beam' | 'repair'; workSpent: number; badness: number; kind: 'new-best' | 'terminal' }): void } | null;
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
     /** Research-only joint-obligation propagation observer — see JointObligationObserver's own doc
@@ -384,6 +390,8 @@ export type BeamResearchStage = 'incoming-frontier' | 'generated' | 'hard-pruned
     | 'post-hard-prune' | 'coarse-state-merge-removed' | 'post-production-coarse-state-merge'
     | 'score-width-culled' | 'mechanic-bucket-culled' | 'ints-bucket-culled'
     | 'post-score-width-cull' | 'post-mechanic-bucket-selection' | 'post-ints-bucket-selection';
+export type BeamFlowStage = 'incoming' | 'generated' | 'hard-pruned' | 'merge-removed'
+    | 'score-width-culled' | 'mechanic-bucket-culled' | 'ints-bucket-culled' | 'retained';
 
 export interface BeamResearchAttemptContext {
     attemptOrdinal: number;

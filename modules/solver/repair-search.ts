@@ -1271,6 +1271,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         considerElite(ws.path.slice(), b, trackEliteStructure ? new Set(ws.path) : null, trackEliteStructure ? elitePendFromState(ws, level) : null);
         if (b < bestBadnessEver) {
             bestBadnessEver = b;
+            prep._failureProgressObserver?.observe({ family: 'repair', workSpent: prep._workMeter.units, badness: b, kind: 'new-best' });
             restartsSinceImprovement = 0;
             // Stage 2: a genuine best-ever improvement is the "signature changed" event — retire any
             // active penalty (it was tuned to the old plateau) and adopt the new best's shape.

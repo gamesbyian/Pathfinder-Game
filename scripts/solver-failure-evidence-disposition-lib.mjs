@@ -11,8 +11,11 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 export const DISPOSITION_REGISTRY_PATH = 'docs/solver-failure-evidence-disposition.json';
+export const WORKFLOW_LIFECYCLE_PATH = 'docs/solver-workflow-lifecycle.json';
 const DISPOSITIONS = new Set(['standard', 'specialized-opt-out', 'unsupported']);
-const STANDARD_TRANSPORT_MARKER = 'summarize-solver-failure-response.mjs';
+const DURABILITY_MODES = new Set(['automatic-harvest', 'alternate-rail', 'artifact-only']);
+const STANDARD_TRANSPORT_MARKERS = ['summarize-solver-failure-response.mjs', 'sweep-publish.mjs'];
+const HARVEST_WORKFLOW_PATH = '.github/workflows/harvest-solver-evidence.yml';
 
 function nonEmptyString(value) {
     return typeof value === 'string' && value.trim().length > 0;
@@ -36,7 +39,7 @@ function isSolverRunningWorkflow(source) {
 }
 
 function declaresStandardTransport(source) {
-    return source.includes(STANDARD_TRANSPORT_MARKER);
+    return STANDARD_TRANSPORT_MARKERS.some(marker => source.includes(marker));
 }
 
 /**
@@ -62,6 +65,8 @@ export function validateFailureEvidenceDisposition(root = process.cwd()) {
     }
 
     const failures = [];
+    const harvestSource = existsSync(path.join(root, HARVEST_WORKFLOW_PATH))
+        ? readFileSync(path.join(root, HARVEST_WORKFLOW_PATH), 'utf8') : '';
     if (registry.schemaVersion !== 1) failures.push(`unsupported schemaVersion ${registry.schemaVersion}; expected 1`);
     if (!Array.isArray(registry.producers) || registry.producers.length === 0) {
         failures.push('producers must be a non-empty array');
@@ -96,13 +101,24 @@ export function validateFailureEvidenceDisposition(root = process.cwd()) {
             failures.push(`${label}.reason is required for disposition "${producer.disposition}"`);
         }
 
+        if (!DURABILITY_MODES.has(producer.durability?.mode)) {
+            failures.push(`${label}.durability.mode must be one of ${[...DURABILITY_MODES].join(', ')}`);
+        } else if (producer.durability.mode !== 'automatic-harvest' && !nonEmptyString(producer.durability.reason)) {
+            failures.push(`${label}.durability.reason is required for mode "${producer.durability.mode}"`);
+        }
+
         const source = readFileSync(path.join(root, producer.workflow), 'utf8');
+        const workflowName = source.match(/^name:\s*(.+)$/mu)?.[1]?.trim().replace(/^['"]|['"]$/gu, '');
+        if (producer.durability?.mode === 'automatic-harvest'
+            && (!workflowName || !harvestSource.includes(`'${workflowName}'`))) {
+            failures.push(`${label} declares automatic-harvest but ${HARVEST_WORKFLOW_PATH} does not trigger on its exact workflow name`);
+        }
         const transports = declaresStandardTransport(source);
         if (producer.disposition === 'standard' && !transports) {
-            failures.push(`${label} declares disposition "standard" but ${producer.workflow} does not invoke ${STANDARD_TRANSPORT_MARKER}`);
+            failures.push(`${label} declares disposition "standard" but ${producer.workflow} does not invoke a standard compact failure transport`);
         }
         if (producer.disposition !== 'standard' && transports) {
-            failures.push(`${label} declares disposition "${producer.disposition}" but ${producer.workflow} already invokes ${STANDARD_TRANSPORT_MARKER}; update its disposition to "standard"`);
+            failures.push(`${label} declares disposition "${producer.disposition}" but ${producer.workflow} already invokes a standard compact failure transport; update its disposition to "standard"`);
         }
         const telemetryLiterals = declaredTelemetryLiterals(source);
         if (producer.disposition === 'standard' && telemetryLiterals.includes('none')) {
@@ -114,6 +130,22 @@ export function validateFailureEvidenceDisposition(root = process.cwd()) {
         const source = readFileSync(path.join(root, workflow), 'utf8');
         if (isSolverRunningWorkflow(source) && !byWorkflow.has(workflow)) {
             failures.push(`${workflow} looks solver-running (declares sideEffects or uses the shared experiment-contract writer/publisher) but has no ${DISPOSITION_REGISTRY_PATH} entry`);
+        }
+    }
+
+    // The lifecycle registry is the authoritative maintained evidence-workflow inventory. Textual
+    // markers above remain a supplementary drift detector for operational canaries/diagnostics.
+    const lifecyclePath = path.join(root, WORKFLOW_LIFECYCLE_PATH);
+    if (existsSync(lifecyclePath)) {
+        try {
+            const lifecycle = JSON.parse(readFileSync(lifecyclePath, 'utf8'));
+            for (const item of lifecycle.workflows ?? []) {
+                if (item?.role !== 'evidence-producing' || item?.status !== 'maintained') continue;
+                const workflow = path.join('.github', 'workflows', item.workflow).replaceAll('\\', '/');
+                if (!byWorkflow.has(workflow)) failures.push(`${workflow} is a maintained evidence-producing lifecycle workflow but has no ${DISPOSITION_REGISTRY_PATH} entry`);
+            }
+        } catch (error) {
+            failures.push(`cannot parse ${WORKFLOW_LIFECYCLE_PATH}: ${error.message}`);
         }
     }
 

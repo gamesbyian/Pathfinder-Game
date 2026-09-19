@@ -312,6 +312,10 @@ export interface SolveOpts {
      *  copied search records plus stable attempt identity/ordinal and cannot affect search.
      *  Functions are intentionally direct/on-thread only and are not worker-serializable. */
     beamResearchObserver?: BeamResearchObserver;
+    /** Research-only counter paths used by failure-information overhead pilots. */
+    beamFlowCounters?: Partial<Record<import('./types.js').BeamFlowStage, number>>;
+    pruneDiagnostics?: { reached: Record<string, number>; rejected: Record<string, number> };
+    failureProgressObserver?: { observe(record: { family: 'dfs' | 'beam' | 'repair'; workSpent: number; badness: number; kind: 'new-best' | 'terminal' }): void };
     /** Research-only isConnected() rejection observer (see ConnectivityRejectionObserver's doc in
      *  types.ts and docs/solver-optimization-workstreams.md item #0's learned-failure Stage A).
      *  Never persisted or exposed by Solver's facade; absent in every production caller. */
