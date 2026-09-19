@@ -3,7 +3,7 @@
 
 Deferred/reopen questions only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) method.
 
-**Level-blindness constrains provenance, not specificity:** generic cold procedures may derive exact current-input facts; cross-parent recurrence is required only for fixed reusable descriptor claims.
+**Level-blindness constrains provenance, not specificity:** cold procedures may derive exact current-input facts; cross-parent recurrence is required only for reusable descriptor claims.
 
 ## Promoted out of future work
 
