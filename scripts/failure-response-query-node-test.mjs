@@ -69,6 +69,10 @@ try {
     assert.equal(result.summary.parentOutcomes.nodeLimited, 1);
     assert.deepEqual(result.summary.protocolPartitions.p1, { parents: 1, solvedParents: 1, nonSolvedParents: 0 });
     assert.deepEqual(result.summary.protocolPartitions['unknown-or-mixed'], { parents: 1, solvedParents: 0, nonSolvedParents: 1 });
+    assert.equal(result.summary.repeatedObservations.multiRecordParents, 1);
+    assert.equal(result.summary.repeatedObservations.multiRunParents, 1);
+    assert.equal(result.summary.repeatedObservations.protocolComparableMultiRunParents, 0);
+    assert.equal(result.summary.repeatedObservations.recordsPerParent.max, 2);
     assert.equal(result.summary.attempts.records, 3);
     assert.equal(result.summary.attempts.actions.beam, 2);
     assert.equal(result.summary.attempts.actions.repair, 1);
