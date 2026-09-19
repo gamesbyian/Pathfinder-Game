@@ -74,6 +74,9 @@ export function classifyFailureEvidenceApplicability(document, row, purpose, {
         if (!substantiveOutcome(row)) {
             return { applicability: 'inadmissible', reason: 'infrastructure-or-malformed-outcome' };
         }
+        if (row.outcome === 'deadlineTruncated') {
+            return { applicability: 'context-bound', reason: 'censored-terminal-outcome' };
+        }
         if (row.outcome === 'unknown') {
             return { applicability: 'context-bound', reason: 'unknown-terminal-outcome' };
         }
@@ -108,10 +111,13 @@ export function classifyFailureEvidenceApplicability(document, row, purpose, {
     if (!integrity || integrity.coverageComplete !== true) {
         return { applicability: 'context-bound', reason: 'population-coverage-not-established' };
     }
+    if (integrity.decisionValidComplete !== true) {
+        return { applicability: 'context-bound', reason: 'population-includes-censored-or-indeterminate-outcomes' };
+    }
     if (!nonEmpty(protocolHash) || !nonEmpty(solverRef)) {
         return { applicability: 'context-bound', reason: 'missing-protocol-or-solver-identity' };
     }
-    if (row.outcome === 'unknown' || row.outcome === 'malformed' || row.outcome === 'missing') {
+    if (['unknown', 'malformed', 'missing', 'harnessError', 'deadlineTruncated'].includes(row.outcome)) {
         return { applicability: 'inadmissible', reason: 'non-interpretable-population-outcome' };
     }
     return { applicability: 'admissible', reason: 'declared-complete-parent-population' };
