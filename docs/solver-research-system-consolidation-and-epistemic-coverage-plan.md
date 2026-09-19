@@ -66,8 +66,8 @@ The system itself is justified only when it does one or more of the following:
 4. preserves evidence that would otherwise be lost;
 5. makes an important previously inaccessible question testable;
 6. exposes a solver capability gap that produces a productive intervention;
-8. reduces agent/human retrieval and coordination cost;
-9. improves the probability that solver-development effort creates additional solves.
+7. reduces agent/human retrieval and coordination cost;
+8. improves the probability that solver-development effort creates additional solves.
 
 Research-system elegance is not an independent objective.
 
@@ -1186,8 +1186,8 @@ For important active/deferred questions, derive or state these layers where rele
 4. **reference answerability** — can exact/reference machinery adjudicate the needed fact, with support/abstention known?
 5. **population answerability** — do suitable independent units/opportunity populations exist?
 6. **economic answerability** — can enough information be acquired at sensible work/cost?
-8. **inferential answerability** — is the instrument calibrated and would the resulting evidence/analysis justify the intended claim rather than only a narrower one?
-9. **decision answerability** — would resolving the ambiguity change implementation, queue state, reopen logic, or the solver model?
+7. **inferential answerability** — is the instrument calibrated and would the resulting evidence/analysis justify the intended claim rather than only a narrower one?
+8. **decision answerability** — would resolving the ambiguity change implementation, queue state, reopen logic, or the solver model?
 
 Low answerability must not imply low scientific value.
 
@@ -1476,8 +1476,8 @@ For every proposed new observer, intervention, evidence layer or research primit
 4. **Estimate opportunity on independent units.**
 5. **Price acquisition.**
 6. **Build the smallest observer/intervention/query.**
-8. **Demonstrate a consumer that changes a useful decision.**
-9. **Only then generalize infrastructure.**
+7. **Demonstrate a consumer that changes a useful decision.**
+8. **Only then generalize infrastructure.**
 
 This applies premise-before-treatment discipline to research infrastructure itself.
 
@@ -1655,27 +1655,27 @@ Do first because these reduce correctness and inference risk with little solver 
 4. Phase 3: constructor-hardening audit.
 5. Phase 6.1: audit real emitted artifacts against declared schemas/contracts, beginning with the current v3 experiment-result split-brain.
 6. Phase 6.2-6.4: identify the minimum common semantic kernel, unit-topology needs and independence dimensions actually shared by current systems.
-8. Phase 4: expand the end-to-end research-transaction fixture around those semantics.
-9. Phase 5: recovery/recombine contract audit.
-10. Phase 9.4: question/premise/capability/MO/queue consistency audit.
-11. Phase 13: plan lifecycle audit.
+7. Phase 4: expand the end-to-end research-transaction fixture around those semantics.
+8. Phase 5: recovery/recombine contract audit.
+9. Phase 9.4: question/premise/capability/MO/queue consistency audit.
+10. Phase 13: plan lifecycle audit.
 
 ## Stage B - Prove the scientific middle layer on narrow real consumers
 
-12. Phase 7: add a lightweight analysis contract to one high-selection/expensive decision-bearing experiment path.
-13. Phase 8.1-8.2: emit one claim capsule that separates execution, scientific and decision disposition.
-14. Phase 8.3: preserve its transformation/analysis provenance.
-15. Phase 9.1: calibrate the primary instrument enough to state its support/abstention boundary.
-16. Phase 7.7: add a manipulation/contrast-fidelity check to the same pilot where applicable.
-17. Phase 9.2: add a small epistemic conformance/metamorphic fixture.
-18. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
-19. Report which common semantics proved reusable and which should remain specialist.
+11. Phase 7: add a lightweight analysis contract to one high-selection/expensive decision-bearing experiment path.
+12. Phase 8.1-8.2: emit one claim capsule that separates execution, scientific and decision disposition.
+13. Phase 8.3: preserve its transformation/analysis provenance.
+14. Phase 9.1: calibrate the primary instrument enough to state its support/abstention boundary.
+15. Phase 7.7: add a manipulation/contrast-fidelity check to the same pilot where applicable.
+16. Phase 9.2: add a small epistemic conformance/metamorphic fixture.
+17. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
+18. Report which common semantics proved reusable and which should remain specialist.
 
 Do not generalize a kernel field until at least two real consumers need the same meaning.
 
 ## Stage C - Measure the research portfolio before correcting it
 
-20. Phase 14: bounded MO-007 research-attention topology.
+19. Phase 14: bounded MO-007 research-attention topology.
 20. Phase 19: question-provenance join over the same bounded window.
 21. Phase 16: answerability decomposition on a small high-value question sample.
 22. Include dependence/independence information where apparent corroboration shares instruments, analysis code or ontology.
@@ -1689,26 +1689,26 @@ This stage deliberately precedes broad reflexivity infrastructure. Do not build 
 25. Phase 8.5: introduce structured closeout capsules for new current-state reports while preserving historical fallback.
 26. Phase 11: compact research front door.
 27. Phase 12: documentation-entropy diagnostics.
-29. Phase 9.5: highest-value already-earned composition views.
-30. Phase 9.3: hint/failure semantic interoperability cleanup only where meaning is genuinely shared.
+28. Phase 9.5: highest-value already-earned composition views.
+29. Phase 9.3: hint/failure semantic interoperability cleanup only where meaning is genuinely shared.
 
 ## Stage E - Earned rigor/reflexivity controls
 
 Only findings from Stages A-D should determine how much of this stage is needed.
 
-31. Phase 15: rival-set preservation in existing preflight/report contracts.
-32. Phase 17: answerability-gap/MO operational-coverage view.
-33. Phase 18: research-system capability audit.
-34. Phase 23: first negative-space intersection-mining pass.
-35. Phase 22: prospective expectation/surprise capture for new high-value investigations.
-36. Phase 7.6: pilot hard-blind confirmation only on a decision whose selection pressure justifies it.
-37. Phase 9.7: target/deployment-envelope audit before any new broad generalization claim.
-38. Phase 20: run one bounded triggered-exploration response if trigger conditions are actually met.
-39. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
+30. Phase 15: rival-set preservation in existing preflight/report contracts.
+31. Phase 17: answerability-gap/MO operational-coverage view.
+32. Phase 18: research-system capability audit.
+33. Phase 23: first negative-space intersection-mining pass.
+34. Phase 22: prospective expectation/surprise capture for new high-value investigations.
+35. Phase 7.6: pilot hard-blind confirmation only on a decision whose selection pressure justifies it.
+36. Phase 9.7: target/deployment-envelope audit before any new broad generalization claim.
+37. Phase 20: run one bounded triggered-exploration response if trigger conditions are actually met.
+38. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
 
 ## Stage F - Blind-spot-driven scientific work
 
-40. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
+39. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
 40. Phase 24: one adversarial semantic challenge population for a high-value capability gap where source construction is the missing discriminator.
 41. Phase 26: bounded external semantic-operation review only when it illuminates a live blind spot.
 42. Use Phase 27 for any new research primitive.
