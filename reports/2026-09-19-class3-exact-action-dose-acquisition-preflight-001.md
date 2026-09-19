@@ -4,7 +4,7 @@
 > **Last evidence:** 2026-09-19 — standard compact failure-response now preserves exact attempt action/stage work and protocol identity; retained current boundary remains 531 residual / 23 primary Class-3 rows.
 > **Decision:** freeze the population from the canonical current residual-atlas regeneration, then measure exact known-rescuer participation and dose inside a production-shaped shared-budget run before interpreting any Class-3 row as exposed-and-failed.
 > **Remaining gate:** freeze the regenerated 23-row expectation artifact from committed census/boundary assets, then obtain protocol-compatible compact attempt telemetry from a maintained shared-production producer. Population derivation and downstream classification are mechanical and require no solver search.
-> **Research question:** `WS2-CLASS3-DOSE-EXPOSURE`.
+> **Research question:** `WS2-CLASS3-DOSE-EXPOSURE`
 > **Evidence role:** acquisition/analysis precommitment, not a treatment test.
 
 ## Scientific question
