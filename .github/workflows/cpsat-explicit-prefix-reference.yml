@@ -41,6 +41,10 @@ on:
         description: 'Skip re-executing the (expensive) shards entirely and only re-run combine/integrity/publish against an earlier run id''s already-uploaded shard artifacts -- for recovering from a downstream post-processing bug without repaying solver compute. Leave blank for an ordinary fresh dispatch.'
         required: false
         default: ''
+      lane_a_signature_collision_analysis:
+        description: 'Run the Lane A C0 signature-collision precommitted analysis (scripts/stress/lane-a-c0-signature-collision-analysis.mjs) against the combined result and print it to this job''s log. Only meaningful when cases_file/case_format dispatch that experiment''s own disambiguated (cutSignature::caseId) ids.'
+        required: false
+        default: 'false'
 
 concurrency:
   group: cpsat-explicit-prefix-reference
@@ -178,6 +182,23 @@ jobs:
             --in-dir=artifact-staging \
             --shards="${{ inputs.shard_count }}" \
             --out="reports/stress/cpsat-explicit-prefix-reference-${{ github.run_id }}.json"
+
+      - name: Run Lane A C0 signature-collision analysis
+        if: inputs.lane_a_signature_collision_analysis == 'true'
+        shell: bash
+        run: |
+          node scripts/stress/lane-a-c0-signature-collision-analysis.mjs \
+            --in="reports/stress/cpsat-explicit-prefix-reference-${{ github.run_id }}.json" \
+            --out="reports/stress/lane-a-c0-signature-collision-analysis-${{ github.run_id }}.json"
+
+      - name: Upload Lane A signature-collision analysis
+        if: inputs.lane_a_signature_collision_analysis == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: lane-a-c0-signature-collision-analysis-${{ github.run_id }}
+          path: reports/stress/lane-a-c0-signature-collision-analysis-${{ github.run_id }}.json
+          retention-days: 90
+          if-no-files-found: error
 
       - name: Validate exact case-population integrity and declare the native v3 contract
         if: always()
