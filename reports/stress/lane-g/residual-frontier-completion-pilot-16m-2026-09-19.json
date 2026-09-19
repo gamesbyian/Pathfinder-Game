@@ -1,0 +1,388 @@
+{
+  "seed": "lane-g-residual-frontier-completion-pilot-2026-09-19",
+  "sampledIds": [
+    "R03115",
+    "R02069",
+    "R03368",
+    "R02899",
+    "R03041",
+    "R03265",
+    "R02701",
+    "R00765",
+    "R02206",
+    "R01683",
+    "R03342",
+    "R03069",
+    "R02419",
+    "R02397",
+    "R02018"
+  ],
+  "depthFractions": [
+    0.7,
+    0.8,
+    0.9
+  ],
+  "results": [
+    {
+      "levelId": "R03115",
+      "depthFraction": 0.7,
+      "pickIndex": 1263,
+      "status": "completion-failed",
+      "candidateLength": 51,
+      "frontierSize": 2000,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03115",
+      "depthFraction": 0.8,
+      "pickIndex": 900,
+      "status": "completion-failed",
+      "candidateLength": 58,
+      "frontierSize": 2000,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03115",
+      "depthFraction": 0.9,
+      "pickIndex": 52,
+      "status": "completion-failed",
+      "candidateLength": 65,
+      "frontierSize": 689,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02069",
+      "depthFraction": 0.7,
+      "pickIndex": 898,
+      "status": "completion-failed",
+      "candidateLength": 44,
+      "frontierSize": 2000,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02069",
+      "depthFraction": 0.8,
+      "pickIndex": 238,
+      "status": "completion-failed",
+      "candidateLength": 51,
+      "frontierSize": 1718,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02069",
+      "depthFraction": 0.9,
+      "pickIndex": 131,
+      "status": "completion-failed",
+      "candidateLength": 57,
+      "frontierSize": 155,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03368",
+      "depthFraction": 0.7,
+      "pickIndex": 364,
+      "status": "completion-failed",
+      "candidateLength": 85,
+      "frontierSize": 2000,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03368",
+      "depthFraction": 0.8,
+      "pickIndex": 1833,
+      "status": "completion-failed",
+      "candidateLength": 97,
+      "frontierSize": 2000,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03368",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R02899",
+      "depthFraction": 0.7,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R02899",
+      "depthFraction": 0.8,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R02899",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R03041",
+      "depthFraction": 0.7,
+      "pickIndex": 276,
+      "status": "completion-failed",
+      "candidateLength": 84,
+      "frontierSize": 1420,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03041",
+      "depthFraction": 0.8,
+      "pickIndex": 849,
+      "status": "completion-failed",
+      "candidateLength": 95,
+      "frontierSize": 888,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03041",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R03265",
+      "depthFraction": 0.7,
+      "pickIndex": 87,
+      "status": "completion-failed",
+      "candidateLength": 58,
+      "frontierSize": 619,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03265",
+      "depthFraction": 0.8,
+      "pickIndex": 410,
+      "status": "completion-failed",
+      "candidateLength": 67,
+      "frontierSize": 498,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03265",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R02701",
+      "depthFraction": 0.7,
+      "pickIndex": 63,
+      "status": "completion-failed",
+      "candidateLength": 63,
+      "frontierSize": 1468,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02701",
+      "depthFraction": 0.8,
+      "pickIndex": 124,
+      "status": "completion-failed",
+      "candidateLength": 71,
+      "frontierSize": 250,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02701",
+      "depthFraction": 0.9,
+      "pickIndex": 18,
+      "status": "completion-failed",
+      "candidateLength": 80,
+      "frontierSize": 26,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R00765",
+      "depthFraction": 0.7,
+      "pickIndex": 562,
+      "status": "completion-failed",
+      "candidateLength": 74,
+      "frontierSize": 737,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R00765",
+      "depthFraction": 0.8,
+      "pickIndex": 250,
+      "status": "completion-failed",
+      "candidateLength": 84,
+      "frontierSize": 364,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R00765",
+      "depthFraction": 0.9,
+      "pickIndex": 0,
+      "status": "completion-failed",
+      "candidateLength": 95,
+      "frontierSize": 1,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02206",
+      "depthFraction": 0.7,
+      "pickIndex": 440,
+      "status": "completion-failed",
+      "candidateLength": 55,
+      "frontierSize": 1683,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02206",
+      "depthFraction": 0.8,
+      "pickIndex": 956,
+      "status": "completion-failed",
+      "candidateLength": 63,
+      "frontierSize": 1297,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02206",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R01683",
+      "depthFraction": 0.7,
+      "pickIndex": 1090,
+      "status": "completion-failed",
+      "candidateLength": 73,
+      "frontierSize": 1393,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R01683",
+      "depthFraction": 0.8,
+      "pickIndex": 1576,
+      "status": "completion-failed",
+      "candidateLength": 83,
+      "frontierSize": 1972,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R01683",
+      "depthFraction": 0.9,
+      "pickIndex": 0,
+      "status": "completion-failed",
+      "candidateLength": 94,
+      "frontierSize": 2,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03342",
+      "depthFraction": 0.7,
+      "pickIndex": 364,
+      "status": "completion-failed",
+      "candidateLength": 73,
+      "frontierSize": 505,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03342",
+      "depthFraction": 0.8,
+      "pickIndex": 43,
+      "status": "completion-failed",
+      "candidateLength": 83,
+      "frontierSize": 322,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03342",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R03069",
+      "depthFraction": 0.7,
+      "pickIndex": 1897,
+      "status": "completion-failed",
+      "candidateLength": 75,
+      "frontierSize": 2000,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03069",
+      "depthFraction": 0.8,
+      "pickIndex": 1183,
+      "status": "completion-failed",
+      "candidateLength": 85,
+      "frontierSize": 1208,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R03069",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R02419",
+      "depthFraction": 0.7,
+      "pickIndex": 103,
+      "status": "completion-failed",
+      "candidateLength": 68,
+      "frontierSize": 481,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02419",
+      "depthFraction": 0.8,
+      "pickIndex": 16,
+      "status": "completion-failed",
+      "candidateLength": 78,
+      "frontierSize": 21,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02419",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    },
+    {
+      "levelId": "R02397",
+      "depthFraction": 0.7,
+      "pickIndex": 1528,
+      "status": "completion-failed",
+      "candidateLength": 100,
+      "frontierSize": 1795,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02397",
+      "depthFraction": 0.8,
+      "pickIndex": 1629,
+      "status": "completion-failed",
+      "candidateLength": 115,
+      "frontierSize": 2000,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02397",
+      "depthFraction": 0.9,
+      "pickIndex": 0,
+      "status": "completion-failed",
+      "candidateLength": 129,
+      "frontierSize": 2,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02018",
+      "depthFraction": 0.7,
+      "pickIndex": 1730,
+      "status": "completion-failed",
+      "candidateLength": 97,
+      "frontierSize": 2000,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02018",
+      "depthFraction": 0.8,
+      "pickIndex": 107,
+      "status": "completion-failed",
+      "candidateLength": 111,
+      "frontierSize": 198,
+      "completionNodes": 16000000
+    },
+    {
+      "levelId": "R02018",
+      "depthFraction": 0.9,
+      "status": "exhausted-before-checkpoint"
+    }
+  ]
+}
