@@ -39,6 +39,8 @@ Mining many assets/features or historical regimes creates selection pressure; di
 |---|---|---|
 | Published/stress levels | level × source/generator/selection | What population and selection process is this? |
 | Hint provenance | path discovery | Who/what found this path, under which context? |
+| Hint discovery process | run × parent × exact stored path | What failed/ran before this accepted path was found under a named experiment contract? |
+| Hint harvest selection | source run × harvest funnel | Which solved candidate rows entered, duplicated, or were quarantined from the hint store? |
 | Structural fingerprint | level structure | Is persisted evidence about the same revision? |
 | Solution profiles | level × provenance source × sample support | What do known sampled solutions look like? |
 | Technique census/capability map | level × technique/config | What isolated capability exists at measured dose? |
@@ -59,7 +61,7 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 ## High-value joins
 
-Useful joins include failure response × census/benchmarks, census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units. Use the smallest useful join.
+Useful joins include failure response × census/benchmarks, census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, hint discovery process × failure response/manifests, hint harvest selection × provenance/manifests, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units. Use the smallest useful join.
 
 ### Four-resource lineage recipe
 
@@ -99,7 +101,7 @@ Variant siblings, generator batches, rediscoveries, and multiple rows from one l
 
 Declare the evidence purpose before consuming provenance: `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process`. Use shared applicability/dependency-stratum helpers rather than a local “trusted hint” predicate.
 
-A referee-valid path remains useful oracle/atlas evidence regardless of producer. Variant replay, witnesses, external/guided/isolated discoveries and old regimes can be valuable history while proving nothing about current cold capability. Missing legacy booleans remain unknown; age alone does not prove staleness; rediscovery-event count is not independent support. Technique performance requires the attempted population, failures, comparable `workSpent`, and protocol identity. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
+A referee-valid path remains useful oracle/atlas evidence regardless of producer. Variant replay, witnesses, external/guided/isolated discoveries and old regimes can be valuable history while proving nothing about current cold capability. Missing legacy booleans remain unknown; age alone does not prove staleness; rediscovery-event count is not independent support. Technique performance requires the attempted population, failures, comparable `workSpent`, and protocol identity. Run-linked discovery-process evidence can recover pre-success failed attempts for exact stored paths without bloating Hint records; harvest-selection manifests explain how already-solved candidates entered the store but are not attempted-population denominators. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 ### Freshness and reuse are evidence-specific
 

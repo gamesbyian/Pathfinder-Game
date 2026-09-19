@@ -190,7 +190,9 @@
         "solution-space-profiles",
         "production-benchmarks",
         "technique-census",
-        "level-structure-fingerprint"
+        "level-structure-fingerprint",
+        "hint-discovery-process",
+        "hint-harvest-selection-provenance"
       ],
       "affordances": [
         "Ask an explicit evidence-purpose question instead of treating every valid historical discovery as equivalent evidence.",
@@ -209,6 +211,121 @@
         "Old solver versions are not automatically stale, but current capability/performance use requires audited code/config/scheduler/work equivalence or bounded current replay.",
         "Technique-performance claims require originating-run denominators/failures and comparable work; success-selected hint events alone cannot establish solve rate or relative performance.",
         "Provenance is powerful offline evidence but must not become level-specific runtime steering."
+      ]
+    },
+    {
+      "id": "hint-discovery-process",
+      "name": "Run-linked hint discovery process evidence",
+      "status": "generated-interface",
+      "grain": [
+        "solver-run",
+        "parent-level",
+        "hint-path",
+        "attempt-sequence-through-winner"
+      ],
+      "locations": [
+        {
+          "kind": "generated",
+          "path": "outputs selected by scripts/hint-discovery-process.mjs"
+        }
+      ],
+      "authorities": [
+        "scripts/hint-discovery-process-lib.mjs",
+        "scripts/hint-discovery-process-evidence-lib.mjs",
+        "scripts/hint-discovery-process.mjs",
+        "docs/solver-evaluation-evidence.md"
+      ],
+      "queryEntryPoints": [
+        "node scripts/research-asset-query.mjs --id=hint-discovery-process",
+        "npm run research:hint-discovery-process -- --in=<solver-report.json> [--contract=<experiment-contract.json> --run-id=<id>]",
+        "npm run research:join-hint-failure-process -- --discovery=<discovery-process.json> --failure=<failure-response.json>"
+      ],
+      "joinKeys": [
+        "parentId/levelId",
+        "exact complete hint path signature",
+        "runId",
+        "protocol/configuration hash",
+        "immutable solver ref",
+        "population identity"
+      ],
+      "evidenceRoles": [
+        "longitudinal-process",
+        "forensic",
+        "technique-performance-context",
+        "success-control"
+      ],
+      "relatedAssets": [
+        "hint-provenance",
+        "compact-failure-response",
+        "production-benchmarks",
+        "experiment-manifests"
+      ],
+      "affordances": [
+        "Recover which failed attempts and work preceded an exact stored solution-path discovery without bloating every persisted hint event.",
+        "Link success-selected hint history to the owning immutable experiment/run envelope when that envelope exists.",
+        "Compare successful discovery process with compact failed-attempt evidence under shared run/protocol/action identities.",
+        "Strictly join successful discovery processes to comparable failed observations by parent + protocol/configuration hash + immutable solver ref."
+      ],
+      "caveats": [
+        "Binding to a hint requires exact complete path equality; no fuzzy level/config/path inference is allowed.",
+        "The owning experiment contract remains authoritative for protocol, population, execution and limit semantics; this asset stores only a bounded identity projection.",
+        "An unmatched solved row is unavailable join evidence, not a negative statement about hint validity or discovery.",
+        "Historical process evidence does not establish current capability merely because the path remains referee-valid.",
+        "Parent level remains the default independent unit unless the owning experiment contract declares a different independent unit.",
+        "This is offline research evidence and may not become exact-level production steering."
+      ]
+    },
+    {
+      "id": "hint-harvest-selection-provenance",
+      "name": "Level-blind report hint-harvest selection provenance",
+      "status": "generated-interface",
+      "grain": [
+        "source-run",
+        "harvest funnel",
+        "quarantine reason"
+      ],
+      "locations": [
+        {
+          "kind": "pattern",
+          "path": "reports/stress/hint-harvest-selection/run-<run-id>.json"
+        }
+      ],
+      "authorities": [
+        "scripts/hint-harvest-selection-manifest-lib.mjs",
+        "scripts/harvest-level-blind-report-hints.mjs",
+        ".github/workflows/harvest-solver-evidence.yml"
+      ],
+      "queryEntryPoints": [
+        "node scripts/research-asset-query.mjs --id=hint-harvest-selection-provenance",
+        "reports/stress/hint-harvest-selection/run-<run-id>.json"
+      ],
+      "joinKeys": [
+        "source runId",
+        "source workflow",
+        "harvested hint/provenance outputs"
+      ],
+      "evidenceRoles": [
+        "selection-audit",
+        "longitudinal-process",
+        "forensic"
+      ],
+      "relatedAssets": [
+        "hint-provenance",
+        "production-benchmarks",
+        "experiment-manifests",
+        "raw-logs-and-baselines"
+      ],
+      "affordances": [
+        "Measure how many already-solved source rows were observed, referee-accepted, persisted as new path/provenance evidence, already represented, or quarantined.",
+        "Preserve why solved evidence failed to enter the current hint store instead of silently losing the selection boundary.",
+        "Audit whether changes in the hint store reflect producer novelty, persistence deduplication, or reconciliation/quarantine behavior."
+      ],
+      "caveats": [
+        "This resource currently covers only harvest-level-blind-report-hints; direct hint-artifact merging and isolated-report harvesting in the same source run have separate selection semantics.",
+        "The denominator is success-selected source rows observed by that harvester, not the originating attempted solver population.",
+        "These manifests cannot estimate solve rate or relative technique performance without joining the originating experiment population/failures.",
+        "A referee-accepted row that makes no persistence change usually means equivalent evidence was already represented; it is not a failed discovery.",
+        "Quarantined evidence remains historical/forensic material and must not be silently reclassified as current capability."
       ]
     },
     {
@@ -645,7 +762,8 @@
       ],
       "queryEntryPoints": [
         "node scripts/stress/collect-known-solution-prefix-survival.mjs",
-        "node scripts/analyze-known-solution-prefix-survival.mjs"
+        "node scripts/analyze-known-solution-prefix-survival.mjs",
+        "npm run research:known-support-extinction -- --in=<survival.json> [--out=<json>]"
       ],
       "joinKeys": [
         "corpus",
@@ -664,12 +782,15 @@
         "exact-reference-labels",
         "solution-space-profiles",
         "variant-family-data",
-        "production-benchmarks"
+        "production-benchmarks",
+        "compact-failure-response",
+        "search-loss-evidence"
       ],
       "affordances": [
         "Locate where known-valid support disappears across generation, prune, dedup, scoring, width cull, and diversity selection.",
         "Distinguish failure to generate viable material from failure to retain or rank it.",
-        "Nominate exact-prefix and paired-trace follow-up at a concrete decision boundary."
+        "Nominate exact-prefix and paired-trace follow-up at a concrete decision boundary.",
+        "Project final known-support extinction into a compact parent-level row carrying path/family support immediately before loss for joins with failure/search-loss evidence."
       ],
       "caveats": [
         "Known-support extinction is not proof that every true solution is extinct.",
@@ -954,7 +1075,8 @@
         "variant-family-data",
         "solver-determinism-fingerprints",
         "raw-logs-and-baselines",
-        "solver-capability-memory"
+        "solver-capability-memory",
+        "hint-discovery-process"
       ],
       "affordances": [
         "Recover exactly what code, population, flags, workflow inputs, seeds, budgets, and output produced a result.",
@@ -1213,11 +1335,14 @@
         "docs/solver-failure-evidence-research-integration-plan.md",
         "scripts/solver-failure-response-lib.mjs",
         "scripts/summarize-solver-failure-response.mjs",
-        "scripts/failure-response-query.mjs"
+        "scripts/failure-response-query.mjs",
+        "scripts/failure-evidence-semantics-lib.mjs",
+        "scripts/failure-evidence-purpose-query.mjs"
       ],
       "queryEntryPoints": [
         "node scripts/research-asset-query.mjs --id=compact-failure-response",
-        "npm run research:query-failure-response -- --in=<failure-response.json>[,<...>]"
+        "npm run research:query-failure-response -- --in=<failure-response.json>[,<...>]",
+        "npm run research:query-failure-evidence-purpose -- --in=<failure-response.json>[,<...>] --purpose=<forensic|mechanism-nomination|longitudinal-process|population-prevalence>"
       ],
       "joinKeys": [
         "parentId/levelId plus record identity",
@@ -1235,12 +1360,14 @@
         "production-benchmarks",
         "lifecycle-telemetry",
         "search-loss-evidence",
-        "solver-capability-memory"
+        "solver-capability-memory",
+        "hint-discovery-process"
       ],
       "affordances": [
         "Distinguish non-participation, stage exposure, work/dose, censoring/exhaustion, badness support, and failed attempts inside solved controls without retaining full paths/state.",
         "Provide the cheapest parent-aware reconnaissance layer before compact diagnostic observers, rich search-loss capsules, exact annotation, or causal interventions.",
-        "Preserve producer-supplied run/protocol identity so protocol-compatible repeated observations can be separated from descriptive-only joins."
+        "Preserve producer-supplied run/protocol identity so protocol-compatible repeated observations can be separated from descriptive-only joins.",
+        "Classify the same stored row differently for forensic, mechanism-nomination, longitudinal-process, or population-prevalence purposes while collapsing repeated rows/runs to conservative parent-level support strata."
       ],
       "caveats": [
         "Independent prevalence defaults to parent level; multiple attempts/records from one parent are dependent support observations.",
@@ -1314,6 +1441,37 @@
     }
   ],
   "relationships": [
+    {
+      "id": "hint-provenance-to-harvest-selection",
+      "assets": [
+        "hint-provenance",
+        "hint-harvest-selection-provenance",
+        "experiment-manifests"
+      ],
+      "join": "source runId/workflow to harvested hint/provenance changes and owning experiment evidence",
+      "questions": [
+        "Did this run add genuinely new accepted paths/provenance or mostly rediscover already-represented evidence?",
+        "Were missing hint discoveries rejected by the referee, blocked by revision mismatch, or simply absent from the success-selected source artifacts?",
+        "Can harvest-selection effects be separated from solver performance effects before interpreting longitudinal hint counts?"
+      ],
+      "boundary": "Harvest manifests describe selection among already-solved candidate rows. They are not attempted-population denominators and cannot support solve-rate or technique-performance claims without the originating run population."
+    },
+    {
+      "id": "hint-provenance-to-discovery-process",
+      "assets": [
+        "hint-provenance",
+        "hint-discovery-process",
+        "compact-failure-response",
+        "experiment-manifests"
+      ],
+      "join": "parentId/levelId + exact complete hint path signature + immutable run/protocol/solver identity",
+      "questions": [
+        "Which failed attempts and work preceded discovery of this exact accepted path?",
+        "Does a path attributed to a winning technique only appear after characteristic failures or handoffs from earlier attempts?",
+        "Can success-selected hint evidence be rejoined to its originating denominator/process context without embedding that context into every Hint record?"
+      ],
+      "boundary": "Exact path equality binds the success to the stored hint; the experiment contract owns protocol/population semantics. Historical process context is offline evidence and does not make the discovery current capability or legal runtime routing."
+    },
     {
       "id": "hint-provenance-to-solution-profiles",
       "assets": [

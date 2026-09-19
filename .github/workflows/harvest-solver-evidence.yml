@@ -167,8 +167,8 @@ jobs:
               --staging-dir=artifact-staging \
               --out-root=reports/stress/experiment-evidence
 
-            if git diff --quiet -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ 2>/dev/null; then
-              echo 'No new canonical hint/provenance or decision-bearing experiment evidence to persist.'
+            if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ 2>/dev/null)" ]; then
+              echo 'No new canonical hint/provenance, selection, pending, or decision-bearing experiment evidence to persist.'
               exit 0
             fi
 
@@ -178,6 +178,9 @@ jobs:
             fi
             if [ -d reports/stress/experiment-evidence ]; then
               git add reports/stress/experiment-evidence/
+            fi
+            if [ -d reports/stress/hint-harvest-selection ]; then
+              git add reports/stress/hint-harvest-selection/
             fi
             git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
             if git push origin HEAD:main; then

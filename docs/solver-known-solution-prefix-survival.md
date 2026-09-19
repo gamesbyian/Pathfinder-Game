@@ -25,6 +25,18 @@ Identity-bound exact/reference labels remain bound to their original witness pat
 
 **Prospective producer boundary:** historical/current compact outputs are not sufficient to reconstruct every replay-first/dependency-collapsed oracle-set view after the fact. `scripts/known-prefix-oracle-set-manifest.mjs` now provides an inactive compact manifest with pure path-set and conditioning-path-set identities, plus scientific-conditioning and full-manifest identities that incorporate producer and ancestry/dependence metadata. Instantiate it only when a future decision-bearing prefix-survival study needs that sensitivity. Do not fabricate missing historical ancestry or dump full provenance into every row. The corresponding reopen condition is tracked in [`solver-future-work.md`](solver-future-work.md).
 
+## Compact extinction projection
+
+`scripts/known-support-extinction.mjs` projects an existing survival capture into one parent-level
+row per observed level so the final-known-support boundary can be joined to compact failure or
+search-loss evidence without reinterpreting the observer. The projection preserves the last known
+supported path/family counts, first/final known-support loss, loss cause/depth/work, solved-control
+status, behavior-parity status, and work after final known support.
+
+This is a join surface, not a stronger oracle. Zero known support still means only that none of the
+supplied stored solution labels remain represented at that observed boundary. It does not establish
+latent whole-solution-space extinction, DEAD/UNSAT, or a causal first-loss class.
+
 ## Interpretation
 
 Known hints/solutions are incomplete, so:

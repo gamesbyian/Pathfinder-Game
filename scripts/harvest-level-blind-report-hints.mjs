@@ -16,6 +16,10 @@ import path from 'node:path';
 import process from 'node:process';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { readLevelsWithHints } from './level-data-io.mjs';
+import {
+    buildHintHarvestSelectionManifest,
+    validateHintHarvestSelectionManifest,
+} from './hint-harvest-selection-manifest-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [key, ...rest] = a.split('=');
@@ -25,6 +29,11 @@ const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
 const sourceWorkflow = args.get('--source-workflow') || process.env.SOURCE_WORKFLOW || 'unknown';
+const selectionManifestArg = args.get('--selection-manifest-out');
+const selectionManifestOut = selectionManifestArg ? path.resolve(selectionManifestArg)
+    : (sourceRunId !== 'unknown'
+        ? path.join(root, 'reports/stress/hint-harvest-selection', `run-${sourceRunId}.json`)
+        : null);
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const ALLOWED_CORPORA = new Set([
@@ -66,7 +75,9 @@ function stateFor(corpusRel) {
 
 let reportsSeen = 0;
 let reportsHarvested = 0;
+let sourceRowsSeen = 0;
 let solvedRowsSeen = 0;
+let refereeAcceptedRows = 0;
 let recordChanges = 0;
 const pending = [];
 const seenReport = new Set();
@@ -88,6 +99,7 @@ for (const file of walk(stagingDir).sort()) {
     if (seenReport.has(reportIdentity)) continue;
     seenReport.add(reportIdentity);
     reportsSeen += 1;
+    sourceRowsSeen += rows.length;
 
     const solved = rows.filter(row => row?.ok && Array.isArray(row.solution) && row.solution.length > 0);
     solvedRowsSeen += solved.length;
@@ -141,6 +153,7 @@ for (const file of walk(stagingDir).sort()) {
         }
         accepted.push({ row, entry });
     }
+    refereeAcceptedRows += accepted.length;
     if (!accepted.length) continue;
 
     const capture = await createHintCapture({
@@ -167,6 +180,26 @@ for (const file of walk(stagingDir).sort()) {
     reportsHarvested += 1;
 }
 
+if (selectionManifestOut) {
+    const selectionManifest = buildHintHarvestSelectionManifest({
+        sourceRunId,
+        sourceWorkflow,
+        sourceReportsSeen: reportsSeen,
+        sourceRowsSeen,
+        solvedCandidateRowsSeen: solvedRowsSeen,
+        refereeAcceptedRows,
+        persistedRecordChanges: recordChanges,
+        pending,
+        reportsHarvested,
+        selectionPolicy: 'unique eligible level-blind reports -> solved rows with complete paths -> current corpus/revision compatibility -> canonical referee acceptance -> semantic hint/provenance merge',
+        corpusScope: [...ALLOWED_CORPORA].sort(),
+    });
+    validateHintHarvestSelectionManifest(selectionManifest);
+    mkdirSync(path.dirname(selectionManifestOut), { recursive: true });
+    writeFileSync(selectionManifestOut, `${JSON.stringify(selectionManifest, null, 2)}\n`);
+    console.log(`Wrote hint-harvest selection manifest to ${path.relative(root, selectionManifestOut)}.`);
+}
+
 if (pending.length > 0) {
     const pendingDir = path.join(root, 'reports/stress/pending-solver-evidence');
     mkdirSync(pendingDir, { recursive: true });
@@ -175,4 +208,4 @@ if (pending.length > 0) {
     console.log(`Quarantined ${pending.length} unmergeable level-blind evidence record(s) to ${path.relative(root, out)}.`);
 }
 
-console.log(`Level-blind evidence harvest: ${reportsSeen} report(s), ${reportsHarvested} merged, ${solvedRowsSeen} solved row(s), ${recordChanges} new hint/provenance record change(s), ${pending.length} pending record(s).`);
+console.log(`Level-blind evidence harvest: ${reportsSeen} report(s), ${reportsHarvested} merged, ${sourceRowsSeen} source row(s), ${solvedRowsSeen} solved row(s), ${refereeAcceptedRows} referee-accepted row(s), ${recordChanges} new hint/provenance record change(s), ${pending.length} pending record(s).`);

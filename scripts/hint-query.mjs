@@ -18,7 +18,7 @@ const comparableSolverVersions = (value('comparable-solver-versions') ?? value('
     .split(',').map(item => item.trim()).filter(Boolean);
 
 if (!id) {
-    console.error('Usage: npx tsx scripts/hint-query.mjs --id=P00001 [--levels=data/levels.json] [--summary] [--purpose=solution-atlas] [--applicability=admissible] [--solver-version=<sha>|--comparable-solver-versions=<sha,...>] [--class=cold-capability] [--replay-basis=configuration-reconstructable|identity-only|historical-unverified] [--source=pathfinder-solver] [--solver=pathfinder-solver] [--technique=repair] [--retry-tier=late-repair-search] [--query=text] [--standard=strict|narrow] [--limit=20] [--full]');
+    console.error('Usage: npx tsx scripts/hint-query.mjs --id=P00001 [--levels=data/levels.json] [--summary] [--purpose=solution-atlas] [--applicability=admissible] [--solver-version=<sha>|--comparable-solver-versions=<sha,...>] [--class=cold-capability] [--replay-basis=configuration-reconstructable|identity-only|historical-unverified] [--termination-class=solved|complete-enumeration|node-limited|work-limited|deadline-truncated|error|unknown] [--source=pathfinder-solver] [--solver=pathfinder-solver] [--technique=repair] [--retry-tier=late-repair-search] [--query=text] [--standard=strict|narrow] [--limit=20] [--full]');
     process.exit(2);
 }
 if (!['strict', 'narrow'].includes(standard)) {
@@ -40,6 +40,7 @@ const filters = {
     technique: value('technique'),
     retryTier: value('retry-tier'),
     replayBasis: value('replay-basis'),
+    terminationClass: value('termination-class'),
     query: value('query'),
     evidencePurpose,
     evidenceApplicability,
