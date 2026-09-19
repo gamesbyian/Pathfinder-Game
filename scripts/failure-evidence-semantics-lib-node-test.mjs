@@ -9,7 +9,7 @@ import {
 const document = {
     protocolHash: 'proto',
     solverRef: 'solver',
-    populationIntegrity: { coverageComplete: true },
+    populationIntegrity: { coverageComplete: true, decisionValidComplete: true },
     records: [
         {
             identity: 'A-1', parentId: 'A', runId: 'run-1', outcome: 'workLimited',
@@ -61,6 +61,15 @@ assert.deepEqual(
         populationSamplingDeclared: true,
     }),
     { applicability: 'admissible', reason: 'declared-complete-parent-population' },
+);
+assert.deepEqual(
+    classifyFailureEvidenceApplicability({
+        ...document,
+        populationIntegrity: { coverageComplete: true, decisionValidComplete: false },
+    }, document.records[0], 'population-prevalence', {
+        populationSamplingDeclared: true,
+    }),
+    { applicability: 'context-bound', reason: 'population-includes-censored-or-indeterminate-outcomes' },
 );
 
 const summary = summarizeFailureEvidenceApplicability(document, 'forensic');
