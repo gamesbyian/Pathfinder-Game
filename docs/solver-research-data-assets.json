@@ -277,7 +277,7 @@
     },
     {
       "id": "hint-harvest-selection-provenance",
-      "name": "Hint harvest selection provenance",
+      "name": "Level-blind report hint-harvest selection provenance",
       "status": "generated-interface",
       "grain": [
         "source-run",
@@ -321,7 +321,8 @@
         "Audit whether changes in the hint store reflect producer novelty, persistence deduplication, or reconciliation/quarantine behavior."
       ],
       "caveats": [
-        "The denominator is success-selected source rows, not the originating attempted solver population.",
+        "This resource currently covers only harvest-level-blind-report-hints; direct hint-artifact merging and isolated-report harvesting in the same source run have separate selection semantics.",
+        "The denominator is success-selected source rows observed by that harvester, not the originating attempted solver population.",
         "These manifests cannot estimate solve rate or relative technique performance without joining the originating experiment population/failures.",
         "A referee-accepted row that makes no persistence change usually means equivalent evidence was already represented; it is not a failed discovery.",
         "Quarantined evidence remains historical/forensic material and must not be silently reclassified as current capability."
