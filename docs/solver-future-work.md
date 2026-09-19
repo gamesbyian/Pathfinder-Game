@@ -27,7 +27,7 @@ These become eligible only after the active premise gate immediately above them 
 
 ## Deferred plan closeouts
 
-- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** substrate complete. Resume P3 on post-contract compact rows, P4A on current Class-3 + exact-action dose, P4B on the frozen reserve probe; rich recurrence stays gated. Retire when descendants have durable owners.
+- **[Failure-evidence integration](solver-failure-evidence-research-integration-plan.md):** substrate complete. Resume P3 on compact rows, P4A on current Class-3 dose, P4B on the frozen reserve probe; retire when descendants have owners.
 - **[Search-loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurrence; P9 needs first-loss selection. No synthetic recurrence.
 - **[Population/family](solver-research-population-family-integration-plan.md):** after two real pilots, run P7 and retire.
 
