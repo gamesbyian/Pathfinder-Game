@@ -184,8 +184,11 @@ assert.deepEqual(validateResearchQuestionRegistry(repositoryRegistry), [],
 const idsFor = filters => queryResearchQuestions(repositoryRegistry, filters).map(entry => entry.id);
 assert(idsFor({ query: 'portal coarse', status: 'concluded-positive' }).includes('WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION'),
     'ordinary portal vocabulary must expose the concluded allocation successor, not only the closed global form');
-assert.deepEqual(idsFor({ query: 'admissible order', status: 'deferred-reopen' }), ['WS2-ADMISSIBLE-ORDER-RETRY-REPRICING'],
-    'plumbing availability must not make admissible-order repricing active or falsely closed');
+assert.deepEqual(idsFor({ query: 'admissible order', status: 'deferred-reopen' }), [
+    'WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION',
+    'WS2-ADMISSIBLE-ORDER-RETRY-REPRICING',
+],
+    'admissible-order descendants must remain deferred until their distinct evidence gates reopen them');
 assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICAL-FULL-POOL'),
     'ordinary full-pool vocabulary must find the already-run categorical projection');
 assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), [],
