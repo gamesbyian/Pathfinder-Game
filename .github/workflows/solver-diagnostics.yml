@@ -40,6 +40,38 @@ jobs:
       - name: Guard audit output
         run: npm run check:audit-output -- logs/solver-workflow/latest.json
 
+      - name: Publish compact failure-response evidence
+        shell: bash
+        run: |
+          mkdir -p logs/solver-diagnostics-contract
+          cat > logs/solver-diagnostics-contract/spec.json <<'JSON'
+          {
+            "configuration": {"mode": "full-published-diagnostics", "saveHints": true},
+            "workflowFamily": "solver-diagnostics",
+            "producer": "solver-diagnostics.yml",
+            "entrypoint": "scripts/analyze-solver-diagnostics.mjs",
+            "population": {"kind": "published-corpus", "identityBasis": "published-level-position"},
+            "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": null, "producerFamily": "solver-diagnostics", "schedulerMode": "production-ladder"},
+            "limits": {"cumulativeNodeCeiling": null, "initialWorkAllocation": null, "totalWorkCeiling": null, "wallSafetyDeadlineMs": null, "wallDeadlineBinding": null},
+            "sideEffects": {"hints": "harvest-permitted", "canonicalBaseline": "none", "telemetry": "compact", "reports": "report-write"}
+          }
+          JSON
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/solver-diagnostics-contract/spec.json \
+            --out=logs/solver-diagnostics-contract/experiment-contract.json
+          node scripts/sweep-publish.mjs \
+            --primary=logs/solver-workflow/latest.json \
+            --contract-file=logs/solver-diagnostics-contract/experiment-contract.json \
+            --source-artifact="solver-diagnostics-${{ github.sha }}"
+
+      - name: Upload standard solver sweep result
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 30
+
       # Cost-regression signal that solver:regression --check structurally cannot give: --check compares
       # only the solved/failed set. Wherever the same attempt config found the same solution under
       # the same budget at two different commits, provenance now holds a real before/after. Reported,
