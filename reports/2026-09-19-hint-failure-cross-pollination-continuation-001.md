@@ -110,7 +110,7 @@ The real `harvest-level-blind-report-hints.mjs` now records:
 - accepted rows whose evidence was already represented;
 - weighted quarantined rows and reasons.
 
-The denominator is explicitly **success-selected candidate rows**, not attempted solver population. The manifest cannot establish solve rate or relative technique performance.
+The manifest is explicitly scoped to `harvest-level-blind-report-hints`; sibling direct/isolated importers in the same source run keep separate semantics. Its denominator is **success-selected candidate rows seen by that harvester**, not attempted solver population. The manifest cannot establish solve rate or relative technique performance.
 
 `harvest-solver-evidence.yml` persists these manifests under
 `reports/stress/hint-harvest-selection/`. Its change gate now uses path-scoped
