@@ -1230,6 +1230,16 @@ Tests:
 
 **Exit gate:** a fresh agent can discover the resource through normal asset/relation tooling before any real capture exists.
 
+### Phase 3 implementation status (2026-09-18)
+
+The automatic compact layer is substantially implemented.
+
+- Ten solver-running GHA workflow families are now `standard` producers under `docs/solver-failure-evidence-disposition.json`, including the three workflows previously blocked by file-size ceilings.
+- The shared `scripts/sweep-publish.mjs` wrapper keeps the standard summary/publisher path available without workflow-size growth.
+- `solver-stress-refresh.yml` now declares a native experiment contract and validates the intended two-corpus population before standard publication. Ordinary refreshes remain non-decision-bearing unless an explicit scientific outcome is supplied.
+- The remaining Phase-3 instrumentation work is bounded by `reports/2026-09-18-failure-information-instrumentation-seam-audit-001.md`: progress-over-work pilot, prune-reason counter pilot, counter-only beam-flow pilot, and replayability contract hardening.
+- `static-portfolio-confirmation` and `collect-variant-family-dataset` remain explicit specialized opt-outs because their combined outputs do not currently expose the standard row-array shape; they are not silently missing from the disposition contract.
+
 ### Phase 3 - shared compact failure-response projection
 
 **Goal:** stop major solver-running workflows from discarding cheap failure-side information before adding rich path/state capture.
