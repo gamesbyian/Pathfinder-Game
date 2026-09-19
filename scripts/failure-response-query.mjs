@@ -101,14 +101,17 @@ function objectFrom(map) {
     return Object.fromEntries([...map.entries()].sort(([a], [b]) => a.localeCompare(b)));
 }
 function numericStats(values) {
-    const known = values.filter(Number.isFinite);
-    if (!known.length) return { count: 0, min: null, max: null, mean: null, total: 0 };
+    const known = values.filter(Number.isFinite).sort((a, b) => a - b);
+    if (!known.length) return { count: 0, min: null, max: null, mean: null, median: null, total: 0 };
     const total = known.reduce((sum, value) => sum + value, 0);
+    const middle = Math.floor(known.length / 2);
+    const median = known.length % 2 ? known[middle] : (known[middle - 1] + known[middle]) / 2;
     return {
         count: known.length,
-        min: Math.min(...known),
-        max: Math.max(...known),
+        min: known[0],
+        max: known[known.length - 1],
         mean: total / known.length,
+        median,
         total,
     };
 }
