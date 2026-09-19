@@ -20,6 +20,7 @@
 - **Phase 4A Class-3:** acquisition path is now explicit; still waits for a prospective producer covering the Class-3 population.
 - **Phase 4B reserve starvation:** zero-compute asset audit is complete and the prospective path is now frozen. The exact R00044 winner is `admissible-order|tieBreak=default|lds=off`; targeted method-probe workflow support now preserves explicit level subsets; a disjoint 40-parent current-residual sample and decision rule are precommitted in `reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md`. Remaining work is dispatch/measurement, not design.
 - **Phase 4C/4D H3/Lane G:** remain independently executable under their existing designs; failure evidence is secondary/optional.
+- **Phase 4E capability memory:** durable contract now explicitly permits protocol-compatible failure-response joins as derived premise/capability evidence while preserving the production verdict boundary; no new memory store was created.
 - **Phases 5-8:** condition-gated as specified below. No synthetic recurring producer or first-loss selection has been created.
 
 ## 1. Why this plan exists
