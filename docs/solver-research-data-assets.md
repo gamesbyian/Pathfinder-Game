@@ -59,7 +59,7 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 ## High-value joins
 
-Useful joins include failure response × census/benchmarks, census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units. Use the smallest join that answers the gate.
+Useful joins include failure response × census/benchmarks, census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units. Use the smallest useful join.
 
 ### Four-resource lineage recipe
 
