@@ -24,6 +24,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: search-loss-real-canary-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   canary:
     runs-on: ubuntu-latest
