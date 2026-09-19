@@ -65,10 +65,20 @@ let populationIntegrity = null;
 const integrityFile = values.get('integrity-file');
 if (integrityFile && fs.existsSync(integrityFile)) populationIntegrity = JSON.parse(fs.readFileSync(integrityFile, 'utf8'));
 
+const contractFile = values.get('contract-file') || null;
+const contract = contractFile && fs.existsSync(contractFile)
+    ? JSON.parse(fs.readFileSync(contractFile, 'utf8'))
+    : null;
+const protocolHash = contract?.experiment?.configurationHash ?? null;
+const solverRef = contract?.experiment?.resolvedSha
+    ?? contract?.solverRef
+    ?? process.env.GITHUB_SHA
+    ?? null;
+
 const failureOut = values.get('failure-response-out')
     || path.join(path.dirname(values.get('primary')), 'compact-failure-response.json');
 const document = createFailureResponseDocument(rows, {
-    populationIntegrity, sourceFiles, missingSourceFiles, invalidSourceFiles,
+    populationIntegrity, sourceFiles, missingSourceFiles, invalidSourceFiles, protocolHash, solverRef,
 });
 validateFailureResponseDocument(document);
 fs.mkdirSync(path.dirname(failureOut), { recursive: true });
