@@ -173,7 +173,7 @@ assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must r
 assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'active'),
     'WS2 active gate must remain discoverable through the research-status queue relation');
 assert.equal(repositoryIndex.queue.find(row => String(row.workstreamId) === '2')?.questionRef,
-    'WS2-WORK-LADDER-ECONOMICS',
+    'WS2-FAILURE-RESPONSE-RECONNAISSANCE',
     'active WS2 gate must carry the stable question reference');
 assert.ok(repositoryIndex.queue.some(row => row.workstreamId === '6/7'),
     'composite workstream identities must survive indexing without numeric coercion');
