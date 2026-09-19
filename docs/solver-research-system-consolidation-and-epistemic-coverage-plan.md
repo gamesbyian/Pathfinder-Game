@@ -532,6 +532,7 @@ Priority candidates:
 - work/resource quantity and unit;
 - exact/reference support/abstention;
 - derivation/transformation identity;
+- reproducibility class and execution-environment identity when scientifically material;
 - claim/decision purpose.
 
 The kernel should be composable imports/helpers, not a master JSON document.
@@ -584,6 +585,23 @@ Do not force:
 when independent failure modes are scientifically valuable.
 
 The architecture map should make shared critical dependencies visible so apparent corroboration is not mistaken for independent confirmation.
+
+### 6.6 Reproducibility and execution-environment semantics
+
+A boolean such as `reproducibilityExpected` is useful but cannot express all relevant cases.
+
+Where the distinction matters, describe reproducibility as one or more of:
+
+- deterministic under identical immutable inputs/configuration;
+- seed-conditioned reproducible;
+- distributionally reproducible rather than row-identical;
+- environment-sensitive but work-normalized;
+- intentionally stochastic with a declared seed/sample contract;
+- historical/observational and not fully reconstructable.
+
+For wall-time, memory, parallelism or runtime-sensitive evidence, preserve enough execution-environment identity to interpret the measurement, such as runner/runtime/toolchain class where material.
+
+Do not require heavyweight environment capture for node/work-normalized mechanistic evidence that is demonstrably environment-insensitive.
 
 ## Phase 7 - Strengthen pre-outcome experimental design and analysis contracts
 
@@ -686,6 +704,21 @@ For heavily tuned/high-selection decisions where genuine holdout independence ma
 6. only then expose exact IDs/traces for forensic learning.
 
 Do not impose this on ordinary narrow experiments. It is a stronger confirmation mode for cases where procedural trust is not enough.
+
+### 7.7 Treatment and contrast fidelity
+
+A well-randomized or perfectly paired experiment is still uninformative if the intended treatment did not actually change the relevant causal variable, or if it changed several uncontrolled variables at once.
+
+For causal A/B, family perturbation and production-inert counterfactual work, establish as appropriate:
+
+- treatment participation/exposure actually occurred;
+- the intended dimension changed enough to create a discriminating opportunity;
+- non-target execution/configuration dimensions remained matched;
+- family/adversarial construction preserved the properties claimed to be controlled;
+- manipulation checks were defined independently of the primary outcome where possible;
+- a null under nonparticipation is classified as nonparticipation, not treatment failure.
+
+Use existing paired-arm comparison, opportunity sizing, family provenance and observer tooling before inventing new machinery.
 
 ## Phase 8 - Make evidence-to-claim derivation explicit and invalidatable
 
@@ -820,6 +853,7 @@ Synthetic known-truth cases should verify invariants such as:
 - deadline-truncated/harness/unknown rows cannot normalize into ordinary scientific negatives;
 - exact/reference `unsupported` or abstention cannot become DEAD;
 - treatment nonparticipation cannot become evidence of treatment failure;
+- an A/B with an intentionally broken manipulation check is rejected/inconclusive even if arm outputs otherwise look valid;
 - opening/using a confirmation block for design makes it ineligible for descendant confirmation under the relevant lineage;
 - changing content under the same display ID changes content identity;
 - cross-source matching remains outcome-blind;
@@ -1557,53 +1591,54 @@ Do first because these reduce correctness and inference risk with little solver 
 12. Phase 8.1-8.2: emit one claim capsule that separates execution, scientific and decision disposition.
 13. Phase 8.3: preserve its transformation/analysis provenance.
 14. Phase 9.1: calibrate the primary instrument enough to state its support/abstention boundary.
-15. Phase 9.2: add a small epistemic conformance/metamorphic fixture.
-16. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
-17. Report which common semantics proved reusable and which should remain specialist.
+15. Phase 7.7: add a manipulation/contrast-fidelity check to the same pilot where applicable.
+16. Phase 9.2: add a small epistemic conformance/metamorphic fixture.
+17. Phase 8.4: run one bounded reverse-invalidation drill from an upstream synthetic/real dependency.
+18. Report which common semantics proved reusable and which should remain specialist.
 
 Do not generalize a kernel field until at least two real consumers need the same meaning.
 
 ## Stage C - Measure the research portfolio before correcting it
 
-18. Phase 14: bounded MO-007 research-attention topology.
-19. Phase 19: question-provenance join over the same bounded window.
-20. Phase 16: answerability decomposition on a small high-value question sample.
-21. Include dependence/independence information where apparent corroboration shares instruments, analysis code or ontology.
-22. Report whether the hypothesized instrument/attention bias is actually visible and which later epistemic phases remain earned.
+19. Phase 14: bounded MO-007 research-attention topology.
+20. Phase 19: question-provenance join over the same bounded window.
+21. Phase 16: answerability decomposition on a small high-value question sample.
+22. Include dependence/independence information where apparent corroboration shares instruments, analysis code or ontology.
+23. Report whether the hypothesized instrument/attention bias is actually visible and which later epistemic phases remain earned.
 
 This stage deliberately precedes broad reflexivity infrastructure. Do not build a cure for an unmeasured pathology.
 
 ## Stage D - Consolidation, closeout and retrieval
 
-23. Phase 10: documentation role classification.
-24. Phase 8.5: introduce structured closeout capsules for new current-state reports while preserving historical fallback.
-25. Phase 11: compact research front door.
-26. Phase 12: documentation-entropy diagnostics.
-27. Phase 9.5: highest-value already-earned composition views.
-28. Phase 9.3: hint/failure semantic interoperability cleanup only where meaning is genuinely shared.
+24. Phase 10: documentation role classification.
+25. Phase 8.5: introduce structured closeout capsules for new current-state reports while preserving historical fallback.
+26. Phase 11: compact research front door.
+27. Phase 12: documentation-entropy diagnostics.
+28. Phase 9.5: highest-value already-earned composition views.
+29. Phase 9.3: hint/failure semantic interoperability cleanup only where meaning is genuinely shared.
 
 ## Stage E - Earned rigor/reflexivity controls
 
 Only findings from Stages A-D should determine how much of this stage is needed.
 
-29. Phase 15: rival-set preservation in existing preflight/report contracts.
-30. Phase 17: answerability-gap/MO operational-coverage view.
-31. Phase 18: research-system capability audit.
-32. Phase 23: first negative-space intersection-mining pass.
-33. Phase 22: prospective expectation/surprise capture for new high-value investigations.
-34. Phase 7.6: pilot hard-blind confirmation only on a decision whose selection pressure justifies it.
-35. Phase 9.7: target/deployment-envelope audit before any new broad generalization claim.
-36. Phase 20: run one bounded triggered-exploration response if trigger conditions are actually met.
-37. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
+30. Phase 15: rival-set preservation in existing preflight/report contracts.
+31. Phase 17: answerability-gap/MO operational-coverage view.
+32. Phase 18: research-system capability audit.
+33. Phase 23: first negative-space intersection-mining pass.
+34. Phase 22: prospective expectation/surprise capture for new high-value investigations.
+35. Phase 7.6: pilot hard-blind confirmation only on a decision whose selection pressure justifies it.
+36. Phase 9.7: target/deployment-envelope audit before any new broad generalization claim.
+37. Phase 20: run one bounded triggered-exploration response if trigger conditions are actually met.
+38. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
 
 ## Stage F - Blind-spot-driven scientific work
 
-38. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
-39. Phase 24: one adversarial semantic challenge population for a high-value capability gap where source construction is the missing discriminator.
-40. Phase 26: bounded external semantic-operation review only when it illuminates a live blind spot.
-41. Use Phase 27 for any new research primitive.
-42. Revisit Phase 9.6 phenotype/mechanism memory only if two real consumers still require it.
-43. Maintain Phase 30 ROI review and Phase 29 protection of direct solver work.
+39. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
+40. Phase 24: one adversarial semantic challenge population for a high-value capability gap where source construction is the missing discriminator.
+41. Phase 26: bounded external semantic-operation review only when it illuminates a live blind spot.
+42. Use Phase 27 for any new research primitive.
+43. Revisit Phase 9.6 phenotype/mechanism memory only if two real consumers still require it.
+44. Maintain Phase 30 ROI review and Phase 29 protection of direct solver work.
 
 # Part VIII - Verification and closeout
 
@@ -1746,10 +1781,12 @@ This plan is successful when the following are true.
 31. Negative results preserve their resolving power/sensitivity instead of becoming stronger through citation.
 32. Reusable instruments expose support, abstention and calibration semantics.
 33. Derived decision-bearing claims preserve enough transformation provenance for a bounded reverse-invalidation query.
-34. New current-state reports can expose structured closeout metadata without depending on fragile Markdown regex reconstruction.
-35. Epistemic conformance tests catch pseudoreplication, censoring errors, unsupported-reference promotion and semantically incompatible workflow outputs.
-36. The system distinguishes benchmark progress, deployment envelope, confirmation/transfer evidence and adversarial semantic challenge evidence.
-37. Scientific interoperability preserves useful independent implementations and heterogeneous disagreement rather than manufacturing false consensus.
+34. Reproducibility-sensitive evidence states whether repeatability is deterministic, seed-conditioned, distributional, environment-sensitive or historical/observational as appropriate.
+35. Causal comparisons verify treatment/contrast fidelity so nonparticipation or uncontrolled perturbation cannot masquerade as a scientific null.
+36. New current-state reports can expose structured closeout metadata without depending on fragile Markdown regex reconstruction.
+37. Epistemic conformance tests catch pseudoreplication, censoring errors, unsupported-reference promotion and semantically incompatible workflow outputs.
+38. The system distinguishes benchmark progress, deployment envelope, confirmation/transfer evidence and adversarial semantic challenge evidence.
+39. Scientific interoperability preserves useful independent implementations and heterogeneous disagreement rather than manufacturing false consensus.
 
 # Part X - Explicit non-goals
 
