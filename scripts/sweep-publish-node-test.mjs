@@ -11,15 +11,19 @@ try {
     const unrelated = path.join(temp, 'plan.json');
     const jsonl = path.join(temp, 'rows.jsonl');
     const out = path.join(temp, 'published');
+    const contract = path.join(temp, 'experiment-contract.json');
     fs.writeFileSync(primary, JSON.stringify({ levels: [{ id: 'A', ok: false, status: 'exhausted', attempts: [{ outcome: 'exhausted', stageId: 'main' }] }] }));
     fs.writeFileSync(unrelated, JSON.stringify({ cells: [{ cellId: 'not-a-result' }] }));
     fs.writeFileSync(jsonl, `${JSON.stringify({ id: 'B', ok: false, status: 'node-budget-reached' })}\n`);
-    execFileSync('node', ['scripts/sweep-publish.mjs', `--primary=${primary}`, `--failure-source=${primary}`, `--failure-source=${jsonl}`, `--include=${unrelated}`, `--out=${out}`], { cwd: root });
+    fs.writeFileSync(contract, JSON.stringify({ experiment: { configurationHash: 'proto-contract', resolvedSha: 'solver-contract' } }));
+    execFileSync('node', ['scripts/sweep-publish.mjs', `--primary=${primary}`, `--failure-source=${primary}`, `--failure-source=${jsonl}`, `--include=${unrelated}`, `--contract-file=${contract}`, `--out=${out}`], { cwd: root });
     const manifest = JSON.parse(fs.readFileSync(path.join(out, 'manifest.json')));
     const compact = JSON.parse(fs.readFileSync(path.join(out, manifest.failureEvidence.publishedPath)));
     assert.deepEqual(compact.records.map(row => row.identity), ['A', 'B']);
     assert.equal(compact.records[0].attempts[0].stageId, 'main');
     assert.equal(compact.invalidSourceFiles.length, 0, 'publication includes are not implicit failure populations');
+    assert.equal(compact.protocolHash, 'proto-contract');
+    assert.equal(compact.solverRef, 'solver-contract');
     assert.ok(manifest.entries.some(entry => entry.source === unrelated && entry.role === 'include'));
     console.log('sweep-publish tests passed');
 } finally {
