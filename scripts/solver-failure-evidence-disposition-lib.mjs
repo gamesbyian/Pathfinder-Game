@@ -12,7 +12,7 @@ import path from 'node:path';
 
 export const DISPOSITION_REGISTRY_PATH = 'docs/solver-failure-evidence-disposition.json';
 const DISPOSITIONS = new Set(['standard', 'specialized-opt-out', 'unsupported']);
-const STANDARD_TRANSPORT_MARKERS = ['summarize-solver-failure-response.mjs', 'sweep-publish.mjs'];
+const STANDARD_TRANSPORT_MARKERS = ['summarize-solver-failure-response.mjs', 'sweep-publish.mjs', '--failure-response-file='];
 
 function nonEmptyString(value) {
     return typeof value === 'string' && value.trim().length > 0;
