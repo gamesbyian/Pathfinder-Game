@@ -1362,7 +1362,7 @@ Record for each:
 
 ### Phase 4 - first production-inert rich capsule producer
 
-> **Status (2026-09-19): compact instrumentation gate cleared; rich capture remains selective and is undergoing denominator hardening.** GHA run `35422485466` exercised 12 real Corpus-2 parents with exact solve/status/solution/node/work parity. Compact progress/prune/beam-flow instrumentation measured -0.35% aggregate wall delta versus observer-off and 35,342 bytes across the sample, with repair/beam/DFS all participating; this clears the plan's <5% representative-overhead gate without interpreting noisy negative timing as a speedup. Bounded rich cull observation measured +7.96%, so rich capsules remain explicit/question-driven rather than universally enabled. The green artifact exposed global-selector and population-denominator bias in the canary capture; both are repaired on the branch and require one follow-up real artifact before treating the rich capture as empirically ready.
+> **Status (2026-09-19): Phase 4 exit gate cleared for production-inert selective capture.** The latest representative follow-up, GHA run `35423841173` on immutable head `cfd6d02ca6ff6cd6ade919e3be89d7be617ca777`, exercised 16 parents (12 hard Corpus-2 parents plus 4 solved controls) with exact solve/status/solution/node/work parity in compact and rich modes. Compact instrumentation measured +0.46% aggregate wall delta and 35,710 bytes across the sample; bounded rich cull observation measured +10.32% and remains explicitly research-only/selective rather than a universal default. The repaired capture preserved per-parent selector denominators, complete population count, solved/failed outcomes, immutable run identity, and replayable selected prefixes. The Resource Contract preflight reports `captureGateClear=true` and `empiricalConditioningReady=true`; Phase 4 no longer has an empirical gate open.
 
 **Goal:** prove cheap path/state observation against real solver execution while preserving exact behavior.
 
@@ -1423,7 +1423,7 @@ Measure:
 
 ### Phase 5 - capture CLI/publisher and durable bundle
 
-> **Status (2026-09-19): partially implemented and verified.** The capture CLI requires explicit observation input, metadata/population identity, structural revisions, profile, selector cap, and output; the standard publisher/durable entry mechanism recognizes included capture documents. Shard-local GHA collection is not yet wired because Phase 4 has not cleared its real-run overhead gate.
+> **Status (2026-09-19): substantially implemented and verified.** The capture CLI requires explicit observation input, metadata/population identity, structural revisions, profile, selector cap, and output; the standard publisher/durable entry mechanism recognizes included capture documents; and the hosted real-search canary emits a schema-valid bounded capture plus audit-preflight artifact with immutable run identity. Phase 4 has now cleared its real-run gate. Shard-local/recurring production-family capture is intentionally not wired yet: rich capture costs about 10% wall time in the representative canary and remains question-driven, so adding a recurring producer should be tied to a concrete durable consumer rather than enabled merely to satisfy a checklist.
 
 **Goal:** make captures reproducible and safe to retain when decision-bearing.
 
@@ -1542,7 +1542,7 @@ Never default to raw capsule count as prevalence.
 
 ### Phase 8 - resource audit
 
-> **Status (2026-09-19): not yet earned; readiness is now mechanically checkable.** The registry remains `contract-only`: no representative real generic capture has yet cleared the Phase 4 parity/overhead gate and no recurring producer population exists to audit for empirical missingness/conditioning. `search-loss-resource-audit-preflight.mjs` now validates a real capture's parity, parent count, selector denominators, immutable run identity, solved/failed control presence, and recurring-producer declaration so promotion cannot happen by eyeballing a synthetic fixture.
+> **Status (2026-09-19): empirical capture gate cleared; recurring-resource gate remains open.** GHA run `35423841173` now clears the real-capture prerequisites checked by `search-loss-resource-audit-preflight.mjs`: valid contract, observer parity, multi-parent population, non-empty bounded capsules, selector denominators, immutable run SHA, non-synthetic producer, solved controls, and failed parents. The preflight reports `captureGateClear=true`, `empiricalConditioningReady=true`, and `auditReady=false` solely because `recurringProducerDeclared=false`. The registry therefore correctly remains `contract-only`. Do not promote it or add a Resource Contract audit declaration until a genuine recurring producer population exists; a one-off canary is evidence for readiness, not permission to invent recurrence.
 
 **Goal:** promote from catalogue-grade to audited-resource grade before broad recurring decision use.
 
