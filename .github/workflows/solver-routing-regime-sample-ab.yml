@@ -469,7 +469,7 @@ jobs:
           "population": {"kind": "sealed-stratified-sample", "identityBasis": "stable-level-id"},
           "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $DETERMINISTIC, "producerFamily": "routing-regime-sample-ab", "schedulerMode": "paired-control-treatment"},
           "limits": {"cumulativeNodeCeiling": $NODE_BUDGET, "initialWorkAllocation": $work_allocation, "totalWorkCeiling": $work_ceiling, "wallSafetyDeadlineMs": $BUDGET_MS, "wallDeadlineBinding": $wall_binding},
-          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
+          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "compact", "reports": "artifact-only"}}
           SPEC
           node scripts/write-solver-experiment-contract.mjs \
             --spec=logs/solver-routing-regime-sample/experiment-contract-spec.json \
@@ -523,12 +523,17 @@ jobs:
           fi
           outcomeFlag=()
           [ -s logs/solver-routing-regime-sample/outcome.json ] && outcomeFlag+=("--outcome-file=logs/solver-routing-regime-sample/outcome.json")
+          node scripts/summarize-solver-failure-response.mjs \
+            --in="reports/stress/routing-regime-ab-control.json,reports/stress/routing-regime-ab-treatment.json" \
+            --rows-key=levels \
+            --out="logs/solver-routing-regime-sample/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/routing-regime-ab-control.json" \
             --include="reports/stress/routing-regime-ab-treatment.json" \
             "${outcomeFlag[@]}" \
             --integrity-file="logs/solver-routing-regime-sample/paired-integrity.json" \
             --contract-file="logs/solver-routing-regime-sample/experiment-contract.json" \
+            --failure-response-file="logs/solver-routing-regime-sample/failure-response-summary.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
             --shards-observed="$(find logs/solver-routing-regime-sample-control logs/solver-routing-regime-sample-treatment -maxdepth 1 -name 'batch-*.json' 2>/dev/null | wc -l | tr -d ' ')" \
             --source-artifact="routing-regime-ab-combined"

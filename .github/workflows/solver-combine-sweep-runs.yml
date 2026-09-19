@@ -130,7 +130,7 @@ jobs:
             },
             execution: provenance.execution,
             limits: provenance.limits,
-            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
+            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
           }, null, 2)}\n`);
           NODE
 
@@ -175,6 +175,10 @@ jobs:
         if: always()
         shell: bash
         run: |
+          node scripts/summarize-solver-failure-response.mjs \
+            --in="logs/solver-combined/combined.json" \
+            --rows-key=levels \
+            --out="logs/solver-combined/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/solver-combined/combined.json" \
             --include="${{ inputs.expected_ids_file }}" \
@@ -183,6 +187,7 @@ jobs:
             --shards-basis="source runs merged; exact expected population validated separately" \
             --integrity-file="logs/solver-combined/population-integrity.json" \
             --contract-file="logs/solver-combined/experiment-contract.json" \
+            --failure-response-file="logs/solver-combined/failure-response-summary.json" \
             --source-artifact="${{ inputs.label }}-combined"
 
       - name: Upload standard solver sweep result

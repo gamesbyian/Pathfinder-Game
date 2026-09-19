@@ -278,15 +278,20 @@ jobs:
             population: { kind: 'whole-supplied-corpus', identityBasis: 'stable-level-id' },
             execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: configuration.workBudget != null, producerFamily: 'method-probe', schedulerMode: 'isolated-technique' },
             limits: { cumulativeNodeCeiling: configuration.nodeBudget, initialWorkAllocation: configuration.workBudget, totalWorkCeiling: configuration.workBudget, wallSafetyDeadlineMs: configuration.budgetMs, wallDeadlineBinding: configuration.workBudget == null },
-            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
+            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
           }, null, 2)}\n`);
           NODE
+          node scripts/summarize-solver-failure-response.mjs \
+            --in="logs/method-probe-shards/combined.json" \
+            --rows-key=levels \
+            --out="logs/method-probe-shards/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/method-probe-shards/combined.json" \
             --include="logs/method-probe-shards/solved-ids.txt" \
             --outcome-file="logs/method-probe-shards/outcome.json" \
             --integrity-file="logs/method-probe-shards/population-integrity.json" \
             --contract-file="logs/method-probe-shards/experiment-contract.json" \
+            --failure-response-file="logs/method-probe-shards/failure-response-summary.json" \
             --shards-expected="${{ inputs.shard_count }}" \
             --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
             --source-artifact="method-probe-combined"

@@ -499,7 +499,7 @@ jobs:
           "population": {"kind": "sealed-generated-cohort", "identityBasis": "stable-level-id"},
           "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $DETERMINISTIC, "producerFamily": "broad-confirmation", "schedulerMode": "paired-control-treatment"},
           "limits": {"cumulativeNodeCeiling": $NODE_BUDGET, "initialWorkAllocation": $work_allocation, "totalWorkCeiling": $work_ceiling, "wallSafetyDeadlineMs": $BUDGET_MS, "wallDeadlineBinding": $wall_binding},
-          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
+          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "compact", "reports": "artifact-only"}}
           SPEC
           node scripts/write-solver-experiment-contract.mjs \
             --spec=logs/solver-broad-confirmation/experiment-contract-spec.json \
@@ -558,12 +558,17 @@ jobs:
             fi
             node scripts/research-workflow-outcome.mjs --out=reports/stress/broad-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
           fi
+          node scripts/summarize-solver-failure-response.mjs \
+            --in="reports/stress/broad-confirmation-control.json,reports/stress/broad-confirmation-treatment.json" \
+            --rows-key=levels \
+            --out="logs/solver-broad-confirmation/failure-response-summary.json"
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/broad-confirmation-control.json" \
             --include="reports/stress/broad-confirmation-treatment.json" \
             --outcome-file="reports/stress/broad-confirmation-outcome.json" \
             --integrity-file="logs/solver-broad-confirmation/paired-integrity.json" \
             --contract-file="logs/solver-broad-confirmation/experiment-contract.json" \
+            --failure-response-file="logs/solver-broad-confirmation/failure-response-summary.json" \
             --shards-expected="$(( ( ${{ inputs.shard_count }} < ${{ needs.generate.outputs.total_levels }} ? ${{ inputs.shard_count }} : ${{ needs.generate.outputs.total_levels }} ) * 2 ))" \
             --shards-observed="$(find logs/solver-broad-confirmation-control logs/solver-broad-confirmation-treatment -maxdepth 1 -name 'batch-*.json' ! -name '*-flags.json' | wc -l | tr -d ' ')" \
             --source-artifact="broad-confirmation-combined"
