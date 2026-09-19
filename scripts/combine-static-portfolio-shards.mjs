@@ -24,6 +24,7 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
+import { summarizeFailureResponse } from './solver-failure-response-lib.mjs';
 
 function findShardFiles(dir) {
     const out = [];
@@ -134,7 +135,8 @@ export function combine(shardOutputs, controlArm, plan = null) {
             ? 'At least one candidate preserved control coverage while gaining solves or reducing work.'
             : 'No candidate preserved control coverage while gaining solves or reducing work.',
     };
-    return { schemaVersion: 1, controlArm, totalCells: results.length, armSummaries, comparisons, researchOutcome };
+    return { schemaVersion: 1, controlArm, totalCells: results.length, armSummaries, comparisons, researchOutcome,
+        failureResponse: summarizeFailureResponse(results) };
 }
 
 function toMarkdown(result) {
@@ -188,6 +190,7 @@ if (isMain) {
     const outFile = argMap.get('--out');
     const summaryOutFile = argMap.get('--summary-out') || (outFile ? outFile.replace(/\.json$/u, '-summary.md') : null);
     const outcomeOutFile = argMap.get('--outcome-out');
+    const failureResponseOutFile = argMap.get('--failure-response-out');
     if (!stagingDir || !controlArm || !outFile) {
         console.error('Usage: --staging-dir=<dir> --control-arm=<name> --out=<path> [--plan=<path>] [--summary-out=<path>]');
         process.exit(1);
@@ -201,6 +204,7 @@ if (isMain) {
     mkdirSync(path.dirname(path.resolve(root, outFile)), { recursive: true });
     writeFileSync(path.resolve(root, outFile), JSON.stringify(result, null, 2) + '\n');
     if (outcomeOutFile) writeResearchWorkflowOutcome(path.resolve(root, outcomeOutFile), result.researchOutcome);
+    if (failureResponseOutFile) writeFileSync(path.resolve(root, failureResponseOutFile), JSON.stringify(result.failureResponse, null, 2) + '\n');
     if (summaryOutFile) writeFileSync(path.resolve(root, summaryOutFile), toMarkdown(result));
     console.log(`Combined ${shardFiles.length} shard file(s), ${result.totalCells} cells, ${result.armSummaries.length} arms. Wrote ${outFile}${summaryOutFile ? ` and ${summaryOutFile}` : ''}.`);
 }
