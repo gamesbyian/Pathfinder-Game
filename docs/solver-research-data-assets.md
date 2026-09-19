@@ -7,7 +7,7 @@
 > **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Method:** [`solver-research-operating-model.md`](solver-research-operating-model.md) and [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
-Do not duplicate the machine registry here. This file explains safe cross-asset use. The older catalogue is frozen at [`archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md). Human/editor-parent contrasts remain variant-family data; [`human-parent-contrast-research.md`](human-parent-contrast-research.md) owns their source/exposure interpretation.
+This file explains safe cross-asset use; the JSON registry owns asset detail. Human/editor-parent contrasts remain variant-family data; [`human-parent-contrast-research.md`](human-parent-contrast-research.md) owns their interpretation.
 
 ## Cheap discovery first
 
@@ -17,7 +17,7 @@ node scripts/research-status-index.mjs --compact --query=<term>
 node scripts/tooling-census.mjs --compact --query=<term>
 ```
 
-Use `research-asset-query --id=<asset-id>` for exact registry detail. Compact results expose `contractGrade`, `independentUnit`, and audit authorities when audited; `--full` includes the complete declaration.
+Use `research-asset-query --id=<asset-id>` for exact registry detail; `--full` includes the complete declaration.
 
 ## Required evidence preflight
 
@@ -31,7 +31,7 @@ Before broad compute or a new dataset:
 6. Prefer an existing evidence join over generation when it answers the gate.
 7. Record materially relevant rejected assets when that prevents rediscovery.
 
-Mining many assets/features or historical regimes creates selection pressure; discovered relationships are development evidence until independently checked.
+Broad asset/feature mining creates selection pressure; discovered relationships remain development evidence until independently checked.
 
 ## Evidence topology
 
@@ -61,15 +61,15 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 ## High-value joins
 
-Useful joins include failure response × census/benchmarks, census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, provenance × profiles/census, hint discovery process × failure response/manifests, hint harvest selection × provenance/manifests, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units. Use the smallest useful join.
+Use the smallest useful join. High-value examples include failure response × census/benchmarks, provenance × profiles/census, hint discovery process × failure response/manifests, hint harvest selection × provenance/manifests, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units.
 
 ### Four-resource lineage recipe
 
-For corpus × family × provenance × profile questions, treat the join as one causal lineage: corpus selection defines the population; family identity the intervention; provenance how paths entered the sample; the Solution Profile summarizes that sample. A replayed parent path may therefore appear as family evidence, provenance, and profile support without becoming three observations.
+For corpus × family × provenance × profile questions, treat the join as one lineage: corpus selection defines the population; family identity the intervention; provenance how paths entered the sample; the Solution Profile summarizes it. One replayed path does not become multiple independent observations because it appears in several resources.
 
 The September 14 census found every current published/C1/C2 parent replay-touched and replay as the earliest dated discovery for ~75% of stored paths. When family effects are the question, distinguish **replay-touched** from **replay-first** and prefer non-replay-first profile evidence, or label the full profile downstream/dependent. Full profiles remain valid descriptions of the current known sample.
 
-Use `scripts/cross-resource-observability-audit.mjs` when this ancestry matters. Missing or partial family mounts remain unavailable, not negative evidence. See the [`audit`](../reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md) and [`machine summary`](../reports/2026-09-14-cross-resource-observability-summary-001.json).
+Use `scripts/cross-resource-observability-audit.mjs` when this ancestry matters. Missing/partial family mounts are unavailable, not negative evidence.
 
 ## Three different fingerprints
 
@@ -87,13 +87,13 @@ Hints, known solutions, exact labels, census winners, historical costs, family o
 
 ### Generation provenance is not selection provenance
 
-Solver-blind generation does not make later corpus membership independent. Current C1 is 23 surviving old A-F rows plus 79 random-generator rows selected for historical solver success, so whole C1 is not cross-generator transfer against C2. Current C2 combines 328 survivors from a historical solver-negative complement with 1,372 later replacements; it is a strong development laboratory, not one prospective untouched draw. See [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md).
+Solver-blind generation does not make later corpus membership independent. C1/C2 carry later solver-outcome selection history, so neither filename implies untouched transfer evidence. See [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md).
 
 A residual or participant cohort supports the conditional question it was selected for, not unconditional mechanic prevalence. Level-blindness alone does not establish sample or distributional generalization. Human/editor parents add a distinct source, not automatic independence: siblings remain correlated, preserved witnesses prove solvability only, and a parent whose outcomes influenced design is development evidence for descendants.
 
 ### Solution profiles are sample profiles
 
-Profile fields summarize stored known solutions with explicit support; missing axes stay unavailable. `observedSingleOrder` is sampled agreement, not rigidity. `hasExhaustiveSearchEvent` records an event, not whole-space enumeration. Saturation needs dated chronology; sparse nearest-profile identity remains exploratory. See [`solver-solution-profile.md`](solver-solution-profile.md) and the [`profile audit`](../reports/2026-09-13-solution-profile-resource-audit-001.md).
+Solution profiles summarize stored samples with explicit support. Missing axes stay unavailable; `observedSingleOrder` is sampled agreement; `hasExhaustiveSearchEvent` is not whole-space enumeration. See [`solver-solution-profile.md`](solver-solution-profile.md).
 
 ### Independence, missingness, and hint provenance
 
