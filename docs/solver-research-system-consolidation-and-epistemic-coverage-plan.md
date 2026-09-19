@@ -785,6 +785,10 @@ Implement at least one bounded invalidation drill before declaring this phase co
 
 Automation should identify affected descendants and their relation. It must not automatically rewrite scientific dispositions.
 
+Treat this as a **dependency question**, not merely a graph-reachability or citation query. The drill should distinguish material evidentiary/assumption dependence from incidental reference, lexical mention or broad shared context, and should report whether the affected set can be bounded narrowly enough to avoid archaeology-scale review. A useful invalidation path says not only "this descendant is downstream" but **which supporting assumption or transformation it depended on** and which sibling claims remain justified.
+
+This is the research-system analogue of selective commitment revision in the solver capability atlas: both problems ask what can survive after one upstream commitment is contradicted. The analogy is conceptual only. Do not respond by building a universal proof graph or by forcing solver and research reasoning through one implementation.
+
 ### 8.5 Structured closeout capsule, rendered prose
 
 New current-state metadata should no longer depend primarily on Markdown regex reconstruction.
@@ -1266,6 +1270,22 @@ For important questions where provenance is recoverable, classify the primary qu
 
 Join this with Phase 14's attention topology.
 
+### Candidate/proposal-set provenance for high-leverage decisions
+
+Question provenance explains where the selected question came from; it does not by itself reveal whether the research system failed earlier by never proposing an important alternative.
+
+For a bounded sample of high-leverage gate transitions, reconstruct from existing plans, reports, comments and future-work records where practical:
+
+- the materially different candidate questions/interventions actually considered at the time;
+- candidates explicitly rejected or deferred;
+- alternatives left unpursued because no observer, intervention, exact/reference path, suitable population, search object or economical discriminator existed;
+- whether the eventual choice was primarily a **proposal-space outcome** ("this was the only represented/available question") or a **priority outcome** ("several meaningful alternatives existed and this one was chosen");
+- which unchosen alternatives were preserved with a trigger/reopen condition versus simply disappearing.
+
+Do not require comprehensive idea logging or attempt to reconstruct an unknowable denominator of every thought that might have occurred. The useful denominator is the recoverable set of **material alternatives that could have changed the next action**.
+
+This distinction should feed Phase 16/17 answerability analysis: a question can be well prioritized within the represented candidate set while the candidate set itself is impoverished.
+
 ### Interpretation
 
 A concentration of questions originating from existing telemetry/tool availability is evidence of possible instrument-shaped research, especially when high-value atlas gaps remain measurement-poor.
@@ -1311,6 +1331,15 @@ Run smaller **independent inquiry probes** when exploration is triggered:
 4. derive missing operations, rival explanations, alternative search objects and desired discriminators in the probe's native vocabulary;
 5. reconcile afterward against the canonical premise map/capability atlas/history;
 6. classify outputs as rediscovery, scope refinement, relation-only, new semantic parent, or ONTOLOGY_ESCAPE.
+
+When the specific question is whether canonical memory or vocabulary is anchoring inquiry, use a **paired reconstruction** rather than interpreting one blind probe in isolation:
+
+- one arm uses the ordinary current research front doors and canonical conceptual authorities;
+- one arm is constrained to primary evidence/code plus the minimum Pathfinder/solver semantics needed to reason correctly;
+- both freeze their candidate semantic objects, rival explanations and desired discriminators before cross-exposure;
+- compare semantic deltas, ontology escapes and genuinely different discriminators, not wording or stylistic novelty.
+
+This is controlled **non-exposure**, not evidence deletion. Keep the full repository history intact. Do not turn every independent inquiry into a paired experiment; use this only when ontology/anchoring independence is itself decision-relevant.
 
 ### Saturation interpretation
 
@@ -1525,6 +1554,22 @@ Use Phase 23 to distinguish:
 
 - repeated evidence against a semantic parent;
 - repeated failure of forms sharing an architectural worldview.
+
+### 28.9 Binary-future blindness
+
+The repo already names completion regimes, option preservation, topology and alternate search objects. The unresolved question is operational: much current exact/reference work still asks whether a selected state is **LIVE or DEAD**, while two LIVE states may preserve radically different sets of future completion regimes.
+
+Do not create a completion-regime schema from this observation.
+
+If a live retention/planning/representation question depends on optionality that binary feasibility cannot adjudicate, first use the smallest exact-supported tractable pilot available:
+
+1. choose tiny states/levels where multiple completions can be enumerated or systematically sampled without heroic compute;
+2. hold current-state facts and ordinary progress descriptors as matched as practical;
+3. derive one intentionally coarse summary of remaining completion-set structure, such as regime count/class diversity, obligation-order diversity, topology family, or another prespecified relation justified by the question;
+4. test whether that summary distinguishes later extinction/recovery or otherwise changes a real consumer decision beyond LIVE/DEAD and current progress;
+5. stop if the signal does not survive the tractable pilot.
+
+A positive pilot may expose a shared missing representation for solver option preservation and research estimands. A negative pilot is a reason to keep "completion regime" conceptual rather than turning it into infrastructure.
 
 # Part VI - Documentation, implementation and operational guardrails
 
