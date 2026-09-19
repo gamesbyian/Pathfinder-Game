@@ -17,7 +17,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`agent-context-routes.json`](agent-context-routes.json) | Required/optional agent-context routes and byte budgets |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
 | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority, workstream state, and next gates** |
-| [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Semantic map of solver reasoning primitives vs. Pathfinder demands; descriptive premise-generation aid, not a queue |
+| [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Solver reasoning capability map; not a queue |
 | [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) | Reconciles historical experiment closure against capability gaps |
 | [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md) | Bounded observer-first plan to measure repeated derivation and potential typed reuse of expensive current-instance facts within one cold solve |
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
