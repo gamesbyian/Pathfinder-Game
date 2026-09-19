@@ -77,11 +77,16 @@ function currentReferenceRows(root) {
     const indexPath = path.join(root, 'docs/README.md');
     if (!existsSync(indexPath)) return [];
     const source = readFileSync(indexPath, 'utf8');
-    const start = source.indexOf('## Current references');
+    const lines = source.split(/\r?\n/u);
+    const start = lines.findIndex(line => line.trim() === '## Current references');
     if (start < 0) return [];
-    const section = source.slice(start).split(/^##\s+/mu).slice(0, 1).join('');
+    const section = [];
+    for (const line of lines.slice(start + 1)) {
+        if (line.startsWith('## ')) break;
+        section.push(line);
+    }
     const rows = [];
-    for (const line of section.split(/\r?\n/u)) {
+    for (const line of section) {
         const match = /^\| \[\`([^\`]+)\`\]\(([^)]+)\) \| (.+) \|$/u.exec(line);
         if (!match) continue;
         rows.push({ label: match[1], path: normalize(path.join('docs', match[2])), ownership: match[3].trim() });
