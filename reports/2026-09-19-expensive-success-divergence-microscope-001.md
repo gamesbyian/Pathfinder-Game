@@ -1,0 +1,56 @@
+# Expensive-success divergence microscope: R00044, R01000, R02974
+
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-19 — zero-new-compute re-analysis of already-collected per-level/per-stage telemetry from the work-ladder confirmation slice (GHA runs [35335885011](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35335885011) at 300M nodes, [35335905251](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35335905251)+[35352629524](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35352629524) at 1.2B nodes), cross-referenced against current `modules/solver/stage-budget-core.ts`.
+> **Decision:** the three expensive successes split cleanly into two distinct mechanisms, not one. **R00044 is an allocation-order artifact**: its solving stage (`admissible-order-fallback`) needed only 219.8M nodes — comfortably inside even a 300M total budget — but at 300M it received only a fixed 25% reserve (75M nodes, `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION`), which cut it off before it could find the answer. **R01000 and R02974 are genuine primary-search underdose**: both solved via `main-search` alone (workSpent 334.8M and 587.6M respectively), a cost that exceeds even the *full, undiminished* 300M ceiling, so no reallocation at fixed total work could have recovered them — consistent with the already-closed WS2-WORK-LADDER-ECONOMICS finding that blind escalation is uneconomical.
+> **Remaining gate:** R00044's mechanism nominates a concrete, cheap, already-instrumented treatment (re-tune `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION` against the *current* residual, at fixed total work) — not yet designed/dispatched. R01000/R02974's mechanism nominates nothing cheap; they remain evidence that budget-escalation solves are mechanistically heterogeneous, not a single fixable pattern.
+> **Evidence role:** discovery — first read of already-collected data through a new lens (per-stage node accounting cross-referenced against the reserve mechanism's own source code), not a new experiment.
+> **Population identity:** the 3 solved ids from the work-ladder confirmation slice's frozen 20-id sample (`reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md`), current commit, `data/stress/stress-levels-random.json`.
+
+## Why this ran
+
+The work-ladder economics closure (`reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md`) established that blanket 4x node-budget escalation is uneconomical, but it deliberately didn't ask *why* the 3 recovered levels (R00044, R01000, R02974) needed the extra budget. Per standing practice ("today's solver already contains enough latent capability to solve some residual levels but often reaches it inefficiently"), these three are natural microscopes: their outcome flips between two already-fully-instrumented budget tiers on the *same* code, so the divergence is directly inspectable from data already sitting in completed GHA job logs — no new solver compute needed.
+
+## Method
+
+For each of the 3 ids, pulled the per-level, per-stage `workSpent`/`stageNodesExpanded`/`stageSolved` rows already printed by `scripts/summarize-targeted-sweep-work.mjs` in the "Combine final results" jobs' logs for both the 300M tier (run 35335885011) and the 1.2B tier (runs 35335905251 + 35352629524), for the three stages that job explicitly instruments (`main-search`'s solve is inferred from `stageAttempts=0` on the other two — i.e. the level solved before ever reaching them): `admissible-order-fallback`, `admissible-order-alternate-tiebreak-retry`, `connectivity-axis-prune-disabled-retry`. Cross-referenced the observed cutoff points against `modules/solver/stage-budget-core.ts`'s documented budget-allocation mechanism to identify *why* each stage received the node ceiling it did.
+
+## Result
+
+| id | Solving stage (1.2B) | Nodes needed to solve | 300M-tier stage ceiling reached | Verdict |
+|---|---|---:|---:|---|
+| R00044 | `admissible-order-fallback` | 219,802,423 | 75,000,064 (node-budget-reached) | **Allocation-order artifact** |
+| R01000 | `main-search` | ~334,791,612 (total workSpent; 0 attempts reached later stages) | n/a (exceeds the whole 300M ceiling) | **Genuine underdose** |
+| R02974 | `main-search` | ~587,585,347 (total workSpent; 0 attempts reached later stages) | n/a (exceeds the whole 300M ceiling) | **Genuine underdose** |
+
+### R00044: allocation-order artifact, code-confirmed
+
+`stage-budget-core.ts` computes `admissibleOrderNodeReserve = Math.floor(nodeBudget * ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION)` where `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION = 0.25` — a **fixed 25% of the raw external `nodeBudget`**, withheld from every earlier tier (`main-search`, `repair-fallback`, `goal-attraction-disabled-retry`) and reserved exclusively for `admissible-order-fallback`. At `nodeBudget=300,000,000`, this reserve is exactly `75,000,000` — matching R00044's observed 300M-tier `admissible-order-fallback` cutoff (`stageNodesExpanded=75,000,064`) to within rounding. At `nodeBudget=1,200,000,000`, the same 25% reserve is `300,000,000` — comfortably more than the `219,802,423` nodes R00044's fallback attempt actually needed, so it found the solution.
+
+**This is not a total-compute story.** R00044 needed 219.8M nodes to solve via this stage — less than the 300M *total* ceiling itself. It failed at 300M purely because the reserve mechanism's fixed 25% fraction under-allocated this particular level's needed slice; a differently-shaped reserve (larger fraction, or a level-adaptive one) could plausibly have solved it at the *same* 300M total budget, at the cost of giving earlier tiers less. This is exactly the "same total work, different allocation" shape of experiment the closed 4x-escalation finding did not test.
+
+**This mechanism has real precedent and real risk, already documented in the source.** `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION`'s own comment records that 0.25 was sized from a real curve analysis on a past population/residual (as of that tuning: "78 of 141 levels' cheapest recorded admissible-order-fallback find cost <=5,000,000 nodes... only 5 of 434 currently-solved corpus-2 levels spend more than the 15,000,000 the earlier tiers would retain... 0.20 covers 75 finds for the same 5 at risk, 0.30 covers 79 for 7") and an A/B (`reports/2026-07-30-admissible-order-fallback-node-reserve.md`, not present in the current repo tree — likely superseded/archived). A sibling mechanism's own history (documented at the same call site) already shows this exact tradeoff can go either way on a single knob: raising a related reserve recovered one level (`R03148`) while costing a different level that needed the *unreserved* pool. **This is not a naive, unexamined knob — it is a mature, already-tuned mechanism whose calibration predates the current (2026-09-16) 531/390-row residual boundary.** The population it was tuned against ("141 levels", "434 solved corpus-2 levels") does not match today's residual, which is itself sufficient justification for a fresh calibration check, not a claim that the existing value is wrong.
+
+### R01000 and R02974: genuine underdose, not reallocation-fixable
+
+Both solved entirely within `main-search` (`stageAttempts=0` for the two other instrumented stages at the 1.2B tier — the level never needed to fall through to them). `earlyTierNodeBudget` (the ceiling `main-search` itself draws from) is `nodeBudget` minus the `admissible-order-fallback` reserve, i.e. at most `nodeBudget` even if that reserve were reduced to zero. R01000's workSpent (334.8M) and R02974's (587.6M) both exceed the *entire* 300M ceiling outright — before any reserve is even subtracted. No reallocation of the existing 300M total, however aggressive, could have supplied either level enough room in `main-search`; they simply need more raw search than 300M provides. This is consistent with, and does not reopen, the closed `WS2-WORK-LADDER-ECONOMICS` finding: for at least these two ids, the recovered capacity really is bought by more total compute, at the uneconomical rate that closure already measured.
+
+## What this establishes
+
+- **The three work-ladder recoveries are not one phenomenon.** A single "give the residual more budget" story would have missed that 1/3 of this small sample is actually a mis-allocation artifact fixable at *zero* extra total compute, while 2/3 are genuine escalation cases the economics closure already ruled uneconomical.
+- **A concrete, cheap, already-instrumented candidate treatment exists for the allocation-order class**: `admissibleOrderNodeReserveFractionOverride` is already a first-class config override (`stage-budget-core.ts:1030`) — no new solver code is needed to test a different reserve fraction, only a fresh matched-work A/B design and population.
+- **Both mechanisms are visible only by comparing per-stage, not per-level, budget consumption.** A per-level `ok`/`status` view (what a raw recovery-rate count uses) cannot distinguish these; the distinction only appears once the *stage that solved it* and *how much of the ceiling that stage actually had access to* are both inspected.
+
+## What this does not establish
+
+- Does not establish that a larger/adaptive `admissible-order-fallback` reserve would net-positive on the *current* residual — only that R00044's specific failure mode is consistent with under-reservation, and that the reserve fraction currently in force was tuned against a population that no longer matches today's residual boundary.
+- Does not generalize beyond this 3-id sample. A single allocation-artifact case is a nomination, not a population-level claim; per standing rule, sizing a real experiment requires characterizing how common this pattern is across the current residual, not just this one level.
+- Does not touch R01000/R02974's own root cause (why `main-search` itself needs 300-590M nodes on these specific boards) — a materially harder question (structural search-cost analysis) than the allocation question this report answers for R00044.
+
+## Nominated next step (not yet dispatched)
+
+Per the same zero-new-compute-first discipline used throughout this report: before dispatching any new solver compute, check whether an already-committed technique census (e.g. `reports/stress/technique-census/*/combined-cells.json`) already records isolated `admissible-order-fallback` find-costs at a high-enough node cap to repeat the original tuning's curve analysis against the *current* residual. The one census artifact inspected so far (`33717910218`, corpus1, 2026-09-03) uses only a 50,000,000-node isolated cap — too small to observe finds in R00044's range (219.8M) or resolve the tuning question. If no adequately-capped census exists, the next step is a fresh, precommitted isolated `admissible-order-fallback` cost census against the current 390-row Class-5 (or 531-row Class 1-5) residual at a cap large enough to observe real find costs, mirroring `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION`'s own original derivation methodology, before proposing any specific new fraction to A/B.
+
+## Artifacts
+
+No new artifacts. All figures are re-derived from already-published GHA job logs (runs 35335885011, 35335905251, 35352629524) and `modules/solver/stage-budget-core.ts` (current HEAD).
