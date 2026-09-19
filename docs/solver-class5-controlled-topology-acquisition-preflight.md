@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=9000 max=12000 -->
 # Class-5 controlled topology acquisition preflight
 
-> **Status:** DESIGNED / NOT YET EXECUTED.
+> **Status:** **EXECUTED / CLOSED-POSITIVE (2026-09-16).** The frozen pilot was run and earned the bounded topology premise; see [`reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md). This preflight is retained as the experiment contract, not as pending work.
 > **Question:** can a runtime-legal open-path topological coordinate distinguish exact completion feasibility between otherwise matched path states?
 > **Queue position:** WS2 Class 5 acquisition, the current premise-generation stack's item 1; H1/H2/H3 (`docs/solver-future-work.md`) are separate candidate mechanisms for the same underlying gap, not a blocking prerequisite for this preflight.
 > **Observer:** `modules/solver/open-path-topology-observer.ts`.

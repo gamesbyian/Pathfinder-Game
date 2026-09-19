@@ -1,6 +1,6 @@
 # Next solver research-resource audit plans
 
-> **Status:** planned audit program, refined against current repository authorities.
+> **Status:** **COMPLETED / RETIRED (2026-09-14).** The planned Audit 1/2/3/5/6 sequence has concluded in dated reports. This file is retained as methodology/history, not as a standing audit queue; new audits require a current decision-bearing need.
 > **Purpose:** carry the September 2026 research-resource audit method into the next decision-bearing evidence systems without duplicating work the repo already does well.
 > **Predecessors:** the hint-provenance, variant-family, solution-profile, stress-corpus, decision-exposure, and cross-resource ancestry audits, plus `solver-research-resource-contract.md`.
 > **Goal:** improve solve-directed research reliability and opportunity discovery, not create audit ceremony or parallel authorities.

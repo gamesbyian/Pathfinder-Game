@@ -1,8 +1,6 @@
 # Naming-cleanup Phases 9–14 preparation audit
 
-Status: **research handoff only**. This document does not claim a batch, change a mapping, add a
-compatibility alias, or authorize implementation ahead of the serialized Phase-8 stream. The plan,
-vocabulary authority, ledger, and (once created) phase execution records remain authoritative.
+Status: **historical / retired after Phase 15**. This preparation document no longer authorizes implementation. The naming program is complete and frozen; `naming-cleanup-plan.md` records the terminal state, while current vocabulary and change recipes govern new work.
 
 > **Phase-9 disposition (2026-08-31):** Phase 9 has been implemented, repaired, and final-audited.
 > Its closure authority is

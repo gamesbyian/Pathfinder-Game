@@ -1,6 +1,6 @@
 # Solver premise-map mining execution plan
 
-> **Status:** execution plan for the frozen v1 premise-map mining program.
+> **Status:** **COMPLETED / RETIRED (2026-09-17).** Phases 1-3 are closed; see [`reports/solver-premise-map-phase3/04-phase3-closeout.md`](../reports/solver-premise-map-phase3/04-phase3-closeout.md). This file is historical method/sequence evidence, not an active queue.
 > **Authority boundary:** `solver-premise-map-mining-preregistration.md` owns the first-round lenses and stop rule. This document sequences execution and defines later synthesis; it must not alter the preregistered lens definitions after results are seen.
 
 ## Goal

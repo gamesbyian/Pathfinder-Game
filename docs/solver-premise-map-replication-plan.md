@@ -1,6 +1,6 @@
 # Solver premise-map replication and path-dependence plan
 
-> **Status:** active experimental extension; independent replication work must remain quarantined.
+> **Status:** **COMPLETED / RETIRED (2026-09-17).** Construction, blind mining, reconciliation, and post-replication disposition are closed; see [`reports/premise-map-replication/03-post-replication-decision-record.md`](../reports/premise-map-replication/03-post-replication-decision-record.md). The conditional fourth-cell reopen lives in [`solver-future-work.md`](solver-future-work.md); do not restart this plan wholesale.
 > **Date:** 2026-09-17
 > **Purpose:** estimate how much of the premise-map program's conceptual output depends on (A) how the repository was conceptualized into a map and (B) how a fixed map was interrogated.
 > **Boundary:** this is not a continuation of M1-M12 mining and does not mutate frozen v1, v2 admissions, or the live solver queue.

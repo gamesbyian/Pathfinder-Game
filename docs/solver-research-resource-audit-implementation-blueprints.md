@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=11000 max=15000 -->
 # Solver research-resource audit implementation blueprints
 
-> **Status:** execution companion to [`solver-research-resource-next-audit-plans.md`](solver-research-resource-next-audit-plans.md).
+> **Status:** **COMPLETED / RETIRED (2026-09-14).** Historical execution companion to the completed [`solver-research-resource-next-audit-plans.md`](solver-research-resource-next-audit-plans.md); use the dated audit reports and current Resource Contract for live work.
 > **Purpose:** specify the best concrete implementation of each planned research-resource audit using Pathfinder's current evidence architecture, known failure modes, and existing tooling.
 > **Priority boundary:** these audits are supporting research infrastructure. They do not displace the live WS2 Class-2, Class-4, or Class-5 gates merely because an audit is available to run.
 
