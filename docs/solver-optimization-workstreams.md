@@ -64,7 +64,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane G — independent search-object nursery
 
-**G1 complete-path LNS:** Stage 1 positive; naive Stage 2 method-limited. Remaining gate: a fair full candidate from frozen real-search partials, then distance/local-repairability. Rich capsules may supplement, not replace, the specialist sampler. No LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
+**G1 complete-path LNS:** Stage 1 positive; naive Stage 2 method-limited. **Real-frontier completion pilot run 2026-09-19: 0/45 referee-valid solves across two tiers (2M and 16M close-gap nodes), outcome shape identical across the 8x escalation.** Still budget-censored, not proven infeasible, but rules out modest dose as the fix and is direct evidence against cheap local repairability. Fair-full-candidate gate not met; no LNS earned. Next cheapest step is the same production-search-quality constructor already blocking Lane B/D, not a further blind dose escalation. [`falsifier result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md) · [`dose pilot result`](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
