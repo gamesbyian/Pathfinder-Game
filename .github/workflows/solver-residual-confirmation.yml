@@ -731,7 +731,7 @@ jobs:
           "population": {"kind": "sealed-residual-corpus", "identityBasis": "stable-level-id"},
           "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $DETERMINISTIC, "producerFamily": "residual-confirmation", "schedulerMode": "paired-control-treatment"},
           "limits": {"cumulativeNodeCeiling": $NODE_BUDGET, "initialWorkAllocation": $work_allocation, "totalWorkCeiling": $work_ceiling, "wallSafetyDeadlineMs": $BUDGET_MS, "wallDeadlineBinding": $wall_binding},
-          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
+          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "compact", "reports": "artifact-only"}}
           SPEC
           node scripts/write-solver-experiment-contract.mjs \
             --spec=logs/solver-residual-confirmation/experiment-contract-spec.json \
@@ -790,7 +790,7 @@ jobs:
             fi
             node scripts/research-workflow-outcome.mjs --out=reports/stress/residual-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
           fi
-          node scripts/publish-solver-sweep-result.mjs \
+          node scripts/sweep-publish.mjs \
             --primary="reports/stress/residual-confirmation-phase2-control.json" \
             --include="reports/stress/residual-confirmation-phase2-treatment.json" \
             --outcome-file="reports/stress/residual-confirmation-outcome.json" \
