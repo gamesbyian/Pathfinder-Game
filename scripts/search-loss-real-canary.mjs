@@ -326,6 +326,7 @@ for (const collector of richCollectors.values()) {
     combinedSelectorSummaries[selectorId] = state;
   }
 }
+const selectedParentIds = selected.map(row => String(row.id)).sort();
 const decisionParents = [...new Set(combinedCapsules.map(row => String(row.parentId)))].sort();
 const capture = validateSearchLossCapture({
   schemaVersion: 1,
@@ -341,9 +342,10 @@ const capture = validateSearchLossCapture({
     levelBlind: true,
   },
   population: {
-    source: `${corpusFile}#rich-decision-parents`,
-    populationIdentity: stableHash({ kind: 'search-loss-real-canary-rich-population', parentIds: decisionParents }),
-    parentCount: decisionParents.length,
+    source: `${corpusFile}#deterministic-canary-sample`,
+    populationIdentity: stableHash({ kind: 'search-loss-real-canary-population', parentIds: selectedParentIds }),
+    parentCount: selectedParentIds.length,
+    observedCapsuleParentCount: decisionParents.length,
   },
   capture: {
     captureProfileId,
