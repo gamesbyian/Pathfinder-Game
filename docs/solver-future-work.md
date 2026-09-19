@@ -1,13 +1,13 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) method; [gap reconciliation](solver-capability-gap-stop-condition-reconciliation.md) closure scope.
+Deferred/reopen questions only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) method.
 
 **Level-blindness constrains provenance, not specificity:** generic cold procedures may derive exact current-input facts; cross-parent recurrence is required only for fixed reusable descriptor claims.
 
 ## Promoted out of future work
 
-Do not duplicate active/concluded lanes here. Current dispositions are owned by workstreams; this file retains only deferred descendants and reopen boundaries.
+Only deferred descendants/reopen boundaries belong here; workstreams owns current dispositions.
 
 ## Deferred descendants of active premises
 
@@ -90,22 +90,16 @@ Do not reopen unchanged:
 - hazard/bandit/ML scheduling before a fixed-work marginal-value premise;
 - bulk variant generation without a frozen causal question.
 
-Important distinctions:
-
-- closing the **cross-level learned-connectivity checker** does not close the active solve-local rediscovery question;
-- closing generic detour gadgets does not close actual per-instance commutativity;
-- closing historical blueprint implementations does not close future-intersection realizability;
-- closing positional/prefix repair does not close dependency-defined causal revision;
-- closing H1's compact recurring vocabulary does not close bounded per-instance joint feasibility.
+Closure is form-scoped: cross-level connectivity does not close solve-local rediscovery; detour gadgets do not close per-instance commutativity; blueprint implementations do not close future-intersection realizability; positional repair does not close dependency-defined revision; H1 vocabulary does not close bounded per-instance feasibility.
 
 ## Premise-map-derived research gates
 
-Replication earned no queue expansion. Robust regions strengthen provenance only: decision state exceeds puzzle state; allocation is part of capability; evidence is process-conditioned; historical negatives are scope-bound. Qualify raw graph/topology claims by representation history. Reopen the fourth replication cell only when a concrete decision cannot otherwise separate ontology artifact, mining-method artifact and robust concept; do not reopen broad mining for its own sake.
+Replication earned no queue expansion. Robust regions strengthen provenance only; evidence remains process-conditioned and negatives scope-bound. Reopen the fourth cell only for a concrete decision that cannot otherwise separate ontology, mining-method and robust-concept explanations.
 
 Measurement opportunities are non-queue. Promote one only for a live ambiguity with a valid discriminator/population/cost/authority contract and decision-changing outcomes; MO-005/MO-007 remain observables.
 
 ## Research hygiene
 
-Before reviving anything from history, classify its old disposition: **FORM-CLOSED, DESCRIPTOR-CLOSED, CROSS-LEVEL-CLOSED, PARTICIPATION-INVALID, DIRTY-REVERT, POPULATION-LIMITED, ECONOMICS-CLOSED, SEMANTIC-CLOSED, or OPEN-PER-INSTANCE**. Only `SEMANTIC-CLOSED` blocks a materially different implementation that asks the same semantic question.
+Before reviving history, classify its disposition: **FORM-CLOSED, DESCRIPTOR-CLOSED, CROSS-LEVEL-CLOSED, PARTICIPATION-INVALID, DIRTY-REVERT, POPULATION-LIMITED, ECONOMICS-CLOSED, SEMANTIC-CLOSED, or OPEN-PER-INSTANCE**. Only `SEMANTIC-CLOSED` blocks a materially different form of the same question.
 
 Keep this file short. Active execution belongs in the workstream authority; measurements/chronology belong in dated reports; historical interpretation belongs in the archaeology register.
