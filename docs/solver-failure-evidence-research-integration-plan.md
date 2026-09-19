@@ -11,6 +11,17 @@
 > **Capability-history authority:** [`solver-capability-memory.md`](solver-capability-memory.md).
 > **Search-loss implementation authority:** [`solver-search-loss-evidence-implementation-plan.md`](solver-search-loss-evidence-implementation-plan.md).
 
+## Implementation status (2026-09-19)
+
+- **Phase 0 authority/consumer reconciliation:** substantially complete. The live queue now routes WS2 through bounded failure-response reconnaissance before selecting first-loss/rejection/2x2; Class-3, H3, Lane G, Lane C, future-work closeout, and the reserve-starvation nomination are connected to their existing owners rather than duplicated here.
+- **Phase 1 compact diagnostic promotion review:** calibration gate complete. GHA run `35423841173` clears representative semantic parity/overhead/byte-volume for the compact prune/beam-flow/progress bundle. Universal durable promotion remains **not earned** pending incremental-value and producer-scope evidence; see [the promotion review](../reports/2026-09-19-compact-failure-diagnostic-promotion-review-001.md).
+- **Phase 2 common reducer/query:** implemented for the automatic compact response layer as `scripts/failure-response-query.mjs` / `npm run research:query-failure-response --`. Producer-supplied `protocolHash` and solver ref are now preserved when present. Diagnostic-field query expansion remains conditional on Phase-1 promotion.
+- **Phase 3 WS2 reconnaissance:** Stage A is authorized by the live queue but awaits a protocol-compatible accumulated compact-response population; do not fabricate one from pre-instrumentation history.
+- **Phase 4A Class-3:** acquisition path is now explicit; still waits for a prospective producer covering the Class-3 population.
+- **Phase 4B reserve starvation:** stable question registered as `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; recurrence sizing awaits comparable attempt evidence beyond R00044.
+- **Phase 4C/4D H3/Lane G:** remain independently executable under their existing designs; failure evidence is secondary/optional.
+- **Phases 5-8:** condition-gated as specified below. No synthetic recurring producer or first-loss selection has been created.
+
 ## 1. Why this plan exists
 
 The September 18-19 failure-data work changed the research economics.
