@@ -57,3 +57,35 @@ The first green rich-capture artifact also exposed two selection/denominator iss
 2. capture `population.parentCount` incorrectly described only parents with retained capsules; it now describes the complete deterministic observed parent sample, with retained-capsule parent coverage recorded separately.
 
 Those repairs require a subsequent canary artifact before Resource Contract promotion. The green run nevertheless closes the compact-overhead question.
+
+
+## Follow-up bounded-capture canary — GHA run 35423279713
+
+A second representative real-search run on immutable head `aba8dc9e961898b3e00c607a13fcc20c8bf54419` repeated the parity result and validated the denominator-hardening work.
+
+Observed aggregate wall time:
+
+| Mode | Aggregate wall ms | Delta vs observer-off |
+| --- | ---: | ---: |
+| observer off | 164,127.9 | — |
+| compact counters/progress | 165,155.3 | +0.63% |
+| bounded rich cull observation | 179,120.6 | +9.13% |
+
+Again, semantic parity was exact on all 12 hard parents. Compact payload remained 35,342 bytes and the same repair/beam/DFS progress families participated. This independently reinforces the conclusion that compact instrumentation is below the plan's 5% overhead threshold, while rich capture remains appropriate only as a selective profile.
+
+The rich artifact now passes the structural capture gate:
+
+- valid capture contract;
+- observer parity verified;
+- multi-parent population;
+- non-empty capsules;
+- selector denominators present;
+- immutable resolved SHA;
+- non-synthetic producer.
+
+Resource Contract promotion still correctly remains blocked on:
+
+1. a solved-control observation in the captured population;
+2. a recurring producer declaration.
+
+The canary population is being extended with a small published-level solved-control cohort, and control status is now evaluated from the population envelope rather than only from parents that happened to retain a cull capsule.
