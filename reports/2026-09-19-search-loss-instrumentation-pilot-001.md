@@ -25,3 +25,35 @@ On the deterministic beam fixture, observer-off, counter-only, and rich-observer
 - typed rejection counts: implemented, specialist, representative overhead gate open;
 - repair progress transitions: implemented, specialist; DFS/beam terminal-only observations are not promoted as “progress over work”;
 - universal automatic persistence: deferred until a representative multi-parent canary shows negligible overhead and incremental value.
+
+
+## Representative real-search follow-up — GHA run 35422485466
+
+The fixture-only timing gate is now superseded for the compact instrumentation path by a representative 12-parent Corpus 2 canary on immutable head `1447fe8c6494426d606ac07e34faa7b874cd7c1c`.
+
+Observed aggregate wall time:
+
+| Mode | Aggregate wall ms | Delta vs observer-off |
+| --- | ---: | ---: |
+| observer off | 161,843.3 | — |
+| compact counters/progress | 161,284.0 | -0.35% |
+| bounded rich cull observation | 174,733.7 | +7.96% |
+
+Semantic parity was exact on all 12 parents for both observational modes: no solve/status/solution/node/work drift.
+
+Compact payload was 35,342 bytes across the sample. Compact progress observation exercised all three intended search families:
+
+- repair: 160 observations;
+- beam: 302 observations;
+- DFS: 945 observations.
+
+This clears the original <5% representative-overhead gate for the compact progress / prune-reason / beam-flow instrumentation as a class. Hosted timing noise means the negative point estimate is not interpreted as a speedup; the scientifically relevant conclusion is that no material slowdown was observed.
+
+The rich observation arm retained cull evidence on 6 parents and observed 551 cull decisions before bounded selection. Its +7.96% wall delta is materially above the compact path and supports the existing architecture: rich capsules remain selective/question-driven rather than universally enabled.
+
+The first green rich-capture artifact also exposed two selection/denominator issues that are now repaired in the canary implementation:
+
+1. selector limits were global and could let early parents consume the retained-capsule allowance; selection is now bounded per independent parent and combined afterward;
+2. capture `population.parentCount` incorrectly described only parents with retained capsules; it now describes the complete deterministic observed parent sample, with retained-capsule parent coverage recorded separately.
+
+Those repairs require a subsequent canary artifact before Resource Contract promotion. The green run nevertheless closes the compact-overhead question.
