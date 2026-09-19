@@ -3,7 +3,7 @@
 
 > **Status:** proposed implementation plan; not an execution-priority authority.
 > **Created:** 2026-09-19.
-> **Purpose:** consolidate the September 2026 solver-research infrastructure expansion, repair control-plane weaknesses exposed by recent execution, reduce documentation and agent-context burden, make invalid research artifacts harder to construct, and systematically expose scientifically important questions the current research system is poorly equipped to answer.
+> **Purpose:** consolidate the September 2026 solver-research infrastructure expansion; repair control-plane weaknesses exposed by recent execution; reduce documentation and agent-context burden; make invalid research artifacts harder to construct; and add a bounded research-portfolio/reflexivity layer that can detect instrument-shaped attention, preserve live rival explanations, expose answerability gaps and ontology escapes, and trigger independent exploration without displacing the solve-directed objective.
 > **Priority authority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Method authority:** [`solver-research-operating-model.md`](solver-research-operating-model.md).
 > **Evidence authority:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
@@ -70,6 +70,48 @@ The system itself is justified only when it does one or more of the following:
 8. improves the probability that solver-development effort creates additional solves.
 
 Research-system elegance is not an independent objective.
+
+### 2.1 The target: a bounded research operating system
+
+The standard is not "maximum scientific completeness." Pathfinder is an engineering-research program with a concrete objective: more or cheaper correct cold solves on unseen editor levels. The target is therefore a **bounded research operating system** with five coupled functions:
+
+1. **State** — preserve what is currently believed, with scope, evidence role, ancestry and authority.
+2. **Execution** — acquire valid evidence reproducibly, economically and recoverably.
+3. **Inquiry** — preserve live questions, rival explanations, missing semantic operations and ontology escapes.
+4. **Portfolio** — make visible where research attention is going, why it is going there, and which high-value uncertainties are neglected because they are hard or poorly instrumented.
+5. **Reflexivity** — detect when the research system's own vocabulary, instruments, source distributions, historical expectations or local stop rules are shaping the agenda more than the solver problem itself.
+
+The first two functions are already strong. Inquiry is substantially developed through the premise map, capability atlas, archaeology, question registry and measurement-opportunity work. The principal missing layer is persistent **portfolio/reflexivity control**.
+
+This layer must remain descriptive and decision-supporting. It must not become an automatic research scheduler, a numerical research score, or another priority authority.
+
+### 2.2 Decision sufficiency is not inquiry-space completeness
+
+Two standards must remain separate:
+
+- **decision sufficiency:** enough valid evidence exists to make the next scoped solver/research decision;
+- **inquiry-space completeness:** the explanatory/model space is broad enough that important alternatives are not being systematically omitted.
+
+A decision may be justified while the broader phenomenon remains incompletely understood. Do not require conceptual completeness before taking a scoped action when the evidence is sufficient for that action.
+
+Conversely, a locally decisive result must not be broadened into semantic closure merely because no currently represented rival survives.
+
+Record unresolved conceptual uncertainty separately from the decision disposition.
+
+### 2.3 Scientific compromises must be explicit, not eliminated indiscriminately
+
+Several departures from maximal academic-style rigor are intentional and useful:
+
+- enriched populations may be used to test whether a mechanism can work before estimating prevalence;
+- diagnostic evidence may nominate a treatment without independent confirmation;
+- cross-generator transfer is unnecessary for narrow corpus-scoped decisions;
+- historical evidence need not be ceremonially replicated when it is not decision-bearing;
+- deterministic mechanistic questions do not require statistical ceremony;
+- scientifically interesting phenomena with no plausible solve-directed consequence need not consume active research capacity.
+
+The requirement is not "always use the strongest possible evidence." It is:
+
+> use evidence strong enough for the exact decision being made, preserve the limitations that prevent broader claims, and keep unresolved high-value uncertainty discoverable.
 
 ## 3. Existing substrate: extend these, do not replace them
 
@@ -715,67 +757,126 @@ For every non-live plan:
 
 Do not preserve plans as pseudo-queues.
 
-# Part IV - Make epistemic blind spots visible
+# Part IV - Add research-portfolio and reflexivity control
 
-## Phase 14 - Add answerability as a derived property of questions, not a priority score
+The repository already contains much of the scientific doctrine needed here: P204's rival-discrimination rule, the inference-audit framework, source-coverage anti-self-sealing rules, ontology-escape handling, independent premise reconstruction, the completeness matrix, the measurement-opportunity overlay, and MO-007 research-process metrology.
 
-A mature research system can accidentally prefer questions it already knows how to answer. Make this bias observable.
+Do not create a parallel "science layer." The work below operationalizes those existing principles across research attention over time.
 
-For important active/deferred questions, derive an answerability profile from existing systems where possible.
+## Phase 14 - Build a bounded research-attention topology using MO-007
 
-Dimensions:
+Before building broad new epistemic machinery, measure whether the suspected myopia is actually present.
 
-- observable with current instrumentation?
-- reconstructable/replayable?
-- intervenable/manipulable?
-- exact/reference label available?
-- counterfactual available?
-- suitable population exists?
-- independent confirmation source exists?
-- production-relevant consumer exists?
-- cost/work acceptable?
-- durable evidence path exists?
-- concept itself sufficiently specified to distinguish rivals?
+Create a read-only retrospective view over a bounded recent window, preferably derived from existing PR/report/question/experiment metadata.
 
-### Required distinction
+Where recoverable without heroic archaeology, classify activity by:
 
-Do not equate low answerability with low scientific value.
+- premise/capability-atlas region;
+- system locus and claim type from the premise completeness matrix;
+- research function (encode, derive, generate, reject, prefer, retain, remember, allocate, select, transfer, recognize, measure, infer from evidence);
+- question source/provenance;
+- evidence family used;
+- research cost proxies available without inventing false precision (PR/experiment count, solver/reference compute when recorded, repeated reopen/iteration cycles);
+- whether the work changed a research decision;
+- whether it created/refined a semantic premise;
+- whether it changed solver behavior;
+- whether it produced or preserved cold-solve capability.
 
-Answerability describes current research capability, not priority.
+### Interpretation
 
-### Three deficit classes
+This is a **topology**, not a productivity score.
 
-Every serious unanswerability should be classified as one of:
+Look for:
 
-1. **knowledge deficit**: existing machinery could answer it, but required evidence has not been collected;
-2. **measurement deficit**: the question is well specified, but observer/intervention/oracle/population/replay/generation capability is missing;
-3. **concept deficit**: the system does not yet have a sufficiently precise representation of the rival explanations or missing semantic operation to design a discriminating observation.
+- dense regions receiving repeated descendants while thin/high-value regions remain untouched;
+- repeated work generated by one instrument/source family;
+- many PRs/experiments with little belief or decision movement;
+- high-value low-answerability gaps receiving no inquiry;
+- overconcentration on current residual/tool vocabulary;
+- areas where negative results are successfully terminating work.
 
-This classification should reuse existing MO/resource/premise/capability structures rather than becoming another ontology.
+Do not infer causal research effectiveness from simple counts.
 
-## Phase 15 - Add a missing-measurement/answerability-gap view
+### Existing authority
 
-The premise-map measurement overlay already represents discriminating observables without turning them into premises. Extend that idea into a derived view over live questions.
+Use MO-007 (research-process yield / premise fertility) as the conceptual home. Do not create another measurement-opportunity identity merely for attention topology.
 
-For each material gap record or derive:
+## Phase 15 - Preserve live rival sets at decision-bearing causal gates
 
-- question/rival explanations;
-- decision that cannot currently be made;
-- missing discriminator;
-- gap type: observer, intervention, oracle, population, source, replay, counterfactual, search object, semantic representation, cost;
-- existing partial primitives;
-- minimum new research capability that would close the gap;
-- whether the gap is likely reusable beyond one question.
+P204 and the inference-audit framework already require rival explanations. The missing operational seam is that rivals can disappear as one explanation becomes instrumentable.
 
-This is not a second future-work queue.
+For causal/discriminating investigations, extend existing preflight/report conventions with a compact optional rival block:
 
-A gap earns implementation only when closing it can change a live/plausible solver decision.
+- **live rivals:** materially different explanations still compatible with current evidence;
+- **discriminating observable/intervention:** what could separate them;
+- **outcome interpretation:** which rivals are strengthened, weakened, closed, or left untouched by each material outcome;
+- **unrepresented/unanswerable rival:** plausible explanation the current experiment cannot adjudicate;
+- **decision consequence:** what action changes if discrimination succeeds.
 
-## Phase 16 - Build a research-system capability atlas as a derived audit view
+Do not create a hypothesis registry.
 
-The solver capability atlas asks what semantic operations the solver lacks. Build an analogous, smaller view for the research system.
+### Closeout rule
 
-Candidate capabilities:
+A tested rival may close only to the extent the experiment could observe/manipulate the distinction. "Not discriminated" is not a negative result.
+
+## Phase 16 - Decompose answerability instead of treating it as one property
+
+A mature research system can prefer questions it already knows how to answer. Make the source of answerability explicit.
+
+For important active/deferred questions, derive or state these layers where relevant:
+
+1. **conceptual answerability** — are the competing explanations specified precisely enough to distinguish?
+2. **observational answerability** — can current instrumentation observe a difference?
+3. **experimental answerability** — can an intervention or controlled construction separate the rivals?
+4. **reference answerability** — can exact/reference machinery adjudicate the needed fact, with support/abstention known?
+5. **population answerability** — do suitable independent units/opportunity populations exist?
+6. **economic answerability** — can enough information be acquired at sensible work/cost?
+7. **inferential answerability** — would the resulting evidence justify the intended claim rather than only a narrower one?
+8. **decision answerability** — would resolving the ambiguity change implementation, queue state, reopen logic, or the solver model?
+
+Low answerability must not imply low scientific value.
+
+### Deficit vocabulary
+
+Reuse existing terminology rather than creating a parallel ontology:
+
+- **evidence deficit:** concept and measurement path exist; needed evidence is not yet acquired;
+- **measurement deficit:** question is sufficiently specified, but the necessary observer/intervention/oracle/population/replay/generation path is not operational;
+- **ONTOLOGY_ESCAPE:** the important distinction cannot be represented cleanly in the current premise/research language without distortion.
+
+Do not introduce "concept deficit" as a competing durable term.
+
+## Phase 17 - Add an answerability-gap / MO operational-coverage view
+
+Extend the existing measurement-opportunity and higher-order composition work into a derived view.
+
+For each material live/deferred ambiguity, show where possible:
+
+question -> live rivals -> premise neighborhood -> MO/discriminator -> primitive -> required resource -> supported population -> reference support -> durable evidence path -> missing link -> decision consequence
+
+Missing-link classes should include:
+
+- observer;
+- intervention;
+- exact/reference support;
+- eligible population;
+- independent source;
+- replay/reconstruction;
+- counterfactual;
+- generation/control;
+- alternative search object;
+- ontology escape;
+- prohibitive cost.
+
+A gap is not automatically implementation work.
+
+Closing the gap is earned only when the resulting information can plausibly change a live or foreseeable solve-directed decision.
+
+## Phase 18 - Derive a compact research-system capability audit
+
+The solver capability atlas asks what semantic operations the solver lacks. Build a smaller derived audit of what the **research system** can and cannot do.
+
+Candidate functions:
 
 - observe;
 - reconstruct/replay;
@@ -784,31 +885,32 @@ Candidate capabilities:
 - generate controlled cases;
 - match/control;
 - estimate prevalence/opportunity;
-- measure causal ancestry/independence;
+- preserve causal ancestry/independent units;
 - compare at matched work;
 - test transfer/source robustness;
 - reason across attempts/stages;
 - evaluate alternative search objects;
 - preserve durable evidence;
-- recover interrupted acquisition.
+- recover interrupted acquisition;
+- preserve prospective expectation/surprise.
 
-For each classify:
+Classify each as:
 
 - strong;
 - partial;
 - specialist/narrow;
 - absent;
-- possible but prohibitively expensive.
+- possible but currently uneconomic.
 
-Map each weakness to live questions/capability gaps.
+Map weaknesses to actual questions/capability gaps.
 
 ### Important boundary
 
-Do not create a permanent giant schema unless repeated use demonstrates value. A generated audit report may be sufficient.
+Start as a generated audit report. Do not build a permanent schema unless repeated consumers earn one.
 
-## Phase 17 - Audit question provenance for instrument-shaped research
+## Phase 19 - Audit question provenance for instrument-shaped research
 
-Tag or derive the origin of important questions where recoverable:
+For important questions where provenance is recoverable, classify the primary question-generation source:
 
 - solver failure/residual evidence;
 - existing tool/data opportunity;
@@ -818,57 +920,120 @@ Tag or derive the origin of important questions where recoverable:
 - human/editor observation;
 - exact/reference discrepancy;
 - external literature/algorithm family;
-- independent peer/red-team proposal;
+- independent peer/red-team reconstruction;
 - adversarial/synthetic construction;
 - unexpected experiment result.
 
-Periodically inspect the distribution.
+Join this with Phase 14's attention topology.
 
 ### Interpretation
 
-A concentration of questions originating from existing telemetry/tool availability is evidence of possible instrument-shaped research.
+A concentration of questions originating from existing telemetry/tool availability is evidence of possible instrument-shaped research, especially when high-value atlas gaps remain measurement-poor.
 
-Do not optimize for equal category counts. Question quality and solver relevance still dominate.
+Do not optimize for equal source counts. A highly productive source may legitimately dominate for a period.
 
-## Phase 18 - Institutionalize tool-blind and ontology-independent question generation
+## Phase 20 - Use trigger-based exploration instead of a fixed exploration budget
 
-The premise-map program already demonstrated the value of independent reconstruction. Preserve that lesson prospectively.
+Do not reserve an arbitrary percentage of effort for moonshots.
 
-Periodically run bounded question-generation exercises in which the generator receives:
+Earn a bounded ontology-challenging exploration when one or more signals fire:
 
-- Pathfinder semantics;
-- a high-level solver architecture;
-- selected residual/failure examples;
-- computational constraints;
-- optionally the reasoning-capability atlas;
+- several successive questions arise from the same evidence/tool family;
+- Phase 14 shows sustained concentration in one dense premise region;
+- a high-value capability gap remains low-answerability across multiple queue cycles;
+- multiple clean negatives share a major architectural/representational assumption;
+- MO-007 shows substantial effort with little decision movement;
+- independent reconstruction produces a material semantic delta;
+- a robust unresolved anomaly conflicts with the current explanatory model;
+- the active queue contains only questions already well served by existing instrumentation.
 
-but does not initially receive:
+An exploration response may be:
 
-- the tooling catalogue;
-- detailed current observer inventory;
-- recent experiment/result narratives;
-- current named research lanes.
+- bounded independent/tool-blind reconstruction;
+- adversarial semantic challenge generation;
+- external semantic-operation review;
+- counterfactual archaeology;
+- an offline surrogate for a currently unobservable concept.
 
-Ask for:
+### Protection rule
 
-- required semantic operations;
-- rival causal explanations;
-- alternative search objects;
-- missing representations;
-- discriminating measurements desired even if unavailable;
-- adversarial examples that separate competing solver models.
+When an exploration trigger is satisfied, the bounded exploration may proceed even if it lacks the immediate expected solve value demanded of an ordinary exploitative experiment. It still requires a stop condition and must not become an open-ended research program.
 
-Only afterward reconcile with existing tools/evidence/history.
+## Phase 21 - Reuse independent premise reconstruction as a saturation instrument
 
-Preserve scientifically meaningful but currently unanswerable proposals as answerability gaps rather than silently discarding them.
+The September independent premise reconstruction already demonstrated the method. Do not create another standing premise-map program.
 
-### Relation to premise-map replication
+Run smaller **independent inquiry probes** when exploration is triggered:
 
-This is not a new premise-map program by default. Reuse the independent-reconstruction methodology and only modify canonical premise structures when normal premise-admission rules are met.
+1. freeze the source bundle before inquiry;
+2. withhold recent canonical premise-map structure, named lanes and detailed tool inventory;
+3. expose Pathfinder semantics, high-level solver architecture, selected evidence/residual examples and computational constraints;
+4. derive missing operations, rival explanations, alternative search objects and desired discriminators in the probe's native vocabulary;
+5. reconcile afterward against the canonical premise map/capability atlas/history;
+6. classify outputs as rediscovery, scope refinement, relation-only, new semantic parent, or ONTOLOGY_ESCAPE.
 
-## Phase 19 - Use adversarial level construction to probe absent reasoning, not only current residuals
+### Saturation interpretation
 
-Current generation infrastructure should be able to nominate or construct populations designed around a semantic demand.
+- repeated independent rediscovery -> stronger confidence that the conceptual map is broad enough for current purposes;
+- mostly scope/refinement deltas -> ontology reasonably stable;
+- recurring new semantic parents -> independent exploration remains high-value;
+- recurring ontology escapes -> current research language needs revision.
+
+No result proves unknown-unknown completeness.
+
+## Phase 22 - Preserve prospective expectations and distinguish surprise from anomaly
+
+The repository now has enough disciplined preflight history to begin preserving what researchers expected before expensive/high-value tests.
+
+For future decision-bearing investigations where expectations are material, record lightweight prospective fields in the existing preflight/report surface:
+
+- **expected discriminating outcome:** the qualitative outcome currently judged most plausible;
+- **surprise condition:** an outcome that would materially change the explanatory model or research direction.
+
+Do not require numeric probabilities unless a particular experiment naturally supports them.
+
+### Surprise versus anomaly
+
+Keep these distinct:
+
+- **surprise:** result differs materially from the recorded prior expectation;
+- **research anomaly:** reproducible observation materially inconsistent with the current explanatory model/scope assumptions, not explained by known execution/plumbing error, and not yet captured by a sufficiently discriminating existing question.
+
+An anomaly can be expected; a surprise can be quickly explained and cease to be anomalous.
+
+### Storage discipline
+
+Initially keep these as report/preflight metadata discoverable through the existing status index. Do not create an anomaly registry unless recurring consumers demonstrate the need.
+
+## Phase 23 - Mine intersections of negative results for shared hidden assumptions
+
+The current system correctly prevents one failed implementation from closing its semantic parent. Add a complementary mining lens:
+
+> when several cleanly closed tested forms cluster around a broader problem, what important assumption did all of them share?
+
+Candidate shared assumptions include:
+
+- forward-prefix search object;
+- intervention only through local ranking;
+- fixed root preprocessing;
+- low-cardinality/scalar representation;
+- no solve-local cross-process fact sharing;
+- irreversible stage boundaries;
+- one-pass rather than revisable information;
+- one witness/basin notion of progress;
+- same residual/source conditioning.
+
+Use the premise relation graph, archaeology dispositions, capability-gap reconciliation and reports as inputs.
+
+This is **negative-space intersection mining**, not an automatic premise generator.
+
+A shared assumption earns a new premise/question only through normal semantic-novelty and evidence rules.
+
+# Part V - Use epistemic blind spots to generate bounded new research
+
+## Phase 24 - Use adversarial level construction to probe absent reasoning
+
+Current generation infrastructure should sometimes construct populations around a semantic demand rather than merely sample what the current solver already fails on.
 
 Candidate challenge families:
 
@@ -881,15 +1046,11 @@ Candidate challenge families:
 - cases where useful exact micro-queries have high expected value;
 - cases where forward-prefix search objects are systematically awkward.
 
-### Controls
+Construction should be outcome-blind to the current solver whenever the purpose is semantic capability testing.
 
-Construction should be outcome-blind to the current solver whenever the goal is to test a semantic capability.
+Preserve generator/source identity. Synthetic challenge success establishes capability on the challenge, not prevalence in the production distribution.
 
-Preserve generator/source identity and do not treat synthetic challenge success as unconditional prevalence evidence.
-
-The purpose is to ask "can the solver/research system reason about this phenomenon?" before asking "how common is it in C2?"
-
-## Phase 20 - Add counterfactual archaeology as a question generator
+## Phase 25 - Use counterfactual archaeology as a question generator
 
 For selected historical/current failures that fit no current explanation cleanly, ask:
 
@@ -899,16 +1060,16 @@ Then ask:
 
 - is that information legal from current input?
 - can it be derived offline?
-- does it correspond to an existing capability-atlas gap?
-- does any current observer even represent it?
+- does it correspond to a current capability-atlas gap?
+- does any current observer represent it?
 - can controlled siblings/adversarial construction vary it?
 - would a consumer decision actually change?
 
-This can expose missing concepts that failure telemetry cannot, because there is no event for an absent representation to emit.
+This is particularly useful for **absence-of-representation blindness**: an absent semantic object emits no telemetry.
 
-## Phase 21 - Continue external conceptual imports at the semantic-operation layer
+## Phase 26 - Continue external conceptual imports at the semantic-operation layer
 
-The August external-research lesson remains valid: external solver literature should nominate operations, not receive authority by prestige.
+The August external-research lesson remains valid.
 
 When reviewing SAT/SMT, constraint programming, automated planning, graph decomposition, program synthesis, theorem proving, routing, game search or learned search, ask:
 
@@ -917,32 +1078,28 @@ When reviewing SAT/SMT, constraint programming, automated planning, graph decomp
 - what intervention becomes possible because of it?
 - can the premise be tested cheaply with existing offline exact/reference or controlled construction?
 
-Avoid "implement algorithm X" until the missing operation earns a Pathfinder-specific premise.
+External techniques nominate missing operations. They do not receive implementation authority by reputation.
 
-# Part V - Turn identified blind spots into bounded new capability
+## Phase 27 - Use a standard ladder for any new research-system capability
 
-## Phase 22 - Use a standard ladder for closing a research-system capability gap
+For every proposed new observer, intervention, evidence layer or research primitive:
 
-For every proposed new measurement/research capability:
-
-1. **Name the missing decision.** What research decision is currently impossible or unreliable?
-2. **Specify the hypothetical information.** What exact fact/relation/proof/counterfactual is missing?
-3. **Build or identify an offline surrogate.** Determine whether possessing the information would actually change useful decisions.
-4. **Estimate opportunity.** How often does the relevant situation arise on independent units?
-5. **Price acquisition.** What would observing/deriving it cost?
+1. **Name the missing decision.**
+2. **Specify the hypothetical information.**
+3. **Build or identify an offline surrogate.**
+4. **Estimate opportunity on independent units.**
+5. **Price acquisition.**
 6. **Build the smallest observer/intervention/query.**
-7. **Demonstrate a consumer.** Show that the information changes a useful solver/research decision.
+7. **Demonstrate a consumer that changes a useful decision.**
 8. **Only then generalize infrastructure.**
 
-This applies the existing premise-before-treatment principle to research infrastructure itself.
+This applies premise-before-treatment discipline to research infrastructure itself.
 
-## Phase 23 - Prioritize blind spots the current repo appears weakest on
+## Phase 28 - Prioritize the research-system blind spots current evidence says are real
 
-Based on the current capability atlas, premise map, measurement-completion audit and higher-order integration work, investigate these research-system weaknesses first.
+### 28.1 Absence-of-representation blindness
 
-### 23.1 Absence-of-representation blindness
-
-The system is strong at explaining events emitted by existing searches. It is weaker at detecting a semantic object the solver never represents.
+The system is strong at explaining events emitted by existing searches. It is weaker at detecting semantic objects the solver never represents.
 
 Examples:
 
@@ -952,33 +1109,25 @@ Examples:
 - causal commitments;
 - abstract completion regimes.
 
-Investigation route:
+Use independent inquiry, offline surrogates and adversarial matched constructions to ask whether existing telemetry could ever expose the missing distinction.
 
-- tool-blind question generation;
-- offline surrogate labels/plans;
-- adversarial matched constructions;
-- determine whether existing failure/search-loss data could ever expose the distinction.
-
-### 23.2 Absent-search-object blindness
+### 28.2 Absent-search-object blindness
 
 Most instrumentation assumes forward-prefix search or repair/reconstruction of prefixes.
 
-Investigate whether important questions require experiments over:
+Cheaply falsify or support alternate objects before implementing them:
 
 - abstract obligation/order plans;
 - backward contracts;
 - separator-region contracts;
 - relaxed complete paths;
-- bounded constraint sets/conflict objects;
-- other non-prefix search objects.
+- bounded conflict/constraint objects.
 
-Do not implement a full alternative solver first. Use the cheapest falsifier/surrogate.
-
-### 23.3 Intervention deficit
+### 28.3 Intervention deficit
 
 Observation has advanced faster than causal manipulation.
 
-Audit which live rivals are currently distinguishable only correlationally because the system cannot independently vary:
+Audit which live rival sets are currently distinguishable only correlationally because the system cannot independently vary:
 
 - retention/rank decision;
 - structural commitment;
@@ -988,48 +1137,45 @@ Audit which live rivals are currently distinguishable only correlationally becau
 - exact-query availability;
 - stage/attempt handoff.
 
-Use family/adversarial generation and production-inert counterfactuals where possible before building runtime treatments.
+Prefer production-inert counterfactuals, family contrasts and adversarial generation before runtime treatments.
 
-### 23.4 Distribution/source blindness
+### 28.4 Distribution/source blindness
 
-Current corpora and generators define which phenomena become visible.
+Current corpora and generators determine which phenomena become visible.
 
-Use generation/source adequacy analysis to ask:
+Use source-adequacy reasoning to identify:
 
-- which mechanics/structures are underrepresented;
-- which source regimes share construction or witness bias;
-- which semantic challenge families cannot currently be produced independently;
-- whether a "rare opportunity" conclusion is population-conditional or plausibly capability-general.
+- mechanics/structures underrepresented by current sources;
+- construction regimes sharing witness/generator bias;
+- semantic challenge families not independently producible;
+- "rare opportunity" conclusions that are only population-conditional.
 
-Do not infer unseen-level prevalence from synthetic challenge sets.
+Do not convert synthetic challenge prevalence into production prevalence.
 
-### 23.5 Language/ontology blindness
+### 28.5 Language/ontology blindness
 
-Premise-map hardening already guards ontology artifacts. Extend the practice to current research vocabulary.
+The premise-map hardening already guards against ontology artifacts.
 
-Periodically ask whether concepts like:
+Permit independent inquiry to use alien vocabulary before reconciliation. Treat awkward forced placement as ONTOLOGY_ESCAPE, not as evidence the idea is invalid.
 
-- failure;
-- first loss;
-- capability;
-- producer/consumer;
-- resource;
-- exposure;
-- retention;
+### 28.6 Cheap-test gravitational bias
 
-are obscuring alternative formulations of the same solving problem.
+The smallest-decisive-evidence rule is correct **after a question exists**.
 
-Independent reconstructions should be allowed to use alien vocabulary first and reconcile later.
+Use attention topology, provenance and answerability to detect the upstream bias where questions served by existing JSON joins, telemetry or exact models are generated more often than equally important poorly instrumented questions.
 
-### 23.6 Cheap-test gravitational bias
+### 28.7 Local-stop-rule aggregation blindness
 
-The operating model correctly prefers the smallest decisive evidence once a question exists. The danger is upstream: easy questions may be generated more often.
+A local stop rule can be correct while the collection of stopped forms reveals an untested shared assumption.
 
-Use answerability and question-provenance diagnostics to detect when research attention clusters around questions served by existing JSON joins or observers while high-value capability gaps remain measurement-poor.
+Use Phase 23 to distinguish:
+
+- repeated evidence against a semantic parent;
+- repeated failure of forms sharing an architectural worldview.
 
 # Part VI - Documentation, implementation and operational guardrails
 
-## Phase 24 - Protect direct solver capability work
+## Phase 29 - Protect direct solver capability work
 
 This plan is supporting infrastructure. It must not consume the whole development program.
 
@@ -1041,7 +1187,7 @@ Rules:
 - new research infrastructure competes for attention under the same value-of-information principle as solver infrastructure;
 - once the major control-plane repairs and blind-spot views land, default to maintenance mode.
 
-## Phase 25 - Add research-infrastructure ROI review
+## Phase 30 - Add research-infrastructure ROI review
 
 At a bounded cadence, review infrastructure added since the previous checkpoint.
 
@@ -1067,7 +1213,7 @@ Possible dispositions:
 
 Do not convert these into one productivity score.
 
-## Phase 26 - Add targeted observer-effect recalibration triggers
+## Phase 31 - Add targeted observer-effect recalibration triggers
 
 Automatic compact failure evidence is valuable because it is cheap and parity-calibrated. Rich capture is intentionally more expensive.
 
@@ -1097,31 +1243,43 @@ Do first because these reduce correctness and coordination risk with little solv
 7. Phase 7: question/premise/capability/MO/queue consistency audit.
 8. Phase 13: plan lifecycle audit.
 
-## Stage B - Consolidation and retrieval
+## Stage B - Measure the portfolio before correcting it
 
-9. Phase 10: documentation role classification.
-10. Phase 11: compact research front door.
-11. Phase 12: documentation-entropy diagnostics.
-12. Phase 8: highest-value existing composition views.
-13. Phase 6: hint/failure symmetry cleanup only where earned.
+9. Phase 14: bounded MO-007 research-attention topology.
+10. Phase 19: question-provenance join over the same bounded window.
+11. Phase 16: answerability decomposition on a small high-value question sample.
+12. Report whether the hypothesized instrument/attention bias is actually visible and which later epistemic phases remain earned.
 
-## Stage C - Epistemic coverage
+This stage deliberately precedes broad reflexivity infrastructure. Do not build a cure for an unmeasured pathology.
 
-14. Phase 14: answerability profiles.
-15. Phase 15: answerability-gap view.
-16. Phase 16: research-system capability atlas/audit.
-17. Phase 17: question provenance analysis.
-18. Phase 18: first tool-blind question-generation exercise.
-19. Phase 20: counterfactual archaeology pilot.
-20. Phase 19: one adversarial semantic challenge population where an existing high-value capability gap warrants it.
-21. Phase 21: bounded external semantic-operation review if it can illuminate a live blind spot.
+## Stage C - Consolidation and retrieval
 
-## Stage D - Earned capability additions
+13. Phase 10: documentation role classification.
+14. Phase 11: compact research front door.
+15. Phase 12: documentation-entropy diagnostics.
+16. Phase 8: highest-value existing composition views.
+17. Phase 6: hint/failure symmetry cleanup only where earned.
 
-22. Use Phase 22 ladder for any new research primitive.
-23. Implement only research-system capabilities with a demonstrated decision-bearing consumer.
-24. Revisit Phase 9 phenotype/mechanism memory only if two real consumers still require it.
-25. Maintain ROI review and direct-solver bandwidth.
+## Stage D - Earned epistemic/reflexivity controls
+
+Only the findings from Stages A-B should determine how much of this stage is needed.
+
+18. Phase 15: rival-set preservation in existing preflight/report contracts.
+19. Phase 17: answerability-gap/MO operational-coverage view.
+20. Phase 18: research-system capability audit.
+21. Phase 23: first negative-space intersection-mining pass.
+22. Phase 22: prospective expectation/surprise capture for new high-value investigations.
+23. Phase 20: run one bounded triggered-exploration response if the trigger conditions are actually met.
+24. Phase 21: use independent inquiry as the preferred first ontology-challenging response when appropriate.
+
+## Stage E - Blind-spot-driven scientific work
+
+25. Phase 25: counterfactual archaeology pilot where a robust unexplained failure earns it.
+26. Phase 24: one adversarial semantic challenge population for a high-value capability gap where source construction is the missing discriminator.
+27. Phase 26: bounded external semantic-operation review only when it illuminates a live blind spot.
+28. Use Phase 27 for any new research primitive.
+29. Revisit Phase 9 phenotype/mechanism memory only if two real consumers still require it.
+30. Maintain Phase 30 ROI review and Phase 29 protection of direct solver work.
 
 # Part VIII - Verification and closeout
 
@@ -1154,12 +1312,15 @@ Verify current-state retrieval does not require scanning large historical report
 Verify the system can explicitly represent:
 
 - a high-value question that is currently answerable;
-- a knowledge-deficit question;
+- an evidence-deficit question;
 - a measurement-deficit question;
-- a concept-deficit question;
+- an ONTOLOGY_ESCAPE;
 - a question with a desired discriminator but no suitable population;
 - a question blocked by exact/reference support;
-- a question whose low answerability does not demote its scientific importance.
+- a question that is conceptually answerable but not experimentally answerable;
+- a question that is experimentally answerable but not inferentially sufficient for the intended claim;
+- a question whose low answerability does not demote its scientific importance;
+- a scoped decision that is justified even though inquiry-space completeness remains unresolved.
 
 ### 27.6 ROI audit
 
@@ -1192,6 +1353,14 @@ This plan is successful when the following are true.
 14. New research-system primitives become rarer and better justified.
 15. Research-system work increasingly shows concrete returns in avoided compute, better closures, new capability premises, implementations, or solve gains.
 16. Direct solver acquisition work continues while the control plane moves into maintenance mode.
+17. A bounded attention-topology view can show where research effort is concentrated without pretending to rank productivity.
+18. Important causal investigations preserve their live rival set long enough that instrument availability cannot silently redefine the question.
+19. Exploration is triggered by evidence of concentration, ontology escape, anomaly or shared-negative assumptions rather than by a standing moonshot quota.
+20. Independent inquiry probes can be used as a saturation check without creating a second premise-map authority.
+21. Prospective surprise conditions make genuinely model-changing results distinguishable from hindsight narrative.
+22. Clusters of closed forms can be mined for shared untested assumptions without automatically reopening them.
+23. The system distinguishes evidence deficits, measurement deficits and ontology escapes using existing vocabulary.
+24. The system can act on decision-sufficient evidence while preserving wider unresolved conceptual uncertainty.
 
 # Part X - Explicit non-goals
 
@@ -1204,6 +1373,10 @@ Do not use this plan to:
 - create a second measurement-opportunity registry;
 - create a second capability atlas for the solver;
 - automatically rank questions by answerability;
+- turn MO-007 into a single research-productivity score;
+- impose a fixed exploration/moonshot percentage;
+- create a permanent anomaly database before recurring consumers earn it;
+- create a second hypothesis/rival registry;
 - automatically close/reopen scientific questions;
 - make rich search-loss capture universal;
 - force specialist topology/exact/family tools through one generic format;
@@ -1219,16 +1392,25 @@ A future implementation session should begin with a bounded tranche rather than 
 
 Recommended first tranche:
 
-1. add the research-system extension gate to the operating model;
+1. add the research-system extension gate and decision-sufficiency/inquiry-completeness distinction to the operating model;
 2. generate the architecture inventory from existing registries/tools;
 3. perform the identity/serialization audit and add the Lane A regressions;
-4. classify recent validator/control-plane failures into constructor-fix vs consumer-validation classes and fix the obvious constructor-owned cases;
+4. classify recent validator/control-plane failures into constructor-fix versus consumer/context-validation classes and fix obvious constructor-owned cases;
 5. implement one tiny end-to-end research-transaction fixture;
 6. audit expensive workflows for recoverable recombination semantics;
 7. run the question/premise/capability/MO/queue consistency audit;
 8. run the recent-plan lifecycle audit;
-9. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
+9. produce the first bounded MO-007 attention-topology/provenance report over recent research activity using only recoverable existing metadata;
+10. apply the decomposed answerability model to a small sample of high-value active/deferred questions and report which gaps are evidence deficits, measurement deficits or ontology escapes;
+11. inspect one cluster of clean negative results for a shared untested architectural/representational assumption;
+12. report which proposed later phases are already fully served by existing infrastructure and delete/merge those plan items rather than implementing them.
 
-Only after that tranche should the documentation/front-door and epistemic-coverage stages be scoped against the newly simplified system.
+The first tranche should answer three meta-questions before more reflexivity infrastructure is built:
 
-This ordering intentionally makes the plan self-correcting: the first implementation work should reduce the chance that the rest of the plan overbuilds the research architecture it is meant to simplify.
+1. **Is research attention measurably concentrated in ways not explained by current solver value?**
+2. **Are high-value questions being neglected primarily because they are poorly answerable with the present research substrate?**
+3. **Do multiple negative lines expose shared assumptions that the current premise map/queue is not treating as questions?**
+
+Only positive evidence on those questions should earn the corresponding heavier portfolio/reflexivity mechanisms.
+
+This ordering intentionally makes the plan self-correcting: the first implementation work should reduce control-plane risk, measure the suspected research-portfolio pathology, and remove recommendations already satisfied by the repo before the plan is allowed to expand the architecture it is meant to simplify.
