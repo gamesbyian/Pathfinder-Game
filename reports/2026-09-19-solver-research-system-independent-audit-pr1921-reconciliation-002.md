@@ -1,6 +1,9 @@
 # Reconciliation of independent research-system audit with PR #1921
 
-> **Status:** concluded
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-19 — independent research-system audit reconciled against PR #1921
+> **Decision:** retain the opportunity/exposure-unit and temporal-validity refinements; otherwise proceed with the existing plan
+> **Remaining gate:** none
 > **Date:** 2026-09-19
 > **Independent source:** `reports/2026-09-19-solver-research-system-independent-negative-space-audit-001.md` on branch `chatgpt/research-system-independent-negative-space-audit-2026-09-19`, frozen before PR exposure at commit `66ac0c7f34e3d70730c7e1a73d038583b18e141a`.
 > **Compared plan:** PR #1921, `docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md`.
