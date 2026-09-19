@@ -13,6 +13,8 @@
 
 ## Implementation status (2026-09-19)
 
+Direct implementation/precommitment work that does not require new solver evidence is exhausted as of [the pre-handoff audit](../reports/2026-09-19-failure-evidence-prehandoff-direct-work-audit-001.md). The plan remains open because Phases 3-4 have real acquisition gates and Phases 5-8 are condition/authority-gated; do not manufacture data or consumers to force closure.
+
 - **Phase 0 — complete:** authority/discoverability closed by [Phase-0 closeout](../reports/2026-09-19-failure-evidence-phase0-authority-closeout-001.md).
 - **Phase 1 — complete:** compact prune/flow/progress stays supported research-only opt-in; no durable default promotion is earned. See [Phase-1 disposition](../reports/2026-09-19-compact-failure-diagnostic-phase1-closeout-001.md) and [producer audit](../reports/2026-09-19-compact-failure-response-producer-suitability-audit-001.md).
 - **Phase 2 — complete for automatic compact response:** common query covers parent/protocol accounting, exact action/stage dose, censoring/outcome support, badness support and protocol-compatible repeats. See [Phase-2 closeout](../reports/2026-09-19-failure-response-query-phase2-closeout-001.md).
