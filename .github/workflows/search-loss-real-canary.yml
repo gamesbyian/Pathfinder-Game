@@ -58,6 +58,8 @@ jobs:
 
       - name: Build bounded real search-loss capture
         shell: bash
+        env:
+          DECISION_LIMIT: ${{ inputs.decision_limit || '32' }}
         run: |
           node scripts/capture-search-loss-evidence.mjs \
             --in=reports/stress/search-loss-real-canary-decisions.json \
