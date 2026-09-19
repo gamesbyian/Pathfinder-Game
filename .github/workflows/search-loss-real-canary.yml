@@ -1,0 +1,89 @@
+name: Search-loss instrumentation real-search canary
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/search-loss-real-canary.mjs'
+      - '.github/workflows/search-loss-real-canary.yml'
+  workflow_dispatch:
+    inputs:
+      sample:
+        description: 'Deterministic number of Corpus 2 parents'
+        required: false
+        default: '12'
+      work_budget:
+        description: 'Strict canonical work ceiling per solve'
+        required: false
+        default: '8000000'
+      decision_limit:
+        description: 'Maximum retained rich decision observations per parent'
+        required: false
+        default: '32'
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run representative OFF / compact / rich canary
+        shell: bash
+        env:
+          SAMPLE: ${{ inputs.sample || '12' }}
+          WORK_BUDGET: ${{ inputs.work_budget || '8000000' }}
+          DECISION_LIMIT: ${{ inputs.decision_limit || '32' }}
+        run: |
+          node scripts/run-bundled.mjs scripts/search-loss-real-canary.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --sample="$SAMPLE" \
+            --seed=search-loss-real-canary-v1 \
+            --work-budget="$WORK_BUDGET" \
+            --time-budget-ms=900000 \
+            --decision-limit="$DECISION_LIMIT" \
+            --out=reports/stress/search-loss-real-canary.json
+
+      - name: Summarize canary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f reports/stress/search-loss-real-canary.json ]; then
+            node - <<'NODE'
+          const fs = require('node:fs');
+          const d = JSON.parse(fs.readFileSync('reports/stress/search-loss-real-canary.json'));
+          const s = d.summary;
+          const lines = [
+            '# Search-loss real-search canary',
+            '',
+            '- parents: ' + s.parents,
+            '- semantic parity: ' + s.semanticParity,
+            '- compact overhead vs off: ' + String(s.overheadPct.compactVsOff) + '%',
+            '- rich overhead vs off: ' + String(s.overheadPct.richVsOff) + '%',
+            '- compact payload bytes: ' + s.payloadBytes.compact,
+            '- rich payload bytes: ' + s.payloadBytes.rich,
+            '- rich parents with decisions: ' + s.richParentsWithDecisions,
+            '- progress families: ' + Object.keys(s.progressFamilies).sort().join(', '),
+          ];
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          NODE
+          fi
+
+      - name: Upload canary evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: search-loss-real-canary
+          path: reports/stress/search-loss-real-canary.json
+          if-no-files-found: warn
+          retention-days: 30
