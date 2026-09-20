@@ -125,6 +125,15 @@ try {
   assert.equal(published.artifactCoverage?.complete, true);
   assert.equal(published.sourceArtifact, 'cpsat-explicit-prefix-reference-fixture');
 
+  const workflow = readFileSync(path.join(process.cwd(), '.github/workflows/cpsat-explicit-prefix-reference.yml'), 'utf8');
+  assert.match(workflow, /RECOMBINE_RUN_ID: \$\{\{ inputs\.recombine_run_id \}\}/u);
+  assert.match(workflow, /kind: 'recombine-only'/u);
+  assert.match(workflow, /acquisitionRecomputed: false/u);
+  assert.match(workflow, /sourceRuns: \[recombineRunId\]/u,
+    'recombine dispatch must publish the original acquisition run as recovery provenance');
+  assert.equal(workflow.includes('cat > reports/stress/cpsat-explicit-prefix-reference-contract-spec.json <<SPEC'), false,
+    'contract spec should be JSON.stringify-built rather than shell-heredoc JSON');
+
   console.log('CP-SAT explicit-prefix reference pipeline contract passed.');
 } finally {
   rmSync(dir, { recursive: true, force: true });
