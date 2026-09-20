@@ -101,7 +101,9 @@ for (const row of rows) bucketCounts[row.bucket] = (bucketCounts[row.bucket] ?? 
 
 const abstentionIds = rows.filter(row => !row.decisionEligible).map(row => row.parentId).sort();
 const protocolKnown = typeof document.protocolHash === 'string' && document.protocolHash.length > 0;
+const solverKnown = typeof document.solverRef === 'string' && document.solverRef.length > 0;
 const decisionReady = protocolKnown
+    && solverKnown
     && missingIds.length === 0
     && unexpectedIds.length === 0
     && duplicateParents.length === 0
@@ -124,7 +126,6 @@ const coverageComplete = missingIds.length === 0
 const censoringClear = abstentionIds.length === 0;
 const sourceBoundaryEligible = sample?.sourceBoundary?.residual > 0
     && sample?.selection?.eligibleCount >= expectedIds.length;
-const solverKnown = typeof document.solverRef === 'string' && document.solverRef.length > 0;
 const resolution = buildResearchResolutionEnvelope({
     questionId: sample.questionId ?? 'WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION',
     liveRivals: [
