@@ -3,7 +3,7 @@
 > **Status:** bounded experiment contract.
 > **Authority:** current Lane-A descendant earned by `reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md`.
 > **Runtime effect:** none. This is an offline/exact representation falsifier.
-> **Progress:** C0 static interface identity concluded mixed on 2026-09-19 (`reports/2026-09-19-lane-a-c0-signature-collision-result-001.md`); the live gate is C1 boundary kinematics on the same frozen 581-case population.
+> **Progress:** C0 concluded mixed on 2026-09-19. C1 boundary kinematics concluded **mixed + repetition-supported** on 2026-09-20: 195/546 decisive rows remain in repeated signatures across 58 parents, with one same-parent 2-row LIVE/DEAD collision. The live gate is now a separately precommitted C2 global-accounting signature on the same frozen 581-case population (`reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md`).
 
 ## Question
 
