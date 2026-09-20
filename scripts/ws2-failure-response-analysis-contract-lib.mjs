@@ -145,3 +145,43 @@ export function ws2FailureResponseAnalysisIdentity(analysis) {
   };
   return `sha256:${createHash('sha256').update(JSON.stringify(stable(semanticCore))).digest('hex')}`;
 }
+
+
+export function ws2FailureResponseAnalysisEnvelopeIssues(analysis, { contractIdentity = null } = {}) {
+  const issues = [];
+  if (!analysis || typeof analysis !== 'object' || Array.isArray(analysis)) return ['analysis'];
+  if (analysis.schemaVersion !== 1) issues.push('schemaVersion');
+  if (analysis.kind !== 'pathfinder-ws2-failure-response-reconnaissance-analysis') issues.push('kind');
+  if (analysis.questionId !== 'WS2-FAILURE-RESPONSE-RECONNAISSANCE') issues.push('questionId');
+  if (analysis.analysisContract?.evidenceRole !== 'development-discriminator-selection') {
+    issues.push('analysisContract.evidenceRole');
+  }
+  if (analysis.analysisContract?.decisionPurpose !== 'scientific-question-discrimination') {
+    issues.push('analysisContract.decisionPurpose');
+  }
+  if (contractIdentity != null && analysis.analysisContract?.identityHash !== contractIdentity) {
+    issues.push('analysisContract.identityHash');
+  }
+  if (!['eligible-for-prespecified-routing', 'ineligible'].includes(analysis.scientificDisposition?.status)) {
+    issues.push('scientificDisposition.status');
+  }
+  if (!['pending-interpretation', 'selected'].includes(analysis.decision?.status)) {
+    issues.push('decision.status');
+  }
+  if (analysis.decision?.status === 'selected') {
+    if (!WS2_FAILURE_RESPONSE_ROUTES.includes(analysis.decision?.route)) issues.push('decision.route');
+    if (typeof analysis.decision?.rationale !== 'string' || !analysis.decision.rationale.trim()) {
+      issues.push('decision.rationale');
+    }
+  } else if (analysis.decision?.route != null) {
+    issues.push('decision.route');
+  }
+  if (analysis.analysisIdentity !== ws2FailureResponseAnalysisIdentity(analysis)) issues.push('analysisIdentity');
+  return [...new Set(issues)];
+}
+
+export function validateWs2FailureResponseAnalysisEnvelope(analysis, options = {}) {
+  const issues = ws2FailureResponseAnalysisEnvelopeIssues(analysis, options);
+  if (issues.length) throw new Error(`invalid WS2 failure-response analysis envelope: ${issues.join(', ')}`);
+  return analysis;
+}
