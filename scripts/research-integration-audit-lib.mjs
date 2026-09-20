@@ -165,9 +165,13 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
             }
         }
         for (const ref of audit.producerAuthority ?? []) {
-            if (/^(?:docs|reports|scripts|data|logs|modules)\//u.test(String(ref))
-                && !existsSync(path.join(root, ref))) {
-                errors.push(`resource contract audit ${audit.assetId}.producerAuthority references missing repository path ${ref}`);
+            const value = String(ref);
+            if (/^(?:docs|reports|scripts|data|logs|modules)\//u.test(value)) {
+                if (!/^(?:docs|reports|scripts|data|logs|modules)\/[A-Za-z0-9._/-]+$/u.test(value)) {
+                    errors.push(`resource contract audit ${audit.assetId}.producerAuthority must be one exact repository path, not prose: ${value}`);
+                } else if (!existsSync(path.join(root, value))) {
+                    errors.push(`resource contract audit ${audit.assetId}.producerAuthority references missing repository path ${value}`);
+                }
             }
         }
     }
