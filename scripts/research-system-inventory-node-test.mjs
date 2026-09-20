@@ -26,11 +26,12 @@ assert.equal(inventory.frontDoorInputs.unfinishedLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'), false,
     'completed consolidation plan must not remain in unfinished front-door execution references');
 assert.ok(Array.isArray(inventory.frontDoorInputs.structuredCloseouts));
-const interoperabilityCloseout = inventory.frontDoorInputs.structuredCloseouts.find(row =>
-    row.path === 'reports/2026-09-19-research-contract-interoperability-audit-001.md');
-assert.ok(interoperabilityCloseout, 'front door should consume the first real structured closeout');
-assert.match(interoperabilityCloseout.scope.inferenceScope, /research-contract interoperability/u);
-assert.ok(interoperabilityCloseout.sourceArtifacts.includes('docs/solver-experiment-result.schema.json'));
+const distributedKnowledgeCloseout = inventory.frontDoorInputs.structuredCloseouts.find(row =>
+    row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md');
+assert.ok(distributedKnowledgeCloseout,
+    'front door should consume a recent real structured closeout inside its bounded recent-evidence window');
+assert.match(distributedKnowledgeCloseout.scope.inferenceScope, /research-system architecture/u);
+assert.ok(distributedKnowledgeCloseout.sourceArtifacts.includes('scripts/research-domain-ownership-node-test.mjs'));
 assert.equal(inventory.integrationHealth.errorCount, 0, 'inventory should surface existing integration-audit errors');
 assert.ok(inventory.integrationHealth.semanticJoinCoverage.authoredAssetRelationships >= 1);
 assert.equal(inventory.integrationHealth.questionCount, inventory.currentState.questions);
