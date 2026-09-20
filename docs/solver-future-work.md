@@ -27,11 +27,11 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 ## Hint/failure reopen hooks
 
 - Compatible compact-response rows -> identity/novelty/frontier audits; never backfill pre-contract attempts.
-- Repeated compatible populations + ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
+- Repeated compatible populations + ambiguity -> phenotype reducers; keep reason/basin recurrence separate.
 - Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins; require a valid denominator, protocol, and dependence unit.
 - Recurring rich producer -> search-loss P8 decision.
 - Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
-- Whole-space extinction is not deferred; sampled hints cannot prove it.
+- Whole-space extinction is not deferred; samples cannot prove it.
 
 ## Deferred architectural questions
 
