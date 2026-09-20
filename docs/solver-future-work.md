@@ -40,7 +40,7 @@ Eligible only after the active premise gate above is positive.
 - Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
 - Whole-space extinction is not deferred; sampled hints cannot prove it.
 
-## Other deferred architectural questions
+## Deferred architectural questions
 
 | Question | Reopen condition |
 |---|---|
