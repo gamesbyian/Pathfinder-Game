@@ -14,6 +14,15 @@ function hash(value) {
   return `sha256:${createHash('sha256').update(JSON.stringify(stable(value))).digest('hex')}`;
 }
 
+const ROUTE_CONSEQUENCE = Object.freeze({
+  'rejection-counterfactual': 'Freeze a bounded typed-rejection counterfactual design at the existing semantic owner; do not disable broad pruning.',
+  'first-loss': 'Invoke the existing search-loss Phase-9 first-loss procedure; do not create a competing protocol.',
+  'producer-consumer-2x2': 'Predeclare all four producer/consumer arms under matched total work before treatment outcomes.',
+  'allocation-specific-follow-up': 'Freeze the nominated exact action/stage allocation question and comparable-work follow-up before outcomes.',
+  'none': 'No expensive WS2 follow-up is earned by this reconnaissance.',
+  'unresolved-needs-compact-diagnostics': 'Freeze a bounded Stage-B compact-diagnostic population/protocol before inspecting prune/flow/progress outcomes.',
+});
+
 export function buildWs2FailureResponseClaimCapsule(analysis) {
   if (!analysis || analysis.kind !== 'pathfinder-ws2-failure-response-reconnaissance-analysis') {
     throw new Error('WS2 claim capsule requires a WS2 reconnaissance analysis');
@@ -74,9 +83,8 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
     decisionDisposition: {
       action: 'select-next-ws2-discriminator',
       route,
-      consequence: route === 'none'
-        ? 'No expensive WS2 follow-up is earned by this reconnaissance.'
-        : `Only the prespecified ${route} route is nominated for the next WS2 design step; no production solver change is licensed.`,
+      consequence: ROUTE_CONSEQUENCE[route],
+      productionChangeLicensed: false,
     },
     derivation: {
       edges: [
