@@ -266,7 +266,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const relations = relationInventory(model);
     const dependencies = sharedDependencies(root, commands);
     const contractOwners = dependencies.filter(row => row.contractFunctions.length > 0);
-    const integrationAudit = auditResearchIntegration(root);
+    const integrationAudit = auditResearchIntegration(root, { model });
     return {
         schemaVersion: 1,
         authority: {
