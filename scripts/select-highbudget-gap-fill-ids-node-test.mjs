@@ -24,10 +24,14 @@ writeFileSync(frozenFile, `${commaId}\nR00002\n`);
 execFileSync(process.execPath, [
   'scripts/select-highbudget-gap-fill-ids.mjs',
   `--frozen-ids-file=${frozenFile}`,
-  `--override=${commaId}`,
   `--out=${outFile}`,
 ], { encoding: 'utf8' });
-assert.equal(readFileSync(outFile, 'utf8').trim(), commaId,
-  'comma-bearing frozen cohort identity must remain one id even though CLI override syntax permits commas');
+assert.equal(readFileSync(outFile, 'utf8').trim(), `${commaId}\nR00002`,
+  'persisted one-per-line cohort identities must preserve commas when no ambiguous CLI override is used');
+assert.throws(
+  () => selectGapFillIds([commaId], commaId),
+  /outside the frozen cohort/,
+  'comma-delimited override syntax is intentionally not a lossless transport for comma-bearing scientific identities',
+);
 
 console.log('select highbudget gap fill ids tests passed');
