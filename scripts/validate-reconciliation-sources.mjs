@@ -5,6 +5,11 @@ import process from 'node:process';
 import { assertCompatibleExperiments, decisionContractIssues, declaredDecisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
 
 function sourceContract(manifest, runId) {
+  if (manifest?.experiment?.reconciliationRun) {
+    throw new Error(
+      `source run ${runId} is already a reconciliation result; supply its leaf acquisition runs instead of nesting reconciliation and losing source ancestry`,
+    );
+  }
   const resolvedSha = manifest?.experiment?.resolvedSha ?? null;
   const configurationHash = manifest?.experiment?.configurationHash ?? null;
   if (!resolvedSha) throw new Error(`source run ${runId} has no declared experiment resolved SHA`);
