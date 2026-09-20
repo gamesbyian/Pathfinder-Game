@@ -24,13 +24,7 @@ Eligible only after the active premise gate above is positive.
 | Dependency-conditioned repair neighborhood | Current exact-labelled/repair-retreat evidence shows rescue requires revising an interior/early commitment outside the append-only neighborhood; trace the coupled commitment before designing a new repair operator |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
-| Phase-aware portal guidance / scoring | `WS2-PARITY-PHASE-DISTANCE` shows non-trivial decision-bearing conditioned-distance opportunity; then compare current-phase guidance against the existing first-twist proxy at matched work |
-| Dynamic parity-phase connectivity | Static phase-conditioned distance is positive but remaining false negatives plausibly come from state-dependent phase reachability; extend connectivity to `(cell, phase)` only if the static representation earns the extra state/cost |
-| Checkerboard-capacity hard prune | `WS2-CHECKERBOARD-CAPACITY` shows non-trivial shadow incidence, synthetic witnesses exist, and stored/referee-valid prefix replay plus differential checks show zero false rejects |
-| Parity-aware repair treatment | A diagnostic-only phase/capacity residual shows repair plateaus or near-misses concentrate in incompatible states and identifies a specific operator/scoring consequence; do not add a generic parity penalty |
-| Parity-derived action/routing selector | A legal current-input phase/capacity feature predicts differentiated technique response on an independent shared-budget transfer; observer incidence alone does not earn routing |
-| All-gates exact-parity unsat fast exit | Measurement shows meaningful work is spent after exact no-twist parity proves zero feasible gates and empty/no-feasible-gate semantics are clean across production/static/legacy orchestration |
-| Complete/random hint-enumeration parity prune | Independent hint-enumeration cost/opportunity justifies it; use only sound no-twist parity or later proved phase-conditioned logic without changing completeness |
+| Parity descendants | Only after `WS2-PARITY-PHASE-DISTANCE` / `WS2-CHECKERBOARD-CAPACITY` earn incidence and soundness: consider scoring/routing, dynamic phase connectivity, hard prune, repair residual, all-gates exit or hint-enumeration reuse exactly as gated in [the parity preflight](solver-parity-phase-capacity-preflight.md) |
 
 ## Deferred plan closeouts
 
