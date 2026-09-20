@@ -16,6 +16,19 @@ Measurements belong in dated reports, current workstream decisions in the workst
 
 Correctness bugs may go directly to fix + regression/soundness validation. Speculative heuristics should test the premise first with existing observers, oracles, family comparisons, reducers, isolated probes, or replay tools.
 
+## Shared research-domain primitives
+
+Reuse the smallest common semantic owners where their meaning genuinely matches:
+
+- `research-semantic-identity-lib.mjs` — canonical semantic hashing only; each specialist owner still defines its hash domain.
+- `research-population-identity-lib.mjs` — identity-line parsing, canonical identity sets, and explicit population hashes; this is not a full population/sample ontology.
+- `research-observation-integrity-lib.mjs` — generic solver-row outcome classes plus structural-versus-decision-valid population completeness; specialist reference verdict taxonomies remain separate.
+- `research-question-contract-lib.mjs` — live ambiguity, discriminating observable, outcome interpretation, and MO syntax.
+- `research-evidence-applicability-lib.mjs` — the shared admissible/context-bound/inadmissible lattice; evidence purposes and classifiers remain specialist.
+- `research-claim-lib.mjs` — claim identity, material derivation edges, and bounded reverse invalidation; specialist claim payloads remain specialist.
+
+Do not route a specialist contract through one of these merely because field names resemble each other. Shared ownership applies only to the exact semantic invariant named above.
+
 ## Stop rules
 
 These are gates, not aspirations.
