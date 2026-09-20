@@ -22,6 +22,34 @@ function typeMatches(value, type) {
     return typeof value === type;
 }
 
+const SUPPORTED_SCHEMA_KEYWORDS = new Set([
+    '$schema', '$id', '$ref', '$defs', 'title', 'description',
+    'type', 'required', 'properties', 'additionalProperties',
+    'const', 'enum', 'anyOf', 'items', 'minimum', 'pattern', 'uniqueItems', 'minItems',
+]);
+
+export function schemaCoverageIssues(schema, at = '$') {
+    if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return [];
+    const issues = [];
+    for (const key of Object.keys(schema)) {
+        if (!SUPPORTED_SCHEMA_KEYWORDS.has(key)) issues.push(`${at}: unsupported schema keyword ${key}`);
+    }
+    for (const [key, value] of Object.entries(schema.properties ?? {})) {
+        issues.push(...schemaCoverageIssues(value, `${at}.properties.${key}`));
+    }
+    for (const [key, value] of Object.entries(schema.$defs ?? {})) {
+        issues.push(...schemaCoverageIssues(value, `${at}.$defs.${key}`));
+    }
+    if (schema.items && typeof schema.items === 'object') issues.push(...schemaCoverageIssues(schema.items, `${at}.items`));
+    if (Array.isArray(schema.anyOf)) {
+        schema.anyOf.forEach((value, index) => issues.push(...schemaCoverageIssues(value, `${at}.anyOf[${index}]`)));
+    }
+    if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
+        issues.push(...schemaCoverageIssues(schema.additionalProperties, `${at}.additionalProperties`));
+    }
+    return issues;
+}
+
 function resolveLocalRef(rootSchema, ref) {
     if (!ref.startsWith('#/')) return null;
     let node = rootSchema;
@@ -111,6 +139,7 @@ export function declaredShapeIssues(schema, value, at = '$', rootSchema = schema
 export function auditExperimentResultDeclaredShape(root = process.cwd()) {
     const schemaPath = 'docs/solver-experiment-result.schema.json';
     const schema = JSON.parse(readFileSync(path.join(root, schemaPath), 'utf8'));
+    const coverageIssues = schemaCoverageIssues(schema);
     const manifests = walk(root, 'reports/stress/experiment-evidence');
     const results = [];
     for (const manifestPath of manifests) {
@@ -123,6 +152,8 @@ export function auditExperimentResultDeclaredShape(root = process.cwd()) {
         schemaVersion: 1,
         declaredSchema: schemaPath,
         artifactCount: results.length,
+        schemaCoverageIssueCount: coverageIssues.length,
+        schemaCoverageIssues: coverageIssues,
         mismatchCount: results.filter(row => row.issueCount > 0).length,
         results,
     };
