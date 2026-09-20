@@ -111,8 +111,6 @@ This closes the class of “the workflow form says X, but a newly added solver o
 
 A generic publisher-side configuration-hash equality check is intentionally not asserted yet: paired and multi-corpus contracts may legitimately hash a composite experiment while the primary result describes only one arm/component. That check needs an explicit single-result/composite ownership signal rather than workflow-name inference.
 
-## F. Prospective gates must have a collection path
-
 The proposal-method calibration audit correctly deferred a machine `originMethod` field until origin is recorded prospectively, but the report convention did not actually ask future authors to record it. That made the gate self-stalling.
 
 `docs/investigation-report-conventions.md` now defines an optional human-readable `Proposal provenance` line for newly nominated questions/candidates when the source is genuinely known before outcome. Multiple contributing methods are allowed; the field is not machine-enforced and must not be retrospectively story-fitted. The proposal-method audit now points to this collection path. This creates observations without prematurely freezing an enum or registry.
@@ -168,6 +166,29 @@ The scans did not earn:
 - a retrospective proposal-origin taxonomy.
 
 Those remain consumer/data-gated under the existing research-system rules. The observed bugs were narrower and had narrower repairs.
+
+## H. Reconsidered scope: join integrity and executable surfaces
+
+The strongest recurring failure class in this pass is broader than “workflow plumbing.” Several artifacts or stages were individually valid but the **join between them was under-proved**:
+
+- technique-census results could drift from the authored plan;
+- CP-SAT shard partitions needed exact partition identity;
+- variant-family summaries/tasks needed corpus-scoped identity;
+- compact failure rows could refill weaker row-local provenance after a document-level identity intentionally left a field unknown;
+- hint/failure joins and failure-dependence strata needed exact population identity;
+- cross-run reconciliation needed same solver revision, canonical leaf source membership and strict declared experiment identity;
+- paired solver verdicts needed exact paired-population integrity rather than workflow step ordering alone;
+- durable evidence persistence needed to recompute decision-bearing eligibility rather than trust a boolean written by an upstream manifest.
+
+This earns a standing operating rule: **prove joins, not only endpoints**. Missing identity stays weak/unknown; a stronger neighboring document must not lend its entitlement implicitly. Mixed modern/legacy joins may remain for explicit weak reanalysis, but must not silently downgrade or upgrade scientific authority.
+
+The paired-verdict work also exposed a separate automation blind spot. The exported classifier function was unit-tested, but the real CLI parser used by workflows stripped `--` and then looked up keys with a different convention, making the workflow-facing path unusable while library tests stayed green. The repo now carries a narrow parser-consistency guard, an actual CLI test for the paired classifier, and CLI smoke coverage for the paired-integrity combiner, reconciliation validator and experiment-contract writer. The operating model now states that decision-bearing automation should test the executable surface it actually invokes when a small fixture can do so.
+
+A scan of the most recent 2,000 Actions runs found no historical broad/residual confirmation dispatches to salvage, so this particular classifier defect appears latent rather than a lost-result incident.
+
+## I. Prospective gates must have collection paths
+
+The proposal-method calibration audit exposed a different systems failure: a closeout can correctly defer until future evidence exists while leaving no process that will ever produce that evidence. `docs/investigation-report-conventions.md` now requires a prospective/data-gated remaining gate to name its producer/detection path when known, or explicitly say detection is opportunistic. This keeps “wait for evidence” from becoming a disguised dead end.
 
 ## Validation boundary
 
