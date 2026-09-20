@@ -264,6 +264,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         .map(role => [role, documentRoles.filter(row => row.role === role).length]));
     const currentAuthorityClaimOutsideIndex = documentRoles.filter(row => row.currentAuthorityClaimOutsideIndex);
     const relations = relationInventory(model);
+    const dependencies = sharedDependencies(root, commands);
+    const contractOwners = dependencies.filter(row => row.contractFunctions.length > 0);
     const integrationAudit = auditResearchIntegration(root);
     return {
         schemaVersion: 1,
@@ -282,7 +284,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         },
         relations,
         commands,
-        sharedImplementationDependencies: sharedDependencies(root, commands),
+        sharedImplementationDependencies: dependencies,
+        contractOwnership: contractOwners,
         documentation: {
             currentReferences,
             currentReferenceCount: currentReferences.length,
@@ -311,6 +314,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             currentAuthorityClaimOutsideIndexPaths: currentAuthorityClaimOutsideIndex.map(row => row.path),
             integrationErrorCount: integrationAudit.errorCount,
             integrationWarningCount: integrationAudit.warningCount,
+            sharedContractOwnerCount: contractOwners.length,
             derivedRelationCount: relations.filter(row => row.authorityKind === 'derived/composed').length,
             structuredRelationCount: relations.filter(row => row.authorityKind === 'structured-source').length,
         },
@@ -330,6 +334,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             relations: inventory.relations,
             commands: inventory.commands,
             sharedImplementationDependencies: inventory.sharedImplementationDependencies,
+            contractOwnership: inventory.contractOwnership,
         };
     }
     if (view === 'lifecycle') {
