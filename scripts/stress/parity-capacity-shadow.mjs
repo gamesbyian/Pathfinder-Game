@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Lane H2 checkerboard-capacity shadow probe.
+ * Lane H1/H2 parity-invariant shadow probe.
  *
  * Runs the real sequential production solve ladder under a deterministic work budget while a
- * research-only observer reads the reached set already computed by isConnected(). Solver decisions
+ * research-only observers read phase-conditioned distance and the reached set already computed by isConnected(). Solver decisions
  * are unchanged. A generous wall deadline is a safety cap only; any deadline-truncated row is
  * explicitly indeterminate rather than a negative.
  *
@@ -34,7 +34,7 @@ const corpusFile = args.get('--corpus') || 'data/stress/stress-levels.json';
 const levelSpec = args.get('--levels') || null;
 const workBudget = Number(required('--work-budget'));
 const budgetMs = Number(args.get('--budget-ms') || 600000);
-const outFile = args.get('--out') || 'reports/stress/parity-capacity-shadow/latest.json';
+const outFile = args.get('--out') || 'reports/stress/parity-invariant-shadow/latest.json';
 const maxExamplesPerLevel = Number(args.get('--max-examples-per-level') || 8);
 if (!Number.isFinite(workBudget) || workBudget <= 0) throw new Error('--work-budget must be a positive number');
 if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be a positive number');
@@ -72,7 +72,11 @@ let totals = {
     eligibleNoTwist: 0,
     observerReached: 0,
     completedWithoutDeadline: 0,
-    evaluatedStates: 0,
+    phaseEvaluations: 0,
+    scalarDistanceRejects: 0,
+    phaseDistanceRejects: 0,
+    incrementalPhaseRejects: 0,
+    capacityEvaluations: 0,
     scalarVolumeRejects: 0,
     parityCapacityRejects: 0,
     incrementalParityRejects: 0,
@@ -85,20 +89,36 @@ for (const entry of selected) {
     if (eligibleNoTwist) totals.eligibleNoTwist++;
 
     const counts = {
-        evaluatedStates: 0,
+        phaseEvaluations: 0,
+        scalarDistanceRejects: 0,
+        phaseDistanceRejects: 0,
+        incrementalPhaseRejects: 0,
+        capacityEvaluations: 0,
         scalarVolumeRejects: 0,
         parityCapacityRejects: 0,
         incrementalParityRejects: 0,
     };
-    const examples = [];
-    const observer = {
+    const phaseExamples = [];
+    const capacityExamples = [];
+    const phaseObserver = {
         observe(record) {
-            counts.evaluatedStates++;
+            counts.phaseEvaluations++;
+            if (record.scalarDistanceWouldReject) counts.scalarDistanceRejects++;
+            if (record.phaseDistanceWouldReject) counts.phaseDistanceRejects++;
+            if (record.incrementalPhaseReject) {
+                counts.incrementalPhaseRejects++;
+                if (phaseExamples.length < maxExamplesPerLevel) phaseExamples.push(record);
+            }
+        },
+    };
+    const capacityObserver = {
+        observe(record) {
+            counts.capacityEvaluations++;
             if (record.totalVolumeWouldReject) counts.scalarVolumeRejects++;
             if (record.parityCapacityWouldReject) counts.parityCapacityRejects++;
             if (record.incrementalParityReject) {
                 counts.incrementalParityRejects++;
-                if (examples.length < maxExamplesPerLevel) examples.push(record);
+                if (capacityExamples.length < maxExamplesPerLevel) capacityExamples.push(record);
             }
         },
     };
@@ -110,7 +130,8 @@ for (const entry of selected) {
             timeBudgetMs: budgetMs,
             workBudget,
             strictTotalWorkBudget: true,
-            parityCapacityObserver: observer,
+            parityCapacityObserver: capacityObserver,
+            parityPhaseDistanceObserver: phaseObserver,
         });
     } catch (error) {
         rows.push({
@@ -120,14 +141,19 @@ for (const entry of selected) {
             error: error?.message ?? String(error),
             elapsedMs: Date.now() - started,
             ...counts,
-            examples,
+            phaseExamples,
+            capacityExamples,
         });
         continue;
     }
 
-    if (counts.evaluatedStates > 0) totals.observerReached++;
+    if (counts.phaseEvaluations > 0 || counts.capacityEvaluations > 0) totals.observerReached++;
     if (!result.deadlineTruncated) totals.completedWithoutDeadline++;
-    totals.evaluatedStates += counts.evaluatedStates;
+    totals.phaseEvaluations += counts.phaseEvaluations;
+    totals.scalarDistanceRejects += counts.scalarDistanceRejects;
+    totals.phaseDistanceRejects += counts.phaseDistanceRejects;
+    totals.incrementalPhaseRejects += counts.incrementalPhaseRejects;
+    totals.capacityEvaluations += counts.capacityEvaluations;
     totals.scalarVolumeRejects += counts.scalarVolumeRejects;
     totals.parityCapacityRejects += counts.parityCapacityRejects;
     totals.incrementalParityRejects += counts.incrementalParityRejects;
@@ -142,25 +168,38 @@ for (const entry of selected) {
         workSpent: result.workSpent ?? null,
         elapsedMs: Date.now() - started,
         ...counts,
-        examples,
+        phaseExamples,
+        capacityExamples,
     });
-    console.log(`${id ?? '?'}: eval=${counts.evaluatedStates} incremental=${counts.incrementalParityRejects} ${result.deadlineTruncated ? 'DEADLINE-TRUNCATED' : result.status}`);
+    console.log(`${id ?? '?'}: H1=${counts.incrementalPhaseRejects}/${counts.phaseEvaluations} H2=${counts.incrementalParityRejects}/${counts.capacityEvaluations} ${result.deadlineTruncated ? 'DEADLINE-TRUNCATED' : result.status}`);
 }
 
 const report = {
-    schema: 'pathfinder.parity-capacity-shadow/v1',
+    schema: 'pathfinder.parity-invariant-shadow/v1',
     createdAt: new Date().toISOString(),
     solverRef: getCommitSha(),
-    question: {
-        lane: 'H2',
-        liveAmbiguity: 'Does checkerboard-split reachable capacity prove decision-bearing dead states that existing scalar connectivity volume misses on future-no-twist states?',
-        discriminatingObservable: 'incrementalParityReject=true at the real connectivity-volume seam while totalVolumeWouldReject=false',
-        outcomeInterpretation: {
-            positive: 'non-trivial incremental incidence nominates witness replay, soundness differential, then the smallest consumer',
-            negative: 'near-zero incremental incidence on completed representative eligible rows stops H2 in this form',
-            indeterminate: 'deadline truncation, no observer reach, or unsupported twist-bearing state cannot support a negative',
+    questions: [
+        {
+            lane: 'H1',
+            liveAmbiguity: 'Does twist-phase-conditioned relaxed goal distance prove decision-bearing dead states that scalar goal distance misses?',
+            discriminatingObservable: 'incrementalPhaseReject=true at the scalar-distance seam while scalarDistanceWouldReject=false',
+            outcomeInterpretation: {
+                positive: 'non-trivial incremental incidence nominates witness replay, soundness differential, then the smallest consumer',
+                negative: 'near-zero incremental incidence on completed twist-bearing rows stops H1 in this static conditioned-distance form',
+                indeterminate: 'deadline truncation, no phase-observer reach, or absence of twist portals cannot support a negative',
+            },
         },
-    },
+        {
+            lane: 'H2',
+            liveAmbiguity: 'Does checkerboard-split reachable capacity prove decision-bearing dead states that existing scalar connectivity volume misses on future-no-twist states?',
+            discriminatingObservable: 'incrementalParityReject=true at the real connectivity-volume seam while totalVolumeWouldReject=false',
+            outcomeInterpretation: {
+                positive: 'non-trivial incremental incidence nominates witness replay, soundness differential, then the smallest consumer',
+                negative: 'near-zero incremental incidence on completed representative eligible rows stops H2 in this form',
+                indeterminate: 'deadline truncation, no capacity-observer reach, or twist-bearing state cannot support a negative',
+            },
+        },
+    ],
     protocol: {
         corpus: corpusFile,
         levelSpec: levelSpec ?? 'all',
@@ -168,13 +207,13 @@ const report = {
         wallDeadlineMs: budgetMs,
         strictTotalWorkBudget: true,
         solverPath: 'real sequential production solveLevel ladder under one strict whole-solve work cap; observer-only H2 instrumentation',
-        observerEffect: 'grid scan after existing connectivity flood fill; no canonical work units charged and no solver decision reads observer output',
+        observerEffect: 'H1 adds one observer callback at the existing distance seam; H2 scans the already-computed reached set after connectivity fill. No canonical work units are charged and no solver decision reads observer output',
     },
     resolutionInputs: {
         eligibility: { eligibleNoTwist: totals.eligibleNoTwist, selected: totals.selected },
         reach: { levelsWithObserverRecords: totals.observerReached, eligibleNoTwist: totals.eligibleNoTwist },
-        participation: { evaluatedStates: totals.evaluatedStates },
-        measurementSupport: { status: 'supported', basis: 'observer reads the exact reached set already used by isConnected; synthetic incremental witness covered by topology.test.ts' },
+        participation: { phaseEvaluations: totals.phaseEvaluations, capacityEvaluations: totals.capacityEvaluations },
+        measurementSupport: { status: 'supported', basis: 'H1 reads the static two-layer relaxation at the scalar-distance seam; H2 reads the exact reached set already used by isConnected; both have synthetic incremental witnesses in solver tests' },
         fidelity: { status: 'supported', basis: 'sequential production solveLevel with no ablation/profile changes and a fixed whole-solve work cap; ordinary additive-tier policy remains intact inside that cap' },
         coverage: { completedWithoutDeadline: totals.completedWithoutDeadline, selected: totals.selected },
         censoring: { deadlineTruncated: rows.filter(row => row.deadlineTruncated).length, errors: rows.filter(row => row.status === 'error').length },
@@ -185,4 +224,4 @@ const report = {
 
 mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
 writeFileSync(path.resolve(outFile), `${JSON.stringify(report, null, 2)}\n`);
-console.log(`Wrote ${outFile}: ${totals.incrementalParityRejects} incremental H2 reject(s) across ${totals.evaluatedStates} evaluated state(s).`);
+console.log(`Wrote ${outFile}: H1 ${totals.incrementalPhaseRejects}/${totals.phaseEvaluations} incremental; H2 ${totals.incrementalParityRejects}/${totals.capacityEvaluations} incremental.`);
