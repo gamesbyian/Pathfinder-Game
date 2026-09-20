@@ -36,7 +36,7 @@ function buildIndexArr(keys: number[]): Int8Array {
     return arr;
 }
 
-export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbors?: boolean } = {}): PrepLevel {
+export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbors?: boolean; includeParityPhaseGoalDist?: boolean } = {}): PrepLevel {
     const prep = {} as PrepLevel;
     // Fresh, isolated per-solve work counter — see PrepLevel._workMeter's own comment. Always
     // initialized here, unconditionally, so no consumer can ever observe an unset one.
@@ -198,7 +198,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // q=1 layer is unreachable and the q=0 layer collapses to the already-cheaper scalar distance
     // plus ordinary endpoint parity. This map is a static over-permissive relaxation just like
     // goalDistArr, but it preserves the one bit the scalar map discards: future twist-jump parity.
-    prep.parityPhaseGoalDistArrs = prep.parityPortalDistMaps.length > 0
+    prep.parityPhaseGoalDistArrs = opts.includeParityPhaseGoalDist && prep.parityPortalDistMaps.length > 0
         ? buildParityPhaseDistArrays(level, level.goalKey, distOpts)
         : null;
 
