@@ -13,6 +13,7 @@ function runCase({
   missingExitCode = null,
   flat = false,
   expectedShards = 1,
+  commit = 'a'.repeat(40),
 }) {
   const temp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-outcome-'));
   const staging = path.join(temp, 'staging');
@@ -26,7 +27,7 @@ function runCase({
   }
   if (!missing) {
     writeFileSync(path.join(shard, 'shard-001-w0.json'), JSON.stringify({
-      corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget, nodeBudget: 1000, levels,
+      commit, corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget, nodeBudget: 1000, levels,
     }));
   }
   const result = spawnSync(process.execPath, [
@@ -84,5 +85,32 @@ run = runCase({ levels: [{ id: 'L1', ok: false }], expectedShards: 2 });
 assert.equal(run.result.status, 2, run.result.stderr);
 assert.equal(run.outcome.outcome, 'harness-error');
 assert.match(run.outcome.reason, /outer shard artifact/u);
+
+// A combined probe must describe one solver revision. The production matrix normally checks out one
+// SHA, but the combiner owns the scientific invariant rather than trusting orchestration.
+const mismatchTemp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-sha-mismatch-'));
+try {
+  const staging = path.join(mismatchTemp, 'staging');
+  for (const [index, commit] of [[1, 'a'.repeat(40)], [2, 'b'.repeat(40)]]) {
+    const shard = path.join(staging, `method-probe-shard-${String(index).padStart(3, '0')}`);
+    mkdirSync(shard, { recursive: true });
+    writeFileSync(path.join(shard, `shard-${String(index).padStart(3, '0')}-w0.console.log`), 'worker started\n');
+    writeFileSync(path.join(shard, `shard-${String(index).padStart(3, '0')}-w0.json`), JSON.stringify({
+      commit, corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget: 1000, nodeBudget: 1000,
+      levels: [{ id: `L${index}`, ok: false }],
+    }));
+  }
+  const mismatch = spawnSync(process.execPath, [
+    'scripts/combine-method-probe-shards.mjs',
+    `--staging-dir=${staging}`,
+    `--out-dir=${path.join(mismatchTemp, 'out')}`,
+    '--expected-shards=2',
+    '--deterministic-work-mode=true',
+  ], { cwd: root, encoding: 'utf8' });
+  assert.equal(mismatch.status, 1);
+  assert.match(mismatch.stderr, /metadata mismatch/u);
+} finally {
+  // Temporary test roots are under the OS temp directory and disappear with the test process.
+}
 
 console.log('combine method-probe shard outcome tests passed');
