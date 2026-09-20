@@ -18,7 +18,7 @@ const contract = validateWs2FailureResponseAnalysisContract(
 );
 assert.match(ws2FailureResponseAnalysisContractIdentity(contract), /^sha256:[0-9a-f]{64}$/u);
 assert.ok(contract.liveRivals.length >= 2);
-assert.deepEqual(contract.requiredObservabilityAxes, ['eligibility', 'measurementSupport', 'coverage']);
+assert.deepEqual(contract.requiredObservabilityAxes, ['measurementSupport', 'fidelity', 'coverage']);
 assert.match(contract.resolutionOutcomeInterpretation.routeNone, /does not imply no mechanism exists/u);
 assert.match(contract.independenceVector.taskFramingPrompt, /no prompt-level independence/u);
 assert.match(contract.independenceVector.authorityContextExposure, /no authority\/context-exposure independence/u);
@@ -107,7 +107,7 @@ try {
   assert.equal(result.scientificDisposition.treatmentFidelity, 'not-applicable-routing-screen-no-treatment');
   assert.equal(result.scientificDisposition.resolution.kind, 'pathfinder-research-resolution-envelope');
   assert.equal(result.scientificDisposition.resolution.resolutionStatus, 'resolution-ready');
-  assert.deepEqual(result.scientificDisposition.resolution.requiredAxes, ['eligibility', 'measurementSupport', 'coverage']);
+  assert.deepEqual(result.scientificDisposition.resolution.requiredAxes, ['measurementSupport', 'fidelity', 'coverage']);
   assert.deepEqual(result.scientificDisposition.resolution.outcomeInterpretation,
     contract.resolutionOutcomeInterpretation);
   assert.equal(result.scientificDisposition.resolution.axes.reach.status, 'not-required');
@@ -294,9 +294,9 @@ try {
   assert.equal(ineligibleResult.execution.status, 'completed');
   assert.equal(ineligibleResult.scientificDisposition.status, 'ineligible');
   assert.equal(ineligibleResult.scientificDisposition.resolution.resolutionStatus, 'observability-blocked');
-  assert.ok(ineligibleResult.scientificDisposition.resolution.blockers.some(row => row.axis === 'eligibility'));
+  assert.ok(ineligibleResult.scientificDisposition.resolution.blockers.some(row => row.axis === 'fidelity'));
   assert.ok(ineligibleResult.scientificDisposition.resolution.blockers.some(row =>
-    row.axis === 'eligibility' && row.remediation === 'acquisition-or-scope'));
+    row.axis === 'fidelity' && row.remediation === 'configuration-or-protocol-reconciliation'));
   assert.ok(ineligibleResult.scientificDisposition.reasons.some(reason => reason.includes('unknown protocolHash')));
 
   const invalidRoute = spawnSync(process.execPath, [
