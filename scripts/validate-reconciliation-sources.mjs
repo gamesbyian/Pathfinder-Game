@@ -60,6 +60,10 @@ export function validateReconciliationSources(sources) {
       contract,
     };
   });
+  const runIds = normalized.map(source => source.runId);
+  if (new Set(runIds).size !== runIds.length) {
+    throw new Error('source run IDs must be unique for reconciliation');
+  }
 
   const reference = normalized[0].contract;
   for (const source of normalized.slice(1)) {
@@ -77,7 +81,9 @@ export function validateReconciliationSources(sources) {
     }
   }
 
-  const sourcesForProvenance = normalized.map(({ contract: _contract, ...source }) => source);
+  const sourcesForProvenance = normalized
+    .map(({ contract: _contract, ...source }) => source)
+    .sort((left, right) => left.runId.localeCompare(right.runId));
   const sourceExperiment = {
     workflowFamily: reference.experiment.workflowFamily,
     producer: reference.experiment.producer,
