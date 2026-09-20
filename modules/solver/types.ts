@@ -306,6 +306,8 @@ export interface PrepLevel {
     /** Research-only Lane H2 checkerboard-capacity shadow observer. Reads the connectivity fill's
      *  existing reached set after goal/objective reachability succeeds; never changes pruning. */
     _parityCapacityObserver?: ParityCapacityObserver | null;
+    /** Research-only Lane H1 phase-conditioned distance shadow observer. */
+    _parityPhaseDistanceObserver?: ParityPhaseDistanceObserver | null;
     /** Research-only joint-obligation propagation observer — see JointObligationObserver's own doc
      *  below. Absent in every production call; observing an already-computed obligation-cluster
      *  verdict changes no pruning/ordering/budget decision. */
@@ -374,6 +376,8 @@ export interface PrepLevel {
      *  prep.ts's portal-parity guidance comment and data/stress/README.md's S043 writeup. Empty for
      *  portal-free levels and levels where every portal pair is same-parity. */
     parityPortalDistMaps?: { a: number; b: number; dist: Uint16Array }[];
+    /** Lane H1 relaxed goal distance split by future twist-jump parity; null on no-twist levels. */
+    parityPhaseGoalDistArrs?: [Uint16Array, Uint16Array] | null;
     // Landmark-specific maps are present only on landmark levels (guarded at the call sites).
     // surround/adjTurn/mustTurn/mcApproach/parityPortal dist maps are all flattened to
     // Uint16Array (distMapToArray) for O(1) access in scoreMove/lower-bounds.ts's hot loops.
