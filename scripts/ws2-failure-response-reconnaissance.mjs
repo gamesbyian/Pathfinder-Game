@@ -79,10 +79,6 @@ if (selectedRoute && !WS2_FAILURE_RESPONSE_ROUTES.includes(selectedRoute)) {
 if (selectedRoute && !decisionRationale) {
   throw new Error('--decision-rationale=<text> is required when --route is selected');
 }
-if (selectedRoute && !eligible) {
-  throw new Error(`cannot select WS2 route from scientifically ineligible evidence: ${eligibilityReasons.join('; ')}`);
-}
-
 const allDecisionValid = documents.every(({ document }) =>
   document.populationIntegrity?.decisionValidComplete === true);
 const identityComparable = documents.every(({ document }) =>
@@ -142,6 +138,12 @@ const resolution = buildResearchResolutionEnvelope({
     analysisContractIdentity: contractIdentity,
   },
 });
+
+if (selectedRoute && resolution.resolutionStatus !== 'resolution-ready') {
+  throw new Error(`cannot select WS2 route while resolution is blocked: ${resolution.blockers
+    .map(row => `${row.axis}=${row.status}`)
+    .join('; ')}`);
+}
 
 const resultCore = {
   schemaVersion: 1,
