@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { buildPopulationIntegrity, recoveryProvenanceIssues } from './solver-experiment-contract.mjs';
 import { combinePopulationIntegrity } from './combine-population-integrity.mjs';
@@ -148,6 +149,12 @@ const consumedEligibility = researchBlockEligibility(consumedBlock, {
 });
 assert.equal(consumedEligibility.eligible, false);
 assert.ok(consumedEligibility.reasons.includes('matching-consumption-recorded'));
+
+// Stale evidence-integrity index fails closed in its dedicated rebuild guard.
+const evidenceIntegrityGuard = readFileSync('.github/workflows/solver-evidence-integrity-guard.yml', 'utf8');
+assert.match(evidenceIntegrityGuard, /npm run solver:evidence-integrity-audit/u);
+assert.match(evidenceIntegrityGuard, /git diff --exit-code -- reports\/stress\/solver-evidence-integrity-index\.json/u,
+    'guard must reject a checked-in integrity index that differs from a fresh rebuild');
 
 // Treatment nonparticipation fails the manipulation/participation gate before a negative verdict can be claimed.
 assert.throws(() => validateSweepIntegrity({
