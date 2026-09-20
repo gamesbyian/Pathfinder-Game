@@ -7,6 +7,7 @@ import {
     EXTERNAL_SOLVER_ID,
 } from '../../modules/domain/hint-types.ts';
 import { classifyProvenanceClass } from './provenance-classes.mjs';
+import { RESEARCH_EVIDENCE_APPLICABILITY } from '../research-evidence-applicability-lib.mjs';
 
 export const VARIANT_REPLAY_SOLVER_ID = 'variant-corpus-diagnostic';
 
@@ -46,7 +47,7 @@ export const EVIDENCE_PURPOSES = [
     'longitudinal-process',
 ];
 
-export const EVIDENCE_APPLICABILITY = ['admissible', 'context-bound', 'inadmissible'];
+export const EVIDENCE_APPLICABILITY = RESEARCH_EVIDENCE_APPLICABILITY;
 
 // Compatibility aliases for callers written while this module still called every bucket a source.
 // Source now means origin only; modality belongs in PROVENANCE_FACETS.
