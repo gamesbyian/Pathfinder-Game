@@ -215,6 +215,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             schemaVersion: inventory.schemaVersion,
             authority: inventory.authority,
             currentState: inventory.currentState,
+            integrationHealth: inventory.integrationHealth,
             relations: inventory.relations,
             commands: inventory.commands,
             sharedImplementationDependencies: inventory.sharedImplementationDependencies,
@@ -238,6 +239,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
         return {
             schemaVersion: inventory.schemaVersion,
             authority: inventory.authority,
+            integrationHealth: inventory.integrationHealth,
             diagnostics: inventory.diagnostics,
         };
     }
