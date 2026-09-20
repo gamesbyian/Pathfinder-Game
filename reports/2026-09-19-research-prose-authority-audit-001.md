@@ -48,7 +48,35 @@ The rich disposition prose remains. Software consumes the explicit state.
 
 This is the canonical example of prose that should become structure.
 
-### 2. Report-local disposition — same defect, already fixed in the authority pass
+### 2. Workstream execution state — real prose-authority defect, fixed
+
+The live workstream table previously had one rich `State` cell containing values such as:
+
+- `ACTIVE / ECONOMICS CLOSED NEGATIVE`;
+- `METHOD COMPLETE`;
+- `SUBSUMED BY WS1`;
+- `ON DEMAND / BUSIER`.
+
+Research tooling decided whether a workstream was active by searching those strings for words such as "active".
+
+That made live queue membership depend on display prose.
+
+The table now carries a dedicated `Execution state` token:
+
+- `active`;
+- `supporting`;
+- `method-complete`;
+- `subsumed`;
+- `closed`;
+- `on-demand`.
+
+The adjacent `State / context` column retains the richer human explanation.
+
+The status index, system inventory and integration audit now consume the explicit execution state. Documentation validation requires valid structured states.
+
+This is the same healthy split as report closeouts and runtime polarity: **machine category plus human explanation**, not machine inference from the explanation.
+
+### 3. Report-local disposition — same defect, already fixed in the authority pass
 
 New reports already had a structured `pathfinder.research-closeout/v1` owner, but `research-status-index` continued to parse the visible Markdown status block.
 
@@ -58,21 +86,6 @@ That has been corrected:
 - visible prose is presentation and legacy compatibility;
 - stable mirrored categorical fields are checked for disagreement;
 - richer human paraphrases are allowed without becoming a second authority.
-
-### 3. Workstream state — structured enough today
-
-The live workstream authority uses a dedicated table column for state and another for the stable scientific-question reference.
-
-Its state text is human-readable, but the fact is not hidden inside narrative prose.
-
-The derived index still normalizes display variants for convenience. That is acceptable because:
-
-- the workstream document itself is the explicit owner;
-- the state is isolated in a dedicated field;
-- stable question identity is separate;
-- no parser is trying to infer the state from an arbitrary paragraph.
-
-If machine scheduling ever requires a stricter state algebra, add an explicit workstream state token then. Do not create one merely to make Markdown look more database-like.
 
 ### 4. Question lifecycle — properly structured
 
