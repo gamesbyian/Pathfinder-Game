@@ -1,14 +1,14 @@
 # Solver research-system consolidation final verification audit 001
 
-> **Status:** active
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-19 — Bundles A-F implementation plus Part-VIII evidence audits on PR #1922
-> **Decision:** all substantive Part-VIII verification categories are now satisfied or explicitly bounded by their intended scope; keep the consolidation plan open only until current-head repository validation is green.
-> **Remaining gate:** current-head CI / solver-evidence-integrity / premise-map-hardening validation, plus any concrete repairs those runs identify.
-<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"active","lastEvidenceDate":"2026-09-19","decision":"all substantive Part-VIII verification categories are now satisfied or explicitly bounded by their intended scope; keep the consolidation plan open only until current-head repository validation is green","remainingGate":"current-head CI / solver-evidence-integrity / premise-map-hardening validation, plus any concrete repairs those runs identify","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":null,"selection":"requirement-by-requirement Part-VIII audit of the implementation on PR #1922","inferenceScope":"research-system consolidation completion; not solver efficacy or production-priority evidence"},"claimRefs":[],"sourceArtifacts":["docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md","reports/2026-09-19-research-system-bundles-a-d-closeout-audit-001.md","reports/2026-09-19-research-portfolio-answerability-retrospective-001.md","reports/2026-09-19-research-prospective-rigor-earned-scope-001.md","reports/2026-09-19-research-independence-triangulation-audit-001.md","reports/2026-09-19-research-confirmation-boundary-audit-001.md","scripts/research-system-consolidation-closeout-node-test.mjs"],"prospective":{"expectation":"the final audit should expose any remaining requirement that was only asserted in progress prose rather than implemented or evidenced","surprise":"the remaining substantive gaps were concentrated in independence/confirmation exemplars and have now been closed with real evidence lines","anomaly":null}} -->
+> **Decision:** all substantive Part-VIII verification categories are satisfied or explicitly bounded by their intended scope; current-head repository validation is green after concrete closeout repairs, so the consolidation plan is complete and enters maintenance/history.
+> **Remaining gate:** none for this program; future work is ordinary maintenance and evidence-triggered reuse of the retained machinery.
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-09-19","decision":"all substantive Part-VIII verification categories are satisfied or explicitly bounded by their intended scope; current-head repository validation is green after concrete closeout repairs, so the consolidation plan is complete and enters maintenance/history","remainingGate":"none for this program; future work is ordinary maintenance and evidence-triggered reuse of retained machinery","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":null,"selection":"requirement-by-requirement Part-VIII audit of the implementation on PR #1922","inferenceScope":"research-system consolidation completion; not solver efficacy or production-priority evidence"},"claimRefs":[],"sourceArtifacts":["docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md","reports/2026-09-19-research-system-bundles-a-d-closeout-audit-001.md","reports/2026-09-19-research-portfolio-answerability-retrospective-001.md","reports/2026-09-19-research-prospective-rigor-earned-scope-001.md","reports/2026-09-19-research-independence-triangulation-audit-001.md","reports/2026-09-19-research-confirmation-boundary-audit-001.md","scripts/research-system-consolidation-closeout-node-test.mjs",".github/workflows/ci.yml"],"prospective":{"expectation":"the final audit should expose any remaining requirement that was only asserted in progress prose rather than implemented or evidenced","surprise":"the remaining substantive gaps were concentrated in independence/confirmation exemplars and have now been closed with real evidence lines","anomaly":null}} -->
 
 ## Executive result
 
-The consolidation implementation has reached the point where the remaining gate is repository validation, not another conceptual subsystem.
+The consolidation implementation has passed its repository-validation gate and is complete at the scope earned by the evidence.
 
 Bundles A-D were already closed through a hostile requirement-by-requirement pass. Bundle E reconstructed one bounded recent research-history dataset and found no evidence strong enough to justify a permanent reflexivity layer or triggered Bundle-G exploration. Bundle F implemented only the protections earned by C/E and explicitly declined stronger ceremony without a consumer.
 
@@ -291,17 +291,6 @@ Some success criteria describe future operating behavior rather than one-time ar
 
 Those are standing rules, not missing projects.
 
-## Remaining gate
+## Closeout
 
-No substantive conceptual or implementation requirement is currently known to be missing.
-
-The plan should remain active only until the **current PR head** passes its repository validation surface.
-
-If CI finds a concrete defect, repair it and rerun only the affected validation naturally through the PR.
-
-If current-head validation is green:
-
-1. mark this audit concluded-positive;
-2. mark the plan implementation complete / maintenance-mode;
-3. reconcile the plan's current-reference lifecycle so it no longer presents as active execution;
-4. keep the reusable commands/tests/reports, not the plan itself, as the operational surface.
+No substantive conceptual or implementation requirement is currently known to be missing. Current-head validation exposed and repaired concrete closeout defects in CI sparse-checkout coverage, population-integrity composition, active-queue state parsing, and stale assertions. The plan is now completed/maintenance history, while the reusable commands, contracts, tests, reports, and generated front-door views remain operational.
