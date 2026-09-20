@@ -24,6 +24,13 @@ assert.ok(inventory.planLifecycle.some(row =>
     row.archived === false &&
     row.status?.includes('proposed implementation plan')));
 assert.ok(inventory.documentation.currentReferenceCount > 0, 'inventory must derive the docs current-reference index');
+assert.ok(inventory.documentation.currentMarkdownReferenceCount > 0);
+assert.ok(inventory.documentation.currentMarkdownBytes > 0);
+assert.equal(inventory.documentation.lifecycleCandidateCount, inventory.planLifecycle.length);
+assert.equal(
+    inventory.documentation.currentLifecycleCandidateCount,
+    inventory.planLifecycle.filter(row => row.currentReference).length,
+);
 assert.equal(inventory.documentation.currentReferences.some(row =>
     row.path === 'docs/solver-workflow-evidence-remediation-plan.md'), false,
     'completed remediation plan should remain navigable as history without being a current reference');
