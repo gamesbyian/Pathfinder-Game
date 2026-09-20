@@ -19,7 +19,7 @@
 - That report drew **200** of the 439 (all 65 class-4 + 135 class-5, proportional by routing regime) for its own frozen cohort.
 - **239 eligible rows were never drawn.** This is a real, already-defined, already-vetted remainder -- no new eligibility computation is needed, only a fresh seeded draw from the documented remainder.
 
-**Draw:** all 239 remaining eligible rows, or a proportional-by-routing-regime seeded subsample if the full 239 is judged too expensive once the phenotype screen's own cost is measured on a small pilot slice first (see "Staged cost" below). Seed: `h3-independent-transfer-2026-09-19` (same mulberry32/FNV-1a/Fisher-Yates convention as the Card-E draw). Exclude nothing further -- the 239-row remainder is already independent of every row used by the original H3 finding.
+**Draw:** all 239 remaining eligible rows for the phenotype screen. Seed `h3-independent-transfer-2026-09-19` remains reserved only for a future separately precommitted subsample if the full phenotype-positive cohort proves too expensive. The current preflight does **not** authorize choosing a reachability subsample after seeing phenotype identities or other row content. Exclude nothing further from the phenotype screen: the 239-row remainder is already independent of every row used by the original H3 finding.
 
 ## Instrument (identical to Card-E's, unchanged)
 
@@ -31,15 +31,23 @@ Reuse Card-E's exact three-step pipeline verbatim -- no new code, no parameter c
 
 ## Staged cost discipline (per "prefer the cheapest information-value test")
 
-Card-E's own pipeline is expensive at the reachability step specifically (2,000,000-node cap x 2,000 rollout trials per reconstructable candidate). Per standing practice, run the phenotype screen (step 1, cheap: a single beam pass per id) on the full 239-row remainder first and inspect only its *count*, not its content, before committing to the full reachability step's cost on whatever cohort results -- exactly the sequencing Card-E's own original report used (156-row cohort size was known before the expensive reachability step ran). If the phenotype screen yields a cohort far smaller than needed to detect an effect of comparable size to the original (very unlikely given the original screen's 78% conversion rate held on an independent 200-row draw), stop and report a sizing failure rather than forcing the expensive step.
+Card-E's own pipeline is expensive at the reachability step specifically (2,000,000-node cap x 2,000 rollout trials per reconstructable candidate). Run the phenotype screen (step 1, cheap: a single beam pass per id) on the full 239-row remainder first. The phenotype screen is an explicit sizing gate, not permission for post-hoc scientific sampling.
+
+After the screen there are only two authorized paths:
+
+1. run reachability on **all phenotype-positive rows**; or
+2. if that cost is unacceptable, stop before any reachability outcome is collected and write a new pre-outcome amendment that freezes an exact deterministic subsample size, seed, stratification rule and inclusion list.
+
+The current report deliberately does not guess that future sample size. This removes the earlier discretion to choose a "large enough" subsample after observing the screen. If the phenotype-positive count is too small to justify the expensive stage, report a sizing failure and stop.
 
 ## Decision rule (fixed before any dispatch)
 
 Feed the resulting `{reachNodes, remainingLength}` per reconstructable row into `scripts/stress/h3-length-allocation-value-simulation.mjs`'s existing four-order simulation (ascending length, descending length, dataset order, random baseline; same per-row cap, same budget grid 2%-100%), unmodified:
 
-- **Ascending-length order clears >=50% of achievable rescues at <=20% of full-cap-for-all budget** (the original found 94% at 20%): confirms the allocation-value effect transfers across population. Proceed to the smallest production consumer (a bounded, matched-work pilot ordering near-miss completion-search candidates by ascending remaining length within a fixed shared budget), per standing rule ("positive premise -> smallest consumer").
-- **Ascending-length order still dominates random by a large margin (e.g. >=5x at low budget) but misses the 50%/20% bar**: the effect transfers directionally but is weaker on this population -- report the actual numbers, do not round up to "transfers," and treat the next step (consumer pilot vs. further characterization) as an open call for the workstream authority, not a foregone yes.
-- **Ascending-length order is statistically indistinguishable from random** (the population is simply too small to tell, or the effect genuinely does not recur): this closes the transfer question negative on this attempt. Given the population is disjoint but drawn by the *same* eligibility/regime-proportional procedure as the original, a negative result here would be a real, decision-relevant finding (population-specific, not technique-specific) and should feed back into whether H3's allocation-value claim is Card-E-specific before any further transfer attempt.
+- **Transfer-positive:** ascending-length order clears >=50% of all achievable rescues at one of the already-fixed budget points at or below 20% of full-cap-for-all budget. This confirms the allocation-value effect transfers across population. Proceed to the smallest production consumer (a bounded, matched-work pilot ordering near-miss completion-search candidates by ascending remaining length within a fixed shared budget), per standing rule ("positive premise -> smallest consumer").
+- **Directional-but-below-transfer-bar:** if the transfer-positive rule fails, inspect only the already-fixed 2% budget point. Classify directional evidence only when ascending length solves at least 2 rows **and** `ascendingLength >= 5 * randomMean` across the simulation's frozen 50 seeded random orders. Report the actual values and leave consumer-pilot vs. further characterization to the workstream authority; do not call this a transferred effect.
+- **No-prespecified-transfer-signal:** all remaining complete, valid outcomes close this population-transfer attempt negative. Do not substitute an undefined post-hoc significance test or search the other budget points for a friendlier ratio. A negative here is population-specific and should feed back into whether H3's allocation-value claim is Card-E-specific before any further transfer attempt.
+- **Blocked:** missing rows, protocol/instrument mismatch, or an incomplete reachability cohort blocks the decision rather than counting as negative.
 
 No outcome has been inspected before this precommitment; no dispatch has occurred as of this report.
 
@@ -47,4 +55,4 @@ No outcome has been inspected before this precommitment; no dispatch has occurre
 
 - Does not itself open a WS1 selector gate under any outcome above -- a positive transfer nominates the smallest production consumer pilot, it does not authorize production deployment of length-first ordering.
 - Does not vary the technique (`searchCompletionFromPartialPath` only) -- a technique-independent transfer is a separate, later question if this one is positive.
-- Does not commit to running the full 239-row remainder if the staged phenotype screen suggests a smaller draw would already be decisive; the exact draw size is fixed only after that screen's count, not its content, is known.
+- Does not authorize an adaptive reachability sample. The full phenotype-positive cohort is the default expensive-stage population; any smaller cohort requires a new pre-outcome amendment that freezes the exact deterministic sample before reachability outcomes are collected.
