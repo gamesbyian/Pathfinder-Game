@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { hashPopulation } from './solver-experiment-contract.mjs';
+import { hashResearchPopulation as hashPopulation } from './research-population-identity-lib.mjs';
 
 export function encodeScopedPopulationIdentity(scope, subjectId) {
   if (typeof scope !== 'string' || scope.length === 0) throw new Error('population identity scope must be a non-empty string');
