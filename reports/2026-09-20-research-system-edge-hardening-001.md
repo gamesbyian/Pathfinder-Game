@@ -139,7 +139,9 @@ The repair now:
 
 The first broad regex version of that guard intentionally over-reported because many scripts legitimately preserve `--` in their map keys. It was narrowed to tie the lookup to the same map whose constructor strips the prefix, and test fixtures are excluded from the production scan. Do not interpret the original broad hit list as a list of broken scripts.
 
-Historical impact was checked before claiming lost evidence. The classifier file entered the repository on 2026-09-09. The discoverable broad/residual confirmation dispatches are from 2026-08-26 and 2026-08-27, before that CLI existed. No already-paid-for broad/residual experiment is currently known to have lost its verdict because of this bug; this was a latent future failure.
+The same join-proof lens found a separate static-portfolio weakness. Its combiner used to prove only that every authored `cellId` appeared once. It did not prove that the row carrying that ID still described the authored corpus/level/arm/technique/work allocation. The combiner now rejects duplicate plan IDs and validates each result row against its authored plan cell before it contributes to coverage, work or gain/loss comparisons. A correct label with the wrong treatment payload is no longer enough.
+
+Historical impact was checked before claiming lost evidence. The classifier file entered the repository on 2026-09-09. There were 96 manual workflow dispatches from 2026-09-09 through 2026-09-20, and none were the broad- or residual-confirmation workflows; the discoverable confirmation dispatches are from 2026-08-26/27, before this CLI existed. No already-paid-for broad/residual experiment lost its verdict because of this bug; it was a latent future failure.
 
 ## H. Decision-bearing eligibility and durable evidence are revalidated
 
