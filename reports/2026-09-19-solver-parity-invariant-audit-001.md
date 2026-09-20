@@ -232,3 +232,95 @@ Current ordering by conceptual leverage, not yet by measured solve gain:
 5. **Repair parity residual** — plausible plateau signal; should be observer-first because repair is sensitive to score/badness changes.
 6. **Twist-aware false-goal tightening** — valid but peripheral to new solver solves.
 
+
+
+## Negative-space pass: inference seams outside the main gauntlet
+
+### Gate filter's all-infeasible fallback
+
+`getActiveGates` currently returns the original gate set when parity filtering finds zero feasible gates:
+
+`return feasible.length > 0 ? feasible : gateKeys`.
+
+On a portal-free / no-twist level, “zero parity-feasible gates” is itself a proof that the level has no exact-length solution from any gate. The fallback therefore preserves a set of attempts that are all known dead.
+
+This is probably low-cost today because `PRUNE_PARITY` kills their first counted moves, but it is still an example of exact knowledge being discarded at a layer boundary. Before changing it, verify callers' behavior for an empty active-gate set and decide whether the right contract is:
+- `getActiveGates -> []` plus a clean no-feasible-gate solve result, or
+- a separate solve-level unsatisfiable precheck that preserves `getActiveGates`'s historical non-empty contract.
+
+Do not conflate the small likely runtime gain with the conceptual value: an impossible whole level should ideally be represented as such rather than converted back into speculative search.
+
+### Complete/random hint enumeration deliberately bypasses most hard pruning
+
+`hint-enumeration.ts` uses the full shared hard-prune gauntlet only in `orderBy: 'admissible-slack'` mode. Its default random/complete mode keeps only simple exact-length/intersection ceilings plus scalar goal distance.
+
+That choice protects enumeration semantics from heuristic coupling, but sound parity is not heuristic. On portal-free/no-twist levels a cheap remaining-parity rejection could reduce the complete tree without changing completeness or which hints exist.
+
+This is not a production-solve opportunity, so it ranks below the main-search items, but it is another concrete place where the invariant currently stops at an API boundary.
+
+### Routing and attempt policy do not expose parity-phase features
+
+The routing/attempt policy uses broad level features (length, intersections, portals, coverage and mechanics). It does not appear to expose:
+- whether the chosen gate requires odd future twist phase;
+- number / placement / conditioned distance of twist portals;
+- whether the static relaxed route has only one feasible twist-parity class.
+
+That absence is not automatically a defect. The scorer already has portal-parity guidance, and adding a policy selector without response evidence would be hand-tuning. The audit result is therefore **measurement opportunity, not recommendation**: if phase-conditioned distances predict sharply different participation or winners among existing portal profiles, they become a legal current-input selector candidate.
+
+### Repair diagnostics already have the right seam for a parity residual
+
+Repair's frozen-signature diagnostics record signed length and intersection residuals plus structural masks. They currently omit a checkerboard/twist-phase residual.
+
+That makes observer-first work especially cheap: add a diagnostic-only field derived from
+
+`requiredFutureTwistParity = parity(pos) XOR parity(goal) XOR (remainingLength mod 2)`
+
+plus whether a phase-compatible relaxed route remains. If frozen near-miss plateaus concentrate disproportionately in phase-incompatible states, then parity deserves repair-specific treatment; if not, close the idea without perturbing repair scoring.
+
+## Audit disposition by type
+
+### Existing logic confirmed sound / appropriately scoped
+
+- exact endpoint parity on portal-free levels;
+- extension to same-parity-only portal levels;
+- conservative deferral on twist portal levels;
+- transient portal-cell caution in the old envelope;
+- gate filtering on production/static/legacy solver entry points when `prep` is available;
+- portal-pair identity retention in portal beam state work;
+- repair exact-state signature contains enough information to distinguish counted length / portal history;
+- exact solution acceptance needs no redundant parity check.
+
+### Concrete propagation gaps
+
+1. admissible-slack ranking omits parity deaths the subsequent gauntlet knows;
+2. portal guidance uses “any twist terminal touched” rather than current required phase;
+3. repair residual/badness surfaces do not expose parity phase;
+4. random/complete hint enumeration omits a cheap sound parity rejection;
+5. all-gates-parity-impossible is converted back to all gates rather than represented as whole-level impossibility.
+
+### New invariant machinery worth testing
+
+1. phase-conditioned two-layer 0-1 goal distance;
+2. checkerboard-split reachable-volume capacity;
+3. dynamic `(cell, twist phase)` connectivity as a stronger later descendant if static conditioned distance shows opportunity;
+4. phase-aware portal guidance based on current algebraic phase rather than visited-terminal proxy.
+
+### Ideas explicitly rejected or deferred by derivation
+
+- naive parity rounding of every objective/MST lower bound;
+- standalone turn parity;
+- standalone intersection-count parity;
+- treating flipping-filter used-count parity as checkerboard parity;
+- repeating the already-closed “some twist portal remains / all consumed” envelope experiment unchanged;
+- policy routing changes before a current-input phase feature predicts differentiated response.
+
+## Recommended empirical order
+
+1. **Shadow the two-layer conditioned distance** on existing search states. Count how often it proves a branch dead that scalar goal distance + current parity/envelope do not, split by solved/unsolved and portal family. This is the cheapest falsifier of the strongest new idea.
+2. **Shadow color-split connectivity volume** inside the existing reached-set pass, with no pruning. Count incremental proofs over total volume and where in the search tree they occur.
+3. If either has non-trivial opportunity, construct synthetic soundness witnesses and run known-solution prefix replay before any default-on prune A/B.
+4. In parallel, instrument admissible ordering for “parity-dead candidate ranked before a live candidate” frequency. This is a narrower economics question, not a correctness question.
+5. Add the repair phase residual only to existing debug/signature output and ask whether it explains plateaus before touching `computeBadness` or scoring.
+6. Only after conditioned-distance opportunity exists, replace the portal scorer's first-twist proxy with current-phase guidance and compare at matched work.
+
+This order tries to make one new representation — phase-conditioned distance — answer several audit questions before proliferating mechanisms.
