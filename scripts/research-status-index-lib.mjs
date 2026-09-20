@@ -270,8 +270,28 @@ export function buildResearchStatusIndex(root) {
                 authorityKind: 'opt-in-ledger',
             };
         });
-    return { schemaVersion: 3, scope: 'current-authority-and-top-level-evidence',
-        authorityOrder: ['workstreams', 'opt-in-ledger', 'structured-closeout-report', 'legacy-status-block-report', 'legacy-report'], queue, experiments,
+    const promotions = tableRows(ledgerSource, '## Recently promoted/default-ON mechanisms worth remembering')
+        .map(([mechanismRaw, decisionEvidenceRaw, disposition]) => {
+            const mechanisms = [...String(mechanismRaw ?? '').matchAll(/`([A-Z0-9_]+)`/gu)]
+                .map(match => match[1]);
+            if (!mechanisms.length) {
+                throw new Error(`${ledgerPath}: promoted/default-ON row has no mechanism identity: ${mechanismRaw}`);
+            }
+            const decisionEvidenceRef = decisionEvidenceRaw && decisionEvidenceRaw !== '—'
+                ? String(decisionEvidenceRaw).replaceAll('`', '').trim()
+                : null;
+            return {
+                promotionId: mechanisms.join('+'),
+                mechanisms,
+                status: 'promoted',
+                decisionEvidenceRef,
+                disposition,
+                authority: ledgerPath,
+                authorityKind: 'opt-in-ledger-promotion-history',
+            };
+        });
+    return { schemaVersion: 4, scope: 'current-authority-and-top-level-evidence',
+        authorityOrder: ['workstreams', 'opt-in-ledger', 'structured-closeout-report', 'legacy-status-block-report', 'legacy-report'], queue, experiments, promotions,
         evidence: topics, legacyEvidence };
 }
 
@@ -282,6 +302,9 @@ function compactEntry(kind, entry) {
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
         promotionState: entry.promotionState ?? null,
         decision: entry.disposition, evidence: entry.latestEvidenceOrGate, authority: entry.authority };
+    if (kind === 'promotion') return { kind, id: entry.promotionId, status: entry.status,
+        mechanisms: entry.mechanisms ?? [], decisionEvidenceRef: entry.decisionEvidenceRef ?? null,
+        decision: entry.disposition, authority: entry.authority };
     if (kind === 'legacy-evidence') return { kind, id: entry.topicId, date: entry.date, title: entry.title,
         headings: entry.headings, report: entry.report };
     return { kind, id: entry.topicId, status: entry.status, title: entry.title,
@@ -389,6 +412,7 @@ export function queryResearchStatusIndex(index, { query = '', status = '', kind 
     const entries = [
         ...index.queue.map(entry => compactEntry('queue', entry)),
         ...index.experiments.map(entry => compactEntry('experiment', entry)),
+        ...(index.promotions ?? []).map(entry => compactEntry('promotion', entry)),
         ...index.evidence.map(entry => compactEntry('evidence', entry)),
         ...(index.legacyEvidence ?? []).map(entry => compactEntry('legacy-evidence', entry)),
     ];
