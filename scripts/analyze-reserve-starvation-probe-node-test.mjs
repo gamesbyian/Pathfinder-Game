@@ -8,7 +8,12 @@ const root = process.cwd();
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'reserve-starvation-probe-'));
 try {
     const sample = path.join(temp, 'sample.json');
-    fs.writeFileSync(sample, JSON.stringify({ questionId: 'Q', ids: ['A', 'B', 'C'] }));
+    fs.writeFileSync(sample, JSON.stringify({
+        questionId: 'Q',
+        sourceBoundary: { residual: 10 },
+        selection: { eligibleCount: 9, sampleCount: 3 },
+        ids: ['A', 'B', 'C'],
+    }));
 
     const writeDoc = (name, records, protocolHash = 'p1') => {
         const file = path.join(temp, name);
