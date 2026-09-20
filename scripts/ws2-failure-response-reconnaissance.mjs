@@ -97,10 +97,8 @@ const resolution = buildResearchResolutionEnvelope({
   requiredAxes: contract.requiredObservabilityAxes,
   axes: {
     eligibility: {
-      status: identityComparable ? 'satisfied' : 'blocked',
-      reason: identityComparable
-        ? 'solver/protocol identities are known and comparable'
-        : 'solver/protocol identity is missing, mixed, or internally inconsistent',
+      status: 'not-required',
+      reason: 'population selection is owned by the prespecified producer/question contract; this reducer verifies coverage and fidelity rather than re-deriving target-population eligibility',
     },
     opportunity: {
       status: 'not-required',
@@ -117,6 +115,12 @@ const resolution = buildResearchResolutionEnvelope({
     measurementSupport: {
       status: 'satisfied',
       reason: 'the compact instrument is calibrated for reported fields; unreported or unsupported optional fields remain unknown and cannot support a route',
+    },
+    fidelity: {
+      status: identityComparable ? 'satisfied' : 'blocked',
+      reason: identityComparable
+        ? 'solver/protocol identities are known and comparable'
+        : 'solver/protocol identity is missing, mixed, or internally inconsistent',
     },
     coverage: {
       status: completeCoverage ? 'satisfied' : 'blocked',
