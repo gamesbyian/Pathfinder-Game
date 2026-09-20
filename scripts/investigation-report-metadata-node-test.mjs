@@ -18,7 +18,7 @@ for (const status of INVESTIGATION_REPORT_STATUSES) {
     remainingGate: 'none',
   });
   assert.match(block, new RegExp(`^> \\*\\*Status:\\*\\* ${status}$`, 'm'));
-  assert.match(block, /^> **Last evidence:** 2026-09-19 — fixture evidence$/m);
+  assert.match(block, /^> \*\*Last evidence:\*\* 2026-09-19 — fixture evidence$/m);
 }
 assert.throws(() => formatInvestigationReportStatusBlock({
   status: 'basically done',
