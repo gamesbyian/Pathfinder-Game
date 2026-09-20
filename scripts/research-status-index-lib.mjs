@@ -45,6 +45,23 @@ function tableRows(source, heading) {
     return rows.slice(1);
 }
 
+const EXPERIMENT_PROMOTION_STATES = Object.freeze([
+    'closed',
+    'open',
+    'no-current-gate',
+    'not-promotion-candidate',
+]);
+
+function experimentStatusFromPromotionState(value) {
+    switch (value) {
+        case 'closed': return 'rejected';
+        case 'open': return 'active';
+        case 'no-current-gate': return 'pending';
+        case 'not-promotion-candidate': return 'pending';
+        default: throw new Error(`unknown experiment promotion state: ${value}`);
+    }
+}
+
 const normalizedState = value => {
     const state = value.replace(/\*\*/g, '').toLowerCase();
     if (state.includes('superseded')) return 'superseded';
@@ -195,10 +212,21 @@ export function buildResearchStatusIndex(root) {
     const ledgerPath = 'docs/solver-opt-in-experiment-ledger.md';
     const ledgerSource = existsSync(path.join(root, ledgerPath)) ? readFileSync(path.join(root, ledgerPath), 'utf8') : '';
     const experiments = tableRows(ledgerSource, '## Current production-default-OFF flags')
-        .map(([flag, disposition, evidence]) => ({
-            experimentId: flag.replace(/`/g, ''), status: normalizedState(disposition), disposition,
-            latestEvidenceOrGate: evidence, authority: ledgerPath, authorityKind: 'opt-in-ledger',
-        }));
+        .map(([flag, promotionStateRaw, disposition]) => {
+            const promotionState = String(promotionStateRaw ?? '').replaceAll('`', '').trim();
+            if (!EXPERIMENT_PROMOTION_STATES.includes(promotionState)) {
+                throw new Error(`${ledgerPath}: unknown promotion state ${promotionState || '(missing)'} for ${flag}`);
+            }
+            return {
+                experimentId: flag.replace(/`/g, ''),
+                promotionState,
+                status: experimentStatusFromPromotionState(promotionState),
+                disposition,
+                latestEvidenceOrGate: disposition,
+                authority: ledgerPath,
+                authorityKind: 'opt-in-ledger',
+            };
+        });
     return { schemaVersion: 3, scope: 'current-authority-and-top-level-evidence',
         authorityOrder: ['workstreams', 'opt-in-ledger', 'structured-closeout-report', 'legacy-status-block-report', 'legacy-report'], queue, experiments,
         evidence: topics, legacyEvidence };
@@ -208,6 +236,7 @@ function compactEntry(kind, entry) {
     if (kind === 'queue') return { kind, id: entry.topicId, workstreamId: entry.workstreamId ?? null, status: entry.status,
         question: entry.question, questionRef: entry.questionRef ?? null, gate: entry.remainingGate, authority: entry.authority };
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
+        promotionState: entry.promotionState ?? null,
         decision: entry.disposition, evidence: entry.latestEvidenceOrGate, authority: entry.authority };
     if (kind === 'legacy-evidence') return { kind, id: entry.topicId, date: entry.date, title: entry.title,
         headings: entry.headings, report: entry.report };
