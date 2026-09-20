@@ -78,9 +78,7 @@ A tool's presence does not imply an active hypothesis or a production recommenda
 
 ## Remote execution
 
-GitHub Actions is execution infrastructure. Use [`.github/workflows/README.md`](../.github/workflows/README.md) for workflow-specific inputs/sharding/retrieval. A successful workflow run is not by itself research evidence; reports/manifests must state the protocol, population, code/data ref, work envelope, and evidence role.
-
-Prefer branch/PR execution. Merge experimental code to `main` only when the required workflow/data path genuinely cannot exercise the branch, and record why.
+GitHub Actions is execution infrastructure; workflow inputs/sharding live in [`.github/workflows/README.md`](../.github/workflows/README.md). A green run is not evidence by itself: retain protocol, population, code/data ref, work envelope, and evidence role. Prefer branch/PR execution.
 
 ## Adding or changing tooling
 
