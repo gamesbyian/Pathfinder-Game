@@ -118,6 +118,15 @@ function lifecycleCandidate(relative) {
     return /(?:-plan|-preflight|-handoff)\.md$/u.test(name);
 }
 
+function lifecycleDisposition(status) {
+    const text = String(status ?? '').trim().toLowerCase();
+    if (!text) return 'unknown';
+    if (/(?:complete|completed|concluded|superseded|historical|retired|cancelled)/u.test(text)) return 'concluded-or-historical';
+    if (/(?:blocked|conditional|await|waiting|deferred)/u.test(text)) return 'blocked-or-conditional';
+    if (/(?:active|implementation|in progress|proposed implementation plan|live)/u.test(text)) return 'active-execution';
+    return 'unknown';
+}
+
 function planLifecycle(root, currentReferences = currentDocumentationReferences(root)) {
     const currentReferencePaths = new Set(currentReferences.map(row => row.path));
     const files = [
@@ -129,8 +138,8 @@ function planLifecycle(root, currentReferences = currentDocumentationReferences(
         const source = readFileSync(path.join(root, relative), 'utf8');
         const status = /^> \*\*Status:\*\* (.+)$/mu.exec(source)?.[1]?.trim() ?? null;
         const implementationProgress = /^> \*\*Implementation progress[^:]*:\*\* (.+)$/mu.exec(source)?.[1]?.trim() ?? null;
-        const statusText = String(status ?? '').toLowerCase();
-        const appearsConcluded = /(?:complete|completed|concluded|superseded|historical|retired|cancelled)/u.test(statusText);
+        const disposition = lifecycleDisposition(status);
+        const appearsConcluded = disposition === 'concluded-or-historical';
         return {
             path: relative,
             kind: path.basename(relative).includes('-preflight') ? 'preflight'
@@ -139,6 +148,7 @@ function planLifecycle(root, currentReferences = currentDocumentationReferences(
             archived: relative.startsWith('docs/archive/'),
             currentReference: currentReferencePaths.has(relative),
             status,
+            lifecycleDisposition: disposition,
             implementationProgress,
             lifecycleBasis: status ? 'structured-status-line' : 'filename/path-only',
             fragileProse: !status,
@@ -244,6 +254,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const currentReferences = currentDocumentationReferences(root);
     const plans = planLifecycle(root, currentReferences);
     const fragilePlans = plans.filter(row => row.fragileProse);
+    const unknownLifecycle = plans.filter(row => row.lifecycleDisposition === 'unknown');
     const currentReferenceLifecycleMismatches = plans.filter(row => row.currentReferenceMismatch);
     const currentMarkdownReferences = currentReferences.filter(row => row.path.endsWith('.md') && existsSync(path.join(root, row.path)));
     const currentMarkdownBytes = currentMarkdownReferences.reduce((sum, row) =>
@@ -292,6 +303,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         diagnostics: {
             fragilePlanLifecycleCount: fragilePlans.length,
             fragilePlanLifecyclePaths: fragilePlans.map(row => row.path),
+            unknownLifecycleDispositionCount: unknownLifecycle.length,
+            unknownLifecycleDispositionPaths: unknownLifecycle.map(row => row.path),
             currentReferenceLifecycleMismatchCount: currentReferenceLifecycleMismatches.length,
             currentReferenceLifecycleMismatchPaths: currentReferenceLifecycleMismatches.map(row => row.path),
             currentAuthorityClaimOutsideIndexCount: currentAuthorityClaimOutsideIndex.length,
