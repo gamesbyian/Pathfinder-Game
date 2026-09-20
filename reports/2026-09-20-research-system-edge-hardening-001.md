@@ -1,0 +1,109 @@
+# Research-system edge hardening 001
+
+> **Status:** active
+> **Last evidence:** 2026-09-20 — PR #1930 branch hardening through the shared-v3 contract migration and workflow-boundary scans.
+> **Decision:** harden the concrete persistence, workflow-validation, experiment-contract, and recovery-lineage seams exposed by the last 24 hours; do not add broader research abstractions without a demonstrated second consumer.
+> **Remaining gate:** green branch CI, then after this workflow version exists on `main`, run one smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
+
+## Why this pass exists
+
+The recent consolidation is already a functioning research system. This pass therefore targets ordinary engineering seams capable of silently degrading otherwise-valid evidence rather than reopening the completed consolidation plan.
+
+The motivating failures were concrete:
+
+- a single-artifact download layout made a method-probe combine report zero tested rows even though the worker had solved its canary;
+- a hand-written method-probe experiment contract omitted `resolvedSha`, making historical runs non-decision-bearing;
+- a targeted-sweep persistence job downloaded evidence before `actions/checkout`, whose default cleaning removed the untracked staging directory;
+- the same persistence job's nominal four-attempt push loop could die on its second `git commit` after a failed first push because there was nothing new left to commit;
+- adding that persistence job grew the already-grandfathered targeted workflow above its frozen 52,324-byte no-growth ceiling, leaving recent fast validation red;
+- while fixing that, a backslash-escaped apostrophe inside a YAML single-quoted scalar produced a zero-job Actions parse failure.
+
+These are all mundane boundary failures. Each is capable of suppressing, misclassifying, or stranding research evidence without changing the underlying solver experiment.
+
+## A. Targeted-sweep persistence boundary
+
+The opt-in persistence job was extracted from `.github/workflows/solver-level-blind-targeted-sweep.yml` into the reusable `.github/workflows/persist-targeted-failure-response.yml`.
+
+Effects:
+
+- the targeted workflow is back below its existing no-growth ceiling;
+- checkout happens before artifact download;
+- the compact response and manifest remain the only durable outputs from this opt-in path;
+- the evidence commit is made once, while fetch/rebase/push is what retries;
+- the existing API-readable work summary now also prints solved and unsolved IDs, removing a redundant inline summary block.
+
+The old monolithic persistence path is known to work after the checkout-order fix: targeted run `35531721218` persisted its compact response and manifest to `main`. The new reusable-workflow handoff still needs one post-merge dispatch because this connector cannot initiate a fresh parameterized workflow run.
+
+## B. Workflow boundary guards
+
+`scripts/check-workflow-actions.mjs` now rejects:
+
+1. a job that downloads an Actions artifact before a later checkout in the same job;
+2. a backslash-escaped apostrophe inside a YAML single-quoted scalar, the exact typo that caused the branch's zero-job parse failure;
+3. direct workflow-local writes of `experiment-contract.json`;
+4. publication of an `experiment-contract.json` without a recognized contract owner in the workflow.
+
+The artifact-before-checkout scan found no second existing offender after the targeted persistence repair.
+
+A separate persistence scan found current durable-writing workflows use `git status --porcelain`, which includes untracked files. The remaining `git diff --exit-code` use checks a known tracked generated integrity index and does not have the historical “new sidecar is invisible” failure shape.
+
+The remaining direct directory-count staging case is technique census, whose execution shape is fixed at 120 shard artifacts. It does not share method-probe's one-artifact versus multi-artifact layout ambiguity, so no speculative common staging abstraction was added.
+
+## C. Shared v3 experiment-contract migration
+
+The method-probe incident motivated a full workflow audit for producers bypassing `scripts/write-solver-experiment-contract.mjs`.
+
+Six maintained workflows still directly constructed `experiment-contract.json`:
+
+- `solver-stress-refresh.yml`;
+- `static-portfolio-confirmation.yml`;
+- `technique-census.yml`;
+- `solver-production-replay-baseline.yml`;
+- `solver-highbudget-unsolved-sweep.yml`;
+- `solver-combine-sweep-runs.yml`.
+
+The first five now route ordinary acquisition contracts through the shared writer, which owns configuration hashing and immutable execution identity. Production replay explicitly records `reproducibilityExpected: false`. High-budget unsolved records `wallDeadlineBinding: true`: its own `budget_ms` is a real per-tier stopping condition even though the node ceiling is historically the usual backstop.
+
+There are now no maintained ordinary workflow producers writing experiment contracts directly.
+
+## D. Cross-run reconciliation lineage
+
+Cross-run reconciliation is intentionally not treated as a fresh acquisition contract. Its source validator already proves compatible source protocol and source execution identity, so that specialist owner now also constructs the reconciliation envelope.
+
+The old inline object had two current-contract defects:
+
+- `experiment.sourceRuns` held provenance objects rather than run-ID strings;
+- `reconciliationRun` lacked the typed recovery fields required by the current contract.
+
+The repaired form declares:
+
+- `kind: recombine-only`;
+- `preservesExperimentIdentity: true`;
+- `acquisitionRecomputed: false`;
+- exact source run IDs in both experiment and reconciliation lineage;
+- the source experiment's resolved SHA/configuration identity;
+- the reconciliation run's own run/attempt/SHA as provenance, without substituting that SHA for the source experiment identity.
+
+The constructor validates itself with the shared declared-contract rules before writing. Node tests pin these semantics.
+
+## E. What this pass deliberately did not promote
+
+The scans did not earn:
+
+- a universal artifact-staging framework;
+- a generic transition engine;
+- a new instrument-calibration schema;
+- a global evidence-freshness/invalidation engine;
+- a retrospective proposal-origin taxonomy.
+
+Those remain consumer/data-gated under the existing research-system rules. The observed bugs were narrower and had narrower repairs.
+
+## Validation boundary
+
+Current validation is split intentionally:
+
+- ordinary CI and the solver-evidence integrity guard exercise repository contracts, tests, lint/build, size ratchets, and the new static workflow guards;
+- GitHub accepting the targeted workflow after the YAML fix establishes that its workflow definition is parseable;
+- only a real targeted dispatch can establish runtime artifact visibility across the new reusable-workflow call.
+
+Do not describe that last runtime boundary as tested until the post-merge canary has actually committed the expected compact response and manifest.
