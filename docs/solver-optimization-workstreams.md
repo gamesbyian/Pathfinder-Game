@@ -60,7 +60,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane G — independent search-object nursery
 
-**G1 complete-path LNS:** Stage 1 positive; naive Stage 2 method-limited. **Real-frontier completion pilot run 2026-09-19: 0/45 referee-valid solves across two tiers (2M and 16M close-gap nodes), outcome shape identical across the 8x escalation.** Still budget-censored, not proven infeasible, but rules out modest dose as the fix and is direct evidence against cheap local repairability. Fair-full-candidate gate not met; no LNS earned. Next cheapest step is the same production-search-quality constructor already blocking Lane B/D, not a further blind dose escalation. [`falsifier result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md) · [`dose pilot result`](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
+**G1 complete-path LNS:** Stage 1 positive; naive Stage 2 method-limited. **Real-frontier completion pilot run 2026-09-19: 0/45 referee-valid solves across two tiers (2M and 16M close-gap nodes), outcome shape identical across the 8x escalation.** Still budget-censored, not proven infeasible, but rules out modest dose as the fix and is direct evidence against cheap local repairability. The old production-search-quality-constructor blocker is closed: real production frontiers can yield referee-verified exact-LIVE siblings under multi-pick sampling. The remaining gate is narrower: construct a fair full relaxed candidate from frozen real-search partials and show local repairability without answer leakage. Do not build another frontier constructor or blindly escalate completion dose. [`falsifier result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md) · [`constructor result`](../reports/2026-09-17-production-search-sibling-construction-result-001.md) · [`dose pilot result`](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
@@ -73,7 +73,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 Frozen-map mining is complete. P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed its pass condition: Lane A is at C1 after C0 mixed, D1's production ranking consumer is closed negative, and F3 has no decision-bearing compact consumer. Use the lane states above and the question registry for current descendants; dated reports own the experiment chronology. No shared signal bus, blackboard, decomposition engine, oracle campaign, or production treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** failure-response reconnaissance on compatible rows; reserve starvation is dispatch-ready; Class-3 remains exact-action-telemetry gated. First-loss/rejection/2x2 require explicit selection after reconnaissance. Deferred forms live in [`solver-future-work.md`](solver-future-work.md).
+**Current WS2 gate:** a frozen **53-parent shared compact-response acquisition** now serves failure-response reconnaissance Stage A and Class-3 exact-action dose together: 23 Class-3 residual parents + 30 solved controls, zero overlap, one production-shaped protocol. Reserve starvation is independently dispatch-ready. First-loss/rejection/2x2 still require explicit selection after reconnaissance; the shared acquisition does not preselect a treatment. [`freeze`](../reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md) · deferred forms live in [`solver-future-work.md`](solver-future-work.md).
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed. Do not restart the completed structural-response ladder. H3 remaining-length ordering is a one-population nomination only; one prespecified independent shared-budget transfer is required before a WS1 gate.
@@ -82,7 +82,7 @@ Frozen-map mining is complete. P201-P206 remain evidence/method premises only. T
 
 | ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|
-| 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Dispatch/analyze the frozen 53-parent shared compact-response acquisition for failure-response + Class-3 dose; then smallest justified discriminator | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
