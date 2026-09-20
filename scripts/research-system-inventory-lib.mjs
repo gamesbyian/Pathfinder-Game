@@ -270,6 +270,53 @@ function frontDoorInputs(model, plans) {
     return { liveQueue, deferredReopenQuestions, unfinishedLifecycle };
 }
 
+function inventoryFindings({
+    currentAuthorityClaimOutsideIndex,
+    currentReferenceLifecycleMismatches,
+    fragilePlans,
+    unknownLifecycle,
+    dependencies,
+    retiredWorkflows,
+}) {
+    return {
+        authority: currentAuthorityClaimOutsideIndex.map(row => ({
+            kind: 'current-authority-claim-outside-index',
+            path: row.path,
+            status: row.status,
+        })),
+        lifecycle: [
+            ...currentReferenceLifecycleMismatches.map(row => ({
+                kind: 'concluded-current-reference',
+                path: row.path,
+                status: row.status,
+            })),
+            ...retiredWorkflows.filter(row => row.presentOnDisk).map(row => ({
+                kind: 'retired-workflow-reappeared',
+                path: `.github/workflows/${row.workflow}`,
+                status: 'retired',
+            })),
+        ],
+        fragileProse: [
+            ...fragilePlans.map(row => ({
+                kind: 'missing-structured-status',
+                path: row.path,
+                detail: 'lifecycle falls back to filename/path inference',
+            })),
+            ...unknownLifecycle.filter(row => !row.fragileProse).map(row => ({
+                kind: 'unclassified-structured-status',
+                path: row.path,
+                detail: row.status,
+            })),
+        ],
+        sharedFailureModes: dependencies.slice(0, 25).map(row => ({
+            dependency: row.dependency,
+            consumerCount: row.consumerCount,
+            consumers: row.consumers,
+            contractFunctions: row.contractFunctions,
+        })),
+    };
+}
+
 function currentState(model) {
     const questions = model.relations.questions ?? [];
     const queue = model.relations.queue ?? [];
@@ -307,6 +354,14 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const dependencies = sharedDependencies(root, commands);
     const contractOwners = dependencies.filter(row => row.contractFunctions.length > 0);
     const integrationAudit = auditResearchIntegration(root, { model });
+    const findings = inventoryFindings({
+        currentAuthorityClaimOutsideIndex,
+        currentReferenceLifecycleMismatches,
+        fragilePlans,
+        unknownLifecycle,
+        dependencies,
+        retiredWorkflows,
+    });
     return {
         schemaVersion: 1,
         authority: {
@@ -316,6 +371,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         },
         currentState: currentState(model),
         frontDoorInputs: frontDoorInputs(model, plans),
+        findings,
         integrationHealth: {
             errorCount: integrationAudit.errorCount,
             warningCount: integrationAudit.warningCount,
@@ -357,6 +413,9 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             integrationErrorCount: integrationAudit.errorCount,
             integrationWarningCount: integrationAudit.warningCount,
             sharedContractOwnerCount: contractOwners.length,
+            authorityFindingCount: findings.authority.length,
+            lifecycleFindingCount: findings.lifecycle.length,
+            fragileProseFindingCount: findings.fragileProse.length,
             derivedRelationCount: relations.filter(row => row.authorityKind === 'derived/composed').length,
             structuredRelationCount: relations.filter(row => row.authorityKind === 'structured-source').length,
             maintainedWorkflowCount: workflows.filter(row => row.status === 'maintained').length,
@@ -399,6 +458,14 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             },
         };
     }
+    if (view === 'findings') {
+        return {
+            schemaVersion: inventory.schemaVersion,
+            authority: inventory.authority,
+            findings: inventory.findings,
+            integrationHealth: inventory.integrationHealth,
+        };
+    }
     if (view === 'brief-inputs') {
         return {
             schemaVersion: inventory.schemaVersion,
@@ -406,6 +473,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             currentState: inventory.currentState,
             frontDoorInputs: inventory.frontDoorInputs,
             integrationHealth: inventory.integrationHealth,
+            findings: inventory.findings,
             diagnostics: {
                 currentReferenceLifecycleMismatchCount: inventory.diagnostics.currentReferenceLifecycleMismatchCount,
                 integrationErrorCount: inventory.diagnostics.integrationErrorCount,
