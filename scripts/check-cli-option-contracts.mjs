@@ -15,17 +15,33 @@ function walk(root, out = []) {
 
 export function cliOptionContractIssues(source, file = '<source>') {
   // Common parser shape: argv token "--foo=bar" -> key "foo" via slice(2).
-  // Looking that key up later as "--foo" makes the CLI path unreachable even when library tests pass.
-  const stripsLongOptionPrefix = /\b[A-Za-z_$][\w$]*\.slice\(2(?:\)|,)/u.test(source);
-  const dashedMapLookup = /\b[A-Za-z_$][\w$]*\.(?:get|has)\(\s*['"]--[^'"]+['"]/u.test(source);
-  if (stripsLongOptionPrefix && dashedMapLookup) {
-    return [`${file}: strips the leading "--" from CLI keys but later performs a Map lookup using a "--..." key`];
+  // Tie the lookup to the same Map variable so unrelated dashed-key maps do not become false positives.
+  const issues = [];
+  const lookup = /\b([A-Za-z_$][\w$]*)\.(?:get|has)\(\s*['"]--[^'"]+['"]/gu;
+  for (const match of source.matchAll(lookup)) {
+    const mapName = match[1];
+    const before = source.slice(Math.max(0, match.index - 6000), match.index);
+    const constNeedle = `const ${mapName} = new Map(`;
+    const letNeedle = `let ${mapName} = new Map(`;
+    const assignment = Math.max(before.lastIndexOf(constNeedle), before.lastIndexOf(letNeedle));
+    if (assignment < 0) continue;
+    const constructorRegion = before.slice(assignment);
+    if (/\b[A-Za-z_$][\w$]*\.slice\(2(?:\)|,)/u.test(constructorRegion)) {
+      issues.push(`${file}: Map "${mapName}" strips the leading "--" from CLI keys but later looks up a "--..." key`);
+    }
   }
-  return [];
+  return [...new Set(issues)];
+}
+
+function isProductionScript(file) {
+  const name = path.basename(file);
+  return !/(?:-node-test|-unit-tests?|\.test)\.(?:mjs|js)$/u.test(name);
 }
 
 export function auditCliOptionContracts(root = 'scripts') {
-  return walk(root).flatMap(file => cliOptionContractIssues(fs.readFileSync(file, 'utf8'), file.replaceAll('\\', '/')));
+  return walk(root)
+    .filter(isProductionScript)
+    .flatMap(file => cliOptionContractIssues(fs.readFileSync(file, 'utf8'), file.replaceAll('\\', '/')));
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${path.resolve(process.argv[1])}`).href) {
