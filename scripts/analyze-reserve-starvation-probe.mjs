@@ -36,6 +36,10 @@ const document = validateFailureResponseDocument(JSON.parse(fs.readFileSync(inpu
 const sample = JSON.parse(fs.readFileSync(sampleFile, 'utf8'));
 const expectedIds = [...new Set(sample.ids ?? [])].map(String).sort();
 if (!expectedIds.length) throw new Error('frozen sample has no ids');
+const resolutionDesign = sample.resolutionDesign;
+if (!resolutionDesign || typeof resolutionDesign !== 'object' || Array.isArray(resolutionDesign)) {
+    throw new Error('frozen sample is missing resolutionDesign');
+}
 
 const recordsByParent = new Map();
 for (const row of document.records) {
@@ -128,12 +132,9 @@ const sourceBoundaryEligible = sample?.sourceBoundary?.residual > 0
     && sample?.selection?.eligibleCount >= expectedIds.length;
 const resolution = buildResearchResolutionEnvelope({
     questionId: sample.questionId ?? 'WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION',
-    liveRivals: [
-        'recurrent-within-total-budget-reserve-starvation',
-        'R00044-isolated-or-too-rare-for-repricing',
-    ],
-    discriminatingObservable: 'independent current-residual frequency of isolated default-profile solves above the 75M reserve and within the fixed 300M total-node envelope',
-    requiredAxes: ['eligibility', 'opportunity', 'participation', 'measurementSupport', 'coverage', 'censoring'],
+    liveRivals: resolutionDesign.liveRivals,
+    discriminatingObservable: resolutionDesign.discriminatingObservable,
+    requiredAxes: resolutionDesign.requiredAxes,
     axes: {
         eligibility: {
             status: protocolKnown && solverKnown ? 'satisfied' : 'blocked',
@@ -176,13 +177,8 @@ const resolution = buildResearchResolutionEnvelope({
                 : 'censored/unknown rows must be recovered before applying the 0/1/>=2 rule',
         },
     },
-    negativeInterpretationPolicy: 'zero opportunities is a negative recurrence screen only when the full required observability envelope is satisfied; it does not establish absence of admissible-order capability',
-    outcomeInterpretation: {
-        zero: 'close the first recurrence screen negative; do not spend reserve A/B compute from R00044 alone',
-        one: 'freeze one additional disjoint 40-parent sample',
-        twoOrMore: 'design the smallest matched-total-work reserve-fraction A/B',
-        blocked: 'recover the named observability deficit before applying the recurrence rule',
-    },
+    negativeInterpretationPolicy: resolutionDesign.negativeInterpretationPolicy,
+    outcomeInterpretation: resolutionDesign.outcomeInterpretation,
     source: {
         kind: 'reserve-starvation-probe',
         sample: sampleFile,
