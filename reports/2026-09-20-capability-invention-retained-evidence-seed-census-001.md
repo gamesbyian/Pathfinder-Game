@@ -1,11 +1,11 @@
 # Capability-invention retained-evidence seed census 001
 
-> **Status:** development seed census
-> **Date:** 2026-09-20
-> **Program:** [solver capability invention program](../docs/solver-capability-invention-program.md)
-> **Register:** `data/stress/capability-invention-demand.json`
-> **Decision:** retained evidence can already separate a large known-capability underdeployment cohort from genuinely unresolved demand. Do not interpret this selected seed as residual prevalence.
-> **Next discriminator:** fresh current-head isolated replay of the exact historical beam rescuers for R02196, R02206, and R02258 before any invention claim.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — retained current-residual evidence populated the first 26-row capability-demand seed.
+> **Decision:** The retained evidence can already distinguish HARVEST from unresolved acquisition demand, but the harvest-enriched seed is not residual prevalence evidence.
+> **Remaining gate:** Freshness-replay R02196/R02206/R02258, then expand first-loss demand sampling outside capability-selected Class 3.
+> **Research question:** `WS2-CAPABILITY-INVENTION-DEMAND`
+> **Evidence role:** development
 
 ## Question
 
