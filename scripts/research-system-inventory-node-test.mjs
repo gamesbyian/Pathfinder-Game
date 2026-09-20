@@ -90,7 +90,7 @@ assert.equal(inventory.diagnostics.closeoutParseErrorCount, inventory.documentat
 assert.ok(inventory.documentation.roles.some(row => row.path === 'docs/solver-optimization-workstreams.md' && row.role === 'canonical-current'));
 assert.ok(inventory.documentation.roles.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md' &&
-    row.role === 'active-execution-reference'));
+    row.role === 'retained-reference-or-evidence'));
 assert.equal(inventory.documentation.lifecycleCandidateCount, inventory.planLifecycle.length);
 assert.equal(
     inventory.documentation.currentLifecycleCandidateCount,
