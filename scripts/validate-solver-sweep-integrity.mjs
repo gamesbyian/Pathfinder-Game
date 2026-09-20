@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { buildPopulationIntegrity, hashPopulation } from './solver-experiment-contract.mjs';
+import { buildPopulationIntegrity, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
 
 function parseArgs(argv) {
   return new Map(argv.filter(arg => arg.startsWith('--')).map(arg => {
@@ -12,7 +12,7 @@ function parseArgs(argv) {
 }
 
 export function readExpectedIds(file) {
-  const ids = fs.readFileSync(file, 'utf8').split(/[\s,]+/).map(x => x.trim()).filter(Boolean);
+  const ids = parseIdentityLines(fs.readFileSync(file, 'utf8'));
   if (!ids.length) throw new Error('expected id list is empty');
   const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
   if (duplicates.length) throw new Error(`expected id list contains duplicates: ${[...new Set(duplicates)].join(', ')}`);
