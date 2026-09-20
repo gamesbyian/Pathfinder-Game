@@ -12,6 +12,8 @@ assert.ok(dossier.conceptualContext.measurementOpportunities.some(row => row.id 
 assert.ok(dossier.acquisition.route);
 assert.ok(Array.isArray(dossier.currentAuthorityMatches.queue));
 assert.equal(dossier.currentAuthorityMatches.queueMatchMode, 'stable-question-id');
+assert.equal(dossier.currentAuthorityMatches.evidenceApplicability.status, 'not-assessed');
+assert.match(dossier.currentAuthorityMatches.evidenceApplicability.note, /freshness.*protocol.*population.*admissibility/u);
 assert.equal(dossier.currentAuthorityMatches.experimentMatchMode, 'lexical-discovery-only');
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
 assert.ok(Array.isArray(dossier.answerRefs));
@@ -38,7 +40,7 @@ assert.equal(activeDossier.currentAuthorityMatches.evidenceDiscoveryMode, 'lexic
 const activeAnsweredBy = new Set(activeDossier.question.answeredBy ?? []);
 assert.ok(activeDossier.currentAuthorityMatches.evidence.every(row =>
     row.researchQuestion === activeQuestionId || activeAnsweredBy.has(row.latestEvidence?.report)),
-    'authoritative dossier evidence must come from stable question tags or authored answeredBy paths');
+    'question-linked dossier evidence must come from stable question tags or authored answeredBy paths');
 
 const run = spawnSync(process.execPath, [
     'scripts/research-question-dossier.mjs',
