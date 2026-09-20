@@ -725,8 +725,11 @@ jobs:
           work_allocation=$(( NODE_BUDGET * 134 / 100 ))
           work_ceiling=null; [ "$STRICT_TOTAL_WORK_BUDGET" = true ] && work_ceiling=$work_allocation
           wall_binding=true; [ "$DETERMINISTIC" = true ] && wall_binding=false
+          control_hash=null; treatment_hash=null
+          [ -f reports/stress/residual-confirmation-phase2-control.json ] && control_hash=$(node -p "JSON.stringify(require('./reports/stress/residual-confirmation-phase2-control.json').configurationHash)")
+          [ -f reports/stress/residual-confirmation-phase2-treatment.json ] && treatment_hash=$(node -p "JSON.stringify(require('./reports/stress/residual-confirmation-phase2-treatment.json').configurationHash)")
           cat > logs/solver-residual-confirmation/experiment-contract-spec.json <<SPEC
-          {"configuration": {"cohortId": "$COHORT_ID", "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS", "nodeBudget": $NODE_BUDGET, "budgetMs": $BUDGET_MS},
+          {"configuration": {"cohortId": "$COHORT_ID", "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS", "nodeBudget": $NODE_BUDGET, "budgetMs": $BUDGET_MS, "observedExecution": {"control": $control_hash, "treatment": $treatment_hash}},
           "workflowFamily": "residual-confirmation", "producer": "solver-residual-confirmation.yml", "entrypoint": "scripts/level-blind-capability-sweep.mjs",
           "population": {"kind": "sealed-residual-corpus", "identityBasis": "stable-level-id"},
           "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $DETERMINISTIC, "producerFamily": "residual-confirmation", "schedulerMode": "paired-control-treatment"},
