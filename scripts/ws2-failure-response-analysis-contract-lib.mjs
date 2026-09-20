@@ -63,6 +63,16 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   }
   if (contract.censoringPolicy !== 'indeterminate-not-negative') issues.push('censoringPolicy');
   if (contract.selectionPolicy !== 'prespecified-stage-a-then-stage-b-only-if-unresolved') issues.push('selectionPolicy');
+  if (contract.populationSelection !== 'first-eligible-post-instrumentation-population-no-outcome-based-population-selection') {
+    issues.push('populationSelection');
+  }
+  if (contract.primaryDiscriminator !== 'cheapest-next-ws2-instrument-route') issues.push('primaryDiscriminator');
+  if (contract.negativeResolution !== 'route-none-does-not-imply-no-mechanism-exists') issues.push('negativeResolution');
+  if (contract.reproducibility?.class !== 'deterministic-under-identical-immutable-inputs') {
+    issues.push('reproducibility.class');
+  }
+  if (contract.targetEnvelope?.developmentLaboratory !== 'current-ws2-residual') issues.push('targetEnvelope.developmentLaboratory');
+  if (contract.targetEnvelope?.broadDeploymentClaim !== false) issues.push('targetEnvelope.broadDeploymentClaim');
   if (!Array.isArray(contract.primaryQuantities) || contract.primaryQuantities.length === 0) issues.push('primaryQuantities');
   if (!contract.stopRule || typeof contract.stopRule !== 'string') issues.push('stopRule');
   return [...new Set(issues)];
