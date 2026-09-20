@@ -39,6 +39,12 @@ assert.equal(inventory.diagnostics.retiredWorkflowReappearanceCount,
 assert.equal(inventory.diagnostics.retiredWorkflowReappearanceCount, 0,
     'retired workflow ledger entries must not silently reappear on disk');
 assert.ok(inventory.commands.some(row => row.name === 'research:integration-audit'));
+assert.equal(inventory.diagnostics.workflowBackedResearchCommandCount,
+    inventory.commands.filter(row => row.workflowConsumerCount > 0).length);
+assert.equal(inventory.diagnostics.directResearchCommandCount,
+    inventory.commands.filter(row => row.workflowConsumerCount === 0).length);
+assert.ok(inventory.commands.some(row =>
+    row.workflowConsumerCount > 0 && row.workflowConsumers.length === row.workflowConsumerCount));
 assert.equal(
     inventory.commands.find(row => row.name === 'research:canary-search-loss')?.entrypoint,
     'scripts/search-loss-real-canary.mjs',
