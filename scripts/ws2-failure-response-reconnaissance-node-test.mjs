@@ -17,6 +17,18 @@ const contract = validateWs2FailureResponseAnalysisContract(
   JSON.parse(await import('node:fs').then(({ readFileSync }) => readFileSync(contractPath, 'utf8'))),
 );
 assert.match(ws2FailureResponseAnalysisContractIdentity(contract), /^sha256:[0-9a-f]{64}$/u);
+assert.ok(contract.liveRivals.length >= 2);
+assert.match(contract.independenceVector.taskFramingPrompt, /no prompt-level independence/u);
+assert.match(contract.independenceVector.authorityContextExposure, /no authority\/context-exposure independence/u);
+assert.match(contract.independenceVector.criticalLibraryCode, /no critical-code independence/u);
+assert.throws(() => validateWs2FailureResponseAnalysisContract({
+  ...contract,
+  independenceVector: {
+    ...contract.independenceVector,
+    framingContext: 'legacy collapsed axis',
+    taskFramingPrompt: undefined,
+  },
+}), /independenceVector\.taskFramingPrompt|independenceVector\.framingContext/);
 assert.throws(() => validateWs2FailureResponseAnalysisContract({ ...contract, independentUnit: 'attempt' }), /independentUnit/);
 
 const temp = mkdtempSync(path.join(tmpdir(), 'ws2-failure-response-analysis-'));
