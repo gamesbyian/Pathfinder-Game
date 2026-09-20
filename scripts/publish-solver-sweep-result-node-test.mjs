@@ -22,7 +22,17 @@ try {
     levels: [{ id: 'A', ok: true, status: 'success' }],
   }));
   fs.writeFileSync(integrity, JSON.stringify({ complete: true, coverageComplete: true, decisionValidComplete: true, expectedCount: 1, observedCount: 1, expectedIds: ['A'], duplicateIds: [], unexpectedIds: [], missingIds: [], outcomes: { solved: 1, exhaustedNegative: 0, nodeLimited: 0, workLimited: 0, deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 }, populationIdentityHash: `sha256:${'a'.repeat(64)}` }));
-  fs.writeFileSync(outcome, JSON.stringify({ schemaVersion: 1, outcome: 'completed-positive', reason: 'frozen gate passed' }));
+  fs.writeFileSync(outcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'frozen gate passed',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [contentHash(primary)],
+    },
+  }));
   fs.writeFileSync(contractFile, JSON.stringify({
     experiment: {
       workflowFamily: 'fixture-family', producer: 'fixture-producer', entrypoint: 'fixture.mjs',
@@ -81,6 +91,24 @@ try {
   assert.equal(manifest.failureEvidence.compactPresent, false);
   assert.equal(manifest.failureEvidence.summary, null);
   assert.equal(manifest.failureEvidence.richCapturePresent, false);
+
+  const unboundOutcome = path.join(temp, 'unbound-outcome.json');
+  fs.writeFileSync(unboundOutcome, JSON.stringify({
+    schemaVersion: 1, outcome: 'completed-positive', reason: 'unbound completed verdict',
+  }));
+  const unboundOut = path.join(temp, 'unbound-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${unboundOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${unboundOut}`,
+  ], { cwd: root });
+  const unboundManifest = JSON.parse(fs.readFileSync(path.join(unboundOut, 'manifest.json')));
+  assert.equal(unboundManifest.decisionBearing, false);
+  assert.ok(unboundManifest.decisionContractIssues.includes(
+    'completed researchOutcome sidecar without an identical primary verdict requires exact resultContentHashes binding'));
 
   const wrongPopulationIntegrity = path.join(temp, 'wrong-population-integrity.json');
   fs.writeFileSync(wrongPopulationIntegrity, JSON.stringify({
