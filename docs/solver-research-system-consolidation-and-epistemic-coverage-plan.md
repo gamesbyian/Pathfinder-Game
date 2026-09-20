@@ -1016,7 +1016,7 @@ Scientific interoperability should make disagreement legible, not erase it.
 
 The repository can retain rich history without requiring agents to treat it all as live.
 
-Classify documents into four roles.
+Classify documents into five cognitive roles. Implementation showed that a useful current execution plan/preflight is not necessarily a canonical authority; collapsing those concepts would make authority-count and retrieval-entropy diagnostics misleading.
 
 ### A. Small canonical current authorities
 
@@ -1040,7 +1040,18 @@ Each authority must have:
 - explicit information that belongs elsewhere;
 - a generated/detail source where appropriate.
 
-### B. Generated current-state views
+### B. Active execution references
+
+Current plans, preflights and handoffs may be routed prominently while work is genuinely active, but they do not thereby become canonical method/priority/product authorities.
+
+They should:
+
+- state their lifecycle explicitly;
+- point back to the authority that owns priority/policy;
+- stop presenting themselves as current once completed/superseded;
+- route surviving obligations outward before demotion/archive.
+
+### C. Generated current-state views
 
 Prefer generated views for volatile multi-system state, for example:
 
@@ -1055,11 +1066,11 @@ Prefer generated views for volatile multi-system state, for example:
 
 Generated views are not authorities.
 
-### C. Dated evidence reports
+### D. Dated evidence reports
 
 Retain them. Index/query them. Keep them out of ordinary context unless relevant.
 
-### D. Historical/archive material
+### E. Historical/archive material
 
 Completed plans, superseded authorities, old notebooks and handoffs should be frozen and excluded from normal "what is current?" retrieval.
 
