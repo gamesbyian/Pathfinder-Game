@@ -22,7 +22,8 @@
  *     None are deliberately left out or under-weighted relative to the others.
  *   - no imports from modules/solver/attempts.ts, policy.ts, routingRegime.ts, or any other
  *     solver-STRATEGY module, and no audit-history-fitted model. The only solver-adjacent
- *     import is normalizeRawLevel (pure wire-format normalization, required by the
+ *     import { validateResearchEvaluationEvidenceRole } from '../research-evaluation-evidence-role-lib.mjs';
+import is normalizeRawLevel (pure wire-format normalization, required by the
  *     referee) — the solver's SEARCH never runs during generation, same as before, but
  *     here nothing about the solver's decision-making is read at all, not even for
  *     labeling.
@@ -126,7 +127,7 @@ const BLOCK_ID = args.get('--block-id') || null;
 const ENVELOPE_CAPS = args.has('--envelope-caps');
 const ID_PREFIX = args.get('--id-prefix') || 'R';
 
-if (!['development', 'confirmation', 'transfer'].includes(EVIDENCE_ROLE)) throw new Error('--evidence-role must be development, confirmation, or transfer');
+validateResearchEvaluationEvidenceRole(EVIDENCE_ROLE, { path: '--evidence-role' });
 if (BLOCK_ID && !QUESTION_ID) throw new Error('--block-id requires --question-id');
 if (QUESTION_ID && APPEND) throw new Error('research-block generation is frozen; --append cannot be combined with --question-id');
 if (QUESTION_ID && !loadResearchQuestionRegistry(ROOT).questions.some(question => question.id === QUESTION_ID)) {
