@@ -11,7 +11,9 @@ assert.ok(inventory.currentState.queueEntries > 0, 'inventory must expose curren
 assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-question state');
 assert.ok(inventory.frontDoorInputs.liveQueue.some(row => String(row.workstreamId) === '2'));
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
-assert.ok(inventory.frontDoorInputs.unfinishedLifecycle.some(row => row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'));
+assert.equal(inventory.frontDoorInputs.unfinishedLifecycle.some(row =>
+    row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'), false,
+    'completed consolidation plan must not remain in unfinished front-door execution references');
 assert.ok(Array.isArray(inventory.frontDoorInputs.structuredCloseouts));
 const interoperabilityCloseout = inventory.frontDoorInputs.structuredCloseouts.find(row =>
     row.path === 'reports/2026-09-19-research-contract-interoperability-audit-001.md');
@@ -64,7 +66,9 @@ assert.equal(
 assert.ok(inventory.planLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md' &&
     row.archived === false &&
-    row.status?.includes('proposed implementation plan')));
+    row.currentReference === false &&
+    row.appearsConcluded === true &&
+    row.status?.includes('completed')));
 assert.ok(inventory.documentation.currentReferenceCount > 0, 'inventory must derive the docs current-reference index');
 assert.ok(inventory.documentation.currentMarkdownReferenceCount > 0);
 assert.ok(inventory.documentation.currentMarkdownBytes > 0);
