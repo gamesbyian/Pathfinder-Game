@@ -106,7 +106,9 @@ This pass now:
 - binds targeted, stress-refresh, production-replay, high-budget, broad-confirmation, residual-confirmation and routing-regime contracts to their combined observed execution identity;
 - corrects deterministic stress/replay envelopes so `reproducibilityExpected` and `wallDeadlineBinding` reflect the resolved deterministic mode.
 
-This closes the class of “the workflow form says X, but a newly added solver option changed what actually ran without changing protocol identity” for the maintained sweep families that expose effective execution configuration.
+This closes the class of “the workflow form says X, but a newly added solver option changed what actually ran without changing protocol identity” for the maintained sweep families that expose effective execution configuration. The standard publisher now also fails closed when a declared single-source `resolvedSha` disagrees with an independently recorded immutable commit in the primary result.
+
+A generic publisher-side configuration-hash equality check is intentionally not asserted yet: paired and multi-corpus contracts may legitimately hash a composite experiment while the primary result describes only one arm/component. That check needs an explicit single-result/composite ownership signal rather than workflow-name inference.
 
 ## F. Prospective gates must have a collection path
 
