@@ -228,7 +228,12 @@ function stableStringify(value) {
     const keys = Object.keys(value).filter(k => value[k] !== undefined).sort();
     return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
 }
-const effectiveConfig = { corpusSha256, levelBlind: true, ...solveOpts };
+const {
+    attemptBudgetTelemetry: _attemptBudgetTelemetry,
+    lifecycleTelemetry: _lifecycleTelemetry,
+    ...semanticSolveOpts
+} = solveOpts;
+const effectiveConfig = { corpusSha256, levelBlind: true, ...semanticSolveOpts };
 const effectiveConfigDigest = createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
 
 const rows = new Map();
@@ -254,6 +259,8 @@ function writeReport() {
         earlyRepairSearchAdaptiveBadnessGate: Number.isFinite(earlyRepairSearchAdaptiveBadnessGate) ? earlyRepairSearchAdaptiveBadnessGate : null,
         earlyRepairSearchAdaptiveMinScale: Number.isFinite(earlyRepairSearchAdaptiveMinScale) ? earlyRepairSearchAdaptiveMinScale : null,
         repairLateProbeNodeBudget: Number.isFinite(repairLateProbeNodeBudget) ? repairLateProbeNodeBudget : null,
+        repairLateProbeMultiSeedRetrySeedCount: Number.isInteger(repairLateProbeMultiSeedRetrySeedCount)
+            ? repairLateProbeMultiSeedRetrySeedCount : null,
         levelsRequested: targets.length, levelsRun: levels.length, solvedCount: solved,
         unsolvedCount: levels.length - solved, saveHints, hintChanges,
         artifactCompletedAt: new Date().toISOString(),
