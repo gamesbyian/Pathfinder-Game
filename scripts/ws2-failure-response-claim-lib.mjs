@@ -39,6 +39,7 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
       protocolHashes: analysis.scientificDisposition.protocolHashes,
       solverRefs: analysis.scientificDisposition.solverRefs,
       applicability: analysis.scientificDisposition.currentApplicability,
+      targetEnvelope: analysis.scientificDisposition.targetEnvelope,
     },
     instrument: analysis.scientificDisposition.instrument,
     observedResult: {
@@ -52,6 +53,7 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
     scientificDisposition: {
       status: 'supports-prespecified-routing-decision',
       inferenceScope: 'current residual parents under the recorded compatible solver/protocol boundary',
+      adaptiveLineage: analysis.scientificDisposition.adaptiveLineage,
       limitations: [
         'This is discriminator-selection evidence, not solver-efficacy evidence.',
         'Attempt/record counts are not independent prevalence units; parent is the analysis/dependence unit.',
