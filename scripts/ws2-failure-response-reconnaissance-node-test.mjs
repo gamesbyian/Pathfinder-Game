@@ -106,6 +106,16 @@ try {
     `--analysis=${routedAnalysisPath}`,
     `--out=${claimPath}`,
   ], { cwd: process.cwd(), encoding: 'utf8' });
+  const tamperedAnalysisPath = path.join(temp, 'tampered-analysis.json');
+  const tamperedAnalysis = { ...routedResult, decision: { ...routedResult.decision, route: 'first-loss' } };
+  writeFileSync(tamperedAnalysisPath, JSON.stringify(tamperedAnalysis));
+  const tamperedClaim = spawnSync(process.execPath, [
+    'scripts/ws2-failure-response-claim.mjs',
+    `--analysis=${tamperedAnalysisPath}`,
+    `--out=${path.join(temp, 'tampered-claim.json')}`,
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.notEqual(tamperedClaim.status, 0);
+  assert.match(`${tamperedClaim.stdout}${tamperedClaim.stderr}`, /valid analysisIdentity matching analysis content/u);
   assert.equal(claimRun.status, 0, claimRun.stderr);
   const claim = JSON.parse(await import('node:fs').then(({ readFileSync }) => readFileSync(claimPath, 'utf8')));
   assert.equal(claim.kind, 'pathfinder-ws2-failure-response-claim-capsule');
