@@ -21,6 +21,19 @@ assert.deepEqual(contract.population, { kind: 'explicit-ids', identityBasis: 'st
 assert.deepEqual(contract.execution, { levelBlind: true, historyAware: false });
 assert.deepEqual(contract.limits, { cumulativeNodeCeiling: 50_000_000 });
 assert.deepEqual(contract.sideEffects, { hints: 'none' });
+const observedConfigurationHash = `sha256:${'7'.repeat(64)}`;
+const observedContract = buildContract({
+  configuration: { baselineRef: 'b'.repeat(40), treatmentRef: 'c'.repeat(40), incompleteMirror: true },
+  configurationHash: observedConfigurationHash,
+  workflowFamily: 'observed-fixture', producer: 'fixture.yml', entrypoint: 'fixture.mjs',
+}, { resolvedSha });
+assert.equal(observedContract.experiment.configurationHash, observedConfigurationHash,
+  'an observed execution hash must override a weaker descriptive configuration mirror');
+assert.ok(observedContract.experiment.arms, 'descriptive configuration remains available for paired-arm inference');
+assert.throws(() => buildContract({
+  configurationHash: 'not-a-hash', workflowFamily: 'x', producer: 'y', entrypoint: 'z',
+}, { resolvedSha }), /configurationHash must be sha256/);
+
 const recoveryContract = buildContract({
   configuration: { corpus: 'fixture' },
   workflowFamily: 'fixture', producer: 'fixture.yml', entrypoint: 'fixture.mjs',
