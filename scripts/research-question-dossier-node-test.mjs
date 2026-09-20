@@ -14,6 +14,14 @@ assert.ok(Array.isArray(dossier.currentAuthorityMatches.queue));
 assert.equal(dossier.currentAuthorityMatches.queueMatchMode, 'stable-question-id');
 assert.equal(dossier.currentAuthorityMatches.experimentMatchMode, 'lexical-discovery-only');
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
+assert.ok(Array.isArray(dossier.answerRefs));
+assert.ok(Array.isArray(dossier.constraintRefs));
+assert.deepEqual(
+    new Set(dossier.evidenceRefs),
+    new Set([...dossier.answerRefs, ...dossier.constraintRefs]),
+    'legacy evidenceRefs should remain only the compatibility union of typed answer/constraint refs',
+);
+assert.equal(dossier.evidenceRefsRelation, 'compatibility-union-of-answer-and-constraint-refs');
 assert.ok(Array.isArray(dossier.resources.candidateAssets));
 assert.ok(Array.isArray(dossier.resources.candidateJoins));
 assert.equal(dossier.conceptualContext.premiseDiscoveryHints.authority, 'lexical-discovery-only');
