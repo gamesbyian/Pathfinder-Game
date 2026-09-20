@@ -2,8 +2,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { buildResearchRelations } from './research-relations-lib.mjs';
-import { buildResearchSystemInventory } from './research-system-inventory-lib.mjs';
-
 const REPORT_DATE = /(?:^|\/)(\d{4}-\d{2}-\d{2})-[^/]+\.md$/u;
 
 const unique = values => [...new Set(values.filter(Boolean))].sort();
@@ -78,7 +76,7 @@ function proposalProvenance(question) {
 }
 
 function negativeIntersection(questions) {
-  const negatives = questions.filter(question => String(question.state) === 'concluded-negative');
+  const negatives = questions.filter(question => /negative/u.test(String(question.state ?? '')));
   const dimensions = [
     ['premiseRef', question => question.premiseRefs ?? []],
     ['measurementOpportunity', question => question.measurementOpportunities ?? []],
@@ -103,23 +101,13 @@ function negativeIntersection(questions) {
   return intersections.sort((a, b) => b.count - a.count || a.dimension.localeCompare(b.dimension) || a.value.localeCompare(b.value));
 }
 
-function dependencySignals(inventory) {
-  return inventory.sharedImplementationDependencies
-    .slice(0, 25)
-    .map(row => ({
-      dependency: row.dependency,
-      consumerCount: row.consumerCount,
-      consumers: row.consumers,
-      contractFunctions: row.contractFunctions,
-    }));
-}
+
 
 export function buildResearchPortfolioRetrospective(root = process.cwd(), {
   startDate = '2026-09-12',
   endDate = '2026-09-19',
 } = {}) {
   const model = buildResearchRelations(root, { discoverArtifacts: true });
-  const inventory = buildResearchSystemInventory(root);
   const questions = model.relations.questions ?? [];
   const opportunities = model.relations.measurementOpportunities ?? [];
   const opportunityById = new Map(opportunities.map(row => [String(row.id), row]));
@@ -232,7 +220,10 @@ export function buildResearchPortfolioRetrospective(root = process.cwd(), {
     measurementOpportunityUse: moUse,
     capabilityGaps,
     negativeIntersections,
-    sharedImplementationDependencies: dependencySignals(inventory),
+    independenceContext: {
+      sharedImplementationDependencySource: 'research:system-inventory -- --view=architecture',
+      note: 'Interpret apparent corroboration against the architecture inventory shared-dependency view; this retrospective does not duplicate that dependency graph.',
+    },
     explorationTriggers,
     interpretationLimits: [
       'Question relations are the unit of this retrospective, not individual commits, agent sessions, or researcher-hours.',
