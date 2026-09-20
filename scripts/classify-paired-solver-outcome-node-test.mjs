@@ -8,7 +8,7 @@ import { classifyPairedSolverOutcome } from './classify-paired-solver-outcome.mj
 const row = (id, ok, workSpent) => ({ id, ok, workSpent });
 const gate = { minGains: 1, maxLosses: 0, maxWorkDeltaPct: null };
 const pairedIntegrity = ids => ({
-  populationIdentityHash: 'sha256:fixture',
+  populationIdentityHash: `sha256:${'c'.repeat(64)}`,
   expectedIds: ids,
   expectedCount: ids.length,
   observedCount: ids.length,
@@ -80,7 +80,7 @@ try {
   const cliOutcome = JSON.parse(fs.readFileSync(outcomeFile, 'utf8'));
   assert.equal(cliOutcome.outcome, 'completed-positive',
     'CLI must parse its --key=value arguments and write the scientific outcome');
-  assert.equal(cliOutcome.binding.populationIdentityHash, 'sha256:fixture');
+  assert.equal(cliOutcome.binding.populationIdentityHash, `sha256:${'c'.repeat(64)}`);
   assert.deepEqual(cliOutcome.binding.resultConfigurationHashes, [
     `sha256:${'a'.repeat(64)}`, `sha256:${'b'.repeat(64)}`,
   ]);
