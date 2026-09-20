@@ -187,9 +187,9 @@ export function crossConstructionStatus(a, b) {
   return left.distributionClass === right.distributionClass ? 'same-construction-family' : 'cross-construction';
 }
 
-export function assessGenerationMethodSupport(method, { requiredMechanics = [] } = {}) {
+export function assessGenerationMethodSupport(method, requirements = {}) {
   const descriptor = methodDescriptor(method);
-  return generationSupportForMechanics(descriptor.supportEnvelope ?? null, requiredMechanics);
+  return generationSupportForClaim(descriptor.supportEnvelope ?? null, requirements);
 }
 
 export function hybridGuidance() {
