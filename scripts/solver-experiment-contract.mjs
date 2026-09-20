@@ -165,6 +165,53 @@ export function declaredDecisionContractIssues(contract) {
   }).filter(issue => issue !== 'population.identityHash');
 }
 
+export function decisionBearingExperimentResultIssues(result) {
+  const issues = [];
+  if (result?.schemaVersion !== EXPERIMENT_SCHEMA_VERSION) issues.push('schemaVersion');
+  if (result?.kind !== EXPERIMENT_RESULT_KIND) issues.push('kind');
+  if (result?.status !== 'published') issues.push('status');
+
+  const emittedContractIssues = result?.decisionContractIssues;
+  if (!Array.isArray(emittedContractIssues)) issues.push('decisionContractIssues');
+  else if (emittedContractIssues.length > 0) issues.push('decisionContractIssues(non-empty)');
+
+  for (const issue of decisionContractIssues(result)) issues.push(`contract:${issue}`);
+
+  const integrity = result?.populationIntegrity ?? result?.coverage?.populationIntegrity ?? null;
+  if (!integrity || typeof integrity !== 'object') {
+    issues.push('populationIntegrity');
+  } else {
+    const decisionValid = integrity.decisionValidComplete === true
+      || (integrity.decisionValidComplete == null
+        && integrity.complete === true
+        && (integrity.outcomes?.deadlineTruncated ?? 0) === 0
+        && (integrity.outcomes?.harnessError ?? 0) === 0
+        && (integrity.outcomes?.malformed ?? 0) === 0
+        && (integrity.outcomes?.missing ?? 0) === 0
+        && (integrity.outcomes?.unknown ?? 0) === 0);
+    if (!decisionValid) issues.push('populationIntegrity.decisionValidComplete');
+    if (integrity.inferredExpectedPopulation === true) issues.push('populationIntegrity.inferredExpectedPopulation');
+  }
+
+  if (!['completed-positive', 'completed-negative'].includes(result?.researchOutcome?.outcome)) {
+    issues.push('researchOutcome.outcome');
+  }
+
+  const populationHash = result?.population?.identityHash ?? null;
+  if (result?.populationIdentityHash != null && result.populationIdentityHash !== populationHash) {
+    issues.push('populationIdentityHash(population-mismatch)');
+  }
+  if (integrity?.populationIdentityHash != null && integrity.populationIdentityHash !== populationHash) {
+    issues.push('populationIntegrity.populationIdentityHash(population-mismatch)');
+  }
+
+  return [...new Set(issues)];
+}
+
+export function isDecisionBearingExperimentResult(result) {
+  return decisionBearingExperimentResultIssues(result).length === 0;
+}
+
 export const rowIdentity = researchObservationIdentity;
 export const classifyRow = classifyResearchObservationOutcome;
 export const buildPopulationIntegrity = buildResearchPopulationIntegrity;
