@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 
 import {
   INVESTIGATION_REPORT_STATUSES,
+  RESEARCH_CLOSEOUT_SCHEMA,
+  createResearchCloseoutCapsule,
   formatInvestigationReportStatusBlock,
+  formatResearchCloseoutCapsule,
+  parseResearchCloseoutCapsule,
 } from './investigation-report-metadata.mjs';
 
 for (const status of INVESTIGATION_REPORT_STATUSES) {
@@ -25,7 +29,7 @@ assert.throws(() => formatInvestigationReportStatusBlock({
 }), /unknown report status/);
 assert.throws(() => formatInvestigationReportStatusBlock({
   status: 'active',
-  lastEvidenceDate: '2026/09/19',
+  lastEvidenceDate: '2026\/09\/19',
   lastEvidenceSummary: 'fixture',
   decision: 'fixture',
   remainingGate: 'none',
@@ -37,5 +41,38 @@ assert.throws(() => formatInvestigationReportStatusBlock({
   decision: 'fixture',
   remainingGate: 'none',
 }), /single line/);
+
+const closeoutInput = {
+  status: 'concluded-negative',
+  lastEvidenceDate: '2026-09-19',
+  decision: 'close the tested form',
+  remainingGate: 'none',
+  researchQuestion: 'WS2-FIXTURE',
+  premiseRefs: ['P032', 'P204'],
+  measurementOpportunity: 'MO-002',
+  evidenceRole: 'confirmation',
+};
+const closeout = createResearchCloseoutCapsule(closeoutInput);
+assert.equal(closeout.schema, RESEARCH_CLOSEOUT_SCHEMA);
+assert.deepEqual(closeout.joins, {
+  researchQuestion: 'WS2-FIXTURE',
+  premiseRefs: ['P032', 'P204'],
+  measurementOpportunity: 'MO-002',
+});
+const encodedCloseout = formatResearchCloseoutCapsule(closeoutInput);
+assert.match(encodedCloseout, /^<!-- research-closeout \{/u);
+assert.deepEqual(parseResearchCloseoutCapsule(`# Fixture\n\n${encodedCloseout}\n`), closeout);
+assert.equal(parseResearchCloseoutCapsule('# Fixture\n'), null);
+
+assert.throws(() => createResearchCloseoutCapsule({
+  ...closeoutInput,
+  premiseRefs: 'P032',
+}), /premiseRefs must be an array/);
+assert.throws(() => parseResearchCloseoutCapsule(
+  '<!-- research-closeout {"schema":"pathfinder.research-closeout/v0"} -->'
+), /unsupported research-closeout schema/);
+assert.throws(() => parseResearchCloseoutCapsule(
+  `${encodedCloseout}\n${encodedCloseout}`
+), /multiple research-closeout capsules/);
 
 console.log('investigation report metadata constructor tests passed');
