@@ -83,7 +83,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         return runStaticPortfolio(level, opts);
     }
     const levelStartTime = Date.now();
-    const prep = prepLevel(level);
+    const prep = prepLevel(level, { includeParityPhaseGoalDist: !!opts.parityPhaseDistanceObserver });
     // This solve's own isolated counter (see PrepLevel._workMeter) — always 0 for a fresh prep, but
     // read explicitly rather than hardcoded, matching every other workStart-style snapshot in this
     // file and staying correct regardless of prepLevel()'s own initialization details.
