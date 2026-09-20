@@ -118,7 +118,15 @@ A canonical attempt identity must not be rewritten as though its search-family t
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
 assert.equal(index.queue[0].questionRef, 'WS2-CURRENT');
-assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), ['FLAG_ONE']);
+assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), [
+    'FLAG_ONE', 'FLAG_TWO', 'FLAG_THREE', 'FLAG_FOUR',
+]);
+assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_ONE')?.promotionState, 'closed');
+assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_TWO')?.promotionState, 'open');
+assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_TWO')?.status, 'active');
+assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_THREE')?.promotionState, 'no-current-gate');
+assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_THREE')?.status, 'pending');
+assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_FOUR')?.promotionState, 'not-promotion-candidate');
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
 const taggedEvidence = index.evidence.find(row => row.topicId === 'example');
 assert.equal(taggedEvidence.metadataSource, 'structured-closeout');
@@ -165,6 +173,8 @@ assert.deepEqual(queryResearchStatusIndex(index, { kind: 'legacy-evidence' }).ma
     'reports/2026-01-02-decoy.md',
 ]);
 assert.deepEqual(queryResearchStatusIndex(index, { status: 'rejected' }).map(x => x.id), ['FLAG_ONE']);
+assert.deepEqual(queryResearchStatusIndex(index, { status: 'active', kind: 'experiment' }).map(x => x.id), ['FLAG_TWO'],
+    'explicit promotion state, not prose keywords, must determine experiment lifecycle status');
 const compact = compactResearchStatusIndex(index, { query: 'current question' });
 assert.equal(compact.count, 1);
 assert.equal(compact.entries[0].kind, 'queue');
