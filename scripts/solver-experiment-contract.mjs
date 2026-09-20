@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { researchSemanticHash } from './research-semantic-identity-lib.mjs';
 
 export const EXPERIMENT_SCHEMA_VERSION = 3;
 export const EXPERIMENT_RESULT_KIND = 'pathfinder-solver-experiment-result';
@@ -6,17 +6,7 @@ export const EXPERIMENT_RESULT_KIND = 'pathfinder-solver-experiment-result';
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 const COMMIT_SHA_RE = /^[0-9a-f]{40}$/iu;
 
-function stable(value) {
-  if (Array.isArray(value)) return value.map(stable);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])]));
-  }
-  return value;
-}
-
-export function stableHash(value) {
-  return `sha256:${createHash('sha256').update(JSON.stringify(stable(value))).digest('hex')}`;
-}
+export const stableHash = researchSemanticHash;
 
 export function isImmutableCommitSha(value) {
   return typeof value === 'string' && COMMIT_SHA_RE.test(value.trim());
