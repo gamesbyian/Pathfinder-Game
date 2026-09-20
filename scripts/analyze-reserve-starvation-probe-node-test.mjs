@@ -15,7 +15,7 @@ try {
         resolutionDesign: {
             liveRivals: ['reserve-starvation', 'too-rare'],
             discriminatingObservable: 'isolated find-cost recurrence inside the fixed total-node envelope',
-            requiredAxes: ['eligibility', 'opportunity', 'participation', 'measurementSupport', 'coverage', 'censoring'],
+            requiredAxes: ['eligibility', 'opportunity', 'participation', 'measurementSupport', 'fidelity', 'coverage', 'censoring'],
             negativeInterpretationPolicy: 'zero is negative only under the full required envelope',
             outcomeInterpretation: {
                 zero: 'close screen',
@@ -69,7 +69,7 @@ try {
     assert.equal(negative.resolution.kind, 'pathfinder-research-resolution-envelope');
     assert.equal(negative.resolution.resolutionStatus, 'resolution-ready');
     assert.deepEqual(negative.resolution.requiredAxes, [
-        'eligibility', 'opportunity', 'participation', 'measurementSupport', 'coverage', 'censoring',
+        'eligibility', 'opportunity', 'participation', 'measurementSupport', 'fidelity', 'coverage', 'censoring',
     ]);
     assert.equal(negative.resolution.axes.reach.status, 'not-required');
     assert.match(negative.resolution.negativeInterpretationPolicy, /negative recurrence screen/u);
@@ -122,7 +122,7 @@ try {
     assert.deepEqual(missingAction.population.abstentionIds, ['A']);
     assert.equal(missingAction.bucketCounts['abstain-action-unknown'], 1);
     assert.ok(missingAction.resolution.blockers.some(row => row.axis === 'participation'));
-    assert.deepEqual(missingAction.resolution.blockers.map(row => row.axis), ['participation']);
+    assert.deepEqual(missingAction.resolution.blockers.map(row => row.axis), ['fidelity']);
 
     const unknownSolverFile = path.join(temp, 'unknown-solver.json');
     fs.writeFileSync(unknownSolverFile, JSON.stringify({
@@ -144,6 +144,14 @@ try {
     const unknownSolver = analyze(unknownSolverFile);
     assert.equal(unknownSolver.decisionReady, false);
     assert.ok(unknownSolver.resolution.blockers.some(row => row.axis === 'eligibility'));
+
+    const zeroParticipation = analyze(writeDoc('zero-participation.json', [
+        row('A', 'exhaustedNegative', 0, { exhausted: true }),
+        row('B', 'nodeLimited', 300_000_000, { nodeCapped: true, nodeCeiling: 300_000_000 }),
+        row('C', 'exhaustedNegative', 55_000_000, { exhausted: true }),
+    ]));
+    assert.equal(zeroParticipation.decisionReady, false);
+    assert.deepEqual(zeroParticipation.resolution.blockers.map(row => row.axis), ['participation']);
 
     const noOpportunitySample = path.join(temp, 'sample-no-opportunity.json');
     const baseSample = JSON.parse(fs.readFileSync(sample, 'utf8'));
