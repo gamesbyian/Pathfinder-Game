@@ -132,10 +132,12 @@ export function buildQuestionDossier(root = process.cwd(), {
         question,
         questionRelations: questionRelations(question, model.relations.questions),
         currentAuthorityMatches: {
-            queue: model.relations.queue.filter(authorityMatch),
+            queue: model.relations.queue.filter(row => row.questionRef === questionId),
+            queueMatchMode: 'stable-question-id',
             evidence: evidenceMatches,
             evidenceMatchMode: exactTaggedEvidence.length ? 'stable-question-id' : 'lexical-fallback',
             experiments: model.relations.experiments.filter(authorityMatch),
+            experimentMatchMode: 'lexical-discovery-only',
         },
         evidenceRefs,
         populations: {
