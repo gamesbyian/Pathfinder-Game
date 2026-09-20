@@ -122,12 +122,26 @@ if (decisionReady) {
     else decision = 'design-smallest-matched-total-work-reserve-ab';
 }
 
-const exactActionKnown = rows.every(row => !['abstain-action-unknown', 'abstain-action-mismatch'].includes(row.bucket));
+const participationBlockers = rows
+    .filter(row => ['abstain-action-unknown', 'abstain-action-mismatch'].includes(row.bucket))
+    .map(row => row.parentId);
+const measurementSupportBlockers = rows
+    .filter(row => ['abstain-solved-without-nodes', 'abstain-unclassified'].includes(row.bucket))
+    .map(row => row.parentId);
+const censoringBlockers = rows
+    .filter(row => [
+        'abstain-deadline',
+        'abstain-error-or-unknown',
+        'abstain-unexpected-work-censor',
+        'abstain-node-censored-below-total',
+        'abstain-solve-over-total-envelope',
+        'abstain-referee-invalid',
+    ].includes(row.bucket))
+    .map(row => row.parentId);
 const coverageComplete = missingIds.length === 0
     && unexpectedIds.length === 0
     && duplicateParents.length === 0
     && rows.length === expectedIds.length;
-const censoringClear = abstentionIds.length === 0;
 const sourceBoundaryEligible = sample?.sourceBoundary?.residual > 0
     && sample?.selection?.eligibleCount >= expectedIds.length;
 const resolution = buildResearchResolutionEnvelope({
@@ -153,16 +167,16 @@ const resolution = buildResearchResolutionEnvelope({
             reason: 'the isolated method probe has no separate downstream stage-reach gate',
         },
         participation: {
-            status: exactActionKnown ? 'satisfied' : 'blocked',
-            reason: exactActionKnown
-                ? 'every interpretable row identifies the exact prespecified admissible-order action'
-                : 'one or more rows lack or mismatch the prespecified action identity',
+            status: participationBlockers.length === 0 ? 'satisfied' : 'blocked',
+            reason: participationBlockers.length === 0
+                ? 'every observed row identifies the exact prespecified admissible-order action'
+                : `missing/mismatched action identity on: ${participationBlockers.join(', ')}`,
         },
         measurementSupport: {
-            status: rows.every(row => row.decisionEligible) ? 'satisfied' : 'unknown',
-            reason: rows.every(row => row.decisionEligible)
-                ? 'node-cost/terminal observations support the prespecified 75M/300M classification'
-                : 'one or more rows do not support the prespecified cost classification',
+            status: measurementSupportBlockers.length === 0 ? 'satisfied' : 'blocked',
+            reason: measurementSupportBlockers.length === 0
+                ? 'reported node-cost/terminal fields support the prespecified 75M/300M classification when execution is uncensored'
+                : `unsupported cost classification on: ${measurementSupportBlockers.join(', ')}`,
         },
         coverage: {
             status: coverageComplete ? 'satisfied' : 'blocked',
@@ -171,10 +185,10 @@ const resolution = buildResearchResolutionEnvelope({
                 : 'missing, unexpected, or duplicate parents prevent complete recurrence sizing',
         },
         censoring: {
-            status: censoringClear ? 'satisfied' : 'blocked',
-            reason: censoringClear
-                ? 'no row is censored or otherwise abstaining'
-                : 'censored/unknown rows must be recovered before applying the 0/1/>=2 rule',
+            status: censoringBlockers.length === 0 ? 'satisfied' : 'blocked',
+            reason: censoringBlockers.length === 0
+                ? 'no row is deadline/work/node/error/referee censored for the recurrence interpretation'
+                : `censored/indeterminate execution on: ${censoringBlockers.join(', ')}`,
         },
     },
     negativeInterpretationPolicy: resolutionDesign.negativeInterpretationPolicy,
