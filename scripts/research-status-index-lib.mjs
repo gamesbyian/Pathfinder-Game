@@ -99,10 +99,20 @@ function reportMachineMetadata(source, reportPath) {
         const mismatches = [];
         if (legacy[2] !== closeout.status) mismatches.push('status');
         if (legacy[3] !== closeout.lastEvidenceDate) mismatches.push('lastEvidenceDate');
-        if (legacy[5] !== closeout.decision) mismatches.push('decision');
-        if (legacy[6] !== closeout.remainingGate) mismatches.push('remainingGate');
+        const proseQuestion = metadataScalar(source, 'Research question');
+        if (closeout.joins?.researchQuestion && proseQuestion && closeout.joins.researchQuestion !== proseQuestion) {
+            mismatches.push('researchQuestion');
+        }
+        const proseEvidenceRole = metadataScalar(source, 'Evidence role');
+        if (closeout.evidenceRole && proseEvidenceRole && closeout.evidenceRole !== proseEvidenceRole) {
+            mismatches.push('evidenceRole');
+        }
+        const prosePopulation = metadataScalar(source, 'Population identity');
+        if (closeout.scope?.populationIdentity && prosePopulation && closeout.scope.populationIdentity !== prosePopulation) {
+            mismatches.push('populationIdentity');
+        }
         if (mismatches.length) {
-            throw new Error(`${reportPath}: structured research closeout disagrees with status block: ${mismatches.join(', ')}`);
+            throw new Error(`${reportPath}: structured research closeout disagrees with canonical status metadata: ${mismatches.join(', ')}`);
         }
     }
 
