@@ -86,6 +86,8 @@ function documentationRoles(root, currentReferences) {
         let role;
         if (relative.startsWith('docs/archive/') || relative.startsWith('docs/history/')) {
             role = 'historical/archive';
+        } else if (currentPaths.has(relative) && lifecycleCandidate(relative)) {
+            role = 'active-execution-reference';
         } else if (currentPaths.has(relative)) {
             role = 'canonical-current';
         } else if (/^reports\/\d{4}-\d{2}-\d{2}-.+\.md$/u.test(relative)) {
