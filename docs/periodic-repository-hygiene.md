@@ -111,7 +111,7 @@ For each significant tool/family ask whether it is used, discoverable, duplicate
 
 Prefer: delete dead tools; retain one-off machinery only when provenance/reproduction value justifies it; consolidate overlap; remove obsolete wrappers after chasing consumers; keep machine discovery authoritative rather than rebuilding prose catalogues.
 
-Existence is not integration. A useful tool that is never wired into the workflow where its evidence matters may be effectively dead infrastructure; either integrate it at the smallest useful point or classify it honestly as on-demand.
+Existence is not integration. A useful tool that is never wired into the workflow where its evidence matters may be effectively dead infrastructure; either integrate it at the smallest useful point or classify it honestly as on-demand. For workflow-invoked CLIs, distinguish library coverage from executable-surface coverage: correctness-bearing argument/file/side-effect wiring needs at least one real CLI invocation in tests.
 
 Orphan detection is evidence, not truth. Deletion/demotion requires a consumer chase through aliases, workflows, tests, docs, generated artifacts, readers/writers, inventories, contract checkers, triggers, aggregators, fixtures, and agent discovery.
 
@@ -125,7 +125,7 @@ Treat historical names (`phase`, date, `legacy`, `one-off`, `closeout`, temporar
 
 Audit not only whether artifacts have consumers, but whether important consumers can **reach the evidence reliably**. If an agent needs evidence to diagnose, verify, or continue work, prefer a bounded proof-bearing projection in ordinary logs/job summaries with the full artifact retained for drill-down. Put this in shared publishing infrastructure when many workflows need it. Keep emitted summaries bounded so accessibility does not create a new size problem.
 
-When a research line closes, reverse-sweep candidate-specific workflows/tests against current dispositions. Default-OFF code retained for reproducibility does not automatically justify a lifetime dedicated workflow.
+When a research line closes, reverse-sweep candidate-specific workflows/tests against current dispositions. Default-OFF code retained for reproducibility does not automatically justify a lifetime dedicated workflow. Durable evidence keyed by run/attempt/experiment identity should be append-only or idempotent: rerun/reharvest must not silently overwrite different bytes under the same identity.
 
 ## 7. CI runtime and structural bloat
 
@@ -167,7 +167,7 @@ Compatibility code/docs need a reason and, where practical, a retirement conditi
 
 Ensure current solver/research work can cheaply discover and combine evidence before buying new compute. Account for reports, logs/manifests, hint provenance, descriptors, technique census/capability maps, variant/family data, lifecycle telemetry, exact/reference labels, known-solution profiles/prefixes, traces, benchmarks, corpus metadata, and scheduling/allocation evidence.
 
-Check that queues point to relevant evidence; structured registries remain authoritative over prose duplicates; join/provenance fields match producers/consumers; aliases/normalizers still cover frozen evidence; freshness/population boundaries remain accurate; and new evidence is discoverable.
+Check that queues point to relevant evidence; structured registries remain authoritative over prose duplicates; aliases/normalizers still cover frozen evidence; freshness/population boundaries remain accurate; and new evidence is discoverable. At every cross-artifact scientific join, make the consuming boundary prove that the exact result/integrity/contract/arm/source artifacts belong together; matching labels, filenames, counts or workflow order are not identity proof, and mixed strong/legacy identity should fail closed rather than downgrade silently.
 
 For append-only longitudinal summaries, keep the long-lived index compact: counts, hashes, protocol identity, and references where sufficient; retain item-level detail in referenced per-run/per-snapshot artifacts. Do not duplicate full detail into the timeline merely because it is available.
 
