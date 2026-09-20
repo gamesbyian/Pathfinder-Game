@@ -65,6 +65,10 @@ try {
   const result = JSON.parse(run.stdout);
   assert.equal(result.execution.status, 'completed');
   assert.equal(result.scientificDisposition.status, 'eligible-for-prespecified-routing');
+  assert.equal(result.scientificDisposition.unitTopology.analysisUnit, 'parent');
+  assert.equal(result.scientificDisposition.unitTopology.observationUnit, 'failure-response-record');
+  assert.equal(result.scientificDisposition.instrument.kind, 'pathfinder-compact-failure-response');
+  assert.equal(result.scientificDisposition.currentApplicability.basis, 'solver-and-protocol-relative');
   assert.equal(result.observation.summary.independentParents, 2);
   assert.equal(result.decision.status, 'pending-interpretation');
   assert.equal(result.decision.route, null);
