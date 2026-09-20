@@ -140,7 +140,7 @@ export function buildQuestionDossier(root = process.cwd(), {
             priorityOwner: 'docs/solver-optimization-workstreams.md',
             questionOwner: 'docs/solver-research-question-relations.json',
             evidenceOwner: 'dated reports/artifacts and their owning contracts',
-            note: 'This dossier joins existing authorities for discovery and planning; it does not change priority, question state, evidence role, or premise admission.',
+            note: 'This dossier joins existing authorities for discovery and planning; stable evidence links prove relationship identity, not current freshness/regime applicability, and do not change priority, question state, evidence role, or premise admission.',
         },
         question,
         questionRelations: questionRelations(question, model.relations.questions),
@@ -152,6 +152,10 @@ export function buildQuestionDossier(root = process.cwd(), {
                 ? 'stable-question-id+answeredBy-path'
                 : exactTaggedEvidence.length ? 'stable-question-id'
                     : answeredByEvidence.length ? 'answeredBy-path' : 'none',
+            evidenceApplicability: {
+                status: 'not-assessed',
+                note: 'Stable question/path linkage does not establish freshness, protocol compatibility, population support, or admissibility for a new claim. Consult the owning evidence/resource contract and claim-specific applicability rules.',
+            },
             evidenceDiscoveryHints: lexicalEvidenceHints,
             evidenceDiscoveryMode: 'lexical-discovery-only',
             experiments: model.relations.experiments.filter(authorityMatch),
