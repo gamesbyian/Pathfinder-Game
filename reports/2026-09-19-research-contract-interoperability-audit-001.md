@@ -5,6 +5,8 @@
 > **Decision:** normalize only the cross-system scientific meanings that already have multiple real consumers; keep family-run, compact failure-response, exact/reference and hint provenance payloads specialist.
 > **Remaining gate:** validate any proposed common-kernel field on a second real consumer before promoting it out of the WS2 vertical slice.
 
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-09-19","decision":"normalize only the cross-system scientific meanings that already have multiple real consumers; keep specialist payloads specialist","remainingGate":"validate any proposed common-kernel field on a second real consumer before promoting it out of the WS2 vertical slice","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic"} -->
+
 ## Purpose
 
 This audit closes the Bundle-B/Phase-6.1 question "does semantic interoperability require one envelope?" with a qualified **no**.
