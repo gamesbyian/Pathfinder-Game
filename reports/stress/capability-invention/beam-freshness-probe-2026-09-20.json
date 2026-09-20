@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-capability-invention-beam-freshness-probe",
+  "createdAt": "2026-09-20",
+  "source": {
+    "historicalTechniqueCensus": "reports/stress/technique-census/33717910218/combined-cells.json",
+    "expectations": "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
+    "sharedProductionResult": "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md"
+  },
+  "purpose": "Resolve whether three exposed-and-negative Class-3 beam rows still possess their historically demonstrated isolated capability on current head before any capability-invention claim.",
+  "cells": [
+    {
+      "cellId": "beam-freshness-mechanic-buckets",
+      "levels": ["R02196", "R02206"],
+      "action": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "historical": {
+        "R02196": {"isolatedNodesExpanded": 293389, "isolatedWinningGate": 327682},
+        "R02206": {"isolatedNodesExpanded": 257117, "isolatedWinningGate": 720900}
+      }
+    },
+    {
+      "cellId": "beam-freshness-plain",
+      "levels": ["R02258"],
+      "action": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "historical": {
+        "R02258": {"isolatedNodesExpanded": 578195, "isolatedWinningGate": 8}
+      }
+    }
+  ],
+  "execution": {
+    "workflow": ".github/workflows/method-probe-sweep.yml",
+    "corpus": "data/stress/stress-levels-random.json",
+    "nodeBudget": 1500000,
+    "budgetMs": 120000,
+    "workBudget": null,
+    "shardCount": 3,
+    "maxParallel": 3,
+    "workers": 1,
+    "rationale": "1.5M nodes is >2.5x the largest historical isolated solve cost and should allow these beam searches to exhaust naturally rather than turn a freshness check into a dose check."
+  },
+  "decisionRule": {
+    "allThreeFresh": "Current isolated capability survives. Keep rows unresolved and compare fresh isolated-success versus shared-production exhausted-negative execution to localize the earliest context-sensitive loss.",
+    "noneFresh": "Historical rescuer evidence is stale on current head. Reclassify these rows away from suppressed-current-capability; do not build a consumer around stale capability memory.",
+    "mixed": "Split the cohort by current capability freshness; do not transport one explanation across all three.",
+    "blocked": "If wall or node limits bind, raise only enough to obtain natural exhaustion/solve before interpreting freshness."
+  },
+  "productionAuthorization": "none"
+}

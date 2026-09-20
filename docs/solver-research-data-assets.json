@@ -1443,6 +1443,59 @@
         "Independent unit is parent level; within-parent capsules are repeated measures, and solved-run controls are required when the same pruning, culling, or repetition event can occur during successful search.",
         "Offline capsules/annotations are forensic evidence and may not steer production solving."
       ]
+    },
+    {
+      "id": "capability-invention-demand",
+      "name": "Capability-invention demand register",
+      "status": "current",
+      "grain": [
+        "parent-level",
+        "first-loss diagnosis",
+        "capability-demand"
+      ],
+      "locations": [
+        {
+          "kind": "tracked",
+          "path": "data/stress/capability-invention-demand.json"
+        }
+      ],
+      "authorities": [
+        "docs/solver-capability-invention-program.md",
+        "docs/solver-capability-invention-demand.schema.json",
+        "docs/solver-first-loss-causal-taxonomy.md",
+        "docs/solver-reasoning-capability-atlas.md"
+      ],
+      "queryEntryPoints": [
+        "npm run research:capability-demand",
+        "node scripts/research-asset-query.mjs --id=capability-invention-demand"
+      ],
+      "joinKeys": [
+        "subject.levelId",
+        "subject.parentId",
+        "firstLossClass",
+        "workClass",
+        "evidenceRefs"
+      ],
+      "evidenceRoles": [
+        "routing",
+        "premise-acquisition",
+        "forensic",
+        "portfolio"
+      ],
+      "relatedAssets": [
+        "compact-failure-response",
+        "technique-census",
+        "exact-reference-labels",
+        "production-benchmarks"
+      ],
+      "affordances": [
+        "Separate underdeployed existing capability from candidate missing semantic operations.",
+        "Turn first-loss evidence into the smallest earned capability probe without making the register a production routing input."
+      ],
+      "caveats": [
+        "Rows are selected evidence, not residual prevalence unless a sampling design explicitly establishes prevalence.",
+        "HARVEST/EXTENSION/INVENTION classification is research metadata and may not become exact-level cold runtime steering."
+      ]
     }
   ],
   "relationships": [

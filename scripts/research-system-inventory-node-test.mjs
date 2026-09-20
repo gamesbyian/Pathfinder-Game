@@ -12,11 +12,14 @@ assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-
 const ws2Live = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2');
 assert.ok(ws2Live);
 assert.equal(ws2Live.executionState, 'active');
-assert.equal(ws2Live.questionRef, 'WS2-FAILURE-RESPONSE-RECONNAISSANCE');
-assert.equal(ws2Live.questionState, 'deferred-reopen');
-assert.equal(ws2Live.questionExecutionRelation, 'reopen-trigger-gate',
-    'active execution may legitimately service the reopen trigger of a deferred scientific question');
-assert.match(ws2Live.questionReopensOn, /maintained producer emits/u);
+assert.equal(ws2Live.questionRef, 'WS2-REPAIR-DEADLINE-ALLOCATION');
+assert.equal(ws2Live.questionState, 'active-candidate');
+assert.equal(ws2Live.questionExecutionRelation, 'active-question');
+assert.equal(ws2Live.questionReopensOn, null);
+const inventionLive = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2I');
+assert.ok(inventionLive, 'capability-invention acquisition front must remain visible at the research front door');
+assert.equal(inventionLive.questionRef, 'WS2-CAPABILITY-INVENTION-DEMAND');
+assert.equal(inventionLive.questionExecutionRelation, 'active-question');
 assert.equal(inventory.findings.authority.some(row =>
     row.kind === 'active-workstream-references-terminal-question' && String(row.workstreamId) === '2'), false);
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
@@ -168,7 +171,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
 assert.match(brief, /^## Live queue$/m);
-assert.match(brief, /WS2-FAILURE-RESPONSE-RECONNAISSANCE[\s\S]*reopen-trigger-gate/u);
+assert.match(brief, /WS2-REPAIR-DEADLINE-ALLOCATION[\s\S]*active-question/u);
 assert.match(brief, /^## Recent structured closeouts$/m);
 assert.match(brief, /^## Unfinished execution references$/m);
 assert.match(brief, /acquisition: telemetry-or-economics|acquisition: fresh-independent-parents/u);

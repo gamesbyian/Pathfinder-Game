@@ -1,37 +1,34 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; the [operating model](solver-research-operating-model.md) owns method.
+Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method; [invention program](solver-capability-invention-program.md) owns capability-acquisition classification. Queue shrinkage does not reopen architecture.
 
 ## Deferred descendants of active premises
 
 | Descendant | Reopen / advancement condition |
 |---|---|
 | General solve-local proof store / blackboard | One concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot |
-| Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational work derives sound recurring current-instance conflicts with a cheaper backjump/rejection target |
-| Production bounded exact-query service | D1 found 0/120 production disagreements; reopen only under a materially different predicate, seam, or population |
+| Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
+| Production bounded exact-query service | D1's observation found 0/120 production disagreements (2026-09-18) -- closed for this predicate. Reopen only under a materially different predicate/seam/population |
 | Region/AND-OR decomposition engine | C0-C2 ladder closed representation-explosive at C2. Reopen only if a different frozen interface contract restores repeated outcome equivalence without near-unique/full-prefix state. [`result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md) |
 | Production topology-aware state relation | Fresh independent parents show a reliable compact descriptor with non-zero decision-bearing discordance; then seek a sound actionable consequence beyond raw phase |
 | Targeted local surgery / causal backjump operator | New independent evidence finds an actionable causal interface materially smaller than naive divergence/ordinary rollback; Lane E's tested form stays closed |
 | Dependency-conditioned repair neighborhood | **DEVELOPMENT POSITIVE.** R03147 nominates path-resource + relational-bound state; require independent-parent replication before any consumer. [`result`](../reports/2026-09-20-ws6-dependency-interface-observer-result-001.md) |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
-| Per-level search-plan compiler | Two distinct solver architectures show predictable current-input niches and a compiler can choose/compose them without historical identity |
+| Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
 
 ## Deferred plan closeouts
 
-- **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
-- **Failure evidence:** P3/P4A concluded from the shared 53-parent acquisition; P3 routes repair-family censoring to `allocation-specific-follow-up`, while P4B reserve starvation concluded positive independently. P7 still needs repeated compatible populations. [`Class-3 result`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [plan](solver-failure-evidence-research-integration-plan.md)
-- **Search loss:** P8 waits for recurring rich production; P9 waits for explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
+- **Parity:** [preflight](solver-parity-phase-capacity-preflight.md).
+- **Failure evidence:** Class-3 dose and reconnaissance are concluded; repair-deadline allocation is active, reserve repricing independently nominated, and P7 still needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
 ## Hint/failure reopen hooks
 
-- Compatible compact-response rows -> identity/novelty/frontier audits; never backfill pre-contract attempts.
-- Repeated compatible populations + ambiguity -> phenotype reducers; keep reason/basin recurrence separate.
-- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins; require a valid denominator, protocol, and dependence unit.
-- Recurring rich producer -> search-loss P8 decision.
-- Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
-- Whole-space extinction is not deferred; samples cannot prove it.
+- Use compatible compact-response evidence first; never backfill pre-contract attempts. Repeated compatible populations may earn phenotype reducers.
+- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins with valid denominator/protocol/dependence unit.
+- Recurring rich producer -> P8; explicit first-loss selection -> P9. Sampled hints cannot prove whole-space extinction.
 
 ## Deferred architectural questions
 
@@ -44,26 +41,24 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 | Cooperative multi-engine search | Two solver families expose complementary typed artifacts that the other cannot cheaply derive; start from one handoff rather than a framework |
 | Declarative mechanic automata | Repeated active descendants need a shared mechanic-state contract enough to justify migration-scale complexity |
 | Adversarial counterexample generation | A frozen semantic hypothesis can be attacked through solver-belief versus exact-reality disagreement without construction leakage |
-| Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules still require independent confirmation |
+| Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules remain nominations until independently confirmed |
 | Heuristic-to-theorem subdomain audit | An active microscope reveals a soft relation with a clearly identifiable exact subdomain worth a prune, lower bound, forced move, decomposition, or exact-mode switch |
 
 ## Conditional composition/allocation work
 
-Keep these dormant unless an active acquisition lane produces a changed premise.
+Dormant unless an active lane changes the premise.
 
 | Question | Reopen condition |
 |---|---|
-| Automatic selector/profile calibration | Remaining-length transfer is confirmed; a bounded matched-work production consumer pilot is nominated but needs its own precommitment and does not open a WS1 gate. [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md) |
+| Automatic selector/profile calibration | **Remaining-length transfer condition MET (2026-09-20).** [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md) nominates a bounded matched-work production consumer pilot; that pilot needs its own precommitment before dispatch and does not itself open a WS1 gate |
 | Cross-attempt basin overlap | A real handoff/allocation question exists; measure canonical action participation and solve-local rediscovery simultaneously |
 | Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates a concrete handoff value proposition |
-| Admissible-order retry repricing | Recurrence is met (2/40 independent parents). Design the smallest matched-total-work `admissibleOrderNodeReserveFractionOverride` A/B with fractions predeclared from the observed cost curve; do not fit them to confirmation outcomes. [`result`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) |
+| Admissible-order retry repricing | **Recurrence condition MET (2026-09-20): 2/40 independent parents.** [`result`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) nominates the smallest matched-total-work `admissibleOrderNodeReserveFractionOverride` A/B; candidate fractions must be predeclared from the observed cost curve, not fit to the confirmation outcomes, and the A/B itself is not yet designed or dispatched |
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
-| Independent transfer / human-editor-envelope niches | A broad claim needs independent construction/locked parents or a stable omitted geometry is independently nominated |
 | Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use a bounded work ladder, not standing sweeps |
 | Mechanism interaction | Reopen when one mechanism plausibly creates another's opportunities; test control/A/B/A+B at matched work, not broad flag matrices |
-| Latent response cluster | Reopen only for an unexplained ancestry/protocol-controlled covariance nomination; clustering alone is not capability evidence |
 
 ## Closed forms that stay closed
 
@@ -83,7 +78,7 @@ Do not reopen unchanged:
 - hazard/bandit/ML scheduling before a fixed-work marginal-value premise;
 - bulk variant generation without a frozen causal question.
 
-Closure is form-scoped: cross-level connectivity does not close solve-local rediscovery; positional repair does not close dependency-defined revision; H1 vocabulary does not close bounded per-instance feasibility.
+Closure is form-scoped: cross-level connectivity does not close solve-local rediscovery; detour gadgets do not close per-instance commutativity; blueprint implementations do not close future-intersection realizability; positional repair does not close dependency-defined revision; H1 vocabulary does not close bounded per-instance feasibility.
 
 ## Premise-map-derived research gates
 
@@ -93,6 +88,4 @@ Measurement opportunities are non-queue. Promote one only for a live ambiguity w
 
 ## Research hygiene
 
-Before reviving history, classify its disposition: **FORM-CLOSED, DESCRIPTOR-CLOSED, CROSS-LEVEL-CLOSED, PARTICIPATION-INVALID, DIRTY-REVERT, POPULATION-LIMITED, ECONOMICS-CLOSED, SEMANTIC-CLOSED, or OPEN-PER-INSTANCE**. Only `SEMANTIC-CLOSED` blocks a materially different form of the same question.
-
-Keep this file short. Active execution belongs in the workstream authority; measurements/chronology belong in dated reports; historical interpretation belongs in the archaeology register.
+Classify historical negatives with the stop taxonomy in [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md); only `SEMANTIC-CLOSED` blocks a materially different form. Active execution stays in workstreams and chronology in reports.
