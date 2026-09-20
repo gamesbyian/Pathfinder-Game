@@ -74,6 +74,7 @@ function classify(row) {
     const actionSupport = attemptActionSupport(row);
     if (actionSupport === 'unknown') return { bucket: 'abstain-action-unknown', decisionEligible: false };
     if (actionSupport === 'mismatch') return { bucket: 'abstain-action-mismatch', decisionEligible: false };
+    if (nodes != null && nodes <= 0) return { bucket: 'abstain-zero-participation', decisionEligible: false };
     if (row.outcome === 'workLimited' || row.workCapped === true) {
         return { bucket: 'abstain-unexpected-work-censor', decisionEligible: false };
     }
@@ -116,8 +117,11 @@ const baseDecisionReady = protocolKnown
 
 const opportunities = bucketCounts['reserve-starvation-opportunity'] ?? 0;
 
-const participationBlockers = rows
+const fidelityBlockers = rows
     .filter(row => ['abstain-action-unknown', 'abstain-action-mismatch'].includes(row.bucket))
+    .map(row => row.parentId);
+const participationBlockers = rows
+    .filter(row => row.bucket === 'abstain-zero-participation')
     .map(row => row.parentId);
 const measurementSupportBlockers = rows
     .filter(row => ['abstain-solved-without-nodes', 'abstain-unclassified'].includes(row.bucket))
@@ -163,14 +167,20 @@ const resolution = buildResearchResolutionEnvelope({
         participation: {
             status: participationBlockers.length === 0 ? 'satisfied' : 'blocked',
             reason: participationBlockers.length === 0
-                ? 'every observed row identifies the exact prespecified admissible-order action'
-                : `missing/mismatched action identity on: ${participationBlockers.join(', ')}`,
+                ? 'every interpretable isolated action performs nonzero node work'
+                : `zero-work execution on: ${participationBlockers.join(', ')}`,
         },
         measurementSupport: {
             status: measurementSupportBlockers.length === 0 ? 'satisfied' : 'blocked',
             reason: measurementSupportBlockers.length === 0
                 ? 'reported node-cost/terminal fields support the prespecified 75M/300M classification when execution is uncensored'
                 : `unsupported cost classification on: ${measurementSupportBlockers.join(', ')}`,
+        },
+        fidelity: {
+            status: fidelityBlockers.length === 0 ? 'satisfied' : 'blocked',
+            reason: fidelityBlockers.length === 0
+                ? 'every observed row identifies the exact prespecified admissible-order action/config'
+                : `missing/mismatched prespecified action identity on: ${fidelityBlockers.join(', ')}`,
         },
         coverage: {
             status: coverageComplete ? 'satisfied' : 'blocked',
