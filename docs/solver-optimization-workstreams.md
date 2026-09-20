@@ -88,15 +88,15 @@ No post-mining implementation, oracle campaign, shared signal subsystem, product
 
 ## Workstream state
 
-| ID | Workstream | State | Next gate | Stable question ref |
-|---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
-| 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
-| 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
-| 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
-| 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
-| 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence | — |
-| 5 | Exact/reference model | **ON DEMAND / BUSIER** | Truth/query service for microscopes | — |
+| ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
+|---:|---|---|---|---|---|
+| 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
+| 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | New reachability evidence / fresh profiling | — |
+| 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
+| 8 | Isolated capability | `subsumed` | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
+| 0/4 | Restart/randomization / beam retention | `closed` | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence | — |
+| 5 | Exact/reference model | `on-demand` | **ON DEMAND / BUSIER** | Truth/query service for microscopes | — |
 
 ## Standing research rules
 
