@@ -30,6 +30,10 @@ assert.deepEqual(combined.outcomes, { missing: 1, solved: 2, unknown: 1 });
 assert.deepEqual(combined.expectedIds, ['c1:a', 'c1:b', 'c2:a', 'c2:b']);
 assert.match(combined.populationIdentityHash, /^sha256:[0-9a-f]{64}$/);
 assert.equal(combined.identityCodec, 'json-tuple-v1');
+assert.deepEqual(combined.identityFields, {
+  canonical: 'canonicalExpectedIds/canonicalDuplicateIds/canonicalUnexpectedIds/canonicalMissingIds',
+  legacyDisplayOnly: 'expectedIds/duplicateIds/unexpectedIds/missingIds',
+});
 assert.deepEqual(combined.canonicalExpectedIds, [
   '["c1","a"]', '["c1","b"]', '["c2","a"]', '["c2","b"]',
 ]);
