@@ -9,6 +9,7 @@ import { formatInvestigationReportStatusBlock } from './investigation-report-met
 import { validateSweepIntegrity } from './validate-solver-sweep-integrity.mjs';
 import { validateResearchQuestionRegistry } from './research-question-relations-lib.mjs';
 import { buildResearchEnrichmentLink } from './research-enrichment-link-lib.mjs';
+import { createFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import {
     appendResearchConsumption,
     buildResearchBlock,
@@ -73,6 +74,32 @@ const support = summarizeIndependentSupport([
 assert.equal(support.rows, 4);
 assert.equal(support.independentUnits, 2);
 assert.equal(support.largestUnitRows, 3);
+
+// Solved controls preserve failed-attempt evidence instead of erasing the failed path to success.
+const solvedControlResponse = createFailureResponseDocument([
+    {
+        id: 'control-solved',
+        ok: true,
+        status: 'success',
+        attempts: [
+            { stageId: 'repair', status: 'exhausted', workSpent: 4 },
+            { stageId: 'main', status: 'success', workSpent: 6 },
+        ],
+    },
+    {
+        id: 'case-negative',
+        ok: false,
+        status: 'exhausted',
+        attempts: [{ stageId: 'main', status: 'exhausted', workSpent: 10 }],
+    },
+], {
+    populationIntegrity: buildPopulationIntegrity(['control-solved', 'case-negative'], [
+        { id: 'control-solved', ok: true, status: 'success' },
+        { id: 'case-negative', ok: false, status: 'exhausted' },
+    ]),
+});
+assert.equal(solvedControlResponse.summary.solvedParentsWithFailedAttempts, 1);
+assert.equal(solvedControlResponse.records.find(row => row.identity === 'control-solved')?.solvedWithFailedAttempt, true);
 
 // Selected/development evidence remains explicitly development after outcomes influence selection.
 const developmentBlock = buildResearchBlock({
