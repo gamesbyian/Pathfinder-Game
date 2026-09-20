@@ -98,12 +98,12 @@ assert.equal(inventory.documentation.structuredCloseoutCount,
 assert.equal(inventory.documentation.closeoutParseErrorCount,
     inventory.documentation.closeoutParseErrors.length);
 assert.equal(inventory.diagnostics.structuredCloseoutCount, inventory.documentation.structuredCloseoutCount);
-assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
-    row.path === 'reports/2026-09-19-research-authority-ownership-audit-001.md'),
-    'authority ownership audit should participate in structured closeout indexing');
+assert.ok(inventory.documentation.roles.some(row =>
+    row.path === 'reports/2026-09-19-research-authority-ownership-audit-001.md' && row.closeout),
+    'older structured closeouts must remain in the full documentation inventory even after aging out of the bounded front-door window');
 assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
     row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md'),
-    'distributed-knowledge audit should participate in structured closeout indexing');
+    'recent distributed-knowledge audit should participate in the bounded structured-closeout front door');
 assert.ok(Number.isInteger(inventory.documentation.legacyStatusBlockEvidenceCount));
 assert.equal(inventory.documentation.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
     'every current workstream row should carry explicit execution state');
