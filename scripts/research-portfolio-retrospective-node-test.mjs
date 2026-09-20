@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { buildResearchPortfolioRetrospective } from './research-portfolio-retrospective-lib.mjs';
 
@@ -31,6 +32,8 @@ assert.equal(result.independenceContext.sharedImplementationDependencySource,
 assert.ok(Array.isArray(result.explorationTriggers));
 assert.ok(result.interpretationLimits.some(limit => /do not measure effort or productivity/u.test(limit)));
 assert.ok(result.interpretationLimits.some(limit => /cannot prove that instruments caused the agenda/u.test(limit)));
+const frozen = JSON.parse(readFileSync('reports/2026-09-19-research-portfolio-retrospective-data-001.json', 'utf8'));
+assert.deepEqual(result, frozen, 'checked-in retrospective dataset must be reproducible from current authorities');
 
 const narrow = buildResearchPortfolioRetrospective(process.cwd(), {
   startDate: '2026-09-19',
