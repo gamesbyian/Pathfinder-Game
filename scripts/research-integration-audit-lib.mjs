@@ -24,6 +24,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     const questionRegistry = loadResearchQuestionRegistry(root);
     errors.push(...validateResearchQuestionRegistry(questionRegistry));
     const questionIds = new Set(questionRegistry.questions.map(question => question.id));
+    const questionById = new Map(questionRegistry.questions.map(question => [question.id, question]));
 
     const premiseMap = loadPremiseMap(root);
     const premiseIds = new Set(premiseMap.premises.map(row => row.premiseId));
@@ -76,6 +77,19 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     }
     if (!model.relations.queue.some(row => String(row.workstreamId) === '2')) {
         errors.push('research-status queue relation does not expose WS2 from current workstream authority');
+    }
+    for (const row of model.relations.queue) {
+        if (!row.questionRef) continue;
+        const question = questionById.get(row.questionRef);
+        if (!question) {
+            errors.push(`workstream ${row.workstreamId ?? row.topicId} references unknown research question ${row.questionRef}`);
+            continue;
+        }
+        const queueActive = String(row.status ?? row.state ?? '').toLowerCase().includes('active');
+        const questionState = String(question.state ?? '').toLowerCase();
+        if (queueActive && /^(?:closed|concluded|superseded|cancelled)/u.test(questionState)) {
+            errors.push(`active workstream ${row.workstreamId ?? row.topicId} references terminal research question ${row.questionRef} (${question.state})`);
+        }
     }
     for (const question of questionRegistry.questions.filter(row => String(row.state ?? '').startsWith('active'))) {
         if (!model.relations.queue.some(row => row.questionRef === question.id)) {
