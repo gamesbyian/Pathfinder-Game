@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { classifyPairedSolverOutcome } from './classify-paired-solver-outcome.mjs';
@@ -87,6 +88,10 @@ try {
     `sha256:${'a'.repeat(64)}`, `sha256:${'b'.repeat(64)}`,
   ]);
   assert.deepEqual(cliOutcome.binding.resultResolvedShas, ['1'.repeat(40), '2'.repeat(40)]);
+  const expectedContentHashes = [controlFile, treatmentFile]
+    .map(file => `sha256:${createHash('sha256').update(fs.readFileSync(file)).digest('hex')}`)
+    .sort();
+  assert.deepEqual(cliOutcome.binding.resultContentHashes, expectedContentHashes);
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
 }
