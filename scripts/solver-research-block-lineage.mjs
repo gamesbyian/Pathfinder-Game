@@ -1,4 +1,4 @@
-import { stableHash } from './solver-experiment-contract.mjs';
+import { researchSemanticHash as stableHash } from './research-semantic-identity-lib.mjs';
 
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 const EVIDENCE_ROLES = new Set(['development', 'confirmation', 'transfer']);
