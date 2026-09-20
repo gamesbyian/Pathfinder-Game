@@ -13,9 +13,9 @@ C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedur
 
 ## Portfolio posture
 
-Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. Classification, acquisition ladder, and demand-register rules: [capability invention program](solver-capability-invention-program.md). Register: `data/stress/capability-invention-demand.json` (`npm run research:capability-demand`).
+Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. Rules: [capability invention program](solver-capability-invention-program.md). Register: `data/stress/capability-invention-demand.json`.
 
-Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence because 23/26 are capability-selected Class 3. Beam UNKNOWNs have a frozen freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
+Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs have a frozen freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
 
 ### 1. Workstream 2: residual capability + premise acquisition
