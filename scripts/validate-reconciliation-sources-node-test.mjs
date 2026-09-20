@@ -71,6 +71,12 @@ assert.throws(() => validateReconciliationSources([{ runId: '1', manifest: {} }]
 const mismatchedConfiguration = clone(secondManifest);
 mismatchedConfiguration.experiment.configurationHash = `sha256:${'f'.repeat(64)}`;
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: mismatchedConfiguration }]), /configurationHash/);
+const mismatchedRevision = clone(secondManifest);
+mismatchedRevision.experiment.resolvedSha = 'c'.repeat(40);
+assert.throws(
+  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: mismatchedRevision }]),
+  /resolved SHA .* differs .* recombine-only result cannot claim one preserved experiment identity/u,
+);
 const mismatchedProtocol = clone(secondManifest);
 mismatchedProtocol.limits.cumulativeNodeCeiling = 101;
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: mismatchedProtocol }]), /limits.cumulativeNodeCeiling/);
