@@ -9,6 +9,7 @@ import {
   EXPERIMENT_SCHEMA_VERSION,
   decisionContractIssues,
   declaredDecisionContractIssues,
+  isImmutableCommitSha,
 } from './solver-experiment-contract.mjs';
 import { FAILURE_RESPONSE_SCHEMA_VERSION, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import { SEARCH_LOSS_CAPTURE_KIND } from './solver-search-loss-evidence-lib.mjs';
@@ -331,8 +332,19 @@ const contract = {
 const compactTelemetryIssue = contract.sideEffects.telemetry === 'compact' && !failureResponseComplete
   ? [`sideEffects.telemetry compact requires complete valid failure response${failureResponseError ? ` (${failureResponseError})` : ''}`]
   : [];
+const primaryResolvedSha = primaryDocument?.commitSha ?? primaryDocument?.summary?.commit ?? primaryDocument?.commit ?? null;
+const sourceIdentityIssue = declaredContract?.experiment?.resolvedSha
+    && isImmutableCommitSha(primaryResolvedSha)
+    && declaredContract.experiment.resolvedSha !== primaryResolvedSha
+  ? ['experiment.resolvedSha disagrees with primary result commit']
+  : [];
 const contractIssues = declaredContract
-  ? [...new Set([...declaredDecisionContractIssues(declaredContract), ...decisionContractIssues(contract), ...compactTelemetryIssue])]
+  ? [...new Set([
+      ...declaredDecisionContractIssues(declaredContract),
+      ...decisionContractIssues(contract),
+      ...compactTelemetryIssue,
+      ...sourceIdentityIssue,
+    ])]
   : ['missing declared experiment contract'];
 const contractDecisionEligible = contractIssues.length === 0;
 
