@@ -105,7 +105,6 @@ Frozen-map mining is complete; P201-P206 remain evidence/method premises only. T
 - Separate semantic premise from tested form before transporting a negative. Offline/exact evidence may nominate/falsify a production premise; it cannot license runtime behavior.
 - Match protocol identity, not nominal stage reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes may generate premises, never production exceptions.
 - Prefer the cheapest information-value test. Hold out independent units and scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not impossibility certificates or state equivalence.
-- Replication robustness strengthens premise provenance, not expected solve gain. Qualify raw graph/topology claims by representation history; reopen the fourth replication cell only for a concrete decision that cannot otherwise separate ontology artifact, mining-method artifact and robust concept.
 - Classify proposed solver work as **HARVEST / EXTENSION / INVENTION** before implementation; a new strategy flag or retry shell is not automatically a new capability.
 - No generic blackboard, production exact solver, CEGAR, LNS, decomposition engine or per-level compiler is earned by an open semantic gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
 
