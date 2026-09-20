@@ -689,7 +689,7 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE_BUDGET), corpus2NodeBudget: Number(process.env.C2_NODE_BUDGET), corpus1WorkBudget: Number(process.env.C1_WORK_BUDGET), corpus2WorkBudget: Number(process.env.C2_WORK_BUDGET), schedulerMode: 'production' };
-          fs.writeFileSync('logs/production-replay-baseline/experiment-contract-spec.json', `${JSON.stringify({
+          fs.writeFileSync('logs/production-replay-baseline/contract-spec.json', `${JSON.stringify({
             configuration,
             workflowFamily: 'history-aware-production-replay',
             producer: 'solver-production-replay-baseline.yml',
@@ -700,9 +700,7 @@ jobs:
             sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
-          node scripts/write-solver-experiment-contract.mjs \
-            --spec=logs/production-replay-baseline/experiment-contract-spec.json \
-            --out=logs/production-replay-baseline/experiment-contract.json
+          node scripts/write-solver-experiment-contract.mjs --spec=logs/production-replay-baseline/contract-spec.json --out=logs/production-replay-baseline/experiment-contract.json
           node scripts/sweep-publish.mjs --failure-in=p,i \
             --primary="reports/stress/typical-budget-corpus1.json" \
             --include="reports/stress/typical-budget-corpus2.json" \
