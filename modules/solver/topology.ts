@@ -1,9 +1,10 @@
 import { KEY_SPACE, popcount } from './encoding.js';
+import { keyParity } from '../domain/cell-key.js';
 import { getRealLengthFromState } from './solution.js';
 import { CONNECTIVITY_WORK_UNITS, workMeter } from './work-meter.js';
 import { stateSignature } from './nogood-cache.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { SolverSearchState, PrepLevel, ConnectivityRejectionSubtype, ConnectivityRejectionObserver, ConnectivityBoundarySketch, ConnectivityBoundaryBlockerReason } from './types.js';
+import type { SolverSearchState, PrepLevel, ConnectivityRejectionSubtype, ConnectivityRejectionObserver, ConnectivityBoundarySketch, ConnectivityBoundaryBlockerReason, ParityCapacityObserver } from './types.js';
 
 const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
@@ -406,6 +407,57 @@ function _reportConnectivityRejection(
     });
 }
 
+
+/** Lane H2 observer helper. Reads the reached set produced by the flood fill that just completed;
+ * it never performs another fill. The bounded grid scan is observer-only so production keeps the
+ * exact hot path it had before the parity audit. */
+function _reportParityCapacityShadow(
+    research: ParityCapacityObserver,
+    pos: number,
+    state: SolverSearchState,
+    level: NormalizedLevel,
+    prep: PrepLevel,
+    intNeeded: number,
+    freshVolume: number,
+    rSteps: number,
+): void {
+    const freshByParity: [number, number] = [0, 0];
+    const { w, h } = level.grid;
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const k = (y << 16) | x;
+            if (_reached(k) && state.visited[k] === 0) freshByParity[keyParity(k)]++;
+        }
+    }
+
+    const requiredArrivalsByParity: [number, number] = [0, 0];
+    const posParity = keyParity(pos);
+    const half = rSteps >>> 1;
+    requiredArrivalsByParity[posParity] = half;
+    requiredArrivalsByParity[posParity ^ 1] = half + (rSteps & 1);
+
+    // Deliberately over-generous: every remaining intersection is credited independently to BOTH
+    // colors. A real suffix cannot spend one intersection twice, so this can miss dead states but
+    // cannot create a false impossibility certificate.
+    const parityCapacityWouldReject =
+        freshByParity[0] + intNeeded < requiredArrivalsByParity[0] ||
+        freshByParity[1] + intNeeded < requiredArrivalsByParity[1];
+    const totalVolumeWouldReject = freshVolume + intNeeded < rSteps;
+
+    research.observe({
+        pos,
+        stateFingerprint: stateSignature(state),
+        remainingSteps: rSteps,
+        intNeeded,
+        freshByParity,
+        requiredArrivalsByParity,
+        totalVolumeWouldReject,
+        parityCapacityWouldReject,
+        incrementalParityReject: parityCapacityWouldReject && !totalVolumeWouldReject,
+        work: prep._workMeter.units,
+    });
+}
+
 // Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos,
 // and (for non-MC levels) that enough fresh cells exist to complete the path.
 // Flood fill traverses cells that are either unvisited, or (if intersections still needed)
@@ -519,6 +571,19 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // gate; it is not affected by this flag.
     if (!(level.portalMap.size > 0 && _cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false)) {
         const rSteps = level.requiredLength - getRealLengthFromState(state);
+
+        // Lane H2 research shadow: ordinary checkerboard arrival counts are fixed only when no
+        // opposite-parity ("twist") portal pair remains in the level-static model. Same-parity
+        // zero-cost portal jumps may add reachable fresh cells without spending counted length;
+        // including those cells here only makes the capacity estimate more generous, which is the
+        // safe direction. The observer runs after goal/objective reachability has passed, so an
+        // incremental record corresponds to the exact volume decision seam rather than a state an
+        // earlier connectivity reason already rejects.
+        const parityResearch = prep._parityCapacityObserver;
+        if (parityResearch && (prep.parityPortalDistMaps?.length ?? 0) === 0) {
+            _reportParityCapacityShadow(parityResearch, pos, state, level, prep, intNeeded, freshVolume, rSteps);
+        }
+
         if (freshVolume + intNeeded < rSteps) {
             if (research) _reportConnectivityRejection(research, 'volume', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted, rSteps);
             return false;
