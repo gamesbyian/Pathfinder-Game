@@ -6,7 +6,14 @@ import { spawnSync } from 'node:child_process';
 
 const root = new URL('..', import.meta.url);
 
-function runCase({ levels, workBudget = null, missing = false, missingExitCode = null, flat = false }) {
+function runCase({
+  levels,
+  workBudget = null,
+  missing = false,
+  missingExitCode = null,
+  flat = false,
+  expectedShards = 1,
+}) {
   const temp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-outcome-'));
   const staging = path.join(temp, 'staging');
   const shard = flat ? staging : path.join(staging, 'method-probe-shard-001');
@@ -28,6 +35,7 @@ function runCase({ levels, workBudget = null, missing = false, missingExitCode =
     `--out-dir=${out}`,
     `--outcome-out=${outcome}`,
     `--deterministic-work-mode=${workBudget != null}`,
+    `--expected-shards=${expectedShards}`,
   ], { cwd: root, encoding: 'utf8' });
   return { result, outcome: JSON.parse(readFileSync(outcome, 'utf8')) };
 }
@@ -68,5 +76,13 @@ assert.equal(run.outcome.outcome, 'timeout');
 run = runCase({ levels: [{ id: 'R00044', ok: true, nodesExpanded: 219802423 }], flat: true });
 assert.equal(run.result.status, 0, run.result.stderr);
 assert.equal(run.outcome.outcome, 'completed-positive');
+
+// An entire outer artifact can disappear before there is any worker log/result pair to inspect.
+// The authored shard count must therefore participate in combine-time completeness, rather than
+// relying only on later population-integrity publication to discover the missing levels.
+run = runCase({ levels: [{ id: 'L1', ok: false }], expectedShards: 2 });
+assert.equal(run.result.status, 2, run.result.stderr);
+assert.equal(run.outcome.outcome, 'harness-error');
+assert.match(run.outcome.reason, /outer shard artifact/u);
 
 console.log('combine method-probe shard outcome tests passed');
