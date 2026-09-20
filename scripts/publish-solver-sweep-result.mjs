@@ -239,10 +239,20 @@ function researchOutcomePrimaryConsistencyIssues(outcome, primary) {
   return [];
 }
 
-function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStats) {
+function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStats, primary) {
   const binding = outcome?.binding;
-  if (!binding) return [];
+  const completed = ['completed-positive', 'completed-negative'].includes(outcome?.outcome);
+  const embedded = primary?.researchOutcome;
+  const mirrorsPrimary = completed && embedded?.outcome === outcome.outcome && embedded?.reason === outcome.reason;
+  if (!binding) {
+    return completed && !mirrorsPrimary
+      ? ['completed researchOutcome sidecar without an identical primary verdict requires exact resultContentHashes binding']
+      : [];
+  }
   const issues = [];
+  if (completed && !mirrorsPrimary && !Array.isArray(binding.resultContentHashes)) {
+    issues.push('completed researchOutcome sidecar without an identical primary verdict requires exact resultContentHashes binding');
+  }
   if (binding.populationIdentityHash != null && binding.populationIdentityHash !== populationIdentity) {
     issues.push('researchOutcome.binding.populationIdentityHash disagrees with published population');
   }
@@ -446,7 +456,7 @@ if (declaredContract?.experiment?.resolvedSha) {
 }
 const populationBindingIssues = populationIntegrityBindingIssues(primaryDocument, populationIntegrity, stats);
 const outcomeBindingIssues = [
-  ...researchOutcomeBindingIssues(researchOutcome, populationIdentity, stats),
+  ...researchOutcomeBindingIssues(researchOutcome, populationIdentity, stats, primaryDocument),
   ...researchOutcomePrimaryConsistencyIssues(researchOutcome, primaryDocument),
 ];
 const contractIssues = declaredContract
