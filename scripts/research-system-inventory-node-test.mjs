@@ -103,7 +103,7 @@ assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
 assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
     row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md'),
     'distributed-knowledge audit should participate in structured closeout indexing');
-assert.ok(inventory.diagnostics.legacyStatusBlockEvidenceCount >= 0);
+assert.ok(Number.isInteger(inventory.documentation.legacyStatusBlockEvidenceCount));
 assert.equal(inventory.diagnostics.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
     'every current workstream row should carry explicit execution state');
 assert.equal(inventory.diagnostics.structuredExperimentPromotionStateCount, inventory.relations
