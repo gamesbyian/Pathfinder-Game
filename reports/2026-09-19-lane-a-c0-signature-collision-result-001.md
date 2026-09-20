@@ -1,11 +1,43 @@
 # Lane A: C0 signature-collision experiment result
 
 > **Status:** concluded-negative
-> **Last evidence:** 2026-09-19 — combined 581/581 (cut, prefix) CP-SAT reference labels from GHA run [35417717852](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35417717852) (all 20 shards succeeded; real solver compute), recombined without any re-execution as run [35420473468](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35420473468) and separately recombined/reconfirmed from the same frozen shard artifacts as run [35466554891](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35466554891) (identical summary both times), then analyzed with `scripts/stress/lane-a-c0-signature-collision-analysis.mjs` per this program's shared `summarizeSignatureCollisions` primitive.
-> **Decision:** **C0 is MIXED.** 2 of 144 cut-signature groups (R02525:196620,327686 and R02345:65540,196612,393218 -- two distinct independent-parent levels) each contain both `live` and `dead` decisive labels on prefixes crossing the identical geometric cut. Per this experiment's own precommitted decision rule, this is the expected outcome and does **not** license promoting C0 to any consumer. **Proceed to precommit C1** (boundary kinematics) as the separate follow-on pass specified in the preflight, reusing the same frozen 581-case population.
+> **Last evidence:** 2026-09-20 — contract-correction reduction adds the prespecified current side/region to C0, reusing the same 581/581 exact labels; original 2026-09-19 combine provenance: from GHA run [35417717852](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35417717852) (all 20 shards succeeded; real solver compute), recombined without any re-execution as run [35420473468](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35420473468) and separately recombined/reconfirmed from the same frozen shard artifacts as run [35466554891](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35466554891) (identical summary both times), then analyzed with `scripts/stress/lane-a-c0-signature-collision-analysis.mjs` per this program's shared `summarizeSignatureCollisions` primitive.
+> **Decision:** **C0 is MIXED under the intended contract (cut identity + current side/region).** The corrected reduction has 3 mixed groups / 10 rows on 3 independent parents (R02792, R02996, R03156), while retaining 487/546 decisive rows in repeated signatures across 94 parents. The original reducer accidentally omitted the prespecified side/region field and therefore tested a weaker cut-only projection; its two reported mixed groups are historical diagnostics, not the current C0 contract result. **Proceed to C1 boundary kinematics** on the same frozen population.
 > **Remaining gate:** precommit and dispatch the C1 contract (C0 + crossing-cell direction/heading continuity + portal-jump-boundary state) per `docs/solver-separator-dynamic-interface-contract-preflight.md`.
 > **Evidence role:** first exact-label pass against the frozen C0 signature-collision population; decisive falsifier for the C0 (interface-identity-only) contract layer. No new solver compute spent producing this report (only recombination of already-collected shard results).
 > **Population identity:** unchanged from `reports/2026-09-18-lane-a-c0-signature-collision-preflight-001.md`'s precommitment -- 144 cut-signature groups / 98 levels / 581 (cut, prefix) query pairs, `reports/stress/lane-a-c0-signature-collision-cases-2026-09-19.json`. No new frontier sampling in this pass.
+
+## 2026-09-20 C0 contract correction
+
+The master preflight defines C0 as **interface/cut identity + side/region**. The 2026-09-19 implementation grouped only by `levelId + sorted cutCells`, despite the C0 preflight also naming side. That was a contract-fidelity bug in the reduction, not a new scientific degree of freedom.
+
+The corrected reducer now joins each frozen case back to the geometry artifact and adds the frozen prefix endpoint's current interface region (`gate`, `remainder`, or `cut`) to the C0 signature.
+
+No exact label, case, parent, or solver result changed.
+
+Corrected C0 summary:
+
+| | |
+|---|---:|
+| Decisive rows | 546 |
+| Abstentions | 35 |
+| Distinct C0+side signatures | 212 |
+| Multi-member signatures | 153 |
+| Rows in multi-member signatures | 487 (89.2%) |
+| Independent parents with repeated signatures | 94 |
+| **Mixed signatures** | **3** |
+| Rows in mixed signatures | 10 |
+| Endpoint side counts | gate 307 / remainder 216 / cut 23 |
+
+Corrected mixed groups:
+
+- `R02792:655365,720902 + remainder`: 4 rows, 3 DEAD / 1 LIVE;
+- `R02996:262145,327681 + gate`: 4 rows, 3 DEAD / 1 LIVE;
+- `R03156:131077,393220,720896 + gate`: 2 rows, 1 LIVE / 1 DEAD.
+
+Thus the intended C0 contract is still decisively insufficient, now with **three** independent-parent counterexamples and very strong repeated-signature support. The Lane-A handoff to C1 is unchanged.
+
+The original R02525/R02345 mixed groups below belong to the weaker cut-only projection. They cease to be mixed once side/region is included and must not be cited as C0-contract counterexamples.
 
 ## Why this ran
 
