@@ -9,7 +9,15 @@ assert.equal(inventory.authority.kind, 'derived-read-only');
 assert.equal(inventory.authority.priorityAuthority, 'docs/solver-optimization-workstreams.md');
 assert.ok(inventory.currentState.queueEntries > 0, 'inventory must expose current workstream state');
 assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-question state');
-assert.ok(inventory.frontDoorInputs.liveQueue.some(row => String(row.workstreamId) === '2'));
+const ws2Live = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2');
+assert.ok(ws2Live);
+assert.equal(ws2Live.questionRef, 'WS2-FAILURE-RESPONSE-RECONNAISSANCE');
+assert.equal(ws2Live.questionState, 'deferred-reopen');
+assert.equal(ws2Live.questionExecutionRelation, 'reopen-trigger-gate',
+    'active execution may legitimately service the reopen trigger of a deferred scientific question');
+assert.match(ws2Live.questionReopensOn, /maintained producer emits/u);
+assert.equal(inventory.findings.authority.some(row =>
+    row.kind === 'active-workstream-references-terminal-question' && String(row.workstreamId) === '2'), false);
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
 assert.equal(inventory.frontDoorInputs.unfinishedLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'), false,
@@ -130,6 +138,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
 assert.match(brief, /^## Live queue$/m);
+assert.match(brief, /WS2-FAILURE-RESPONSE-RECONNAISSANCE[\s\S]*reopen-trigger-gate/u);
 assert.match(brief, /^## Recent structured closeouts$/m);
 assert.match(brief, /^## Unfinished execution references$/m);
 assert.match(brief, /Priority authority: `docs\/solver-optimization-workstreams\.md`/);
