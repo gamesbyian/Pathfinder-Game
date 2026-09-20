@@ -142,6 +142,69 @@ test('volume prune on a portal level evaluates by default (production default-ON
 // Research-only _connectivityRejectionObserver (2026-08-28, queue item #0's learned-failure Stage
 // A — see reports/2026-08-24-learned-failure-certificate-audit.md). Reuses each subtype's own
 // fixture above; the point of this test is the observer's own contract, not re-proving those prunes.
+test('_parityCapacityObserver finds an incremental checkerboard-capacity death without changing connectivity', () => {
+    // Cross-with-tail reachable region rooted at (2,2):
+    //
+    //     . A . .
+    //     B P C G
+    //     . . . .
+    //
+    // P and G are parity 0; A/B/C are parity 1. With four counted steps remaining, any ordinary
+    // suffix from P needs two arrivals of each parity. The existing scalar volume sees four fresh
+    // cells (+ P itself) and passes, but only one fresh parity-0 cell exists, so H2 can prove the
+    // branch dead. Goal parity is deliberately compatible with the exact-length endpoint invariant;
+    // this is not merely the existing PRUNE_PARITY rediscovered.
+    const level = makeLevel({
+        grid: { w: 4, h: 3 },
+        gates: [{ x: 2, y: 2 }],
+        goal: { x: 4, y: 2 },
+        reqLen: 4,
+        reqInt: 0,
+        blocks: [
+            { x: 1, y: 1 }, { x: 3, y: 1 }, { x: 4, y: 1 },
+            { x: 1, y: 3 }, { x: 2, y: 3 }, { x: 3, y: 3 }, { x: 4, y: 3 },
+        ],
+    });
+    const prep = prepLevel(level);
+    const state = stateAt(level, prep, [K(2, 2)]);
+    const records: any[] = [];
+    prep._parityCapacityObserver = { observe: (record: any) => records.push(record) };
+
+    assert.equal(isConnected(K(2, 2), state, level, prep), true,
+        'H2 is shadow-only: existing connectivity must still pass the scalar volume test');
+    prep._parityCapacityObserver = null;
+
+    assert.equal(records.length, 1);
+    assert.equal(records[0].totalVolumeWouldReject, false);
+    assert.equal(records[0].parityCapacityWouldReject, true);
+    assert.equal(records[0].incrementalParityReject, true);
+    assert.deepEqual(records[0].freshByParity, [1, 3]);
+    assert.deepEqual(records[0].requiredArrivalsByParity, [2, 2]);
+    assert.equal(records[0].remainingSteps, 4);
+    assert.equal(records[0].intNeeded, 0);
+    assert.equal(typeof records[0].stateFingerprint, 'string');
+    assert.equal(records[0].work, prep._workMeter.units);
+});
+
+test('_parityCapacityObserver abstains when a twist portal invalidates the fixed checkerboard schedule', () => {
+    const level = makeLevel({
+        grid: { w: 4, h: 2 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 4, y: 2 },
+        reqLen: 4,
+        portals: [{ x1: 2, y1: 1, x2: 2, y2: 2 }], // opposite checkerboard parity
+    });
+    const prep = prepLevel(level);
+    assert.ok((prep.parityPortalDistMaps?.length ?? 0) > 0, 'fixture must contain a twist pair');
+    const records: any[] = [];
+    prep._parityCapacityObserver = { observe: (record: any) => records.push(record) };
+
+    isConnected(K(1, 1), stateAt(level, prep, [K(1, 1)]), level, prep);
+    prep._parityCapacityObserver = null;
+
+    assert.deepEqual(records, [], 'fixed-color H2 must not speak on twist-bearing levels');
+});
+
 test('_connectivityRejectionObserver reports the correct subtype without changing isConnected\'s result', () => {
     function observeRejection(next: number, state: any, level: any, prep: any) {
         const records: any[] = [];
