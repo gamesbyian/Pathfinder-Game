@@ -136,6 +136,29 @@ The index now exposes:
 
 The legacy `authorities` field remains for compatibility, but new consumers have an explicit warning that the relation is navigational/discovery-only rather than scientific or execution authority.
 
+### 8. Promotion decision -> runtime default: minimal provenance edge earned
+
+The earlier authority audit deliberately deferred a generic production-realization object, but this relation recurred across many promoted mechanisms.
+
+The promoted/default-ON ledger now carries a primary `Decision evidence ref` column.
+
+The status index/research-relations model exposes each listed promotion as:
+
+- `promotionId`;
+- one or more runtime mechanism IDs;
+- optional primary decision-evidence report;
+- promoted disposition.
+
+Validation checks that:
+
+- each listed mechanism is a live feature key;
+- it is not still in `OPT_IN_FEATURES`;
+- any claimed decision-evidence report exists.
+
+Rows whose historical prose does not identify a defensible primary licensing report remain `—`. No report is inferred merely to make the graph complete.
+
+This is the smallest useful decision-to-realization provenance link. Runtime polarity and behavior remain owned by code/tests.
+
 ## Relationships deliberately left inferred or descriptive
 
 ### Experiment -> question
