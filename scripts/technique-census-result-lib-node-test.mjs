@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { dedupeTechniqueCensusResults, inferredVariantLabel, techniqueCensusIdentityKey } from './technique-census-result-lib.mjs';
+import {
+    dedupeTechniqueCensusResults,
+    inferredVariantLabel,
+    techniqueCensusIdentityKey,
+    validateTechniqueCensusPlanJoin,
+} from './technique-census-result-lib.mjs';
 
 test('dedupeTechniqueCensusResults treats top-level totalMs as timing noise', () => {
     const a = { cellId: 'T1-1', tier: 'T1', ok: true, status: 'success', nodesExpanded: 10, totalMs: 100 };
@@ -56,4 +61,57 @@ test('dedupeTechniqueCensusResults treats legacy and canonical attempt keys as o
     const { results, duplicatesRemoved } = dedupeTechniqueCensusResults([legacy, canonical]);
     assert.equal(duplicatesRemoved, 1);
     assert.deepEqual(results[0].techniqueKeys, ['dfs|score=default|bias=none']);
+});
+
+
+test('validateTechniqueCensusPlanJoin binds observed rows to authored cell payloads', () => {
+    const plan = { cells: [{
+        cellId: 'T1-0000001',
+        tier: 'T1',
+        corpus: 'corpus2',
+        levelPos: 7,
+        levelId: 'R00007',
+        variantLabel: 'dfs|score=default|bias=none',
+        techniqueKeys: ['dfs:default'],
+        nodeBudget: 1000,
+        ablation: null,
+    }] };
+    const row = {
+        cellId: 'T1-0000001',
+        tier: 'T1',
+        corpus: 'corpus2',
+        levelPos: 7,
+        levelId: 'R00007',
+        variantLabel: 'dfs|score=default|bias=none',
+        techniqueKeys: ['dfs|score=default|bias=none'],
+        nodeBudget: 1000,
+        ablation: null,
+        ok: false,
+        status: 'node-budget-reached',
+    };
+    const joined = validateTechniqueCensusPlanJoin(plan, [row], { requireComplete: true });
+    assert.deepEqual(joined.missing, []);
+    assert.deepEqual(joined.duplicated, []);
+
+    assert.throws(
+        () => validateTechniqueCensusPlanJoin(plan, [{ ...row, levelPos: 8 }], { requireComplete: true }),
+        /disagrees with authored plan on levelPos/u,
+    );
+    assert.throws(
+        () => validateTechniqueCensusPlanJoin(plan, [{ ...row, techniqueKeys: ['beam:objectiveFirst@beam2000'] }], { requireComplete: true }),
+        /disagrees with authored plan on techniqueKeys/u,
+    );
+    assert.throws(
+        () => validateTechniqueCensusPlanJoin({ cells: [plan.cells[0], plan.cells[0]] }, [row]),
+        /duplicate cellId in authored plan/u,
+    );
+    assert.throws(
+        () => validateTechniqueCensusPlanJoin(plan, [{ ...row, cellId: 'T1-9999999' }]),
+        /unexpected result cellId/u,
+    );
+    assert.deepEqual(
+        validateTechniqueCensusPlanJoin({ cells: [...plan.cells, { ...plan.cells[0], cellId: 'T1-0000002' }] }, [row]).missing,
+        ['T1-0000002'],
+        'partial analytical combines may validate observed rows while retaining explicit missing cells',
+    );
 });
