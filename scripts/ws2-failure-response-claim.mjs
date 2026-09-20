@@ -3,6 +3,11 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 
 import { buildWs2FailureResponseClaimCapsule } from './ws2-failure-response-claim-lib.mjs';
+import {
+  validateWs2FailureResponseAnalysisContract,
+  validateWs2FailureResponseAnalysisEnvelope,
+  ws2FailureResponseAnalysisContractIdentity,
+} from './ws2-failure-response-analysis-contract-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -12,6 +17,14 @@ if (!analysisPath || !outPath) throw new Error('--analysis=<file> and --out=<fil
 if (!existsSync(analysisPath)) throw new Error(`missing analysis file: ${analysisPath}`);
 
 const analysis = JSON.parse(readFileSync(analysisPath, 'utf8'));
+const contractPath = analysis?.analysisContract?.path;
+if (typeof contractPath !== 'string' || !contractPath || !existsSync(contractPath)) {
+  throw new Error('analysis references a missing frozen analysis contract');
+}
+const contract = validateWs2FailureResponseAnalysisContract(JSON.parse(readFileSync(contractPath, 'utf8')));
+validateWs2FailureResponseAnalysisEnvelope(analysis, {
+  contractIdentity: ws2FailureResponseAnalysisContractIdentity(contract),
+});
 const capsule = buildWs2FailureResponseClaimCapsule(analysis);
 writeFileSync(outPath, JSON.stringify(capsule, null, 2) + '\n');
 process.stdout.write(JSON.stringify({
