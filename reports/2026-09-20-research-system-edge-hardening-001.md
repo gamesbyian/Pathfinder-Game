@@ -86,7 +86,7 @@ The repaired form declares:
 
 A later hostile pass found two more lineage defects. The source validator required every source to *have* an immutable resolved SHA but did not require those SHAs to agree, so cross-revision sibling/gap-fill runs could falsely claim one preserved experiment identity. It also hashed the source "set" in caller/directory order, making identical source membership produce different provenance on different enumeration orders.
 
-Recombine-only validation now rejects cross-revision sources explicitly, canonicalizes source membership before hashing/lineage emission, rejects duplicate run IDs, and requires the source artifact's declared `experiment.resolvedSha` rather than falling back to top-level workflow `sha`. Population slices may differ; solver revision may not.
+Recombine-only validation now rejects cross-revision sources explicitly, canonicalizes source membership before hashing/lineage emission, rejects duplicate run IDs, and requires both execution identity fields from the declared experiment envelope rather than falling back to top-level workflow metadata. It also rejects a reconciliation artifact as a source: callers must supply leaf acquisition runs instead of nesting recombinations and silently dropping ancestry. Population slices may differ; solver revision may not.
 
 The constructor validates itself with the shared declared-contract rules before writing. Node tests pin these semantics.
 
