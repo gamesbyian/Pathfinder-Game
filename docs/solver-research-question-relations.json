@@ -484,17 +484,19 @@
       "id": "WS6-DEPENDENCY-CONDITIONED-REPAIR",
       "question": "When append-only repair cannot rescue a near miss, is the missing neighborhood better defined by a compact set of earlier coupled commitments than by rollback/path distance?",
       "owner": "WS6",
-      "state": "deferred-reopen",
+      "state": "active-candidate",
       "answeredBy": [],
-      "result": "Historical repair-retreat evidence made rollback locality regime-dependent, and an archived descent-aware shadow probe intended to identify the earlier coupled commitment was never executed. This preserves an observer question, not a new repair operator.",
+      "result": "Lane E remains closed in its tested rollback-distance form, but retained exact R03147 evidence now satisfies a narrower observer-scale reopen: the exact point of no return coincides with ordinary DEAD/LIVE divergence, so the live question is what future-relevant current-state commitment changes at that divergence. A zero-new-search observer is frozen on the retained matched pairs; no repair operator is earned.",
       "constrainedBy": [
-        "docs/solver-archaeology-register.md"
+        "docs/solver-archaeology-register.md",
+        "reports/2026-09-20-ws6-dependency-interface-observer-reopen-001.md"
       ],
       "constrains": [
-        "Reopen only after current evidence implicates an interior/early commitment that continuation cannot revise.",
-        "Trace changed turn/crossing/axis/portal/visit/obligation commitments before designing CP-LNS, adaptive destroy, or another repair neighborhood."
+        "Preserve Lane E's tested-form negative: do not rerun bisection merely to seek a later/smaller causal point.",
+        "Run the frozen retained-data observer first; only a coherent bounded semantic delta may justify a broader independent-parent study.",
+        "No CP-LNS, adaptive destroy, backjump, or new repair neighborhood before a dependency interface survives that observer ladder."
       ],
-      "reopensOn": "WS6 sees current exact-labelled or repair-retreat evidence that rescue requires revising an interior/early commitment outside the append-only neighborhood.",
+      "reopensOn": null,
       "aliases": [
         "dependency-conditioned repair",
         "repair neighborhood"
