@@ -59,6 +59,7 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
       status: 'supports-prespecified-routing-decision',
       inferenceScope: 'current residual parents under the recorded compatible solver/protocol boundary',
       adaptiveLineage: analysis.scientificDisposition.adaptiveLineage,
+      independenceVector: analysis.scientificDisposition.independenceVector,
       limitations: [
         'This is discriminator-selection evidence, not solver-efficacy evidence.',
         'Attempt/record counts are not independent prevalence units; parent is the analysis/dependence unit.',
