@@ -138,4 +138,25 @@ const frontier = auditFailurePhenotypesAtFrontier([noveltyDoc1, noveltyDoc2], 1,
 assert.equal(frontier.alreadyVisiblePhenotypes, 1);
 assert.equal(frontier.firstVisibleAtTargetPhenotypes, 1);
 
+const authoritative = createFailureResponseDocument([
+  {
+    id: 'AUTH',
+    ok: false,
+    status: 'exhausted',
+    protocolHash: 'row-protocol',
+    solverRef: 'row-solver',
+    commitSha: 'row-commit',
+  },
+], { protocolHash: 'document-protocol', solverRef: null });
+assert.equal(authoritative.records[0].protocolHash, 'document-protocol');
+assert.equal(authoritative.records[0].solverRef, null,
+  'an authoritative document identity must not let a row refill the missing solver half from legacy metadata');
+
+const contextual = createFailureResponseDocument([
+  { id: 'CTX', ok: false, status: 'exhausted', protocolHash: 'row-protocol', solverRef: 'row-solver' },
+]);
+assert.equal(contextual.records[0].protocolHash, 'row-protocol');
+assert.equal(contextual.records[0].solverRef, 'row-solver',
+  'without document identity, native row provenance remains available as contextual evidence');
+
 console.log('solver failure response lib tests passed');
