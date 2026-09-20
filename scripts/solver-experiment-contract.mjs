@@ -72,12 +72,22 @@ export function canonicalizeIdentities(ids, { rejectDuplicates = true } = {}) {
   return { identities: [...new Set(normalized)].sort(), duplicates };
 }
 
-export function hashPopulation({ kind, identityBasis, identities, corpusIdentity = null, selection = null }) {
+export function hashPopulation({
+  kind,
+  identityBasis,
+  identities,
+  corpusIdentity = null,
+  selection = null,
+  identityCodec = null,
+}) {
   if (!kind || !identityBasis) throw new Error('population kind and identityBasis are required');
+  if (identityCodec != null && !isNonEmptyString(identityCodec)) throw new Error('identityCodec must be null or a non-empty string');
   const canonical = canonicalizeIdentities(identities);
+  const hashInput = { kind, identityBasis, corpusIdentity, selection, identities: canonical.identities };
+  if (identityCodec != null) hashInput.identityCodec = identityCodec;
   return {
     identities: canonical.identities,
-    identityHash: stableHash({ kind, identityBasis, corpusIdentity, selection, identities: canonical.identities }),
+    identityHash: stableHash(hashInput),
   };
 }
 
