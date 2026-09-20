@@ -162,6 +162,9 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const plans = planLifecycle(root, currentReferences);
     const fragilePlans = plans.filter(row => row.fragileProse);
     const currentReferenceLifecycleMismatches = plans.filter(row => row.currentReferenceMismatch);
+    const currentMarkdownReferences = currentReferences.filter(row => row.path.endsWith('.md') && existsSync(path.join(root, row.path)));
+    const currentMarkdownBytes = currentMarkdownReferences.reduce((sum, row) =>
+        sum + statSync(path.join(root, row.path)).size, 0);
     const relations = relationInventory(model);
     return {
         schemaVersion: 1,
@@ -177,6 +180,10 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         documentation: {
             currentReferences,
             currentReferenceCount: currentReferences.length,
+            currentMarkdownReferenceCount: currentMarkdownReferences.length,
+            currentMarkdownBytes,
+            lifecycleCandidateCount: plans.length,
+            currentLifecycleCandidateCount: plans.filter(row => row.currentReference).length,
         },
         planLifecycle: plans,
         diagnostics: {
