@@ -181,18 +181,7 @@ export function decisionBearingExperimentResultIssues(result) {
   if (!integrity || typeof integrity !== 'object') {
     issues.push('populationIntegrity');
   } else {
-    const normalizedOutcomes = integrity.outcomes && typeof integrity.outcomes === 'object'
-      && !Array.isArray(integrity.outcomes) ? integrity.outcomes : null;
-    const decisionValid = integrity.decisionValidComplete === true
-      || (integrity.decisionValidComplete == null
-        && integrity.complete === true
-        && normalizedOutcomes
-        && (normalizedOutcomes.deadlineTruncated ?? 0) === 0
-        && (normalizedOutcomes.harnessError ?? 0) === 0
-        && (normalizedOutcomes.malformed ?? 0) === 0
-        && (normalizedOutcomes.missing ?? 0) === 0
-        && (normalizedOutcomes.unknown ?? 0) === 0);
-    if (!decisionValid) issues.push('populationIntegrity.decisionValidComplete');
+    if (integrity.decisionValidComplete !== true) issues.push('populationIntegrity.decisionValidComplete');
     if (integrity.inferredExpectedPopulation === true) issues.push('populationIntegrity.inferredExpectedPopulation');
   }
 
