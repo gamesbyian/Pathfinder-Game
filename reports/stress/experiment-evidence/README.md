@@ -14,7 +14,7 @@ A source artifact is retained here only when its `manifest.json` has all of:
 - `schemaVersion: 3`; and
 - `decisionBearing: true`.
 
-The retention layer does not decide whether evidence is scientific. It preserves evidence only after the existing experiment contract, population-integrity, research-outcome, and decision-bearing gates have already accepted it.
+The retention layer does not invent scientific eligibility. It re-runs the shared decision-bearing result predicate before preservation, so a stale or hand-edited `decisionBearing: true` cannot bypass the experiment contract, population-integrity, research-outcome, published-primary, or identity-consistency gates.
 
 Non-decision-bearing benchmark artifacts are ignored.
 
@@ -31,6 +31,8 @@ and contains:
 - `evidence/...` — every non-missing file/directory named by the published manifest's evidence entries.
 
 Files larger than 4 MiB are stored as deterministic gzip files. `bundle.json` records the original byte count, SHA-256 of the uncompressed source bytes, stored path, and compression mode. Smaller files remain directly readable.
+
+Bundle identity is append-only. Re-harvesting the same experiment/run/attempt is accepted only when the reconstructed bundle is byte-identical, in which case it is an idempotent no-op. If the same durable identity reconstructs to different bytes, retention fails instead of overwriting the previously retained evidence.
 
 The bundle is intended to retain enough primary evidence to recompute the decision after Actions retention expires. It does not replace the dated interpretation report, question state, capability memory, or experiment manifest/result schema.
 
