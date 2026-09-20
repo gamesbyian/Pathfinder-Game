@@ -65,9 +65,15 @@ jobs:
           # measured that path silently dropping pages of results (see harvest-solver-evidence.yml's
           # own note). One artifact per run here, but stay consistent with the house convention.
           IFS=',' read -ra RUN_IDS <<< "${{ inputs.run_ids }}"
+          declare -A seen=()
           for run_id in "${RUN_IDS[@]}"; do
             run_id="$(echo "$run_id" | tr -d '[:space:]')"
             [ -n "$run_id" ] || continue
+            if [ -n "${seen[$run_id]:-}" ]; then
+              echo "Duplicate source run id: $run_id" >&2
+              exit 1
+            fi
+            seen[$run_id]=1
             dest="logs/solver-combined/sources/${run_id}"
             mkdir -p "$dest"
             gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "${{ inputs.artifact_name }}" --dir "$dest"
