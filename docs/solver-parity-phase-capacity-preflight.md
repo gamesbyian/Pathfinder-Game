@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7000 max=9500 -->
 # Solver parity-phase and checkerboard-capacity preflight
 
-> **Status:** ACTIVE CHEAP PREMISE TESTS; H1/H2 shadow observers implemented, corpus evidence pending. Production decisions unchanged.
+> **Status:** ACTIVE CHEAP PREMISE TESTS; the phase-distance and checkerboard-capacity premises shadow observers implemented, corpus evidence pending. Production decisions unchanged.
 > **Owner:** `docs/solver-optimization-workstreams.md` Lane H.
 > **Origin:** [parity invariant audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
 > **Question:** can exact checkerboard/twist-phase structure prove enough additional dead search states, or explain enough decision-bearing ordering/repair failures, to justify a production consumer?
@@ -34,7 +34,7 @@ The prefix phase is derivable without another mutable state field:
 
 Do not substitute `portalJumps & 1`: same-parity portal jumps increment `portalJumps` without toggling checkerboard phase.
 
-## 2. Premise H1: phase-conditioned relaxed goal distance
+## 2. Premise `WS2-PARITY-PHASE-DISTANCE`: phase-conditioned relaxed goal distance
 
 ### Hypothesis
 
@@ -72,9 +72,9 @@ Prefer one shared helper/map producer if it can serve multiple observational con
 
 ### Stop / advance
 
-**Stop H1** if incremental decision-bearing incidence is negligible at the cheapest representative pilot or construction/runtime overhead is plainly disproportionate.
+**Stop the phase-distance premise** if incremental decision-bearing incidence is negligible at the cheapest representative pilot or construction/runtime overhead is plainly disproportionate.
 
-**Advance H1** only if there is non-trivial incremental opportunity. Then:
+**Advance the phase-distance premise** only if there is non-trivial incremental opportunity. Then:
 1. build minimal synthetic witnesses;
 2. replay stored valid solution prefixes / known referee-valid paths and require zero false rejects;
 3. run differential/reference checking as appropriate;
@@ -86,9 +86,9 @@ Consumer preference:
 3. portal guidance only after the exact phase representation exists and matched-work evidence is needed;
 4. routing/attempt selection only after current-input phase features predict differentiated response.
 
-The 2026-08-08 existence-only portal envelope remains closed. H1 is a materially different conditioned-distance predicate, not a rerun of “some twist remains / all twists consumed.”
+The 2026-08-08 existence-only portal envelope remains closed. `WS2-PARITY-PHASE-DISTANCE` is a materially different conditioned-distance predicate, not a rerun of “some twist remains / all twists consumed.”
 
-## 3. Premise H2: checkerboard-split connectivity capacity
+## 3. Premise `WS2-CHECKERBOARD-CAPACITY`: checkerboard-split connectivity capacity
 
 ### Hypothesis
 
@@ -126,9 +126,9 @@ Report:
 
 ### Stop / advance
 
-**Stop H2** if incremental rejects are negligible or concentrated only where another same-cost reject fires immediately.
+**Stop the checkerboard-capacity premise** if incremental rejects are negligible or concentrated only where another same-cost reject fires immediately.
 
-**Advance H2** on non-trivial incremental opportunity, then require:
+**Advance the checkerboard-capacity premise** on non-trivial incremental opportunity, then require:
 1. synthetic witnesses where total volume passes but one color is provably short;
 2. stored-solution/referee-valid prefix replay with zero false rejects;
 3. differential checking of the reached-set color counts;
@@ -136,15 +136,15 @@ Report:
 
 ## 4. Secondary observational seams
 
-These do not outrank H1/H2 and should reuse their representation rather than creating parallel parity machinery.
+These do not outrank the phase-distance and checkerboard-capacity premises and should reuse their representation rather than creating parallel parity machinery.
 
-### H3 admissible-order propagation
+### Admissible-order propagation
 
 Measure how often a candidate later rejected solely/earliest by parity is ranked ahead of a live sibling by `rankByAdmissibleSlack`.
 
 If common, make the admissible bound consume a shared parity/phase feasibility helper. This is ordering economics, not a correctness repair.
 
-### H4 repair residual explanation
+### Repair residual explanation
 
 Extend repair diagnostic/signature output, not scoring, with:
 - current required future twist parity;
@@ -153,7 +153,7 @@ Extend repair diagnostic/signature output, not scoring, with:
 
 Ask whether best/plateau near-misses concentrate in phase/capacity-incompatible states. Only a positive observer result can nominate a repair scoring/operator change.
 
-### H5 exact all-gates infeasibility
+### Exact all-gates infeasibility
 
 On no-twist levels, zero parity-feasible gates proves whole-level exact-length infeasibility. Current `getActiveGates` falls back to all gates.
 
@@ -164,7 +164,7 @@ Before changing behavior:
 
 Likely low solve-value; treat as correctness/representation cleanup unless measurement shows otherwise.
 
-### H6 complete/random hint enumeration
+### Complete/random hint enumeration
 
 Sound ordinary parity rejection can reduce complete enumeration on no-twist levels without changing completeness. Keep this outside the production solve priority unless hint-enumeration cost makes it independently worthwhile.
 
@@ -199,14 +199,14 @@ Any soft consumer follows the ordinary matched-work research rules:
 
 Lane H is a cheap premise-acquisition lane and may run in parallel with the current Workstream-2 failure-response gate. It does not replace or reorder that gate.
 
-Only H1 and H2 are active premise tests. H3-H6 are downstream or secondary measurements. Contingent architectures/treatments belong in `solver-future-work.md`, not here or in the audit report as a second queue.
+Only `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` are active premise tests. The remaining seams are downstream or secondary measurements. Contingent architectures/treatments belong in `solver-future-work.md`, not here or in the audit report as a second queue.
 
 
 ## 8. Implemented observational seam
 
 The first falsifier machinery is now implemented on this branch.
 
-### H1
+### Phase-conditioned distance
 
 - `distance.ts` owns a static two-layer 0-1 relaxation keyed by future twist-jump parity.
 - `prepLevel()` builds the two goal-distance layers only on twist-bearing levels.
@@ -214,7 +214,7 @@ The first falsifier machinery is now implemented on this branch.
 - `ParityPhaseDistanceObserver` is research-only and cannot affect the returned prune verdict.
 - A synthetic regression witness proves an incremental H1 case: scalar goal distance fits while the required twist phase cannot fit.
 
-### H2
+### Checkerboard capacity
 
 - `isConnected()` reuses the exact reached set from its existing flood fill.
 - The observer performs only a bounded grid scan; it never launches a second fill.
@@ -240,7 +240,7 @@ The probe:
 - changes no ablation/profile or solver decision;
 - uses `strictTotalWorkBudget=true` so the scientific work envelope is deterministic;
 - leaves ordinary additive-tier policy intact inside that cap;
-- records H1 and H2 participation/opportunity in the same solve;
+- records both parity-premise participation/opportunity in the same solve;
 - reports observer reach, measurement support, fidelity, coverage, deadline truncation and errors separately;
 - treats no observer reach / deadline truncation / ineligible mechanic regime as indeterminate, never as a clean negative;
 - keeps only bounded example records while aggregating all observer calls.
@@ -249,4 +249,4 @@ This is deliberately compatible in spirit with PR #1923's resolution-envelope di
 
 ### Decision boundary
 
-The new code is still **observer machinery**, not an earned treatment. No H1/H2 result may change pruning, ordering, scoring, routing or repair until the preflight's stated witness/replay/differential/economic gates are met.
+The new code is still **observer machinery**, not an earned treatment. No the phase-distance and checkerboard-capacity premises result may change pruning, ordering, scoring, routing or repair until the preflight's stated witness/replay/differential/economic gates are met.
