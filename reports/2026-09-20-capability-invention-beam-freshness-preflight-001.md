@@ -1,11 +1,11 @@
 # Capability-invention beam freshness preflight 001
 
-> **Status:** dispatch-ready
-> **Date:** 2026-09-20
-> **Population:** R02196, R02206, R02258
-> **Frozen input:** `reports/stress/capability-invention/beam-freshness-probe-2026-09-20.json`
-> **Decision:** run a current-head isolated freshness replay before treating these Class-3 exposed-and-negative rows as capability-acquisition demand.
-> **Production authorization:** none.
+> **Status:** active
+> **Last evidence:** 2026-09-20 — three Class-3 beam rescuers were confirmed exposed-and-negative under shared production at comparable dose.
+> **Decision:** Replay the exact historical rescuers in isolation on current head before interpreting these rows as missing-capability demand.
+> **Remaining gate:** Dispatch the two frozen method-probe cells and classify 3/3 fresh, 0/3 stale, mixed, or censored.
+> **Research question:** `WS2-CAPABILITY-INVENTION-DEMAND`
+> **Evidence role:** development
 
 ## Why this probe exists
 
