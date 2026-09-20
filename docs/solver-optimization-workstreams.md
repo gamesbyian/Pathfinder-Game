@@ -64,6 +64,17 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
+
+#### Lane H — parity invariants
+
+**ACTIVE CHEAP PREMISE TESTS; production decisions unchanged.** A first-principles audit found ordinary endpoint parity sound in its current domains while two stronger representations have concrete incremental synthetic witnesses and production-inert observers. Stable questions: `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY`. [`audit`](../reports/2026-09-19-solver-parity-invariant-audit-001.md) · [`preflight`](solver-parity-phase-capacity-preflight.md)
+
+1. **Phase-conditioned relaxed distance (`WS2-PARITY-PHASE-DISTANCE`):** shadow a two-layer `(cell, futureTwistParity)` 0-1 goal-distance bound at the existing scalar-distance seam. Count incremental dead states where scalar distance passes. This is materially different from the closed August existence-only portal envelope.
+2. **Checkerboard-split connectivity capacity (`WS2-CHECKERBOARD-CAPACITY`):** on zero-twist states, reuse the existing connectivity reached set to compare exact per-color future-arrival demand with an over-generous per-color fresh+intersection capacity. Count incremental deaths where total scalar volume passes; no second flood fill.
+3. **Downstream only:** admissible-order propagation, repair residual explanation, all-gates exact infeasibility, hint-enumeration reuse, phase-aware scoring/routing and any dynamic phase-connectivity extension remain contingent consumers, not separate live premises.
+
+The combined `solver:parity-invariant-shadow` probe measures both questions under one strict whole-solve work envelope and emits canonical research-resolution envelopes. **Stop** a premise on negligible incremental incidence with satisfied observability axes; **advance** only through synthetic witness -> stored/referee-valid prefix replay -> differential/reference validation -> smallest consumer -> matched-work economics. Lane H may run in parallel with the current WS2 failure-response gate; it does not replace or reorder it.
+
 ### Post-mining premise-map handoff closeout
 
 Frozen-map mining is complete. P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed its pass condition: Lane A is at C1 after C0 mixed, D1's production ranking consumer is closed negative, and F3 has no decision-bearing compact consumer. Use the lane states above and the question registry for current descendants; dated reports own the experiment chronology. No shared signal bus, blackboard, decomposition engine, oracle campaign, or production treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
@@ -78,6 +89,8 @@ Frozen-map mining is complete. P201-P206 remain evidence/method premises only. T
 | ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|
 | 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 2P | Parity phase-conditioned distance premise | `supporting` | **PARALLEL PREMISE OBSERVER** | Run the combined fixed-work shadow; advance only on non-trivial incremental incidence with a resolution-ready envelope | `WS2-PARITY-PHASE-DISTANCE` |
+| 2C | Checkerboard-capacity premise | `supporting` | **PARALLEL PREMISE OBSERVER** | Run the combined fixed-work shadow; advance only on non-trivial incremental incidence with a resolution-ready envelope | `WS2-CHECKERBOARD-CAPACITY` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |

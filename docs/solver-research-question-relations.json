@@ -817,6 +817,48 @@
         "MO-004"
       ],
       "acquisitionNeed": "telemetry-or-economics"
+    },
+    {
+      "id": "WS2-PARITY-PHASE-DISTANCE",
+      "question": "Does a current-input two-layer relaxed goal-distance bound conditioned on required future twist-jump parity prove decision-bearing dead states that the existing scalar goal distance misses often enough to justify a solver consumer?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "parity phase distance",
+        "phase-conditioned distance",
+        "twist-phase distance"
+      ],
+      "constrainedBy": [
+        "reports/2026-09-19-solver-parity-invariant-audit-001.md",
+        "docs/solver-parity-phase-capacity-preflight.md"
+      ],
+      "result": "Observer implemented; corpus opportunity evidence pending. Production decisions remain unchanged.",
+      "constrains": [
+        "Do not reopen the closed August existence-only portal parity envelope unchanged; this question conditions distance on the exact required future twist phase.",
+        "No hard prune, scorer, routing feature or repair treatment is earned by synthetic witnesses or observer incidence alone."
+      ],
+      "reopensOn": null
+    },
+    {
+      "id": "WS2-CHECKERBOARD-CAPACITY",
+      "question": "On current-input zero-twist states, does checkerboard-split reachable capacity prove decision-bearing dead states that the existing scalar connectivity-volume bound misses often enough to justify a solver consumer?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "checkerboard capacity",
+        "color-split connectivity capacity",
+        "parity capacity"
+      ],
+      "constrainedBy": [
+        "reports/2026-09-19-solver-parity-invariant-audit-001.md",
+        "docs/solver-parity-phase-capacity-preflight.md"
+      ],
+      "result": "Observer implemented; corpus opportunity evidence pending. Production decisions remain unchanged.",
+      "constrains": [
+        "The fixed checkerboard arrival schedule applies only when future twist phase is statically absent; twist-bearing states require a different phase-aware formulation.",
+        "No hard prune is earned until stored/referee-valid prefix replay and differential soundness checks show zero false rejects."
+      ],
+      "reopensOn": null
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { getRequiredPathCoverageRatio } from './routing-regime.js';
-import { buildAxisApproachMap, buildDistMap, denseIndex, distMapToArray } from './distance.js';
+import { buildAxisApproachMap, buildDistMap, buildParityPhaseDistArrays, denseIndex, distMapToArray } from './distance.js';
 import type { DistMapOpts } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
 import { MAX_BITROW_DIM } from './topology.js';
@@ -36,7 +36,7 @@ function buildIndexArr(keys: number[]): Int8Array {
     return arr;
 }
 
-export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbors?: boolean } = {}): PrepLevel {
+export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbors?: boolean; includeParityPhaseGoalDist?: boolean } = {}): PrepLevel {
     const prep = {} as PrepLevel;
     // Fresh, isolated per-solve work counter — see PrepLevel._workMeter's own comment. Always
     // initialized here, unconditionally, so no consumer can ever observe an unset one.
@@ -193,6 +193,14 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         if (keyParity(a) === keyParity(b)) continue; // twist=0: doesn't fix a parity mismatch
         prep.parityPortalDistMaps.push({ a, b, dist: distMapToArray(buildDistMap(level, [a, b], distOpts), level.grid.w, level.grid.h) });
     }
+
+    // Lane H1 research representation. Build only when twist portals exist; on no-twist levels the
+    // q=1 layer is unreachable and the q=0 layer collapses to the already-cheaper scalar distance
+    // plus ordinary endpoint parity. This map is a static over-permissive relaxation just like
+    // goalDistArr, but it preserves the one bit the scalar map discards: future twist-jump parity.
+    prep.parityPhaseGoalDistArrs = opts.includeParityPhaseGoalDist && prep.parityPortalDistMaps.length > 0
+        ? buildParityPhaseDistArrays(level, level.goalKey, distOpts)
+        : null;
 
     // Pairwise BFS distances between must-cross cells (for MST lower bound). Flat row-major
     // Float64Array (mcPairDist[i*mcN+j] = dist from mustCrossKeys[i] to mustCrossKeys[j]) rather

@@ -83,7 +83,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         return runStaticPortfolio(level, opts);
     }
     const levelStartTime = Date.now();
-    const prep = prepLevel(level);
+    const prep = prepLevel(level, { includeParityPhaseGoalDist: !!opts.parityPhaseDistanceObserver });
     // This solve's own isolated counter (see PrepLevel._workMeter) — always 0 for a fresh prep, but
     // read explicitly rather than hardcoded, matching every other workStart-style snapshot in this
     // file and staying correct regardless of prepLevel()'s own initialization details.
@@ -103,6 +103,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     if (opts.pruneDiagnostics) prep._pruneDiagnostics = opts.pruneDiagnostics;
     if (opts.failureProgressObserver) prep._failureProgressObserver = opts.failureProgressObserver;
     if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
+    if (opts.parityCapacityObserver) prep._parityCapacityObserver = opts.parityCapacityObserver;
+    if (opts.parityPhaseDistanceObserver) prep._parityPhaseDistanceObserver = opts.parityPhaseDistanceObserver;
     if (opts.jointObligationObserver) prep._jointObligationObserver = opts.jointObligationObserver;
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 
