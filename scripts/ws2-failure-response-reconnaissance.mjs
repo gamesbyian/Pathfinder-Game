@@ -77,7 +77,7 @@ if (selectedRoute && !eligible) {
   throw new Error(`cannot select WS2 route from scientifically ineligible evidence: ${eligibilityReasons.join('; ')}`);
 }
 
-const result = {
+const resultCore = {
   schemaVersion: 1,
   kind: 'pathfinder-ws2-failure-response-reconnaissance-analysis',
   questionId: contract.questionId,
@@ -123,6 +123,8 @@ const result = {
       : 'No route is inferred automatically. Interpret only under the frozen preflight and contract.',
   },
 };
+const analysisIdentity = sha256(JSON.stringify(resultCore));
+const result = { ...resultCore, analysisIdentity };
 
 const serialized = JSON.stringify(result, null, 2) + '\n';
 if (outPath) writeFileSync(outPath, serialized);
