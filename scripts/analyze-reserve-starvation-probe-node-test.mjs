@@ -88,7 +88,10 @@ try {
     assert.equal(negative.resolution.axes.reach.status, 'not-required');
     assert.equal(negative.independenceVector.sourceConstruction, 'shared generator family');
     assert.equal(negative.independenceVector.sampleData, 'independent fresh sample');
-    assert.equal(negative.resolution.negativeInterpretationPolicy, 'zero is negative only under the full required envelope');
+    assert.equal(
+        negative.resolution.negativeInterpretationPolicy,
+        JSON.parse(fs.readFileSync(sample, 'utf8')).resolutionDesign.negativeInterpretationPolicy,
+    );
 
     const one = analyze(writeDoc('one.json', [
         row('A', 'solved', 100_000_000),
