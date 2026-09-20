@@ -9,6 +9,8 @@ assert.equal(inventory.authority.kind, 'derived-read-only');
 assert.equal(inventory.authority.priorityAuthority, 'docs/solver-optimization-workstreams.md');
 assert.ok(inventory.currentState.queueEntries > 0, 'inventory must expose current workstream state');
 assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-question state');
+assert.equal(inventory.integrationHealth.errorCount, 0, 'inventory should surface existing integration-audit errors');
+assert.equal(inventory.diagnostics.integrationErrorCount, inventory.integrationHealth.errorCount);
 assert.ok(inventory.relations.some(row =>
     row.relation === 'questions' && row.source === 'docs/solver-research-question-relations.json'));
 assert.ok(inventory.relations.some(row =>
@@ -52,6 +54,7 @@ assert.equal(
 
 const architectureView = researchSystemInventoryView(inventory, 'architecture');
 assert.ok(Array.isArray(architectureView.relations));
+assert.equal(architectureView.integrationHealth, inventory.integrationHealth);
 assert.equal('planLifecycle' in architectureView, false);
 const lifecycleView = researchSystemInventoryView(inventory, 'lifecycle');
 assert.ok(Array.isArray(lifecycleView.planLifecycle));
