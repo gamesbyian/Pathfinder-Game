@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { ws2FailureResponseAnalysisIdentity } from './ws2-failure-response-analysis-contract-lib.mjs';
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -23,8 +24,12 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
   if (analysis.decision?.status !== 'selected' || !analysis.decision?.route) {
     throw new Error('WS2 claim capsule requires an explicit selected routing decision');
   }
+  const expectedAnalysisIdentity = ws2FailureResponseAnalysisIdentity(analysis);
+  if (analysis.analysisIdentity !== expectedAnalysisIdentity) {
+    throw new Error('WS2 claim capsule requires a valid analysisIdentity matching analysis content');
+  }
   const route = analysis.decision.route;
-  const analysisIdentity = hash(analysis);
+  const analysisIdentity = expectedAnalysisIdentity;
   return {
     schemaVersion: 1,
     kind: 'pathfinder-ws2-failure-response-claim-capsule',
