@@ -84,6 +84,7 @@ console.log(JSON.stringify({
     evidenceRole,
     route: decision.route,
     need: decision.need,
+    basis: decision.basis ?? (eligibleBlocks.length ? 'eligible-existing-block' : null),
     rationale: decision.rationale,
     existing: {
         explicitArtifactInputs: artifactPaths.length,
