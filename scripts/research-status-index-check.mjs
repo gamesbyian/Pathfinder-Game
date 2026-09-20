@@ -6,9 +6,12 @@ import path from 'node:path';
 import { buildResearchStatusIndex, compactResearchStatusIndex, queryResearchStatusIndex } from './research-status-index-lib.mjs';
 import { formatResearchCloseoutCapsule } from './investigation-report-metadata.mjs';
 import {
+    isTerminalResearchQuestionState,
     loadResearchQuestionRegistry,
     normalizeResearchQuestionStatus,
     queryResearchQuestions,
+    RESEARCH_QUESTION_STATES,
+    researchQuestionLifecycleClass,
     validateResearchQuestionRegistry,
 } from './research-question-relations-lib.mjs';
 
@@ -189,12 +192,25 @@ const questionRegistry = loadResearchQuestionRegistry(root);
 assert.deepEqual(validateResearchQuestionRegistry(questionRegistry), []);
 assert.equal(normalizeResearchQuestionStatus('active-candidate'), 'active');
 assert.equal(normalizeResearchQuestionStatus('closed-tested-form'), 'closed');
+assert.equal(researchQuestionLifecycleClass('active-candidate'), 'active');
+assert.equal(researchQuestionLifecycleClass('deferred-reopen'), 'deferred');
+assert.equal(researchQuestionLifecycleClass('concluded-positive'), 'concluded');
+assert.equal(isTerminalResearchQuestionState('closed-tested-form'), true);
+assert.equal(isTerminalResearchQuestionState('concluded-negative'), true);
+assert.equal(isTerminalResearchQuestionState('deferred-reopen'), false);
+assert.ok(RESEARCH_QUESTION_STATES.includes('mixed'));
 assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'question', status: 'active' }).map(x => x.id), ['WS2-CURRENT']);
 assert.deepEqual(queryResearchQuestions(questionRegistry, { query: 'bounded follow-up' }).map(x => x.id), ['WS2-FOLLOWUP']);
 assert.deepEqual(queryResearchQuestions(questionRegistry, { query: 'bounded follow up' }).map(x => x.id), ['WS2-FOLLOWUP'],
     'ordinary spaced vocabulary must discover a hyphenated question');
 assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'experiment' }), [],
     'question query helper must not leak questions into other compact kinds');
+const invalidState = JSON.parse(JSON.stringify(questionRegistry));
+invalidState.questions[0].state = 'active-ish';
+assert.deepEqual(validateResearchQuestionRegistry(invalidState), [
+    'questions[0].state is unknown: active-ish',
+]);
+
 const invalidRelations = JSON.parse(JSON.stringify(questionRegistry));
 invalidRelations.questions[0].implies = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidRelations), [
