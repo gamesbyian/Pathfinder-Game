@@ -39,6 +39,13 @@ function validateOutcomeBinding(binding) {
     }
     result.resultResolvedShas = binding.resultResolvedShas.map(String).sort();
   }
+  if (binding.resultContentHashes != null) {
+    if (!Array.isArray(binding.resultContentHashes) || binding.resultContentHashes.length === 0
+        || binding.resultContentHashes.some(value => !SHA256_RE.test(String(value)))) {
+      throw new Error('research outcome binding resultContentHashes must be a non-empty sha256 array');
+    }
+    result.resultContentHashes = binding.resultContentHashes.map(String).sort();
+  }
   if (Object.keys(result).length === 0) throw new Error('research outcome binding must declare at least one identity');
   return result;
 }
