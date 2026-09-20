@@ -41,6 +41,7 @@ The producer now emits a resolution envelope requiring:
 - `opportunity`;
 - `participation`;
 - `measurementSupport`;
+- `fidelity`;
 - `coverage`;
 - `censoring`.
 
@@ -120,6 +121,14 @@ The reserve-starvation probe, by contrast, cannot interpret zero recurrence unle
 A universal checklist would have been wrong for at least one pilot.
 
 A claim-relative envelope works.
+
+## Historical calibration later added one axis
+
+A targeted retrospective of influential negative results found that the initial seven-axis envelope was still missing one correctness-bearing condition: **execution fidelity/comparability**.
+
+The known historical 0/483 work-ladder false negative had high dose, broad coverage and mostly uncensored rows, but it came from an old solver revision and history-aware execution rather than the current level-blind intervention. The later clean confirmation overturned the apparent absence-of-capability reading.
+
+`fidelity` is now a first-class axis. In the reserve pilot, exact action/config identity belongs to fidelity while actual nonzero work belongs to participation.
 
 ## Stop condition
 
