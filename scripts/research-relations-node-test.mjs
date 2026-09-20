@@ -144,7 +144,8 @@ try {
 // search-loss-evidence (docs/solver-search-loss-evidence-implementation-plan.md, Phase 2): a
 // capture discovered from its own transient root, using its native population.populationIdentity
 // field rather than the D1 fixture's top-level populationIdentity/corpusIdentity spellings.
-const searchLossRoot = path.join(process.cwd(), 'tmp', 'search-loss-evidence');
+const discoveryRoot = mkdtempSync(path.join(tmpdir(), 'pathfinder-research-discovery-'));
+const searchLossRoot = path.join(discoveryRoot, 'tmp', 'search-loss-evidence');
 mkdirSync(searchLossRoot, { recursive: true });
 try {
     const searchLossPopulationIdentity = `sha256:${'4'.repeat(64)}`;
@@ -172,10 +173,11 @@ try {
         capsules: [],
     }));
 
-    assert.ok(discoverResearchArtifactPaths(process.cwd()).some(p => p.endsWith(path.join('tmp', 'search-loss-evidence', 'capture.json'))),
-        'search-loss capture under its own transient root is discoverable');
+    const discoveredSearchLoss = discoverResearchArtifactPaths(discoveryRoot);
+    assert.deepEqual(discoveredSearchLoss, [path.join('tmp', 'search-loss-evidence', 'capture.json')],
+        'search-loss capture under its own transient root is discoverable without touching the repository fixture space');
 
-    const searchLossModel = buildResearchRelations(process.cwd(), { discoverArtifacts: true });
+    const searchLossModel = buildResearchRelations(process.cwd(), { artifactPaths: [searchLossCapturePath] });
     const searchLossRow = searchLossModel.relations.researchBlocks.find(row => row.blockId === 'SEARCH-LOSS-BLOCK-TEST');
     assert.ok(searchLossRow, 'discovered search-loss capture appears as a research block');
     assert.equal(searchLossRow.enrichments.observation.length, 1);
@@ -184,7 +186,7 @@ try {
         && row._researchSource?.relation === 'assets'), 'search-loss-evidence asset is discoverable with source provenance retained');
     assert.ok(searchLossModel.relations.assetRelationships.some(row => row.id === 'search-loss-to-lifecycle'));
 } finally {
-    rmSync(searchLossRoot, { recursive: true, force: true });
+    rmSync(discoveryRoot, { recursive: true, force: true });
 }
 
 const real = buildResearchRelations(process.cwd());
