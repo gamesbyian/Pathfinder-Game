@@ -18,7 +18,7 @@ The September consolidation work succeeded at composition strongly enough to exp
 
 The safest promotion rule is **repeated semantic convergence across real producers/consumers**, not conceptual attractiveness. A shared primitive should be extracted only when at least two real call sites need the same invariant and keeping the invariant local would permit semantic drift or duplicated correctness logic.
 
-This pass initially found six such primitives; the subsequent synchronous observability/identifiability pilot earned a seventh. It also found several attractive near-misses that should remain separate for now.
+This pass initially found six such primitives; the subsequent synchronous observability/identifiability pilot earned a seventh, and the independence/causal-ancestry pass earned an eighth. It also found several attractive near-misses that should remain separate for now.
 
 ## Shared primitives extracted
 
@@ -157,6 +157,25 @@ The reserve-starvation integration immediately found two false-readiness paths: 
 
 See `reports/2026-09-19-synchronous-observability-identifiability-pilot-001.md`.
 
+### 8. Research independence vector
+
+The next pass found another repeated correctness-bearing invariant: evidence channels need the same explicit dimensions of independence/common-mode dependence even when their scientific payloads differ.
+
+The shared owner is now:
+
+- `scripts/research-independence-vector-lib.mjs`
+
+It owns canonical axes and structural validation only. The first two live consumers are:
+
+- WS2 failure-response reconnaissance;
+- admissible-order reserve-starvation recurrence.
+
+The shared axes cover sample/data, parent/family, source construction, decision seam, instrument implementation, analysis method, analyst/model, framing/context exposure, ontology/vocabulary and critical-code ancestry.
+
+Specialist artifacts still own the actual relationship statements. No scalar independence score exists.
+
+See `reports/2026-09-20-research-independence-causal-ancestry-audit-002.md`.
+
 ## Near-misses deliberately not unified
 
 ### Measurement support versus evidence applicability
@@ -271,6 +290,6 @@ The target is a small research-domain model embedded inside the existing researc
 
 ## Result
 
-This follow-up now promotes seven proven common invariants while explicitly declining several superficially similar abstractions.
+This follow-up now promotes eight proven common invariants while explicitly declining several superficially similar abstractions.
 
 That is the intended direction of travel: continue to prefer composition, but once composition repeatedly reconstructs the same correctness-critical meaning, stop adding bridges and give that meaning a proper owner.
