@@ -79,6 +79,13 @@
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
     },
     {
+      "workflow": "persist-targeted-failure-response.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "targeted-sweep opt-in compact failure-response persistence",
+      "retirementTrigger": "retire when equivalent persistence is absorbed into the targeted sweep or a shared evidence-harvest mechanism"
+    },
+    {
       "workflow": "premise-map-hardening.yml",
       "role": "operational",
       "status": "maintained",
