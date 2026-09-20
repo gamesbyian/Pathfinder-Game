@@ -58,8 +58,14 @@ try {
   const treatmentFile = path.join(temp, 'treatment.json');
   const integrityFile = path.join(temp, 'integrity.json');
   const outcomeFile = path.join(temp, 'outcome.json');
-  fs.writeFileSync(controlFile, JSON.stringify({ levels: [row('A', false, 10)] }));
-  fs.writeFileSync(treatmentFile, JSON.stringify({ levels: [row('A', true, 10)] }));
+  fs.writeFileSync(controlFile, JSON.stringify({
+    configurationHash: `sha256:${'a'.repeat(64)}`,
+    levels: [row('A', false, 10)],
+  }));
+  fs.writeFileSync(treatmentFile, JSON.stringify({
+    configurationHash: `sha256:${'b'.repeat(64)}`,
+    levels: [row('A', true, 10)],
+  }));
   fs.writeFileSync(integrityFile, JSON.stringify(pairedIntegrity(['A'])));
   execFileSync(process.execPath, [
     'scripts/classify-paired-solver-outcome.mjs',
@@ -71,8 +77,13 @@ try {
     '--max-losses=0',
     '--max-work-delta-pct=',
   ], { cwd: process.cwd(), stdio: 'pipe' });
-  assert.equal(JSON.parse(fs.readFileSync(outcomeFile, 'utf8')).outcome, 'completed-positive',
+  const cliOutcome = JSON.parse(fs.readFileSync(outcomeFile, 'utf8'));
+  assert.equal(cliOutcome.outcome, 'completed-positive',
     'CLI must parse its --key=value arguments and write the scientific outcome');
+  assert.equal(cliOutcome.binding.populationIdentityHash, 'sha256:fixture');
+  assert.deepEqual(cliOutcome.binding.resultConfigurationHashes, [
+    `sha256:${'a'.repeat(64)}`, `sha256:${'b'.repeat(64)}`,
+  ]);
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
 }
