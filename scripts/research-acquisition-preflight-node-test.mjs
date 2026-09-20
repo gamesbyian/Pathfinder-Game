@@ -13,6 +13,7 @@ const d1 = {
 };
 assert.equal(inferAcquisitionNeed(d1), 'telemetry-or-economics');
 assert.equal(chooseAcquisitionRoute({ question: d1 }).route, 'NO_LEVEL_GENERATION');
+assert.equal(chooseAcquisitionRoute({ question: d1 }).basis, 'lexical-question-text');
 
 const fresh = {
     id: 'F3',
@@ -20,6 +21,12 @@ const fresh = {
     reopensOn: 'Fresh independent parents produce non-zero decision-bearing discordance.',
 };
 assert.equal(chooseAcquisitionRoute({ question: fresh }).route, 'FRESH_SAME_SOURCE');
+assert.equal(chooseAcquisitionRoute({
+    question: { ...fresh, acquisitionNeed: 'telemetry-or-economics' },
+}).basis, 'structured-question-field');
+assert.equal(chooseAcquisitionRoute({
+    question: { ...fresh, acquisitionNeed: 'telemetry-or-economics' },
+}).route, 'NO_LEVEL_GENERATION');
 
 const lengthTransfer = {
     id: 'LEN',
@@ -44,6 +51,10 @@ assert.equal(chooseAcquisitionRoute({
     question: d1,
     requestedNeed: 'cross-source-transfer',
 }).route, 'CROSS_SOURCE_TRANSFER');
+assert.equal(chooseAcquisitionRoute({
+    question: d1,
+    requestedNeed: 'cross-source-transfer',
+}).basis, 'caller-request');
 
 console.log('research acquisition preflight tests passed');
 
@@ -116,6 +127,7 @@ try {
     assert.equal(run.status, 0, run.stderr);
     const output = JSON.parse(run.stdout);
     assert.equal(output.route, 'REUSE_EXISTING');
+    assert.equal(output.basis, 'eligible-existing-block');
     assert.equal(output.existing.mechanicallyEligibleBlocks, 1);
     assert.equal(output.generationGuidance.automaticGeneration, false);
     assert.equal(output.existing.explicitArtifactInputs, 1);
