@@ -93,7 +93,7 @@ export function formatResearchCloseoutCapsule(input) {
 
 export function parseResearchCloseoutCapsule(markdown) {
   if (typeof markdown !== 'string') throw new Error('markdown must be a string');
-  const matches = [...markdown.matchAll(/<!--\s*research-closeout\s+({[^\r\n]*})\s*-->/gu)];
+  const matches = [...markdown.matchAll(/<!--\s*research-closeout\s+(\{[^\r\n]*\})\s*-->/gu)];
   if (matches.length === 0) return null;
   if (matches.length > 1) throw new Error('report contains multiple research-closeout capsules');
 
