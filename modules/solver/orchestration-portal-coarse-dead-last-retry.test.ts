@@ -23,6 +23,8 @@ function portalLevel() {
 // exercise the off/control/treatment states so the assertions read the same regardless of the
 // current production default polarity.
 test('Class-4 promotion conversion-fidelity contract matches ordinary production callers', () => {
+    assert.ok('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY' in FEATURES);
+    assert.ok('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT' in FEATURES);
     assert.equal(OPT_IN_FEATURES.has('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY'), false,
         'promoted retry shell must remain production default-on');
     assert.equal(OPT_IN_FEATURES.has('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT'), false,
