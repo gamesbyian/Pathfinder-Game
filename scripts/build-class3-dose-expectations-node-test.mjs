@@ -32,6 +32,14 @@ try {
 
     assert.equal(result.kind, 'pathfinder-class3-dose-expectations');
     assert.equal(result.expectedParentCount, 2);
+    assert.deepEqual(result.unitTopology, {
+        observationUnit: 'compact-failure-response-attempt',
+        opportunityUnit: 'parent-exact-rescuer',
+        assignmentUnit: null,
+        dependenceClusterUnit: 'parent',
+        analysisUnit: 'parent',
+        generalizationUnit: 'current-class3-parent-under-compatible-shared-production-protocol',
+    });
     assert.deepEqual(result.parents.map(row => row.parentId), ['R00001', 'R00003']);
     assert.equal(result.parents[0].rescuers.length, 1);
     assert.equal(result.parents[0].rescuers[0].actionKey, 'repair|score=repair|guidance=standard');
