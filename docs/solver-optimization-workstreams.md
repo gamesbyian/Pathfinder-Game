@@ -89,6 +89,8 @@ Frozen-map mining is complete. P201-P206 remain evidence/method premises only. T
 | ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|
 | 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 2P | Parity phase-conditioned distance premise | `supporting` | **PARALLEL PREMISE OBSERVER** | Run the combined fixed-work shadow; advance only on non-trivial incremental incidence with a resolution-ready envelope | `WS2-PARITY-PHASE-DISTANCE` |
+| 2C | Checkerboard-capacity premise | `supporting` | **PARALLEL PREMISE OBSERVER** | Run the combined fixed-work shadow; advance only on non-trivial incremental incidence with a resolution-ready envelope | `WS2-CHECKERBOARD-CAPACITY` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
