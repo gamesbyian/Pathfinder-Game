@@ -13,6 +13,18 @@ import {
 const a = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['b', 'a'] });
 const b = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['a', 'b'] });
 assert.equal(a.identityHash, b.identityHash);
+const codedA = hashPopulation({
+  kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['a', 'b'], identityCodec: 'json-tuple-v1',
+});
+const codedB = hashPopulation({
+  kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['b', 'a'], identityCodec: 'json-tuple-v1',
+});
+assert.equal(codedA.identityHash, codedB.identityHash);
+assert.notEqual(codedA.identityHash, a.identityHash,
+  'an explicitly declared identity codec must be part of the scientific hash domain');
+assert.throws(() => hashPopulation({
+  kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['a'], identityCodec: '',
+}), /identityCodec/);
 assert.throws(() => hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['a', 'a'] }), /duplicate/);
 assert.equal(hashConfiguration({ b: 2, a: 1 }), hashConfiguration({ a: 1, b: 2 }));
 assert.equal(isImmutableCommitSha('a'.repeat(40)), true);
