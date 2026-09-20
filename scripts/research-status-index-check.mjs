@@ -374,8 +374,9 @@ assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), [],
     const mixedTopology = idsFor({ query: 'topology', status: 'mixed' });
     assert(mixedTopology.includes('WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR'),
         'topology discovery must retain the qualified F3 descriptor disposition after its microscope ran');
-    assert(mixedTopology.includes('WS2-SEPARATOR-DYNAMIC-INTERFACE'),
-        'topology discovery must expose the mixed Lane-A dynamic-interface successor once C0 advances to C1');
+    const closedTopology = idsFor({ query: 'topology', status: 'closed' });
+    assert(closedTopology.includes('WS2-SEPARATOR-DYNAMIC-INTERFACE'),
+        'topology discovery must retain Lane A after its tested compact-interface form closes at C2');
 }
 assert(idsFor({ query: 'topology', status: 'concluded-positive' }).includes('WS2-OPEN-PATH-TOPOLOGY-SIGNATURE'),
     'the open-path topology signature question must remain discoverable as the concluded premise upstream of F3');
