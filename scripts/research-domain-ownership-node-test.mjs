@@ -45,6 +45,9 @@ assert.match(failureEvidence, /research-evidence-applicability-lib\.mjs/u);
 
 const evaluationEvidenceRole = source('scripts/research-evaluation-evidence-role-lib.mjs');
 assert.match(evaluationEvidenceRole, /RESEARCH_EVALUATION_EVIDENCE_ROLES/u);
+const evaluationEvidenceDoc = source('docs/solver-evaluation-evidence.md');
+assert.match(evaluationEvidenceDoc, /topology-generation-support-lib\.mjs/u,
+  'evaluation evidence docs must point to the producer-owned topology support envelope');
 assert.doesNotMatch(evaluationEvidenceRole, /forensic|historical/u,
   'shared evaluation evidence roles must not absorb broader report-role vocabulary');
 
