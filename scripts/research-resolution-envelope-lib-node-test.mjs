@@ -39,6 +39,10 @@ const blocked = buildResearchResolutionEnvelope({
 });
 assert.equal(blocked.resolutionStatus, 'observability-blocked');
 assert.deepEqual(blocked.blockers.map(row => row.axis), ['participation', 'censoring']);
+assert.deepEqual(blocked.blockers.map(row => row.remediation), [
+  'allocation-or-wiring',
+  'work-envelope-or-recovery',
+]);
 
 assert.deepEqual(researchResolutionEnvelopeIssues({
   ...ready,
