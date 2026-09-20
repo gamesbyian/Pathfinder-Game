@@ -6,6 +6,7 @@ import { summarizeIndependentSupport } from './research-relations-lib.mjs';
 import { classifyProbeProcess } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
 import { formatInvestigationReportStatusBlock } from './investigation-report-metadata.mjs';
 import { validateSweepIntegrity } from './validate-solver-sweep-integrity.mjs';
+import { validateResearchQuestionRegistry } from './research-question-relations-lib.mjs';
 import {
     appendResearchConsumption,
     buildResearchBlock,
@@ -159,6 +160,31 @@ assert.throws(() => validateSweepIntegrity({
     minParticipatingLevels: 1,
 }), /target stage treatment-stage participated on 0 level\(s\)/,
 'treatment nonparticipation must stop interpretation rather than becoming an ordinary negative');
+
+// Question closeout/supersession must retain a valid outbound relation to the successor.
+const supersessionRegistry = {
+    schemaVersion: 1,
+    questions: [
+        { id: 'TX-OLD', question: 'old tested form?', owner: 'TX', state: 'closed-tested-form', supersedes: ['TX-OLDER'] },
+        { id: 'TX-OLDER', question: 'older tested form?', owner: 'TX', state: 'closed-tested-form' },
+        { id: 'TX-NEXT', question: 'successor ambiguity?', owner: 'TX', state: 'active' },
+    ],
+};
+assert.deepEqual(validateResearchQuestionRegistry(supersessionRegistry), []);
+assert.ok(validateResearchQuestionRegistry({
+    ...supersessionRegistry,
+    questions: supersessionRegistry.questions.map(question =>
+        question.id === 'TX-OLD' ? { ...question, supersedes: ['TX-MISSING'] } : question),
+}).some(issue => issue.includes('references unknown question TX-MISSING')));
+
+const supersededStatusBlock = formatInvestigationReportStatusBlock({
+    status: 'superseded',
+    lastEvidenceDate: '2026-09-19',
+    lastEvidenceSummary: 'successor question now owns the live ambiguity',
+    decision: 'use TX-NEXT for current disposition',
+    remainingGate: 'TX-NEXT',
+});
+assert.match(supersededStatusBlock, /^> \*\*Status:\*\* superseded$/m);
 
 // Report status creation uses the shared constructor, not free-form prose.
 const reportStatusBlock = formatInvestigationReportStatusBlock({
