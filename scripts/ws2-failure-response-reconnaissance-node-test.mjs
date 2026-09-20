@@ -287,6 +287,8 @@ try {
   assert.equal(ineligibleResult.scientificDisposition.status, 'ineligible');
   assert.equal(ineligibleResult.scientificDisposition.resolution.resolutionStatus, 'observability-blocked');
   assert.ok(ineligibleResult.scientificDisposition.resolution.blockers.some(row => row.axis === 'eligibility'));
+  assert.ok(ineligibleResult.scientificDisposition.resolution.blockers.some(row =>
+    row.axis === 'eligibility' && row.remediation === 'acquisition-or-scope'));
   assert.ok(ineligibleResult.scientificDisposition.reasons.some(reason => reason.includes('unknown protocolHash')));
 
   const invalidRoute = spawnSync(process.execPath, [
