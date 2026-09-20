@@ -106,6 +106,8 @@ const result = {
     negativeResolution: contract.negativeResolution,
     reproducibility: contract.reproducibility,
     targetEnvelope: contract.targetEnvelope,
+    adaptiveLineage: contract.adaptiveLineage,
+    treatmentFidelity: contract.treatmentFidelity,
     protocolHashes: [...protocolHashes].sort(),
     solverRefs: [...solverRefs].sort(),
     censoringPolicy: contract.censoringPolicy,
