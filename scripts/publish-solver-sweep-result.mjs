@@ -228,6 +228,16 @@ function populationIntegrityBindingIssues(primary, integrity, publishedStats) {
   issues.push(...exactPopulationIssues(primary?.levels, integrity.expectedIds, 'primary result'));
   return issues;
 }
+function researchOutcomePrimaryConsistencyIssues(outcome, primary) {
+  if (!outcome || !['completed-positive', 'completed-negative'].includes(outcome.outcome)) return [];
+  const embedded = primary?.researchOutcome;
+  if (!embedded) return [];
+  if (embedded.outcome !== outcome.outcome || embedded.reason !== outcome.reason) {
+    return ['researchOutcome sidecar disagrees with primary result embedded verdict'];
+  }
+  return [];
+}
+
 function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStats) {
   const binding = outcome?.binding;
   if (!binding) return [];
@@ -415,7 +425,10 @@ if (declaredContract?.experiment?.resolvedSha) {
   }
 }
 const populationBindingIssues = populationIntegrityBindingIssues(primaryDocument, populationIntegrity, stats);
-const outcomeBindingIssues = researchOutcomeBindingIssues(researchOutcome, populationIdentity, stats);
+const outcomeBindingIssues = [
+  ...researchOutcomeBindingIssues(researchOutcome, populationIdentity, stats),
+  ...researchOutcomePrimaryConsistencyIssues(researchOutcome, primaryDocument),
+];
 const contractIssues = declaredContract
   ? [...new Set([
       ...declaredDecisionContractIssues(declaredContract),
