@@ -6,9 +6,9 @@ import { assertCompatibleExperiments, decisionContractIssues, declaredDecisionCo
 
 function sourceContract(manifest, runId) {
   const resolvedSha = manifest?.experiment?.resolvedSha ?? null;
-  const configurationHash = manifest?.experiment?.configurationHash ?? manifest?.configurationHash ?? null;
+  const configurationHash = manifest?.experiment?.configurationHash ?? null;
   if (!resolvedSha) throw new Error(`source run ${runId} has no declared experiment resolved SHA`);
-  if (!configurationHash) throw new Error(`source run ${runId} has no configuration hash`);
+  if (!configurationHash) throw new Error(`source run ${runId} has no declared experiment configuration hash`);
 
   const contract = {
     experiment: {
