@@ -102,6 +102,43 @@ test('PRUNE_PARITY applies unweakened on a same-parity portal level (zero twist 
     assert.equal(diagnostics.rejected.PRUNE_PARITY, 1);
 });
 
+test('phase-distance observer finds a twist-required dead state that scalar goal distance misses without changing the verdict', () => {
+    const level = makePortalLevel(true);
+    // Put the goal one ordinary move from the observed state, while the only twist portal is far
+    // enough away that satisfying the exact remaining-length phase cannot fit in two counted steps.
+    level.grid = { w: 4, h: 3 };
+    level.gateKeys = [PACK(2, 2)];
+    level.goalKey = PACK(3, 1);
+    level.requiredLength = 3;
+    level.requiredIntersections = 0;
+    level.portalMap = new Map([
+        [PACK(0, 0), { dest: PACK(1, 0), color: '#fff' }],
+        [PACK(1, 0), { dest: PACK(0, 0), color: '#fff' }],
+    ]);
+
+    const prep = prepLevel(level, { includeParityPhaseGoalDist: true });
+    const records: any[] = [];
+    prep._parityPhaseDistanceObserver = { observe: (record: any) => records.push(record) };
+
+    const next = PACK(2, 1);
+    const state = createState(level.gateKeys[0], level, prep);
+    applyMove(next, state, level, prep, false);
+    const verdict = evaluatePrunedMove(
+        next, getRealLengthFromState(state), state, level, prep, null, false,
+    );
+    prep._parityPhaseDistanceObserver = null;
+
+    assert.equal(verdict, 'pass', 'H1 remains shadow-only');
+    assert.equal(records.length, 1);
+    assert.equal(records[0].remainingSteps, 2);
+    assert.equal(records[0].scalarGoalDistance, 1);
+    assert.equal(records[0].scalarDistanceWouldReject, false);
+    assert.equal(records[0].requiredFutureTwistParity, 1);
+    assert.equal(records[0].phaseDistanceWouldReject, true);
+    assert.equal(records[0].incrementalPhaseReject, true);
+    assert.ok(records[0].phaseGoalDistance > 2 || !Number.isFinite(records[0].phaseGoalDistance));
+});
+
 test('PRUNE_PARITY stays deferred (never reached) on a twist portal level, preserving the pre-restoration conservative behavior', () => {
     const level = makePortalLevel(true);
     level.requiredLength = 2;
