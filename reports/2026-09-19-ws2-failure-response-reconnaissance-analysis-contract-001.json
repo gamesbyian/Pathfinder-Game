@@ -56,5 +56,18 @@
       "current residual population boundary changes materially",
       "compact failure-response semantics or observer instrumentation changes materially"
     ]
+  },
+  "populationSelection": "first-eligible-post-instrumentation-population-no-outcome-based-population-selection",
+  "primaryDiscriminator": "cheapest-next-ws2-instrument-route",
+  "negativeResolution": "route-none-does-not-imply-no-mechanism-exists",
+  "reproducibility": {
+    "class": "deterministic-under-identical-immutable-inputs",
+    "note": "The offline reducer and routing envelope are deterministic for the same compact-response inputs and frozen analysis contract; hosted acquisition timing is outside this claim."
+  },
+  "targetEnvelope": {
+    "benchmarkObjective": "inform the next WS2 discriminator choice for the current production residual",
+    "developmentLaboratory": "current-ws2-residual",
+    "confirmationPopulation": "protocol-compatible post-instrumentation compact-response population when available",
+    "broadDeploymentClaim": false
   }
 }
