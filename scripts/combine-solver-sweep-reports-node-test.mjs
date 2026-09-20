@@ -110,6 +110,23 @@ async function main() {
         ]);
         console.log('  ✓ mixed-corpus identities cannot alias across colon placement');
 
+        const mixedConfigA = path.join(tempDir, 'mixed-config-a.json');
+        const mixedConfigB = path.join(tempDir, 'mixed-config-b.json');
+        const mixedConfigOut = path.join(tempDir, 'mixed-config-out.json');
+        await writeFile(mixedConfigA, JSON.stringify(batchReport({
+            summary: { corpus: 'corpus-a', effectiveConfig: { corpusSha256: 'aaa', timeBudgetMs: 100, schedulerMode: 'production' } },
+            levels: [{ level: 1, id: 'A1', ok: false }],
+        })));
+        await writeFile(mixedConfigB, JSON.stringify(batchReport({
+            summary: { corpus: 'corpus-b', effectiveConfig: { corpusSha256: 'bbb', timeBudgetMs: 100, schedulerMode: 'production' } },
+            levels: [{ level: 1, id: 'B1', ok: false }],
+        })));
+        await run([`--in=${mixedConfigA},${mixedConfigB}`, `--out=${mixedConfigOut}`, '--allow-mixed-corpora']);
+        const mixedConfigCombined = JSON.parse(await readFile(mixedConfigOut, 'utf8'));
+        assert.equal(Object.keys(mixedConfigCombined.effectiveConfig.byCorpus).length, 2);
+        assert.equal(mixedConfigCombined.configurationHash, hashConfiguration(mixedConfigCombined.effectiveConfig));
+        console.log('  ✓ mixed-corpus observed execution identity composes per-corpus configs instead of requiring false equality');
+
         const mixedExpectedLegacy = path.join(tempDir, 'mixed-expected-legacy.txt');
         await writeFile(mixedExpectedLegacy, 'scope:a:b\n');
         await assert.rejects(
