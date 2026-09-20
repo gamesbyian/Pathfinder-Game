@@ -5,6 +5,7 @@ import { buildResearchRelations, RESEARCH_RELATION_CONTRACTS } from './research-
 import { currentDocumentationReferences } from './documentation-index-lib.mjs';
 import { parseResearchCloseoutCapsule } from './investigation-report-metadata.mjs';
 import { auditResearchIntegration } from './research-integration-audit-lib.mjs';
+import { researchQuestionLifecycleClass } from './research-question-relations-lib.mjs';
 
 const normalize = value => value.split(path.sep).join('/');
 const isLocalImport = value => value.startsWith('./') || value.startsWith('../');
@@ -268,9 +269,10 @@ function queueQuestionRelation(row, question) {
     if (!row.questionRef) return 'unlinked';
     if (!question) return 'missing-question';
     const state = String(question.state ?? '').trim().toLowerCase();
-    if (state.startsWith('active')) return 'active-question';
+    const lifecycle = researchQuestionLifecycleClass(state);
+    if (lifecycle === 'active') return 'active-question';
     if (state === 'deferred-reopen') return 'reopen-trigger-gate';
-    if (/^(?:closed|concluded|superseded|cancelled)/u.test(state)) return 'terminal-question';
+    if (['closed', 'concluded'].includes(lifecycle)) return 'terminal-question';
     return 'nonterminal-nonactive-question';
 }
 
@@ -403,7 +405,7 @@ function currentState(model) {
         queueEntries: queue.length,
         activeQueueEntries: queue.filter(row => row.executionState === 'active' || row.status === 'active').length,
         questions: questions.length,
-        activeQuestions: questions.filter(row => String(row.state ?? '').toLowerCase().startsWith('active')).length,
+        activeQuestions: questions.filter(row => researchQuestionLifecycleClass(String(row.state ?? '').toLowerCase()) === 'active').length,
         evidenceReports: model.relations.evidence?.length ?? 0,
         durableEvidenceBundles: model.relations.durableEvidence?.length ?? 0,
         researchBlocks: model.relations.researchBlocks?.length ?? 0,
