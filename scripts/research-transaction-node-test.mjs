@@ -253,7 +253,7 @@ const supersessionRegistry = {
     schemaVersion: 1,
     questions: [
         { id: 'TX-OLD', question: 'old tested form?', owner: 'TX', state: 'closed-tested-form' },
-        { id: 'TX-NEXT', question: 'successor ambiguity?', owner: 'TX', state: 'active', supersedes: ['TX-OLD'] },
+        { id: 'TX-NEXT', question: 'successor ambiguity?', owner: 'TX', state: 'active-candidate', supersedes: ['TX-OLD'] },
     ],
 };
 assert.deepEqual(validateResearchQuestionRegistry(supersessionRegistry), []);
