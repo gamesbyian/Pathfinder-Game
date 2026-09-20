@@ -21,20 +21,36 @@ const input = args.get('in');
 const sampleFile = args.get('sample')
     || 'reports/stress/failure-evidence/reserve-starvation-default-profile-sample-2026-09-19.json';
 const outFile = args.get('out') || null;
-const reserveNodes = Number(args.get('reserve-nodes') || 75_000_000);
-const totalNodes = Number(args.get('total-nodes') || 300_000_000);
-const expectedAction = args.get('action') || 'admissible-order|tieBreak=default|lds=off';
 
 if (!input) {
     console.error('Usage: node scripts/analyze-reserve-starvation-probe.mjs --in=<compact-failure-response.json> [--sample=<frozen-sample.json>] [--out=<result.json>]');
     process.exit(2);
 }
-if (!Number.isFinite(reserveNodes) || !Number.isFinite(totalNodes) || reserveNodes < 0 || totalNodes <= reserveNodes) {
-    throw new Error('reserve/total node thresholds must satisfy 0 <= reserve < total');
-}
-
 const document = validateFailureResponseDocument(JSON.parse(fs.readFileSync(input, 'utf8')));
 const sample = JSON.parse(fs.readFileSync(sampleFile, 'utf8'));
+const probeDesign = sample.probeDesign;
+if (!probeDesign || typeof probeDesign !== 'object' || Array.isArray(probeDesign)) {
+    throw new Error('frozen sample is missing probeDesign');
+}
+const reserveNodes = Number(probeDesign.reserveNodes);
+const totalNodes = Number(probeDesign.totalNodes);
+const expectedAction = String(probeDesign.expectedAction ?? '');
+if (!Number.isFinite(reserveNodes) || !Number.isFinite(totalNodes) || reserveNodes < 0 || totalNodes <= reserveNodes) {
+    throw new Error('sample.probeDesign node thresholds must satisfy 0 <= reserve < total');
+}
+if (!expectedAction) throw new Error('sample.probeDesign.expectedAction is required');
+
+for (const [argName, frozenValue] of [
+    ['reserve-nodes', reserveNodes],
+    ['total-nodes', totalNodes],
+    ['action', expectedAction],
+]) {
+    if (!args.has(argName)) continue;
+    const supplied = argName === 'action' ? args.get(argName) : Number(args.get(argName));
+    if (supplied !== frozenValue) {
+        throw new Error(`--${argName} disagrees with frozen sample probeDesign`);
+    }
+}
 const expectedIds = [...new Set(sample.ids ?? [])].map(String).sort();
 if (!expectedIds.length) throw new Error('frozen sample has no ids');
 const resolutionDesign = sample.resolutionDesign;
