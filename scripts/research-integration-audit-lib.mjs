@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { buildResearchRelations } from './research-relations-lib.mjs';
@@ -70,6 +70,14 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
         for (const moId of refIds(question, ['measurementOpportunity', 'measurementOpportunities', 'measurementOpportunityIds'])) {
             if (!measurementIds.has(moId)) errors.push(`${question.id} references unknown measurement opportunity ${moId}`);
+        }
+        for (const field of ['answeredBy', 'constrainedBy']) {
+            for (const value of question[field] ?? []) {
+                if (!/^(?:docs|reports|scripts|data|logs)\//u.test(String(value))) continue;
+                if (!existsSync(path.join(root, value))) {
+                    errors.push(`${question.id}.${field} references missing repository path ${value}`);
+                }
+            }
         }
     }
 
