@@ -142,6 +142,24 @@ const keyedPlan = { cells: [{
     ablation: null,
 }] };
 assert.equal(combine([keyedShard], 'full-menu', keyedPlan).populationIntegrity.coverageComplete, true);
+const revisionBound = combine([
+    { ...keyedShard, commit: 'a'.repeat(40) },
+], 'full-menu', keyedPlan);
+assert.equal(revisionBound.commit, 'a'.repeat(40));
+assert.throws(
+    () => combine([
+        { ...keyedShard, commit: 'a'.repeat(40) },
+        { results: [], commit: 'b'.repeat(40) },
+    ], 'full-menu', keyedPlan),
+    /execution revisions disagree/u,
+);
+assert.throws(
+    () => combine([
+        { ...keyedShard, commit: 'a'.repeat(40) },
+        { results: [] },
+    ], 'full-menu', keyedPlan),
+    /mixed shard execution-revision metadata/u,
+);
 const wrongTechniquePlan = JSON.parse(JSON.stringify(keyedPlan));
 wrongTechniquePlan.cells[0].techniqueKeys = ['dfs|score=default|bias=none'];
 assert.throws(
