@@ -136,17 +136,34 @@ export function discoverResearchArtifactPaths(root = process.cwd()) {
     return [...new Set(discovered)].sort();
 }
 
+function durableBundleManifestPath(root, bundlePath, bundle) {
+    const bundleDir = path.dirname(bundlePath);
+    const explicit = bundle?.manifestStoredPath ?? null;
+    const legacyFile = (bundle?.files ?? []).find(file => file?.source === 'manifest.json')?.stored ?? null;
+    const stored = explicit ?? legacyFile;
+    if (!stored) throw new Error(`durable evidence bundle has no explicit manifest edge: ${bundlePath}`);
+
+    const resolved = path.resolve(root, bundleDir, stored);
+    const base = path.resolve(root, bundleDir);
+    const relativeToBundle = path.relative(base, resolved);
+    if (relativeToBundle === '..' || relativeToBundle.startsWith(`..${path.sep}`) || path.isAbsolute(relativeToBundle)) {
+        throw new Error(`durable evidence manifest edge escapes bundle directory: ${bundlePath} -> ${stored}`);
+    }
+    const relative = path.relative(root, resolved).split(path.sep).join('/');
+    if (!existsSync(resolved)) throw new Error(`durable evidence manifest edge is missing: ${bundlePath} -> ${relative}`);
+    return relative;
+}
+
 function buildDurableEvidenceRelations(root) {
     const bundles = walkFiles(root, 'reports/stress/experiment-evidence',
         relative => path.basename(relative) === 'bundle.json');
     return bundles.map(bundlePath => {
         const bundle = JSON.parse(readFileSync(path.join(root, bundlePath), 'utf8'));
-        const manifestPath = path.join(path.dirname(bundlePath), 'manifest.json');
-        const hasManifest = existsSync(path.join(root, manifestPath));
+        const manifestPath = durableBundleManifestPath(root, bundlePath, bundle);
         return {
             ...bundle,
             bundlePath,
-            manifestPath: hasManifest ? manifestPath : null,
+            manifestPath,
             questionId: bundle?.researchQuestion?.questionId ?? bundle?.researchBlock?.questionId ?? null,
             measurementOpportunity: bundle?.researchQuestion?.measurementOpportunity ?? null,
             blockId: bundle?.researchBlock?.blockId ?? null,
