@@ -45,6 +45,14 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   if (instrument?.calibrationRef !== 'reports/2026-09-19-failure-evidence-prehandoff-direct-work-audit-001.md') {
     issues.push('instrument.calibrationRef');
   }
+  if (instrument?.calibration?.runId !== '35423841173') issues.push('instrument.calibration.runId');
+  if (instrument?.calibration?.semanticParity !== true) issues.push('instrument.calibration.semanticParity');
+  if (!Number.isFinite(instrument?.calibration?.representativeCompactWallOverheadPct)) {
+    issues.push('instrument.calibration.representativeCompactWallOverheadPct');
+  }
+  if (!Number.isFinite(instrument?.calibration?.representativeCompactPayloadBytesApprox)) {
+    issues.push('instrument.calibration.representativeCompactPayloadBytesApprox');
+  }
   const applicability = contract.currentApplicability;
   if (applicability?.basis !== 'solver-and-protocol-relative') issues.push('currentApplicability.basis');
   if (!Array.isArray(applicability?.refreshTriggers) || applicability.refreshTriggers.length === 0) {
