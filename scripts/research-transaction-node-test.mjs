@@ -5,7 +5,11 @@ import { buildPopulationIntegrity, recoveryProvenanceIssues } from './solver-exp
 import { combinePopulationIntegrity } from './combine-population-integrity.mjs';
 import { summarizeIndependentSupport } from './research-relations-lib.mjs';
 import { classifyProbeProcess } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
-import { formatInvestigationReportStatusBlock } from './investigation-report-metadata.mjs';
+import { createResearchCloseoutCapsule, formatInvestigationReportStatusBlock } from './investigation-report-metadata.mjs';
+import {
+    validateWs2FailureResponseAnalysisContract,
+    ws2FailureResponseAnalysisContractIdentity,
+} from './ws2-failure-response-analysis-contract-lib.mjs';
 import { validateSweepIntegrity } from './validate-solver-sweep-integrity.mjs';
 import { validateResearchQuestionRegistry } from './research-question-relations-lib.mjs';
 import { buildResearchEnrichmentLink } from './research-enrichment-link-lib.mjs';
@@ -244,6 +248,35 @@ const supersededStatusBlock = formatInvestigationReportStatusBlock({
     remainingGate: 'TX-NEXT',
 });
 assert.match(supersededStatusBlock, /^> \*\*Status:\*\* superseded$/m);
+
+// A real frozen analysis contract participates in the transaction spine and retains a stable identity.
+const ws2AnalysisContract = validateWs2FailureResponseAnalysisContract(JSON.parse(readFileSync(
+    'reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json',
+    'utf8',
+)));
+assert.match(ws2FailureResponseAnalysisContractIdentity(ws2AnalysisContract), /^sha256:[0-9a-f]{64}$/u);
+
+// Structured closeout keeps claim provenance distinct from the report/decision disposition.
+const closeoutCapsule = createResearchCloseoutCapsule({
+    status: 'concluded-negative',
+    lastEvidenceDate: '2026-09-19',
+    decision: 'close the synthetic tested form',
+    remainingGate: 'none',
+    researchQuestion: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    evidenceRole: 'confirmation',
+    populationIdentity: firstBlock.populationIdentity,
+    selection: 'prespecified synthetic transaction fixture',
+    inferenceScope: 'fixture-only transaction semantics',
+    claimRefs: ['claim:synthetic-transaction'],
+    sourceArtifacts: ['reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json'],
+});
+assert.equal(closeoutCapsule.decision, 'close the synthetic tested form');
+assert.deepEqual(closeoutCapsule.claimRefs, ['claim:synthetic-transaction']);
+assert.equal(closeoutCapsule.scope.populationIdentity, firstBlock.populationIdentity);
+assert.throws(() => createResearchCloseoutCapsule({
+    ...closeoutCapsule,
+    status: 'done-ish',
+}), /unknown report status/);
 
 // Report status creation uses the shared constructor, not free-form prose.
 const reportStatusBlock = formatInvestigationReportStatusBlock({
