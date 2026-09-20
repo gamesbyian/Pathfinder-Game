@@ -208,9 +208,11 @@ Production realization is already protected by:
 
 That is already a functioning organ rather than mere connective tissue.
 
-The remaining seam is narrower: promotion decisions and their evidence are usually linked to implementation/regression proof through reports, feature descriptions and comments rather than one common machine-readable relation.
+The previously identified narrow provenance seam has now earned and received the smallest useful extraction: promoted/default-ON ledger rows may carry a primary `Decision evidence ref`, exposed through the research relations model and checked against runtime polarity. Historical promotions without a defensible retained primary report remain explicitly unlinked.
 
-**Promotion trigger:** extract only the smallest decision-to-realization provenance link if multiple future promotions need tooling to answer that relation reliably. Do not create a `ChangeRealization` registry merely to restate runtime truth.
+This closes the decision-evidence -> listed runtime-default provenance question without creating a `ChangeRealization` registry.
+
+**Next promotion trigger:** only add more realization structure if multiple real consumers need implementation-target identity, qualification/invalidation state, or supersession history beyond the current evidence-ref edge.
 
 ## Connective tissue that should remain connective tissue
 
