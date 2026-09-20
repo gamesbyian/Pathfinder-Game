@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-durable-experiment-evidence-bundle",
+  "experimentId": "35530061224",
+  "workflowFamily": "isolated-method-probe",
+  "workflowRunId": "35530061224",
+  "workflowRunAttempt": "1",
+  "resolvedSha": "5ef9146bfea52f1c5bdea3a64eabce2e5e7ec78a",
+  "configurationHash": "sha256:96f216576333db2cec1743d8b758f07251bace3d6b8765604dea9aeb67f6f10f",
+  "populationIdentityHash": "sha256:b5eae070a768b082a3ac00c6508fe0f29bd2035fb2eb49606fafa93d2d27a51a",
+  "researchQuestion": null,
+  "researchBlock": null,
+  "researchOutcome": {
+    "schemaVersion": 1,
+    "outcome": "completed-positive",
+    "reason": "4 level(s) were solved by the probed method."
+  },
+  "sourceArtifact": "method-probe-combined",
+  "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35530061224",
+  "decisionBearing": true,
+  "manifestStoredPath": "manifest.json",
+  "files": [
+    {
+      "source": "manifest.json",
+      "stored": "manifest.json",
+      "bytes": 7939,
+      "sha256": "sha256:bec1ed04338e22e8c6bee65ff0741ce0f92f69df0981e66c5c4acbeb440574e7",
+      "compression": "none"
+    },
+    {
+      "source": "result.json",
+      "stored": "evidence/primary/result.json",
+      "bytes": 35054,
+      "sha256": "sha256:8e3a8715e86cb76710143a69f1cbb4f5021442ed2cccd4766b21e90b0f35a38d",
+      "compression": "none"
+    },
+    {
+      "source": "files/solved-ids.txt",
+      "stored": "evidence/include/files/solved-ids.txt",
+      "bytes": 28,
+      "sha256": "sha256:4f71e86ea46f98165c241bcab026401d255d2da7332cd2172064e62d81b4eec9",
+      "compression": "none"
+    },
+    {
+      "source": "failure-response/compact.json",
+      "stored": "evidence/compact-failure-response/failure-response/compact.json",
+      "bytes": 55474,
+      "sha256": "sha256:255794a32a3d3429468badecbe7bada949495f400d25268e7b3e72143063e99c",
+      "compression": "none"
+    }
+  ]
+}
