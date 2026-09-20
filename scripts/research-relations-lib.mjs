@@ -22,6 +22,7 @@ export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     evidence: { identity: 'topicId', source: 'reports/*.md via research-status-index' },
     queue: { identity: 'topicId', source: 'docs/solver-optimization-workstreams.md via research-status-index' },
     experiments: { identity: 'experimentId', source: 'docs/solver-opt-in-experiment-ledger.md via research-status-index' },
+    promotions: { identity: 'promotionId', source: 'docs/solver-opt-in-experiment-ledger.md#recently-promoted via research-status-index' },
     premiseSnapshots: { identity: 'snapshotId', source: 'docs/solver-premise-map-snapshot-v*.json' },
     premiseAdmissions: { identity: 'premiseId', source: 'docs/solver-premise-map-v2-admissions.json' },
     premises: { identity: 'premiseId', source: 'active solver-premise-map snapshot canonicalPremiseFiles' },
@@ -309,6 +310,7 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
         evidence: status.evidence.map(row => withSource(row, 'evidence', RESEARCH_RELATION_CONTRACTS.evidence.source)),
         queue: status.queue.map(row => withSource(row, 'queue', RESEARCH_RELATION_CONTRACTS.queue.source)),
         experiments: status.experiments.map(row => withSource(row, 'experiments', RESEARCH_RELATION_CONTRACTS.experiments.source)),
+        promotions: (status.promotions ?? []).map(row => withSource(row, 'promotions', RESEARCH_RELATION_CONTRACTS.promotions.source)),
         premiseSnapshots: [v1, v2].filter(Boolean).map(row =>
             withSource(row, 'premiseSnapshots', 'docs/solver-premise-map-snapshot-v*.json')),
         researchBlocks: artifactRelations.blockRows,
