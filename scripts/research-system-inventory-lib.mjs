@@ -264,6 +264,16 @@ function relationInventory(model) {
     })).sort((a, b) => a.relation.localeCompare(b.relation));
 }
 
+function queueQuestionRelation(row, question) {
+    if (!row.questionRef) return 'unlinked';
+    if (!question) return 'missing-question';
+    const state = String(question.state ?? '').trim().toLowerCase();
+    if (state.startsWith('active')) return 'active-question';
+    if (state === 'deferred-reopen') return 'reopen-trigger-gate';
+    if (/^(?:closed|concluded|superseded|cancelled)/u.test(state)) return 'terminal-question';
+    return 'nonterminal-nonactive-question';
+}
+
 function frontDoorInputs(model, plans, documentRoles = []) {
     const questions = model.relations.questions ?? [];
     const questionById = new Map(questions.map(question => [String(question.id), question]));
@@ -271,14 +281,19 @@ function frontDoorInputs(model, plans, documentRoles = []) {
         .filter(row => !/^(?:closed\b|subsumed\b|method complete\b)/iu.test(
             String(row.state ?? row.status ?? '').trim(),
         ))
-        .map(row => ({
-            workstreamId: row.workstreamId ?? null,
-            question: row.question ?? null,
-            state: row.state ?? row.status ?? null,
-            remainingGate: row.remainingGate ?? null,
-            questionRef: row.questionRef ?? null,
-            questionState: row.questionRef ? questionById.get(String(row.questionRef))?.state ?? null : null,
-        }));
+        .map(row => {
+            const question = row.questionRef ? questionById.get(String(row.questionRef)) ?? null : null;
+            return {
+                workstreamId: row.workstreamId ?? null,
+                question: row.question ?? null,
+                state: row.state ?? row.status ?? null,
+                remainingGate: row.remainingGate ?? null,
+                questionRef: row.questionRef ?? null,
+                questionState: question?.state ?? null,
+                questionReopensOn: question?.reopensOn ?? null,
+                questionExecutionRelation: queueQuestionRelation(row, question),
+            };
+        });
     const deferredReopenQuestions = questions
         .filter(question => String(question.state ?? '').toLowerCase() === 'deferred-reopen')
         .map(question => ({
@@ -311,13 +326,42 @@ function inventoryFindings({
     unknownLifecycle,
     dependencies,
     retiredWorkflows,
+    liveQueue,
 }) {
     return {
-        authority: currentAuthorityClaimOutsideIndex.map(row => ({
-            kind: 'current-authority-claim-outside-index',
-            path: row.path,
-            status: row.status,
-        })),
+        authority: [
+            ...currentAuthorityClaimOutsideIndex.map(row => ({
+                kind: 'current-authority-claim-outside-index',
+                path: row.path,
+                status: row.status,
+            })),
+            ...(liveQueue ?? []).flatMap(row => {
+                const active = String(row.state ?? '').toLowerCase().includes('active');
+                if (!active) return [];
+                if (row.questionExecutionRelation === 'missing-question') {
+                    return [{
+                        kind: 'active-workstream-references-missing-question',
+                        workstreamId: row.workstreamId,
+                        questionRef: row.questionRef,
+                    }];
+                }
+                if (row.questionExecutionRelation === 'terminal-question') {
+                    return [{
+                        kind: 'active-workstream-references-terminal-question',
+                        workstreamId: row.workstreamId,
+                        questionRef: row.questionRef,
+                        questionState: row.questionState,
+                    }];
+                }
+                if (row.questionExecutionRelation === 'unlinked') {
+                    return [{
+                        kind: 'active-workstream-without-stable-question-ref',
+                        workstreamId: row.workstreamId,
+                    }];
+                }
+                return [];
+            }),
+        ],
         lifecycle: [
             ...currentReferenceLifecycleMismatches.map(row => ({
                 kind: 'concluded-current-reference',
@@ -408,6 +452,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             .filter(row => row.rows === 0)
             .map(row => ({ kind: 'empty-relation-surface', relation: row.relation, source: row.canonicalSource })),
     };
+    const frontDoor = frontDoorInputs(model, plans, documentRoles);
     const findings = inventoryFindings({
         currentAuthorityClaimOutsideIndex,
         currentReferenceLifecycleMismatches,
@@ -415,6 +460,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         unknownLifecycle,
         dependencies,
         retiredWorkflows,
+        liveQueue: frontDoor.liveQueue,
     });
     return {
         schemaVersion: 1,
@@ -424,7 +470,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             methodAuthority: 'docs/solver-research-operating-model.md',
         },
         currentState: currentState(model),
-        frontDoorInputs: frontDoorInputs(model, plans, documentRoles),
+        frontDoorInputs: frontDoor,
         findings,
         architectureFindings,
         integrationHealth: {
