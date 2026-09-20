@@ -20,6 +20,8 @@ assert.match(ws2Live.questionReopensOn, /maintained producer emits/u);
 assert.equal(inventory.findings.authority.some(row =>
     row.kind === 'active-workstream-references-terminal-question' && String(row.workstreamId) === '2'), false);
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
+assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.every(row => row.acquisitionNeed),
+    'every deferred research question should expose its authored acquisition relation');
 assert.equal(inventory.frontDoorInputs.unfinishedLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'), false,
     'completed consolidation plan must not remain in unfinished front-door execution references');
@@ -150,6 +152,7 @@ assert.match(brief, /^## Live queue$/m);
 assert.match(brief, /WS2-FAILURE-RESPONSE-RECONNAISSANCE[\s\S]*reopen-trigger-gate/u);
 assert.match(brief, /^## Recent structured closeouts$/m);
 assert.match(brief, /^## Unfinished execution references$/m);
+assert.match(brief, /acquisition: telemetry-or-economics|acquisition: fresh-independent-parents/u);
 assert.match(brief, /Priority authority: `docs\/solver-optimization-workstreams\.md`/);
 assert.equal(researchSystemInventoryView(inventory, 'brief'), brief);
 
