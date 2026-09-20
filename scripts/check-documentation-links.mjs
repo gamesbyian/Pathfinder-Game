@@ -219,7 +219,7 @@ if (optInStart < 0 || optInEnd < 0) {
     : '';
   const allowedPromotionStates = new Set(['closed', 'open', 'no-current-gate', 'not-promotion-candidate']);
   const ledgerRows = new Map(
-    [...currentFlagsSection.matchAll(/^\| \`([A-Z0-9_]+)\` \| \`([a-z-]+)\` \| (.+) \|$/gmu)]
+    [...currentFlagsSection.matchAll(/^\| `([A-Z0-9_]+)` \| `([a-z-]+)` \| (.+) \|$/gmu)]
       .map(match => [match[1], { promotionState: match[2], disposition: match[3] }]),
   );
   for (const flag of optInFlags) {
