@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
     compactFailureResponseRow,
+    createFailureResponseDocument,
     summarizeFailureResponse,
 } from './solver-failure-response-lib.mjs';
 import { auditFailureResponseIdentity } from './failure-response-identity-audit-lib.mjs';
