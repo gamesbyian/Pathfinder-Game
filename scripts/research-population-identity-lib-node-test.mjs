@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
   canonicalizeResearchIdentities,
+  encodeResearchScopedIdentity,
   hashResearchPopulation,
   parseResearchIdentityLines,
 } from './research-population-identity-lib.mjs';
@@ -17,6 +18,16 @@ assert.deepEqual(
 assert.throws(
   () => canonicalizeResearchIdentities(['a', 'a']),
   /duplicate population identities/u,
+);
+assert.equal(encodeResearchScopedIdentity('scope:a', 'b'), '["scope:a","b"]');
+assert.equal(encodeResearchScopedIdentity('scope', 'a:b'), '["scope","a:b"]');
+assert.notEqual(
+  encodeResearchScopedIdentity('scope:a', 'b'),
+  encodeResearchScopedIdentity('scope', 'a:b'),
+);
+assert.notEqual(
+  encodeResearchScopedIdentity('cut,group', 'case:1'),
+  encodeResearchScopedIdentity('cut', 'group,case:1'),
 );
 
 const a = hashResearchPopulation({
