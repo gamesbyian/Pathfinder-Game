@@ -525,6 +525,23 @@ export interface ParityCapacityObserver {
     observe(record: ParityCapacityRecord): void;
 }
 
+export interface ParityPhaseDistanceRecord {
+    pos: number;
+    stateFingerprint: string;
+    remainingSteps: number;
+    requiredFutureTwistParity: 0 | 1;
+    scalarGoalDistance: number;
+    phaseGoalDistance: number;
+    scalarDistanceWouldReject: boolean;
+    phaseDistanceWouldReject: boolean;
+    incrementalPhaseReject: boolean;
+    work: number;
+}
+
+export interface ParityPhaseDistanceObserver {
+    observe(record: ParityPhaseDistanceRecord): void;
+}
+
 /** Observer-only joint-obligation propagation (see joint-obligation-propagation.ts's own doc and
  *  reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md). Currently one cluster
  *  kind: a pending must-cross cell's still-open-axis forced neighbor that is itself a portal
