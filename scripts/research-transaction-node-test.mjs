@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { buildPopulationIntegrity } from './solver-experiment-contract.mjs';
+import { buildPopulationIntegrity, recoveryProvenanceIssues } from './solver-experiment-contract.mjs';
 import { combinePopulationIntegrity } from './combine-population-integrity.mjs';
 import { summarizeIndependentSupport } from './research-relations-lib.mjs';
 import { classifyProbeProcess } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
@@ -117,6 +117,32 @@ const consumedEligibility = researchBlockEligibility(consumedBlock, {
 });
 assert.equal(consumedEligibility.eligible, false);
 assert.ok(consumedEligibility.reasons.includes('matching-consumption-recorded'));
+
+// Recovery provenance distinguishes recombination from missing-acquisition retry.
+const recombineProvenance = {
+    sourceRuns: ['first-pass', 'recovery-pass'],
+    reconciliationRun: {
+        kind: 'recombine-only',
+        sourceRuns: ['first-pass', 'recovery-pass'],
+        preservesExperimentIdentity: true,
+        acquisitionRecomputed: false,
+    },
+};
+assert.deepEqual(recoveryProvenanceIssues(recombineProvenance), []);
+const retryProvenance = {
+    sourceRuns: ['first-pass', 'recovery-pass'],
+    reconciliationRun: {
+        kind: 'retry-missing-acquisition',
+        sourceRuns: ['first-pass', 'recovery-pass'],
+        preservesExperimentIdentity: true,
+        acquisitionRecomputed: true,
+    },
+};
+assert.deepEqual(recoveryProvenanceIssues(retryProvenance), []);
+assert.ok(recoveryProvenanceIssues({
+    ...recombineProvenance,
+    reconciliationRun: { ...recombineProvenance.reconciliationRun, acquisitionRecomputed: true },
+}).includes('experiment.reconciliationRun.acquisitionRecomputed'));
 
 // Recovery reuses the immutable expected population and replaces only the failed/incomplete
 // acquisition component. No solver/reference recomputation is needed for shard A.
