@@ -174,14 +174,18 @@ export function laneABoundaryKinematics({ levelId, interfaceGeometry, prefix, le
         throw new Error(`Lane-A prefix endpoint is outside interface partition: ${endpointSide}`);
     }
     const events = crossingEvents(normalizedPrefix, sets, portalMap);
-    if (!events.length) throw new Error('Lane-A C1 frozen case contains no gate/remainder crossing event');
+    const incidence = cutIncidence(normalizedPrefix, sets, portalMap);
+    const cutVisitCount = incidence.reduce((sum, cell) => sum + cell.visits.length, 0);
+    if (!events.length && cutVisitCount === 0) {
+        throw new Error('Lane-A C1 frozen case has neither a side-transition event nor cut-cell incidence');
+    }
 
     return {
         schemaVersion: 2,
         levelId: String(levelId),
         cutCells: sets.cutCells,
         endpointSide,
-        cutIncidence: cutIncidence(normalizedPrefix, sets, portalMap),
+        cutIncidence: incidence,
         crossingEvents: events,
         crossingPortalState: crossingPortalState(normalizedPrefix, sets, level, portalMap),
     };
