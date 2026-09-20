@@ -117,6 +117,7 @@ const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
 assert.match(brief, /^## Live queue$/m);
 assert.match(brief, /^## Recent structured closeouts$/m);
+assert.match(brief, /^## Unfinished execution references$/m);
 assert.match(brief, /Priority authority: `docs\/solver-optimization-workstreams\.md`/);
 assert.equal(researchSystemInventoryView(inventory, 'brief'), brief);
 
