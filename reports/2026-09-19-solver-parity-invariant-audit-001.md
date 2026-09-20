@@ -112,3 +112,123 @@ A genuinely stronger parity bound would need additional resource information, no
 4. Inspect policy/features/budgeting for places where a static parity signature could change attempt selection without leaking level identity.
 5. Build small synthetic witnesses for confirmed gaps before touching production behavior.
 6. Prefer observer/probe evidence for guidance/order changes; require stored-solution/referee/differential evidence for any hard prune.
+
+
+## First-principles deductions
+
+### A. Phase-conditioned portal distance is stronger than the closed existence envelope
+
+The August envelope asks only whether a parity-repairing twist portal remains somewhere. That loses two kinds of information: whether a route to the goal exists with the **required parity of future twist crossings**, and whether such a route fits inside the remaining counted length.
+
+A better static relaxation is a two-layer 0-1 shortest-path graph:
+
+- state: `(cell, q)`, where `q ∈ {0,1}` is future twist-jump parity;
+- ordinary cardinal edge: cost 1, `q` unchanged;
+- same-parity portal jump: cost 0, `q` unchanged;
+- twist portal jump: cost 0, `q` toggled.
+
+Let `D_q(pos)` be the relaxed minimum counted distance from `pos` to the goal using twist parity `q`. From a stable state with `rSteps` remaining, the required future twist parity is
+
+`qRequired = parity(pos) XOR parity(goal) XOR (rSteps mod 2)`.
+
+Then either of these is a sound rejection in the relaxed graph:
+
+- `D_qRequired(pos) = Infinity`;
+- `D_qRequired(pos) > rSteps`.
+
+Why this remains admissible:
+- the graph may ignore dynamic walls, consumed portals, edge-axis history, forced-turn details, and exact intersection obligations, so it can only invent extra routes or make routes cheaper;
+- rejecting only when even that relaxation cannot supply the required phase/length therefore cannot remove a real completion;
+- portal forcing needs care in the implementation, but using an over-permissive ordinary+portal-edge relaxation is still safe for a lower bound.
+
+This is a **materially tighter parity argument** than “all twist pairs consumed”, so it satisfies the 2026-08-08 report's reopen condition rather than repeating the closed experiment.
+
+Potential consumers:
+1. hard prune as a new conditioned distance bound;
+2. `admissibleRemainingBound`, where it can improve ordering even before promotion as a prune;
+3. portal guidance, replacing “head toward the first twist” with a state-relative phase deficit;
+4. false-goal endpoint search, if a conditioned endpoint formulation proves useful.
+
+### B. Checkerboard-split connectivity volume
+
+On any state where future twist parity is fixed to zero (portal-free or only same-parity portals), the colors of the next `rSteps` counted arrivals are fixed.
+
+If current color is `p`:
+
+- when `rSteps = 2k`, future counted arrivals require `k` of color 0 and `k` of color 1;
+- when `rSteps = 2k+1`, they require `k+1` arrivals of color `p XOR 1` and `k` of color `p`.
+
+The current connectivity-volume prune is color-blind:
+
+`freshVolume + intNeeded >= rSteps`.
+
+A sound color-aware relaxation can count reachable fresh cells separately as `fresh[0]` / `fresh[1]` and give the full remaining intersection budget to *each* color independently:
+
+`capacity[c] = fresh[c] + intNeeded`.
+
+Giving every future intersection to either color simultaneously is deliberately over-generous. Therefore
+
+`capacity[c] < requiredArrivals[c]`
+
+for either color proves failure.
+
+This can detect a component with enough total volume but the wrong color composition. It should be especially relevant to corridor-rich / near-Hamiltonian states, exactly where the existing parity check is already considered worth paying for.
+
+Portal details:
+- a same-parity zero-cost jump can make an extra fresh cell reachable without consuming counted length; counting that cell in `fresh[c]` only inflates capacity and is safe;
+- twist portals invalidate the fixed color schedule unless future twist phase is itself represented, so the first implementation should abstain on them or move to a layered phase/color formulation.
+
+The bit-parallel connectivity implementation already computes a reached set. A shadow measurement can therefore add color counts without changing search decisions, and later implementation need not require another flood fill.
+
+### C. Dynamic phase can be derived; it does not require another mutable state field
+
+For the path prefix from its actual gate to current `pos`:
+
+`pastTwistParity = parity(start) XOR parity(pos) XOR (realLen mod 2)`.
+
+That follows directly from the same invariant: ordinary counted moves toggle cell color and twist jumps add the only zero-cost color toggles.
+
+This is useful because:
+- `state.portalJumps & 1` is **not** the same quantity: same-parity portal jumps also increment `portalJumps`;
+- no new undo-sensitive search-state field is needed merely to know current checkerboard phase;
+- soft guidance can stop using “has any twist terminal ever been visited?” as a proxy.
+
+At a transient portal source immediately before its forced jump, callers still need the same care the August census discovered: the cell has been visited but the jump has not yet occurred. The algebra above remains about actual applied transitions, so using `realLen` + position is preferable to visited-terminal inference.
+
+### D. Objective-distance parity alone is mostly a red herring
+
+For a portal-free bipartite walk, the parity of segment lengths through a sequence of mandatory waypoint cells telescopes to the parity between the current cell and final goal. Therefore simply “parity-rounding” each must-pass/must-cross/MST lower bound is not automatically new information, and doing so independently can double-count incompatible slack.
+
+A worthwhile obligation-level parity deduction needs an additional resource restriction, such as:
+- which twist phases are available between objective regions;
+- color-specific visit capacity;
+- forced interfaces that constrain the parity layer a route must occupy.
+
+This is an explicit guard against turning a true invariant into cargo-cult arithmetic.
+
+## Search-family propagation matrix
+
+| Surface | Existing parity knowledge | Audit result |
+|---|---|---|
+| DFS | shared hard prune + scoring | endpoint parity represented; stronger phase/capacity deductions absent |
+| Beam | shared hard prune + scoring; consumed portal-pair identity retained where portal merge research applies | no state-identity parity loss found |
+| Repair | shared hard prune + scoring; exact cache records path length/portal history | correctness covered; badness/residual landscape is parity-blind |
+| Admissible-order DFS | hard prune after move; ordering bound omits parity | confirmed knowledge-propagation gap in ordering |
+| Hint/variety admissible-slack mode | reuses `rankByAdmissibleSlack` and shared hard prune | inherits the same ordering gap |
+| Production/static/legacy orchestration | `getActiveGates(..., prep)` | same-parity-portal gate filtering already propagated |
+| False-goal classification | static endpoint parity; any twist portal => conservative “both” | sound but coarse on twist levels |
+| Connectivity | total volume + reachability | prime location for color-split capacity and dynamic phase reachability |
+| Lower-bound prep | portal-aware scalar 0-1 distances | loses route's required future twist parity by collapsing layers |
+| Solution/referee acceptance | exact path already materialized | no separate parity check needed |
+
+## Priority emerging from the audit
+
+Current ordering by conceptual leverage, not yet by measured solve gain:
+
+1. **Phase-conditioned 0-1 distance maps** — strongest clean new invariant; can serve pruning, ordering and guidance from one representation.
+2. **Checkerboard-split connectivity capacity** — cheap, orthogonal to scalar volume, plausible dense/corridor leverage.
+3. **Admissible-order parity propagation** — small but concrete mismatch; likely cheap to close once a shared parity-feasibility helper exists.
+4. **Dynamic portal guidance** — obvious semantic improvement, but scoring changes are empirical and can reshuffle winners.
+5. **Repair parity residual** — plausible plateau signal; should be observer-first because repair is sensitive to score/badness changes.
+6. **Twist-aware false-goal tightening** — valid but peripheral to new solver solves.
+
