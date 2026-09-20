@@ -150,7 +150,8 @@
           "docs/solver-failure-evidence-research-integration-plan.md",
           "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
           "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md",
-          "reports/2026-09-19-expensive-success-divergence-microscope-001.md"
+          "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
+          "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md"
         ],
         "aliases": [
           "R00044 allocation-order artifact",
@@ -158,7 +159,7 @@
           "reserve starvation"
         ],
         "explicitTrigger": true,
-        "explicitConstraintSources": 4,
+        "explicitConstraintSources": 5,
         "candidateSetVisible": true
       }
     },
@@ -341,7 +342,9 @@
         "constraints": [
           "docs/solver-failure-evidence-research-integration-plan.md",
           "reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md",
+          "reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md",
           "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
+          "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
           "scripts/analyze-class3-dose-exposure.mjs",
           "scripts/build-class3-dose-expectations.mjs",
           "scripts/failure-response-query.mjs",
@@ -354,7 +357,7 @@
           "dose reconciliation"
         ],
         "explicitTrigger": true,
-        "explicitConstraintSources": 8,
+        "explicitConstraintSources": 10,
         "candidateSetVisible": false
       }
     },
@@ -534,7 +537,7 @@
         "measurementDeficit": false,
         "computeDeficit": true,
         "codeDeficit": true,
-        "conceptDeficit": true,
+        "conceptDeficit": false,
         "reopenConditionPresent": true
       },
       "proposalProvenance": {
@@ -547,6 +550,8 @@
           "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json",
           "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md",
           "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md",
+          "reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md",
+          "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
           "scripts/failure-evidence-purpose-query.mjs",
           "scripts/failure-response-query.mjs"
         ],
@@ -556,7 +561,7 @@
           "post-work-ladder discriminator"
         ],
         "explicitTrigger": true,
-        "explicitConstraintSources": 7,
+        "explicitConstraintSources": 9,
         "candidateSetVisible": true
       }
     },
@@ -1070,7 +1075,7 @@
     {
       "id": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
       "owner": "WS2",
-      "state": "mixed",
+      "state": "closed-tested-form",
       "question": "Can the separator/decomposition positive be upgraded into a compact dynamic interface contract that preserves the future-relevant history needed for safe composition?",
       "evidenceRefs": [
         "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
@@ -1094,8 +1099,8 @@
         "measurementDeficit": false,
         "computeDeficit": false,
         "codeDeficit": false,
-        "conceptDeficit": false,
-        "reopenConditionPresent": false
+        "conceptDeficit": true,
+        "reopenConditionPresent": true
       },
       "proposalProvenance": {
         "triggers": [],
@@ -1103,7 +1108,9 @@
           "docs/solver-separator-dynamic-interface-contract-preflight.md",
           "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
           "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
-          "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md"
+          "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md",
+          "reports/2026-09-20-lane-a-c1-boundary-kinematics-preflight-001.md",
+          "reports/2026-09-20-lane-a-c2-global-accounting-preflight-001.md"
         ],
         "aliases": [
           "Lane A",
@@ -1111,7 +1118,7 @@
           "separator interface"
         ],
         "explicitTrigger": false,
-        "explicitConstraintSources": 4,
+        "explicitConstraintSources": 6,
         "candidateSetVisible": true
       }
     },
@@ -1275,7 +1282,7 @@
       "needsMeasurement": false,
       "needsCompute": true,
       "needsCode": true,
-      "needsConceptOrRepresentation": true
+      "needsConceptOrRepresentation": false
     },
     {
       "questionId": "WS2-G1-COMPLETE-PATH-LNS",

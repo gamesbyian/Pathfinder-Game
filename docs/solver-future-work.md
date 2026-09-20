@@ -3,8 +3,6 @@
 
 Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method.
 
-Cold procedures may derive exact current-input facts; cross-parent recurrence is only required for reusable descriptor claims.
-
 ## Deferred descendants of active premises
 
 | Descendant | Reopen / advancement condition |
@@ -12,17 +10,17 @@ Cold procedures may derive exact current-input facts; cross-parent recurrence is
 | General solve-local proof store / blackboard | One concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
 | Production bounded exact-query service | D1's observation found 0/120 production disagreements (2026-09-18) -- closed for this predicate. Reopen only under a materially different predicate/seam/population |
-| Region/AND-OR decomposition engine | The prespecified C0-C4 separator contract falsifier yields a compact repeated exact-outcome-pure signature across independent parents without near-unique/full-prefix state |
+| Region/AND-OR decomposition engine | C0-C2 ladder closed representation-explosive at C2. Reopen only if a different frozen interface contract restores repeated outcome equivalence without near-unique/full-prefix state. [`result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md) |
 | Production topology-aware state relation | Fresh independent parents show a reliable compact descriptor with non-zero decision-bearing discordance; then seek a sound actionable consequence beyond raw phase |
 | Targeted local surgery / causal backjump operator | New independent evidence finds an actionable causal interface materially smaller than naive divergence/ordinary rollback; Lane E's tested form stays closed |
-| Dependency-conditioned repair neighborhood | Current exact-labelled/repair-retreat evidence shows rescue requires revising an interior/early commitment outside the append-only neighborhood; trace the coupled commitment before designing a new repair operator |
+| Dependency-conditioned repair neighborhood | **DEVELOPMENT POSITIVE.** R03147 nominates path-resource + relational-bound state; require independent-parent replication before any consumer. [`result`](../reports/2026-09-20-ws6-dependency-interface-observer-result-001.md) |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
 
 ## Deferred plan closeouts
 
 - **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
-- **Failure evidence:** P3 -> failure-response; P4A -> class-3 dose; P4B -> reserve starvation; P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Failure evidence:** P3 failure-response + P4A Class-3 dose now share one frozen 53-parent compact-response acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md`); their analyses/dispositions remain separate. P4B -> reserve starvation; P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
