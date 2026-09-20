@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method; [capability invention program](solver-capability-invention-program.md) owns the HARVEST / EXTENSION / INVENTION classification and acquisition ladder. Deferred architectures here do not become active merely because the harvest queue shrinks; they must be nominated by current capability demand.
+Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method; [invention program](solver-capability-invention-program.md) owns capability-acquisition classification. Queue shrinkage alone does not reopen architecture.
 
 ## Deferred descendants of active premises
 
@@ -19,19 +19,16 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 ## Deferred plan closeouts
 
-- **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
-- **Failure evidence:** P3 failure-response and P4A Class-3 dose both concluded (2026-09-20) from the shared 53-parent acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md` -> `reports/2026-09-20-ws2-class3-dose-and-reconnaissance-result-001.md`): P4A 0/23 exposure-gap, 20/23 censored-dose (16 repair-family, 5 admissible-order-fraction), 3/23 exposed-and-negative; P3 routes `allocation-specific-follow-up`, nominating a repair-family per-attempt-deadline A/B (distinct question from P4B). P4B reserve starvation concluded positive (2/40, see "Admissible-order retry repricing" above), now cross-validated by P4A's admissible-order rows. P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Parity:** [preflight](solver-parity-phase-capacity-preflight.md).
+- **Failure evidence:** Class-3 dose and reconnaissance are concluded; repair-deadline allocation is active, reserve repricing independently nominated, and P7 still needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
 ## Hint/failure reopen hooks
 
-- Compatible compact-response rows -> identity/novelty/frontier audits; never backfill pre-contract attempts.
-- Repeated compatible populations + ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
-- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins. Require a valid denominator/protocol/dependence unit; R00044's canary is not prevalence evidence.
-- Recurring rich producer -> search-loss P8 decision.
-- Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
-- Whole-space extinction is not deferred; sampled hints cannot prove it.
+- Use compatible compact-response evidence first; never backfill pre-contract attempts. Repeated compatible populations may earn phenotype reducers.
+- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins with valid denominator/protocol/dependence unit.
+- Recurring rich producer -> P8; explicit first-loss selection -> P9. Sampled hints cannot prove whole-space extinction.
 
 ## Deferred architectural questions
 
