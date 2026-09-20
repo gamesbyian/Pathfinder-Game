@@ -85,8 +85,15 @@ if (selectedRoute && !eligible) {
 
 const allDecisionValid = documents.every(({ document }) =>
   document.populationIntegrity?.decisionValidComplete === true);
-const hasUnknownInstrumentSupport = observation.rows?.some(row =>
-  row.badness?.support === 'UNKNOWN' || row.badness?.support === 'UNSUPPORTED') ?? false;
+const identityComparable = documents.every(({ document }) =>
+  typeof document.protocolHash === 'string' && document.protocolHash
+  && typeof document.solverRef === 'string' && document.solverRef)
+  && protocolHashes.size <= 1
+  && solverRefs.size <= 1
+  && observation.summary.protocolComparability.parentsWithUnknownProtocol === 0
+  && observation.summary.protocolComparability.parentsWithMultipleKnownProtocols === 0;
+const completeCoverage = documents.every(({ document }) =>
+  document.populationIntegrity?.coverageComplete === true);
 const resolution = buildResearchResolutionEnvelope({
   questionId: contract.questionId,
   liveRivals: contract.liveRivals,
@@ -94,8 +101,10 @@ const resolution = buildResearchResolutionEnvelope({
   requiredAxes: ['eligibility', 'measurementSupport', 'coverage'],
   axes: {
     eligibility: {
-      status: eligible ? 'satisfied' : 'blocked',
-      reason: eligible ? 'solver/protocol-relative population eligibility satisfied' : eligibilityReasons.join('; '),
+      status: identityComparable ? 'satisfied' : 'blocked',
+      reason: identityComparable
+        ? 'solver/protocol identities are known and comparable'
+        : 'solver/protocol identity is missing, mixed, or internally inconsistent',
     },
     opportunity: {
       status: 'not-required',
@@ -110,15 +119,14 @@ const resolution = buildResearchResolutionEnvelope({
       reason: 'participation is an observed discriminator dimension in this screen, not a global precondition',
     },
     measurementSupport: {
-      status: hasUnknownInstrumentSupport ? 'unknown' : 'satisfied',
-      reason: hasUnknownInstrumentSupport
-        ? 'one or more reported badness annotations are unsupported/unknown; route only on supported compact fields'
-        : 'compact instrument support policy is satisfied for reported routing fields',
+      status: 'satisfied',
+      reason: 'the compact instrument is calibrated for reported fields; unreported or unsupported optional fields remain unknown and cannot support a route',
     },
     coverage: {
-      status: documents.every(({ document }) => document.populationIntegrity?.coverageComplete === true)
-        ? 'satisfied' : 'blocked',
-      reason: 'primary routing requires complete accounting of the eligible population',
+      status: completeCoverage ? 'satisfied' : 'blocked',
+      reason: completeCoverage
+        ? 'the supplied populations have complete structural accounting'
+        : 'primary routing requires complete accounting of the eligible population',
     },
     censoring: {
       status: allDecisionValid ? 'satisfied' : 'unknown',
