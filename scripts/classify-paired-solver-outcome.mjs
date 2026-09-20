@@ -85,11 +85,23 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       maxLosses: nonnegativeInteger(args.get('max-losses'), 'max-losses'),
       maxWorkDeltaPct,
     };
-    const control = JSON.parse(fs.readFileSync(controlFile, 'utf8')).levels ?? [];
-    const treatment = JSON.parse(fs.readFileSync(treatmentFile, 'utf8')).levels ?? [];
+    const controlDocument = JSON.parse(fs.readFileSync(controlFile, 'utf8'));
+    const treatmentDocument = JSON.parse(fs.readFileSync(treatmentFile, 'utf8'));
+    const control = controlDocument.levels ?? [];
+    const treatment = treatmentDocument.levels ?? [];
     const integrity = JSON.parse(fs.readFileSync(integrityFile, 'utf8'));
     const result = classifyPairedSolverOutcome(control, treatment, gate, integrity);
-    writeResearchWorkflowOutcome(out, result.researchOutcome);
+    const resultConfigurationHashes = [controlDocument.configurationHash, treatmentDocument.configurationHash];
+    if (resultConfigurationHashes.some(value => typeof value !== 'string' || !/^sha256:[0-9a-f]{64}$/u.test(value))) {
+      throw new Error('paired control/treatment results must carry sha256 configurationHash values');
+    }
+    writeResearchWorkflowOutcome(out, {
+      ...result.researchOutcome,
+      binding: {
+        populationIdentityHash: integrity.populationIdentityHash,
+        resultConfigurationHashes,
+      },
+    });
     console.log(`control solved: ${result.controlSolved}/${control.length}, work=${result.controlWork}`);
     console.log(`treatment solved: ${result.treatmentSolved}/${treatment.length}, work=${result.treatmentWork} (${Number.isFinite(result.workDeltaPct) ? result.workDeltaPct.toFixed(2) : result.workDeltaPct}% vs control)`);
     console.log(`gained (${result.gained.length}): ${result.gained.join(',')}`);
