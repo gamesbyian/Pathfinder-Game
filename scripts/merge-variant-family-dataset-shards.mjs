@@ -33,7 +33,27 @@ const ATTEMPTS_DIR = path.resolve(process.cwd(), 'reports/families');
 const CANONICAL_ATTEMPT_RE = /^variant-family-dataset-attempts-[A-Za-z0-9_-]+-part\d+\.json$/;
 
 const manifest = JSON.parse(readFileSync(path.resolve(process.cwd(), MANIFEST), 'utf8'));
-const idToCorpus = new Map(manifest.map((e) => [e.id, e.corpus]));
+const taskKey = (corpus, id, mode) => `${corpus}|${id}|${mode}`;
+const levelKey = (corpus, id) => `${corpus}|${id}`;
+const manifestTaskKeys = new Set();
+const corporaById = new Map();
+const taskCorporaByBareKey = new Map();
+for (const entry of manifest) {
+    if (!corporaById.has(entry.id)) corporaById.set(entry.id, new Set());
+    corporaById.get(entry.id).add(entry.corpus);
+    for (const mode of entry.modes) {
+        const key = taskKey(entry.corpus, entry.id, mode);
+        if (manifestTaskKeys.has(key)) throw new Error(`duplicate manifest task identity: ${key}`);
+        manifestTaskKeys.add(key);
+        const bareKey = `${entry.id}|${mode}`;
+        if (!taskCorporaByBareKey.has(bareKey)) taskCorporaByBareKey.set(bareKey, new Set());
+        taskCorporaByBareKey.get(bareKey).add(entry.corpus);
+    }
+}
+function uniqueCorpusForId(id) {
+    const corpora = corporaById.get(id);
+    return corpora?.size === 1 ? [...corpora][0] : null;
+}
 
 // Deduped by (id, mode), keeping the LAST occurrence: collect-variant-family-dataset-shard.mjs's
 // progress files are append-only (appendFileSync), and a re-dispatch of an already-committed shard re-checks
@@ -45,6 +65,7 @@ const idToCorpus = new Map(manifest.map((e) => [e.id, e.corpus]));
 // (a task counted N times for N dispatches that ever touched its shard), even though the underlying
 // data files themselves stay correctly deduplicated by the idempotency check.
 const rowByKey = new Map();
+const ambiguousLegacySummaryRows = [];
 const inDirAbs = path.resolve(process.cwd(), IN_DIR);
 if (existsSync(inDirAbs)) {
     for (const file of readdirSync(inDirAbs).filter((f) => /^wide-shard-\d+-summary\.jsonl$/.test(f))) {
@@ -52,22 +73,40 @@ if (existsSync(inDirAbs)) {
         for (const line of text.split('\n')) {
             if (!line.trim()) continue;
             try {
-                const row = JSON.parse(line);
-                rowByKey.set(`${row.id}|${row.mode}`, row);
-            } catch { /* partial last line from a killed shard */ }
+                const parsed = JSON.parse(line);
+                let corpus = parsed.corpus ?? null;
+                if (corpus == null) {
+                    const candidates = taskCorporaByBareKey.get(`${parsed.id}|${parsed.mode}`) ?? new Set();
+                    if (candidates.size === 1) corpus = [...candidates][0];
+                    else {
+                        ambiguousLegacySummaryRows.push({ file, id: parsed.id, mode: parsed.mode, candidateCorpora: [...candidates].sort() });
+                        continue;
+                    }
+                }
+                const key = taskKey(corpus, parsed.id, parsed.mode);
+                if (!manifestTaskKeys.has(key)) {
+                    throw new Error(`summary row is not an authored manifest task: ${key}`);
+                }
+                rowByKey.set(key, { ...parsed, corpus });
+            } catch (err) {
+                if (err instanceof SyntaxError) continue; // partial last line from a killed shard
+                throw err;
+            }
         }
     }
 }
 const rows = [...rowByKey.values()];
 
-const expectedTasks = manifest.reduce((a, e) => a + e.modes.length, 0);
-console.log(`Parsed ${rows.length} (level,mode) result(s) against ${expectedTasks} expected tasks.`);
+const expectedTasks = manifestTaskKeys.size;
+console.log(`Parsed ${rows.length} namespaced (level,mode) result(s) against ${expectedTasks} expected tasks.`);
+if (ambiguousLegacySummaryRows.length) {
+    console.log(`Excluded ${ambiguousLegacySummaryRows.length} ambiguous legacy summary row(s) whose bare id/mode exists in multiple corpora.`);
+}
 
 const byCorpus = {};
 const byMode = {};
 for (const r of rows) {
-    const corpus = idToCorpus.get(r.id) || 'unknown';
-    (byCorpus[corpus] ??= []).push(r);
+    (byCorpus[r.corpus] ??= []).push(r);
     (byMode[r.mode] ??= []).push(r);
 }
 
@@ -83,7 +122,11 @@ function summarize(rowsSubset, label) {
 const lines = [];
 lines.push('# Variant-family dataset: generation + solve + hint-extraction coverage');
 lines.push('');
-lines.push(`${rows.length}/${expectedTasks} (level, mode) tasks completed (${manifest.length} levels in manifest across published/corpus1/corpus2).`);
+lines.push(`${rows.length}/${expectedTasks} namespaced (corpus, level, mode) tasks completed (${manifest.length} levels in manifest across published/corpus1/corpus2).`);
+if (ambiguousLegacySummaryRows.length) {
+    lines.push('');
+    lines.push(`**Legacy identity warning:** ${ambiguousLegacySummaryRows.length} bare-id summary row(s) were excluded because the same id/mode is authored in multiple corpora. They cannot be assigned safely without corpus identity.`);
+}
 lines.push('');
 lines.push('A "0-variant" task is a level with no eligible objects for that mode (e.g. local-mutant');
 lines.push('on a level with zero movable objects) -- expected, not a failure.');
@@ -101,13 +144,21 @@ lines.push('|---|---|---|---|---|---|');
 for (const [m, rs] of Object.entries(byMode)) lines.push(summarize(rs, m));
 lines.push('');
 
-const missingIds = new Set(manifest.map((e) => e.id));
-for (const r of rows) missingIds.delete(r.id);
+const missingTaskKeys = new Set(manifestTaskKeys);
+const missingLevelKeys = new Set(manifest.map((e) => levelKey(e.corpus, e.id)));
+for (const [key, row] of rowByKey) {
+    missingTaskKeys.delete(key);
+    missingLevelKeys.delete(levelKey(row.corpus, row.id));
+}
 lines.push(`## Coverage gaps`);
 lines.push('');
-lines.push(`${missingIds.size} manifest level(s) have zero completed tasks (shard didn't reach them / stopped early on the wall-clock budget). First 50:`);
+lines.push(`${missingTaskKeys.size} manifest task(s) are incomplete. First 50:`);
 lines.push('');
-lines.push([...missingIds].slice(0, 50).join(', ') || '(none)');
+lines.push([...missingTaskKeys].slice(0, 50).join(', ') || '(none)');
+lines.push('');
+lines.push(`${missingLevelKeys.size} namespaced manifest level(s) have zero completed tasks. First 50:`);
+lines.push('');
+lines.push([...missingLevelKeys].slice(0, 50).join(', ') || '(none)');
 
 // Failure provenance: solve-<id>-<abbr>.json (portfolio-solve-sweep's own --out format,
 // {summary, levels:[{...full per-attempt record: attempts, failedStrategies, nodesExpanded,
@@ -131,11 +182,16 @@ function ingestSolveFile(filePath, file, corpusOverride) {
     // contain an id "R02000" -- a flat, non-namespaced solve path let one corpus's real solve
     // attempt silently overwrite the other's). Falls back to the id->corpus manifest lookup only
     // for the legacy flat files predating the per-corpus solve-output layout.
-    const corpus = corpusOverride ?? (idToCorpus.get(parentId) || 'unknown');
+    const corpus = corpusOverride ?? uniqueCorpusForId(parentId) ?? 'unknown';
     let parsed;
     try { parsed = JSON.parse(readFileSync(filePath, 'utf8')); } catch { return; }
     for (const levelResult of parsed.levels || []) {
-        (attemptsByCorpus[corpus] ??= []).push({ ...levelResult, parentId, mode: ABBR_TO_MODE[abbr] });
+        (attemptsByCorpus[corpus] ??= []).push({
+            ...levelResult,
+            parentId,
+            parentCorpus: corpus,
+            mode: ABBR_TO_MODE[abbr],
+        });
     }
 }
 if (existsSync(inDirAbs)) {
