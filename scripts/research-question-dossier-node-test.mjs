@@ -25,6 +25,12 @@ assert.ok(activeDossier.currentAuthorityMatches.queue.some(row => row.questionRe
     'the current WS2 active gate must resolve to the queue row that names it as the stable question ref');
 assert.ok(activeDossier.currentAuthorityMatches.queue.every(row => row.questionRef === activeQuestionId),
     'queue matches must not fall back to lexical similarity once a stable question reference exists');
+assert.notEqual(activeDossier.currentAuthorityMatches.evidenceMatchMode, 'lexical-fallback');
+assert.equal(activeDossier.currentAuthorityMatches.evidenceDiscoveryMode, 'lexical-discovery-only');
+const activeAnsweredBy = new Set(activeDossier.question.answeredBy ?? []);
+assert.ok(activeDossier.currentAuthorityMatches.evidence.every(row =>
+    row.researchQuestion === activeQuestionId || activeAnsweredBy.has(row.latestEvidence?.report)),
+    'authoritative dossier evidence must come from stable question tags or authored answeredBy paths');
 
 const run = spawnSync(process.execPath, [
     'scripts/research-question-dossier.mjs',
