@@ -295,16 +295,9 @@ This should be applied especially to historical “clean negatives” before the
 
 The concept has clearly earned an audit lens now.
 
-The shared code primitive is earned when two live, materially different consumers can delegate:
+That promotion trigger has now been met. `WS2-FAILURE-RESPONSE-RECONNAISSANCE` and `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` both emit the shared `pathfinder-research-resolution-envelope` while retaining different required-axis subsets and specialist verdict logic. The reserve-starvation integration also exposed two concrete false-readiness gaps: missing action identity and missing solver identity.
 
-- axis validation;
-- required-axis declaration;
-- blocker classification;
-- negative-evidence eligibility
-
-without losing specialist semantics or introducing duplicate payload conversion.
-
-Until then, keep this as a cross-system audit concept and do not build a universal observation object.
+The shared primitive is now `scripts/research-resolution-envelope-lib.mjs`. It owns canonical axes/statuses, required-axis declaration, blocker projection and resolution readiness only. It does not own specialist derivation or outcome interpretation. See `reports/2026-09-19-synchronous-observability-identifiability-pilot-001.md`.
 
 ## Standing rule
 
