@@ -47,6 +47,17 @@ function walk(root) {
   return files;
 }
 
+function directoryBytesEqual(leftRoot, rightRoot) {
+  const relativeFiles = root => walk(root)
+    .map(file => path.relative(root, file).replaceAll('\\', '/'))
+    .sort();
+  const leftFiles = relativeFiles(leftRoot);
+  const rightFiles = relativeFiles(rightRoot);
+  if (JSON.stringify(leftFiles) !== JSON.stringify(rightFiles)) return false;
+  return leftFiles.every(relative =>
+    fs.readFileSync(path.join(leftRoot, relative)).equals(fs.readFileSync(path.join(rightRoot, relative))));
+}
+
 function findDecisionBearingManifests(root) {
   return walk(root)
     .filter(file => path.basename(file) === 'manifest.json')
@@ -110,17 +121,15 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
     const runId = safeSegment(manifest?.experiment?.workflowRunId ?? manifest?.runId, 'unknown-run');
     const runAttempt = safeSegment(manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt, '1');
     const destinationRoot = path.join(output, `${experimentId}__run-${runId}__attempt-${runAttempt}`);
-    fs.rmSync(destinationRoot, { recursive: true, force: true });
-    fs.mkdirSync(destinationRoot, { recursive: true });
-
+    const candidateRoot = fs.mkdtempSync(path.join(output, '.incoming-'));
     const files = [];
-    copyEvidenceFile(manifestFile, artifactRoot, destinationRoot, 'manifest.json', files, compressAboveBytes, { allowCompression: false });
+    copyEvidenceFile(manifestFile, artifactRoot, candidateRoot, 'manifest.json', files, compressAboveBytes, { allowCompression: false });
     for (const entry of manifest.entries || []) {
       if (entry?.missing || !entry?.published) continue;
       const source = path.resolve(artifactRoot, entry.published);
       const role = safeSegment(entry.role, 'entry');
       const logical = path.join('evidence', role, entry.published);
-      copyEvidenceFile(source, artifactRoot, destinationRoot, logical, files, compressAboveBytes);
+      copyEvidenceFile(source, artifactRoot, candidateRoot, logical, files, compressAboveBytes);
     }
 
     const bundle = {
@@ -147,8 +156,26 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
       manifestStoredPath: files.find(file => file.source === 'manifest.json')?.stored ?? null,
       files,
     };
-    fs.writeFileSync(path.join(destinationRoot, 'bundle.json'), `${JSON.stringify(bundle, null, 2)}\n`);
-    retained.push({ experimentId: bundle.experimentId, workflowRunId: bundle.workflowRunId, path: destinationRoot, files: files.length });
+    fs.writeFileSync(path.join(candidateRoot, 'bundle.json'), `${JSON.stringify(bundle, null, 2)}\n`);
+    if (fs.existsSync(destinationRoot)) {
+      const identical = directoryBytesEqual(destinationRoot, candidateRoot);
+      fs.rmSync(candidateRoot, { recursive: true, force: true });
+      if (!identical) {
+        throw new Error(
+          `durable evidence identity collision for ${path.basename(destinationRoot)}: immutable source run/attempt bytes differ from the retained bundle`,
+        );
+      }
+      retained.push({
+        experimentId: bundle.experimentId, workflowRunId: bundle.workflowRunId,
+        path: destinationRoot, files: files.length, disposition: 'unchanged',
+      });
+      continue;
+    }
+    fs.renameSync(candidateRoot, destinationRoot);
+    retained.push({
+      experimentId: bundle.experimentId, workflowRunId: bundle.workflowRunId,
+      path: destinationRoot, files: files.length, disposition: 'created',
+    });
   }
   return retained;
 }
@@ -275,7 +302,7 @@ if (values.has('self-test')) {
   } else {
     console.log(`Retained ${retained.length} decision-bearing experiment evidence bundle(s).`);
     for (const item of retained) {
-      console.log(`- ${item.experimentId ?? 'unknown experiment'} run ${item.workflowRunId ?? 'unknown'} -> ${path.relative(process.cwd(), item.path).replaceAll('\\', '/')} (${item.files} files)`);
+      console.log(`- ${item.experimentId ?? 'unknown experiment'} run ${item.workflowRunId ?? 'unknown'} -> ${path.relative(process.cwd(), item.path).replaceAll('\\', '/')} (${item.files} files; ${item.disposition})`);
     }
   }
 }
