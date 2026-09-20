@@ -523,6 +523,16 @@ export function renderResearchSystemBrief(inventory) {
         }
     }
 
+    lines.push('', '## Unfinished execution references');
+    const unfinished = inventory.frontDoorInputs.unfinishedLifecycle.slice(0, 8);
+    if (unfinished.length === 0) {
+        lines.push('- none');
+    } else {
+        for (const row of unfinished) {
+            lines.push(`- ${row.kind}: ${row.path} [${compactBriefValue(row.status)}]${row.fragileProse ? ' (fragile prose lifecycle)' : ''}`);
+        }
+    }
+
     lines.push('', '## Consolidation signals');
     lines.push(`- authority findings: ${inventory.findings.authority.length}`);
     lines.push(`- lifecycle findings: ${inventory.findings.lifecycle.length}`);
