@@ -258,6 +258,9 @@ function relationInventory(model) {
         source: contract.source,
         rows: model.relations[relation]?.length ?? 0,
         authorityKind: / via |\*|\*\*/u.test(contract.source) ? 'derived/composed' : 'structured-source',
+        stableIdentityDomain: `${relation}:${contract.identity}`,
+        primaryJoinKey: contract.identity,
+        canonicalSource: contract.source,
     })).sort((a, b) => a.relation.localeCompare(b.relation));
 }
 
@@ -379,6 +382,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const roleCounts = Object.fromEntries([...new Set(documentRoles.map(row => row.role))].sort()
         .map(role => [role, documentRoles.filter(row => row.role === role).length]));
     const currentAuthorityClaimOutsideIndex = documentRoles.filter(row => row.currentAuthorityClaimOutsideIndex);
+    const missingCurrentReferences = currentReferences.filter(row => !existsSync(path.join(root, row.path)));
     const relations = relationInventory(model);
     const workflows = workflowInventory(root);
     const retiredWorkflows = retiredWorkflowInventory(root);
@@ -386,6 +390,22 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const dependencies = sharedDependencies(root, commands);
     const contractOwners = dependencies.filter(row => row.contractFunctions.length > 0);
     const integrationAudit = auditResearchIntegration(root, { model });
+    const architectureFindings = {
+        missingCurrentReferences: missingCurrentReferences.map(row => ({
+            kind: 'missing-current-reference-target',
+            path: row.path,
+            ownership: row.ownership,
+        })),
+        missingMaintainedWorkflows: workflows
+            .filter(row => row.status === 'maintained' && !existsSync(path.join(root, row.path)))
+            .map(row => ({ kind: 'missing-maintained-workflow', path: row.path, role: row.role })),
+        opaqueWorkflowInvocations: workflows
+            .filter(row => row.status === 'maintained' && row.scriptEntrypoints.length === 0 && row.npmAliases.length === 0)
+            .map(row => ({ kind: 'opaque-workflow-invocation', path: row.path, role: row.role })),
+        emptyRelationSurfaces: relations
+            .filter(row => row.rows === 0)
+            .map(row => ({ kind: 'empty-relation-surface', relation: row.relation, source: row.canonicalSource })),
+    };
     const findings = inventoryFindings({
         currentAuthorityClaimOutsideIndex,
         currentReferenceLifecycleMismatches,
@@ -404,6 +424,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         currentState: currentState(model),
         frontDoorInputs: frontDoorInputs(model, plans, documentRoles),
         findings,
+        architectureFindings,
         integrationHealth: {
             errorCount: integrationAudit.errorCount,
             warningCount: integrationAudit.warningCount,
@@ -433,6 +454,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             },
             currentAuthorityClaimOutsideIndexCount: currentAuthorityClaimOutsideIndex.length,
             currentAuthorityClaimOutsideIndexPaths: currentAuthorityClaimOutsideIndex.map(row => row.path),
+            missingCurrentReferenceCount: missingCurrentReferences.length,
+            missingCurrentReferencePaths: missingCurrentReferences.map(row => row.path),
             structuredCloseoutCount,
             closeoutParseErrorCount: closeoutParseErrors.length,
             closeoutParseErrors: closeoutParseErrors.map(row => ({ path: row.path, error: row.closeoutError })),
@@ -463,6 +486,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             retiredWorkflowReappearanceCount: retiredWorkflows.filter(row => row.presentOnDisk).length,
             workflowBackedResearchCommandCount: commands.filter(row => row.workflowConsumerCount > 0).length,
             directResearchCommandCount: commands.filter(row => row.workflowConsumerCount === 0).length,
+            architectureGapCount: Object.values(architectureFindings).reduce((sum, rows) => sum + rows.length, 0),
+            missingCurrentReferenceCount: missingCurrentReferences.length,
             structuredCloseoutCount,
             closeoutParseErrorCount: closeoutParseErrors.length,
         },
@@ -560,6 +585,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             workflows: inventory.workflows,
             retiredWorkflows: inventory.retiredWorkflows,
             sharedImplementationDependencies: inventory.sharedImplementationDependencies,
+            architectureFindings: inventory.architectureFindings,
             contractOwnership: inventory.contractOwnership,
         };
     }
@@ -582,6 +608,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             schemaVersion: inventory.schemaVersion,
             authority: inventory.authority,
             findings: inventory.findings,
+            architectureFindings: inventory.architectureFindings,
             integrationHealth: inventory.integrationHealth,
         };
     }
