@@ -108,6 +108,7 @@ const resultCore = {
     reproducibility: contract.reproducibility,
     targetEnvelope: contract.targetEnvelope,
     adaptiveLineage: contract.adaptiveLineage,
+    independenceVector: contract.independenceVector,
     treatmentFidelity: contract.treatmentFidelity,
     protocolHashes: [...protocolHashes].sort(),
     solverRefs: [...solverRefs].sort(),
