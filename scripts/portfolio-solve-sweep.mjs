@@ -355,11 +355,20 @@ const commit = (() => { try { return execSync('git rev-parse HEAD', { encoding: 
 // flags. A previous corpus-2 refresh silently did zero work because old rows were trusted after
 // the code changed. Persist the commit plus behavior-affecting invocation as a checkpoint header;
 // omit only --resume itself, whose presence naturally differs between an initial run and recovery.
+const corpusSha256 = createHash('sha256').update(readFileSync(corpusPath)).digest('hex');
 const checkpointSignature = JSON.stringify({
     commit,
-    corpusDigest: createHash('sha256').update(readFileSync(corpusPath)).digest('hex'),
+    corpusDigest: corpusSha256,
     args: args.filter(arg => arg !== '--resume' && arg !== '--').sort(),
 });
+
+function stableStringify(value) {
+    if (value === undefined) return undefined;
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(item => stableStringify(item) ?? 'null').join(',')}]`;
+    const keys = Object.keys(value).filter(key => value[key] !== undefined).sort();
+    return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+}
 const legacyLatencyPortfolioExperiment = experimentFromArgs();
 
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
@@ -578,6 +587,38 @@ if (attemptCachePath && baselineMap) {
     }
 }
 
+const baselineSha256 = baselinePath && existsSync(baselinePath)
+    ? createHash('sha256').update(readFileSync(baselinePath)).digest('hex')
+    : null;
+const attemptCacheInputSha256 = attemptCachePath && existsSync(attemptCachePath)
+    ? createHash('sha256').update(readFileSync(attemptCachePath)).digest('hex')
+    : null;
+// Scientific execution identity comes from the resolved behavior handed to the solver plus the
+// history-dependent transforms that solveOptsFor() adds per level. Output-only controls such as
+// workers, resume/checkpoint paths, hint persistence and report paths stay out of this object.
+const effectiveConfig = {
+    corpusSha256,
+    levelBlind: false,
+    engine: racePoolSize > 0 ? 'raced' : 'sequential',
+    ...(racePoolSize > 0 ? { racePoolSize } : {}),
+    ...solveOpts,
+    ...(adaptiveBudget ? {
+        adaptiveBudget: { solvedBudgetMult, minNodeBudget, unsolvedNodeBudget: unsolvedNodeBudget ?? null, baselineSha256 },
+    } : {}),
+    ...(primeWinnerActive ? {
+        primeWinner: {
+            includeAll: primeIncludeAll,
+            primeBudgetMult: argMap.has('--prime-budget-mult') ? primeBudgetMult : null,
+            primeMinNodeBudget,
+            baselineSha256,
+        },
+    } : {}),
+    ...(attemptCachePath && baselineMap ? {
+        attemptCache: { inputSha256: attemptCacheInputSha256, baselineSha256 },
+    } : {}),
+};
+const effectiveConfigDigest = createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
+
 // Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs (the CI
 // audit pass). Only the SCHEDULING of writes stays here -- this tool persists incrementally after
 // every level so a killed multi-hour run keeps its finds, which is deliberately different from the
@@ -723,6 +764,10 @@ function writeReport() {
         saveHints,
         hintsAppended,
         hintFilesChanged: totalHintFilesChanged,
+        enableFlags,
+        disableFlags,
+        effectiveConfig,
+        effectiveConfigDigest,
     };
 
     mkdirSync(path.dirname(outFile), { recursive: true });
