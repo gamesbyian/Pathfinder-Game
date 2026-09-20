@@ -247,8 +247,8 @@ if (optInStart < 0 || optInEnd < 0) {
     .filter(match => match[1] !== 'Mechanism' && !/^---/u.test(match[1]))
     .map(match => ({
       mechanismCell: match[1],
-      mechanisms: [...match[1].matchAll(/\`([A-Z0-9_]+)\`/gu)].map(item => item[1]),
-      decisionEvidenceRef: match[2] === '—' ? null : match[2].replaceAll('\`', '').trim(),
+      mechanisms: [...match[1].matchAll(/`([A-Z0-9_]+)`/gu)].map(item => item[1]),
+      decisionEvidenceRef: match[2] === '—' ? null : match[2].replaceAll('`', '').trim(),
     }));
   if (promotedRows.length === 0) {
     failures.push('docs/solver-opt-in-experiment-ledger.md: missing structured promoted/default-ON rows');
