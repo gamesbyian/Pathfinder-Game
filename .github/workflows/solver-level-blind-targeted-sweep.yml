@@ -122,6 +122,10 @@ on:
         description: 'Optional suffix appended to this workflow''s concurrency group. Set distinct values on paired A/B dispatches when they should run concurrently.'
         required: false
         default: ''
+      persist_failure_response:
+        description: 'Opt-in only. When true, durably commit this run''s standard compact-failure-response document (the small, bounded per-parent/attempt evidence layer -- never the full result, never hints, never baseline files) to reports/stress/failure-evidence/targeted-sweep-runs/<run id>/ on main once combine-final succeeds. This workflow is otherwise artifact-only by design; use this only for a specific acquisition that a sandboxed research session needs to read back, since GitHub Actions artifact downloads are blocked from some environments (see docs/solver-failure-evidence-research-integration-plan.md). Default false preserves the existing artifact-only behavior for ordinary dispatches.'
+        required: false
+        default: 'false'
 
 concurrency:
   group: solver-level-blind-targeted-sweep${{ inputs.concurrency_suffix && format('-{0}', inputs.concurrency_suffix) || '' }}
@@ -888,3 +892,66 @@ jobs:
           path: logs/solver-sweep-result/
           if-no-files-found: error
           retention-days: 90
+
+  persist-failure-response:
+    name: Persist compact failure-response evidence (opt-in)
+    needs: [combine-final]
+    # Opt-in and best-effort: this durability path exists only so a sandboxed research session
+    # whose egress policy blocks GitHub Actions artifact downloads can still read back this run's
+    # small, bounded compact-failure-response document. It commits nothing else -- never the full
+    # combined result, never hints, never baseline files -- preserving this workflow's existing
+    # artifact-only invariant for every other input/output.
+    if: always() && needs.combine-final.result == 'success' && inputs.persist_failure_response == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download standard solver sweep result
+        uses: actions/download-artifact@v8
+        with:
+          name: solver-sweep-result
+          path: artifact-staging/solver-sweep-result
+
+      - name: Check out main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Persist the compact failure-response document
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="artifact-staging/solver-sweep-result/failure-response/compact.json"
+          if [ ! -f "$SRC" ]; then
+            echo "No compact failure-response document was published for this run; nothing to persist."
+            exit 0
+          fi
+
+          DEST_DIR="reports/stress/failure-evidence/targeted-sweep-runs/${{ github.run_id }}"
+          mkdir -p "$DEST_DIR"
+          cp "$SRC" "$DEST_DIR/compact-failure-response.json"
+          cp artifact-staging/solver-sweep-result/manifest.json "$DEST_DIR/manifest.json"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain -- "$DEST_DIR")" ]; then
+            echo "No new failure-response evidence to persist."
+            exit 0
+          fi
+
+          for attempt in 1 2 3 4; do
+            git add "$DEST_DIR"
+            git commit -m "Persist compact failure-response evidence (run ${{ github.run_id }})"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            git fetch origin main
+            git rebase origin/main
+            sleep $((attempt * 5))
+          done
+
+          echo "Failed to persist failure-response evidence after four retries." >&2
+          exit 1
