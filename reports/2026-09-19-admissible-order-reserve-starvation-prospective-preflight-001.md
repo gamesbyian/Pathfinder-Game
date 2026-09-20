@@ -37,7 +37,7 @@ The frozen artifact is:
 
 `reports/stress/failure-evidence/reserve-starvation-default-profile-sample-2026-09-19.json`
 
-The frozen artifact also carries the machine-readable `resolutionDesign`: live rivals, discriminating observable, required observability axes, negative-interpretation policy, and the 0/1/>=2 outcome meanings. `analyze-reserve-starvation-probe.mjs` consumes that design rather than hardcoding a second copy of the scientific contract.
+The frozen artifact also carries the machine-readable `resolutionDesign`: live rivals, discriminating observable, required observability axes, negative-interpretation policy, and the 0/1/>=2 outcome meanings. It also owns `probeDesign.reserveNodes`, `probeDesign.totalNodes`, and `probeDesign.expectedAction`. `analyze-reserve-starvation-probe.mjs` consumes those frozen values and rejects disagreeing CLI overrides rather than hardcoding a second quantitative contract.
 
 It also carries a frozen `independenceDesign`. The 40 sampled rows are independent level-parent units and exclude the three discovery rows, but they remain from the same Corpus-2 construction family and use shared Pathfinder implementation/analysis/framing. The recurrence result therefore supports a current-residual frequency claim, not cross-distribution or independently implemented replication.
 
