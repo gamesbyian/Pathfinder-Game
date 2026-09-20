@@ -10,23 +10,30 @@
  * remain readable because their dispatched id was built as `${cutSignature}::${originalCaseId}`
  * (PR #1902); only that frozen compatibility path recovers the signature from the first `::`.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { summarizeSignatureCollisions } from '../signature-collision-analysis-lib.mjs';
+import { deriveLaneAC0Cases } from './lane-a-c0-population-lib.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); return h === undefined ? d : h.slice(n.length + 3); };
 
 const IN = arg('in', null);
-const CASES = arg('cases', 'reports/stress/lane-a-c0-signature-collision-cases-2026-09-19.json');
+const CASES = arg('cases', null);
+const POPULATION = arg('population', 'reports/stress/lane-a-frozen-prefix-population-2026-09-18.json');
 const GEOMETRY = arg('geometry', 'reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json');
 if (!IN) throw new Error('Usage: lane-a-c0-signature-collision-analysis.mjs --in=<combined.json> [--cases=<cases.json>] [--geometry=<geometry.json>]');
 
 const document = JSON.parse(readFileSync(path.resolve(ROOT, IN), 'utf8'));
-const casesDocument = JSON.parse(readFileSync(path.resolve(ROOT, CASES), 'utf8'));
 const geometryDocument = JSON.parse(readFileSync(path.resolve(ROOT, GEOMETRY), 'utf8'));
+const casesDocument = CASES && existsSync(path.resolve(ROOT, CASES))
+    ? JSON.parse(readFileSync(path.resolve(ROOT, CASES), 'utf8'))
+    : deriveLaneAC0Cases(
+        JSON.parse(readFileSync(path.resolve(ROOT, POPULATION), 'utf8')),
+        geometryDocument,
+    );
 const caseById = new Map((casesDocument.cases ?? []).map(row => [String(row.id), row]));
 const geometryByLevel = new Map((geometryDocument.levels ?? []).map(row => [String(row.id), row]));
 const rows = document.rows ?? document.levels ?? document.results ?? [];
