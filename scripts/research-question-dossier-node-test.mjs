@@ -11,6 +11,8 @@ assert.ok(dossier.conceptualContext.explicitPremises.some(row => row.premiseId =
 assert.ok(dossier.conceptualContext.measurementOpportunities.some(row => row.id === 'MO-002'));
 assert.ok(dossier.acquisition.route);
 assert.ok(Array.isArray(dossier.currentAuthorityMatches.queue));
+assert.equal(dossier.currentAuthorityMatches.queueMatchMode, 'stable-question-id');
+assert.equal(dossier.currentAuthorityMatches.experimentMatchMode, 'lexical-discovery-only');
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
 assert.ok(Array.isArray(dossier.resources.candidateAssets));
 assert.ok(Array.isArray(dossier.resources.candidateJoins));
@@ -21,6 +23,8 @@ const activeQuestionId = 'WS2-FAILURE-RESPONSE-RECONNAISSANCE';
 const activeDossier = buildQuestionDossier(process.cwd(), { questionId: activeQuestionId });
 assert.ok(activeDossier.currentAuthorityMatches.queue.some(row => row.questionRef === activeQuestionId),
     'the current WS2 active gate must resolve to the queue row that names it as the stable question ref');
+assert.ok(activeDossier.currentAuthorityMatches.queue.every(row => row.questionRef === activeQuestionId),
+    'queue matches must not fall back to lexical similarity once a stable question reference exists');
 
 const run = spawnSync(process.execPath, [
     'scripts/research-question-dossier.mjs',
