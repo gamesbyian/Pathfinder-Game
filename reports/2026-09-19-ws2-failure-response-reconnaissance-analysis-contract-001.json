@@ -98,7 +98,16 @@
     "instrumentImplementation": "shared compact failure-response implementation",
     "analysisMethod": "shared prespecified reducer",
     "analystModel": "not claimed",
-    "framingContext": "shared current WS2 authorities and preflight",
-    "ontologyVocabulary": "shared Pathfinder failure-response vocabulary"
-  }
+    "taskFramingPrompt": "shared prespecified WS2 reconnaissance task framing and routing rules; no prompt-level independence is claimed",
+    "authorityContextExposure": "shared current WS2 authorities, preflight, and failure-evidence vocabulary; no authority/context-exposure independence is claimed",
+    "ontologyVocabulary": "shared Pathfinder failure-response vocabulary",
+    "criticalLibraryCode": "analysis and compact-response normalization share Pathfinder research code; no critical-code independence is claimed"
+  },
+  "liveRivals": [
+    "rejection-counterfactual",
+    "first-loss",
+    "producer-consumer-2x2",
+    "allocation-specific-follow-up",
+    "no-expensive-follow-on-yet"
+  ]
 }
