@@ -67,6 +67,33 @@ const common = {
 };
 const clone = value => JSON.parse(JSON.stringify(value));
 assert.deepEqual(decisionContractIssues(common), []);
+const recombineOnly = clone(common);
+recombineOnly.experiment.sourceRuns = ['run-1', 'run-2'];
+recombineOnly.experiment.reconciliationRun = {
+  kind: 'recombine-only',
+  sourceRuns: ['run-1', 'run-2'],
+  preservesExperimentIdentity: true,
+  acquisitionRecomputed: false,
+};
+assert.deepEqual(decisionContractIssues(recombineOnly), []);
+const retryMissing = clone(common);
+retryMissing.experiment.sourceRuns = ['run-1', 'run-2'];
+retryMissing.experiment.reconciliationRun = {
+  kind: 'retry-missing-acquisition',
+  sourceRuns: ['run-1', 'run-2'],
+  preservesExperimentIdentity: true,
+  acquisitionRecomputed: true,
+};
+assert.deepEqual(decisionContractIssues(retryMissing), []);
+const fakeRecombine = clone(recombineOnly);
+fakeRecombine.experiment.reconciliationRun.acquisitionRecomputed = true;
+assert.ok(decisionContractIssues(fakeRecombine).includes('experiment.reconciliationRun.acquisitionRecomputed'));
+const unknownRecoveryRun = clone(recombineOnly);
+unknownRecoveryRun.experiment.reconciliationRun.sourceRuns = ['run-3'];
+assert.ok(decisionContractIssues(unknownRecoveryRun).includes('experiment.reconciliationRun.sourceRuns(not-in-experiment-sourceRuns)'));
+const duplicateSourceRuns = clone(recombineOnly);
+duplicateSourceRuns.experiment.sourceRuns = ['run-1', 'run-1'];
+assert.ok(decisionContractIssues(duplicateSourceRuns).includes('experiment.sourceRuns'));
 assert.deepEqual(declaredDecisionContractIssues(common), []);
 const withResearchQuestion = {
   ...clone(common),
