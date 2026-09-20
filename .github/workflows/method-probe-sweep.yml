@@ -295,19 +295,27 @@ jobs:
               --result=logs/method-probe-shards/combined.json \
               --integrity-out=logs/method-probe-shards/population-integrity.json
           fi
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
-          const number = value => value === '' ? null : Number(value);
-          const configuration = { only: process.env.ONLY, corpus: process.env.CORPUS, levels: process.env.LEVELS || 'all', budgetMs: number(process.env.BUDGET_MS), workBudget: number(process.env.WORK_BUDGET), nodeBudget: number(process.env.NODE_BUDGET) };
-          fs.writeFileSync('logs/method-probe-shards/experiment-contract.json', `${JSON.stringify({
-            experiment: { workflowFamily: 'isolated-method-probe', producer: 'method-probe-sweep.yml', entrypoint: 'scripts/method-probe.mjs', configurationHash: hashConfiguration(configuration) },
-            population: { kind: configuration.levels === 'all' ? 'whole-supplied-corpus' : 'explicit-selected-subset', identityBasis: 'stable-level-id', selector: configuration.levels },
-            execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: configuration.workBudget != null, producerFamily: 'method-probe', schedulerMode: 'isolated-technique' },
-            limits: { cumulativeNodeCeiling: configuration.nodeBudget, initialWorkAllocation: configuration.workBudget, totalWorkCeiling: configuration.workBudget, wallSafetyDeadlineMs: configuration.budgetMs, wallDeadlineBinding: configuration.workBudget == null },
-            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
-          }, null, 2)}\n`);
-          NODE
+          node_budget_json="${NODE_BUDGET:-null}"
+          work_budget_json="${WORK_BUDGET:-null}"
+          budget_ms_json="${BUDGET_MS:-null}"
+          levels_selector="${LEVELS:-all}"
+          population_kind=explicit-selected-subset
+          [ "$levels_selector" = all ] && population_kind=whole-supplied-corpus
+          reproducibility_expected=false
+          [ -n "$WORK_BUDGET" ] && reproducibility_expected=true
+          wall_deadline_binding=true
+          [ -n "$WORK_BUDGET" ] && wall_deadline_binding=false
+          cat > logs/method-probe-shards/experiment-contract-spec.json <<SPEC
+          {"configuration": {"only": "$ONLY", "corpus": "$CORPUS", "levels": "$levels_selector", "budgetMs": $budget_ms_json, "workBudget": $work_budget_json, "nodeBudget": $node_budget_json},
+          "workflowFamily": "isolated-method-probe", "producer": "method-probe-sweep.yml", "entrypoint": "scripts/method-probe.mjs",
+          "population": {"kind": "$population_kind", "identityBasis": "stable-level-id", "selector": "$levels_selector"},
+          "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $reproducibility_expected, "producerFamily": "method-probe", "schedulerMode": "isolated-technique"},
+          "limits": {"cumulativeNodeCeiling": $node_budget_json, "initialWorkAllocation": $work_budget_json, "totalWorkCeiling": $work_budget_json, "wallSafetyDeadlineMs": $budget_ms_json, "wallDeadlineBinding": $wall_deadline_binding},
+          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "compact", "reports": "artifact-only"}}
+          SPEC
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/method-probe-shards/experiment-contract-spec.json \
+            --out=logs/method-probe-shards/experiment-contract.json
           node scripts/summarize-solver-failure-response.mjs \
             --in="logs/method-probe-shards/combined.json" \
             --rows-key=levels \
@@ -321,7 +329,7 @@ jobs:
             --contract-file="logs/method-probe-shards/experiment-contract.json" \
             --failure-response-file="logs/method-probe-shards/failure-response-summary.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
-            --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
+            --shards-observed="$(node scripts/count-method-probe-shard-dirs.mjs --staging-dir=artifact-staging)" \
             --source-artifact="method-probe-combined"
 
       - name: Upload standard solver sweep result

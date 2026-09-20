@@ -12,6 +12,7 @@ import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
+import { resolveMethodProbeShardDirs } from './method-probe-staging-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -23,7 +24,7 @@ const OUTCOME_OUT = args.get('--outcome-out') || null;
 const DETERMINISTIC_WORK_MODE_ARG = args.get('--deterministic-work-mode');
 const TIMEOUT_EXIT_CODES = new Set([124, 143]);
 
-const dirs = readdirSync(STAGING_DIR).filter(d => d.startsWith('method-probe-shard-'));
+const dirs = resolveMethodProbeShardDirs(STAGING_DIR);
 let allLevels = [];
 let meta = null;
 const missing = [];
