@@ -235,6 +235,26 @@ function populationIntegrityBindingIssues(primary, integrity, publishedStats) {
   issues.push(...exactPopulationIssues(primary?.levels, integrity.expectedIds, 'primary result'));
   return issues;
 }
+function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStats) {
+  const binding = outcome?.binding;
+  if (!binding) return [];
+  const issues = [];
+  if (binding.populationIdentityHash != null && binding.populationIdentityHash !== populationIdentity) {
+    issues.push('researchOutcome.binding.populationIdentityHash disagrees with published population');
+  }
+  if (Array.isArray(binding.resultConfigurationHashes)) {
+    const observed = publishedStats.map(stat => {
+      const document = JSON.parse(fs.readFileSync(stat.file, 'utf8'));
+      return document?.configurationHash ?? null;
+    }).filter(Boolean).sort();
+    const expected = [...binding.resultConfigurationHashes].sort();
+    if (JSON.stringify(observed) !== JSON.stringify(expected)) {
+      issues.push('researchOutcome.binding.resultConfigurationHashes disagree with published result files');
+    }
+  }
+  return issues;
+}
+
 
 const stats = collectJsonFiles(outDir).map(levelStats).filter(Boolean);
 function statsForSource(re) {
@@ -395,6 +415,7 @@ const sourceIdentityIssue = declaredContract?.experiment?.resolvedSha
   ? ['experiment.resolvedSha disagrees with primary result commit']
   : [];
 const populationBindingIssues = populationIntegrityBindingIssues(primaryDocument, populationIntegrity, stats);
+const outcomeBindingIssues = researchOutcomeBindingIssues(researchOutcome, populationIdentity, stats);
 const contractIssues = declaredContract
   ? [...new Set([
       ...declaredDecisionContractIssues(declaredContract),
@@ -402,6 +423,7 @@ const contractIssues = declaredContract
       ...compactTelemetryIssue,
       ...sourceIdentityIssue,
       ...populationBindingIssues,
+      ...outcomeBindingIssues,
     ])]
   : ['missing declared experiment contract'];
 const contractDecisionEligible = contractIssues.length === 0;
