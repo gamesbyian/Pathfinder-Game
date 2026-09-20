@@ -1,22 +1,71 @@
 # Lane A C1 boundary-kinematics result 001
 
-> **Status:** superseded
-> **Last evidence:** 2026-09-20 — source workflow artifact 10591287305 from run 35466554891 proved the compact labels are ordered by concatenated round-robin shards, not canonical case order.
-> **Decision:** superseded before downstream use. The compact exact-label projection was discovered to preserve the source workflow's shard-major combined-row order, while this result attached those labels to canonical case order. Rerun C1 with the now-explicit projection ordering before applying any C1/C2 decision rule.
-> **Remaining gate:** rerun frozen C1 against the same 581 cases using schema-v2 projection ordering; only then decide whether the already-frozen C2 representation is reached.
+> **Status:** concluded-mixed
+> **Last evidence:** 2026-09-20 — corrected frozen C1 reducer on schema-v2 exact-label projection order; no new solver or reference compute.
+> **Decision:** C1 is insufficient but repetition-supported. Advance to the already-frozen C2 global-accounting representation on the same population. Do not modify C1 after observing the collisions.
+> **Remaining gate:** run C2 once on the same 581 cases / 546 decisive retained labels and apply the frozen support/mixing rule.
 > **Evidence role:** development
 
-<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"superseded","lastEvidenceDate":"2026-09-20","decision":"superseded: labels were attached in canonical case order although the retained projection labels are in combined shard-major row order; rerun frozen C1 before any C2 advancement","remainingGate":"rerun frozen C1 using schema-v2 explicit shard-major projection ordering; apply the original frozen rule to that corrected result","joins":{"researchQuestion":"WS2-SEPARATOR-DYNAMIC-INTERFACE","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"development","scope":{"populationIdentity":"same 581-case Lane-A C0/C1 population; projection schema v2 records canonical order and the source workflow combined-row order separately","selection":"no resampling; representation-only reanalysis of retained labels","inferenceScope":"C1 boundary-kinematics representation sufficiency only"},"claimRefs":[],"sourceArtifacts":["reports/2026-09-20-lane-a-c1-boundary-kinematics-preflight-001.md","reports/2026-09-19-lane-a-c0-signature-collision-result-001.md","docs/solver-separator-dynamic-interface-contract-preflight.md"],"prospective":{"expectation":"C1 will remove at least some C0 collisions but may remain mixed or fragment strongly","surprise":"none retained: the numerical outcome was invalidated before downstream use because labels were joined to the wrong case order","anomaly":"compact projection order was ambiguous in schema v1; source artifact recovery showed labels follow concatenated round-robin shard order"}} -->
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-mixed","lastEvidenceDate":"2026-09-20","decision":"corrected C1 is mixed + repetition-supported under schema-v2 explicit shard-major label ordering; advance to frozen C2 global accounting without modifying C1","remainingGate":"run the already-frozen C2 global-accounting reducer on the same 581 cases/retained labels and apply its preregistered support/mixing rule","joins":{"researchQuestion":"WS2-SEPARATOR-DYNAMIC-INTERFACE","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"development","scope":{"populationIdentity":"same 581-case Lane-A population; projection schema v2 seals canonical case order and source combined-row order separately","selection":"no resampling or relabelling; corrected label-to-case alignment only","inferenceScope":"C1 boundary-kinematics representation sufficiency only"},"claimRefs":[],"sourceArtifacts":["reports/2026-09-20-lane-a-c1-boundary-kinematics-preflight-001.md","reports/2026-09-19-lane-a-c0-signature-collision-result-001.md","docs/solver-separator-dynamic-interface-contract-preflight.md","reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json"],"prospective":{"expectation":"C1 will remove at least some C0 collisions but may remain mixed or fragment strongly","surprise":"corrected C1 retains 34.25% repeated-row support across 58 parents while leaving two mixed same-parent signatures","anomaly":null}} -->
 
-## Supersession note
+## Provenance correction
 
-This report's numerical collision summary is **not decision-bearing**. On 2026-09-20 the retained compact projection was traced back to workflow run 35466554891. Its labels follow the combined artifact's 20-shard concatenation order, not canonical case-file order. The old `caseOrderHash` value seals that source-row order exactly.
+An earlier C1 pass was superseded because the compact projection's valid labels were attached to canonical case order rather than the CP-SAT workflow's concatenated 20-shard row order.
 
-The population, exact labels and reference compute remain valid. Only the compact label-to-case alignment used by this report was wrong. The projection is now schema v2 with both canonical and source-row hashes plus the explicit round-robin-shard transform. C1 must be rerun unchanged against that corrected mapping.
+Projection schema v2 now records both:
 
+- canonical case order hash;
+- source combined-row order hash;
+- the exact round-robin-shards-then-concatenate transform.
 
-## Withdrawn numerical outcome
+The corrected run uses that explicit mapping. Population, exact labels and C1 fields are unchanged.
 
-All numerical C1 collision/grouping values from the superseded pass are intentionally removed. They were computed after attaching valid exact labels to the wrong case identities, so neither group counts nor the apparent mixed pair can support any scientific claim.
+## Corrected result
 
-This file survives only as a provenance record for the invalidated pass and the schema-v2 ordering repair. The unchanged frozen C1 analysis must be rerun before any representation verdict or C2 advancement.
+- frozen rows: **581**
+- decisive labels: **546**
+- retained abstentions: **35**
+- correctness/input alarms: **0**
+- distinct C1 signatures: **440**
+- multi-member signatures: **81**
+- decisive rows in repeated signatures: **187 / 546 = 34.25%**
+- independent parents contributing to repeated signatures: **58**
+- mixed signatures: **2**
+- rows in mixed signatures: **4**
+
+The frozen support gate required:
+
+1. at least **20%** of decisive rows in signatures containing at least two rows; and
+2. at least **10 independent parent levels** contributing to repeated signatures.
+
+Corrected C1 clears both comfortably.
+
+## Surviving C1 falsifiers
+
+Two same-parent C1 signatures still mix exact LIVE/DEAD:
+
+- **R02525**, 2-row mixed signature:
+  - DEAD: `R02525:frontier-1584`
+  - LIVE: `R02525:frontier-3954`
+- **R02345**, 2-row mixed signature:
+  - DEAD: `R02345:frontier-3356`
+  - LIVE: `R02345:frontier-2685`
+
+Cross-parent recurrence is not required for a logical sufficiency falsifier. These exact same-signature opposite-outcome pairs prove C1 alone is insufficient.
+
+No C1 field may be edited post-outcome to separate them.
+
+## Frozen decision
+
+This is the preregistered **mixed + repetition-supported** branch:
+
+- C1 remains meaningfully compressive;
+- C1 is not exact-outcome sufficient;
+- advance to **C2 global accounting**;
+- keep C1 unchanged as the negative control.
+
+C2 was frozen before the corrected C1 outcome was inspected, so advancing to it does not introduce post-outcome feature selection.
+
+## Boundaries
+
+This result does not earn a separator consumer, decomposition engine, hard prune, topology subsystem, or exact-query service. C2 remains an offline representation falsifier on retained truth.
