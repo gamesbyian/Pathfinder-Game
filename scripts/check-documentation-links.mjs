@@ -240,6 +240,39 @@ if (optInStart < 0 || optInEnd < 0) {
       failures.push(`docs/solver-opt-in-experiment-ledger.md: unknown promotion state ${row.promotionState} for ${flag}`);
     }
   }
+
+  const promotedStart = ledger.indexOf('## Recently promoted/default-ON mechanisms worth remembering');
+  const promotedSection = promotedStart >= 0 ? ledger.slice(promotedStart) : '';
+  const promotedRows = [...promotedSection.matchAll(/^\| (.+?) \| (.+?) \| (.+) \|$/gmu)]
+    .filter(match => match[1] !== 'Mechanism' && !/^---/u.test(match[1]))
+    .map(match => ({
+      mechanismCell: match[1],
+      mechanisms: [...match[1].matchAll(/\`([A-Z0-9_]+)\`/gu)].map(item => item[1]),
+      decisionEvidenceRef: match[2] === '—' ? null : match[2].replaceAll('\`', '').trim(),
+    }));
+  if (promotedRows.length === 0) {
+    failures.push('docs/solver-opt-in-experiment-ledger.md: missing structured promoted/default-ON rows');
+  }
+  for (const row of promotedRows) {
+    if (row.mechanisms.length === 0) {
+      failures.push(`docs/solver-opt-in-experiment-ledger.md: promoted row has no mechanism identity: ${row.mechanismCell}`);
+    }
+    for (const flag of row.mechanisms) {
+      if (!new RegExp(`^\\s*${flag}\\s*:`, 'mu').test(ablationSource)) {
+        failures.push(`docs/solver-opt-in-experiment-ledger.md: promoted mechanism ${flag} is not a live FEATURES key`);
+      }
+      if (optInFlags.includes(flag)) {
+        failures.push(`docs/solver-opt-in-experiment-ledger.md: promoted mechanism ${flag} is still in OPT_IN_FEATURES`);
+      }
+    }
+    if (row.decisionEvidenceRef) {
+      if (!/^reports\//u.test(row.decisionEvidenceRef)) {
+        failures.push(`docs/solver-opt-in-experiment-ledger.md: promotion decision evidence must be a reports/ path: ${row.decisionEvidenceRef}`);
+      } else if (!existsSync(resolve(ROOT, row.decisionEvidenceRef))) {
+        failures.push(`docs/solver-opt-in-experiment-ledger.md: missing promotion decision evidence ${row.decisionEvidenceRef}`);
+      }
+    }
+  }
 }
 
 // Workstream execution state is a control-plane fact. Keep the rich State/context prose, but
