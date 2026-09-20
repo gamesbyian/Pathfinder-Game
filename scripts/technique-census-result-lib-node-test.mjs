@@ -74,6 +74,7 @@ test('validateTechniqueCensusPlanJoin binds observed rows to authored cell paylo
         variantLabel: 'dfs|score=default|bias=none',
         techniqueKeys: ['dfs:default'],
         nodeBudget: 1000,
+        budgetMs: 600000,
         ablation: null,
     }] };
     const row = {
@@ -85,6 +86,7 @@ test('validateTechniqueCensusPlanJoin binds observed rows to authored cell paylo
         variantLabel: 'dfs|score=default|bias=none',
         techniqueKeys: ['dfs|score=default|bias=none'],
         nodeBudget: 1000,
+        budgetMs: 600000,
         ablation: null,
         ok: false,
         status: 'node-budget-reached',
@@ -114,4 +116,19 @@ test('validateTechniqueCensusPlanJoin binds observed rows to authored cell paylo
         ['T1-0000002'],
         'partial analytical combines may validate observed rows while retaining explicit missing cells',
     );
+    const legacyRow = { ...row };
+    delete legacyRow.budgetMs;
+    assert.throws(
+        () => validateTechniqueCensusPlanJoin(plan, [legacyRow], { requireComplete: true }),
+        /disagrees with authored plan on budgetMs/u,
+        'fresh results may not silently omit a treatment-bearing echoed field',
+    );
+    const legacyJoin = validateTechniqueCensusPlanJoin(
+        plan,
+        [legacyRow],
+        { requireComplete: true, allowLegacyOmissions: true },
+    );
+    assert.equal(legacyJoin.identityFullyVerified, false);
+    assert.deepEqual(legacyJoin.unverifiedJoinFields, [{ cellId: 'T1-0000001', field: 'budgetMs' }]);
+
 });
