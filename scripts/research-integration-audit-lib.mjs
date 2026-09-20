@@ -11,6 +11,7 @@ import {
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
 import { buildQuestionDossier } from './research-question-dossier-lib.mjs';
 import { GENERATION_METHODS, GENERATION_SUITES, crossConstructionStatus } from './research-level-generation-lib.mjs';
+import { validateSolverResearchDataAssets } from './solver-research-data-assets-lib.mjs';
 
 function refIds(question, keys) {
     return keys.flatMap(key => {
@@ -142,19 +143,8 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     }
 
     const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
-    const assets = assetsDocument.assets ?? [];
-    const assetIds = new Set(assets.map(asset => asset.id));
-    if (assetIds.size !== assets.length) errors.push('research asset registry contains duplicate asset ids');
-    for (const asset of assets) {
-        for (const relatedId of asset.relatedAssets ?? []) {
-            if (!assetIds.has(relatedId)) errors.push(`research asset ${asset.id} references unknown related asset ${relatedId}`);
-        }
-    }
-    for (const relationship of assetsDocument.relationships ?? []) {
-        for (const assetId of relationship.assets ?? []) {
-            if (!assetIds.has(assetId)) errors.push(`research asset relationship ${relationship.id} references unknown asset ${assetId}`);
-        }
-    }
+    errors.push(...validateSolverResearchDataAssets(root).map(error => `research asset registry: ${error}`));
+    const assetIds = new Set((assetsDocument.assets ?? []).map(asset => asset.id));
     const resourceAudits = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-resource-contract-audits.json'), 'utf8'));
     for (const audit of resourceAudits.auditedResources ?? []) {
         if (!assetIds.has(audit.assetId)) errors.push(`resource contract audit references unknown asset ${audit.assetId}`);
