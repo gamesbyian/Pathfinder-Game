@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 import { buildPopulationIntegrity, recoveryProvenanceIssues } from './solver-experiment-contract.mjs';
 import { combinePopulationIntegrity } from './combine-population-integrity.mjs';
@@ -166,6 +166,15 @@ const consumedEligibility = researchBlockEligibility(consumedBlock, {
 });
 assert.equal(consumedEligibility.eligible, false);
 assert.ok(consumedEligibility.reasons.includes('matching-consumption-recorded'));
+
+// Archive/retirement transition: retired workflows retain a reason and must not reappear on disk.
+const workflowLifecycle = JSON.parse(readFileSync('docs/solver-workflow-lifecycle.json', 'utf8'));
+const workflowFiles = new Set(readdirSync('.github/workflows').filter(name => /\.ya?ml$/u.test(name)));
+for (const retired of workflowLifecycle.retiredWorkflows ?? []) {
+    assert.ok(String(retired.reason ?? '').trim(), `${retired.workflow}: retired workflow must retain a reason`);
+    assert.equal(workflowFiles.has(retired.workflow), false,
+        `${retired.workflow}: retired workflow must remain absent from the active workflow surface`);
+}
 
 // Stale evidence-integrity index fails closed in its dedicated rebuild guard.
 const evidenceIntegrityGuard = readFileSync('.github/workflows/solver-evidence-integrity-guard.yml', 'utf8');
