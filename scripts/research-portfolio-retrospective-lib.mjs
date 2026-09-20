@@ -187,10 +187,11 @@ export function buildResearchPortfolioRetrospective(root = process.cwd(), {
       detail: `${instrumentShapingSignals.uniqueMeasurementOpportunitiesUsed} MOs cover ${questionRows.length} recent questions`,
     });
   }
-  if (capabilityGaps.filter(row => row.needsConceptOrRepresentation).length > 0) {
+  const conceptBlocked = capabilityGaps.filter(row => row.disposition === 'concept-or-representation-blocked');
+  if (conceptBlocked.length > 0) {
     explorationTriggers.push({
       kind: 'ontology-or-representation-block',
-      detail: `${capabilityGaps.filter(row => row.needsConceptOrRepresentation).length} recent questions appear concept/representation blocked`,
+      detail: `${conceptBlocked.length} recent questions are primarily concept/representation blocked`,
     });
   }
   if (negativeIntersections.length > 0) {
