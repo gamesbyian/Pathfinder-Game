@@ -303,6 +303,9 @@ export interface PrepLevel {
     _failureProgressObserver?: { observe(record: { family: 'dfs' | 'beam' | 'repair'; workSpent: number; badness: number; kind: 'new-best' | 'terminal' }): void } | null;
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
+    /** Research-only Lane H2 checkerboard-capacity shadow observer. Reads the connectivity fill's
+     *  existing reached set after goal/objective reachability succeeds; never changes pruning. */
+    _parityCapacityObserver?: ParityCapacityObserver | null;
     /** Research-only joint-obligation propagation observer — see JointObligationObserver's own doc
      *  below. Absent in every production call; observing an already-computed obligation-cluster
      *  verdict changes no pruning/ordering/budget decision. */
@@ -493,6 +496,33 @@ export interface ConnectivityRejectionObserver {
      *  default (Stage A's own scope) since scanning/canonicalizing the boundary has a real cost
      *  that should be measured separately from Stage A's plain field capture. */
     includeBoundarySketch?: boolean;
+}
+
+
+/** Research-only shadow observer for Lane H2's checkerboard-split connectivity-capacity premise.
+ * Runs only after the ordinary connectivity flood fill has already proved goal/objective reachability,
+ * and only on levels with zero twist-portal pairs. It reuses that exact reached set and never changes
+ * the boolean returned by isConnected(). */
+export interface ParityCapacityRecord {
+    pos: number;
+    stateFingerprint: string;
+    remainingSteps: number;
+    intNeeded: number;
+    /** Reachable cells with visited==0, split by checkerboard parity. Current pos is excluded. */
+    freshByParity: [number, number];
+    /** Counted future arrivals demanded by ordinary checkerboard alternation from pos. */
+    requiredArrivalsByParity: [number, number];
+    /** Existing scalar connectivity-volume predicate at this same decision seam. */
+    totalVolumeWouldReject: boolean;
+    /** Lane H2 shadow predicate; observational only. */
+    parityCapacityWouldReject: boolean;
+    /** True exactly when H2 rejects while existing total volume does not. */
+    incrementalParityReject: boolean;
+    work: number;
+}
+
+export interface ParityCapacityObserver {
+    observe(record: ParityCapacityRecord): void;
 }
 
 /** Observer-only joint-obligation propagation (see joint-obligation-propagation.ts's own doc and
