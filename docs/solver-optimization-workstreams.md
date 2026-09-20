@@ -21,7 +21,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-- **Classes 1-3:** class 1 has no menu headroom. Class 3 is dose-unverified, not negative: 23 rows lack per-technique telemetry. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
+- **Classes 1-3:** class 1 has no menu headroom. Class 3 remains dose-unverified, not negative: run `35465898521` reconfirmed the 23-row population unchanged (0 new solves); exact-action classification is artifact-access-blocked. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md) · [`result`](../reports/2026-09-19-class3-dose-exposure-result-001.md)
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 - **Class 5:** topology remains research-only; F3 population 14 pairs/7 parents. No raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 - **Card-E:** 17/156 reconstructable-unexposed; both tested descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
@@ -80,7 +80,7 @@ No post-mining implementation, oracle campaign, shared signal subsystem, product
 
 **Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) on compatible rows, including purpose/dependence + novelty/saturation, before first-loss/rejection/2x2. First-loss needs explicit selection. Reserve starvation is **dispatch-ready**; Class-3 awaits exact-action telemetry. Deferred: [`solver-future-work.md`](solver-future-work.md).
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. `WS2-FAILURE-RESPONSE-RECONNAISSANCE` Stage A ran (run `35465898521`, population matched expectations) and returned **unresolved-needs-compact-diagnostics**: raw artifact unreachable from sandbox, observed asymmetry has an unconfirmable non-adverse explanation. [`result`](../reports/2026-09-19-ws2-failure-response-reconnaissance-stage-a-result-001.md) Next: retrieve the artifact, or get explicit authorization for a frozen Stage-B population, before first-loss/rejection/2x2. Reserve starvation is **dispatch-ready**; Class-3 awaits exact-action telemetry (acquisition-blocked). Deferred: [`solver-future-work.md`](solver-future-work.md).
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -90,7 +90,7 @@ No post-mining implementation, oracle campaign, shared signal subsystem, product
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Stage A unresolved (artifact access gap); get raw artifact or explicit authorization for a frozen Stage-B population | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
