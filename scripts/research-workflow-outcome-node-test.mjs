@@ -28,12 +28,14 @@ const bound = validateResearchWorkflowOutcome({
     populationIdentityHash: `sha256:${'a'.repeat(64)}`,
     resultConfigurationHashes: [`sha256:${'c'.repeat(64)}`, `sha256:${'b'.repeat(64)}`],
     resultResolvedShas: ['c'.repeat(40), 'b'.repeat(40)],
+    resultContentHashes: [`sha256:${'e'.repeat(64)}`, `sha256:${'d'.repeat(64)}`],
   },
 });
 assert.deepEqual(bound.binding, {
   populationIdentityHash: `sha256:${'a'.repeat(64)}`,
   resultConfigurationHashes: [`sha256:${'b'.repeat(64)}`, `sha256:${'c'.repeat(64)}`],
   resultResolvedShas: ['b'.repeat(40), 'c'.repeat(40)],
+  resultContentHashes: [`sha256:${'d'.repeat(64)}`, `sha256:${'e'.repeat(64)}`],
 });
 assert.throws(() => validateResearchWorkflowOutcome({
   outcome: 'completed-positive', reason: 'bad binding', binding: { populationIdentityHash: 'bad' },
@@ -41,6 +43,9 @@ assert.throws(() => validateResearchWorkflowOutcome({
 assert.throws(() => validateResearchWorkflowOutcome({
   outcome: 'completed-positive', reason: 'bad revision binding', binding: { resultResolvedShas: ['not-a-sha'] },
 }), /resultResolvedShas/);
+assert.throws(() => validateResearchWorkflowOutcome({
+  outcome: 'completed-positive', reason: 'bad content binding', binding: { resultContentHashes: ['not-a-hash'] },
+}), /resultContentHashes/);
 
 const primary = path.join(temp, 'primary.json');
 writeFileSync(primary, '{"levels":[]}\n');
