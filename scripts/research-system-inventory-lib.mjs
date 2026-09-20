@@ -148,6 +148,16 @@ function planLifecycle(root, currentReferences = currentDocumentationReferences(
     });
 }
 
+function exportedContractFunctions(root, relative) {
+    if (!relative || !existsSync(path.join(root, relative))) return [];
+    const source = readFileSync(path.join(root, relative), 'utf8');
+    const names = [];
+    for (const match of source.matchAll(/export\s+(?:async\s+)?function\s+([A-Za-z0-9_$]+)/gu)) {
+        if (/^(?:build|validate|assert|write|format|parse|canonicalize)/u.test(match[1])) names.push(match[1]);
+    }
+    return [...new Set(names)].sort();
+}
+
 function sharedDependencies(root, commands) {
     const owners = new Map();
     for (const command of commands) {
@@ -164,6 +174,7 @@ function sharedDependencies(root, commands) {
             dependency,
             consumerCount: names.length,
             consumers: [...new Set(names)].sort(),
+            contractFunctions: exportedContractFunctions(root, dependency),
         }))
         .sort((a, b) => b.consumerCount - a.consumerCount || a.dependency.localeCompare(b.dependency));
 }
