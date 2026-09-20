@@ -48,6 +48,8 @@ The producer now emits a resolution envelope requiring:
 
 This is materially different from Pilot A: the same envelope structure supports a prospective cost-curve recurrence test rather than an instrumentation/routing screen.
 
+The reserve pilot's frozen sample now carries its `resolutionDesign`, so both pilots obtain rivals/discriminator/interpretation from pre-outcome machine-readable artifacts rather than analyzer-local prose constants.
+
 ## Hardening found by the pilot
 
 The reserve-starvation integration found two real readiness holes.
