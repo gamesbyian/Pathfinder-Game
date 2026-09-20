@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-09-20T19:06:44.971Z",
+  "evidenceRole": "H3's own flagged open question -- does remaining length have economically actionable ALLOCATION value under a fixed shared budget, not just descriptive correlation. Zero new solver compute: simulation over Card-E's already-recorded real search costs.",
+  "sourceCrossTab": "reports/stress/h3-independent-transfer-cross-tab-001.json",
+  "sourceH3Features": "reports/stress/h3-independent-transfer-h3-features-001.json",
+  "method": "deterministic replay: a row is \"solved\" under a simulated shared budget iff processed before the budget is exhausted AND its recorded reachNodes <= remaining budget at that point. Compares ascending/descending remaining-length order, the dataset's own (unordered) row order, and an oracle ascending-actual-cost order as an upper bound.",
+  "rowCount": 175,
+  "reconstructableCount": 12,
+  "randomTrials": 50,
+  "perRowCap": 2000000,
+  "solvableSumNodes": 7633600,
+  "budgetSimulations": [
+    {
+      "budgetFraction": 0.02,
+      "totalBudget": 7000000,
+      "approxRowsAtFullCap": 4,
+      "ascendingLength": 2,
+      "descendingLength": 0,
+      "datasetOrder": 2,
+      "oracleAscendingCost": 11,
+      "randomMean": 0.18,
+      "randomMin": 0,
+      "randomMax": 1
+    },
+    {
+      "budgetFraction": 0.05,
+      "totalBudget": 17500000,
+      "approxRowsAtFullCap": 9,
+      "ascendingLength": 7,
+      "descendingLength": 0,
+      "datasetOrder": 2,
+      "oracleAscendingCost": 12,
+      "randomMean": 0.56,
+      "randomMin": 0,
+      "randomMax": 2
+    },
+    {
+      "budgetFraction": 0.1,
+      "totalBudget": 35000000,
+      "approxRowsAtFullCap": 18,
+      "ascendingLength": 7,
+      "descendingLength": 0,
+      "datasetOrder": 2,
+      "oracleAscendingCost": 12,
+      "randomMean": 1.16,
+      "randomMin": 0,
+      "randomMax": 4
+    },
+    {
+      "budgetFraction": 0.2,
+      "totalBudget": 70000000,
+      "approxRowsAtFullCap": 35,
+      "ascendingLength": 10,
+      "descendingLength": 0,
+      "datasetOrder": 3,
+      "oracleAscendingCost": 12,
+      "randomMean": 2.44,
+      "randomMin": 0,
+      "randomMax": 7
+    },
+    {
+      "budgetFraction": 0.35,
+      "totalBudget": 122500000,
+      "approxRowsAtFullCap": 61,
+      "ascendingLength": 12,
+      "descendingLength": 0,
+      "datasetOrder": 5,
+      "oracleAscendingCost": 12,
+      "randomMean": 4.38,
+      "randomMin": 0,
+      "randomMax": 9
+    },
+    {
+      "budgetFraction": 0.5,
+      "totalBudget": 175000000,
+      "approxRowsAtFullCap": 88,
+      "ascendingLength": 12,
+      "descendingLength": 0,
+      "datasetOrder": 8,
+      "oracleAscendingCost": 12,
+      "randomMean": 6.48,
+      "randomMin": 4,
+      "randomMax": 11
+    },
+    {
+      "budgetFraction": 1,
+      "totalBudget": 350000000,
+      "approxRowsAtFullCap": 175,
+      "ascendingLength": 12,
+      "descendingLength": 12,
+      "datasetOrder": 12,
+      "oracleAscendingCost": 12,
+      "randomMean": 12,
+      "randomMin": 12,
+      "randomMax": 12
+    }
+  ]
+}

@@ -20,7 +20,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 ## Deferred plan closeouts
 
 - **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
-- **Failure evidence:** P3 failure-response + P4A Class-3 dose now share one frozen 53-parent compact-response acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md`); their analyses/dispositions remain separate. P4B -> reserve starvation; P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Failure evidence:** P3 failure-response + P4A Class-3 dose now share one frozen 53-parent compact-response acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md`); their analyses/dispositions remain separate. P4B reserve starvation concluded positive (2/40, see "Admissible-order retry repricing" above); P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
@@ -53,10 +53,10 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 
 | Question | Reopen condition |
 |---|---|
-| Automatic selector/profile calibration | A legal current-input relation predicts differentiated response; remaining length first needs one independent shared-budget transfer |
+| Automatic selector/profile calibration | **Remaining-length transfer condition MET (2026-09-20).** [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md) nominates a bounded matched-work production consumer pilot; that pilot needs its own precommitment before dispatch and does not itself open a WS1 gate |
 | Cross-attempt basin overlap | A real handoff/allocation question exists; measure canonical action participation and solve-local rediscovery simultaneously |
 | Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates a concrete handoff value proposition |
-| Admissible-order retry repricing | Reopen `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` on a precommitted high-cap fallback sample; only recurrent starvation nominates a matched-work reserve A/B |
+| Admissible-order retry repricing | **Recurrence condition MET (2026-09-20): 2/40 independent parents.** [`result`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) nominates the smallest matched-total-work `admissibleOrderNodeReserveFractionOverride` A/B; candidate fractions must be predeclared from the observed cost curve, not fit to the confirmation outcomes, and the A/B itself is not yet designed or dispatched |
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |

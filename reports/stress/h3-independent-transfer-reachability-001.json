@@ -1,0 +1,6563 @@
+{
+  "generatedAt": "2026-09-20T19:05:58.826Z",
+  "corpus": "data/stress/stress-levels-random.json",
+  "eliteNodeBudget": 500000,
+  "rolloutTrials": 2000,
+  "rolloutNodeCap": 5000,
+  "seed": "repair-plateau-rollout-2026-08-15",
+  "retreatFile": "reports/stress/h3-independent-transfer-retreat-file-001.json",
+  "method": "CP-SAT-anchored: rollouts start from a verified-feasible depth (repair-retreat-binary-search.mjs output), not a raw elite dead end",
+  "levels": [
+    {
+      "id": "R00350",
+      "provenance": "unknown",
+      "reqLen": 113,
+      "blocks": 17,
+      "blocksFraction": 0.1006,
+      "mustCross": 0,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.8248,
+      "eliteId": "R00350",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 117,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 102,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 40,
+          "progressMax": 76,
+          "progressFractionOfResidualMax": 0.7450980392156863,
+          "avgNodesPerTrial": 25.8775
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00367",
+      "provenance": "unknown",
+      "reqLen": 65,
+      "blocks": 32,
+      "blocksFraction": 0.2645,
+      "mustCross": 0,
+      "reqInt": 1,
+      "requiredPathCoverageRatio": 0.7927,
+      "eliteId": "R00367",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 71,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 50,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 29,
+          "progressMax": 43,
+          "progressFractionOfResidualMax": 0.86,
+          "avgNodesPerTrial": 19.7245
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 129841,
+        "path": [
+          131082,
+          131081,
+          131080,
+          196616,
+          65540,
+          131076,
+          196612,
+          196613,
+          196614,
+          262150,
+          8,
+          7,
+          6,
+          5,
+          65541,
+          65542,
+          131078,
+          131079,
+          196615,
+          262151,
+          327687,
+          327686,
+          327685,
+          524296,
+          458760,
+          458759,
+          458758,
+          458757,
+          393221,
+          393222,
+          458758,
+          524294,
+          524293,
+          524292,
+          196617,
+          196618,
+          262154,
+          327690,
+          393226,
+          393225,
+          458761,
+          458762,
+          524298,
+          589834,
+          589833,
+          589832,
+          131073,
+          131074,
+          131075,
+          196611,
+          196610,
+          262146,
+          262147,
+          262148,
+          327684,
+          393220,
+          458756,
+          458755,
+          524291,
+          524290,
+          458754,
+          458753,
+          65538,
+          65537,
+          1,
+          0,
+          65536,
+          131072,
+          196608,
+          196609,
+          262145,
+          327681
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R00399",
+      "provenance": "unknown",
+      "reqLen": 129,
+      "blocks": 23,
+      "blocksFraction": 0.1173,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.7771,
+      "eliteId": "R00399",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 135,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 118,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 26,
+          "progressP90": 45,
+          "progressMax": 83,
+          "progressFractionOfResidualMax": 0.7033898305084746,
+          "avgNodesPerTrial": 28.119
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00417",
+      "provenance": "unknown",
+      "reqLen": 88,
+      "blocks": 24,
+      "blocksFraction": 0.1983,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.9362,
+      "eliteId": "R00417",
+      "verifiedFeasibleDepth": 20,
+      "verifiedInfeasibleDepth": 21,
+      "eliteLength": 94,
+      "rolloutLadder": [
+        {
+          "branchDepth": 20,
+          "residual": 68,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 5,
+          "progressP90": 23,
+          "progressMax": 59,
+          "progressFractionOfResidualMax": 0.8676470588235294,
+          "avgNodesPerTrial": 10.7845
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 1503148,
+        "path": [
+          7,
+          8,
+          9,
+          10,
+          65546,
+          131082,
+          196618,
+          262154,
+          327690,
+          393226,
+          458762,
+          458761,
+          524297,
+          589833,
+          655362,
+          655363,
+          655364,
+          589828,
+          589827,
+          589826,
+          589825,
+          589824,
+          524288,
+          524289,
+          458753,
+          393217,
+          327681,
+          262145,
+          196609,
+          196610,
+          131074,
+          131075,
+          196611,
+          458754,
+          458753,
+          458752,
+          393216,
+          327680,
+          262144,
+          196608,
+          131072,
+          65536,
+          0,
+          65539,
+          65538,
+          65537,
+          1,
+          2,
+          3,
+          4,
+          65540,
+          131076,
+          196612,
+          196613,
+          131077,
+          131078,
+          65542,
+          65543,
+          65544,
+          65545,
+          524298,
+          524297,
+          524296,
+          458760,
+          458759,
+          393223,
+          327687,
+          262151,
+          262152,
+          327688,
+          393224,
+          393225,
+          524292,
+          524293,
+          524294,
+          524295,
+          589831,
+          655367,
+          655366,
+          655365,
+          589829,
+          524293,
+          458757,
+          393221,
+          327685,
+          327684,
+          262146,
+          327682,
+          393218,
+          393219,
+          458755,
+          458756,
+          393220,
+          393221,
+          393222
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R00479",
+      "provenance": "unknown",
+      "reqLen": 72,
+      "blocks": 30,
+      "blocksFraction": 0.2479,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8571,
+      "eliteId": "R00479",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 78,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 58,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 19,
+          "progressP90": 34,
+          "progressMax": 46,
+          "progressFractionOfResidualMax": 0.7931034482758621,
+          "avgNodesPerTrial": 20.304
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00507",
+      "provenance": "unknown",
+      "reqLen": 118,
+      "blocks": 9,
+      "blocksFraction": 0.0459,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.6556,
+      "eliteId": "R00507",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 123,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 107,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 54,
+          "progressMax": 90,
+          "progressFractionOfResidualMax": 0.8411214953271028,
+          "avgNodesPerTrial": 32.0945
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00513",
+      "provenance": "unknown",
+      "reqLen": 79,
+      "blocks": 27,
+      "blocksFraction": 0.2231,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.908,
+      "eliteId": "R00513",
+      "verifiedFeasibleDepth": 18,
+      "verifiedInfeasibleDepth": 19,
+      "eliteLength": 86,
+      "rolloutLadder": [
+        {
+          "branchDepth": 18,
+          "residual": 61,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 39,
+          "progressMax": 54,
+          "progressFractionOfResidualMax": 0.8852459016393442,
+          "avgNodesPerTrial": 24.048
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00563",
+      "provenance": "unknown",
+      "reqLen": 100,
+      "blocks": 8,
+      "blocksFraction": 0.0661,
+      "mustCross": 6,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.9615,
+      "eliteId": "R00563",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 106,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 85,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 39,
+          "progressMax": 73,
+          "progressFractionOfResidualMax": 0.8588235294117647,
+          "avgNodesPerTrial": 25.9695
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00623",
+      "provenance": "unknown",
+      "reqLen": 137,
+      "blocks": 37,
+      "blocksFraction": 0.1888,
+      "mustCross": 0,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.932,
+      "eliteId": "R00623",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 143,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 127,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 43,
+          "progressMax": 99,
+          "progressFractionOfResidualMax": 0.7795275590551181,
+          "avgNodesPerTrial": 29.096
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00646",
+      "provenance": "unknown",
+      "reqLen": 144,
+      "blocks": 34,
+      "blocksFraction": 0.1511,
+      "mustCross": 0,
+      "reqInt": 13,
+      "requiredPathCoverageRatio": 0.8182,
+      "eliteId": "R00646",
+      "verifiedFeasibleDepth": 9,
+      "verifiedInfeasibleDepth": 10,
+      "eliteLength": 151,
+      "rolloutLadder": [
+        {
+          "branchDepth": 9,
+          "residual": 135,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 47,
+          "progressMax": 88,
+          "progressFractionOfResidualMax": 0.6518518518518519,
+          "avgNodesPerTrial": 27.793
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00647",
+      "provenance": "unknown",
+      "reqLen": 121,
+      "blocks": 11,
+      "blocksFraction": 0.0651,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.8067,
+      "eliteId": "R00647",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 126,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 110,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 51,
+          "progressMax": 99,
+          "progressFractionOfResidualMax": 0.9,
+          "avgNodesPerTrial": 28.903
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00656",
+      "provenance": "unknown",
+      "reqLen": 138,
+      "blocks": 42,
+      "blocksFraction": 0.1867,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.7582,
+      "eliteId": "R00656",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 145,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 128,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 34,
+          "progressP90": 57,
+          "progressMax": 87,
+          "progressFractionOfResidualMax": 0.6796875,
+          "avgNodesPerTrial": 34.371
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00682",
+      "provenance": "unknown",
+      "reqLen": 89,
+      "blocks": 26,
+      "blocksFraction": 0.1806,
+      "mustCross": 0,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.8091,
+      "eliteId": "R00682",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 94,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 76,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 23,
+          "progressP90": 38,
+          "progressMax": 62,
+          "progressFractionOfResidualMax": 0.8157894736842105,
+          "avgNodesPerTrial": 24.288
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00692",
+      "provenance": "unknown",
+      "reqLen": 118,
+      "blocks": 39,
+      "blocksFraction": 0.1733,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.6592,
+      "eliteId": "R00692",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 122,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 105,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 47,
+          "progressMax": 90,
+          "progressFractionOfResidualMax": 0.8571428571428571,
+          "avgNodesPerTrial": 26.519
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00709",
+      "provenance": "unknown",
+      "reqLen": 116,
+      "blocks": 30,
+      "blocksFraction": 0.1531,
+      "mustCross": 0,
+      "reqInt": 2,
+      "requiredPathCoverageRatio": 0.703,
+      "eliteId": "R00709",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 120,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 104,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 47,
+          "progressMax": 88,
+          "progressFractionOfResidualMax": 0.8461538461538461,
+          "avgNodesPerTrial": 27.033
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00720",
+      "provenance": "unknown",
+      "reqLen": 70,
+      "blocks": 24,
+      "blocksFraction": 0.1983,
+      "mustCross": 0,
+      "reqInt": 2,
+      "requiredPathCoverageRatio": 0.7692,
+      "eliteId": "R00720",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 76,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 57,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 29,
+          "progressMax": 48,
+          "progressFractionOfResidualMax": 0.8421052631578947,
+          "avgNodesPerTrial": 17.7785
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R00923",
+      "provenance": "unknown",
+      "reqLen": 65,
+      "blocks": 2,
+      "blocksFraction": 0.0165,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.619,
+      "eliteId": "R00923",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 72,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 53,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 46,
+          "progressMax": 50,
+          "progressFractionOfResidualMax": 0.9433962264150944,
+          "avgNodesPerTrial": 30.018
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01000",
+      "provenance": "unknown",
+      "reqLen": 99,
+      "blocks": 22,
+      "blocksFraction": 0.1528,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.8182,
+      "eliteId": "R01000",
+      "verifiedFeasibleDepth": 17,
+      "verifiedInfeasibleDepth": 18,
+      "eliteLength": 99,
+      "rolloutLadder": [
+        {
+          "branchDepth": 17,
+          "residual": 82,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 17,
+          "progressP90": 25,
+          "progressMax": 45,
+          "progressFractionOfResidualMax": 0.5487804878048781,
+          "avgNodesPerTrial": 18.726
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01006",
+      "provenance": "unknown",
+      "reqLen": 116,
+      "blocks": 27,
+      "blocksFraction": 0.1598,
+      "mustCross": 0,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.8593,
+      "eliteId": "R01006",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 120,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 102,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 38,
+          "progressMax": 72,
+          "progressFractionOfResidualMax": 0.7058823529411765,
+          "avgNodesPerTrial": 20.1175
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01142",
+      "provenance": "unknown",
+      "reqLen": 134,
+      "blocks": 41,
+      "blocksFraction": 0.1822,
+      "mustCross": 0,
+      "reqInt": 11,
+      "requiredPathCoverageRatio": 0.7882,
+      "eliteId": "R01142",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 138,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 122,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 8,
+          "progressP90": 28,
+          "progressMax": 82,
+          "progressFractionOfResidualMax": 0.6721311475409836,
+          "avgNodesPerTrial": 14.2045
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01154",
+      "provenance": "unknown",
+      "reqLen": 87,
+      "blocks": 23,
+      "blocksFraction": 0.1901,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.9355,
+      "eliteId": "R01154",
+      "verifiedFeasibleDepth": 30,
+      "verifiedInfeasibleDepth": 31,
+      "eliteLength": 93,
+      "rolloutLadder": [
+        {
+          "branchDepth": 30,
+          "residual": 57,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 18,
+          "progressP90": 33,
+          "progressMax": 45,
+          "progressFractionOfResidualMax": 0.7894736842105263,
+          "avgNodesPerTrial": 18.4185
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 18521,
+        "path": [
+          589828,
+          589829,
+          524293,
+          524292,
+          458756,
+          458755,
+          393219,
+          393218,
+          458754,
+          458753,
+          7,
+          65543,
+          65542,
+          65541,
+          65540,
+          65539,
+          131075,
+          131076,
+          131077,
+          131078,
+          65542,
+          6,
+          5,
+          65541,
+          131077,
+          196613,
+          196614,
+          327689,
+          327688,
+          327687,
+          327686,
+          262150,
+          262151,
+          196615,
+          131079,
+          131080,
+          131081,
+          196617,
+          262153,
+          262152,
+          327688,
+          393224,
+          655360,
+          655361,
+          655362,
+          655363,
+          589827,
+          524291,
+          524290,
+          524289,
+          589825,
+          589824,
+          524288,
+          458752,
+          262146,
+          196610,
+          196611,
+          262147,
+          327683,
+          327682,
+          327681,
+          327680,
+          262144,
+          196608,
+          131072,
+          131073,
+          65537,
+          65536,
+          0,
+          1,
+          458761,
+          524297,
+          524298,
+          458762,
+          393226,
+          327690,
+          262154,
+          196618,
+          196617,
+          196616,
+          131080,
+          65544,
+          8,
+          9,
+          65545,
+          655369,
+          655368,
+          589832,
+          589831,
+          655367,
+          655366,
+          589830,
+          524294,
+          524295
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R01341",
+      "provenance": "unknown",
+      "reqLen": 73,
+      "blocks": 22,
+      "blocksFraction": 0.1818,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8022,
+      "eliteId": "R01341",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 77,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 59,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 36,
+          "progressMax": 53,
+          "progressFractionOfResidualMax": 0.8983050847457628,
+          "avgNodesPerTrial": 23.532
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01351",
+      "provenance": "unknown",
+      "reqLen": 104,
+      "blocks": 29,
+      "blocksFraction": 0.1716,
+      "mustCross": 5,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8254,
+      "eliteId": "R01351",
+      "verifiedFeasibleDepth": 20,
+      "verifiedInfeasibleDepth": 21,
+      "eliteLength": 110,
+      "rolloutLadder": [
+        {
+          "branchDepth": 20,
+          "residual": 84,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 28,
+          "progressP90": 54,
+          "progressMax": 75,
+          "progressFractionOfResidualMax": 0.8928571428571429,
+          "avgNodesPerTrial": 29.808
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01368",
+      "provenance": "unknown",
+      "reqLen": 122,
+      "blocks": 34,
+      "blocksFraction": 0.1735,
+      "mustCross": 7,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.7578,
+      "eliteId": "R01368",
+      "verifiedFeasibleDepth": 20,
+      "verifiedInfeasibleDepth": 21,
+      "eliteLength": 126,
+      "rolloutLadder": [
+        {
+          "branchDepth": 20,
+          "residual": 102,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 38,
+          "progressMax": 85,
+          "progressFractionOfResidualMax": 0.8333333333333334,
+          "avgNodesPerTrial": 24.123
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01416",
+      "provenance": "unknown",
+      "reqLen": 122,
+      "blocks": 24,
+      "blocksFraction": 0.142,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.8777,
+      "eliteId": "R01416",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 127,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 108,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 18,
+          "progressP90": 51,
+          "progressMax": 81,
+          "progressFractionOfResidualMax": 0.75,
+          "avgNodesPerTrial": 24.7615
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01568",
+      "provenance": "unknown",
+      "reqLen": 102,
+      "blocks": 20,
+      "blocksFraction": 0.1389,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.887,
+      "eliteId": "R01568",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 106,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 90,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 1,
+          "progressP90": 19,
+          "progressMax": 51,
+          "progressFractionOfResidualMax": 0.5666666666666667,
+          "avgNodesPerTrial": 5.544
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01577",
+      "provenance": "unknown",
+      "reqLen": 104,
+      "blocks": 18,
+      "blocksFraction": 0.1065,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.7647,
+      "eliteId": "R01577",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 109,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 91,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 43,
+          "progressMax": 62,
+          "progressFractionOfResidualMax": 0.6813186813186813,
+          "avgNodesPerTrial": 27.5695
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01764",
+      "provenance": "unknown",
+      "reqLen": 90,
+      "blocks": 20,
+      "blocksFraction": 0.1653,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.9278,
+      "eliteId": "R01764",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 97,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 78,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 8,
+          "progressP90": 26,
+          "progressMax": 60,
+          "progressFractionOfResidualMax": 0.7692307692307693,
+          "avgNodesPerTrial": 12.765
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01773",
+      "provenance": "unknown",
+      "reqLen": 101,
+      "blocks": 28,
+      "blocksFraction": 0.1657,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.7594,
+      "eliteId": "R01773",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 105,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 91,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 54,
+          "progressMax": 77,
+          "progressFractionOfResidualMax": 0.8461538461538461,
+          "avgNodesPerTrial": 31.568
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01932",
+      "provenance": "unknown",
+      "reqLen": 108,
+      "blocks": 7,
+      "blocksFraction": 0.0414,
+      "mustCross": 0,
+      "reqInt": 2,
+      "requiredPathCoverageRatio": 0.6923,
+      "eliteId": "R01932",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 113,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 98,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 46,
+          "progressMax": 78,
+          "progressFractionOfResidualMax": 0.7959183673469388,
+          "avgNodesPerTrial": 30.681
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01945",
+      "provenance": "unknown",
+      "reqLen": 82,
+      "blocks": 24,
+      "blocksFraction": 0.1667,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.7321,
+      "eliteId": "R01945",
+      "verifiedFeasibleDepth": 17,
+      "verifiedInfeasibleDepth": 18,
+      "eliteLength": 88,
+      "rolloutLadder": [
+        {
+          "branchDepth": 17,
+          "residual": 65,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 36,
+          "progressMax": 55,
+          "progressFractionOfResidualMax": 0.8461538461538461,
+          "avgNodesPerTrial": 23.5285
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R01997",
+      "provenance": "unknown",
+      "reqLen": 98,
+      "blocks": 26,
+      "blocksFraction": 0.1806,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8991,
+      "eliteId": "R01997",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 98,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 86,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 38,
+          "progressMax": 65,
+          "progressFractionOfResidualMax": 0.7558139534883721,
+          "avgNodesPerTrial": 23.133
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02000",
+      "provenance": "unknown",
+      "reqLen": 85,
+      "blocks": 36,
+      "blocksFraction": 0.25,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8586,
+      "eliteId": "R02000",
+      "verifiedFeasibleDepth": 29,
+      "verifiedInfeasibleDepth": 30,
+      "eliteLength": 92,
+      "rolloutLadder": [
+        {
+          "branchDepth": 29,
+          "residual": 56,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 10,
+          "progressP90": 28,
+          "progressMax": 48,
+          "progressFractionOfResidualMax": 0.8571428571428571,
+          "avgNodesPerTrial": 14.814
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02011",
+      "provenance": "unknown",
+      "reqLen": 77,
+      "blocks": 22,
+      "blocksFraction": 0.1528,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.6937,
+      "eliteId": "R02011",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 84,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 63,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 17,
+          "progressP90": 24,
+          "progressMax": 58,
+          "progressFractionOfResidualMax": 0.9206349206349206,
+          "avgNodesPerTrial": 15.917
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02018",
+      "provenance": "unknown",
+      "reqLen": 137,
+      "blocks": 35,
+      "blocksFraction": 0.1556,
+      "mustCross": 7,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.7874,
+      "eliteId": "R02018",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 143,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 126,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 40,
+          "progressP90": 64,
+          "progressMax": 97,
+          "progressFractionOfResidualMax": 0.7698412698412699,
+          "avgNodesPerTrial": 42.1945
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02021",
+      "provenance": "unknown",
+      "reqLen": 88,
+      "blocks": 18,
+      "blocksFraction": 0.1488,
+      "mustCross": 5,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.9362,
+      "eliteId": "R02021",
+      "verifiedFeasibleDepth": 28,
+      "verifiedInfeasibleDepth": 29,
+      "eliteLength": 92,
+      "rolloutLadder": [
+        {
+          "branchDepth": 28,
+          "residual": 60,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 11,
+          "progressP90": 32,
+          "progressMax": 52,
+          "progressFractionOfResidualMax": 0.8666666666666667,
+          "avgNodesPerTrial": 15.6935
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02027",
+      "provenance": "unknown",
+      "reqLen": 126,
+      "blocks": 29,
+      "blocksFraction": 0.1716,
+      "mustCross": 0,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.9065,
+      "eliteId": "R02027",
+      "verifiedFeasibleDepth": 9,
+      "verifiedInfeasibleDepth": 10,
+      "eliteLength": 132,
+      "rolloutLadder": [
+        {
+          "branchDepth": 9,
+          "residual": 117,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 31,
+          "progressP90": 50,
+          "progressMax": 78,
+          "progressFractionOfResidualMax": 0.6666666666666666,
+          "avgNodesPerTrial": 32.231
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02029",
+      "provenance": "unknown",
+      "reqLen": 93,
+      "blocks": 46,
+      "blocksFraction": 0.2347,
+      "mustCross": 0,
+      "reqInt": 1,
+      "requiredPathCoverageRatio": 0.6596,
+      "eliteId": "R02029",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 97,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 81,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 19,
+          "progressP90": 35,
+          "progressMax": 64,
+          "progressFractionOfResidualMax": 0.7901234567901234,
+          "avgNodesPerTrial": 20.867
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02030",
+      "provenance": "unknown",
+      "reqLen": 99,
+      "blocks": 24,
+      "blocksFraction": 0.1667,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8839,
+      "eliteId": "R02030",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 106,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 86,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 13,
+          "progressP90": 42,
+          "progressMax": 81,
+          "progressFractionOfResidualMax": 0.9418604651162791,
+          "avgNodesPerTrial": 20.9165
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02039",
+      "provenance": "unknown",
+      "reqLen": 127,
+      "blocks": 43,
+      "blocksFraction": 0.1911,
+      "mustCross": 8,
+      "reqInt": 14,
+      "requiredPathCoverageRatio": 0.7341,
+      "eliteId": "R02039",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 131,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 116,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 36,
+          "progressP90": 54,
+          "progressMax": 85,
+          "progressFractionOfResidualMax": 0.7327586206896551,
+          "avgNodesPerTrial": 37.8435
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02049",
+      "provenance": "unknown",
+      "reqLen": 122,
+      "blocks": 48,
+      "blocksFraction": 0.2133,
+      "mustCross": 8,
+      "reqInt": 11,
+      "requiredPathCoverageRatio": 0.7176,
+      "eliteId": "R02049",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 122,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 107,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 10,
+          "progressP90": 38,
+          "progressMax": 88,
+          "progressFractionOfResidualMax": 0.822429906542056,
+          "avgNodesPerTrial": 16.652
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02054",
+      "provenance": "unknown",
+      "reqLen": 123,
+      "blocks": 33,
+      "blocksFraction": 0.1467,
+      "mustCross": 8,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.6649,
+      "eliteId": "R02054",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 128,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 111,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 52,
+          "progressMax": 91,
+          "progressFractionOfResidualMax": 0.8198198198198198,
+          "avgNodesPerTrial": 28.213
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02057",
+      "provenance": "unknown",
+      "reqLen": 75,
+      "blocks": 18,
+      "blocksFraction": 0.125,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.6637,
+      "eliteId": "R02057",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 79,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 63,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 34,
+          "progressMax": 53,
+          "progressFractionOfResidualMax": 0.8412698412698413,
+          "avgNodesPerTrial": 23.0085
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02058",
+      "provenance": "unknown",
+      "reqLen": 90,
+      "blocks": 19,
+      "blocksFraction": 0.157,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.9184,
+      "eliteId": "R02058",
+      "verifiedFeasibleDepth": 17,
+      "verifiedInfeasibleDepth": 18,
+      "eliteLength": 96,
+      "rolloutLadder": [
+        {
+          "branchDepth": 17,
+          "residual": 73,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 27,
+          "progressMax": 64,
+          "progressFractionOfResidualMax": 0.8767123287671232,
+          "avgNodesPerTrial": 16.766
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02069",
+      "provenance": "unknown",
+      "reqLen": 62,
+      "blocks": 24,
+      "blocksFraction": 0.1983,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.6458,
+      "eliteId": "R02069",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 67,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 47,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 20,
+          "progressP90": 28,
+          "progressMax": 45,
+          "progressFractionOfResidualMax": 0.9574468085106383,
+          "avgNodesPerTrial": 20.843
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02072",
+      "provenance": "unknown",
+      "reqLen": 77,
+      "blocks": 18,
+      "blocksFraction": 0.1488,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8105,
+      "eliteId": "R02072",
+      "verifiedFeasibleDepth": 24,
+      "verifiedInfeasibleDepth": 25,
+      "eliteLength": 82,
+      "rolloutLadder": [
+        {
+          "branchDepth": 24,
+          "residual": 53,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 8,
+          "progressP90": 25,
+          "progressMax": 46,
+          "progressFractionOfResidualMax": 0.8679245283018868,
+          "avgNodesPerTrial": 13.5575
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02079",
+      "provenance": "unknown",
+      "reqLen": 159,
+      "blocks": 21,
+      "blocksFraction": 0.0933,
+      "mustCross": 6,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.8325,
+      "eliteId": "R02079",
+      "verifiedFeasibleDepth": 18,
+      "verifiedInfeasibleDepth": 19,
+      "eliteLength": 165,
+      "rolloutLadder": [
+        {
+          "branchDepth": 18,
+          "residual": 141,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 12,
+          "progressP90": 35,
+          "progressMax": 80,
+          "progressFractionOfResidualMax": 0.5673758865248227,
+          "avgNodesPerTrial": 19.458
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02117",
+      "provenance": "unknown",
+      "reqLen": 106,
+      "blocks": 22,
+      "blocksFraction": 0.1302,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.7518,
+      "eliteId": "R02117",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 113,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 96,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 41,
+          "progressMax": 87,
+          "progressFractionOfResidualMax": 0.90625,
+          "avgNodesPerTrial": 25.546
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02118",
+      "provenance": "unknown",
+      "reqLen": 71,
+      "blocks": 32,
+      "blocksFraction": 0.2222,
+      "mustCross": 2,
+      "reqInt": 2,
+      "requiredPathCoverageRatio": 0.6396,
+      "eliteId": "R02118",
+      "verifiedFeasibleDepth": 21,
+      "verifiedInfeasibleDepth": 22,
+      "eliteLength": 77,
+      "rolloutLadder": [
+        {
+          "branchDepth": 21,
+          "residual": 50,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 11,
+          "progressP90": 30,
+          "progressMax": 44,
+          "progressFractionOfResidualMax": 0.88,
+          "avgNodesPerTrial": 16.2605
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 1506719,
+        "path": [
+          589824,
+          589825,
+          655361,
+          720897,
+          720896,
+          655360,
+          655361,
+          655362,
+          655363,
+          458757,
+          458756,
+          458755,
+          524291,
+          589827,
+          589828,
+          524292,
+          524291,
+          524290,
+          458754,
+          327688,
+          393224,
+          393225,
+          458761,
+          458760,
+          458759,
+          393223,
+          393222,
+          458758,
+          524294,
+          589830,
+          589831,
+          655367,
+          6,
+          7,
+          8,
+          65544,
+          65545,
+          9,
+          10,
+          11,
+          65547,
+          65546,
+          131082,
+          131081,
+          196617,
+          196616,
+          262152,
+          3,
+          4,
+          5,
+          65541,
+          131077,
+          196613,
+          196612,
+          196611,
+          262147,
+          262146,
+          393221,
+          393220,
+          393219,
+          393218,
+          327682,
+          327681,
+          327680,
+          393216,
+          458752,
+          458753,
+          524289,
+          589833,
+          589834,
+          589835,
+          655371,
+          720907,
+          720906,
+          655370,
+          655369,
+          655368,
+          720904
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R02120",
+      "provenance": "unknown",
+      "reqLen": 115,
+      "blocks": 36,
+      "blocksFraction": 0.213,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.9274,
+      "eliteId": "R02120",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 120,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 99,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 18,
+          "progressP90": 43,
+          "progressMax": 68,
+          "progressFractionOfResidualMax": 0.6868686868686869,
+          "avgNodesPerTrial": 22.992
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02121",
+      "provenance": "unknown",
+      "reqLen": 84,
+      "blocks": 22,
+      "blocksFraction": 0.1818,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.913,
+      "eliteId": "R02121",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 89,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 68,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 39,
+          "progressMax": 56,
+          "progressFractionOfResidualMax": 0.8235294117647058,
+          "avgNodesPerTrial": 28.0785
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02125",
+      "provenance": "unknown",
+      "reqLen": 91,
+      "blocks": 34,
+      "blocksFraction": 0.2361,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.875,
+      "eliteId": "R02125",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 95,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 75,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 20,
+          "progressP90": 33,
+          "progressMax": 58,
+          "progressFractionOfResidualMax": 0.7733333333333333,
+          "avgNodesPerTrial": 21.5835
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02144",
+      "provenance": "unknown",
+      "reqLen": 111,
+      "blocks": 35,
+      "blocksFraction": 0.1786,
+      "mustCross": 7,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.6937,
+      "eliteId": "R02144",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 117,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 100,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 20,
+          "progressP90": 39,
+          "progressMax": 79,
+          "progressFractionOfResidualMax": 0.79,
+          "avgNodesPerTrial": 23.695
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02154",
+      "provenance": "unknown",
+      "reqLen": 124,
+      "blocks": 6,
+      "blocksFraction": 0.0355,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.7949,
+      "eliteId": "R02154",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 128,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 111,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 46,
+          "progressMax": 85,
+          "progressFractionOfResidualMax": 0.7657657657657657,
+          "avgNodesPerTrial": 26.2955
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02157",
+      "provenance": "unknown",
+      "reqLen": 85,
+      "blocks": 25,
+      "blocksFraction": 0.2066,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.9551,
+      "eliteId": "R02157",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 85,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 71,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 33,
+          "progressMax": 54,
+          "progressFractionOfResidualMax": 0.7605633802816901,
+          "avgNodesPerTrial": 23.21
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02164",
+      "provenance": "unknown",
+      "reqLen": 147,
+      "blocks": 18,
+      "blocksFraction": 0.08,
+      "mustCross": 0,
+      "reqInt": 10,
+      "requiredPathCoverageRatio": 0.7387,
+      "eliteId": "R02164",
+      "verifiedFeasibleDepth": 9,
+      "verifiedInfeasibleDepth": 10,
+      "eliteLength": 153,
+      "rolloutLadder": [
+        {
+          "branchDepth": 9,
+          "residual": 138,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 59,
+          "progressMax": 94,
+          "progressFractionOfResidualMax": 0.6811594202898551,
+          "avgNodesPerTrial": 35.453
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02171",
+      "provenance": "unknown",
+      "reqLen": 150,
+      "blocks": 17,
+      "blocksFraction": 0.0756,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.7538,
+      "eliteId": "R02171",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 156,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 139,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 46,
+          "progressMax": 91,
+          "progressFractionOfResidualMax": 0.6546762589928058,
+          "avgNodesPerTrial": 30.3105
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02174",
+      "provenance": "unknown",
+      "reqLen": 119,
+      "blocks": 32,
+      "blocksFraction": 0.1893,
+      "mustCross": 5,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.952,
+      "eliteId": "R02174",
+      "verifiedFeasibleDepth": 18,
+      "verifiedInfeasibleDepth": 19,
+      "eliteLength": 126,
+      "rolloutLadder": [
+        {
+          "branchDepth": 18,
+          "residual": 101,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 17,
+          "progressP90": 43,
+          "progressMax": 74,
+          "progressFractionOfResidualMax": 0.7326732673267327,
+          "avgNodesPerTrial": 22.1925
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02184",
+      "provenance": "unknown",
+      "reqLen": 97,
+      "blocks": 24,
+      "blocksFraction": 0.142,
+      "mustCross": 0,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.6978,
+      "eliteId": "R02184",
+      "verifiedFeasibleDepth": 9,
+      "verifiedInfeasibleDepth": 10,
+      "eliteLength": 103,
+      "rolloutLadder": [
+        {
+          "branchDepth": 9,
+          "residual": 88,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 43,
+          "progressMax": 73,
+          "progressFractionOfResidualMax": 0.8295454545454546,
+          "avgNodesPerTrial": 26.915
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02187",
+      "provenance": "unknown",
+      "reqLen": 88,
+      "blocks": 14,
+      "blocksFraction": 0.1157,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.9167,
+      "eliteId": "R02187",
+      "verifiedFeasibleDepth": 18,
+      "verifiedInfeasibleDepth": 19,
+      "eliteLength": 93,
+      "rolloutLadder": [
+        {
+          "branchDepth": 18,
+          "residual": 70,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 16,
+          "progressP90": 35,
+          "progressMax": 56,
+          "progressFractionOfResidualMax": 0.8,
+          "avgNodesPerTrial": 20.881
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 927395,
+        "path": [
+          262149,
+          262150,
+          196614,
+          196615,
+          196616,
+          196617,
+          262153,
+          262154,
+          196618,
+          131082,
+          131081,
+          65545,
+          9,
+          8,
+          7,
+          393226,
+          327690,
+          327689,
+          327688,
+          393224,
+          458760,
+          524296,
+          589832,
+          655368,
+          655367,
+          589831,
+          589832,
+          589833,
+          655369,
+          655370,
+          589834,
+          524298,
+          524297,
+          458752,
+          458753,
+          393217,
+          655361,
+          655360,
+          589824,
+          589825,
+          589826,
+          589827,
+          524291,
+          458755,
+          393219,
+          393220,
+          327684,
+          327683,
+          262147,
+          196611,
+          196612,
+          262148,
+          262147,
+          262146,
+          458758,
+          458759,
+          393223,
+          327687,
+          262151,
+          262152,
+          196616,
+          131080,
+          131079,
+          65543,
+          65542,
+          65541,
+          5,
+          65538,
+          2,
+          3,
+          4,
+          65540,
+          131076,
+          131075,
+          131074,
+          196610,
+          196609,
+          262145,
+          262144,
+          327680,
+          327681,
+          327682,
+          393218,
+          458754,
+          458755,
+          458756,
+          458757,
+          524293,
+          524292,
+          589828,
+          589829,
+          589830,
+          655366,
+          655365
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R02191",
+      "provenance": "unknown",
+      "reqLen": 73,
+      "blocks": 33,
+      "blocksFraction": 0.2292,
+      "mustCross": 0,
+      "reqInt": 0,
+      "requiredPathCoverageRatio": 0.6952,
+      "eliteId": "R02191",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 79,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 59,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 20,
+          "progressP90": 33,
+          "progressMax": 51,
+          "progressFractionOfResidualMax": 0.864406779661017,
+          "avgNodesPerTrial": 21.13
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02235",
+      "provenance": "unknown",
+      "reqLen": 129,
+      "blocks": 39,
+      "blocksFraction": 0.1733,
+      "mustCross": 0,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.7414,
+      "eliteId": "R02235",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 135,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 119,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 41,
+          "progressMax": 77,
+          "progressFractionOfResidualMax": 0.6470588235294118,
+          "avgNodesPerTrial": 23.243
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02237",
+      "provenance": "unknown",
+      "reqLen": 91,
+      "blocks": 18,
+      "blocksFraction": 0.1488,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.9785,
+      "eliteId": "R02237",
+      "verifiedFeasibleDepth": 9,
+      "verifiedInfeasibleDepth": 10,
+      "eliteLength": 97,
+      "rolloutLadder": [
+        {
+          "branchDepth": 9,
+          "residual": 82,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 16,
+          "progressP90": 43,
+          "progressMax": 69,
+          "progressFractionOfResidualMax": 0.8414634146341463,
+          "avgNodesPerTrial": 22.346
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02260",
+      "provenance": "unknown",
+      "reqLen": 155,
+      "blocks": 34,
+      "blocksFraction": 0.1511,
+      "mustCross": 0,
+      "reqInt": 14,
+      "requiredPathCoverageRatio": 0.847,
+      "eliteId": "R02260",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 159,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 144,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 39,
+          "progressMax": 74,
+          "progressFractionOfResidualMax": 0.5138888888888888,
+          "avgNodesPerTrial": 24.1585
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02263",
+      "provenance": "unknown",
+      "reqLen": 121,
+      "blocks": 32,
+      "blocksFraction": 0.1633,
+      "mustCross": 5,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8231,
+      "eliteId": "R02263",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 125,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 110,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 30,
+          "progressP90": 47,
+          "progressMax": 79,
+          "progressFractionOfResidualMax": 0.7181818181818181,
+          "avgNodesPerTrial": 28.293
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02274",
+      "provenance": "unknown",
+      "reqLen": 105,
+      "blocks": 27,
+      "blocksFraction": 0.1875,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 1,
+      "eliteId": "R02274",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 110,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 86,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 24,
+          "progressP90": 42,
+          "progressMax": 67,
+          "progressFractionOfResidualMax": 0.7790697674418605,
+          "avgNodesPerTrial": 26.9365
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02280",
+      "provenance": "unknown",
+      "reqLen": 94,
+      "blocks": 22,
+      "blocksFraction": 0.1528,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8103,
+      "eliteId": "R02280",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 98,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 82,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 1,
+          "progressP90": 21,
+          "progressMax": 66,
+          "progressFractionOfResidualMax": 0.8048780487804879,
+          "avgNodesPerTrial": 6.1575
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02281",
+      "provenance": "unknown",
+      "reqLen": 98,
+      "blocks": 28,
+      "blocksFraction": 0.1944,
+      "mustCross": 7,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.9608,
+      "eliteId": "R02281",
+      "verifiedFeasibleDepth": 20,
+      "verifiedInfeasibleDepth": 21,
+      "eliteLength": 104,
+      "rolloutLadder": [
+        {
+          "branchDepth": 20,
+          "residual": 78,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 6,
+          "progressP90": 25,
+          "progressMax": 61,
+          "progressFractionOfResidualMax": 0.782051282051282,
+          "avgNodesPerTrial": 12.6735
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 287778,
+        "path": [
+          589824,
+          655360,
+          720896,
+          720897,
+          720898,
+          655364,
+          655363,
+          720899,
+          720900,
+          720901,
+          655365,
+          589829,
+          589830,
+          589831,
+          524295,
+          524294,
+          589830,
+          655366,
+          655367,
+          655368,
+          262149,
+          327685,
+          327686,
+          327687,
+          327688,
+          393224,
+          393225,
+          327689,
+          327690,
+          327691,
+          393227,
+          393226,
+          458762,
+          458763,
+          524299,
+          589835,
+          655371,
+          131079,
+          65543,
+          7,
+          6,
+          5,
+          4,
+          65540,
+          65539,
+          589825,
+          589826,
+          524290,
+          524291,
+          458755,
+          393219,
+          393218,
+          393217,
+          393216,
+          327680,
+          262144,
+          262145,
+          262146,
+          196610,
+          131074,
+          131075,
+          131076,
+          196612,
+          196611,
+          262147,
+          327683,
+          327682,
+          393218,
+          458754,
+          458753,
+          393217,
+          327681,
+          393221,
+          393220,
+          458756,
+          524292,
+          524293,
+          458757,
+          458758,
+          458759,
+          393223,
+          327687,
+          262151,
+          196615,
+          196616,
+          65542,
+          65543,
+          65544,
+          65545,
+          131081,
+          131080,
+          65544,
+          8,
+          9,
+          10,
+          11,
+          65547,
+          131083,
+          131082,
+          196618,
+          262154,
+          262153,
+          262152,
+          262151,
+          262150
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R02288",
+      "provenance": "unknown",
+      "reqLen": 83,
+      "blocks": 23,
+      "blocksFraction": 0.1597,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.7685,
+      "eliteId": "R02288",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 88,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 70,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 3,
+          "progressP90": 23,
+          "progressMax": 57,
+          "progressFractionOfResidualMax": 0.8142857142857143,
+          "avgNodesPerTrial": 8.0495
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02300",
+      "provenance": "unknown",
+      "reqLen": 123,
+      "blocks": 23,
+      "blocksFraction": 0.1022,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.6543,
+      "eliteId": "R02300",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 129,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 111,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 39,
+          "progressP90": 70,
+          "progressMax": 95,
+          "progressFractionOfResidualMax": 0.8558558558558559,
+          "avgNodesPerTrial": 39.4745
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02301",
+      "provenance": "unknown",
+      "reqLen": 113,
+      "blocks": 29,
+      "blocksFraction": 0.1716,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.8626,
+      "eliteId": "R02301",
+      "verifiedFeasibleDepth": 31,
+      "verifiedInfeasibleDepth": 32,
+      "eliteLength": 119,
+      "rolloutLadder": [
+        {
+          "branchDepth": 31,
+          "residual": 82,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 13,
+          "progressP90": 32,
+          "progressMax": 54,
+          "progressFractionOfResidualMax": 0.6585365853658537,
+          "avgNodesPerTrial": 16.98
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02317",
+      "provenance": "unknown",
+      "reqLen": 100,
+      "blocks": 34,
+      "blocksFraction": 0.2012,
+      "mustCross": 1,
+      "reqInt": 1,
+      "requiredPathCoverageRatio": 0.7813,
+      "eliteId": "R02317",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 106,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 85,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 34,
+          "progressMax": 69,
+          "progressFractionOfResidualMax": 0.8117647058823529,
+          "avgNodesPerTrial": 24.005
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02322",
+      "provenance": "unknown",
+      "reqLen": 127,
+      "blocks": 32,
+      "blocksFraction": 0.1633,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.8194,
+      "eliteId": "R02322",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 127,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 113,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 7,
+          "progressP90": 36,
+          "progressMax": 65,
+          "progressFractionOfResidualMax": 0.5752212389380531,
+          "avgNodesPerTrial": 15.5465
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02325",
+      "provenance": "unknown",
+      "reqLen": 77,
+      "blocks": 16,
+      "blocksFraction": 0.1322,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.875,
+      "eliteId": "R02325",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 83,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 63,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 8,
+          "progressP90": 22,
+          "progressMax": 54,
+          "progressFractionOfResidualMax": 0.8571428571428571,
+          "avgNodesPerTrial": 13.202
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02326",
+      "provenance": "unknown",
+      "reqLen": 116,
+      "blocks": 40,
+      "blocksFraction": 0.2041,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.8169,
+      "eliteId": "R02326",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 120,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 101,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 48,
+          "progressMax": 69,
+          "progressFractionOfResidualMax": 0.6831683168316832,
+          "avgNodesPerTrial": 27.4335
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02334",
+      "provenance": "unknown",
+      "reqLen": 116,
+      "blocks": 13,
+      "blocksFraction": 0.0663,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.6591,
+      "eliteId": "R02334",
+      "verifiedFeasibleDepth": 22,
+      "verifiedInfeasibleDepth": 23,
+      "eliteLength": 123,
+      "rolloutLadder": [
+        {
+          "branchDepth": 22,
+          "residual": 94,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 7,
+          "progressP90": 22,
+          "progressMax": 81,
+          "progressFractionOfResidualMax": 0.8617021276595744,
+          "avgNodesPerTrial": 12.1575
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02336",
+      "provenance": "unknown",
+      "reqLen": 109,
+      "blocks": 37,
+      "blocksFraction": 0.1888,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.7124,
+      "eliteId": "R02336",
+      "verifiedFeasibleDepth": 20,
+      "verifiedInfeasibleDepth": 21,
+      "eliteLength": 114,
+      "rolloutLadder": [
+        {
+          "branchDepth": 20,
+          "residual": 89,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 28,
+          "progressP90": 48,
+          "progressMax": 63,
+          "progressFractionOfResidualMax": 0.7078651685393258,
+          "avgNodesPerTrial": 29.3425
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02340",
+      "provenance": "unknown",
+      "reqLen": 92,
+      "blocks": 19,
+      "blocksFraction": 0.157,
+      "mustCross": 6,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.9109,
+      "eliteId": "R02340",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 98,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 81,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 16,
+          "progressP90": 39,
+          "progressMax": 68,
+          "progressFractionOfResidualMax": 0.8395061728395061,
+          "avgNodesPerTrial": 22.562
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02369",
+      "provenance": "unknown",
+      "reqLen": 124,
+      "blocks": 20,
+      "blocksFraction": 0.1183,
+      "mustCross": 0,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.8378,
+      "eliteId": "R02369",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 129,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 112,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 45,
+          "progressMax": 77,
+          "progressFractionOfResidualMax": 0.6875,
+          "avgNodesPerTrial": 29.6895
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02380",
+      "provenance": "unknown",
+      "reqLen": 84,
+      "blocks": 15,
+      "blocksFraction": 0.124,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.9032,
+      "eliteId": "R02380",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 90,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 74,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 18,
+          "progressP90": 28,
+          "progressMax": 56,
+          "progressFractionOfResidualMax": 0.7567567567567568,
+          "avgNodesPerTrial": 19.4625
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02391",
+      "provenance": "unknown",
+      "reqLen": 93,
+      "blocks": 29,
+      "blocksFraction": 0.1716,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.6691,
+      "eliteId": "R02391",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 100,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 81,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 16,
+          "progressP90": 35,
+          "progressMax": 61,
+          "progressFractionOfResidualMax": 0.7530864197530864,
+          "avgNodesPerTrial": 20.947
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02392",
+      "provenance": "unknown",
+      "reqLen": 79,
+      "blocks": 15,
+      "blocksFraction": 0.124,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.8061,
+      "eliteId": "R02392",
+      "verifiedFeasibleDepth": 22,
+      "verifiedInfeasibleDepth": 23,
+      "eliteLength": 85,
+      "rolloutLadder": [
+        {
+          "branchDepth": 22,
+          "residual": 57,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 4,
+          "progressP90": 22,
+          "progressMax": 50,
+          "progressFractionOfResidualMax": 0.8771929824561403,
+          "avgNodesPerTrial": 11.42
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 45029,
+        "path": [
+          196611,
+          196612,
+          262148,
+          262147,
+          262146,
+          262145,
+          196616,
+          262152,
+          262153,
+          327689,
+          393225,
+          393224,
+          458760,
+          458759,
+          458758,
+          393222,
+          393221,
+          327685,
+          262149,
+          589824,
+          655360,
+          655361,
+          655362,
+          589826,
+          589825,
+          524289,
+          458753,
+          393217,
+          327681,
+          262150,
+          262151,
+          196615,
+          196614,
+          196613,
+          131077,
+          131078,
+          65542,
+          65543,
+          131079,
+          131080,
+          65544,
+          65545,
+          65546,
+          10,
+          9,
+          3,
+          65539,
+          65538,
+          65537,
+          65536,
+          0,
+          1,
+          65537,
+          131073,
+          131074,
+          196610,
+          262146,
+          327682,
+          458757,
+          524293,
+          524292,
+          589828,
+          655364,
+          655363,
+          589827,
+          589828,
+          589829,
+          655365,
+          655366,
+          589830,
+          524298,
+          458762,
+          458761,
+          524297,
+          589833,
+          655369,
+          655370,
+          589834,
+          589833,
+          589832,
+          589831,
+          655367,
+          655368,
+          589832,
+          524296,
+          524295
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R02397",
+      "provenance": "unknown",
+      "reqLen": 142,
+      "blocks": 42,
+      "blocksFraction": 0.1867,
+      "mustCross": 7,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8023,
+      "eliteId": "R02397",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 148,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 127,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 23,
+          "progressP90": 54,
+          "progressMax": 89,
+          "progressFractionOfResidualMax": 0.7007874015748031,
+          "avgNodesPerTrial": 30.614
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02405",
+      "provenance": "unknown",
+      "reqLen": 139,
+      "blocks": 37,
+      "blocksFraction": 0.1888,
+      "mustCross": 0,
+      "reqInt": 11,
+      "requiredPathCoverageRatio": 0.8797,
+      "eliteId": "R02405",
+      "verifiedFeasibleDepth": 9,
+      "verifiedInfeasibleDepth": 10,
+      "eliteLength": 143,
+      "rolloutLadder": [
+        {
+          "branchDepth": 9,
+          "residual": 130,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 24,
+          "progressP90": 46,
+          "progressMax": 98,
+          "progressFractionOfResidualMax": 0.7538461538461538,
+          "avgNodesPerTrial": 28.1965
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02408",
+      "provenance": "unknown",
+      "reqLen": 93,
+      "blocks": 21,
+      "blocksFraction": 0.1458,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8692,
+      "eliteId": "R02408",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 99,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 81,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 30,
+          "progressP90": 38,
+          "progressMax": 70,
+          "progressFractionOfResidualMax": 0.8641975308641975,
+          "avgNodesPerTrial": 28.4835
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02416",
+      "provenance": "unknown",
+      "reqLen": 99,
+      "blocks": 15,
+      "blocksFraction": 0.1042,
+      "mustCross": 0,
+      "reqInt": 2,
+      "requiredPathCoverageRatio": 0.8609,
+      "eliteId": "R02416",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 103,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 89,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 16,
+          "progressP90": 38,
+          "progressMax": 67,
+          "progressFractionOfResidualMax": 0.7528089887640449,
+          "avgNodesPerTrial": 19.14
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02419",
+      "provenance": "unknown",
+      "reqLen": 96,
+      "blocks": 29,
+      "blocksFraction": 0.2014,
+      "mustCross": 7,
+      "reqInt": 10,
+      "requiredPathCoverageRatio": 0.9697,
+      "eliteId": "R02419",
+      "verifiedFeasibleDepth": 20,
+      "verifiedInfeasibleDepth": 21,
+      "eliteLength": 103,
+      "rolloutLadder": [
+        {
+          "branchDepth": 20,
+          "residual": 76,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 6,
+          "progressP90": 31,
+          "progressMax": 63,
+          "progressFractionOfResidualMax": 0.8289473684210527,
+          "avgNodesPerTrial": 13.1235
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 1463906,
+        "path": [
+          196610,
+          196609,
+          196608,
+          131072,
+          131073,
+          131074,
+          65538,
+          2,
+          1,
+          65537,
+          131073,
+          196609,
+          262145,
+          65546,
+          131082,
+          196618,
+          196617,
+          131081,
+          131080,
+          65544,
+          65545,
+          9,
+          8,
+          7,
+          6,
+          458757,
+          524293,
+          524292,
+          589828,
+          655364,
+          720900,
+          720901,
+          655365,
+          589829,
+          589828,
+          589827,
+          524291,
+          262151,
+          327687,
+          393223,
+          393224,
+          393225,
+          393226,
+          458762,
+          458763,
+          393227,
+          327691,
+          262155,
+          262154,
+          196616,
+          196615,
+          196614,
+          196613,
+          196612,
+          262148,
+          327684,
+          393220,
+          458756,
+          458755,
+          393219,
+          393220,
+          393221,
+          458752,
+          458753,
+          393217,
+          327681,
+          327682,
+          327683,
+          327684,
+          327685,
+          327686,
+          262150,
+          196614,
+          131078,
+          65542,
+          65543,
+          131079,
+          131077,
+          65541,
+          5,
+          4,
+          65540,
+          65539,
+          65538,
+          65537,
+          65536,
+          0,
+          524289,
+          524290,
+          589826,
+          589825,
+          589824,
+          655360,
+          655361,
+          720897,
+          720898,
+          720899,
+          655363,
+          655364,
+          655365,
+          655366,
+          720902,
+          720903,
+          720904
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R02445",
+      "provenance": "unknown",
+      "reqLen": 117,
+      "blocks": 44,
+      "blocksFraction": 0.1956,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.6964,
+      "eliteId": "R02445",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 121,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 103,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 31,
+          "progressP90": 55,
+          "progressMax": 79,
+          "progressFractionOfResidualMax": 0.7669902912621359,
+          "avgNodesPerTrial": 32.9525
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02451",
+      "provenance": "unknown",
+      "reqLen": 150,
+      "blocks": 39,
+      "blocksFraction": 0.1733,
+      "mustCross": 0,
+      "reqInt": 14,
+      "requiredPathCoverageRatio": 0.838,
+      "eliteId": "R02451",
+      "verifiedFeasibleDepth": 18,
+      "verifiedInfeasibleDepth": 19,
+      "eliteLength": 155,
+      "rolloutLadder": [
+        {
+          "branchDepth": 18,
+          "residual": 132,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 50,
+          "progressMax": 87,
+          "progressFractionOfResidualMax": 0.6590909090909091,
+          "avgNodesPerTrial": 31.6445
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02461",
+      "provenance": "unknown",
+      "reqLen": 107,
+      "blocks": 30,
+      "blocksFraction": 0.1531,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.673,
+      "eliteId": "R02461",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 113,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 94,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 24,
+          "progressP90": 42,
+          "progressMax": 72,
+          "progressFractionOfResidualMax": 0.7659574468085106,
+          "avgNodesPerTrial": 25.922
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02462",
+      "provenance": "unknown",
+      "reqLen": 107,
+      "blocks": 12,
+      "blocksFraction": 0.0833,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8917,
+      "eliteId": "R02462",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 112,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 93,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 18,
+          "progressP90": 36,
+          "progressMax": 65,
+          "progressFractionOfResidualMax": 0.6989247311827957,
+          "avgNodesPerTrial": 21.809
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02473",
+      "provenance": "unknown",
+      "reqLen": 124,
+      "blocks": 31,
+      "blocksFraction": 0.1582,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.7898,
+      "eliteId": "R02473",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 131,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 114,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 54,
+          "progressMax": 92,
+          "progressFractionOfResidualMax": 0.8070175438596491,
+          "avgNodesPerTrial": 32.2295
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02494",
+      "provenance": "unknown",
+      "reqLen": 123,
+      "blocks": 46,
+      "blocksFraction": 0.2347,
+      "mustCross": 0,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.8723,
+      "eliteId": "R02494",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 123,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 107,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 37,
+          "progressMax": 70,
+          "progressFractionOfResidualMax": 0.6542056074766355,
+          "avgNodesPerTrial": 24.837
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02498",
+      "provenance": "unknown",
+      "reqLen": 83,
+      "blocks": 17,
+      "blocksFraction": 0.1405,
+      "mustCross": 0,
+      "reqInt": 0,
+      "requiredPathCoverageRatio": 0.883,
+      "eliteId": "R02498",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 89,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 72,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 10,
+          "progressP90": 28,
+          "progressMax": 53,
+          "progressFractionOfResidualMax": 0.7361111111111112,
+          "avgNodesPerTrial": 15.4925
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02525",
+      "provenance": "unknown",
+      "reqLen": 106,
+      "blocks": 45,
+      "blocksFraction": 0.2296,
+      "mustCross": 5,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.7413,
+      "eliteId": "R02525",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 110,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 87,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 7,
+          "progressP90": 23,
+          "progressMax": 65,
+          "progressFractionOfResidualMax": 0.7471264367816092,
+          "avgNodesPerTrial": 12.266
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02565",
+      "provenance": "unknown",
+      "reqLen": 108,
+      "blocks": 21,
+      "blocksFraction": 0.1243,
+      "mustCross": 1,
+      "reqInt": 1,
+      "requiredPathCoverageRatio": 0.7347,
+      "eliteId": "R02565",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 112,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 97,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 46,
+          "progressMax": 75,
+          "progressFractionOfResidualMax": 0.7731958762886598,
+          "avgNodesPerTrial": 28.1055
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02571",
+      "provenance": "unknown",
+      "reqLen": 114,
+      "blocks": 34,
+      "blocksFraction": 0.1735,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.7308,
+      "eliteId": "R02571",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 114,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 100,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 4,
+          "progressP90": 37,
+          "progressMax": 64,
+          "progressFractionOfResidualMax": 0.64,
+          "avgNodesPerTrial": 12.1045
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02578",
+      "provenance": "unknown",
+      "reqLen": 101,
+      "blocks": 30,
+      "blocksFraction": 0.1775,
+      "mustCross": 0,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.8016,
+      "eliteId": "R02578",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 106,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 88,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 3,
+          "progressP90": 26,
+          "progressMax": 51,
+          "progressFractionOfResidualMax": 0.5795454545454546,
+          "avgNodesPerTrial": 10.9435
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02588",
+      "provenance": "unknown",
+      "reqLen": 100,
+      "blocks": 24,
+      "blocksFraction": 0.1667,
+      "mustCross": 0,
+      "reqInt": 14,
+      "requiredPathCoverageRatio": 0.8929,
+      "eliteId": "R02588",
+      "verifiedFeasibleDepth": 17,
+      "verifiedInfeasibleDepth": 18,
+      "eliteLength": 104,
+      "rolloutLadder": [
+        {
+          "branchDepth": 17,
+          "residual": 83,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 14,
+          "progressP90": 25,
+          "progressMax": 60,
+          "progressFractionOfResidualMax": 0.7228915662650602,
+          "avgNodesPerTrial": 15.475
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02591",
+      "provenance": "unknown",
+      "reqLen": 91,
+      "blocks": 21,
+      "blocksFraction": 0.1736,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.9891,
+      "eliteId": "R02591",
+      "verifiedFeasibleDepth": 20,
+      "verifiedInfeasibleDepth": 21,
+      "eliteLength": 91,
+      "rolloutLadder": [
+        {
+          "branchDepth": 20,
+          "residual": 71,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 25,
+          "progressMax": 52,
+          "progressFractionOfResidualMax": 0.7323943661971831,
+          "avgNodesPerTrial": 14.7145
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02605",
+      "provenance": "unknown",
+      "reqLen": 83,
+      "blocks": 23,
+      "blocksFraction": 0.1597,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.6917,
+      "eliteId": "R02605",
+      "verifiedFeasibleDepth": 25,
+      "verifiedInfeasibleDepth": 26,
+      "eliteLength": 89,
+      "rolloutLadder": [
+        {
+          "branchDepth": 25,
+          "residual": 58,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 17,
+          "progressP90": 26,
+          "progressMax": 50,
+          "progressFractionOfResidualMax": 0.8620689655172413,
+          "avgNodesPerTrial": 19.4495
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02627",
+      "provenance": "unknown",
+      "reqLen": 139,
+      "blocks": 31,
+      "blocksFraction": 0.1378,
+      "mustCross": 5,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.7202,
+      "eliteId": "R02627",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 145,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 128,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 37,
+          "progressMax": 88,
+          "progressFractionOfResidualMax": 0.6875,
+          "avgNodesPerTrial": 20.447
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02635",
+      "provenance": "unknown",
+      "reqLen": 120,
+      "blocks": 36,
+      "blocksFraction": 0.1837,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.7547,
+      "eliteId": "R02635",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 125,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 106,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 35,
+          "progressP90": 51,
+          "progressMax": 87,
+          "progressFractionOfResidualMax": 0.8207547169811321,
+          "avgNodesPerTrial": 32.867
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02661",
+      "provenance": "unknown",
+      "reqLen": 79,
+      "blocks": 20,
+      "blocksFraction": 0.1653,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.8316,
+      "eliteId": "R02661",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 83,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 67,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 33,
+          "progressP90": 41,
+          "progressMax": 59,
+          "progressFractionOfResidualMax": 0.8805970149253731,
+          "avgNodesPerTrial": 29.69
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 1215416,
+        "path": [
+          458760,
+          458759,
+          458758,
+          458757,
+          393221,
+          327685,
+          327686,
+          262150,
+          196614,
+          196615,
+          131079,
+          131080,
+          131081,
+          131082,
+          196618,
+          9,
+          65545,
+          131081,
+          196617,
+          262153,
+          262152,
+          262151,
+          327687,
+          327688,
+          393224,
+          393223,
+          393222,
+          393221,
+          393220,
+          589830,
+          524294,
+          524293,
+          524292,
+          458756,
+          458755,
+          458754,
+          524290,
+          524289,
+          524288,
+          458752,
+          458753,
+          393217,
+          393216,
+          327680,
+          262144,
+          196608,
+          196609,
+          131073,
+          131072,
+          393218,
+          393219,
+          458755,
+          524291,
+          589827,
+          655363,
+          655364,
+          655365,
+          655366,
+          655367,
+          589831,
+          589832,
+          524296,
+          524297,
+          524298,
+          589834,
+          655370,
+          131074,
+          131075,
+          131076,
+          196612,
+          262148,
+          262149,
+          196613,
+          131077,
+          65541,
+          65540,
+          65539,
+          3,
+          2,
+          65538,
+          65537,
+          65536,
+          0,
+          1
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R02664",
+      "provenance": "unknown",
+      "reqLen": 78,
+      "blocks": 18,
+      "blocksFraction": 0.1488,
+      "mustCross": 2,
+      "reqInt": 2,
+      "requiredPathCoverageRatio": 0.8966,
+      "eliteId": "R02664",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 85,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 65,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 23,
+          "progressP90": 42,
+          "progressMax": 63,
+          "progressFractionOfResidualMax": 0.9692307692307692,
+          "avgNodesPerTrial": 26.839
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02689",
+      "provenance": "unknown",
+      "reqLen": 105,
+      "blocks": 21,
+      "blocksFraction": 0.1458,
+      "mustCross": 6,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.913,
+      "eliteId": "R02689",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 112,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 93,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 35,
+          "progressMax": 60,
+          "progressFractionOfResidualMax": 0.6451612903225806,
+          "avgNodesPerTrial": 23.184
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02693",
+      "provenance": "unknown",
+      "reqLen": 126,
+      "blocks": 53,
+      "blocksFraction": 0.2356,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.7975,
+      "eliteId": "R02693",
+      "verifiedFeasibleDepth": 9,
+      "verifiedInfeasibleDepth": 10,
+      "eliteLength": 130,
+      "rolloutLadder": [
+        {
+          "branchDepth": 9,
+          "residual": 117,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 28,
+          "progressP90": 45,
+          "progressMax": 83,
+          "progressFractionOfResidualMax": 0.7094017094017094,
+          "avgNodesPerTrial": 28.1265
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02720",
+      "provenance": "unknown",
+      "reqLen": 124,
+      "blocks": 41,
+      "blocksFraction": 0.2092,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8732,
+      "eliteId": "R02720",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 128,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 111,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 41,
+          "progressMax": 81,
+          "progressFractionOfResidualMax": 0.7297297297297297,
+          "avgNodesPerTrial": 22.541
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02754",
+      "provenance": "unknown",
+      "reqLen": 118,
+      "blocks": 12,
+      "blocksFraction": 0.071,
+      "mustCross": 7,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8429,
+      "eliteId": "R02754",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 124,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 99,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 7,
+          "progressP90": 21,
+          "progressMax": 71,
+          "progressFractionOfResidualMax": 0.7171717171717171,
+          "avgNodesPerTrial": 10.8145
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02769",
+      "provenance": "unknown",
+      "reqLen": 137,
+      "blocks": 31,
+      "blocksFraction": 0.1378,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.7287,
+      "eliteId": "R02769",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 143,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 122,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 32,
+          "progressP90": 53,
+          "progressMax": 108,
+          "progressFractionOfResidualMax": 0.8852459016393442,
+          "avgNodesPerTrial": 34.8715
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02774",
+      "provenance": "unknown",
+      "reqLen": 106,
+      "blocks": 21,
+      "blocksFraction": 0.1458,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.9217,
+      "eliteId": "R02774",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 112,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 87,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 24,
+          "progressP90": 56,
+          "progressMax": 80,
+          "progressFractionOfResidualMax": 0.9195402298850575,
+          "avgNodesPerTrial": 30.529
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02789",
+      "provenance": "unknown",
+      "reqLen": 96,
+      "blocks": 30,
+      "blocksFraction": 0.1531,
+      "mustCross": 0,
+      "reqInt": 2,
+      "requiredPathCoverageRatio": 0.6076,
+      "eliteId": "R02789",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 103,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 86,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 42,
+          "progressMax": 69,
+          "progressFractionOfResidualMax": 0.8023255813953488,
+          "avgNodesPerTrial": 26.799
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02792",
+      "provenance": "unknown",
+      "reqLen": 107,
+      "blocks": 35,
+      "blocksFraction": 0.2071,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8992,
+      "eliteId": "R02792",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 113,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 95,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 30,
+          "progressMax": 65,
+          "progressFractionOfResidualMax": 0.6842105263157895,
+          "avgNodesPerTrial": 21.269
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02809",
+      "provenance": "unknown",
+      "reqLen": 128,
+      "blocks": 40,
+      "blocksFraction": 0.2041,
+      "mustCross": 7,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.8591,
+      "eliteId": "R02809",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 132,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 113,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 46,
+          "progressMax": 75,
+          "progressFractionOfResidualMax": 0.6637168141592921,
+          "avgNodesPerTrial": 22.696
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02856",
+      "provenance": "unknown",
+      "reqLen": 85,
+      "blocks": 22,
+      "blocksFraction": 0.1818,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8673,
+      "eliteId": "R02856",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 91,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 73,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 2,
+          "progressP90": 26,
+          "progressMax": 60,
+          "progressFractionOfResidualMax": 0.821917808219178,
+          "avgNodesPerTrial": 8.4645
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02870",
+      "provenance": "unknown",
+      "reqLen": 122,
+      "blocks": 5,
+      "blocksFraction": 0.0255,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.6421,
+      "eliteId": "R02870",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 127,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 111,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 41,
+          "progressP90": 71,
+          "progressMax": 93,
+          "progressFractionOfResidualMax": 0.8378378378378378,
+          "avgNodesPerTrial": 42.8095
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02880",
+      "provenance": "unknown",
+      "reqLen": 92,
+      "blocks": 8,
+      "blocksFraction": 0.0661,
+      "mustCross": 0,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8846,
+      "eliteId": "R02880",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 98,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 81,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 31,
+          "progressP90": 53,
+          "progressMax": 71,
+          "progressFractionOfResidualMax": 0.8765432098765432,
+          "avgNodesPerTrial": 33.494
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02899",
+      "provenance": "unknown",
+      "reqLen": 103,
+      "blocks": 23,
+      "blocksFraction": 0.1597,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.9035,
+      "eliteId": "R02899",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 107,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 90,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 13,
+          "progressP90": 25,
+          "progressMax": 84,
+          "progressFractionOfResidualMax": 0.9333333333333333,
+          "avgNodesPerTrial": 18.543
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02910",
+      "provenance": "unknown",
+      "reqLen": 147,
+      "blocks": 22,
+      "blocksFraction": 0.0978,
+      "mustCross": 0,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.7277,
+      "eliteId": "R02910",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 154,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 135,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 30,
+          "progressP90": 57,
+          "progressMax": 106,
+          "progressFractionOfResidualMax": 0.7851851851851852,
+          "avgNodesPerTrial": 33.4545
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02918",
+      "provenance": "unknown",
+      "reqLen": 117,
+      "blocks": 43,
+      "blocksFraction": 0.2194,
+      "mustCross": 6,
+      "reqInt": 10,
+      "requiredPathCoverageRatio": 0.8357,
+      "eliteId": "R02918",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 121,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 98,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 35,
+          "progressMax": 71,
+          "progressFractionOfResidualMax": 0.7244897959183674,
+          "avgNodesPerTrial": 21.188
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02926",
+      "provenance": "unknown",
+      "reqLen": 137,
+      "blocks": 33,
+      "blocksFraction": 0.1684,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8782,
+      "eliteId": "R02926",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 143,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 127,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 8,
+          "progressP90": 45,
+          "progressMax": 78,
+          "progressFractionOfResidualMax": 0.6141732283464567,
+          "avgNodesPerTrial": 19.746
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02936",
+      "provenance": "unknown",
+      "reqLen": 125,
+      "blocks": 15,
+      "blocksFraction": 0.0888,
+      "mustCross": 7,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.8929,
+      "eliteId": "R02936",
+      "verifiedFeasibleDepth": 17,
+      "verifiedInfeasibleDepth": 18,
+      "eliteLength": 131,
+      "rolloutLadder": [
+        {
+          "branchDepth": 17,
+          "residual": 108,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 11,
+          "progressP90": 28,
+          "progressMax": 90,
+          "progressFractionOfResidualMax": 0.8333333333333334,
+          "avgNodesPerTrial": 15.3265
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02949",
+      "provenance": "unknown",
+      "reqLen": 139,
+      "blocks": 24,
+      "blocksFraction": 0.1224,
+      "mustCross": 6,
+      "reqInt": 10,
+      "requiredPathCoverageRatio": 0.8528,
+      "eliteId": "R02949",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 143,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 127,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 49,
+          "progressMax": 89,
+          "progressFractionOfResidualMax": 0.7007874015748031,
+          "avgNodesPerTrial": 31.6245
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02950",
+      "provenance": "unknown",
+      "reqLen": 105,
+      "blocks": 36,
+      "blocksFraction": 0.1837,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.6908,
+      "eliteId": "R02950",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 111,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 95,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 17,
+          "progressP90": 37,
+          "progressMax": 70,
+          "progressFractionOfResidualMax": 0.7368421052631579,
+          "avgNodesPerTrial": 22.1645
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02970",
+      "provenance": "unknown",
+      "reqLen": 121,
+      "blocks": 55,
+      "blocksFraction": 0.2444,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.716,
+      "eliteId": "R02970",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 128,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 105,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 37,
+          "progressMax": 80,
+          "progressFractionOfResidualMax": 0.7619047619047619,
+          "avgNodesPerTrial": 24.6485
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02980",
+      "provenance": "unknown",
+      "reqLen": 120,
+      "blocks": 38,
+      "blocksFraction": 0.1689,
+      "mustCross": 5,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.6667,
+      "eliteId": "R02980",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 126,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 108,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 7,
+          "progressP90": 16,
+          "progressMax": 71,
+          "progressFractionOfResidualMax": 0.6574074074074074,
+          "avgNodesPerTrial": 10.5395
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02986",
+      "provenance": "unknown",
+      "reqLen": 84,
+      "blocks": 14,
+      "blocksFraction": 0.1157,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.9032,
+      "eliteId": "R02986",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 88,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 68,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 13,
+          "progressP90": 25,
+          "progressMax": 47,
+          "progressFractionOfResidualMax": 0.6911764705882353,
+          "avgNodesPerTrial": 16.3645
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R02996",
+      "provenance": "unknown",
+      "reqLen": 100,
+      "blocks": 18,
+      "blocksFraction": 0.125,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.9091,
+      "eliteId": "R02996",
+      "verifiedFeasibleDepth": 21,
+      "verifiedInfeasibleDepth": 22,
+      "eliteLength": 106,
+      "rolloutLadder": [
+        {
+          "branchDepth": 21,
+          "residual": 79,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 7,
+          "progressP90": 30,
+          "progressMax": 68,
+          "progressFractionOfResidualMax": 0.8607594936708861,
+          "avgNodesPerTrial": 13.106
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03002",
+      "provenance": "unknown",
+      "reqLen": 117,
+      "blocks": 11,
+      "blocksFraction": 0.0561,
+      "mustCross": 0,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.6536,
+      "eliteId": "R03002",
+      "verifiedFeasibleDepth": 9,
+      "verifiedInfeasibleDepth": 10,
+      "eliteLength": 124,
+      "rolloutLadder": [
+        {
+          "branchDepth": 9,
+          "residual": 108,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 40,
+          "progressP90": 63,
+          "progressMax": 104,
+          "progressFractionOfResidualMax": 0.9629629629629629,
+          "avgNodesPerTrial": 42.582
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03003",
+      "provenance": "unknown",
+      "reqLen": 127,
+      "blocks": 13,
+      "blocksFraction": 0.0578,
+      "mustCross": 7,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.6019,
+      "eliteId": "R03003",
+      "verifiedFeasibleDepth": 18,
+      "verifiedInfeasibleDepth": 19,
+      "eliteLength": 134,
+      "rolloutLadder": [
+        {
+          "branchDepth": 18,
+          "residual": 109,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 24,
+          "progressP90": 48,
+          "progressMax": 90,
+          "progressFractionOfResidualMax": 0.8256880733944955,
+          "avgNodesPerTrial": 28.4655
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03013",
+      "provenance": "unknown",
+      "reqLen": 113,
+      "blocks": 13,
+      "blocksFraction": 0.0663,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.6457,
+      "eliteId": "R03013",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 120,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 94,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 28,
+          "progressP90": 48,
+          "progressMax": 77,
+          "progressFractionOfResidualMax": 0.8191489361702128,
+          "avgNodesPerTrial": 29.848
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03028",
+      "provenance": "unknown",
+      "reqLen": 78,
+      "blocks": 16,
+      "blocksFraction": 0.1322,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8667,
+      "eliteId": "R03028",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 84,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 68,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 17,
+          "progressP90": 34,
+          "progressMax": 51,
+          "progressFractionOfResidualMax": 0.75,
+          "avgNodesPerTrial": 20.082
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03039",
+      "provenance": "unknown",
+      "reqLen": 105,
+      "blocks": 21,
+      "blocksFraction": 0.1243,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.7447,
+      "eliteId": "R03039",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 105,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 90,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 39,
+          "progressMax": 69,
+          "progressFractionOfResidualMax": 0.7666666666666667,
+          "avgNodesPerTrial": 22.217
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03041",
+      "provenance": "unknown",
+      "reqLen": 118,
+      "blocks": 28,
+      "blocksFraction": 0.1429,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.7421,
+      "eliteId": "R03041",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 124,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 99,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 30,
+          "progressP90": 45,
+          "progressMax": 77,
+          "progressFractionOfResidualMax": 0.7777777777777778,
+          "avgNodesPerTrial": 30.7565
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03051",
+      "provenance": "unknown",
+      "reqLen": 123,
+      "blocks": 37,
+      "blocksFraction": 0.1644,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.6578,
+      "eliteId": "R03051",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 130,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 111,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 30,
+          "progressP90": 49,
+          "progressMax": 86,
+          "progressFractionOfResidualMax": 0.7747747747747747,
+          "avgNodesPerTrial": 29.297
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03055",
+      "provenance": "unknown",
+      "reqLen": 107,
+      "blocks": 35,
+      "blocksFraction": 0.2071,
+      "mustCross": 5,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8425,
+      "eliteId": "R03055",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 111,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 94,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 41,
+          "progressMax": 64,
+          "progressFractionOfResidualMax": 0.6808510638297872,
+          "avgNodesPerTrial": 27.928
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03067",
+      "provenance": "unknown",
+      "reqLen": 120,
+      "blocks": 21,
+      "blocksFraction": 0.1243,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8451,
+      "eliteId": "R03067",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 127,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 101,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 32,
+          "progressP90": 54,
+          "progressMax": 84,
+          "progressFractionOfResidualMax": 0.8316831683168316,
+          "avgNodesPerTrial": 35.369
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03078",
+      "provenance": "unknown",
+      "reqLen": 94,
+      "blocks": 37,
+      "blocksFraction": 0.2569,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.9307,
+      "eliteId": "R03078",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 99,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 80,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 40,
+          "progressMax": 68,
+          "progressFractionOfResidualMax": 0.85,
+          "avgNodesPerTrial": 26.1005
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03080",
+      "provenance": "unknown",
+      "reqLen": 117,
+      "blocks": 14,
+      "blocksFraction": 0.0622,
+      "mustCross": 8,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.5939,
+      "eliteId": "R03080",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 117,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 98,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 37,
+          "progressP90": 60,
+          "progressMax": 74,
+          "progressFractionOfResidualMax": 0.7551020408163265,
+          "avgNodesPerTrial": 38.938
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03093",
+      "provenance": "unknown",
+      "reqLen": 80,
+      "blocks": 22,
+      "blocksFraction": 0.1528,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.7018,
+      "eliteId": "R03093",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 86,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 64,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 39,
+          "progressMax": 54,
+          "progressFractionOfResidualMax": 0.84375,
+          "avgNodesPerTrial": 23.3685
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03105",
+      "provenance": "unknown",
+      "reqLen": 83,
+      "blocks": 29,
+      "blocksFraction": 0.2014,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.7685,
+      "eliteId": "R03105",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 87,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 69,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 19,
+          "progressP90": 31,
+          "progressMax": 54,
+          "progressFractionOfResidualMax": 0.782608695652174,
+          "avgNodesPerTrial": 21.11
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03114",
+      "provenance": "unknown",
+      "reqLen": 82,
+      "blocks": 21,
+      "blocksFraction": 0.1736,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.9647,
+      "eliteId": "R03114",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 86,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 71,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 22,
+          "progressP90": 31,
+          "progressMax": 58,
+          "progressFractionOfResidualMax": 0.8169014084507042,
+          "avgNodesPerTrial": 22.6995
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03123",
+      "provenance": "unknown",
+      "reqLen": 104,
+      "blocks": 24,
+      "blocksFraction": 0.1667,
+      "mustCross": 6,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.8739,
+      "eliteId": "R03123",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 111,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 85,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 5,
+          "progressP90": 22,
+          "progressMax": 64,
+          "progressFractionOfResidualMax": 0.7529411764705882,
+          "avgNodesPerTrial": 11.485
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03125",
+      "provenance": "unknown",
+      "reqLen": 78,
+      "blocks": 23,
+      "blocksFraction": 0.1901,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.8764,
+      "eliteId": "R03125",
+      "verifiedFeasibleDepth": 24,
+      "verifiedInfeasibleDepth": 25,
+      "eliteLength": 85,
+      "rolloutLadder": [
+        {
+          "branchDepth": 24,
+          "residual": 54,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 5,
+          "progressP90": 18,
+          "progressMax": 44,
+          "progressFractionOfResidualMax": 0.8148148148148148,
+          "avgNodesPerTrial": 9.5175
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 26012,
+        "path": [
+          196608,
+          262144,
+          262145,
+          327681,
+          327682,
+          393218,
+          393219,
+          458755,
+          524291,
+          589827,
+          589828,
+          524292,
+          524291,
+          524290,
+          655368,
+          655369,
+          589833,
+          524297,
+          524296,
+          458760,
+          458759,
+          458758,
+          458757,
+          196612,
+          196613,
+          196614,
+          262150,
+          327686,
+          327687,
+          327688,
+          327689,
+          262153,
+          262152,
+          196616,
+          196615,
+          0,
+          65536,
+          131072,
+          131073,
+          196609,
+          196610,
+          262146,
+          262147,
+          196611,
+          131075,
+          131074,
+          65538,
+          65537,
+          655364,
+          655365,
+          589829,
+          524293,
+          524294,
+          589830,
+          589831,
+          589832,
+          589833,
+          589834,
+          524298,
+          458762,
+          65539,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          65545,
+          65544,
+          262151,
+          262150,
+          262149,
+          262148,
+          327684,
+          393220,
+          393221,
+          393222,
+          393223,
+          458759,
+          524295,
+          458754,
+          458753,
+          393217,
+          393216,
+          327680
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R03128",
+      "provenance": "unknown",
+      "reqLen": 101,
+      "blocks": 28,
+      "blocksFraction": 0.1944,
+      "mustCross": 5,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.9266,
+      "eliteId": "R03128",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 108,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 85,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 16,
+          "progressP90": 30,
+          "progressMax": 62,
+          "progressFractionOfResidualMax": 0.7294117647058823,
+          "avgNodesPerTrial": 17.9355
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03129",
+      "provenance": "unknown",
+      "reqLen": 126,
+      "blocks": 48,
+      "blocksFraction": 0.2133,
+      "mustCross": 5,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.7159,
+      "eliteId": "R03129",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 132,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 111,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 31,
+          "progressP90": 49,
+          "progressMax": 86,
+          "progressFractionOfResidualMax": 0.7747747747747747,
+          "avgNodesPerTrial": 32.0805
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03130",
+      "provenance": "unknown",
+      "reqLen": 111,
+      "blocks": 28,
+      "blocksFraction": 0.1657,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8222,
+      "eliteId": "R03130",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 116,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 97,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 24,
+          "progressP90": 46,
+          "progressMax": 83,
+          "progressFractionOfResidualMax": 0.8556701030927835,
+          "avgNodesPerTrial": 24.1805
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03156",
+      "provenance": "unknown",
+      "reqLen": 114,
+      "blocks": 27,
+      "blocksFraction": 0.1378,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.7037,
+      "eliteId": "R03156",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 121,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 103,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 31,
+          "progressP90": 57,
+          "progressMax": 85,
+          "progressFractionOfResidualMax": 0.8252427184466019,
+          "avgNodesPerTrial": 33.409
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03157",
+      "provenance": "unknown",
+      "reqLen": 129,
+      "blocks": 16,
+      "blocksFraction": 0.0947,
+      "mustCross": 6,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8776,
+      "eliteId": "R03157",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 135,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 118,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 30,
+          "progressP90": 47,
+          "progressMax": 102,
+          "progressFractionOfResidualMax": 0.864406779661017,
+          "avgNodesPerTrial": 32.9565
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03158",
+      "provenance": "unknown",
+      "reqLen": 114,
+      "blocks": 30,
+      "blocksFraction": 0.1775,
+      "mustCross": 6,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.8702,
+      "eliteId": "R03158",
+      "verifiedFeasibleDepth": 21,
+      "verifiedInfeasibleDepth": 22,
+      "eliteLength": 118,
+      "rolloutLadder": [
+        {
+          "branchDepth": 21,
+          "residual": 93,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 23,
+          "progressP90": 39,
+          "progressMax": 71,
+          "progressFractionOfResidualMax": 0.7634408602150538,
+          "avgNodesPerTrial": 25.179
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03180",
+      "provenance": "unknown",
+      "reqLen": 87,
+      "blocks": 20,
+      "blocksFraction": 0.1389,
+      "mustCross": 0,
+      "reqInt": 1,
+      "requiredPathCoverageRatio": 0.7838,
+      "eliteId": "R03180",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 94,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 72,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 25,
+          "progressP90": 39,
+          "progressMax": 66,
+          "progressFractionOfResidualMax": 0.9166666666666666,
+          "avgNodesPerTrial": 25.4445
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03183",
+      "provenance": "unknown",
+      "reqLen": 89,
+      "blocks": 29,
+      "blocksFraction": 0.1716,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.6794,
+      "eliteId": "R03183",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 20,
+      "eliteLength": 93,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 70,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 35,
+          "progressP90": 63,
+          "progressMax": 69,
+          "progressFractionOfResidualMax": 0.9857142857142858,
+          "avgNodesPerTrial": 36.6705
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03190",
+      "provenance": "unknown",
+      "reqLen": 79,
+      "blocks": 16,
+      "blocksFraction": 0.1111,
+      "mustCross": 5,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.6639,
+      "eliteId": "R03190",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 84,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 64,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 16,
+          "progressP90": 33,
+          "progressMax": 52,
+          "progressFractionOfResidualMax": 0.8125,
+          "avgNodesPerTrial": 20.633
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03195",
+      "provenance": "unknown",
+      "reqLen": 105,
+      "blocks": 9,
+      "blocksFraction": 0.0625,
+      "mustCross": 6,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.8203,
+      "eliteId": "R03195",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 112,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 90,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 21,
+          "progressP90": 39,
+          "progressMax": 72,
+          "progressFractionOfResidualMax": 0.8,
+          "avgNodesPerTrial": 24.794
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03199",
+      "provenance": "unknown",
+      "reqLen": 94,
+      "blocks": 28,
+      "blocksFraction": 0.1657,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.6714,
+      "eliteId": "R03199",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 101,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 82,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 28,
+          "progressP90": 42,
+          "progressMax": 62,
+          "progressFractionOfResidualMax": 0.7560975609756098,
+          "avgNodesPerTrial": 28.6995
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03212",
+      "provenance": "unknown",
+      "reqLen": 110,
+      "blocks": 27,
+      "blocksFraction": 0.1875,
+      "mustCross": 0,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 1.0377,
+      "eliteId": "R03212",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 115,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 95,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 16,
+          "progressP90": 34,
+          "progressMax": 67,
+          "progressFractionOfResidualMax": 0.7052631578947368,
+          "avgNodesPerTrial": 18.366
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03213",
+      "provenance": "unknown",
+      "reqLen": 102,
+      "blocks": 24,
+      "blocksFraction": 0.1224,
+      "mustCross": 6,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.6145,
+      "eliteId": "R03213",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 109,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 86,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 23,
+          "progressP90": 38,
+          "progressMax": 70,
+          "progressFractionOfResidualMax": 0.813953488372093,
+          "avgNodesPerTrial": 24.973
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03216",
+      "provenance": "unknown",
+      "reqLen": 111,
+      "blocks": 33,
+      "blocksFraction": 0.1467,
+      "mustCross": 0,
+      "reqInt": 1,
+      "requiredPathCoverageRatio": 0.5968,
+      "eliteId": "R03216",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 117,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 101,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 31,
+          "progressP90": 54,
+          "progressMax": 91,
+          "progressFractionOfResidualMax": 0.900990099009901,
+          "avgNodesPerTrial": 31.567
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03221",
+      "provenance": "unknown",
+      "reqLen": 106,
+      "blocks": 27,
+      "blocksFraction": 0.1598,
+      "mustCross": 5,
+      "reqInt": 8,
+      "requiredPathCoverageRatio": 0.7794,
+      "eliteId": "R03221",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 113,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 92,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 3,
+          "progressP90": 47,
+          "progressMax": 83,
+          "progressFractionOfResidualMax": 0.9021739130434783,
+          "avgNodesPerTrial": 15.774
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03259",
+      "provenance": "unknown",
+      "reqLen": 86,
+      "blocks": 9,
+      "blocksFraction": 0.0625,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.6825,
+      "eliteId": "R03259",
+      "verifiedFeasibleDepth": 10,
+      "verifiedInfeasibleDepth": 11,
+      "eliteLength": 93,
+      "rolloutLadder": [
+        {
+          "branchDepth": 10,
+          "residual": 76,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 33,
+          "progressP90": 50,
+          "progressMax": 71,
+          "progressFractionOfResidualMax": 0.9342105263157895,
+          "avgNodesPerTrial": 33.444
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03265",
+      "provenance": "unknown",
+      "reqLen": 82,
+      "blocks": 28,
+      "blocksFraction": 0.1944,
+      "mustCross": 0,
+      "reqInt": 0,
+      "requiredPathCoverageRatio": 0.713,
+      "eliteId": "R03265",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 89,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 69,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 23,
+          "progressP90": 36,
+          "progressMax": 56,
+          "progressFractionOfResidualMax": 0.8115942028985508,
+          "avgNodesPerTrial": 24.305
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03280",
+      "provenance": "unknown",
+      "reqLen": 96,
+      "blocks": 9,
+      "blocksFraction": 0.0533,
+      "mustCross": 5,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.6621,
+      "eliteId": "R03280",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 100,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 83,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 28,
+          "progressP90": 54,
+          "progressMax": 73,
+          "progressFractionOfResidualMax": 0.8795180722891566,
+          "avgNodesPerTrial": 32.2875
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03287",
+      "provenance": "unknown",
+      "reqLen": 132,
+      "blocks": 36,
+      "blocksFraction": 0.16,
+      "mustCross": 5,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.7293,
+      "eliteId": "R03287",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 138,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 117,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 18,
+          "progressP90": 48,
+          "progressMax": 92,
+          "progressFractionOfResidualMax": 0.7863247863247863,
+          "avgNodesPerTrial": 24.723
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03288",
+      "provenance": "unknown",
+      "reqLen": 117,
+      "blocks": 56,
+      "blocksFraction": 0.2489,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.7178,
+      "eliteId": "R03288",
+      "verifiedFeasibleDepth": 16,
+      "verifiedInfeasibleDepth": 17,
+      "eliteLength": 123,
+      "rolloutLadder": [
+        {
+          "branchDepth": 16,
+          "residual": 101,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 18,
+          "progressP90": 33,
+          "progressMax": 77,
+          "progressFractionOfResidualMax": 0.7623762376237624,
+          "avgNodesPerTrial": 21.5445
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03290",
+      "provenance": "unknown",
+      "reqLen": 139,
+      "blocks": 52,
+      "blocksFraction": 0.2311,
+      "mustCross": 0,
+      "reqInt": 9,
+      "requiredPathCoverageRatio": 0.8373,
+      "eliteId": "R03290",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 145,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 126,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 19,
+          "progressP90": 34,
+          "progressMax": 78,
+          "progressFractionOfResidualMax": 0.6190476190476191,
+          "avgNodesPerTrial": 21.2495
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03296",
+      "provenance": "unknown",
+      "reqLen": 136,
+      "blocks": 42,
+      "blocksFraction": 0.1867,
+      "mustCross": 0,
+      "reqInt": 7,
+      "requiredPathCoverageRatio": 0.7816,
+      "eliteId": "R03296",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 140,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 123,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 18,
+          "progressP90": 38,
+          "progressMax": 84,
+          "progressFractionOfResidualMax": 0.6829268292682927,
+          "avgNodesPerTrial": 22.1955
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03301",
+      "provenance": "unknown",
+      "reqLen": 97,
+      "blocks": 19,
+      "blocksFraction": 0.1319,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.7823,
+      "eliteId": "R03301",
+      "verifiedFeasibleDepth": 17,
+      "verifiedInfeasibleDepth": 18,
+      "eliteLength": 104,
+      "rolloutLadder": [
+        {
+          "branchDepth": 17,
+          "residual": 80,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 13,
+          "progressP90": 34,
+          "progressMax": 61,
+          "progressFractionOfResidualMax": 0.7625,
+          "avgNodesPerTrial": 19.425
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03308",
+      "provenance": "unknown",
+      "reqLen": 68,
+      "blocks": 18,
+      "blocksFraction": 0.1488,
+      "mustCross": 3,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.7083,
+      "eliteId": "R03308",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 75,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 53,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 8,
+          "progressP90": 30,
+          "progressMax": 48,
+          "progressFractionOfResidualMax": 0.9056603773584906,
+          "avgNodesPerTrial": 15.1455
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 475098,
+        "path": [
+          327681,
+          327682,
+          393226,
+          393225,
+          458761,
+          458760,
+          524296,
+          524295,
+          458759,
+          458758,
+          393222,
+          393223,
+          327684,
+          262148,
+          262149,
+          262150,
+          196614,
+          131078,
+          65542,
+          6,
+          5,
+          65541,
+          131075,
+          131076,
+          131077,
+          196613,
+          262149,
+          327685,
+          327686,
+          327687,
+          262151,
+          262152,
+          196616,
+          655361,
+          589825,
+          524289,
+          524290,
+          589826,
+          589827,
+          589828,
+          655364,
+          655363,
+          1,
+          0,
+          65536,
+          131072,
+          131073,
+          131074,
+          65538,
+          2,
+          3,
+          4,
+          65540,
+          65539,
+          65538,
+          65537,
+          131073,
+          196609,
+          262145,
+          262146,
+          262147,
+          327683,
+          131080,
+          65544,
+          8,
+          9,
+          10,
+          65546,
+          65545,
+          131081,
+          196617,
+          196618,
+          262154,
+          327690,
+          327689,
+          262153
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R03313",
+      "provenance": "unknown",
+      "reqLen": 127,
+      "blocks": 49,
+      "blocksFraction": 0.2178,
+      "mustCross": 4,
+      "reqInt": 4,
+      "requiredPathCoverageRatio": 0.784,
+      "eliteId": "R03313",
+      "verifiedFeasibleDepth": 14,
+      "verifiedInfeasibleDepth": 15,
+      "eliteLength": 132,
+      "rolloutLadder": [
+        {
+          "branchDepth": 14,
+          "residual": 113,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 52,
+          "progressMax": 85,
+          "progressFractionOfResidualMax": 0.7522123893805309,
+          "avgNodesPerTrial": 30.7815
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03316",
+      "provenance": "unknown",
+      "reqLen": 71,
+      "blocks": 33,
+      "blocksFraction": 0.2727,
+      "mustCross": 0,
+      "reqInt": 3,
+      "requiredPathCoverageRatio": 0.8659,
+      "eliteId": "R03316",
+      "verifiedFeasibleDepth": 13,
+      "verifiedInfeasibleDepth": 14,
+      "eliteLength": 77,
+      "rolloutLadder": [
+        {
+          "branchDepth": 13,
+          "residual": 58,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 19,
+          "progressP90": 34,
+          "progressMax": 55,
+          "progressFractionOfResidualMax": 0.9482758620689655,
+          "avgNodesPerTrial": 19.9925
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03328",
+      "provenance": "unknown",
+      "reqLen": 94,
+      "blocks": 22,
+      "blocksFraction": 0.1818,
+      "mustCross": 0,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 1.0217,
+      "eliteId": "R03328",
+      "verifiedFeasibleDepth": 11,
+      "verifiedInfeasibleDepth": 12,
+      "eliteLength": 98,
+      "rolloutLadder": [
+        {
+          "branchDepth": 11,
+          "residual": 83,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 31,
+          "progressP90": 45,
+          "progressMax": 64,
+          "progressFractionOfResidualMax": 0.7710843373493976,
+          "avgNodesPerTrial": 31.4435
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03334",
+      "provenance": "unknown",
+      "reqLen": 118,
+      "blocks": 38,
+      "blocksFraction": 0.2249,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 1.0172,
+      "eliteId": "R03334",
+      "verifiedFeasibleDepth": 17,
+      "verifiedInfeasibleDepth": 18,
+      "eliteLength": 122,
+      "rolloutLadder": [
+        {
+          "branchDepth": 17,
+          "residual": 101,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 29,
+          "progressP90": 56,
+          "progressMax": 74,
+          "progressFractionOfResidualMax": 0.7326732673267327,
+          "avgNodesPerTrial": 32.9205
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03337",
+      "provenance": "unknown",
+      "reqLen": 96,
+      "blocks": 23,
+      "blocksFraction": 0.1597,
+      "mustCross": 5,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8571,
+      "eliteId": "R03337",
+      "verifiedFeasibleDepth": 12,
+      "verifiedInfeasibleDepth": 13,
+      "eliteLength": 102,
+      "rolloutLadder": [
+        {
+          "branchDepth": 12,
+          "residual": 84,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 6,
+          "progressP90": 16,
+          "progressMax": 60,
+          "progressFractionOfResidualMax": 0.7142857142857143,
+          "avgNodesPerTrial": 9.0755
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    },
+    {
+      "id": "R03348",
+      "provenance": "unknown",
+      "reqLen": 86,
+      "blocks": 29,
+      "blocksFraction": 0.2014,
+      "mustCross": 6,
+      "reqInt": 6,
+      "requiredPathCoverageRatio": 0.8515,
+      "eliteId": "R03348",
+      "verifiedFeasibleDepth": 29,
+      "verifiedInfeasibleDepth": 30,
+      "eliteLength": 91,
+      "rolloutLadder": [
+        {
+          "branchDepth": 29,
+          "residual": 57,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 17,
+          "progressP90": 29,
+          "progressMax": 48,
+          "progressFractionOfResidualMax": 0.8421052631578947,
+          "avgNodesPerTrial": 20.5845
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": true,
+        "nodes": 34737,
+        "path": [
+          524289,
+          524290,
+          589826,
+          655362,
+          655363,
+          589827,
+          524291,
+          327687,
+          327688,
+          262152,
+          262153,
+          327689,
+          327690,
+          393226,
+          458762,
+          524298,
+          524297,
+          458761,
+          458762,
+          458763,
+          524299,
+          589835,
+          589834,
+          131081,
+          196617,
+          196616,
+          196615,
+          131079,
+          65543,
+          65542,
+          6,
+          5,
+          4,
+          65540,
+          65539,
+          131075,
+          131074,
+          131073,
+          131072,
+          65536,
+          524292,
+          458756,
+          458757,
+          393221,
+          393222,
+          458758,
+          458759,
+          458760,
+          524296,
+          524295,
+          524294,
+          589830,
+          589829,
+          589828,
+          589827,
+          589826,
+          589825,
+          65538,
+          2,
+          1,
+          65537,
+          131073,
+          196609,
+          196610,
+          196611,
+          196612,
+          131076,
+          131077,
+          196613,
+          196614,
+          131078,
+          131079,
+          131080,
+          393223,
+          393224,
+          393225,
+          393226,
+          393227,
+          327691,
+          262155,
+          196619,
+          196618,
+          131082,
+          131083,
+          65547,
+          11,
+          10,
+          65546,
+          65545,
+          65544,
+          8,
+          9
+        ],
+        "refereeValid": true,
+        "refereeReason": null,
+        "independentReplayValid": true
+      }
+    },
+    {
+      "id": "R03355",
+      "provenance": "unknown",
+      "reqLen": 93,
+      "blocks": 6,
+      "blocksFraction": 0.0496,
+      "mustCross": 0,
+      "reqInt": 5,
+      "requiredPathCoverageRatio": 0.93,
+      "eliteId": "R03355",
+      "verifiedFeasibleDepth": 15,
+      "verifiedInfeasibleDepth": 16,
+      "eliteLength": 97,
+      "rolloutLadder": [
+        {
+          "branchDepth": 15,
+          "residual": 78,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 25,
+          "progressMax": 54,
+          "progressFractionOfResidualMax": 0.6923076923076923,
+          "avgNodesPerTrial": 18.1335
+        }
+      ],
+      "searchCompletionFromPartialPathResult": {
+        "solved": false,
+        "nodes": 2000000
+      }
+    }
+  ]
+}

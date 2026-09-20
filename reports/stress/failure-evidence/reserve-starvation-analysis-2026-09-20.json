@@ -1,0 +1,315 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-reserve-starvation-probe-analysis",
+  "questionId": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
+  "source": {
+    "input": "/tmp/reserve-starvation-evidence/compact-failure-response.json",
+    "sample": "reports/stress/failure-evidence/reserve-starvation-default-profile-sample-2026-09-19.json",
+    "protocolHash": "sha256:96f216576333db2cec1743d8b758f07251bace3d6b8765604dea9aeb67f6f10f",
+    "solverRef": "5ef9146bfea52f1c5bdea3a64eabce2e5e7ec78a"
+  },
+  "thresholds": {
+    "reserveNodes": 75000000,
+    "totalNodes": 300000000,
+    "expectedAction": "admissible-order|tieBreak=default|lds=off"
+  },
+  "population": {
+    "expected": 40,
+    "observedUniqueParents": 40,
+    "missingIds": [],
+    "unexpectedIds": [],
+    "duplicateParents": [],
+    "abstentionIds": []
+  },
+  "bucketCounts": {
+    "no-solve-at-total-node-envelope": 36,
+    "solved-within-current-reserve": 2,
+    "reserve-starvation-opportunity": 2
+  },
+  "opportunities": 2,
+  "decisionReady": true,
+  "decision": "design-smallest-matched-total-work-reserve-ab",
+  "rows": [
+    {
+      "parentId": "R00050",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R00142",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R00306",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R00479",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R00563",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R00647",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R01044",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R01132",
+      "nodesExpanded": 73548703,
+      "outcome": "solved",
+      "bucket": "solved-within-current-reserve",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R01154",
+      "nodesExpanded": 179026618,
+      "outcome": "solved",
+      "bucket": "reserve-starvation-opportunity",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R01290",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R01577",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02029",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02032",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02054",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02206",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02210",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02272",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02318",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02325",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02347",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02387",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02397",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02432",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02561",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02622",
+      "nodesExpanded": 37411185,
+      "outcome": "solved",
+      "bucket": "solved-within-current-reserve",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02664",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02733",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02768",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02780",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02890",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02918",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R02949",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R03046",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R03092",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R03212",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R03216",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R03270",
+      "nodesExpanded": 172663501,
+      "outcome": "solved",
+      "bucket": "reserve-starvation-opportunity",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R03287",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R03291",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    },
+    {
+      "parentId": "R03330",
+      "nodesExpanded": 300000000,
+      "outcome": "nodeLimited",
+      "bucket": "no-solve-at-total-node-envelope",
+      "decisionEligible": true
+    }
+  ],
+  "interpretation": "Isolated find-cost recurrence only. A positive screen nominates a matched-total-work allocation A/B; it does not authorize a reserve change."
+}
