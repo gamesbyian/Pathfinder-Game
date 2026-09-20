@@ -30,8 +30,8 @@ jobs:
           set -euo pipefail
           SRC="artifact-staging/solver-sweep-result/failure-response/compact.json"
           if [ ! -f "$SRC" ]; then
-            echo "No compact failure-response document was published for this run; nothing to persist."
-            exit 0
+            echo "Persistence was requested but the standard compact failure-response document is missing." >&2
+            exit 1
           fi
 
           DEST_DIR="reports/stress/failure-evidence/targeted-sweep-runs/${{ github.run_id }}"
