@@ -84,6 +84,8 @@ The repaired form declares:
 - the source experiment's resolved SHA/configuration identity;
 - the reconciliation run's own run/attempt/SHA as provenance, without substituting that SHA for the source experiment identity.
 
+A later hostile pass found that the source validator required every source to *have* an immutable resolved SHA but did not require those SHAs to agree. That made `preservesExperimentIdentity: true` false whenever sibling/gap-fill runs came from different solver revisions: the output silently inherited the first source's SHA. Recombine-only validation now rejects cross-revision sources explicitly. Population slices may differ; solver revision may not.
+
 The constructor validates itself with the shared declared-contract rules before writing. Node tests pin these semantics.
 
 ## E. Observed execution identity, not dispatch-intent mirrors
