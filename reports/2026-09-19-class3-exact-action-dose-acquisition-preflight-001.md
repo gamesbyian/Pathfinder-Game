@@ -93,6 +93,14 @@ Freeze the regenerated population before solver acquisition as a tracked JSON do
 {
   "schemaVersion": 1,
   "kind": "pathfinder-class3-dose-expectations",
+  "unitTopology": {
+    "observationUnit": "compact-failure-response-attempt",
+    "opportunityUnit": "parent-exact-rescuer",
+    "assignmentUnit": null,
+    "dependenceClusterUnit": "parent",
+    "analysisUnit": "parent",
+    "generalizationUnit": "current-class3-parent-under-compatible-shared-production-protocol"
+  },
   "parents": [
     {
       "parentId": "Rxxxxx",
@@ -115,11 +123,18 @@ npm run research:analyze-class3-dose -- \
 
 `scripts/analyze-class3-dose-exposure.mjs` fails closed unless all observed expected-parent rows share one known `protocolHash` and one known `solverRef`. It reports missing parents explicitly, preserves parent as the independent unit, and mechanically classifies every expected exact rescuer as not participated, dose unknown, censored, exhausted-negative, solved, or indeterminate. Error/unknown-only attempts stay indeterminate rather than being converted into negative evidence.
 
-## Independent unit
+## Unit topology
 
-Parent/level is the independent unit.
+The frozen expectation artifact owns the study's unit topology, and the reducer validates and propagates it:
 
-A parent can have several known T1 rescuers and several repeated production attempts. Those attempts are dependent exposure observations inside one parent, not extra independent samples.
+- observation unit: compact failure-response attempt;
+- exposure/opportunity unit: parent × exact rescuer;
+- assignment unit: none, because this is observational acquisition;
+- dependence cluster: parent;
+- analysis unit: parent;
+- generalization unit: current Class-3 parent under a compatible shared-production protocol.
+
+This distinction matters: a parent can have several known T1 rescuers and several repeated production attempts. Those are multiple exposure opportunities/observations inside one dependent parent cluster, not extra independent samples.
 
 ## Per-rescuer classification
 
