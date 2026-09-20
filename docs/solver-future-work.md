@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method; [invention program](solver-capability-invention-program.md) owns capability-acquisition classification. Queue shrinkage alone does not reopen architecture.
+Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method; [invention program](solver-capability-invention-program.md) owns capability-acquisition classification. Queue shrinkage does not reopen architecture.
 
 ## Deferred descendants of active premises
 
