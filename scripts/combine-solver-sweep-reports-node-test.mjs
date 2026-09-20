@@ -16,6 +16,7 @@ import { validateSweepIntegrity, diffPopulation } from './validate-solver-sweep-
 import { analyzeOpportunity, opportunitySampleSizeForAtLeastOne } from './experiment-opportunity-audit.mjs';
 import { simulateMakespan, packByMakespan, classifyTelemetry } from './plan-highbudget-shards.mjs';
 import { calibrateMultipliers } from './backtest-shard-runtime-policy.mjs';
+import { hashConfiguration } from './solver-experiment-contract.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -311,6 +312,48 @@ async function main() {
             /Mismatched execution config admissibleOrderNonDefaultRetryBudgetFraction/,
         );
         console.log('  ✓ combiner rejects shards that disagree on decision-bearing execution configuration');
+
+        const observedConfig1 = path.join(tempDir, 'observed-config-01.json');
+        const observedConfig2 = path.join(tempDir, 'observed-config-02.json');
+        const observedConfigOut = path.join(tempDir, 'observed-config-combined.json');
+        const observedEffectiveConfig = {
+            corpusSha256: 'corpus-a',
+            levelBlind: true,
+            timeBudgetMs: 8000,
+            schedulerMode: 'production',
+            repairLateProbeMultiSeedRetrySeedCountOverride: 6,
+        };
+        await writeFile(observedConfig1, JSON.stringify(batchReport({
+            summary: { effectiveConfig: observedEffectiveConfig },
+            levels: [{ level: 21, id: 'R00221', ok: false }],
+        })));
+        await writeFile(observedConfig2, JSON.stringify(batchReport({
+            summary: { effectiveConfig: observedEffectiveConfig },
+            levels: [{ level: 22, id: 'R00222', ok: false }],
+        })));
+        await run([`--in=${observedConfig1},${observedConfig2}`, `--out=${observedConfigOut}`]);
+        const observedCombined = JSON.parse(await readFile(observedConfigOut, 'utf8'));
+        assert.deepEqual(observedCombined.effectiveConfig, observedEffectiveConfig);
+        assert.match(observedCombined.effectiveConfigDigest, /^[0-9a-f]{64}$/u);
+        assert.equal(observedCombined.configurationHash, hashConfiguration(observedEffectiveConfig),
+            'standard configuration identity must be derived from observed solver execution when available');
+
+        const observedConfigMismatch = path.join(tempDir, 'observed-config-mismatch.json');
+        await writeFile(observedConfigMismatch, JSON.stringify(batchReport({
+            summary: { effectiveConfig: { ...observedEffectiveConfig, repairLateProbeMultiSeedRetrySeedCountOverride: 7 } },
+            levels: [{ level: 23, id: 'R00223', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${observedConfig1},${observedConfigMismatch}`, `--out=${path.join(tempDir, 'observed-config-mismatch-out.json')}`]),
+            /Mismatched effectiveConfig/u,
+        );
+        console.log('  ✓ observed solver execution identity detects treatment drift omitted by legacy workflow mirrors');
+
+        const portfolioSource = await readFile(path.join(ROOT, 'scripts/portfolio-solve-sweep.mjs'), 'utf8');
+        assert.match(portfolioSource, /effectiveConfigDigest/u);
+        assert.match(portfolioSource, /primeWinner: \{/u);
+        assert.match(portfolioSource, /adaptiveBudget: \{/u);
+        console.log('  ✓ portfolio sweeps publish history-aware effective execution identity');
 
         const batch3 = path.join(tempDir, 'batch-03-mismatch.json');
         await writeFile(batch3, JSON.stringify(batchReport({ summary: { budgetMs: 20000 }, levels: [{ level: 3, id: 'R00003', ok: true }] })));
