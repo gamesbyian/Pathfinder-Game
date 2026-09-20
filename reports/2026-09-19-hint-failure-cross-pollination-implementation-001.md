@@ -1,9 +1,9 @@
 # Hint/failure evidence cross-pollination implementation 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-19 — additive cross-pollination tooling implemented on PR #1913 with production behavior and persisted hint schema unchanged.
-> **Decision:** retain the derived replayability, known-live support, identity-audit, novelty/frontier, and exact-path discovery-process joins; defer persistence/schema changes until the concurrent failure-evidence producer contracts settle.
-> **Remaining gate:** merge/reconcile PR #1912, then audit current compact artifacts and decide whether durable run-linked hint provenance or first-loss/all-known-basin tooling is earned.
+> **Status:** superseded
+> **Last evidence:** 2026-09-19 — PR #1912 and #1913 were reconciled and merged; `reports/2026-09-19-hint-failure-cross-pollination-continuation-001.md` records the integrated final handoff.
+> **Decision:** historical implementation slice only. Its retained tooling was integrated and extended by the continuation report; surviving evidence-gated descendants are owned by current workstream/question/future-work authorities.
+> **Remaining gate:** none owned here. Follow `reports/2026-09-19-hint-failure-cross-pollination-continuation-001.md` and current solver-research authorities.
 > **Branch:** `chatgpt/hint-failure-cross-pollination-2026-09-19`.
 > **Concurrency boundary:** intentionally disjoint from open PR #1912 and its active edits to
 > `docs/solver-failure-evidence-research-integration-plan.md`, workflow producers, package commands,
