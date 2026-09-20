@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { ws2FailureResponseAnalysisIdentity } from './ws2-failure-response-analysis-contract-lib.mjs';
+import { validateWs2FailureResponseAnalysisEnvelope, ws2FailureResponseAnalysisIdentity } from './ws2-failure-response-analysis-contract-lib.mjs';
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -24,6 +24,7 @@ const ROUTE_CONSEQUENCE = Object.freeze({
 });
 
 export function buildWs2FailureResponseClaimCapsule(analysis) {
+  validateWs2FailureResponseAnalysisEnvelope(analysis);
   if (!analysis || analysis.kind !== 'pathfinder-ws2-failure-response-reconnaissance-analysis') {
     throw new Error('WS2 claim capsule requires a WS2 reconnaissance analysis');
   }
