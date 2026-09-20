@@ -892,7 +892,7 @@
         "repair-family per-attempt deadline"
       ],
       "answeredBy": [],
-      "result": "Nominated, not yet treatment-tested: 16 Class-3 censored rows show repair-family per-attempt deadlines well below known isolated solve cost, independently corroborated by residual-vs-solved-control failure-response evidence.",
+      "result": "Nominated, not yet treatment-tested: 16 Class-3 censored rows show repair-family node caps well below known isolated solve cost, corroborated by residual-vs-solved-control evidence. Current production has fixed early-repair caps (2M ordinary, up to 6M biased) but no dedicated top-level experiment override for them.",
       "triggeredBy": [
         "WS2-CLASS3-DOSE-EXPOSURE",
         "WS2-FAILURE-RESPONSE-RECONNAISSANCE"
@@ -904,7 +904,8 @@
       ],
       "constrains": [
         "Treat this as HARVEST: do not infer a missing semantic capability until the matched-work allocation question is resolved.",
-        "Predeclare deadline values and protect earlier-stage winners under fixed total work."
+        "Implementation prerequisite: add narrow experiment-only SolveOpts for ordinary and biased early-repair node caps; keep them separate so the 2M ordinary and 6M biased calibrations cannot silently move together.",
+        "Predeclare treatment caps from the frozen isolated-cost distribution and protect earlier-stage winners under fixed total work; the wall-clock cap is already a non-binding safety tripwire and is not the treatment."
       ],
       "reopensOn": null,
       "premiseRefs": [
