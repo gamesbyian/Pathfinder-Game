@@ -87,6 +87,56 @@ export function hashConfiguration(configuration) {
  * semantics, limits, and side-effect posture. Explicit null is allowed for numeric limit fields
  * where "there is no such ceiling" is meaningful; omission/undefined is not.
  */
+export const RECOVERY_RECONCILIATION_KINDS = Object.freeze([
+  'recombine-only',
+  'reanalyze-only',
+  'retry-missing-acquisition',
+]);
+
+export function recoveryProvenanceIssues(experiment) {
+  const issues = [];
+  const sourceRuns = experiment?.sourceRuns;
+  if (sourceRuns != null && (!Array.isArray(sourceRuns)
+      || sourceRuns.some(value => typeof value !== 'string' || !value.trim())
+      || new Set(sourceRuns).size !== sourceRuns.length)) {
+    issues.push('experiment.sourceRuns');
+  }
+
+  const reconciliation = experiment?.reconciliationRun;
+  if (reconciliation == null) return issues;
+  if (!reconciliation || typeof reconciliation !== 'object' || Array.isArray(reconciliation)) {
+    issues.push('experiment.reconciliationRun');
+    return issues;
+  }
+  if (!RECOVERY_RECONCILIATION_KINDS.includes(reconciliation.kind)) {
+    issues.push('experiment.reconciliationRun.kind');
+  }
+  if (typeof reconciliation.preservesExperimentIdentity !== 'boolean') {
+    issues.push('experiment.reconciliationRun.preservesExperimentIdentity');
+  }
+  if (typeof reconciliation.acquisitionRecomputed !== 'boolean') {
+    issues.push('experiment.reconciliationRun.acquisitionRecomputed');
+  }
+  if (!Array.isArray(reconciliation.sourceRuns) || reconciliation.sourceRuns.length === 0
+      || reconciliation.sourceRuns.some(value => typeof value !== 'string' || !value.trim())
+      || new Set(reconciliation.sourceRuns).size !== reconciliation.sourceRuns.length) {
+    issues.push('experiment.reconciliationRun.sourceRuns');
+  }
+  if (Array.isArray(sourceRuns) && Array.isArray(reconciliation.sourceRuns)
+      && reconciliation.sourceRuns.some(value => !sourceRuns.includes(value))) {
+    issues.push('experiment.reconciliationRun.sourceRuns(not-in-experiment-sourceRuns)');
+  }
+  if (['recombine-only', 'reanalyze-only'].includes(reconciliation.kind)
+      && reconciliation.acquisitionRecomputed !== false) {
+    issues.push('experiment.reconciliationRun.acquisitionRecomputed');
+  }
+  if (reconciliation.kind === 'retry-missing-acquisition'
+      && reconciliation.acquisitionRecomputed !== true) {
+    issues.push('experiment.reconciliationRun.acquisitionRecomputed');
+  }
+  return [...new Set(issues)];
+}
+
 export function decisionContractIssues(contract) {
   const issues = [];
   const experiment = contract?.experiment;
