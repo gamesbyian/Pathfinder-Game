@@ -56,6 +56,37 @@ test('prepLevel prepares masks and dense-level must-pass scoring behavior', () =
   assert.equal(dense.mustMaskForDFS, 0);
 });
 
+test('prepLevel builds twist-phase-conditioned goal distances on twist-portal levels', () => {
+  const a = PACK(0, 1);
+  const b = PACK(1, 1); // opposite checkerboard parity from a
+  const goal = PACK(2, 1);
+  const level = makeLevel({
+    grid: { w: 3, h: 2 },
+    gateKeys: [PACK(0, 0)],
+    goalKey: goal,
+    requiredLength: 4,
+    mustPassKeys: [],
+    mustCrossKeys: [],
+    portalMap: new Map([
+      [a, { dest: b }],
+      [b, { dest: a }],
+    ]),
+  });
+  const prep = prepLevel(level);
+  assert.equal(prep.parityPortalDistMaps?.length, 1);
+  assert.ok(prep.parityPhaseGoalDistArrs, 'twist levels should build both phase layers');
+
+  const [even, odd] = prep.parityPhaseGoalDistArrs!;
+  assert.equal(getDistanceFromArray(even, a, prep.gridW), 2,
+    'ordinary a->b->goal route reaches goal with even twist parity in two counted moves');
+  assert.equal(getDistanceFromArray(odd, a, prep.gridW), 1,
+    'zero-cost twist a->b followed by b->goal reaches goal with odd twist parity in one counted move');
+
+  const noTwist = prepLevel(makeLevel({ mustPassKeys: [], mustCrossKeys: [] }));
+  assert.equal(noTwist.parityPhaseGoalDistArrs, null,
+    'no-twist levels keep the extra H1 representation absent');
+});
+
 test('prepLevel builds approach maps for must-cross and flipping filters', () => {
   const flipper = PACK(3, 2);
   const level = makeLevel({ flippingFilterMap: new Map([[flipper, AXIS_H]]) });
