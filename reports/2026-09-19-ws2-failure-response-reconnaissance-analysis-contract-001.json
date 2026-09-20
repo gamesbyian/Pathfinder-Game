@@ -117,5 +117,15 @@
       "A protocol-compatible, sufficiently supported population produces a stable cross-parent pattern that none of the frozen route rules can represent."
     ],
     "anomalyPolicy": "Protocol/solver identity conflicts, missingness contradictions, malformed rows, integrity failures, or instrument-support violations are anomalies that make evidence ineligible; they are not scientific surprises."
+  },
+  "requiredObservabilityAxes": [
+    "eligibility",
+    "measurementSupport",
+    "coverage"
+  ],
+  "resolutionOutcomeInterpretation": {
+    "routeSelected": "select only under the frozen Stage-A/Stage-B routing rules",
+    "routeNone": "no expensive follow-on is earned; this does not imply no mechanism exists",
+    "blocked": "repair the named observability blocker before treating the routing screen as resolution-ready"
   }
 }
