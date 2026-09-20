@@ -87,7 +87,7 @@ That has been corrected:
 - stable mirrored categorical fields are checked for disagreement;
 - richer human paraphrases are allowed without becoming a second authority.
 
-### 4. Question lifecycle — properly structured
+### 4. Question lifecycle — structured container, previously loose state protocol; fixed
 
 `docs/solver-research-question-relations.json` already gives each question:
 
@@ -98,7 +98,21 @@ That has been corrected:
 - evidence refs;
 - premise/MO refs where relevant.
 
-The scientific result, constraints, and reopen condition are still prose. That is mostly correct.
+But the `state` field itself had been treated as an open string. Consumers inferred lifecycle class with prefix/regex rules such as `startsWith("active")`, `startsWith("closed")`, or `concluded|superseded|cancelled`.
+
+The actual protocol is small. It is now explicit and validated:
+
+- `active-candidate`;
+- `closed-negative`;
+- `closed-tested-form`;
+- `concluded-negative`;
+- `concluded-positive`;
+- `deferred-reopen`;
+- `mixed`.
+
+A shared classifier now maps exact states to the broader lifecycle classes needed by queue/integration logic. Query behavior still preserves distinctions such as concluded-positive versus concluded-negative.
+
+The scientific result, constraints, and reopen condition remain prose. That is correct because their content is not a small categorical protocol.
 
 ### 5. `reopensOn` — prose, but not yet a defect
 
@@ -167,13 +181,20 @@ Tests already verify:
 
 This is the healthy pattern: prose explains machine truth and is mechanically checked.
 
-### 10. Workflow retirement triggers — prose is appropriate
+### 10. Workflow lifecycle — categorical tokens validated; retirement trigger stays prose
 
-`solver-workflow-lifecycle.json` structurally owns workflow identity, role, and maintained/retired status.
+`solver-workflow-lifecycle.json` structurally owns workflow identity and current lifecycle metadata.
 
-`retirementTrigger` is prose because it describes a future contextual judgment. No machine currently retires workflows automatically from that sentence.
+Inventory logic branches directly on two categorical fields, so their current vocabularies are now validated:
 
-Keep it prose.
+- role: `operational | evidence-producing`;
+- current workflow status: `maintained`.
+
+Duplicate/missing workflow identities are also rejected.
+
+`currentConsumer` and `retirementTrigger` remain prose because they describe contextual ownership and future judgment. No machine currently retires workflows automatically from that wording.
+
+This is the desired split: validate the categories software branches on; preserve contextual reasoning as prose.
 
 ### 11. Data-asset affordances/caveats — prose is the payload
 
