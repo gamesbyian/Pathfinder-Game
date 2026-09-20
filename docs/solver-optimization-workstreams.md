@@ -5,11 +5,24 @@
 > **Reconciled:** 2026-09-20.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
-Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability memory: [`capability memory`](solver-capability-memory.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
+Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability memory: [`capability memory`](solver-capability-memory.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Capability acquisition: [`invention program`](solver-capability-invention-program.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
 
 ## Data-audit guardrail
 
 C1 is not cross-generator transfer; C2 is a mixed development laboratory; residual claims are population-conditional. Level-blind cold procedures may derive exact board facts but may not consume historical identity/outcome/hints/capability-memory membership. Historical negatives close only the tested claim.
+
+## Portfolio posture
+
+Solver work now runs on two explicit fronts:
+
+- **Harvest:** recover already-demonstrated capability through exposure, placement, allocation, scheduling, dose, retention, or composition.
+- **Acquisition:** identify a completion-relevant operation the solver does not yet possess, then climb existence -> distinction -> action -> solves -> economics.
+
+The classification and promotion rules live in the [capability invention program](solver-capability-invention-program.md). The machine-readable demand register is `data/stress/capability-invention-demand.json`; `npm run research:capability-demand` validates and summarizes it.
+
+Implementation-readiness is not priority. A weakly nominated tuning descendant competes with a causally grounded capability-acquisition probe. As harvest descendants become null, displacement-only, or pure repricing, research capacity moves toward acquisition rather than manufacturing new tuning axes.
+
+The seed demand register deliberately contains both outcomes: R01154/R03270 are **HARVEST** (F7 work starvation; existing admissible-order capability), while R03147 is a cautious **EXTENSION** nomination (F4 causal divergence; path-resource + relational-bound interface, independent-parent replication still required). This is not prevalence evidence yet.
 
 ## Current execution priority
 
@@ -82,7 +95,7 @@ Frozen-map mining is complete; P201-P206 remain evidence/method premises only. T
 
 | ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|
-| 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Design the nominated repair-family per-attempt-deadline allocation experiment; dispatch the nominated reserve-fraction A/B | — |
+| 2 | Residual capability + premise acquisition | `active` | **ACTIVE / TWO-FRONT PORTFOLIO** | Harvest: nominated repair-deadline + reserve-fraction experiments. Acquisition: expand first-loss demand sampling from retained current-residual evidence and promote only recurrent decision-bearing gaps | — |
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
@@ -100,6 +113,7 @@ Frozen-map mining is complete; P201-P206 remain evidence/method premises only. T
 - Match protocol identity, not nominal stage reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes may generate premises, never production exceptions.
 - Prefer the cheapest information-value test. Hold out independent units and scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not impossibility certificates or state equivalence.
 - Replication robustness strengthens premise provenance, not expected solve gain. Qualify raw graph/topology claims by representation history; reopen the fourth replication cell only for a concrete decision that cannot otherwise separate ontology artifact, mining-method artifact and robust concept.
+- Classify proposed solver work as **HARVEST / EXTENSION / INVENTION** before implementation; a new strategy flag or retry shell is not automatically a new capability.
 - No generic blackboard, production exact solver, CEGAR, LNS, decomposition engine or per-level compiler is earned by an open semantic gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
 
 ## Cheap evidence routing
