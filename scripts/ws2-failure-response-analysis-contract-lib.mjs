@@ -76,7 +76,7 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
       || contract.requiredObservabilityAxes.length !== 3
       || new Set(contract.requiredObservabilityAxes).size !== contract.requiredObservabilityAxes.length
       || contract.requiredObservabilityAxes.some(axis => !RESEARCH_OBSERVABILITY_AXES.includes(axis))
-      || !['eligibility', 'measurementSupport', 'coverage'].every(axis => contract.requiredObservabilityAxes.includes(axis))) {
+      || !['measurementSupport', 'fidelity', 'coverage'].every(axis => contract.requiredObservabilityAxes.includes(axis))) {
     issues.push('requiredObservabilityAxes');
   }
   const resolutionInterpretation = contract.resolutionOutcomeInterpretation;
