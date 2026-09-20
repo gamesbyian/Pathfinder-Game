@@ -63,6 +63,13 @@ export function validateReconciliationSources(sources) {
 
   const reference = normalized[0].contract;
   for (const source of normalized.slice(1)) {
+    if (source.contract.experiment.resolvedSha !== reference.experiment.resolvedSha) {
+      throw new Error(
+        `source run ${source.runId} resolved SHA ${source.contract.experiment.resolvedSha} differs from `
+        + `source run ${normalized[0].runId} resolved SHA ${reference.experiment.resolvedSha}; `
+        + 'a recombine-only result cannot claim one preserved experiment identity across different solver revisions',
+      );
+    }
     try {
       assertCompatibleExperiments(reference, source.contract);
     } catch (error) {
