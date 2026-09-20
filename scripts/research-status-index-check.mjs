@@ -249,9 +249,12 @@ assert.deepEqual(validateResearchQuestionRegistry(invalidAcquisition), [
 
 const invalidAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
 invalidAnsweredBy.questions[0].answeredBy = ['not-a-repository-edge'];
-assert.deepEqual(validateResearchQuestionRegistry(invalidAnsweredBy), [
-    'questions[0].answeredBy must start with one of docs, reports, scripts, data, logs',
-]);
+{
+    const errors = validateResearchQuestionRegistry(invalidAnsweredBy);
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /questions\[0\]\.answeredBy.*(?:repository|start with)/u,
+        'invalid answeredBy must fail repository-reference validation without freezing validator prose');
+}
 
 const duplicateAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
 duplicateAnsweredBy.questions[0].answeredBy = [
