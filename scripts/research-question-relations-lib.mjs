@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { RESEARCH_ACQUISITION_NEEDS } from './research-acquisition-preflight-lib.mjs';
 
 export const RESEARCH_QUESTION_STATES = Object.freeze([
     'active-candidate',
@@ -78,6 +79,13 @@ export function validateResearchQuestionRegistry(registry) {
         const state = String(question?.state ?? '').trim();
         if (!state) errors.push(`${prefix}.state is required`);
         else if (!RESEARCH_QUESTION_STATES.includes(state)) errors.push(`${prefix}.state is unknown: ${state}`);
+        const acquisitionNeed = String(question?.acquisitionNeed ?? '').trim();
+        if (acquisitionNeed && !RESEARCH_ACQUISITION_NEEDS.includes(acquisitionNeed)) {
+            errors.push(`${prefix}.acquisitionNeed is unknown: ${acquisitionNeed}`);
+        }
+        if (state === 'deferred-reopen' && !acquisitionNeed) {
+            errors.push(`${prefix}.acquisitionNeed is required for deferred-reopen questions`);
+        }
         for (const field of ['premiseRefs', 'measurementOpportunities']) {
             if (question?.[field] != null && (!Array.isArray(question[field])
                 || question[field].some(value => typeof value !== 'string' || !value.trim()))) {
