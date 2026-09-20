@@ -13,7 +13,7 @@ export function currentDocumentationReferences(root = process.cwd()) {
     const rows = [];
     for (const line of lines.slice(start + 1)) {
         if (line.startsWith('## ')) break;
-        const match = /^\| \[\`([^\`]+)\`\]\(([^)]+)\) \| (.+) \|$/u.exec(line);
+        const match = /^\| \[`([^`]+)`\]\(([^)]+)\) \| (.+) \|$/u.exec(line);
         if (!match) continue;
         const destination = match[2].split('#', 1)[0].trim();
         if (!destination || /^[a-z][a-z0-9+.-]*:/iu.test(destination)) continue;
