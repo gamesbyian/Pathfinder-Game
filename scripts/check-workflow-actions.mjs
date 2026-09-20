@@ -17,9 +17,7 @@ const expected = new Map([
 // These two maintained workflows predate the shared native-v3 writer and still need a semantic
 // migration rather than a blind mechanical rewrite. Keep the debt explicit and prevent new manual
 // contract writers from appearing elsewhere.
-const LEGACY_MANUAL_EXPERIMENT_CONTRACT_WORKFLOWS = new Set([
-  'solver-highbudget-unsolved-sweep.yml',
-]);
+const LEGACY_MANUAL_EXPERIMENT_CONTRACT_WORKFLOWS = new Set();
 
 const root = process.cwd();
 const workflowDir = path.join(root, '.github', 'workflows');
