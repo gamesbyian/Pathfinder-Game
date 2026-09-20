@@ -146,8 +146,36 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     errors.push(...validateSolverResearchDataAssets(root).map(error => `research asset registry: ${error}`));
     const assetIds = new Set((assetsDocument.assets ?? []).map(asset => asset.id));
     const resourceAudits = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-resource-contract-audits.json'), 'utf8'));
+    for (const topLevelPath of [resourceAudits.registry, resourceAudits.contractDocument]) {
+        if (topLevelPath && !existsSync(path.join(root, topLevelPath))) {
+            errors.push(`resource contract registry references missing repository path ${topLevelPath}`);
+        }
+    }
+    const auditedAssetIds = new Set();
     for (const audit of resourceAudits.auditedResources ?? []) {
+        if (auditedAssetIds.has(audit.assetId)) errors.push(`resource contract audit duplicates asset ${audit.assetId}`);
+        auditedAssetIds.add(audit.assetId);
         if (!assetIds.has(audit.assetId)) errors.push(`resource contract audit references unknown asset ${audit.assetId}`);
+        for (const field of ['historicalClaimBlastRadius', 'auditAuthorities']) {
+            for (const ref of audit[field] ?? []) {
+                if (!existsSync(path.join(root, ref))) {
+                    errors.push(`resource contract audit ${audit.assetId}.${field} references missing repository path ${ref}`);
+                }
+            }
+        }
+        for (const ref of audit.producerAuthority ?? []) {
+            if (/^(?:docs|reports|scripts|data|logs|modules)\//u.test(String(ref))
+                && !existsSync(path.join(root, ref))) {
+                errors.push(`resource contract audit ${audit.assetId}.producerAuthority references missing repository path ${ref}`);
+            }
+        }
+    }
+    for (const requiredId of resourceAudits.requiredAuditedResources ?? []) {
+        if (!assetIds.has(requiredId)) {
+            errors.push(`resource contract requires unknown asset ${requiredId}`);
+        } else if (!auditedAssetIds.has(requiredId)) {
+            errors.push(`resource contract requires unaudited asset ${requiredId}`);
+        }
     }
 
     const validEvidenceRoles = new Set(['development', 'confirmation', 'transfer']);
