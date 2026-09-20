@@ -18,7 +18,7 @@ The September consolidation work succeeded at composition strongly enough to exp
 
 The safest promotion rule is **repeated semantic convergence across real producers/consumers**, not conceptual attractiveness. A shared primitive should be extracted only when at least two real call sites need the same invariant and keeping the invariant local would permit semantic drift or duplicated correctness logic.
 
-This pass initially found six such primitives; the subsequent synchronous observability/identifiability pilot earned a seventh, and the independence/causal-ancestry pass earned an eighth. It also found several attractive near-misses that should remain separate for now.
+This pass initially found six such primitives; the subsequent synchronous observability/identifiability pilot earned a seventh, the independence/causal-ancestry pass earned an eighth, and the distributed-knowledge audit earned a ninth. It also found several attractive near-misses that should remain separate for now.
 
 ## Shared primitives extracted
 
@@ -176,6 +176,30 @@ Specialist artifacts still own the actual relationship statements. No scalar ind
 
 See `reports/2026-09-20-research-independence-causal-ancestry-audit-002.md`.
 
+### 9. Evaluation evidence-role vocabulary
+
+The distributed-knowledge hardening pass found the same correctness-bearing three-value evaluation role contract independently encoded in:
+
+- targeted, random and topology generators;
+- the research generation dispatcher;
+- research-block lineage;
+- the integration audit.
+
+The shared owner is now:
+
+- `scripts/research-evaluation-evidence-role-lib.mjs`
+
+It owns only:
+
+- `development`;
+- `confirmation`;
+- `transfer`;
+- membership validation.
+
+This does **not** absorb broader report/closeout evidence roles such as `forensic`. The common invariant is specifically the evaluation/population role used across generation and research-block boundaries.
+
+See `reports/2026-09-20-distributed-knowledge-hardening-audit-001.md`.
+
 ## Near-misses deliberately not unified
 
 ### Measurement support versus evidence applicability
@@ -290,6 +314,6 @@ The target is a small research-domain model embedded inside the existing researc
 
 ## Result
 
-This follow-up now promotes eight proven common invariants while explicitly declining several superficially similar abstractions.
+This follow-up now promotes nine proven common invariants while explicitly declining several superficially similar abstractions.
 
 That is the intended direction of travel: continue to prefer composition, but once composition repeatedly reconstructs the same correctness-critical meaning, stop adding bridges and give that meaning a proper owner.
