@@ -93,7 +93,10 @@ function validatedEffectiveConfig(reports) {
 
 function collectEffectiveConfig(reports, { allowMixedCorpora = false } = {}) {
     const withConfig = reports.filter(report => report.summary?.effectiveConfig && typeof report.summary.effectiveConfig === 'object');
-    if (withConfig.length === 0 || withConfig.length !== reports.length) return null;
+    if (withConfig.length === 0) return null;
+    if (withConfig.length !== reports.length) {
+        throw new Error('Mismatched effectiveConfig: some source reports record observed solver execution identity and others omit it.');
+    }
 
     let value;
     if (!allowMixedCorpora) {
