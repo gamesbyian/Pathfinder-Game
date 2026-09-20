@@ -64,7 +64,7 @@ Before broad catalogs, reports, corpora, or histories:
 
 - solver priority/state: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md);
 - prior evidence: `node scripts/research-status-index.mjs --compact --query=<term>`;
-- research-system health/current-state composition: `npm run research:system-inventory -- --view=brief-inputs` (derived read-only view; not priority authority);
+- research-system orientation: `npm run research:system-inventory -- --view=brief` (compact derived read-only brief; not priority authority);\n- research-system machine briefing inputs: `npm run research:system-inventory -- --view=brief-inputs` (structured derived view for tools/agents);
 - research-system consolidation findings: `npm run research:system-inventory -- --view=findings` (derived stale-authority/lifecycle/shared-failure diagnostics; not authority);
 - historical solver premise/disposition memory: [`solver-archaeology-register.md`](solver-archaeology-register.md) when the question is explicitly about old/retired work;
 - existing tooling: `node scripts/tooling-census.mjs --compact --query=<term>`;
