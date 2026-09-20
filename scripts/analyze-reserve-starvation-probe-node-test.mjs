@@ -12,6 +12,18 @@ try {
         questionId: 'Q',
         sourceBoundary: { residual: 10 },
         selection: { eligibleCount: 9, sampleCount: 3 },
+        resolutionDesign: {
+            liveRivals: ['reserve-starvation', 'too-rare'],
+            discriminatingObservable: 'isolated find-cost recurrence inside the fixed total-node envelope',
+            requiredAxes: ['eligibility', 'opportunity', 'participation', 'measurementSupport', 'coverage', 'censoring'],
+            negativeInterpretationPolicy: 'zero is negative only under the full required envelope',
+            outcomeInterpretation: {
+                zero: 'close screen',
+                one: 'expand once',
+                twoOrMore: 'design matched-work A/B',
+                blocked: 'repair observability',
+            },
+        },
         ids: ['A', 'B', 'C'],
     }));
 
