@@ -45,7 +45,11 @@ const normalizeSearchText = value => String(value ?? '')
     .trim();
 
 export function normalizeResearchQuestionStatus(state) {
-    return researchQuestionLifecycleClass(String(state ?? '').trim().toLowerCase());
+    const value = String(state ?? '').trim().toLowerCase();
+    const lifecycle = researchQuestionLifecycleClass(value);
+    if (lifecycle === 'active') return 'active';
+    if (lifecycle === 'closed') return 'closed';
+    return value;
 }
 
 export function loadResearchQuestionRegistry(root = process.cwd()) {
