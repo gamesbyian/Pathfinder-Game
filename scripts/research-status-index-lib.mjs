@@ -83,7 +83,8 @@ function experimentStatusFromPromotionState(value) {
     }
 }
 
-const normalizedState = value => {
+// Legacy-only compatibility for pre-structured workstream tables. New control-plane state must use explicit tokens.
+const normalizedLegacyWorkstreamState = value => {
     const state = value.replace(/\*\*/g, '').toLowerCase();
     if (state.includes('superseded')) return 'superseded';
     if (state.includes('active') || state.includes('shipping') || state.includes('promotion gate')) return 'active';
@@ -245,7 +246,7 @@ export function buildResearchStatusIndex(root) {
         : legacyWorkstreamRows.map(([id, question, state, gate, questionRef]) => ({
             topicId: `workstream-${id}`, workstreamId: /^\d+$/u.test(id) ? Number(id) : id, question,
             executionState: null,
-            status: normalizedState(state), authority: workstreamsPath, authorityKind: 'workstreams',
+            status: normalizedLegacyWorkstreamState(state), authority: workstreamsPath, authorityKind: 'workstreams',
             state, remainingGate: gate,
             questionRef: questionRef && questionRef !== '—' ? questionRef.replaceAll('`', '').trim() : null,
         }));
