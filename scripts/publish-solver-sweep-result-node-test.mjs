@@ -75,6 +75,26 @@ try {
   assert.equal(manifest.failureEvidence.summary, null);
   assert.equal(manifest.failureEvidence.richCapturePresent, false);
 
+  const wrongPopulationIntegrity = path.join(temp, 'wrong-population-integrity.json');
+  fs.writeFileSync(wrongPopulationIntegrity, JSON.stringify({
+    ...JSON.parse(fs.readFileSync(integrity, 'utf8')),
+    expectedIds: ['B'],
+  }));
+  const wrongPopulationOut = path.join(temp, 'wrong-population-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${wrongPopulationIntegrity}`,
+    `--outcome-file=${outcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${wrongPopulationOut}`,
+  ], { cwd: root });
+  const wrongPopulationManifest = JSON.parse(fs.readFileSync(path.join(wrongPopulationOut, 'manifest.json')));
+  assert.equal(wrongPopulationManifest.decisionBearing, false);
+  assert.ok(wrongPopulationManifest.decisionContractIssues.some(issue =>
+    issue.includes('primary result: result rows do not match integrity expectedIds')),
+    'an integrity file for a different population must not certify the primary result');
+
   const wrongRevisionPrimary = path.join(temp, 'wrong-revision-result.json');
   fs.writeFileSync(wrongRevisionPrimary, JSON.stringify({
     producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
