@@ -46,6 +46,8 @@ try {
     assert.equal(weakCompact.protocolHash, 'proto-weak');
     assert.equal(weakCompact.solverRef, null,
         'workflow/legacy SHA metadata must not upgrade weak provenance into comparable-run solver identity');
+    assert.equal(weakCompact.records[0].solverRef, null,
+        'row commit aliases must not refill the missing solver identity under a document-level protocol authority');
     assert.ok(manifest.entries.some(entry => entry.source === unrelated && entry.role === 'include'));
     console.log('sweep-publish tests passed');
 } finally {
