@@ -279,6 +279,17 @@ assert.deepEqual(validateResearchQuestionRegistry(duplicateQuestionEdge), [
     'questions[0].implies duplicates WS2-FOLLOWUP',
 ]);
 
+const asymmetricCalibration = JSON.parse(JSON.stringify(questionRegistry));
+asymmetricCalibration.questions[0].calibratedBy = ['WS2-FOLLOWUP'];
+assert.deepEqual(validateResearchQuestionRegistry(asymmetricCalibration), [
+    'questions[0].calibratedBy WS2-FOLLOWUP is missing reciprocal calibrates edge',
+]);
+
+const reciprocalCalibration = JSON.parse(JSON.stringify(questionRegistry));
+reciprocalCalibration.questions[0].calibratedBy = ['WS2-FOLLOWUP'];
+reciprocalCalibration.questions[1].calibrates = ['WS2-CURRENT'];
+assert.deepEqual(validateResearchQuestionRegistry(reciprocalCalibration), []);
+
 const selfQuestionEdge = JSON.parse(JSON.stringify(questionRegistry));
 selfQuestionEdge.questions[0].implies = ['WS2-CURRENT'];
 assert.deepEqual(validateResearchQuestionRegistry(selfQuestionEdge), [
