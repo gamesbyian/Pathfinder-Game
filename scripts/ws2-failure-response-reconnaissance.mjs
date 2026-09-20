@@ -8,6 +8,7 @@ import { validateFailureResponseDocument } from './solver-failure-response-lib.m
 import {
   validateWs2FailureResponseAnalysisContract,
   ws2FailureResponseAnalysisContractIdentity,
+  ws2FailureResponseAnalysisIdentity,
   WS2_FAILURE_RESPONSE_ROUTES,
 } from './ws2-failure-response-analysis-contract-lib.mjs';
 
@@ -123,7 +124,7 @@ const resultCore = {
       : 'No route is inferred automatically. Interpret only under the frozen preflight and contract.',
   },
 };
-const analysisIdentity = sha256(JSON.stringify(resultCore));
+const analysisIdentity = ws2FailureResponseAnalysisIdentity(resultCore);
 const result = { ...resultCore, analysisIdentity };
 
 const serialized = JSON.stringify(result, null, 2) + '\n';
