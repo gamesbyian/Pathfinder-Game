@@ -1,4 +1,5 @@
 import { canonicalResearchValue, researchSemanticHash } from './research-semantic-identity-lib.mjs';
+import { RESEARCH_OBSERVABILITY_AXES } from './research-resolution-envelope-lib.mjs';
 
 export const WS2_FAILURE_RESPONSE_ROUTES = Object.freeze([
   'rejection-counterfactual',
@@ -71,6 +72,19 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   }
   if (contract.primaryDiscriminator !== 'cheapest-next-ws2-instrument-route') issues.push('primaryDiscriminator');
   if (contract.negativeResolution !== 'route-none-does-not-imply-no-mechanism-exists') issues.push('negativeResolution');
+  if (!Array.isArray(contract.requiredObservabilityAxes)
+      || contract.requiredObservabilityAxes.length !== 3
+      || new Set(contract.requiredObservabilityAxes).size !== contract.requiredObservabilityAxes.length
+      || contract.requiredObservabilityAxes.some(axis => !RESEARCH_OBSERVABILITY_AXES.includes(axis))
+      || !['eligibility', 'measurementSupport', 'coverage'].every(axis => contract.requiredObservabilityAxes.includes(axis))) {
+    issues.push('requiredObservabilityAxes');
+  }
+  const resolutionInterpretation = contract.resolutionOutcomeInterpretation;
+  for (const field of ['routeSelected', 'routeNone', 'blocked']) {
+    if (typeof resolutionInterpretation?.[field] !== 'string' || !resolutionInterpretation[field].trim()) {
+      issues.push(`resolutionOutcomeInterpretation.${field}`);
+    }
+  }
   if (contract.reproducibility?.class !== 'deterministic-under-identical-immutable-inputs') {
     issues.push('reproducibility.class');
   }
