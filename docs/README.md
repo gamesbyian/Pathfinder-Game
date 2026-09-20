@@ -23,7 +23,6 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
 | [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md) | Observer-first test of whether DEAD near-misses trace to a compact dependency-defined commitment set, not path-distance rollback |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
-| [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) | Consolidation plan/history |
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
 | [`solver-research-data-assets.json`](solver-research-data-assets.json) | Structured per-asset locations, authorities, joins, relationships, roles, and caveats |
@@ -128,6 +127,7 @@ Retained for evidence/history and targeted archaeology, not as current authoriti
 - [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) — completed PR #1740 remediation program.
 - [`solver-workflow-remediation-implementation-handoff.md`](solver-workflow-remediation-implementation-handoff.md) — historical implementation contract for that program.
 - [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) — completed closeout/review record.
+- [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) — completed research-system consolidation/epistemic-coverage program; retained for history and maintenance rationale.
 
 Superseded plans, concluded experiments, and old authority states live in [`archive/snapshots/`](archive/snapshots/README.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
 
