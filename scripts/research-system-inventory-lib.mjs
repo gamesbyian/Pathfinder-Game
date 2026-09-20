@@ -140,6 +140,39 @@ function relationInventory(model) {
     })).sort((a, b) => a.relation.localeCompare(b.relation));
 }
 
+function frontDoorInputs(model, plans) {
+    const questions = model.relations.questions ?? [];
+    const questionById = new Map(questions.map(question => [String(question.id), question]));
+    const liveQueue = (model.relations.queue ?? [])
+        .filter(row => !/(?:closed|subsumed|method complete)/iu.test(String(row.state ?? row.status ?? '')))
+        .map(row => ({
+            workstreamId: row.workstreamId ?? null,
+            question: row.question ?? null,
+            state: row.state ?? row.status ?? null,
+            remainingGate: row.remainingGate ?? null,
+            questionRef: row.questionRef ?? null,
+            questionState: row.questionRef ? questionById.get(String(row.questionRef))?.state ?? null : null,
+        }));
+    const deferredReopenQuestions = questions
+        .filter(question => String(question.state ?? '').toLowerCase() === 'deferred-reopen')
+        .map(question => ({
+            id: question.id,
+            owner: question.owner ?? null,
+            question: question.question ?? null,
+            reopensOn: question.reopensOn ?? null,
+        }))
+        .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    const unfinishedLifecycle = plans
+        .filter(row => row.currentReference && !row.appearsConcluded)
+        .map(row => ({
+            path: row.path,
+            kind: row.kind,
+            status: row.status,
+            fragileProse: row.fragileProse,
+        }));
+    return { liveQueue, deferredReopenQuestions, unfinishedLifecycle };
+}
+
 function currentState(model) {
     const questions = model.relations.questions ?? [];
     const queue = model.relations.queue ?? [];
@@ -176,6 +209,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             methodAuthority: 'docs/solver-research-operating-model.md',
         },
         currentState: currentState(model),
+        frontDoorInputs: frontDoorInputs(model, plans),
         integrationHealth: {
             errorCount: integrationAudit.errorCount,
             warningCount: integrationAudit.warningCount,
@@ -215,6 +249,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             schemaVersion: inventory.schemaVersion,
             authority: inventory.authority,
             currentState: inventory.currentState,
+            frontDoorInputs: inventory.frontDoorInputs,
             integrationHealth: inventory.integrationHealth,
             relations: inventory.relations,
             commands: inventory.commands,
@@ -232,6 +267,20 @@ export function researchSystemInventoryView(inventory, view = 'all') {
                 fragilePlanLifecyclePaths: inventory.diagnostics.fragilePlanLifecyclePaths,
                 currentReferenceLifecycleMismatchCount: inventory.diagnostics.currentReferenceLifecycleMismatchCount,
                 currentReferenceLifecycleMismatchPaths: inventory.diagnostics.currentReferenceLifecycleMismatchPaths,
+            },
+        };
+    }
+    if (view === 'brief-inputs') {
+        return {
+            schemaVersion: inventory.schemaVersion,
+            authority: inventory.authority,
+            currentState: inventory.currentState,
+            frontDoorInputs: inventory.frontDoorInputs,
+            integrationHealth: inventory.integrationHealth,
+            diagnostics: {
+                currentReferenceLifecycleMismatchCount: inventory.diagnostics.currentReferenceLifecycleMismatchCount,
+                integrationErrorCount: inventory.diagnostics.integrationErrorCount,
+                integrationWarningCount: inventory.diagnostics.integrationWarningCount,
             },
         };
     }
