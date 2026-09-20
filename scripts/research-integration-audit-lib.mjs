@@ -123,6 +123,12 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
     }
 
+    for (const promotion of model.relations.promotions ?? []) {
+        if (promotion.decisionEvidenceRef && !existsSync(path.join(root, promotion.decisionEvidenceRef))) {
+            errors.push(`promotion ${promotion.promotionId} references missing decision evidence ${promotion.decisionEvidenceRef}`);
+        }
+    }
+
     for (const evidence of model.relations.evidence) {
         if (evidence.researchQuestion && !questionIds.has(evidence.researchQuestion)) {
             errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown research question ${evidence.researchQuestion}`);
