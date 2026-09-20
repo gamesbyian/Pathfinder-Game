@@ -12,9 +12,9 @@ The stronger problem was narrower:
 
 1. some downstream tools were still reconstructing report-local scientific disposition from human-readable Markdown even after a structured closeout owner existed;
 2. execution state and scientific-question lifecycle are distinct authorities, but their relationship was implicit enough that an active workstream pointing at a `deferred-reopen` question could look contradictory;
-3. production realization still has a weaker machine-readable ownership story than the upstream research lifecycle.
+3. production realization initially looked weaker than the upstream lifecycle, but a deeper pass found substantial existing conformance machinery.
 
-The first two are repaired in this follow-up. The third remains the clearest candidate for a future missing organ.
+The first two are repaired in this follow-up. The third now looks less like a missing organ and more like a narrower provenance-link gap.
 
 ## Authority partition
 
@@ -96,30 +96,35 @@ The opt-in ledger owns promotion disposition for retained default-OFF experiment
 
 This separation is correct.
 
-## Remaining weak seam: research decision -> production realization
+## Production realization: existing organ, narrower provenance gap
 
-The least mature ownership boundary remains the transition:
+A deeper pass found that production realization is already protected by several independent mechanisms:
 
-`scientific claim -> promotion decision -> implementation -> real caller/default behavior -> observed production participation`.
+- `ablation-default-polarity.test.ts` checks explicit feature prose against `OPT_IN_FEATURES` and verifies `defaultConfig()` agrees with normalized defaults;
+- `production-default-equivalence.test.ts` proves that ordinary no-ablation/null-config invocation and an empty explicit config produce identical routing/scheduling/allocation defaults across representative paths;
+- documentation validation requires every current default-OFF flag to have a disposition in the opt-in ledger;
+- the Class-4 portal coarse-state dead-last retry additionally has a production-shaped participation test because that promotion exposed a real read-site/default-path hazard.
 
-The Class-4 portal coarse-state dead-last retry has a strong bespoke conversion-fidelity regression. It proved why this seam matters: a correct promotion decision could otherwise have become inert for ordinary production callers because default-polarity semantics at read sites differed from the experiment path.
+That is already a meaningful production-realization organ. A new `ChangeRealization` registry/object would currently duplicate working code/test authority.
 
-There are many other promoted/default-ON mechanisms, but they do not yet share a compact machine-readable realization contract.
+The weaker seam is narrower:
 
-That does **not** yet justify a central deployment registry.
+`scientific claim / promotion decision -> specific implementation change and regression proof`.
 
-### Promotion trigger for a first-class production-realization object
+Today that linkage is usually present in reports, feature descriptions and comments, but is not a common machine-readable relation.
 
-Extract a compact shared `ChangeRealization` / production-realization primitive when a second materially different evidence-backed promotion needs to record and mechanically validate the same chain:
+### Trigger for further structure
 
-- decision/claim reference;
-- implementation target;
-- production default/polarity;
-- real caller reachability;
-- treatment participation under ordinary production-shaped invocation;
-- qualification or invalidation conditions.
+Do **not** create a production-realization registry now.
 
-Until then, production-shaped regression tests remain the right organ-specific protection.
+Revisit only if multiple future promotions require tooling to answer a concrete question that current code/tests/report links cannot answer reliably, such as:
+
+- which promotion decision licensed this default polarity;
+- which production-shaped regression proves ordinary callers participate;
+- which realization was superseded by a later decision;
+- which claim invalidation should force a realization review.
+
+If that repeatedly becomes operationally necessary, extract the smallest decision-to-realization link required. The runtime realization itself already has an owner.
 
 ## What this says about the original “connective tissue versus bones/organs” question
 
@@ -138,6 +143,6 @@ It left a mature collection of specialist research organs with:
 - several shared scientific bones that needed extraction;
 - one report-state owner that existed but was not fully respected;
 - an execution/question relationship that needed explicit semantics;
-- one still-plausible downstream organ around production realization.
+- a narrower, still-conditional provenance seam between promotion decisions and their implementation/regression proofs.
 
 The next architectural work should be triggered by another demonstrated ownership ambiguity or repeated invariant, not by an attempt to complete a theoretical ontology.
