@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Empirical capability demand observed on current solver residuals. Rows diagnose what operation is missing or merely underdeployed; they do not authorize production behavior.",
+  "productionBoundary": "35066677597",
+  "updatedAt": "2026-09-20",
+  "rows": [
+    {
+      "id": "CID-0001",
+      "subject": {
+        "levelId": "R01154",
+        "population": "WS2 admissible-order reserve-starvation frozen 40-parent confirmation sample",
+        "corpus": "Corpus 2",
+        "parentId": "R01154"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Allow the already-existing admissible-order fallback more than the current 75M-node reserve while holding total production work fixed.",
+      "demand": "No new semantic reasoning is indicated by this evidence. Existing admissible-order capability can solve the parent in isolation at 179,026,618 nodes but is censored by its production reserve.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a larger admissible-order reserve recover this recurring capability without displacing earlier-stage production solves at matched total work?",
+        "decisionSeam": "production stage-budget allocation",
+        "advanceIf": "A predeclared reserve fraction produces net referee-valid gains at matched total work with acceptable collateral.",
+        "stopIf": "Matched-work reallocation merely displaces earlier-stage winners or produces no net gains."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Paired recurrence evidence is R03270 under the same frozen confirmation probe."
+    },
+    {
+      "id": "CID-0002",
+      "subject": {
+        "levelId": "R03270",
+        "population": "WS2 admissible-order reserve-starvation frozen 40-parent confirmation sample",
+        "corpus": "Corpus 2",
+        "parentId": "R03270"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Allow the already-existing admissible-order fallback more than the current 75M-node reserve while holding total production work fixed.",
+      "demand": "No new semantic reasoning is indicated by this evidence. Existing admissible-order capability can solve the parent in isolation at 172,663,501 nodes but is censored by its production reserve.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a larger admissible-order reserve recover this recurring capability without displacing earlier-stage production solves at matched total work?",
+        "decisionSeam": "production stage-budget allocation",
+        "advanceIf": "A predeclared reserve fraction produces net referee-valid gains at matched total work with acceptable collateral.",
+        "stopIf": "Matched-work reallocation merely displaces earlier-stage winners or produces no net gains."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Paired recurrence evidence is R01154 under the same frozen confirmation probe."
+    },
+    {
+      "id": "CID-0003",
+      "subject": {
+        "levelId": "R03147",
+        "population": "Lane-E exact DEAD/LIVE multi-pick divergence microscope",
+        "corpus": "Corpus 2",
+        "parentId": "R03147"
+      },
+      "diagnosisStatus": "partial",
+      "firstLossClass": "F4",
+      "workClass": "EXTENSION",
+      "evidenceStrength": "development",
+      "evidenceRefs": [
+        "reports/2026-09-20-ws6-dependency-interface-observer-result-001.md",
+        "reports/2026-09-17-lane-e-multi-pick-bisection-result-001.md"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "At each exact divergence point, take the matched LIVE ordinary move instead of the causally fatal DEAD ordinary move.",
+      "demand": "Current hard facts and global accounting treat the matched moves alike, while the move changes path-resource occupancy and relational must-pass bounds. The candidate missing operation is a decision-bearing relation between local path-history/resource use and future obligation cost, not another global scalar counter.",
+      "atlasDimensions": [
+        "inference",
+        "composition",
+        "action"
+      ],
+      "smallestProbe": {
+        "question": "Does the same frozen path-resource plus relational-bound interface recur on independent exact DEAD/LIVE parents and distinguish causal divergences that current hard prunes do not?",
+        "decisionSeam": "ordinary branch choice before the exact LIVE-to-DEAD causal commitment",
+        "advanceIf": "Independent parents reproduce the same bounded semantic-family distinction under frozen fields, earning a smallest consumer falsifier.",
+        "stopIf": "The one-parent interface fails to recur or recurrence has no decision-bearing discordance."
+      },
+      "recurrenceScope": "single-parent",
+      "notes": "This is intentionally EXTENSION rather than INVENTION until independent-parent replication shows a recurrent decision-bearing relation. No repair operator is earned."
+    }
+  ]
+}
