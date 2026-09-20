@@ -86,7 +86,13 @@ The repaired form declares:
 
 The constructor validates itself with the shared declared-contract rules before writing. Node tests pin these semantics.
 
-## E. What this pass deliberately did not promote
+## E. Prospective gates must have a collection path
+
+The proposal-method calibration audit correctly deferred a machine `originMethod` field until origin is recorded prospectively, but the report convention did not actually ask future authors to record it. That made the gate self-stalling.
+
+`docs/investigation-report-conventions.md` now defines an optional human-readable `Proposal provenance` line for newly nominated questions/candidates when the source is genuinely known before outcome. Multiple contributing methods are allowed; the field is not machine-enforced and must not be retrospectively story-fitted. The proposal-method audit now points to this collection path. This creates observations without prematurely freezing an enum or registry.
+
+## F. What this pass deliberately did not promote
 
 The scans did not earn:
 
