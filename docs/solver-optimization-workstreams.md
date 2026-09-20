@@ -68,6 +68,16 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
+#### Lane H — parity phase + checkerboard capacity
+
+**ACTIVE CHEAP PREMISE TESTS; production behavior unchanged.** A first-principles solver audit found that ordinary endpoint parity is already soundly implemented, including the 2026-09-09 restoration on same-parity-portal-only levels, but stronger invariant information is not yet represented across several decision seams. [`audit`](../reports/2026-09-19-solver-parity-invariant-audit-001.md) · [`preflight`](solver-parity-phase-capacity-preflight.md)
+
+1. **H1 phase-conditioned relaxed distance:** shadow a two-layer `(cell, futureTwistParity)` 0-1 shortest-path bound. Count incremental decision-bearing deaths over current scalar goal distance/parity before nominating any prune/order/scoring consumer. This is materially different from the closed August existence-only portal envelope.
+2. **H2 checkerboard-split connectivity capacity:** on future-no-twist states, reuse the existing reached set to shadow per-color fresh capacity against the exact remaining arrival schedule. Count incremental rejects where total volume passes; no second flood fill.
+3. **H3-H6 downstream only:** admissible-order parity propagation, repair residual explanation, all-gates exact infeasibility, and complete/random hint-enumeration parity reuse do not outrank H1/H2 and should reuse their representation rather than spawning parallel machinery.
+
+**Stop:** negligible incremental incidence or clearly disproportionate overhead at the cheapest representative pilot. **Advance:** non-trivial opportunity -> minimal synthetic witness -> stored/referee-valid prefix replay with zero false rejects -> differential/reference validation -> smallest consumer -> matched-work economics. Lane H may proceed in parallel with the current WS2 failure-response gate; it does not replace or reorder it.
+
 ### Post-mining premise-map handoff closeout
 
 The frozen-map mining execution plan's three phases are complete. P201-P206 remain evidence/method premises; no additional solver-mechanism premise survives the bounded post-mining consumer-contract work.
