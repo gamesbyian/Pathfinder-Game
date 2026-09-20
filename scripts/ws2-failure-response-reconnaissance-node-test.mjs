@@ -191,6 +191,7 @@ try {
   assert.equal(claim.kind, 'pathfinder-ws2-failure-response-claim-capsule');
   assert.equal(claim.scientificDisposition.status, 'supports-prespecified-routing-decision');
   assert.equal(claim.decisionDisposition.route, 'none');
+  assert.match(claim.decisionDisposition.rationale, /no prespecified contrast/u);
   assert.equal(claim.decisionDisposition.productionChangeLicensed, false);
   assert.match(claim.decisionDisposition.consequence, /No expensive WS2 follow-up is earned/u);
   assert.equal(claim.populationScope.unitTopology.analysisUnit, 'parent');
