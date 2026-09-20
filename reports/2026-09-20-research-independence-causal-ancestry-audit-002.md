@@ -278,18 +278,22 @@ Do **not** extract this yet merely because the vocabulary is attractive.
 
 The existing WS2 failure-response contract has one rich `independenceVector`, but other systems currently express the same ideas in specialist prose/roles rather than a second common machine contract.
 
-## Promotion test
+## Promotion result
 
-A shared machine independence vector is earned when a second live decision-bearing artifact must prevent a real ambiguity such as:
+That trigger has now been met by two materially different live decision-bearing artifacts:
 
-- independent parents being mistaken for cross-distribution support;
-- multiple artifacts being mistaken for independent implementations;
-- repeated family siblings inflating confirmation strength;
-- blind/context-independent replication needing to be distinguished from ordinary fresh-sample confirmation.
+1. **WS2 failure-response reconnaissance** already carried a rich independence vector describing parent clustering, shared instrument/analysis/common code, and explicitly unclaimed analyst/framing independence.
+2. **Admissible-order reserve-starvation recurrence** now freezes its own independence design with the 40-parent sample. It explicitly distinguishes fresh parent/sample independence from the still-shared Corpus-2 construction family, implementation, analysis, framing, ontology and code.
 
-At that point extract canonical axes/relationship states only.
+The second case prevents a real ambiguity: "40 independent parents" is valid for the recurrence estimate but does **not** imply cross-distribution or implementation-independent replication.
 
-Do not create an overall independence score.
+The shared owner is now:
+
+- `scripts/research-independence-vector-lib.mjs`
+
+It owns only the canonical axes and structural completeness of the vector. Each specialist artifact still owns the actual relationship claims and their evidence.
+
+No aggregate independence/confidence score is created.
 
 ## Standing rule
 
