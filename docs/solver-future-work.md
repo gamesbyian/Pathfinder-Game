@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method.
+Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method; [capability invention program](solver-capability-invention-program.md) owns the HARVEST / EXTENSION / INVENTION classification and acquisition ladder. Deferred architectures here do not become active merely because the harvest queue shrinks; they must be nominated by current capability demand.
 
 ## Deferred descendants of active premises
 
