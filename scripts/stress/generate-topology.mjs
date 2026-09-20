@@ -51,6 +51,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { stringifyCorpusJson } from '../level-json-format.mjs';
+import { TOPOLOGY_GENERATION_SUPPORT } from './topology-generation-support-lib.mjs';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
@@ -68,7 +69,7 @@ import {
 } from './witness.mjs';
 import { levelFeatures, structuralComplexity } from './features.mjs';
 
-const GENERATOR_VERSION = '0.1.0';
+const GENERATOR_VERSION = TOPOLOGY_GENERATION_SUPPORT.generatorVersion;
 const CORPUS_NAME = 'topology-composition-v1';
 const ROOT = process.cwd();
 
@@ -712,7 +713,8 @@ async function main() {
             'structural, and canonical-referee validation. v0.1 supports blocks, MustPass, ' +
             'MustCross, flipping filters, must-turn landmarks, geese, and false goals; portals, ' +
             'static filters, surround, adjacent-turn, and multi-gate are intentionally absent.',
-        gridSizes: [12, 15],
+        gridSizes: [...TOPOLOGY_GENERATION_SUPPORT.gridSizes],
+        supportEnvelope: TOPOLOGY_GENERATION_SUPPORT,
         mechanicCaps: MECH_CAPS,
         generationStats: stats,
         levels,
