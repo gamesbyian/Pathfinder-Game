@@ -125,7 +125,7 @@ assert.equal(
 );
 assert.ok(inventory.planLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md' &&
-    row.lifecycleDisposition === 'active-execution'));
+    row.lifecycleDisposition === 'concluded-or-historical'));
 
 const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
