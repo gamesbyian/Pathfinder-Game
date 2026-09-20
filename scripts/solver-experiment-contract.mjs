@@ -161,6 +161,7 @@ export function decisionContractIssues(contract) {
   const sideEffects = contract?.sideEffects;
 
   issues.push(...researchQuestionIssues(contract?.researchQuestion));
+  issues.push(...recoveryProvenanceIssues(experiment));
 
   for (const field of ['workflowFamily', 'producer', 'entrypoint']) {
     if (!isNonEmptyString(experiment?.[field])) issues.push(`experiment.${field}`);
