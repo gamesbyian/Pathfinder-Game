@@ -31,7 +31,12 @@ try {
   }]));
   writeFileSync(casesFile, JSON.stringify({
     corpus: corpusFile,
-    cases: [{ id: 'native-illegal', levelId: 'REFERENCE_PIPELINE', prefix: [[999, 999]] }],
+    cases: [{
+      id: 'native-illegal',
+      levelId: 'REFERENCE_PIPELINE',
+      prefix: [[999, 999]],
+      source: { cutSignature: 'REFERENCE_PIPELINE:1,2', cutCells: [1, 2] },
+    }],
   }));
 
   let exitCode = 0;
@@ -57,6 +62,8 @@ try {
   assert.equal(result.rows[0].schemaVersion, 2);
   assert.equal(result.rows[0].referenceLabel, 'timeout/abstain');
   assert.equal(result.rows[0].referenceReason, 'native-prefix-illegal');
+  assert.deepEqual(result.rows[0].source, { cutSignature: 'REFERENCE_PIPELINE:1,2', cutCells: [1, 2] },
+    'structured case source metadata must survive the exact/reference runner');
   assert.equal('oracleLabel' in result.rows[0], false);
   assert.equal('oracleReason' in result.rows[0], false);
   assert.equal(result.summary.cases, 1);
@@ -87,6 +94,8 @@ try {
   assert.equal(combined.summary.cases, 1);
   assert.equal(combined.summary.inputAlarms, 1);
   assert.equal(combined.rows[0].referenceLabel, 'timeout/abstain');
+  assert.deepEqual(combined.rows[0].source, { cutSignature: 'REFERENCE_PIPELINE:1,2', cutCells: [1, 2] },
+    'structured case source metadata must survive shard recombination');
   assert.equal('oracleLabel' in combined.rows[0], false);
 
   await run(process.execPath, [
