@@ -38,7 +38,7 @@ Do not collapse distinct kinds of state merely because they describe the same li
 - **New report-local status/decision/remaining gate:** the structured `pathfinder.research-closeout/v1` capsule; the Markdown status block is a human mirror and legacy fallback.
 - **Evidence applicability:** the evidence-family classifier for the stated purpose/regime, using the shared applicability lattice; there is no global timeless applicability flag.
 - **Claim validity/invalidation:** the claim plus its material derivation dependencies, not a report summary.
-- **Production default polarity:** runtime code/config. The opt-in ledger owns promotion disposition for retained default-OFF experiments, not runtime truth.
+- **Production default polarity:** runtime code/config. The opt-in ledger owns promotion disposition for retained default-OFF experiments, and its promoted-history rows may carry a primary decision-evidence ref; that provenance edge does not override runtime truth.
 
 An active workstream may legitimately reference a `deferred-reopen` scientific question when satisfying its reopen trigger is the current execution gate. A live workstream referencing an unknown or terminal question is an authority error. Derived indexes/inventories may expose these relationships but must not silently become a second owner.
 
