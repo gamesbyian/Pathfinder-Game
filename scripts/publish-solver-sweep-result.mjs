@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { readResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 import { buildResearchPopulationIntegrity as buildPopulationIntegrity } from './research-observation-integrity-lib.mjs';
 import { hashResearchPopulation as hashPopulation } from './research-population-identity-lib.mjs';
@@ -263,6 +264,15 @@ function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStat
     const expected = [...binding.resultResolvedShas].sort();
     if (JSON.stringify(observed) !== JSON.stringify(expected)) {
       issues.push('researchOutcome.binding.resultResolvedShas disagree with published result files');
+    }
+  }
+  if (Array.isArray(binding.resultContentHashes)) {
+    const observed = publishedStats
+      .map(stat => `sha256:${createHash('sha256').update(fs.readFileSync(stat.file)).digest('hex')}`)
+      .sort();
+    const expected = [...binding.resultContentHashes].sort();
+    if (JSON.stringify(observed) !== JSON.stringify(expected)) {
+      issues.push('researchOutcome.binding.resultContentHashes disagree with published result files');
     }
   }
   return issues;
