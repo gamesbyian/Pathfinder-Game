@@ -63,6 +63,9 @@ assert.ok(inventory.planLifecycle.some(row => row.kind === 'preflight'),
 assert.ok(inventory.planLifecycle.some(row => row.kind === 'handoff'),
     'lifecycle inventory must cover handoffs, not only *-plan.md files');
 assert.ok(Array.isArray(inventory.sharedImplementationDependencies));
+assert.ok(inventory.sharedImplementationDependencies.some(row =>
+    row.contractFunctions.some(name => /^(?:build|validate|assert|write|format|parse|canonicalize)/u.test(name))),
+    'shared research dependencies should expose constructor/validator ownership when exported');
 assert.equal(
     inventory.diagnostics.fragilePlanLifecycleCount,
     inventory.planLifecycle.filter(row => row.fragileProse).length,
