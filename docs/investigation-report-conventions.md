@@ -97,6 +97,7 @@ The same artifact can support different claims at different roles, but the repor
 - **Superseded** links its replacement; preserve the old evidence.
 - **Cancelled** explains why the original scope is no longer decision-relevant and any reopen condition.
 - **Remaining gate** is the smallest decision-bearing check, with population and acceptance criterion when known.
+- A prospective/data-gated remaining gate should name **how the trigger will be observed or collected** when that path is known (producer/workflow/report field/monitor); otherwise say that detection is intentionally opportunistic. Do not close work by waiting for evidence no current process is capable of producing.
 - When a later report closes a gate, link both directions.
 - An A/B applies to the implementation it tested. If participation, budget, ordering, applicability, candidate set, or interactions materially change, state whether the old verdict still applies.
 - A positive result selected from many alternatives is normally **nomination evidence** until confirmed independently. Evidence intensity should scale with selection pressure and claim scope under [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md); do not report the maximum observed arm as though it were a prespecified single test.
