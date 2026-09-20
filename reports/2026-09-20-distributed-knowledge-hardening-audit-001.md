@@ -220,6 +220,30 @@ and reused by generation output, dispatcher, and acquisition guidance.
 
 This is the canonical-authority form of hardening, not a new global transportability framework.
 
+## Healthy distributed knowledge: current production boundary
+
+The current residual/production boundary appears in both current and historical material, but the ownership is correctly partitioned:
+
+- `docs/solver-optimization-workstreams.md` owns the current boundary/counts;
+- `reports/2026-09-16-post-promotion-production-boundary-refresh-001.md` owns the dated evidence establishing that boundary;
+- `docs/solver-capability-memory.md` explicitly says derived views must treat the owning current workstream as authoritative.
+
+This is **not** duplicate authority.
+
+The report should remain immutable history. The workstream should remain the mutable current-state owner.
+
+A new production-boundary registry is not earned unless a real machine consumer repeatedly needs structured current boundary identity and cannot safely receive it explicitly.
+
+## Human mirrors should point at machine owners
+
+The topology generator supplied another healthy repair pattern.
+
+Before this pass, `solver-evaluation-evidence.md` repeated the producer's exact unsupported-mechanic list in multiple places. That made human guidance a parallel source of current support truth.
+
+The exact set now belongs to `scripts/stress/topology-generation-support-lib.mjs`. Evaluation guidance explains the scientific rule and points to that owner instead of maintaining a second exact list.
+
+The ownership test requires that pointer to remain.
+
 ## A practical audit procedure
 
 When "the repo already knows X, but..." appears during research or implementation:
