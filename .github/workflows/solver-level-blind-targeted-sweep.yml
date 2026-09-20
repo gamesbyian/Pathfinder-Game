@@ -123,7 +123,7 @@ on:
         required: false
         default: ''
       persist_failure_response:
-        description: 'Persist this run\'s compact failure-response evidence to main after a successful combine.'
+        description: 'Persist this run''s compact failure-response evidence to main after a successful combine.'
         required: false
         default: 'false'
 
