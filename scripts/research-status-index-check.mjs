@@ -17,15 +17,18 @@ mkdirSync(path.join(root, 'reports')); mkdirSync(path.join(root, 'docs'));
 writeFileSync(path.join(root, 'docs/topic.md'), '# Topic\n');
 writeFileSync(path.join(root, 'docs/solver-optimization-workstreams.md'), `# Solver optimization workstreams
 ## Workstream state
-| ID | Workstream | State | Next gate | Stable question ref |
-|---:|---|---|---|---|
-| 2 | Current question | **ACTIVE** | Run current gate. | \`WS2-CURRENT\` |
+| ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
+|---:|---|---|---|---|---|
+| 2 | Current question | \`active\` | **ACTIVE** | Run current gate. | \`WS2-CURRENT\` |
 `);
 writeFileSync(path.join(root, 'docs/solver-opt-in-experiment-ledger.md'), `# Ledger
 ## Current production-default-OFF flags
-| Flag | Disposition | Decision-bearing evidence / reopen condition |
+| Flag | Promotion state | Disposition / reopen condition |
 |---|---|---|
-| \`FLAG_ONE\` | **CLOSED NEGATIVE** | Historical test rejected it. |
+| \`FLAG_ONE\` | \`closed\` | **CLOSED NEGATIVE.** Historical test rejected it. |
+| \`FLAG_TWO\` | \`open\` | **OPEN.** Awaiting a bounded promotion test. |
+| \`FLAG_THREE\` | \`no-current-gate\` | **RETAINED, NO CURRENT PROMOTION GATE.** Counterfactual only. |
+| \`FLAG_FOUR\` | \`not-promotion-candidate\` | **NEW architecture prerequisite, not itself a promotion candidate.** |
 `);
 writeFileSync(path.join(root, 'docs/solver-research-question-relations.json'), JSON.stringify({
     schemaVersion: 1,
@@ -117,6 +120,7 @@ A canonical attempt identity must not be rewritten as though its search-family t
 `);
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
+assert.equal(index.queue[0].executionState, 'active');
 assert.equal(index.queue[0].questionRef, 'WS2-CURRENT');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), [
     'FLAG_ONE', 'FLAG_TWO', 'FLAG_THREE', 'FLAG_FOUR',
