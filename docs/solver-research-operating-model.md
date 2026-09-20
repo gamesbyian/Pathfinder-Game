@@ -42,6 +42,12 @@ Do not collapse distinct kinds of state merely because they describe the same li
 
 An active workstream may legitimately reference a `deferred-reopen` scientific question when satisfying its reopen trigger is the current execution gate. A live workstream referencing an unknown or terminal question is an authority error. Derived indexes/inventories may expose these relationships but must not silently become a second owner.
 
+### Prose versus machine state
+
+Prose is not a defect by itself. Keep scientific reasoning, nuanced constraints, caveats, and open-ended reopen predicates in prose when no machine consumer can honestly evaluate them.
+
+But when software or multiple authorities need a stable categorical meaning, prose must not become an undocumented API. Prefer an explicit enum, stable ID, relation, or structured capsule over keyword-parsing arbitrary sentences. If prose merely explains an existing machine-owned fact, consumers use the machine owner and may validate the prose mirror. See `reports/2026-09-19-research-prose-authority-audit-001.md`.
+
 ## Stop rules
 
 These are gates, not aspirations.
