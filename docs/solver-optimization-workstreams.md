@@ -13,7 +13,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ## Portfolio posture
 
-Run two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. Classification, acquisition ladder, and demand-register rules: [capability invention program](solver-capability-invention-program.md). Register: `data/stress/capability-invention-demand.json` (`npm run research:capability-demand`).
+Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. Classification, acquisition ladder, and demand-register rules: [capability invention program](solver-capability-invention-program.md). Register: `data/stress/capability-invention-demand.json` (`npm run research:capability-demand`).
 
 Seed census: **26 rows = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence evidence because 23/26 are capability-selected Class 3. Unknown beam rows R02196/R02206/R02258 have a frozen current-head freshness replay; R03147 remains an EXTENSION nomination pending independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
