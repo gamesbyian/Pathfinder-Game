@@ -52,10 +52,10 @@ try {
         attempts: [{ outcome: outcome === 'solved' ? 'solved' : outcome === 'nodeLimited' ? 'node-limited' : 'exhausted', actionKey: 'admissible-order|tieBreak=default|lds=off' }],
         ...extra,
     });
-    const analyze = file => JSON.parse(execFileSync('node', [
+    const analyze = (file, samplePath = sample) => JSON.parse(execFileSync('node', [
         'scripts/analyze-reserve-starvation-probe.mjs',
         '--in=' + file,
-        '--sample=' + sample,
+        '--sample=' + samplePath,
     ], { cwd: root, encoding: 'utf8' }));
 
     const negative = analyze(writeDoc('negative.json', [
@@ -144,6 +144,20 @@ try {
     const unknownSolver = analyze(unknownSolverFile);
     assert.equal(unknownSolver.decisionReady, false);
     assert.ok(unknownSolver.resolution.blockers.some(row => row.axis === 'eligibility'));
+
+    const noOpportunitySample = path.join(temp, 'sample-no-opportunity.json');
+    const baseSample = JSON.parse(fs.readFileSync(sample, 'utf8'));
+    delete baseSample.sourceBoundary;
+    fs.writeFileSync(noOpportunitySample, JSON.stringify(baseSample));
+    const noOpportunityBoundary = analyze(writeDoc('no-opportunity-boundary.json', [
+        row('A', 'solved', 70_000_000),
+        row('B', 'nodeLimited', 300_000_000, { nodeCapped: true, nodeCeiling: 300_000_000 }),
+        row('C', 'exhaustedNegative', 55_000_000, { exhausted: true }),
+    ]), noOpportunitySample);
+    assert.equal(noOpportunityBoundary.resolution.resolutionStatus, 'observability-blocked');
+    assert.deepEqual(noOpportunityBoundary.resolution.blockers.map(row => row.axis), ['opportunity']);
+    assert.equal(noOpportunityBoundary.decisionReady, false);
+    assert.equal(noOpportunityBoundary.decision, 'recover-incomplete-or-censored');
 
     console.log('reserve starvation probe reducer tests passed');
 } finally {
