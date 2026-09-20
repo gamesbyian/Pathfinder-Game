@@ -37,6 +37,14 @@ try {
     fs.writeFileSync(expectations, JSON.stringify({
         schemaVersion: 1,
         kind: 'pathfinder-class3-dose-expectations',
+        unitTopology: {
+            observationUnit: 'compact-failure-response-attempt',
+            opportunityUnit: 'parent-exact-rescuer',
+            assignmentUnit: null,
+            dependenceClusterUnit: 'parent',
+            analysisUnit: 'parent',
+            generalizationUnit: 'current-class3-parent-under-compatible-shared-production-protocol',
+        },
         parents: [
             { parentId: 'A', rescuers: [{ actionKey: 'beam-a', stageId: 'main' }] },
             { parentId: 'B', rescuers: [{ actionKey: 'beam-a', stageId: 'main' }] },
@@ -54,6 +62,14 @@ try {
     ], { cwd: process.cwd(), encoding: 'utf8' }));
 
     assert.equal(result.expectedParents, 6);
+    assert.deepEqual(result.unitTopology, {
+        observationUnit: 'compact-failure-response-attempt',
+        opportunityUnit: 'parent-exact-rescuer',
+        assignmentUnit: null,
+        dependenceClusterUnit: 'parent',
+        analysisUnit: 'parent',
+        generalizationUnit: 'current-class3-parent-under-compatible-shared-production-protocol',
+    });
     assert.equal(result.observedExpectedParents, 5);
     assert.deepEqual(result.missingParents, ['F']);
     assert.equal(result.protocolHash, 'p1');
@@ -73,6 +89,19 @@ try {
     assert.equal(result.byAction['beam-a'].attempts, 1);
     assert.equal(result.byAction['beam-a'].workSpent.median, 11);
     assert.equal(result.byAction['repair-a'].nodesExpanded.median, 80);
+
+    const invalidExpectations = path.join(temp, 'invalid-expectations.json');
+    fs.writeFileSync(invalidExpectations, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'pathfinder-class3-dose-expectations',
+        unitTopology: { analysisUnit: 'parent' },
+        parents: [{ parentId: 'A', rescuers: [{ actionKey: 'beam-a', stageId: 'main' }] }],
+    }));
+    assert.throws(() => execFileSync('node', [
+        'scripts/analyze-class3-dose-exposure.mjs',
+        '--in=' + doc,
+        '--expectations=' + invalidExpectations,
+    ], { cwd: process.cwd(), encoding: 'utf8' }), /Command failed/u);
 
     console.log('class3 dose exposure reducer tests passed');
 } finally {
