@@ -212,9 +212,31 @@ ${formatResearchCloseoutCapsule({
     remainingGate: 'none',
 })}
 `);
-assert.throws(() => buildResearchStatusIndex(root), /structured research closeout disagrees with status block: status, decision, remainingGate/u,
-    'structured/prose authority disagreement must fail instead of choosing a parser implicitly');
+assert.throws(() => buildResearchStatusIndex(root), /structured research closeout disagrees with canonical status metadata: status/u,
+    'canonical structured/prose disagreement must fail instead of choosing a parser implicitly');
 unlinkSync(conflictingPath);
+
+const paraphrasePath = path.join(root, 'reports/2026-08-24-paraphrased-closeout.md');
+writeFileSync(paraphrasePath, `# Paraphrased closeout
+
+> **Status:** concluded-negative
+> **Last evidence:** 2026-08-24 — Human-readable mirror.
+> **Decision:** A fuller human explanation of why the form is closed.
+> **Remaining gate:** Reopen only if the premise changes materially.
+
+${formatResearchCloseoutCapsule({
+    status: 'concluded-negative',
+    lastEvidenceDate: '2026-08-24',
+    decision: 'close tested form',
+    remainingGate: 'materially changed premise',
+})}
+`);
+const paraphrasedIndex = buildResearchStatusIndex(root);
+const paraphrased = paraphrasedIndex.evidence.find(row => row.topicId === 'paraphrased-closeout');
+assert.equal(paraphrased.decision, 'close tested form',
+    'machine decision must come from the structured capsule, not the human prose paraphrase');
+assert.equal(paraphrased.remainingGate, 'materially changed premise');
+unlinkSync(paraphrasePath);
 
 const repositoryIndex = buildResearchStatusIndex(process.cwd());
 assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must remain visible through the research-status queue relation');
