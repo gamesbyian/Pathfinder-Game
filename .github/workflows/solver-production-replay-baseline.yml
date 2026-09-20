@@ -33,12 +33,8 @@
 # allocation between attempts, the node budget stops the level — and note the node budget is just as
 # host-independent as the work budget, so determinism is not what was traded away here.
 #
-# THE ms DEADLINE DOES NOT BOUND PER-LEVEL WALL TIME. Also measured: R00001 ran 593s against a
-# 90,000ms `--budget-ms` and still came back deadlineTruncated: false, because timeBudgetMs sizes
-# attempt tiers rather than capping the level. Do not size a shard's runtime from it. The `timeout`
-# wrapper on each sweep step is the only real wall-clock bound in this workflow. The truncation check
-# in the combine job stays because a truncated level IS indeterminate rather than unsolved when it
-# does happen — it is just not the cost control it was originally written as.
+# budget-ms sizes attempt tiers, not total level wall time; the OS timeout is the shard safety net.
+# Any deadline-truncated row remains indeterminate rather than ordinary unsolved evidence.
 name: Solver history-aware production replay baseline (corpus-1 + corpus-2)
 run-name: "Production replay · flags=${{ inputs.enable_flags || 'control' }} · shards=${{ inputs.shards }}"
 
@@ -684,6 +680,7 @@ jobs:
           C2_NODE_BUDGET: ${{ inputs.corpus2_node_budget }}
           C1_WORK_BUDGET: ${{ inputs.corpus1_work_budget }}
           C2_WORK_BUDGET: ${{ inputs.corpus2_work_budget }}
+          DETERMINISTIC: ${{ inputs.deterministic }}
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
@@ -696,8 +693,8 @@ jobs:
             producer: 'solver-production-replay-baseline.yml',
             entrypoint: 'scripts/portfolio-solve-sweep.mjs',
             population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
-            execution: { levelBlind: false, historyAware: true, historicalInputs: ['continuity baseline', 'prime winner', 'saved hints'], reproducibilityExpected: false, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
-            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: true },
+            execution: { levelBlind: false, historyAware: true, historicalInputs: ['continuity baseline', 'prime winner', 'saved hints'], reproducibilityExpected: process.env.DETERMINISTIC === 'true', producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
+            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: process.env.DETERMINISTIC !== 'true' },
             sideEffects:{hints:'harvest-permitted',canonicalBaseline:'none',telemetry:'compact',reports:'report-write'},
           }, null, 2)}\n`);
           NODE
@@ -722,9 +719,6 @@ jobs:
           retention-days: 90
 
       - name: Commit the new baseline and diff to main
-        # Also gated on the ref: now that shards follow the dispatch, a branch run produces numbers
-        # from branch code, and committing those to main's continuity baseline would silently corrupt
-        # the series.
         if: ${{ inputs.commit_results == 'true' && inputs.deterministic != 'true' && github.ref == 'refs/heads/main' && steps.integrity.outputs.complete == 'true' }}
         shell: bash
         run: |
