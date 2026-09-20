@@ -6,6 +6,7 @@
 > **Remaining gate:** one maintained producer emits an eligible protocol-compatible population under `WS2-FAILURE-RESPONSE-RECONNAISSANCE`; then execute this analysis before commissioning first-loss, rejection-counterfactual, or 2x2 compute.
 > **Research question:** `WS2-FAILURE-RESPONSE-RECONNAISSANCE`
 > **Evidence role:** precommitment / discriminator selection, not solver efficacy evidence.
+> **Machine analysis contract:** [`2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json`](2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json), executed via `npm run research:ws2-failure-response-reconnaissance -- --in=<compact-response.json> --analysis-contract=reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json`.
 
 ## Purpose
 
@@ -173,6 +174,17 @@ For every nominated contrast publish:
 - whether the contrast was prespecified by this preflight or discovered in a secondary exploratory view.
 
 Do not choose thresholds after looking at outcomes. If a numeric cutoff is needed for a descendant experiment, freeze it in that experiment's own preflight and treat this reconnaissance as development evidence.
+
+## Machine-bound execution
+
+The generic `failure-response-query.mjs` remains the reducer. The WS2 wrapper binds its observation to the frozen analysis-contract identity and emits four separate layers:
+
+- execution status;
+- scientific eligibility/disposition;
+- the reducer observation;
+- the routing decision.
+
+A successful reducer execution is not sufficient for a scientific routing decision. Unknown/mixed protocol or solver identity, incomplete population accounting, or other contract eligibility failures leave the analysis explicitly ineligible. Route selection remains a separate action over the prespecified observation.
 
 ## Output
 
