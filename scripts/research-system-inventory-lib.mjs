@@ -82,6 +82,7 @@ function documentationRoles(root, currentReferences) {
         ...walk(root, 'reports', relative => relative.endsWith('.md')),
     ];
     return [...new Set(markdown)].sort().map(relative => {
+        const source = readFileSync(path.join(root, relative), 'utf8');
         let role;
         if (relative.startsWith('docs/archive/') || relative.startsWith('docs/history/')) {
             role = 'historical/archive';
@@ -90,12 +91,23 @@ function documentationRoles(root, currentReferences) {
         } else if (/^reports\/\d{4}-\d{2}-\d{2}-.+\.md$/u.test(relative)) {
             role = 'dated-evidence';
         } else {
-            const source = readFileSync(path.join(root, relative), 'utf8');
             role = source.includes('<!-- generated-current-state -->')
                 ? 'generated-current-state'
                 : 'retained-reference-or-evidence';
         }
-        return { path: relative, role, bytes: statSync(path.join(root, relative)).size };
+        const status = /^> \*\*Status:\*\* (.+)$/mu.exec(source)?.[1]?.trim() ?? null;
+        const statusText = String(status ?? '').toLowerCase();
+        const claimsCurrentAuthority = /(?:canonical|current authority|live authority)/u.test(statusText);
+        const claimsActive = /(?:^|\b)active(?:\b|$)/u.test(statusText);
+        return {
+            path: relative,
+            role,
+            bytes: statSync(path.join(root, relative)).size,
+            status,
+            claimsCurrentAuthority,
+            claimsActive,
+            currentAuthorityClaimOutsideIndex: claimsCurrentAuthority && !currentPaths.has(relative),
+        };
     });
 }
 
@@ -226,6 +238,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const documentRoles = documentationRoles(root, currentReferences);
     const roleCounts = Object.fromEntries([...new Set(documentRoles.map(row => row.role))].sort()
         .map(role => [role, documentRoles.filter(row => row.role === role).length]));
+    const currentAuthorityClaimOutsideIndex = documentRoles.filter(row => row.currentAuthorityClaimOutsideIndex);
     const relations = relationInventory(model);
     const integrationAudit = auditResearchIntegration(root);
     return {
@@ -253,6 +266,12 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             currentMarkdownBytes,
             roleCounts,
             roles: documentRoles,
+            statusClaimCounts: {
+                currentAuthority: documentRoles.filter(row => row.claimsCurrentAuthority).length,
+                active: documentRoles.filter(row => row.claimsActive).length,
+            },
+            currentAuthorityClaimOutsideIndexCount: currentAuthorityClaimOutsideIndex.length,
+            currentAuthorityClaimOutsideIndexPaths: currentAuthorityClaimOutsideIndex.map(row => row.path),
             lifecycleCandidateCount: plans.length,
             currentLifecycleCandidateCount: plans.filter(row => row.currentReference).length,
         },
@@ -262,6 +281,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             fragilePlanLifecyclePaths: fragilePlans.map(row => row.path),
             currentReferenceLifecycleMismatchCount: currentReferenceLifecycleMismatches.length,
             currentReferenceLifecycleMismatchPaths: currentReferenceLifecycleMismatches.map(row => row.path),
+            currentAuthorityClaimOutsideIndexCount: currentAuthorityClaimOutsideIndex.length,
+            currentAuthorityClaimOutsideIndexPaths: currentAuthorityClaimOutsideIndex.map(row => row.path),
             integrationErrorCount: integrationAudit.errorCount,
             integrationWarningCount: integrationAudit.warningCount,
             derivedRelationCount: relations.filter(row => row.authorityKind === 'derived/composed').length,
