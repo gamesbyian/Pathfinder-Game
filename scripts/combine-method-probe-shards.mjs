@@ -65,6 +65,7 @@ for (const d of dirs.sort()) {
     for (const file of files) {
         const data = JSON.parse(readFileSync(path.join(shardPath, file), 'utf8'));
         const thisMeta = {
+            commit: data.commit ?? null,
             corpus: data.corpus, only: data.only, budgetMs: data.budgetMs,
             workBudget: data.workBudget ?? null, nodeBudget: data.nodeBudget,
         };
