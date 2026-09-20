@@ -64,6 +64,18 @@ For **decision-bearing solver research**, also state near the status block:
 
 If several candidates, thresholds, profiles, seeds, populations, metrics, or explanations were tried before the reported winner was chosen, say so and give the meaningful candidate count/range when available. Do not make a selected-on population look like an untouched confirmatory test. `Population identity` and `Selection history` are separate on purpose: a level may be generated solver-blind and later enter a corpus because of solver outcome. A corpus filename alone is not either field.
 
+### Prospective proposal provenance
+
+When a report or preflight **nominates a new research question or materially new candidate**, and the proposal source is genuinely known before its outcome, record a short human-readable line near the status block:
+
+```markdown
+> **Proposal provenance:** <what generated or triggered this proposal before outcome>
+```
+
+This is deliberately **not** a machine enum or registry. Multiple contributing origins are allowed and often correct. Reuse stable plain-language method names when they fit (for example premise-map mining, archaeology, negative-space audit, failure-response nomination, capability-memory contrast, family microscopy, exact/reference disagreement, or human/agent reconstruction), but do not force a proposal into one bucket or backfill a plausible origin after results are known. Existing `triggeredBy`/`constrainedBy` question relations remain the authority for actual question ancestry; this line records method-of-discovery history that those relations do not encode.
+
+The purpose is to accumulate prospective observations for later calibration of proposal channels without freezing an ontology prematurely. Omit the line when origin is unknown or only inferable in hindsight.
+
 For solution-profile evidence, also state material sample support/chronology limits when the claim depends on diversity, ordering, saturation, or similarity. `observedSingleOrder` is sampled agreement; `hasExhaustiveSearchEvent` is an event marker; neither is whole-space proof. Sparse nearest-profile identity is exploratory unless independently calibrated under current schema-v3 semantics.
 
 For top-level dated reports created on or after **2026-08-20**, `npm run check:documentation-links` enforces the core status block. A generated top-level dated report may opt out only with `<!-- report-metadata: generated -->` immediately after its title. Generated collection reports use their collection/generator conventions.
@@ -103,7 +115,7 @@ For expensive decision-bearing work, write down enough of the intended test befo
 
 1. treatment/configuration being tested;
 2. control/baseline and code/ref identity;
-3. evidence role, exact population identity/revision, generation ancestry, later selection history, prior use for this treatment lineage, and population selection rule;
+3. evidence role, proposal provenance when prospectively known, exact population identity/revision, generation ancestry, later selection history, prior use for this treatment lineage, and population selection rule;
 4. the intended inference scope, separately from the literal row-level observation the run will produce;
 5. primary outcome and work/cost envelope;
 6. smallest result that would close the form, nominate follow-up, or justify confirmation;
