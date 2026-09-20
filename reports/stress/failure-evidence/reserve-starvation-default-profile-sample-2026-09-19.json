@@ -104,5 +104,10 @@
     "authorityContextExposure": "shared current workstream/preflight context",
     "ontologyVocabulary": "shared Pathfinder allocation/reserve-starvation vocabulary",
     "criticalLibraryCode": "shared solver/action identity, failure-response normalization, and research helper code"
+  },
+  "probeDesign": {
+    "reserveNodes": 75000000,
+    "totalNodes": 300000000,
+    "expectedAction": "admissible-order|tieBreak=default|lds=off"
   }
 }
