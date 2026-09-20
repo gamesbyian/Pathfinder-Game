@@ -78,7 +78,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 Frozen-map mining is complete; P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed: A's tested compact-interface ladder is closed negative at C2, D1's ranking consumer is closed negative, F3 has no compact decision-bearing consumer. Dated reports own chronology; no shared runtime substrate or treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** HARVEST first adds a narrow early-repair node-cap experiment seam, then designs the matched-work repair A/B; admissible-order reserve repricing is independently nominated by 2/40 recurrence. ACQUISITION runs the 3-row beam freshness gate, then broadens first-loss demand sampling outside capability-selected Class 3. [`class3`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [`reserve`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) · [`invention`](solver-capability-invention-program.md)
+**Current WS2 gate:** HARVEST adds the repair node-cap experiment seam, then designs the matched-work A/B; admissible-order repricing is independently nominated by 2/40. ACQUISITION runs the 3-row beam freshness gate, then broadens first-loss demand sampling outside capability-selected Class 3. [`class3`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [`reserve`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) · [`invention`](solver-capability-invention-program.md)
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed. Do not restart the completed structural-response ladder. **H3 remaining-length ordering: INDEPENDENT TRANSFER CONFIRMED (2026-09-20).** Ascending-length order clears 83.3% (10/12) of achievable rescues at 20% shared budget on a disjoint 175-row population (vs the 50% confirmation bar), descending order 0/12 below full budget on every tier. The prespecified transfer requirement is satisfied; this nominates, but does not itself authorize, a bounded matched-work production consumer pilot. [`transfer result`](../reports/2026-09-20-h3-independent-transfer-result-001.md)
@@ -87,7 +87,7 @@ Frozen-map mining is complete; P201-P206 remain evidence/method premises only. T
 
 | ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|
-| 2 | Residual capability + premise acquisition | `active` | **HARVEST** | Add narrow early-repair node-cap experiment seam, then preflight matched-work A/B; reserve repricing separately nominated | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2 | Residual capability + premise acquisition | `active` | **HARVEST** | Add repair node-cap seam; preflight matched-work A/B; reserve repricing separately nominated | `WS2-REPAIR-DEADLINE-ALLOCATION` |
 | 2I | Capability invention demand | `active` | **ACQUISITION** | Run 3-row beam freshness gate; expand first-loss sampling outside capability-selected Class 3 | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
