@@ -8,6 +8,7 @@ import {
   hashConfiguration,
   hashPopulation,
   isImmutableCommitSha,
+  parseIdentityLines,
 } from './solver-experiment-contract.mjs';
 
 const a = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['b', 'a'] });
@@ -29,6 +30,11 @@ assert.throws(() => hashPopulation({ kind: 'explicit-ids', identityBasis: 'stabl
 assert.equal(hashConfiguration({ b: 2, a: 1 }), hashConfiguration({ a: 1, b: 2 }));
 assert.equal(isImmutableCommitSha('a'.repeat(40)), true);
 assert.equal(isImmutableCommitSha('main'), false);
+assert.deepEqual(
+  parseIdentityLines('scope:a,b::case\n切断群:ケース 1\n'),
+  ['scope:a,b::case', '切断群:ケース 1'],
+  'comma-bearing line identity and Unicode must remain intact',
+);
 
 const integrity = buildPopulationIntegrity(['a', 'b', 'c'], [
   { id: 'a', ok: true }, { id: 'b', status: 'deadline-truncated' }, { id: 'x', error: 'boom' },
