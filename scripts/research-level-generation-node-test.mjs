@@ -17,17 +17,39 @@ assert.deepEqual(assessGenerationMethodSupport('topology', {
   requiredMechanics: ['must-cross', 'flipping-filter'],
 }), {
   status: 'supported',
-  requiredMechanics: ['must-cross', 'flipping-filter'],
-  unsupported: [],
-  unknown: [],
+  mechanics: {
+    status: 'supported',
+    required: ['must-cross', 'flipping-filter'],
+    unsupported: [],
+    unknown: [],
+  },
+  gridSizes: { status: 'supported', required: [], unsupported: [], unknown: [] },
+  topologyFamilies: { status: 'supported', required: [], unsupported: [], unknown: [] },
 });
 assert.deepEqual(assessGenerationMethodSupport('topology', {
   requiredMechanics: ['portal', 'must-pass'],
+  requiredGridSizes: [12, 18],
+  requiredTopologyFamilies: ['perfect-maze-diameter', 'open-region'],
 }), {
   status: 'unsupported',
-  requiredMechanics: ['portal', 'must-pass'],
-  unsupported: ['portal'],
-  unknown: [],
+  mechanics: {
+    status: 'unsupported',
+    required: ['portal', 'must-pass'],
+    unsupported: ['portal'],
+    unknown: [],
+  },
+  gridSizes: {
+    status: 'unknown',
+    required: ['12', '18'],
+    unsupported: [],
+    unknown: ['18'],
+  },
+  topologyFamilies: {
+    status: 'unsupported',
+    required: ['perfect-maze-diameter', 'open-region'],
+    unsupported: ['open-region'],
+    unknown: [],
+  },
 });
 assert.equal(assessGenerationMethodSupport('random', {
   requiredMechanics: ['portal'],
