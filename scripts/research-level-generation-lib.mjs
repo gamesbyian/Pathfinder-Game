@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { validateResearchEvaluationEvidenceRole } from './research-evaluation-evidence-role-lib.mjs';
 import { TOPOLOGY_GENERATION_SUPPORT, generationSupportForMechanics } from './stress/topology-generation-support-lib.mjs';
 
 export const GENERATION_METHODS = Object.freeze({
@@ -139,9 +140,7 @@ export function compileGeneratorInvocation({
   const descriptor = methodDescriptor(method);
   if (!Number.isFinite(masterSeed)) throw new Error('--master-seed must be numeric');
   if (blockId && !questionId) throw new Error('--block-id requires --question-id');
-  if (evidenceRole && !['development', 'confirmation', 'transfer'].includes(evidenceRole)) {
-    throw new Error('--evidence-role must be development, confirmation, or transfer');
-  }
+  if (evidenceRole) validateResearchEvaluationEvidenceRole(evidenceRole, { path: '--evidence-role' });
   if (append && questionId) throw new Error('--append cannot be combined with frozen question-bound generation');
   if (envelopeCaps && descriptor.unsupportedCommonFlags.includes('envelopeCaps')) {
     throw new Error(`--envelope-caps is not supported by ${method}`);
