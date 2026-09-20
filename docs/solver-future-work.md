@@ -1,9 +1,9 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) method.
+Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method.
 
-**Level-blindness constrains provenance, not specificity:** cold procedures may derive exact current-input facts; cross-parent recurrence is required only for reusable descriptor claims.
+Cold procedures may derive exact current-input facts; cross-parent recurrence is only required for reusable descriptor claims.
 
 ## Promoted out of future work
 
@@ -27,7 +27,7 @@ Eligible only after the active premise gate above is positive.
 
 ## Deferred plan closeouts
 
-- **Parity descendants:** scoring/routing, phase connectivity, pruning, repair, gate-exit and hint reuse reopen only through the gates in [the parity preflight](solver-parity-phase-capacity-preflight.md).
+- **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
 - **[Failure evidence](solver-failure-evidence-research-integration-plan.md):** P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE` (data-gated); P4A -> `WS2-CLASS3-DOSE-EXPOSURE`; P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P7 needs repeated compatible populations.
 - **[Search loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurring rich production; P9 needs explicit first-loss selection.
 - **[Population/family](solver-research-population-family-integration-plan.md):** after two pilots, run P7.
