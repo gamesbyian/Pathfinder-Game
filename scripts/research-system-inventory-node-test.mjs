@@ -12,6 +12,7 @@ assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-
 assert.ok(inventory.frontDoorInputs.liveQueue.some(row => row.workstreamId === 2));
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
 assert.ok(inventory.frontDoorInputs.unfinishedLifecycle.some(row => row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'));
+assert.ok(Array.isArray(inventory.frontDoorInputs.structuredCloseouts));
 assert.equal(inventory.integrationHealth.errorCount, 0, 'inventory should surface existing integration-audit errors');
 assert.ok(inventory.integrationHealth.semanticJoinCoverage.authoredAssetRelationships >= 1);
 assert.equal(inventory.integrationHealth.questionCount, inventory.currentState.questions);
@@ -66,6 +67,12 @@ assert.equal(inventory.documentation.statusClaimCounts.active,
     inventory.documentation.roles.filter(row => row.claimsActive).length);
 assert.equal(inventory.documentation.currentAuthorityClaimOutsideIndexCount,
     inventory.documentation.currentAuthorityClaimOutsideIndexPaths.length);
+assert.equal(inventory.documentation.structuredCloseoutCount,
+    inventory.documentation.roles.filter(row => row.closeout).length);
+assert.equal(inventory.documentation.closeoutParseErrorCount,
+    inventory.documentation.closeoutParseErrors.length);
+assert.equal(inventory.diagnostics.structuredCloseoutCount, inventory.documentation.structuredCloseoutCount);
+assert.equal(inventory.diagnostics.closeoutParseErrorCount, inventory.documentation.closeoutParseErrorCount);
 assert.ok(inventory.documentation.roles.some(row => row.path === 'docs/solver-optimization-workstreams.md' && row.role === 'canonical-current'));
 assert.ok(inventory.documentation.roles.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md' &&
