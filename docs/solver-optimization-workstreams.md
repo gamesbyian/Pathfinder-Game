@@ -9,7 +9,7 @@ Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [
 
 ## Data-audit guardrail
 
-C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive current-board facts but not consume historical identity/outcome/hints/capability-memory membership. Negatives close only the tested claim.
+C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts but not consume historical identity/outcome/hints/capability-memory membership. Negatives close only tested claims.
 
 ## Portfolio posture
 
