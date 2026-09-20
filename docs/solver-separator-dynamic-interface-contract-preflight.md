@@ -3,7 +3,7 @@
 > **Status:** bounded experiment contract.
 > **Authority:** current Lane-A descendant earned by `reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md`.
 > **Runtime effect:** none. This is an offline/exact representation falsifier.
-> **Progress:** C0 concluded mixed on 2026-09-19. C1 boundary kinematics concluded **mixed + repetition-supported** on 2026-09-20: 195/546 decisive rows remain in repeated signatures across 58 parents, with one same-parent 2-row LIVE/DEAD collision. The live gate is now a separately precommitted C2 global-accounting signature on the same frozen 581-case population (`reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md`).
+> **Progress:** C0 concluded mixed on 2026-09-19. The first C1 summary is superseded: compact labels were stored in the exact workflow's concatenated 20-shard row order but were initially joined to canonical case order. Projection schema v2 now seals both orders and the transform. Live gate: rerun the unchanged frozen C1 representation; C2 remains prospectively frozen but unreached (`reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md`).
 
 ## Question
 
