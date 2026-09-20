@@ -180,6 +180,10 @@ try {
   assert.equal(claim.scientificDisposition.status, 'supports-prespecified-routing-decision');
   assert.equal(claim.decisionDisposition.route, 'none');
   assert.equal(claim.populationScope.unitTopology.analysisUnit, 'parent');
+  assert.equal(claim.populationScope.selection, 'first-eligible-post-instrumentation-population-no-outcome-based-population-selection');
+  assert.equal(claim.scientificDisposition.primaryDiscriminator, 'cheapest-next-ws2-instrument-route');
+  assert.equal(claim.scientificDisposition.negativeResolution, 'route-none-does-not-imply-no-mechanism-exists');
+  assert.equal(claim.scientificDisposition.reproducibility.class, 'deterministic-under-identical-immutable-inputs');
   assert.equal(claim.scientificDisposition.adaptiveLineage.descendantEvidenceRole, 'development-until-new-precommitment');
   assert.match(claim.analysisIdentity, /^sha256:[0-9a-f]{64}$/u);
   assert.match(claim.claimIdentity, /^sha256:[0-9a-f]{64}$/u);
