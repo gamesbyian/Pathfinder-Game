@@ -25,6 +25,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'n
 import path from 'node:path';
 import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 import { buildPopulationIntegrity } from './solver-experiment-contract.mjs';
+import { validateTechniqueCensusPlanJoin } from './technique-census-result-lib.mjs';
 
 function findShardFiles(dir) {
     const out = [];
@@ -49,47 +50,8 @@ export function combine(shardOutputs, controlArm, plan = null) {
 
     let populationIntegrity;
     if (plan) {
-        const planById = new Map();
-        for (const cell of plan.cells) {
-            if (planById.has(cell.cellId)) throw new Error(`combine: duplicate cellId in authored plan: ${cell.cellId}`);
-            planById.set(cell.cellId, cell);
-        }
-        const expected = new Set(planById.keys());
-        const seen = new Map();
-        for (const r of results) seen.set(r.cellId, (seen.get(r.cellId) ?? 0) + 1);
-        const missing = [...expected].filter((id) => !seen.has(id));
-        const duplicated = [...seen.entries()].filter(([, count]) => count > 1).map(([id]) => id);
-        const unexpected = [...seen.keys()].filter((id) => !expected.has(id));
-        if (missing.length || duplicated.length || unexpected.length) {
-            throw new Error(`combine: incomplete/inconsistent coverage against the plan — `
-                + `${missing.length} missing, ${duplicated.length} duplicated, ${unexpected.length} unexpected cellIds. `
-                + `First few missing: ${missing.slice(0, 5).join(', ')}`);
-        }
-
-        const joinFields = [
-            'tier', 'corpus', 'levelPos', 'variantLabel', 'techniqueKeys',
-            'workBudget', 'perTechniqueWorkCap', 'perTechniqueWorkCapByKey', 'ablation',
-        ];
-        for (const row of results) {
-            const cell = planById.get(row.cellId);
-            for (const field of joinFields) {
-                const planned = cell[field] ?? null;
-                const observed = row[field] ?? null;
-                if (JSON.stringify(observed) !== JSON.stringify(planned)) {
-                    throw new Error(
-                        `combine: result ${row.cellId} disagrees with authored plan on ${field}: `
-                        + `observed=${JSON.stringify(observed)} planned=${JSON.stringify(planned)}`,
-                    );
-                }
-            }
-            if (cell.levelId != null && row.levelId != null && String(row.levelId) !== String(cell.levelId)) {
-                throw new Error(
-                    `combine: result ${row.cellId} disagrees with authored plan on levelId: `
-                    + `observed=${JSON.stringify(row.levelId)} planned=${JSON.stringify(cell.levelId)}`,
-                );
-            }
-        }
-        populationIntegrity = buildPopulationIntegrity([...expected], results.map(row => ({ ...row, id: row.cellId })));
+        const { expectedIds } = validateTechniqueCensusPlanJoin(plan, results, { requireComplete: true });
+        populationIntegrity = buildPopulationIntegrity(expectedIds, results.map(row => ({ ...row, id: row.cellId })));
     } else {
         // Observed rows describe what arrived, never what was intended. Without the authored plan
         // there is no authority from which to claim complete coverage.
