@@ -215,6 +215,18 @@ function workflowInventory(root) {
     }).sort((a, b) => a.workflow.localeCompare(b.workflow));
 }
 
+function retiredWorkflowInventory(root) {
+    const lifecyclePath = path.join(root, 'docs/solver-workflow-lifecycle.json');
+    if (!existsSync(lifecyclePath)) return [];
+    const lifecycle = JSON.parse(readFileSync(lifecyclePath, 'utf8'));
+    return (lifecycle.retiredWorkflows ?? []).map(row => ({
+        workflow: row.workflow,
+        reason: row.reason ?? null,
+        status: 'retired',
+        presentOnDisk: existsSync(path.join(root, '.github/workflows', row.workflow)),
+    })).sort((a, b) => a.workflow.localeCompare(b.workflow));
+}
+
 function relationInventory(model) {
     return Object.entries(RESEARCH_RELATION_CONTRACTS).map(([relation, contract]) => ({
         relation,
@@ -291,6 +303,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const currentAuthorityClaimOutsideIndex = documentRoles.filter(row => row.currentAuthorityClaimOutsideIndex);
     const relations = relationInventory(model);
     const workflows = workflowInventory(root);
+    const retiredWorkflows = retiredWorkflowInventory(root);
     const dependencies = sharedDependencies(root, commands);
     const contractOwners = dependencies.filter(row => row.contractFunctions.length > 0);
     const integrationAudit = auditResearchIntegration(root, { model });
@@ -312,6 +325,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         relations,
         commands,
         workflows,
+        retiredWorkflows,
         sharedImplementationDependencies: dependencies,
         contractOwnership: contractOwners,
         documentation: {
@@ -347,6 +361,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             structuredRelationCount: relations.filter(row => row.authorityKind === 'structured-source').length,
             maintainedWorkflowCount: workflows.filter(row => row.status === 'maintained').length,
             evidenceProducingWorkflowCount: workflows.filter(row => row.role === 'evidence-producing').length,
+            retiredWorkflowCount: retiredWorkflows.length,
+            retiredWorkflowReappearanceCount: retiredWorkflows.filter(row => row.presentOnDisk).length,
         },
     };
 }
@@ -364,6 +380,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             relations: inventory.relations,
             commands: inventory.commands,
             workflows: inventory.workflows,
+            retiredWorkflows: inventory.retiredWorkflows,
             sharedImplementationDependencies: inventory.sharedImplementationDependencies,
             contractOwnership: inventory.contractOwnership,
         };
