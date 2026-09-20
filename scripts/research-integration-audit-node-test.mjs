@@ -40,6 +40,64 @@ assert.ok(missingQueueQuestion.errors.some(error =>
     /workstream 2 references unknown research question WS2-NOT-A-REAL-QUESTION/u.test(error)),
 'stable queue question references must resolve through the question authority');
 
+const withConsumptionEvent = event => ({
+    ...prebuiltModel,
+    relations: {
+        ...prebuiltModel.relations,
+        researchBlocks: [
+            ...prebuiltModel.relations.researchBlocks,
+            {
+                blockId: 'AUDIT-BLOCK',
+                questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+                researchBlock: {
+                    parentIds: ['PARENT-1'],
+                    consumptionEvents: [event],
+                },
+            },
+        ],
+    },
+});
+
+const badConsumptionQuestion = auditResearchIntegration(process.cwd(), {
+    model: withConsumptionEvent({
+        questionId: 'WS2-NOT-A-REAL-QUESTION',
+        decisionRef: 'logical-decision-ref',
+        scope: { kind: 'block', id: 'AUDIT-BLOCK' },
+    }),
+});
+assert.ok(badConsumptionQuestion.errors.some(error =>
+    /consumptionEvents\[0\] references unknown question WS2-NOT-A-REAL-QUESTION/u.test(error)));
+
+const missingConsumptionDecision = auditResearchIntegration(process.cwd(), {
+    model: withConsumptionEvent({
+        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        decisionRef: 'reports/not-a-real-decision-report.md',
+        scope: { kind: 'block', id: 'AUDIT-BLOCK' },
+    }),
+});
+assert.ok(missingConsumptionDecision.errors.some(error =>
+    /consumptionEvents\[0\] references missing decisionRef reports\/not-a-real-decision-report\.md/u.test(error)));
+
+const badBlockScope = auditResearchIntegration(process.cwd(), {
+    model: withConsumptionEvent({
+        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        decisionRef: 'logical-decision-ref',
+        scope: { kind: 'block', id: 'OTHER-BLOCK' },
+    }),
+});
+assert.ok(badBlockScope.errors.some(error =>
+    /consumptionEvents\[0\] block scope names OTHER-BLOCK/u.test(error)));
+
+const badParentScope = auditResearchIntegration(process.cwd(), {
+    model: withConsumptionEvent({
+        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        decisionRef: 'logical-decision-ref',
+        scope: { kind: 'parent', id: 'PARENT-2' },
+    }),
+});
+assert.ok(badParentScope.errors.some(error =>
+    /consumptionEvents\[0\] parent scope names unknown parent PARENT-2/u.test(error)));
+
 
 const run = spawnSync(process.execPath, ['scripts/research-integration-audit.mjs'], {
     cwd: process.cwd(),
