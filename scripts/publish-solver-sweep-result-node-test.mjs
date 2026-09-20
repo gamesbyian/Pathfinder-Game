@@ -20,6 +20,13 @@ try {
     experiment: {
       workflowFamily: 'fixture-family', producer: 'fixture-producer', entrypoint: 'fixture.mjs',
       configurationHash: hashConfiguration({ budget: 1 }), resolvedSha: 'b'.repeat(40),
+      sourceRuns: ['fixture-acquisition-a', 'fixture-acquisition-b'],
+      reconciliationRun: {
+        kind: 'recombine-only',
+        sourceRuns: ['fixture-acquisition-a', 'fixture-acquisition-b'],
+        preservesExperimentIdentity: true,
+        acquisitionRecomputed: false,
+      },
     },
     researchQuestion: {
       questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
@@ -50,6 +57,9 @@ try {
   assert.equal(manifest.coverage.populationIntegrity.decisionValidComplete, true);
   assert.match(manifest.experiment.configurationHash, /^sha256:[0-9a-f]{64}$/);
   assert.equal(manifest.experiment.resolvedSha, 'b'.repeat(40));
+  assert.deepEqual(manifest.experiment.sourceRuns, ['fixture-acquisition-a', 'fixture-acquisition-b']);
+  assert.equal(manifest.experiment.reconciliationRun.kind, 'recombine-only');
+  assert.equal(manifest.experiment.reconciliationRun.acquisitionRecomputed, false);
   assert.equal(manifest.execution.levelBlind, true);
   assert.equal(manifest.limits.representation.kind, 'heterogeneous-by-corpus');
   assert.equal(manifest.researchQuestion.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
