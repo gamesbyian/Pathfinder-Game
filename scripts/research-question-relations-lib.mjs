@@ -113,6 +113,8 @@ export function validateResearchQuestionRegistry(registry) {
         }
     }
 
+    const questionById = new Map(questions.map(question => [question.id, question]));
+
     for (const [index, question] of questions.entries()) {
         for (const field of QUESTION_ID_RELATION_FIELDS) {
             const targets = question?.[field];
@@ -150,6 +152,21 @@ export function validateResearchQuestionRegistry(registry) {
                     }
                     seenConstraints.add(value);
                 }
+            }
+        }
+    }
+
+    for (const [index, question] of questions.entries()) {
+        for (const target of question.calibratedBy ?? []) {
+            if (!ids.has(target) || target === question.id) continue;
+            if (!(questionById.get(target)?.calibrates ?? []).includes(question.id)) {
+                errors.push(`questions[${index}].calibratedBy ${target} is missing reciprocal calibrates edge`);
+            }
+        }
+        for (const target of question.calibrates ?? []) {
+            if (!ids.has(target) || target === question.id) continue;
+            if (!(questionById.get(target)?.calibratedBy ?? []).includes(question.id)) {
+                errors.push(`questions[${index}].calibrates ${target} is missing reciprocal calibratedBy edge`);
             }
         }
     }
