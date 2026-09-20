@@ -666,16 +666,17 @@
       "id": "WS2-CLASS3-DOSE-EXPOSURE",
       "question": "Did the Class-3 residual receive enough exact-action work from its historically implicated techniques to support any negative capability inference?",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "concluded-positive",
       "aliases": [
         "Class-3 dose",
         "Class 3 exposure",
         "dose reconciliation"
       ],
       "answeredBy": [
-        "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md"
+        "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md",
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md"
       ],
-      "result": "Zero-compute prep is complete and acquisition is now coalesced with WS2 reconnaissance: the 23-parent exact-rescuer expectation map is the residual tranche of a frozen 53-parent shared production-shaped compact-response run, with 30 disjoint solved controls. The remaining evidence gap is execution of that one protocol-compatible acquisition and mechanical exact-rescuer dose classification.",
+      "result": "Resolved (2026-09-20) via the frozen 53-parent acquisition: 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative. Fixed a real actionKey-format matching bug in analyze-class3-dose-exposure.mjs first (frozen expectations use bare technique-census actionKeys; production attempts carry stage-prefixed + seedSalt-suffixed keys for the same action), which had produced a false 23/23 exposure-gap on the uncorrected first pass. Of the 20 censored: 16 (repair family, guidance=standard/must-turn-biased) hit a per-attempt deadline well below T1-isolated cost -- a genuinely new allocation-specific nomination distinct from reserve-starvation; 5 (admissible-order) hit the already-tracked WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION reserve fraction (cross-validated at a different total budget, not a new mechanism). The 3 exposed-and-negative rows (beam family) ran to real exhaustion near/above isolated cost and are genuine negatives.",
       "triggeredBy": [
         "WS2-CLASS123-CHEAP-HARVEST"
       ],
@@ -683,7 +684,7 @@
         "Do not treat Class-3 as exposed-and-failed or rerun broad capability work from atlas membership alone.",
         "A future producer must record exact-action participation/work dose prospectively under a comparable protocol. The standard compact failure-response document now preserves attempt/action/work/censoring evidence and is the preferred acquisition path; use the work-ladder reducer once those rows exist."
       ],
-      "reopensOn": "Dispatch the exact frozen 53-parent population in reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json under one production-shaped shared ladder, then analyze the 23 Class-3 parents with reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json and the existing Class-3 reducer.",
+      "reopensOn": "Design a bounded matched-work repair-family per-attempt-deadline allocation experiment (population, candidate deadline values, matched total work, earlier-stage loss controls) with its own precommitment before dispatch.",
       "premiseRefs": [
         "P123",
         "P206"
@@ -701,7 +702,8 @@
         "scripts/build-class3-dose-expectations.mjs",
         "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
         "reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md",
-        "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json"
+        "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md"
       ],
       "acquisitionNeed": "telemetry-or-economics"
     },
@@ -760,16 +762,17 @@
       "id": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
       "question": "What does protocol-compatible compact failure-response evidence say about the cheapest next WS2 discriminator: operational divergence/first-loss, rejection counterfactuals, a producer-consumer 2x2, or no expensive follow-on yet?",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "concluded-positive",
       "aliases": [
         "failure-response reconnaissance",
         "failure data reconnaissance",
         "post-work-ladder discriminator"
       ],
       "answeredBy": [
-        "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md"
+        "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md",
+        "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md"
       ],
-      "result": "Analysis/query machinery is ready and the missing acquisition is now frozen: one disjoint 53-parent production-shaped compact-response run combines 23 current Class-3 residual parents with 30 solved controls. No eligible post-instrumentation outcomes have been inspected yet. After dispatch, run the existing Stage-A contract before selecting first-loss, rejection-counterfactual, 2x2, allocation follow-up, or no treatment.",
+      "result": "Stage A concluded (2026-09-20): route allocation-specific-follow-up. Every late-ladder stage the residual population reaches shows 100% deadline-truncated outcomes (zero natural exhaustion). The admissible-order-fallback ~12.5M-node ceiling is identical in residual and solved-control rows (folds into the existing reserve-starvation question, no new claim). The repair-family per-attempt deadline is not explained by the same solved-control pattern (residual 0/55 solved vs solved-control 5/29 under the same ceiling) and is independently corroborated by WS2-CLASS3-DOSE-EXPOSUREs exact-action isolated-cost comparison. No rejection-counterfactual, first-loss, or 2x2 candidate was identified.",
       "triggeredBy": [
         "WS2-WORK-LADDER-ECONOMICS"
       ],
@@ -782,7 +785,8 @@
         "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md",
         "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json",
         "reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md",
-        "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json"
+        "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
+        "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md"
       ],
       "constrains": [
         "Use already-published standard compact response first; enable compact diagnostic observers only if automatic response cannot discriminate the next instrument.",
@@ -791,7 +795,7 @@
         "Before escalating from reconnaissance, classify evidence by purpose/applicability and inspect parent-level identity collision, novelty/saturation, and repeated-phenotype opportunity where the accumulated population supports those questions.",
         "If recurrence/phenotype analysis is not yet supported by repeated compatible populations, defer it under solver-future-work.md rather than manufacturing recurrence."
       ],
-      "reopensOn": "When the maintained producer emits one complete compact-response artifact for the exact frozen 53-parent population in reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json under one production-shaped protocol/solver ref, analyze it under reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md.",
+      "reopensOn": "Explicit workstream selection of the nominated repair-family allocation experiment, or a new reconnaissance pass if a future acquisition surfaces a different pattern.",
       "premiseRefs": [],
       "measurementOpportunities": [],
       "acquisitionNeed": "telemetry-or-economics"
