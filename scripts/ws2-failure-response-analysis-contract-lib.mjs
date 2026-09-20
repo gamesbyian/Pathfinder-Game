@@ -128,6 +128,9 @@ export function ws2FailureResponseAnalysisIdentity(analysis) {
       ...observation,
       inputs: undefined,
       filters,
+      rows: Array.isArray(observation.rows)
+        ? observation.rows.map(({ __sourceFile: _sourceFile, ...row }) => row)
+        : observation.rows,
     },
   };
   return `sha256:${createHash('sha256').update(JSON.stringify(stable(semanticCore))).digest('hex')}`;
