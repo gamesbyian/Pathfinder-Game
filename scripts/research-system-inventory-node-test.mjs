@@ -104,24 +104,24 @@ assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
     row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md'),
     'distributed-knowledge audit should participate in structured closeout indexing');
 assert.ok(Number.isInteger(inventory.documentation.legacyStatusBlockEvidenceCount));
-assert.equal(inventory.diagnostics.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
+assert.equal(inventory.documentation.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
     'every current workstream row should carry explicit execution state');
-assert.equal(inventory.diagnostics.structuredExperimentPromotionStateCount, inventory.relations
+assert.equal(inventory.documentation.structuredExperimentPromotionStateCount, inventory.relations
     .find(row => row.relation === 'experiments')?.rows ?? 0,
     'every default-off experiment row should carry explicit promotion state');
-assert.equal(inventory.diagnostics.deferredQuestionCount,
+assert.equal(inventory.documentation.deferredQuestionCount,
     inventory.frontDoorInputs.deferredReopenQuestions.length);
-assert.equal(inventory.diagnostics.authoredAcquisitionRelationCount,
+assert.equal(inventory.documentation.authoredAcquisitionRelationCount,
     inventory.currentState.authoredAcquisitionRelations);
-assert.equal(inventory.currentState.deferredQuestions, inventory.diagnostics.deferredQuestionCount);
+assert.equal(inventory.currentState.deferredQuestions, inventory.documentation.deferredQuestionCount);
 assert.equal(inventory.currentState.authoredAcquisitionRelations >= inventory.currentState.deferredQuestions, true,
     'every deferred question should be covered by an authored acquisition relation');
-assert.equal(inventory.diagnostics.promotionDecisionEvidenceRelationCount,
+assert.equal(inventory.documentation.promotionDecisionEvidenceRelationCount,
     inventory.currentState.promotionsWithDecisionEvidence);
 assert.ok(inventory.currentState.promotions > 0);
 assert.ok(inventory.currentState.promotionsWithDecisionEvidence > 0,
     'retained promoted mechanisms should expose decision-evidence relations where the record supports them');
-assert.equal(inventory.diagnostics.structuredSourceArtifactEvidenceCount,
+assert.equal(inventory.documentation.structuredSourceArtifactEvidenceCount,
     inventory.currentState.evidenceReportsWithStructuredSourceArtifacts);
 assert.equal(inventory.diagnostics.closeoutParseErrorCount, inventory.documentation.closeoutParseErrorCount);
 assert.ok(inventory.documentation.roles.some(row => row.path === 'docs/solver-optimization-workstreams.md' && row.role === 'canonical-current'));
