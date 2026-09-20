@@ -4,6 +4,7 @@ import { attemptIdentityTerms } from '../modules/solver/attempt-identity.mjs';
 import { SOLVER_STAGE_IDS, solverStageIdentityTerms } from '../modules/solver/stage-id-normalization.mjs';
 import { ROUTING_REGIMES, routingRegimeIdentityTerms } from '../modules/solver/routing-regime-normalization.mjs';
 import { parseResearchCloseoutCapsule } from './investigation-report-metadata.mjs';
+import { validateResearchRepositoryRef } from './research-repository-ref-lib.mjs';
 
 const REPORT_NAME = /^(\d{4}-\d{2}-\d{2})-(.+)\.md$/;
 const METADATA = /^# (.+)\r?\n\r?\n> \*\*Status:\*\* ([a-z-]+)\r?\n> \*\*Last evidence:\*\* (\d{4}-\d{2}-\d{2}) — (.+)\r?\n> \*\*Decision:\*\* (.+)\r?\n> \*\*Remaining gate:\*\* (.+)$/m;
@@ -286,6 +287,13 @@ export function buildResearchStatusIndex(root) {
             const decisionEvidenceRef = decisionEvidenceRaw && decisionEvidenceRaw !== '—'
                 ? String(decisionEvidenceRaw).replaceAll('`', '').trim()
                 : null;
+            if (decisionEvidenceRef) {
+                validateResearchRepositoryRef(decisionEvidenceRef, {
+                    root,
+                    requireFile: true,
+                    label: `${ledgerPath} decision evidence ref for ${mechanisms.join('+')}`,
+                });
+            }
             return {
                 promotionId: mechanisms.join('+'),
                 mechanisms,
