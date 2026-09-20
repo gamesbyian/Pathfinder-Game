@@ -82,5 +82,14 @@
     "descendantEvidenceRole": "development-until-new-precommitment",
     "consequence": "Any selected rejection, first-loss, allocation, or 2x2 descendant must freeze its own design before treatment outcomes and cannot treat the reconnaissance population as untouched confirmation."
   },
-  "treatmentFidelity": "not-applicable-routing-screen-no-treatment"
+  "treatmentFidelity": "not-applicable-routing-screen-no-treatment",
+  "independenceVector": {
+    "sampleData": "parent-clustered; repeated records/attempts within one parent are dependent",
+    "sourceConstruction": "not claimed by this routing screen",
+    "instrumentImplementation": "shared compact failure-response implementation",
+    "analysisMethod": "shared prespecified reducer",
+    "analystModel": "not claimed",
+    "framingContext": "shared current WS2 authorities and preflight",
+    "ontologyVocabulary": "shared Pathfinder failure-response vocabulary"
+  }
 }
