@@ -67,5 +67,27 @@
     "R03287",
     "R03291",
     "R03330"
-  ]
+  ],
+  "resolutionDesign": {
+    "liveRivals": [
+      "recurrent-within-total-budget-reserve-starvation",
+      "R00044-isolated-or-too-rare-for-repricing"
+    ],
+    "discriminatingObservable": "independent current-residual frequency of isolated default-profile solves above the 75M reserve and within the fixed 300M total-node envelope",
+    "requiredAxes": [
+      "eligibility",
+      "opportunity",
+      "participation",
+      "measurementSupport",
+      "coverage",
+      "censoring"
+    ],
+    "negativeInterpretationPolicy": "zero opportunities is a negative recurrence screen only when the full required observability envelope is satisfied; it does not establish absence of admissible-order capability",
+    "outcomeInterpretation": {
+      "zero": "close the first recurrence screen negative; do not spend reserve A/B compute from R00044 alone",
+      "one": "freeze one additional disjoint 40-parent sample",
+      "twoOrMore": "design the smallest matched-total-work reserve-fraction A/B",
+      "blocked": "recover the named observability deficit before applying the recurrence rule"
+    }
+  }
 }
