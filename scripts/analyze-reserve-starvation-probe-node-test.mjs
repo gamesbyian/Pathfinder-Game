@@ -49,6 +49,13 @@ try {
     assert.equal(negative.decisionReady, true);
     assert.equal(negative.opportunities, 0);
     assert.equal(negative.decision, 'close-first-recurrence-screen-negative');
+    assert.equal(negative.resolution.kind, 'pathfinder-research-resolution-envelope');
+    assert.equal(negative.resolution.resolutionStatus, 'resolution-ready');
+    assert.deepEqual(negative.resolution.requiredAxes, [
+        'eligibility', 'opportunity', 'participation', 'measurementSupport', 'coverage', 'censoring',
+    ]);
+    assert.equal(negative.resolution.axes.reach.status, 'not-required');
+    assert.match(negative.resolution.negativeInterpretationPolicy, /negative recurrence screen/u);
 
     const one = analyze(writeDoc('one.json', [
         row('A', 'solved', 100_000_000),
@@ -76,6 +83,9 @@ try {
     assert.equal(censored.decisionReady, false);
     assert.deepEqual(censored.population.abstentionIds, ['B']);
     assert.equal(censored.decision, 'recover-incomplete-or-censored');
+    assert.equal(censored.resolution.resolutionStatus, 'observability-blocked');
+    assert.ok(censored.resolution.blockers.some(row => row.axis === 'measurementSupport'));
+    assert.ok(censored.resolution.blockers.some(row => row.axis === 'censoring'));
 
     const unknownProtocol = analyze(writeDoc('unknown-protocol.json', [
         row('A', 'solved', 70_000_000),
@@ -83,6 +93,38 @@ try {
         row('C', 'exhaustedNegative', 55_000_000, { exhausted: true }),
     ], null));
     assert.equal(unknownProtocol.decisionReady, false);
+    assert.ok(unknownProtocol.resolution.blockers.some(row => row.axis === 'eligibility'));
+
+    const missingAction = analyze(writeDoc('missing-action.json', [
+        { ...row('A', 'solved', 70_000_000), attempts: [] },
+        row('B', 'nodeLimited', 300_000_000, { nodeCapped: true, nodeCeiling: 300_000_000 }),
+        row('C', 'exhaustedNegative', 55_000_000, { exhausted: true }),
+    ]));
+    assert.equal(missingAction.decisionReady, false);
+    assert.deepEqual(missingAction.population.abstentionIds, ['A']);
+    assert.equal(missingAction.bucketCounts['abstain-action-unknown'], 1);
+    assert.ok(missingAction.resolution.blockers.some(row => row.axis === 'participation'));
+
+    const unknownSolverFile = path.join(temp, 'unknown-solver.json');
+    fs.writeFileSync(unknownSolverFile, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'pathfinder-compact-failure-response',
+        protocolHash: 'p1',
+        solverRef: null,
+        records: [
+            row('A', 'solved', 70_000_000),
+            row('B', 'nodeLimited', 300_000_000, { nodeCapped: true, nodeCeiling: 300_000_000 }),
+            row('C', 'exhaustedNegative', 55_000_000, { exhausted: true }),
+        ],
+        summary: { observed: 3 },
+        populationIntegrity: null,
+        sourceFiles: [],
+        missingSourceFiles: [],
+        invalidSourceFiles: [],
+    }));
+    const unknownSolver = analyze(unknownSolverFile);
+    assert.equal(unknownSolver.decisionReady, false);
+    assert.ok(unknownSolver.resolution.blockers.some(row => row.axis === 'eligibility'));
 
     console.log('reserve starvation probe reducer tests passed');
 } finally {
