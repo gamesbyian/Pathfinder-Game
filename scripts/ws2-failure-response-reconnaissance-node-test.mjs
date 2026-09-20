@@ -98,6 +98,54 @@ try {
   assert.equal(JSON.parse(relocated.stdout).analysisIdentity, result.analysisIdentity,
     'scientific analysis identity must be invariant to local evidence file location');
 
+  const oneParentIntegrity = {
+    ...integrity,
+    expectedCount: 1,
+    observedCount: 1,
+    outcomes: { solved: 1 },
+  };
+  const producerA = {
+    ...eligibleDoc,
+    records: [{ ...eligibleDoc.records[0], producer: 'producer-family-a' }],
+    summary: { ...eligibleDoc.summary, observed: 1 },
+    populationIntegrity: oneParentIntegrity,
+  };
+  const producerB = {
+    ...eligibleDoc,
+    records: [{ ...eligibleDoc.records[1], producer: 'producer-family-b' }],
+    summary: { ...eligibleDoc.summary, observed: 1 },
+    populationIntegrity: { ...oneParentIntegrity, outcomes: { exhaustedNegative: 1 } },
+  };
+  const producerAPath = path.join(temp, 'producer-a.json');
+  const producerBPath = path.join(temp, 'producer-b.json');
+  writeFileSync(producerAPath, JSON.stringify(producerA));
+  writeFileSync(producerBPath, JSON.stringify(producerB));
+  const producerAB = spawnSync(process.execPath, [
+    'scripts/ws2-failure-response-reconnaissance.mjs',
+    `--in=${producerAPath},${producerBPath}`,
+    `--analysis-contract=${contractPath}`,
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  const producerBA = spawnSync(process.execPath, [
+    'scripts/ws2-failure-response-reconnaissance.mjs',
+    `--in=${producerBPath},${producerAPath}`,
+    `--analysis-contract=${contractPath}`,
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.equal(producerAB.status, 0, producerAB.stderr);
+  assert.equal(producerBA.status, 0, producerBA.stderr);
+  const producerABResult = JSON.parse(producerAB.stdout);
+  const producerBAResult = JSON.parse(producerBA.stdout);
+  assert.equal(producerABResult.analysisIdentity, producerBAResult.analysisIdentity,
+    'compatible producer document order must not change the semantic analysis identity');
+  assert.equal(producerABResult.scientificDisposition.status, 'eligible-for-prespecified-routing');
+  assert.equal(producerABResult.observation.summary.independentParents, 2);
+  assert.deepEqual(
+    new Set(producerABResult.observation.rows.map(row => row.producer)),
+    new Set(['producer-family-a', 'producer-family-b']),
+  );
+  assert.equal(producerABResult.scientificDisposition.independenceVector.instrumentImplementation,
+    'shared compact failure-response implementation',
+    'producer diversity is descriptive and must not become an implementation-independence claim');
+
   const routedAnalysisPath = path.join(temp, 'routed-analysis.json');
   const routed = spawnSync(process.execPath, [
     'scripts/ws2-failure-response-reconnaissance.mjs',
