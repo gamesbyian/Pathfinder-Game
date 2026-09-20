@@ -106,7 +106,7 @@ for (const row of rows) bucketCounts[row.bucket] = (bucketCounts[row.bucket] ?? 
 const abstentionIds = rows.filter(row => !row.decisionEligible).map(row => row.parentId).sort();
 const protocolKnown = typeof document.protocolHash === 'string' && document.protocolHash.length > 0;
 const solverKnown = typeof document.solverRef === 'string' && document.solverRef.length > 0;
-const decisionReady = protocolKnown
+const baseDecisionReady = protocolKnown
     && solverKnown
     && missingIds.length === 0
     && unexpectedIds.length === 0
@@ -115,12 +115,6 @@ const decisionReady = protocolKnown
     && rows.length === expectedIds.length;
 
 const opportunities = bucketCounts['reserve-starvation-opportunity'] ?? 0;
-let decision = 'recover-incomplete-or-censored';
-if (decisionReady) {
-    if (opportunities === 0) decision = 'close-first-recurrence-screen-negative';
-    else if (opportunities === 1) decision = 'freeze-additional-disjoint-40';
-    else decision = 'design-smallest-matched-total-work-reserve-ab';
-}
 
 const participationBlockers = rows
     .filter(row => ['abstain-action-unknown', 'abstain-action-mismatch'].includes(row.bucket))
@@ -201,6 +195,14 @@ const resolution = buildResearchResolutionEnvelope({
         expectedAction,
     },
 });
+
+const decisionReady = baseDecisionReady && resolution.resolutionStatus === 'resolution-ready';
+let decision = 'recover-incomplete-or-censored';
+if (decisionReady) {
+    if (opportunities === 0) decision = 'close-first-recurrence-screen-negative';
+    else if (opportunities === 1) decision = 'freeze-additional-disjoint-40';
+    else decision = 'design-smallest-matched-total-work-reserve-ab';
+}
 
 const result = {
     schemaVersion: 1,
