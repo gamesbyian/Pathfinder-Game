@@ -6,64 +6,123 @@
     {
       "id": "product-code-change",
       "description": "Ordinary product/code change before changed files are opened.",
-      "required": ["AGENTS.md", "docs/architecture.md"],
-      "optional": ["docs/testing.md", "DEVELOPER_REFERENCE.md"],
+      "required": [
+        "AGENTS.md",
+        "docs/architecture.md"
+      ],
+      "optional": [
+        "docs/testing.md",
+        "DEVELOPER_REFERENCE.md"
+      ],
       "warnBytes": 30000,
       "maxBytes": 45000
     },
     {
       "id": "periodic-repository-hygiene",
       "description": "Recurring entropy-control pass invoked by the periodic hygiene check plan.",
-      "required": ["AGENTS.md", "docs/periodic-repository-hygiene.md"],
-      "optional": ["docs/README.md", "docs/tooling-catalog.md", "reports/README.md", "scripts/README.md"],
+      "required": [
+        "AGENTS.md",
+        "docs/periodic-repository-hygiene.md"
+      ],
+      "optional": [
+        "docs/README.md",
+        "docs/tooling-catalog.md",
+        "reports/README.md",
+        "scripts/README.md"
+      ],
       "warnBytes": 38000,
       "maxBytes": 50000
     },
     {
       "id": "solver-implementation",
       "description": "Current solver implementation work before specialist implementation files.",
-      "required": ["AGENTS.md", "docs/solver-architecture.md", "docs/solver-level-blindness.md"],
-      "optional": ["docs/solver-correctness-hardening.md", "DEVELOPER_REFERENCE.md"],
+      "required": [
+        "AGENTS.md",
+        "docs/solver-architecture.md",
+        "docs/solver-level-blindness.md"
+      ],
+      "optional": [
+        "docs/solver-correctness-hardening.md",
+        "DEVELOPER_REFERENCE.md"
+      ],
       "warnBytes": 55000,
       "maxBytes": 80000
     },
     {
       "id": "solver-research",
       "description": "Default current-head solver research orientation before a specialist doc/report is opened.",
-      "required": ["AGENTS.md", "docs/solver-optimization-workstreams.md", "docs/solver-research-operating-model.md"],
-      "optional": ["docs/solver-research-data-assets.md", "docs/solver-research-post-naming-resumption.md"],
+      "required": [
+        "AGENTS.md",
+        "docs/solver-optimization-workstreams.md",
+        "docs/solver-research-operating-model.md"
+      ],
+      "optional": [
+        "docs/solver-research-data-assets.md",
+        "docs/solver-research-post-naming-resumption.md"
+      ],
       "warnBytes": 40000,
       "maxBytes": 55000
     },
     {
       "id": "solver-workflow-evidence-remediation",
       "description": "Historical/completed workflow-evidence remediation context; use only when auditing that completed program.",
-      "required": ["AGENTS.md", "docs/solver-workflow-evidence-remediation-plan.md", "docs/solver-workflow-remediation-implementation-handoff.md"],
-      "optional": ["docs/solver-evidence-integrity-index.schema.json", "docs/solver-research-operating-model.md", "docs/solver-evaluation-evidence.md", "docs/solver-budget-determinism.md", ".github/workflows/README.md"],
+      "required": [
+        "AGENTS.md",
+        "docs/solver-workflow-evidence-remediation-plan.md",
+        "docs/solver-workflow-remediation-implementation-handoff.md"
+      ],
+      "optional": [
+        "docs/solver-evidence-integrity-index.schema.json",
+        "docs/solver-research-operating-model.md",
+        "docs/solver-evaluation-evidence.md",
+        "docs/solver-budget-determinism.md",
+        ".github/workflows/README.md"
+      ],
       "warnBytes": 57000,
       "maxBytes": 82000
     },
     {
       "id": "solver-scheduler-research",
       "description": "Allocation/scheduler work after the workstream authority identifies Workstream 2 as relevant.",
-      "required": ["AGENTS.md", "docs/solver-optimization-workstreams.md", "docs/solver-research-operating-model.md", "docs/solver-scheduling-policy.md"],
-      "optional": ["docs/solver-budget-determinism.md", "docs/solver-research-data-assets.md"],
+      "required": [
+        "AGENTS.md",
+        "docs/solver-optimization-workstreams.md",
+        "docs/solver-scheduling-policy.md"
+      ],
+      "optional": [
+        "docs/solver-research-operating-model.md",
+        "docs/solver-budget-determinism.md",
+        "docs/solver-research-data-assets.md"
+      ],
       "warnBytes": 58000,
       "maxBytes": 75000
     },
     {
       "id": "prior-experiment-archaeology",
       "description": "Finding/interpreting old evidence before a matched report is opened.",
-      "required": ["AGENTS.md", "reports/README.md"],
-      "optional": ["docs/investigation-report-conventions.md", "docs/solver-optimization-workstreams.md"],
+      "required": [
+        "AGENTS.md",
+        "reports/README.md"
+      ],
+      "optional": [
+        "docs/investigation-report-conventions.md",
+        "docs/solver-optimization-workstreams.md"
+      ],
       "warnBytes": 38000,
       "maxBytes": 55000
     },
     {
       "id": "variant-family-research",
       "description": "Variant/family analysis before a selected family artifact/report is opened.",
-      "required": ["AGENTS.md", "docs/variant-level-research.md", "docs/solver-research-operating-model.md"],
-      "optional": ["docs/solver-research-data-assets.md", "DEVELOPER_REFERENCE.md"],
+      "required": [
+        "AGENTS.md",
+        "docs/variant-level-research.md",
+        "docs/solver-research-operating-model.md"
+      ],
+      "optional": [
+        "docs/solver-research-data-assets.md",
+        "DEVELOPER_REFERENCE.md"
+      ],
       "warnBytes": 60000,
       "maxBytes": 85000
     }
