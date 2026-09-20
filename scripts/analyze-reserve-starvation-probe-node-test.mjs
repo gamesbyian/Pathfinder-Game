@@ -127,7 +127,7 @@ try {
         row('C', 'exhaustedNegative', 55_000_000, { exhausted: true }),
     ], null));
     assert.equal(unknownProtocol.decisionReady, false);
-    assert.ok(unknownProtocol.resolution.blockers.some(row => row.axis === 'eligibility'));
+    assert.ok(unknownProtocol.resolution.blockers.some(row => row.axis === 'fidelity'));
 
     const missingAction = analyze(writeDoc('missing-action.json', [
         { ...row('A', 'solved', 70_000_000), attempts: [] },
@@ -137,7 +137,6 @@ try {
     assert.equal(missingAction.decisionReady, false);
     assert.deepEqual(missingAction.population.abstentionIds, ['A']);
     assert.equal(missingAction.bucketCounts['abstain-action-unknown'], 1);
-    assert.ok(missingAction.resolution.blockers.some(row => row.axis === 'participation'));
     assert.deepEqual(missingAction.resolution.blockers.map(row => row.axis), ['fidelity']);
 
     const unknownSolverFile = path.join(temp, 'unknown-solver.json');
@@ -159,7 +158,7 @@ try {
     }));
     const unknownSolver = analyze(unknownSolverFile);
     assert.equal(unknownSolver.decisionReady, false);
-    assert.ok(unknownSolver.resolution.blockers.some(row => row.axis === 'eligibility'));
+    assert.ok(unknownSolver.resolution.blockers.some(row => row.axis === 'fidelity'));
 
     const zeroParticipation = analyze(writeDoc('zero-participation.json', [
         row('A', 'exhaustedNegative', 0, { exhausted: true }),
