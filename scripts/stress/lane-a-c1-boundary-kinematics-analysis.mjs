@@ -16,6 +16,7 @@ const arg = (name, fallback = null) => {
 
 const inputPath = arg('in');
 const casesPath = arg('cases', 'reports/stress/lane-a-c0-signature-collision-cases-2026-09-19.json');
+const geometryPath = arg('geometry', 'reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json');
 const outPath = arg('out', null);
 if (!inputPath) {
     throw new Error('Usage: lane-a-c1-boundary-kinematics-analysis.mjs --in=<combined-reference.json> [--cases=<cases.json>] [--out=<analysis.json>]');
@@ -23,6 +24,8 @@ if (!inputPath) {
 
 const input = JSON.parse(readFileSync(path.resolve(ROOT, inputPath), 'utf8'));
 const casesDocument = JSON.parse(readFileSync(path.resolve(ROOT, casesPath), 'utf8'));
+const geometryDocument = JSON.parse(readFileSync(path.resolve(ROOT, geometryPath), 'utf8'));
+const geometryByLevel = new Map((geometryDocument.levels ?? []).map(row => [String(row.id), row]));
 if (!Array.isArray(casesDocument.cases) || !casesDocument.cases.length) throw new Error(`no cases found in ${casesPath}`);
 const caseById = new Map(casesDocument.cases.map(row => [String(row.id), row]));
 if (caseById.size !== casesDocument.cases.length) throw new Error(`duplicate case id in ${casesPath}`);
@@ -80,15 +83,21 @@ const enriched = rows.map(row => {
     const level = levelById.get(String(row.levelId));
     if (!level) throw new Error(`missing corpus level ${row.levelId}`);
     const prefix = row.prefix ?? frozenCase.prefix;
+    const geometryLevel = geometryByLevel.get(String(row.levelId));
+    if (!geometryLevel) throw new Error(`missing Lane-A geometry level ${row.levelId}`);
+    const interfaceGeometry = (geometryLevel.interfaces ?? []).find(candidate =>
+        candidate.target === frozenCase.source?.interfaceTarget
+        && Number(candidate.targetKey) === Number(frozenCase.source?.interfaceTargetKey));
+    if (!interfaceGeometry) throw new Error(`missing Lane-A interface geometry for ${row.caseId}`);
     const kinematics = laneABoundaryKinematics({
         levelId: row.levelId,
-        cutCells: frozenCase.source?.cutCells,
+        interfaceGeometry,
         prefix,
         level,
     });
     const signature = laneABoundaryKinematicsSignature({
         levelId: row.levelId,
-        cutCells: frozenCase.source?.cutCells,
+        interfaceGeometry,
         prefix,
         level,
     });
@@ -113,7 +122,8 @@ const summary = summarizeSignatureCollisions(decisive, {
 const multiParentIds = new Set(summary.groups
     .filter(group => group.rows > 1)
     .flatMap(group => group.members.map(member => String(member.independentUnit))));
-const boundaryVisitCounts = decisive.map(row => row.c1BoundaryKinematics.boundaryVisitCount);
+const crossingEventCounts = decisive.map(row => row.c1BoundaryKinematics.crossingEvents.length);
+const cutVisitCounts = decisive.map(row => row.c1BoundaryKinematics.cutIncidence.reduce((sum, cell) => sum + cell.visits.length, 0));
 const prefixLengths = decisive.map(row => row.prefix?.length ?? caseFor(row).prefix.length);
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 
@@ -124,18 +134,19 @@ const output = {
         exactLabels: inputPath,
         frozenCases: casesPath,
         corpus: corpusPath,
+        geometry: geometryPath,
         labelReuse: 'reuses frozen C0 exact labels; no new reference/solver queries',
     },
     signatureDefinition: {
         contract: 'C1 boundary kinematics',
-        fields: 'C0 level+sorted cut cells plus per-cut-cell used state and unordered local entry/exit tokens N/S/E/W/portal/start/end',
-        portalSemantics: 'portal transitions are identified from the level portal map before cardinal geometry',
+        fields: 'C0 cut identity + endpoint side, plus unordered side-to-side crossing-event shapes, cut-cell local incidence, and crossing-relevant portal-pair use state',
+        portalSemantics: 'portal transitions are identified from the level portal map before cardinal geometry; only portal pairs spanning interface regions enter C1 state',
         omittedByDesign: [
-            'global crossing temporal order',
+            'global temporal ordering among crossing events',
             'full prefix history',
             'length/intersection accounting',
             'outstanding obligation accounting',
-            'mutable mechanic runtime state outside boundary transition kind',
+            'mutable mechanic runtime state outside crossing-relevant portal-pair use',
             'topology/path-history token',
         ],
     },
@@ -146,10 +157,15 @@ const output = {
     alarmedRows: alarmed.length,
     independentParentsAcrossMultiMemberGroups: multiParentIds.size,
     repeatedRowFraction: decisive.length ? summary.rowsInMultiMemberGroups / decisive.length : 0,
-    boundaryVisitCount: {
-        min: boundaryVisitCounts.length ? Math.min(...boundaryVisitCounts) : 0,
-        max: boundaryVisitCounts.length ? Math.max(...boundaryVisitCounts) : 0,
-        mean: mean(boundaryVisitCounts),
+    crossingEventCount: {
+        min: crossingEventCounts.length ? Math.min(...crossingEventCounts) : 0,
+        max: crossingEventCounts.length ? Math.max(...crossingEventCounts) : 0,
+        mean: mean(crossingEventCounts),
+    },
+    cutVisitCount: {
+        min: cutVisitCounts.length ? Math.min(...cutVisitCounts) : 0,
+        max: cutVisitCounts.length ? Math.max(...cutVisitCounts) : 0,
+        mean: mean(cutVisitCounts),
     },
     prefixLength: {
         min: prefixLengths.length ? Math.min(...prefixLengths) : 0,
@@ -173,7 +189,8 @@ const concise = {
     rowsInMixedGroups: output.rowsInMixedGroups,
     mixedGroupDetail: output.groups.filter(group => group.mixed),
     signatureBytes: output.signatureBytes,
-    boundaryVisitCount: output.boundaryVisitCount,
+    crossingEventCount: output.crossingEventCount,
+    cutVisitCount: output.cutVisitCount,
     prefixLength: output.prefixLength,
 };
 console.log(JSON.stringify(concise, null, 2));
