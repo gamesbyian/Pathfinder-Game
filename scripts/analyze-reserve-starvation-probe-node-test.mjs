@@ -101,8 +101,7 @@ try {
     assert.deepEqual(censored.population.abstentionIds, ['B']);
     assert.equal(censored.decision, 'recover-incomplete-or-censored');
     assert.equal(censored.resolution.resolutionStatus, 'observability-blocked');
-    assert.ok(censored.resolution.blockers.some(row => row.axis === 'measurementSupport'));
-    assert.ok(censored.resolution.blockers.some(row => row.axis === 'censoring'));
+    assert.deepEqual(censored.resolution.blockers.map(row => row.axis), ['censoring']);
     assert.ok(censored.resolution.blockers.some(row =>
         row.axis === 'censoring' && row.remediation === 'work-envelope-or-recovery'));
 
@@ -123,6 +122,7 @@ try {
     assert.deepEqual(missingAction.population.abstentionIds, ['A']);
     assert.equal(missingAction.bucketCounts['abstain-action-unknown'], 1);
     assert.ok(missingAction.resolution.blockers.some(row => row.axis === 'participation'));
+    assert.deepEqual(missingAction.resolution.blockers.map(row => row.axis), ['participation']);
 
     const unknownSolverFile = path.join(temp, 'unknown-solver.json');
     fs.writeFileSync(unknownSolverFile, JSON.stringify({
