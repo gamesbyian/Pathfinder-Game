@@ -14,9 +14,8 @@ const expected = new Map([
   ['actions/deploy-pages', 'v5'],
 ]);
 
-// These two maintained workflows predate the shared native-v3 writer and still need a semantic
-// migration rather than a blind mechanical rewrite. Keep the debt explicit and prevent new manual
-// contract writers from appearing elsewhere.
+// Explicit debt escape hatch only. Keep empty unless a maintained workflow genuinely cannot use a
+// shared/native contract constructor yet; new direct writers are rejected below.
 const LEGACY_MANUAL_EXPERIMENT_CONTRACT_WORKFLOWS = new Set();
 
 const root = process.cwd();
