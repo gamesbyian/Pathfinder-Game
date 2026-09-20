@@ -7,6 +7,7 @@ import { hashResearchPopulation as hashPopulation } from './research-population-
 import {
   EXPERIMENT_RESULT_KIND,
   EXPERIMENT_SCHEMA_VERSION,
+  decisionBearingExperimentResultIssues,
   decisionContractIssues,
   declaredDecisionContractIssues,
   isImmutableCommitSha,
@@ -266,8 +267,6 @@ if (failureResponseDocument) {
   failureResponseEntry = { role: 'compact-failure-response', source: failureResponseFile, published, missing: false };
   entries.push(failureResponseEntry);
 }
-const outcomeDecisionBearing = researchOutcome && ['completed-positive', 'completed-negative'].includes(researchOutcome.outcome);
-const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
 const contract = {
   experiment: {
     experimentId: declaredContract?.experiment?.experimentId ?? process.env.GITHUB_RUN_ID ?? null,
@@ -346,8 +345,6 @@ const contractIssues = declaredContract
       ...sourceIdentityIssue,
     ])]
   : ['missing declared experiment contract'];
-const contractDecisionEligible = contractIssues.length === 0;
-
 const manifest = {
   schemaVersion: EXPERIMENT_SCHEMA_VERSION,
   kind: EXPERIMENT_RESULT_KIND,
@@ -367,7 +364,7 @@ const manifest = {
   populationIntegrity,
   populationIdentityHash: populationIdentity,
   decisionContractIssues: contractIssues,
-  decisionBearing: Boolean(contractDecisionEligible && integrityDecisionValid && !populationIntegrity?.inferredExpectedPopulation && outcomeDecisionBearing),
+  decisionBearing: false,
   failureEvidence: {
     schemaVersion: FAILURE_RESPONSE_SCHEMA_VERSION,
     disposition: contract.sideEffects.telemetry,
@@ -383,6 +380,7 @@ const manifest = {
   researchOutcome,
   entries,
 };
+manifest.decisionBearing = decisionBearingExperimentResultIssues(manifest).length === 0;
 fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 
 if (provenanceOut) {
