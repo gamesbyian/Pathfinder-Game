@@ -101,6 +101,19 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   }
   if ('framingContext' in (contract.independenceVector ?? {})) issues.push('independenceVector.framingContext');
   if (!Array.isArray(contract.liveRivals) || contract.liveRivals.length < 2) issues.push('liveRivals');
+  if (typeof contract.prospectiveExpectation?.expectedShape !== 'string'
+      || !contract.prospectiveExpectation.expectedShape.trim()) {
+    issues.push('prospectiveExpectation.expectedShape');
+  }
+  if (!Array.isArray(contract.prospectiveExpectation?.surpriseConditions)
+      || contract.prospectiveExpectation.surpriseConditions.length === 0
+      || contract.prospectiveExpectation.surpriseConditions.some(value => typeof value !== 'string' || !value.trim())) {
+    issues.push('prospectiveExpectation.surpriseConditions');
+  }
+  if (typeof contract.prospectiveExpectation?.anomalyPolicy !== 'string'
+      || !contract.prospectiveExpectation.anomalyPolicy.trim()) {
+    issues.push('prospectiveExpectation.anomalyPolicy');
+  }
   if (contract.treatmentFidelity !== 'not-applicable-routing-screen-no-treatment') issues.push('treatmentFidelity');
   if (!Array.isArray(contract.primaryQuantities) || contract.primaryQuantities.length === 0) issues.push('primaryQuantities');
   if (!contract.stopRule || typeof contract.stopRule !== 'string') issues.push('stopRule');
