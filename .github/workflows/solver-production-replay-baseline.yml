@@ -1,5 +1,4 @@
-# Produces a FRESH history-aware production replay baseline over BOTH stress corpora and diffs it against the
-# baseline currently on main, so a batch of solver changes can be judged corpus-wide in one run.
+# Produces a history-aware replay baseline over both stress corpora and diffs it against main.
 #
 # How this differs from the two workflows next to it:
 #   solver-stress-refresh.yml          20 shards, ms-budgeted, refreshes the official baselines.
