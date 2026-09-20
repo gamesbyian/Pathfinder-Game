@@ -1,17 +1,4 @@
-import { createHash } from 'node:crypto';
-
-function stable(value) {
-  if (Array.isArray(value)) return value.map(stable);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, child]) => [key, stable(child)]));
-  }
-  return value;
-}
-
-export function researchSemanticHash(value) {
-  return `sha256:${createHash('sha256').update(JSON.stringify(stable(value))).digest('hex')}`;
-}
+import { researchSemanticHash } from './research-semantic-identity-lib.mjs';
 
 function nonEmptyString(value, field) {
   if (typeof value !== 'string' || !value.trim()) throw new Error(`${field} must be a non-empty string`);
