@@ -18,6 +18,7 @@
     "research:integration-audit": "node scripts/research-integration-audit.mjs",
     "research:system-inventory": "node scripts/research-system-inventory.mjs",
     "research:ws2-failure-response-reconnaissance": "node scripts/ws2-failure-response-reconnaissance.mjs",
+    "research:ws2-failure-response-claim": "node scripts/ws2-failure-response-claim.mjs",
     "research:experiment-result-contract-audit": "node scripts/experiment-result-contract-audit.mjs",
     "check:research-integration": "node scripts/research-integration-audit.mjs",
     "research:link-enrichment": "node scripts/research-enrichment-link.mjs",
