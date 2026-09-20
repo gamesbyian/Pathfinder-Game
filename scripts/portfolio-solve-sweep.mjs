@@ -596,12 +596,15 @@ const attemptCacheInputSha256 = attemptCachePath && existsSync(attemptCachePath)
 // Scientific execution identity comes from the resolved behavior handed to the solver plus the
 // history-dependent transforms that solveOptsFor() adds per level. Output-only controls such as
 // workers, resume/checkpoint paths, hint persistence and report paths stay out of this object.
+const effectiveSolveOpts = solveOpts.legacyLatencyPortfolioExperiment
+    ? { ...solveOpts, legacyLatencyPortfolioExperiment: serializePortfolioExperiment(solveOpts.legacyLatencyPortfolioExperiment) }
+    : solveOpts;
 const effectiveConfig = {
     corpusSha256,
     levelBlind: false,
     engine: racePoolSize > 0 ? 'raced' : 'sequential',
     ...(racePoolSize > 0 ? { racePoolSize } : {}),
-    ...solveOpts,
+    ...effectiveSolveOpts,
     ...(adaptiveBudget ? {
         adaptiveBudget: { solvedBudgetMult, minNodeBudget, unsolvedNodeBudget: unsolvedNodeBudget ?? null, baselineSha256 },
     } : {}),
