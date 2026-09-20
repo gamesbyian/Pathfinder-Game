@@ -24,11 +24,11 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-- **Classes 1-3:** class 1 has no menu headroom. **Class 3 dose RESOLVED (2026-09-20): 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative.** Every known rescuer genuinely ran; 16/23 (repair family) censored by a per-attempt deadline well below T1-isolated cost, 5/23 (admissible-order) by the already-tracked reserve fraction, 3/23 (beam family) ran to real exhaustion. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md) · [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
+- **Classes 1-3:** class 1 has no menu headroom. **Class 3 dose RESOLVED:** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative; repair-family deadline censoring and admissible-order reserve starvation route to separate follow-ups. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 - **Class 5:** topology remains research-only; F3 population 14 pairs/7 parents. No raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 - **Card-E:** 17/156 reconstructable-unexposed; both tested descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
-- **Post-topology:** H1 vocabulary closed; DEAD-core size-1 clean negative on the fresh matched population; H3/H2 negative; behavioral quotient mixed/capability-memory only. H3 allocation-value remains positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md) · [`sim`](../reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md)
+- **Post-topology:** H1 vocabulary and DEAD-core size-1 are closed; H3/H2 are negative; behavioral quotient remains research-only. H3 allocation-value is positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md)
 
 ### Premise-acquisition lanes
 
@@ -38,7 +38,7 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
-- **Sibling asset: HANDOFF CLOSED.** 75 DEAD/0 alarms; naive and single-pick found no LIVE, multi-pick 25 draws/frontier found 2/25 referee-verified LIVE, exposing sampling limitation. [`result`](../reports/2026-09-17-production-search-sibling-construction-result-001.md)
+- **Sibling asset: HANDOFF CLOSED.** 75 DEAD/0 alarms; multi-pick found 2/25 referee-verified LIVE after naive/single-pick found none, exposing a sampling limitation. [`result`](../reports/2026-09-17-production-search-sibling-construction-result-001.md)
 - **DEAD-core size-1: CLEAN NEGATIVE.** 215 queries on 23 matched DEAD plus 2 held-out LIVE: 0 cores, 0 alarms; size-2 unjustified. [`result`](../reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md)
 
 #### Lane C — solve-local typed knowledge reuse
@@ -50,8 +50,8 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 1. **D1: premise positive, tested ranking consumer closed.** Independent production slice: 24 culls / 120 candidates / 1,960 queries / 8 parents, 84% definitive, **0 retention disagreements**. Reopen only at a materially different seam/population. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
-2. **Constrained-event feasibility: NARROWED POSITIVE.** H1 re-analysis: DEAD infeasibility trivial; LIVE states show within-state commitment viability, not a LIVE/DEAD classifier. [`result`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md)
-3. **Residual-interface commutativity: POSITIVE, NARROW SUPPORT.** 12,277 splice pairs: 46.6% legal pooled; 0% flipper-bearing, but support is 3 levels and not explained by segment-flipper contact. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md) · [`correction`](../reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md)
+2. **Constrained-event feasibility: NARROWED POSITIVE.** DEAD infeasibility is trivial; LIVE states show within-state commitment viability, not a LIVE/DEAD classifier. [`result`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md)
+3. **Residual-interface commutativity: POSITIVE, NARROW SUPPORT.** 12,277 splice pairs give 46.6% legal pooled support across only 3 levels; flipper-bearing support remains 0%. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md)
 
 #### Lane E — dependency-defined causal revision
 
@@ -76,12 +76,12 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 ### Post-mining premise-map handoff closeout
 
-Frozen-map mining is complete; P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed: A's tested compact-interface ladder is closed negative at C2, D1's ranking consumer is closed negative, F3 has no compact decision-bearing consumer. Dated reports own chronology; no shared runtime substrate or treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
+Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: A closes at C2, D1's ranking consumer is negative, and F3 has no compact decision-bearing consumer. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
 **Current WS2 gate:** HARVEST adds the repair node-cap experiment seam, then designs the matched-work A/B; admissible-order repricing is independently nominated by 2/40. ACQUISITION runs the 3-row beam freshness gate, then broadens first-loss demand sampling outside capability-selected Class 3. [`class3`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [`reserve`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) · [`invention`](solver-capability-invention-program.md)
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed. Do not restart the completed structural-response ladder. **H3 remaining-length ordering: INDEPENDENT TRANSFER CONFIRMED (2026-09-20).** Ascending-length order clears 83.3% (10/12) of achievable rescues at 20% shared budget on a disjoint 175-row population (vs the 50% confirmation bar), descending order 0/12 below full budget on every tier. The prespecified transfer requirement is satisfied; this nominates, but does not itself authorize, a bounded matched-work production consumer pilot. [`transfer result`](../reports/2026-09-20-h3-independent-transfer-result-001.md)
+**State:** SUPPORTING / NO ACTIVE SELECTOR GATE. H3 remaining-length ordering independently transferred: 10/12 achievable rescues at 20% shared budget, nominating a bounded matched-work production consumer pilot. [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md)
 
 ## Workstream state
 
