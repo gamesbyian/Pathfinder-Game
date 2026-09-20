@@ -80,6 +80,8 @@ writeFileSync(path.join(root, 'reports/2026-08-21-example.md'), `# Example inves
 > **Inference scope:** fixture-only
 
 Authority: [topic](../docs/topic.md). Artifact: \`logs/example/run.json\`.
+
+${exampleCloseout}
 `);
 writeFileSync(path.join(root, 'reports/2026-08-22-legacy-metadata.md'), `# Legacy structured-status report
 
