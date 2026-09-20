@@ -242,6 +242,31 @@ if (optInStart < 0 || optInEnd < 0) {
   }
 }
 
+// Workstream execution state is a control-plane fact. Keep the rich State/context prose, but
+// require a small explicit token so research tooling never has to infer queue state from adjectives.
+const workstreamsSource = readFileSync(resolve(ROOT, 'docs/solver-optimization-workstreams.md'), 'utf8');
+const workstreamStateStart = workstreamsSource.indexOf('## Workstream state');
+const workstreamStateEnd = workstreamStateStart < 0 ? -1 : workstreamsSource.indexOf('## Standing research rules', workstreamStateStart);
+const workstreamStateSection = workstreamStateStart >= 0
+  ? workstreamsSource.slice(workstreamStateStart, workstreamStateEnd >= 0 ? workstreamStateEnd : undefined)
+  : '';
+const allowedWorkstreamExecutionStates = new Set([
+  'active', 'supporting', 'method-complete', 'subsumed', 'closed', 'on-demand',
+]);
+const workstreamRows = [...workstreamStateSection.matchAll(
+  /^\| ([^|]+?) \| ([^|]+?) \| \`([a-z-]+)\` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|$/gmu,
+)];
+if (workstreamRows.length === 0) {
+  failures.push('docs/solver-optimization-workstreams.md: missing structured Workstream state rows with explicit execution state');
+}
+for (const row of workstreamRows) {
+  const id = row[1].trim();
+  const executionState = row[3];
+  if (!allowedWorkstreamExecutionStates.has(executionState)) {
+    failures.push(`docs/solver-optimization-workstreams.md: unknown execution state ${executionState} for workstream ${id}`);
+  }
+}
+
 const workflowDir = resolve(ROOT, '.github/workflows');
 const workflowIndex = readFileSync(resolve(workflowDir, 'README.md'), 'utf8');
 for (const name of readdirSync(workflowDir).filter((name) => /\.ya?ml$/i.test(name)).sort()) {
