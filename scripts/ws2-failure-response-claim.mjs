@@ -18,5 +18,6 @@ process.stdout.write(JSON.stringify({
   out: outPath,
   questionId: capsule.questionId,
   analysisIdentity: capsule.analysisIdentity,
+  claimIdentity: capsule.claimIdentity,
   route: capsule.decisionDisposition.route,
 }, null, 2) + '\n');
