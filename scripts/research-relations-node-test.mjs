@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -196,6 +196,17 @@ assert.equal(real.relations.premiseEdges.length, 184);
 assert.ok(real.relations.premises.some(row => row.premiseId === 'P204'));
 assert.ok(real.relations.premiseEdges.some(row => row.from === 'P204' && row.to === 'P183'));
 assert.ok(Array.isArray(real.relations.durableEvidence));
+for (const bundle of real.relations.durableEvidence) {
+    const source = JSON.parse(readFileSync(bundle.bundlePath, 'utf8'));
+    assert.ok(source.manifestStoredPath || (source.files ?? []).some(file => file.source === 'manifest.json'),
+        'durable evidence relation must derive manifest membership from an authored bundle edge');
+    assert.equal(
+        bundle.manifestPath,
+        path.join(path.dirname(bundle.bundlePath), source.manifestStoredPath ?? source.files.find(file => file.source === 'manifest.json').stored)
+            .split(path.sep).join('/'),
+        'durable evidence manifest relation must follow the bundle edge, not assume a sibling filename',
+    );
+}
 assert.ok(real.relations.assets.some(row => row.id === 'experiment-manifests'));
 assert.deepEqual(
     exactPathIntegrityRecords(
