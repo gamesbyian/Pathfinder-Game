@@ -145,7 +145,7 @@ export function auditExperimentResultDeclaredShape(root = process.cwd()) {
     for (const manifestPath of manifests) {
         const document = JSON.parse(readFileSync(path.join(root, manifestPath), 'utf8'));
         if (document?.schemaVersion !== 3 || document?.kind !== 'pathfinder-solver-experiment-result') continue;
-        const issues = declaredShapeIssues(schema, document, '
+        const issues = declaredShapeIssues(schema, document, '$', schema);
         results.push({ manifestPath, issueCount: issues.length, issues });
     }
     return {
@@ -154,17 +154,6 @@ export function auditExperimentResultDeclaredShape(root = process.cwd()) {
         artifactCount: results.length,
         schemaCoverageIssueCount: coverageIssues.length,
         schemaCoverageIssues: coverageIssues,
-        mismatchCount: results.filter(row => row.issueCount > 0).length,
-        results,
-    };
-}
-, schema);
-        results.push({ manifestPath, issueCount: issues.length, issues });
-    }
-    return {
-        schemaVersion: 1,
-        declaredSchema: schemaPath,
-        artifactCount: results.length,
         mismatchCount: results.filter(row => row.issueCount > 0).length,
         results,
     };
