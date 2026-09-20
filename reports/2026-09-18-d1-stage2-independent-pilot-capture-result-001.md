@@ -19,6 +19,21 @@
 
 The D1 gate was the top of `docs/solver-optimization-workstreams.md`'s current execution priority, and its supporting infrastructure (production-orchestration observer bridge, capture/annotate scripts, research-block lineage) had been merged (#1880, #1867-adjacent work) but **never actually executed** — no Stage 1/2 result report existed. This report executes it as far as current tooling economically allows and documents precisely where it stops.
 
+## Independence dimensions
+
+“Independent confirmation” in this report refers specifically to the **sample/parent selection dimension**: the 8 Stage-2 parents exclude the three D1 development parents and were frozen by seeded sampling before D1 outcomes.
+
+Other dimensions are intentionally common-mode:
+
+- source construction: shared Corpus-2 / current Class-5 development laboratory;
+- decision seam: the same production beam-retention seam D1 is intended to diagnose;
+- instrument implementation: shared Pathfinder capture/adaptation code plus the same CP-SAT reference implementation;
+- analysis method: the same prespecified D1 candidate/revisit classification and reconciliation code;
+- ontology/framing: shared D1 future-intersection-commitment vocabulary and current WS2 authority;
+- critical code: candidate eligibility, exact-query conversion and reconciliation all share repository code with the development line.
+
+Thus this is strong independent-parent confirmation of **recurrence at the tested production seam**, not an independently implemented or cross-distribution replication. The zero-disagreement conclusion should not be described as receiving independent support along those other axes.
+
 ## Stage 1: development canary (production-orchestration boundary)
 
 Ran `solver:capture-d1-decisions -- --levels=R03147 --execution-boundary=production-orchestration --evidence-role=development` at node budgets 100K, 1M, and 5M (development material only, per the preflight):
