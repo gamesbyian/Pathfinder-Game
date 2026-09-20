@@ -45,6 +45,10 @@ export function combinePopulationIntegrity(inputs, { kind = 'multi-population', 
     expectedIds,
     canonicalExpectedIds,
     identityCodec: 'json-tuple-v1',
+    identityFields: {
+      canonical: 'canonicalExpectedIds/canonicalDuplicateIds/canonicalUnexpectedIds/canonicalMissingIds',
+      legacyDisplayOnly: 'expectedIds/duplicateIds/unexpectedIds/missingIds',
+    },
     outcomes: Object.fromEntries(outcomeKeys.map(key => [key, inputs.reduce((sum, { integrity }) => sum + (integrity.outcomes[key] ?? 0), 0)])),
     populationIdentityHash: hashPopulation({ kind, identityBasis, identityCodec: 'json-tuple-v1', identities: canonicalExpectedIds }).identityHash,
     components: inputs.map(({ label, integrity }) => ({
