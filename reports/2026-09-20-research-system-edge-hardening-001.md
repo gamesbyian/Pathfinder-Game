@@ -100,7 +100,7 @@ This pass now:
 
 - keeps `level-blind-capability-sweep.mjs`'s `effectiveConfig` semantic by excluding telemetry-only switches and retaining all actual solve-affecting overrides;
 - adds equivalent observed execution identity to `portfolio-solve-sweep.mjs`, including prime-winner/adaptive-history transforms and baseline input identity while excluding workers/resume/output-only controls;
-- makes `combine-solver-sweep-reports.mjs` validate/preserve observed effective config and derive its standard `configurationHash` from it when every source report supplies one;
+- makes `combine-solver-sweep-reports.mjs` validate/preserve observed effective config and derive its standard `configurationHash` from it when every source report supplies one; mixed modern/legacy presence now fails instead of silently downgrading the whole combine to weaker legacy reconstruction;
 - retains the older execution-field reconstruction only as compatibility fallback for historical/partial inputs;
 - lets the shared v3 writer accept an already-validated observed `sha256:` configuration identity;
 - binds targeted, stress-refresh, production-replay, high-budget, broad-confirmation, residual-confirmation and routing-regime contracts to their combined observed execution identity;
