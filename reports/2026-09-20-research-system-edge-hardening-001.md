@@ -86,13 +86,31 @@ The repaired form declares:
 
 The constructor validates itself with the shared declared-contract rules before writing. Node tests pin these semantics.
 
-## E. Prospective gates must have a collection path
+## E. Observed execution identity, not dispatch-intent mirrors
+
+The shared v3 writer migration exposed a second-order provenance gap: several workflows hashed a hand-maintained subset of dispatch inputs even though the sweep producer already knew the literal solver configuration that ran. A newly added treatment knob could therefore affect search while remaining absent from `experiment.configurationHash`.
+
+The concrete example is targeted sweep's `repair_late_probe_multi_seed_retry_seed_count`: it reaches `SolveOpts.repairLateProbeMultiSeedRetrySeedCountOverride`, but the old YAML-side configuration object did not include it. Stress refresh similarly omitted several reserve/probe overrides; production replay omitted flags and resolved deadline mode.
+
+This pass now:
+
+- keeps `level-blind-capability-sweep.mjs`'s `effectiveConfig` semantic by excluding telemetry-only switches and retaining all actual solve-affecting overrides;
+- adds equivalent observed execution identity to `portfolio-solve-sweep.mjs`, including prime-winner/adaptive-history transforms and baseline input identity while excluding workers/resume/output-only controls;
+- makes `combine-solver-sweep-reports.mjs` validate/preserve observed effective config and derive its standard `configurationHash` from it when every source report supplies one;
+- retains the older execution-field reconstruction only as compatibility fallback for historical/partial inputs;
+- lets the shared v3 writer accept an already-validated observed `sha256:` configuration identity;
+- binds targeted, stress-refresh, production-replay, high-budget, broad-confirmation, residual-confirmation and routing-regime contracts to their combined observed execution identity;
+- corrects deterministic stress/replay envelopes so `reproducibilityExpected` and `wallDeadlineBinding` reflect the resolved deterministic mode.
+
+This closes the class of “the workflow form says X, but a newly added solver option changed what actually ran without changing protocol identity” for the maintained sweep families that expose effective execution configuration.
+
+## F. Prospective gates must have a collection path
 
 The proposal-method calibration audit correctly deferred a machine `originMethod` field until origin is recorded prospectively, but the report convention did not actually ask future authors to record it. That made the gate self-stalling.
 
 `docs/investigation-report-conventions.md` now defines an optional human-readable `Proposal provenance` line for newly nominated questions/candidates when the source is genuinely known before outcome. Multiple contributing methods are allowed; the field is not machine-enforced and must not be retrospectively story-fitted. The proposal-method audit now points to this collection path. This creates observations without prematurely freezing an enum or registry.
 
-## F. What this pass deliberately did not promote
+## G. What this pass deliberately did not promote
 
 The scans did not earn:
 
