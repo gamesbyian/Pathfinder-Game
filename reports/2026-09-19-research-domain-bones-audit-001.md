@@ -13,9 +13,28 @@ The September consolidation work succeeded at composition strongly enough to exp
 
 The safest promotion rule is **repeated semantic convergence across real producers/consumers**, not conceptual attractiveness. A shared primitive should be extracted only when at least two real call sites need the same invariant and keeping the invariant local would permit semantic drift or duplicated correctness logic.
 
-## Extraction landed in this follow-up
+This pass found four such primitives. It also found several attractive near-misses that should remain separate for now.
 
-The first concept that clearly passed that test is the **research claim/dependency primitive**.
+## Shared primitives extracted
+
+### 1. Semantic identity
+
+Before this follow-up, canonical order-insensitive semantic hashing existed independently in:
+
+- the v3 solver experiment contract;
+- research-block lineage, indirectly by importing the solver experiment contract only for its hash helper;
+- the WS2 analysis-contract/analysis identity code;
+- the WS2 claim code.
+
+That is a real cross-domain invariant, and the ownership was visibly wrong: research blocks depended on a solver-experiment module merely to construct their own identities.
+
+The shared owner is now:
+
+- `scripts/research-semantic-identity-lib.mjs`
+
+It owns only canonical object-key ordering and SHA-256 semantic hashing. Specialist owners still decide what belongs in their hash domain and whether array order is semantic. The v3 experiment contract retains its `stableHash` export as a compatibility alias, but research blocks, analysis contracts and claims no longer need the experiment contract as their identity owner.
+
+### 2. Research claim/dependency primitive
 
 The live WS2 Bundle-C slice already contained generic semantics inside a specialist file:
 
@@ -30,13 +49,62 @@ with:
 - separation of scientific and decision dispositions;
 - no automatic downstream rewriting.
 
-Those semantics are not intrinsically WS2-specific. They now have a shared owner in:
+Those semantics now have a shared owner in:
 
 - `scripts/research-claim-lib.mjs`
 
-The WS2 claim builder remains the specialist producer. It still owns its routing semantics, population scope, instrument meaning, limitations and route consequences, but delegates common claim identity/dependency/invalidation behavior to the shared primitive.
+The WS2 claim builder remains the specialist producer. It still owns routing semantics, population scope, instrument meaning, limitations and route consequences, but delegates common claim identity/dependency/invalidation behavior to the shared primitive.
 
 This is intentionally **not** a universal claim schema or knowledge graph. Specialist payloads remain specialist; only the invariant skeleton is shared.
+
+### 3. Research-question contract
+
+Two independently evolved experiment systems duplicated the same scientific question semantics:
+
+- the v3 solver experiment contract;
+- the older experiment-manifest family.
+
+Both require a live ambiguity, discriminating observable, non-empty outcome interpretation and canonical `MO-NNN` measurement-opportunity syntax. Their only material difference is that current v3 decision-bearing contracts require a stable question ID while older manifests may omit it.
+
+The shared owner is now:
+
+- `scripts/research-question-contract-lib.mjs`
+
+The common validator exposes that one difference explicitly through `requireQuestionId` rather than forcing historical manifests into a stronger contract they never claimed.
+
+### 4. Evidence-applicability lattice
+
+Hint provenance and compact failure evidence deliberately retain different evidence-purpose taxonomies and different classifiers, but both independently use the same epistemic result lattice:
+
+- `admissible`;
+- `context-bound`;
+- `inadmissible`.
+
+That shared meaning now has one owner:
+
+- `scripts/research-evidence-applicability-lib.mjs`
+
+Hint provenance and failure evidence re-export/use the shared values while keeping their purpose-specific logic separate.
+
+This extraction is intentionally small. It does **not** imply that hint and failure evidence share one schema, purpose taxonomy, dependence model or classifier.
+
+## Near-misses deliberately not unified
+
+### Measurement support versus evidence applicability
+
+Decision observations use `SUPPORTED | UNKNOWN | UNSUPPORTED` for whether an annotation/instrument can support a measurement. Hint/failure evidence use `admissible | context-bound | inadmissible` for whether an existing observation may support a stated research purpose.
+
+The vocabularies rhyme but answer different questions. They remain separate.
+
+### Hint/failure evidence purposes
+
+Hint provenance and failure evidence now share applicability outcomes, but their purpose sets are materially different. They remain specialist.
+
+### Population identity
+
+The v3 experiment contract canonicalizes logical population identities plus kind/basis/selection/codec semantics. Research blocks instead seal aligned parent display IDs to parent content identities to prevent content drift under stable names.
+
+Both now share semantic hashing, but the population contracts themselves still differ enough that a generic `PopulationSpec` would erase useful distinctions.
 
 ## Concepts that look like real future organs but have not yet earned extraction
 
@@ -81,7 +149,7 @@ The current WS2 compact-failure-response analysis contract demonstrates the shap
 
 ### 4. Unit topology
 
-Observation, opportunity/exposure, assignment, dependence-cluster, analysis and generalization units are now explicit in the WS2 slice and conceptually recur elsewhere.
+Observation, opportunity/exposure, assignment, dependence-cluster, analysis and generalization units are explicit in the WS2 slice and conceptually recur elsewhere.
 
 **Promotion trigger:** a second machine-readable analysis contract needs the same six-axis topology. Then extract a shared constructor/validator rather than copying the WS2 field checks.
 
@@ -124,6 +192,6 @@ The target is a small research-domain model embedded inside the existing researc
 
 ## Result
 
-This follow-up therefore makes one concrete architectural promotion now and records promotion thresholds for the larger candidates.
+This follow-up now promotes four proven common invariants while explicitly declining several superficially similar abstractions.
 
-The system should continue to prefer composition. But once composition repeatedly reconstructs the same invariant, another bridge is no longer the cheapest architecture.
+That is the intended direction of travel: continue to prefer composition, but once composition repeatedly reconstructs the same correctness-critical meaning, stop adding bridges and give that meaning a proper owner.
