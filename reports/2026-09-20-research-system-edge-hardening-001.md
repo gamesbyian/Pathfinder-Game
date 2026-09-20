@@ -1,9 +1,9 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — PR #1930 branch hardening through the shared-v3 contract migration and workflow-boundary scans.
-> **Decision:** harden the concrete persistence, workflow-validation, experiment-contract, and recovery-lineage seams exposed by the last 24 hours; do not add broader research abstractions without a demonstrated second consumer.
-> **Remaining gate:** green branch CI, then after this workflow version exists on `main`, run one smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
+> **Last evidence:** 2026-09-20 — PR #1930 branch hardening through join integrity, executable-surface coverage, shared-v3 execution identity, lineage, durable evidence, family/corpus identity, census and CP-SAT partition joins.
+> **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
+> **Remaining gate:** finish branch validation once on a stable head; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
 ## Why this pass exists
 
@@ -111,6 +111,8 @@ This closes the class of “the workflow form says X, but a newly added solver o
 
 A generic publisher-side configuration-hash equality check is intentionally not asserted yet: paired and multi-corpus contracts may legitimately hash a composite experiment while the primary result describes only one arm/component. That check needs an explicit single-result/composite ownership signal rather than workflow-name inference.
 
+## F. Prospective proposal provenance
+
 The proposal-method calibration audit correctly deferred a machine `originMethod` field until origin is recorded prospectively, but the report convention did not actually ask future authors to record it. That made the gate self-stalling.
 
 `docs/investigation-report-conventions.md` now defines an optional human-readable `Proposal provenance` line for newly nominated questions/candidates when the source is genuinely known before outcome. Multiple contributing methods are allowed; the field is not machine-enforced and must not be retrospectively story-fitted. The proposal-method audit now points to this collection path. This creates observations without prematurely freezing an enum or registry.
@@ -167,7 +169,7 @@ The scans did not earn:
 
 Those remain consumer/data-gated under the existing research-system rules. The observed bugs were narrower and had narrower repairs.
 
-## H. Reconsidered scope: join integrity and executable surfaces
+## J. Extended closure pass: join integrity across specialist systems
 
 The strongest recurring failure class in this pass is broader than “workflow plumbing.” Several artifacts or stages were individually valid but the **join between them was under-proved**:
 
@@ -186,7 +188,7 @@ The paired-verdict work also exposed a separate automation blind spot. The expor
 
 A scan of the most recent 2,000 Actions runs found no historical broad/residual confirmation dispatches to salvage, so this particular classifier defect appears latent rather than a lost-result incident.
 
-## I. Prospective gates must have collection paths
+## K. Prospective gates must have collection paths
 
 The proposal-method calibration audit exposed a different systems failure: a closeout can correctly defer until future evidence exists while leaving no process that will ever produce that evidence. `docs/investigation-report-conventions.md` now requires a prospective/data-gated remaining gate to name its producer/detection path when known, or explicitly say detection is opportunistic. This keeps “wait for evidence” from becoming a disguised dead end.
 
