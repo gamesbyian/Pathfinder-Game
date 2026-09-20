@@ -10,15 +10,23 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const temp = mkdtempSync(path.join(tmpdir(), 'variant-family-dataset-merge-'));
 mkdirSync(path.join(temp, 'data/families'), { recursive: true });
 mkdirSync(path.join(temp, 'logs/family-census/corpus1'), { recursive: true });
+mkdirSync(path.join(temp, 'logs/family-census/corpus2'), { recursive: true });
 mkdirSync(path.join(temp, 'reports/families'), { recursive: true });
 
 writeFileSync(path.join(temp, 'data/families/variant-family-dataset-manifest.json'), JSON.stringify([
-    { id: 'S00001', corpus: 'corpus1', corpusPath: 'data/stress/stress-levels.json', modes: ['symmetry'], group: null },
+    { id: 'R02000', corpus: 'corpus1', corpusPath: 'data/stress/stress-levels.json', modes: ['symmetry'], group: null },
+    { id: 'R02000', corpus: 'corpus2', corpusPath: 'data/stress/stress-levels-random.json', modes: ['symmetry'], group: null },
 ]));
-writeFileSync(path.join(temp, 'logs/family-census/wide-shard-01-summary.jsonl'),
-    JSON.stringify({ id: 'S00001', mode: 'symmetry', solved: 1, total: 1 }) + '\n');
-writeFileSync(path.join(temp, 'logs/family-census/corpus1/solve-S00001-sym.json'), JSON.stringify({
+writeFileSync(path.join(temp, 'logs/family-census/wide-shard-01-summary.jsonl'), [
+    JSON.stringify({ corpus: 'corpus1', id: 'R02000', mode: 'symmetry', solved: 1, total: 1 }),
+    JSON.stringify({ corpus: 'corpus2', id: 'R02000', mode: 'symmetry', solved: 0, total: 1 }),
+    '',
+].join('\n'));
+writeFileSync(path.join(temp, 'logs/family-census/corpus1/solve-R02000-sym.json'), JSON.stringify({
     levels: [{ id: 'V1', ok: true, workSpent: 17, winningConfig: 'fixture' }],
+}));
+writeFileSync(path.join(temp, 'logs/family-census/corpus2/solve-R02000-sym.json'), JSON.stringify({
+    levels: [{ id: 'V2', ok: false, status: 'exhausted', workSpent: 19 }],
 }));
 
 const staleCanonical = path.join(temp, 'reports/families/variant-family-dataset-attempts-corpus1-part99.json');
@@ -34,17 +42,25 @@ assert.equal(run.status, 0, `merge script failed:\n${run.stdout}\n${run.stderr}`
 
 const summary = path.join(temp, 'reports/families/variant-family-dataset-summary.md');
 const attempts = path.join(temp, 'reports/families/variant-family-dataset-attempts-corpus1-part01.json');
+const attemptsCorpus2 = path.join(temp, 'reports/families/variant-family-dataset-attempts-corpus2-part01.json');
 assert.ok(existsSync(summary), 'new runs must write the stable canonical summary path');
 assert.ok(existsSync(attempts), 'new runs must write stable canonical attempt chunks');
+assert.ok(existsSync(attemptsCorpus2), 'same bare id in another corpus must retain its own attempt chunk');
 assert.equal(existsSync(staleCanonical), false, 'rerun must remove stale prior canonical chunks before writing');
 assert.equal(existsSync(frozenHistorical), true, 'writer must never delete frozen historical evidence');
 assert.equal(existsSync(path.join(temp, 'reports/families/2026-08-07-wide-trove-summary.md')), false,
     'new runs must not regenerate the dated historical summary name');
 const report = readFileSync(summary, 'utf8');
 assert.match(report, /variant-family-dataset-attempts-<corpus>-part<NN>\.json/u);
+assert.match(report, /2\/2 namespaced \(corpus, level, mode\) tasks completed/u);
 const attemptDoc = JSON.parse(readFileSync(attempts, 'utf8'));
 assert.equal(attemptDoc.levels.length, 1);
 assert.equal(attemptDoc.levels[0].id, 'V1');
+assert.equal(attemptDoc.levels[0].parentCorpus, 'corpus1');
+const attemptDoc2 = JSON.parse(readFileSync(attemptsCorpus2, 'utf8'));
+assert.equal(attemptDoc2.levels.length, 1);
+assert.equal(attemptDoc2.levels[0].id, 'V2');
+assert.equal(attemptDoc2.levels[0].parentCorpus, 'corpus2');
 
 const publish = spawnSync(process.execPath, [
     path.join(ROOT, 'scripts/publish-solver-sweep-result.mjs'),
@@ -82,5 +98,24 @@ const standardManifest = JSON.parse(readFileSync(path.join(temp, 'logs/solver-sw
 assert.equal(standardManifest.status, 'published');
 assert.equal(standardManifest.entries[0].source, 'reports/families/variant-family-dataset-summary.md');
 assert.equal(standardManifest.sourceArtifact, 'variant-family-dataset-combined');
+
+const legacyTemp = mkdtempSync(path.join(tmpdir(), 'variant-family-legacy-identity-'));
+mkdirSync(path.join(legacyTemp, 'data/families'), { recursive: true });
+mkdirSync(path.join(legacyTemp, 'logs/family-census'), { recursive: true });
+mkdirSync(path.join(legacyTemp, 'reports/families'), { recursive: true });
+writeFileSync(path.join(legacyTemp, 'data/families/variant-family-dataset-manifest.json'), JSON.stringify([
+    { id: 'R02000', corpus: 'corpus1', modes: ['symmetry'] },
+    { id: 'R02000', corpus: 'corpus2', modes: ['symmetry'] },
+]));
+writeFileSync(path.join(legacyTemp, 'logs/family-census/wide-shard-01-summary.jsonl'),
+    JSON.stringify({ id: 'R02000', mode: 'symmetry', solved: 0, total: 1 }) + '\n');
+const legacyRun = spawnSync(process.execPath, [path.join(ROOT, 'scripts/merge-variant-family-dataset-shards.mjs'),
+    '--in-dir=logs/family-census',
+    '--manifest=data/families/variant-family-dataset-manifest.json',
+], { cwd: legacyTemp, encoding: 'utf8' });
+assert.equal(legacyRun.status, 0, `legacy identity merge failed:\n${legacyRun.stdout}\n${legacyRun.stderr}`);
+const legacyReport = readFileSync(path.join(legacyTemp, 'reports/families/variant-family-dataset-summary.md'), 'utf8');
+assert.match(legacyReport, /Legacy identity warning.*1 bare-id summary row/u);
+assert.match(legacyReport, /0\/2 namespaced \(corpus, level, mode\) tasks completed/u);
 
 console.log('Variant-family dataset merge/publication contract passed.');
