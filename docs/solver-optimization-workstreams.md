@@ -29,7 +29,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 #### Lane A — separator / decomposition
 
-**C0 MIXED (expected); PROCEED TO C1.** 121/390 balanced width<=4 Class-5 levels. C0 falsifier (581 cases/144 groups): 2 groups mix live/dead, falsified. Next: precommit C1. [`preflight`](solver-separator-dynamic-interface-contract-preflight.md) · [`result`](../reports/2026-09-19-lane-a-c0-signature-collision-result-001.md)
+**C0 MIXED (expected); PROCEED TO C1.** 121/390 balanced width<=4 Class-5 levels. Corrected intended C0 (cut + side/region) reuses the 581 frozen labels: 3 groups / 10 rows mix LIVE/DEAD across 3 independent parents, with 487/546 decisive rows still in repeated signatures. Next: precommit C1. [`preflight`](solver-separator-dynamic-interface-contract-preflight.md) · [`result`](../reports/2026-09-19-lane-a-c0-signature-collision-result-001.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
