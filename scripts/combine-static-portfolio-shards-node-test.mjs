@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { combine } from './combine-static-portfolio-shards.mjs';
 
 const cell = (cellId, levelId, arm, ok, workSpent, status = 'work-budget-reached') => ({
@@ -149,5 +153,47 @@ assert.throws(
     () => combine([keyedShard], 'full-menu', { cells: [keyedPlan.cells[0], keyedPlan.cells[0]] }),
     /duplicate cellId in authored plan/u,
 );
+
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'static-portfolio-cli-'));
+try {
+    const staging = path.join(temp, 'staging');
+    fs.mkdirSync(staging, { recursive: true });
+    const cliShard = {
+        shard: 1,
+        shards: 1,
+        results: [
+            cell('CLI-L1-control', 'CLI-L1', 'control', false, 100),
+            cell('CLI-L1-candidate', 'CLI-L1', 'candidate', true, 100, 'success'),
+        ],
+    };
+    const cliPlan = {
+        cells: cliShard.results.map(({ cellId, levelId, variantLabel }) => ({
+            cellId, levelId, variantLabel,
+        })),
+    };
+    fs.writeFileSync(path.join(staging, 'shard-001.json'), JSON.stringify(cliShard));
+    const planFile = path.join(temp, 'plan.json');
+    const outFile = path.join(temp, 'combined.json');
+    const summaryFile = path.join(temp, 'summary.md');
+    const outcomeFile = path.join(temp, 'outcome.json');
+    fs.writeFileSync(planFile, JSON.stringify(cliPlan));
+    const cli = spawnSync(process.execPath, [
+        'scripts/combine-static-portfolio-shards.mjs',
+        `--staging-dir=${staging}`,
+        '--control-arm=control',
+        `--plan=${planFile}`,
+        `--out=${outFile}`,
+        `--summary-out=${summaryFile}`,
+        `--outcome-out=${outcomeFile}`,
+    ], { cwd: process.cwd(), encoding: 'utf8' });
+    assert.equal(cli.status, 0, cli.stderr);
+    const written = JSON.parse(fs.readFileSync(outFile, 'utf8'));
+    assert.equal(written.populationIntegrity.coverageComplete, true);
+    assert.equal(written.researchOutcome.outcome, 'completed-positive');
+    assert.equal(JSON.parse(fs.readFileSync(outcomeFile, 'utf8')).outcome, 'completed-positive');
+    assert.match(fs.readFileSync(summaryFile, 'utf8'), /candidate/);
+} finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+}
 
 console.log('combine-static-portfolio-shards tests passed');
