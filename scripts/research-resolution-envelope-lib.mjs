@@ -15,6 +15,16 @@ export const RESEARCH_OBSERVABILITY_AXIS_STATUSES = Object.freeze([
   'not-required',
 ]);
 
+export const RESEARCH_OBSERVABILITY_DEFAULT_REMEDIATION = Object.freeze({
+  eligibility: 'acquisition-or-scope',
+  opportunity: 'population-conditioning',
+  reach: 'routing-or-exposure',
+  participation: 'allocation-or-wiring',
+  measurementSupport: 'instrumentation-or-reference',
+  coverage: 'acquisition-or-reconciliation',
+  censoring: 'work-envelope-or-recovery',
+});
+
 function nonEmpty(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
@@ -50,6 +60,7 @@ export function researchResolutionEnvelopeIssues(envelope, { path = 'resolution'
         issues.push(`${path}.axes.${axis}.status`);
       }
       if (record.reason != null && !nonEmpty(record.reason)) issues.push(`${path}.axes.${axis}.reason`);
+      if (record.remediation != null && !nonEmpty(record.remediation)) issues.push(`${path}.axes.${axis}.remediation`);
     }
     for (const axis of Object.keys(envelope.axes)) {
       if (!RESEARCH_OBSERVABILITY_AXES.includes(axis)) issues.push(`${path}.axes.${axis}`);
@@ -85,6 +96,7 @@ export function buildResearchResolutionEnvelope({
       status: supplied.status ?? (requiredAxes?.includes(axis) ? 'unknown' : 'not-required'),
       ...(supplied.reason != null ? { reason: supplied.reason } : {}),
       ...(supplied.evidence != null ? { evidence: supplied.evidence } : {}),
+      ...(supplied.remediation != null ? { remediation: supplied.remediation } : {}),
     };
   }
 
@@ -108,6 +120,8 @@ export function buildResearchResolutionEnvelope({
       axis,
       status: envelope.axes[axis].status,
       reason: envelope.axes[axis].reason ?? null,
+      remediation: envelope.axes[axis].remediation
+        ?? RESEARCH_OBSERVABILITY_DEFAULT_REMEDIATION[axis],
     }));
 
   return {
