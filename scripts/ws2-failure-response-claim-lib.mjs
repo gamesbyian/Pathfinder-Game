@@ -44,6 +44,7 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
       protocolHashes: analysis.scientificDisposition.protocolHashes,
       solverRefs: analysis.scientificDisposition.solverRefs,
       applicability: analysis.scientificDisposition.currentApplicability,
+      selection: analysis.scientificDisposition.populationSelection,
       targetEnvelope: analysis.scientificDisposition.targetEnvelope,
     },
     instrument: analysis.scientificDisposition.instrument,
@@ -57,6 +58,9 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
     },
     scientificDisposition: {
       status: 'supports-prespecified-routing-decision',
+      primaryDiscriminator: analysis.scientificDisposition.primaryDiscriminator,
+      negativeResolution: analysis.scientificDisposition.negativeResolution,
+      reproducibility: analysis.scientificDisposition.reproducibility,
       inferenceScope: 'current residual parents under the recorded compatible solver/protocol boundary',
       adaptiveLineage: analysis.scientificDisposition.adaptiveLineage,
       independenceVector: analysis.scientificDisposition.independenceVector,
