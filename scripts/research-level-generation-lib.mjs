@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { validateResearchEvaluationEvidenceRole } from './research-evaluation-evidence-role-lib.mjs';
-import { TOPOLOGY_GENERATION_SUPPORT, generationSupportForMechanics } from './stress/topology-generation-support-lib.mjs';
+import { TOPOLOGY_GENERATION_SUPPORT, generationSupportForClaim } from './stress/topology-generation-support-lib.mjs';
 
 export const GENERATION_METHODS = Object.freeze({
   targeted: Object.freeze({
