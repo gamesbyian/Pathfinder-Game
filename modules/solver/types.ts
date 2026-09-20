@@ -303,6 +303,11 @@ export interface PrepLevel {
     _failureProgressObserver?: { observe(record: { family: 'dfs' | 'beam' | 'repair'; workSpent: number; badness: number; kind: 'new-best' | 'terminal' }): void } | null;
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
+    /** Research-only Lane H2 checkerboard-capacity shadow observer. Reads the connectivity fill's
+     *  existing reached set after goal/objective reachability succeeds; never changes pruning. */
+    _parityCapacityObserver?: ParityCapacityObserver | null;
+    /** Research-only Lane H1 phase-conditioned distance shadow observer. */
+    _parityPhaseDistanceObserver?: ParityPhaseDistanceObserver | null;
     /** Research-only joint-obligation propagation observer — see JointObligationObserver's own doc
      *  below. Absent in every production call; observing an already-computed obligation-cluster
      *  verdict changes no pruning/ordering/budget decision. */
@@ -371,6 +376,8 @@ export interface PrepLevel {
      *  prep.ts's portal-parity guidance comment and data/stress/README.md's S043 writeup. Empty for
      *  portal-free levels and levels where every portal pair is same-parity. */
     parityPortalDistMaps?: { a: number; b: number; dist: Uint16Array }[];
+    /** Lane H1 relaxed goal distance split by future twist-jump parity; null on no-twist levels. */
+    parityPhaseGoalDistArrs?: [Uint16Array, Uint16Array] | null;
     // Landmark-specific maps are present only on landmark levels (guarded at the call sites).
     // surround/adjTurn/mustTurn/mcApproach/parityPortal dist maps are all flattened to
     // Uint16Array (distMapToArray) for O(1) access in scoreMove/lower-bounds.ts's hot loops.
@@ -493,6 +500,50 @@ export interface ConnectivityRejectionObserver {
      *  default (Stage A's own scope) since scanning/canonicalizing the boundary has a real cost
      *  that should be measured separately from Stage A's plain field capture. */
     includeBoundarySketch?: boolean;
+}
+
+
+/** Research-only shadow observer for Lane H2's checkerboard-split connectivity-capacity premise.
+ * Runs only after the ordinary connectivity flood fill has already proved goal/objective reachability,
+ * and only on levels with zero twist-portal pairs. It reuses that exact reached set and never changes
+ * the boolean returned by isConnected(). */
+export interface ParityCapacityRecord {
+    pos: number;
+    stateFingerprint: string;
+    remainingSteps: number;
+    intNeeded: number;
+    /** Reachable cells with visited==0, split by checkerboard parity. Current pos is excluded. */
+    freshByParity: [number, number];
+    /** Counted future arrivals demanded by ordinary checkerboard alternation from pos. */
+    requiredArrivalsByParity: [number, number];
+    /** Existing scalar connectivity-volume predicate at this same decision seam. */
+    totalVolumeWouldReject: boolean;
+    /** Lane H2 shadow predicate; observational only. */
+    parityCapacityWouldReject: boolean;
+    /** True exactly when H2 rejects while existing total volume does not. */
+    incrementalParityReject: boolean;
+    work: number;
+}
+
+export interface ParityCapacityObserver {
+    observe(record: ParityCapacityRecord): void;
+}
+
+export interface ParityPhaseDistanceRecord {
+    pos: number;
+    stateFingerprint: string;
+    remainingSteps: number;
+    requiredFutureTwistParity: 0 | 1;
+    scalarGoalDistance: number;
+    phaseGoalDistance: number;
+    scalarDistanceWouldReject: boolean;
+    phaseDistanceWouldReject: boolean;
+    incrementalPhaseReject: boolean;
+    work: number;
+}
+
+export interface ParityPhaseDistanceObserver {
+    observe(record: ParityPhaseDistanceRecord): void;
 }
 
 /** Observer-only joint-obligation propagation (see joint-obligation-propagation.ts's own doc and
