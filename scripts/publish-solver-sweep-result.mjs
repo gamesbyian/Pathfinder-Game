@@ -401,12 +401,19 @@ const contract = {
 const compactTelemetryIssue = contract.sideEffects.telemetry === 'compact' && !failureResponseComplete
   ? [`sideEffects.telemetry compact requires complete valid failure response${failureResponseError ? ` (${failureResponseError})` : ''}`]
   : [];
-const primaryResolvedSha = primaryDocument?.commitSha ?? primaryDocument?.summary?.commit ?? primaryDocument?.commit ?? null;
-const sourceIdentityIssue = declaredContract?.experiment?.resolvedSha
-    && isImmutableCommitSha(primaryResolvedSha)
-    && declaredContract.experiment.resolvedSha !== primaryResolvedSha
-  ? ['experiment.resolvedSha disagrees with primary result commit']
-  : [];
+const primaryResolvedSha = primaryDocument?.commitSha
+  ?? primaryDocument?.summary?.commit
+  ?? primaryDocument?.commit
+  ?? primaryDocument?.solverRef
+  ?? null;
+let sourceIdentityIssue = [];
+if (declaredContract?.experiment?.resolvedSha) {
+  if (!isImmutableCommitSha(primaryResolvedSha)) {
+    sourceIdentityIssue = ['primary result lacks immutable execution SHA needed to bind experiment.resolvedSha'];
+  } else if (declaredContract.experiment.resolvedSha !== primaryResolvedSha) {
+    sourceIdentityIssue = ['experiment.resolvedSha disagrees with primary result commit'];
+  }
+}
 const populationBindingIssues = populationIntegrityBindingIssues(primaryDocument, populationIntegrity, stats);
 const outcomeBindingIssues = researchOutcomeBindingIssues(researchOutcome, populationIdentity, stats);
 const contractIssues = declaredContract
