@@ -22,6 +22,20 @@ function portalLevel() {
 // fully on. Explicit ablation overrides (rather than an implicit "no override" baseline) now
 // exercise the off/control/treatment states so the assertions read the same regardless of the
 // current production default polarity.
+test('Class-4 promotion conversion-fidelity contract matches ordinary production callers', () => {
+    assert.equal(OPT_IN_FEATURES.has('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY'), false,
+        'promoted retry shell must remain production default-on');
+    assert.equal(OPT_IN_FEATURES.has('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT'), false,
+        'promoted treatment selector must remain production default-on');
+
+    const solverController = readFileSync(new URL('../input/solver-controller.ts', import.meta.url), 'utf8');
+    const reviewController = readFileSync(new URL('../input/review-controller.ts', import.meta.url), 'utf8');
+    assert.equal(solverController.includes('ablation:'), false,
+        'ordinary solver-controller calls intentionally rely on production defaults');
+    assert.equal(reviewController.includes('ablation:'), false,
+        'ordinary review-controller calls intentionally rely on production defaults');
+});
+
 test('Class-4 retry is portal-only, default-on, true-final, and enables merge only inside its fresh dispatch', async () => {
     const seen = [] as Array<{ merge: unknown; nodes: number; workCap: number | undefined; work: number }>;
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
