@@ -98,6 +98,754 @@
       },
       "recurrenceScope": "single-parent",
       "notes": "This is intentionally EXTENSION rather than INVENTION until independent-parent replication shows a recurrent decision-bearing relation. No repair operator is earned."
+    },
+    {
+      "id": "CID-0004",
+      "subject": {
+        "levelId": "R00306",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R00306"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=must-turn-biased) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=must-turn-biased."
+    },
+    {
+      "id": "CID-0005",
+      "subject": {
+        "levelId": "R01011",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R01011"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0006",
+      "subject": {
+        "levelId": "R01086",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R01086"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0007",
+      "subject": {
+        "levelId": "R01269",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R01269"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (admissible-order|tieBreak=none|lds=off) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing admissible-order capability participates but is cut off by its reserved production dose before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can admissible-order reserve repricing recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "admissible-order stage reserve allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): admissible-order|tieBreak=none|lds=off."
+    },
+    {
+      "id": "CID-0008",
+      "subject": {
+        "levelId": "R01724",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R01724"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0009",
+      "subject": {
+        "levelId": "R02138",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02138"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0010",
+      "subject": {
+        "levelId": "R02160",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02160"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=must-turn-biased + repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=must-turn-biased + repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0011",
+      "subject": {
+        "levelId": "R02196",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02196"
+      },
+      "diagnosisStatus": "unresolved",
+      "firstLossClass": "UNRESOLVED_EARLIER_CLASS",
+      "workClass": "UNKNOWN",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [
+        "F1",
+        "F2",
+        "F4",
+        "F5",
+        "F6",
+        "F8"
+      ],
+      "minimalCounterfactual": null,
+      "demand": "The known isolated beam rescuer genuinely participates and reaches comparable real exhaustion under shared production but no longer solves. Before calling this a missing capability, localize what changed between clean isolated execution and the shared-production context.",
+      "atlasDimensions": [],
+      "smallestProbe": {
+        "question": "What is the earliest decision-relevant difference between the isolated successful rescuer execution and the shared-production exhausted-negative execution?",
+        "decisionSeam": "entry state/context and subsequent beam generation, ranking, retention, or inherited solver state",
+        "advanceIf": "A reproducible causal difference identifies either a recoverable existing-capability deployment defect or a specific missing semantic operation.",
+        "stopIf": "The isolated success does not reproduce under a protocol-compatible clean control, invalidating the premise that shared-production context caused the loss."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exposed-and-negative at comparable dose. Rescuer action: beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets. Do not classify as invention until causal localization."
+    },
+    {
+      "id": "CID-0012",
+      "subject": {
+        "levelId": "R02206",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02206"
+      },
+      "diagnosisStatus": "unresolved",
+      "firstLossClass": "UNRESOLVED_EARLIER_CLASS",
+      "workClass": "UNKNOWN",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [
+        "F1",
+        "F2",
+        "F4",
+        "F5",
+        "F6",
+        "F8"
+      ],
+      "minimalCounterfactual": null,
+      "demand": "The known isolated beam rescuer genuinely participates and reaches comparable real exhaustion under shared production but no longer solves. Before calling this a missing capability, localize what changed between clean isolated execution and the shared-production context.",
+      "atlasDimensions": [],
+      "smallestProbe": {
+        "question": "What is the earliest decision-relevant difference between the isolated successful rescuer execution and the shared-production exhausted-negative execution?",
+        "decisionSeam": "entry state/context and subsequent beam generation, ranking, retention, or inherited solver state",
+        "advanceIf": "A reproducible causal difference identifies either a recoverable existing-capability deployment defect or a specific missing semantic operation.",
+        "stopIf": "The isolated success does not reproduce under a protocol-compatible clean control, invalidating the premise that shared-production context caused the loss."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exposed-and-negative at comparable dose. Rescuer action: beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets. Do not classify as invention until causal localization."
+    },
+    {
+      "id": "CID-0013",
+      "subject": {
+        "levelId": "R02219",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02219"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (admissible-order|tieBreak=none|lds=off) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing admissible-order capability participates but is cut off by its reserved production dose before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can admissible-order reserve repricing recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "admissible-order stage reserve allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): admissible-order|tieBreak=none|lds=off."
+    },
+    {
+      "id": "CID-0014",
+      "subject": {
+        "levelId": "R02258",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02258"
+      },
+      "diagnosisStatus": "unresolved",
+      "firstLossClass": "UNRESOLVED_EARLIER_CLASS",
+      "workClass": "UNKNOWN",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [
+        "F1",
+        "F2",
+        "F4",
+        "F5",
+        "F6",
+        "F8"
+      ],
+      "minimalCounterfactual": null,
+      "demand": "The known isolated beam rescuer genuinely participates and reaches comparable real exhaustion under shared production but no longer solves. Before calling this a missing capability, localize what changed between clean isolated execution and the shared-production context.",
+      "atlasDimensions": [],
+      "smallestProbe": {
+        "question": "What is the earliest decision-relevant difference between the isolated successful rescuer execution and the shared-production exhausted-negative execution?",
+        "decisionSeam": "entry state/context and subsequent beam generation, ranking, retention, or inherited solver state",
+        "advanceIf": "A reproducible causal difference identifies either a recoverable existing-capability deployment defect or a specific missing semantic operation.",
+        "stopIf": "The isolated success does not reproduce under a protocol-compatible clean control, invalidating the premise that shared-production context caused the loss."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exposed-and-negative at comparable dose. Rescuer action: beam|score=objectiveFirst|bias=none|width=5000|retention=plain. Do not classify as invention until causal localization."
+    },
+    {
+      "id": "CID-0015",
+      "subject": {
+        "levelId": "R02277",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02277"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (admissible-order|tieBreak=none|lds=off) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing admissible-order capability participates but is cut off by its reserved production dose before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can admissible-order reserve repricing recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "admissible-order stage reserve allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): admissible-order|tieBreak=none|lds=off."
+    },
+    {
+      "id": "CID-0016",
+      "subject": {
+        "levelId": "R02458",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02458"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0017",
+      "subject": {
+        "levelId": "R02561",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02561"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=must-turn-biased) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=must-turn-biased."
+    },
+    {
+      "id": "CID-0018",
+      "subject": {
+        "levelId": "R02835",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02835"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=must-turn-biased) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=must-turn-biased."
+    },
+    {
+      "id": "CID-0019",
+      "subject": {
+        "levelId": "R02844",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02844"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=must-turn-biased) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=must-turn-biased."
+    },
+    {
+      "id": "CID-0020",
+      "subject": {
+        "levelId": "R02892",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02892"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0021",
+      "subject": {
+        "levelId": "R02979",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02979"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (admissible-order|tieBreak=none|lds=off) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing admissible-order capability participates but is cut off by its reserved production dose before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can admissible-order reserve repricing recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "admissible-order stage reserve allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): admissible-order|tieBreak=none|lds=off."
+    },
+    {
+      "id": "CID-0022",
+      "subject": {
+        "levelId": "R02997",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R02997"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0023",
+      "subject": {
+        "levelId": "R03109",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R03109"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0024",
+      "subject": {
+        "levelId": "R03251",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R03251"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0025",
+      "subject": {
+        "levelId": "R03323",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R03323"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (repair|score=repair|guidance=standard) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing repair-family capability participates but is cut off by the per-attempt deadline before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can a bounded increase in repair-family per-attempt deadline recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "repair-family per-attempt deadline allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): repair|score=repair|guidance=standard."
+    },
+    {
+      "id": "CID-0026",
+      "subject": {
+        "levelId": "R03354",
+        "population": "Current Class-3 residual shared-production exact-action dose cohort",
+        "corpus": "Corpus 2",
+        "parentId": "R03354"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F7",
+      "workClass": "HARVEST",
+      "evidenceStrength": "confirmation",
+      "evidenceRefs": [
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/stress/failure-evidence/class3-dose-analysis-2026-09-20.json"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Give the already-demonstrated rescuer (admissible-order|tieBreak=none|lds=off) enough per-action dose to reach its known isolated solve scale while holding total production work fixed.",
+      "demand": "No new semantic operation is indicated by this evidence. Existing admissible-order capability participates but is cut off by its reserved production dose before its known isolated solve cost.",
+      "atlasDimensions": [
+        "action",
+        "reachability"
+      ],
+      "smallestProbe": {
+        "question": "Can admissible-order reserve repricing recover known capability at matched total work without displacing production winners?",
+        "decisionSeam": "admissible-order stage reserve allocation",
+        "advanceIf": "A predeclared matched-total-work treatment produces net referee-valid gains with acceptable collateral.",
+        "stopIf": "Extra dose is displacement-only, uneconomic, or fails to recover the isolated capability."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): admissible-order|tieBreak=none|lds=off."
     }
   ]
 }
