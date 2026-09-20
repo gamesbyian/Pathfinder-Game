@@ -93,6 +93,9 @@ export function declaredShapeIssues(schema, value, at = '$', rootSchema = schema
         }
     }
     if (Array.isArray(value)) {
+        if (Number.isInteger(schema.minItems) && value.length < schema.minItems) {
+            issues.push(`${at}: array has fewer than minItems=${schema.minItems}`);
+        }
         if (schema.uniqueItems === true) {
             const encoded = value.map(stableValue);
             if (new Set(encoded).size !== encoded.length) issues.push(`${at}: array items are not unique`);
