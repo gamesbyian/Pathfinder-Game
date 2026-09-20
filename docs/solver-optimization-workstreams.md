@@ -9,13 +9,13 @@ Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [
 
 ## Data-audit guardrail
 
-C1 is not cross-generator transfer; C2 is a mixed development laboratory; residual claims are population-conditional. Level-blind cold procedures may derive exact board facts but may not consume historical identity/outcome/hints/capability-memory membership. Historical negatives close only the tested claim.
+C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive current-board facts but not consume historical identity/outcome/hints/capability-memory membership. Negatives close only the tested claim.
 
 ## Portfolio posture
 
 Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. Classification, acquisition ladder, and demand-register rules: [capability invention program](solver-capability-invention-program.md). Register: `data/stress/capability-invention-demand.json` (`npm run research:capability-demand`).
 
-Seed census: **26 rows = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence evidence because 23/26 are capability-selected Class 3. Unknown beam rows R02196/R02206/R02258 have a frozen current-head freshness replay; R03147 remains an EXTENSION nomination pending independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
+Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence because 23/26 are capability-selected Class 3. Beam UNKNOWNs have a frozen freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
 
 ### 1. Workstream 2: residual capability + premise acquisition
@@ -111,4 +111,4 @@ Frozen-map mining is complete; P201-P206 remain evidence/method premises only. T
 
 ## Cheap evidence routing
 
-Prefer `research-status-index --compact`, `tooling-census --compact`, `research-asset-query`, `corpus-query`, capability/provenance helpers, audited family tooling and retained exact-labelled artifacts before bespoke work. Measurements belong in dated reports; genuinely deferred forms with precise reopen triggers belong in [`solver-future-work.md`](solver-future-work.md).
+Prefer indexed/queryable retained evidence before bespoke work. Measurements belong in dated reports; deferred forms with precise reopen triggers belong in [`solver-future-work.md`](solver-future-work.md).
