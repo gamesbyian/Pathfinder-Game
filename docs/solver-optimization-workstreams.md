@@ -29,7 +29,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 #### Lane A — separator / decomposition
 
-**C1 RERUN ACTIVE; C2 FROZEN PENDING C1.** The compact label projection was found to use the CP-SAT workflow's 20-shard combined-row order, while the first C1 pass aligned labels to canonical case order. That result is superseded. Population/reference truth are intact; schema-v2 ordering now seals both orders. Rerun frozen C1 unchanged, then apply its original rule. [`contract`](solver-separator-dynamic-interface-contract-preflight.md) · [`supersession`](../reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md)
+**C1 MIXED + REPETITION-SUPPORTED; C2 ACTIVE.** Corrected schema-v2 label alignment leaves 187/546 decisive rows (34.25%) in repeated signatures across 58 parents and two exact LIVE/DEAD mixed signatures. Frozen rule advances to the already-precommitted C2 global-accounting representation; do not edit C1. [`contract`](solver-separator-dynamic-interface-contract-preflight.md) · [`C1 result`](../reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
