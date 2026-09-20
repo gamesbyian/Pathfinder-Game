@@ -36,6 +36,17 @@ async function main() {
         assert.deepEqual(missingIds, ['R00002', 'R00003']);
         console.log('  ✓ missing-ids-only population is recoverable and writes exactly the missing ids');
 
+        const commaExpectedFile = path.join(tempDir, 'comma-expected-ids.txt');
+        const commaIdentity = 'R00046:131081,196618::frontier-4758';
+        await writeFile(commaExpectedFile, `${commaIdentity}\nR00002\n`);
+        const commaResult = path.join(tempDir, 'comma-result.json');
+        const commaOut = path.join(tempDir, 'comma-out.txt');
+        await writeFile(commaResult, JSON.stringify({ levels: [{ id: commaIdentity, ok: true }] }));
+        await run([`--expected-ids=${commaExpectedFile}`, `--result=${commaResult}`, `--out=${commaOut}`]);
+        assert.deepEqual((await readFile(commaOut, 'utf8')).trim().split('\n'), ['R00002'],
+            'comma-bearing population identity must survive recovery-population parsing as one id');
+        console.log('  ✓ comma-bearing population identity survives timeout-recovery parsing');
+
         // Already complete -- recoverable trivially, with an empty (not missing) --out.
         const completeResult = path.join(tempDir, 'complete.json');
         const completeOut = path.join(tempDir, 'complete-out.txt');
