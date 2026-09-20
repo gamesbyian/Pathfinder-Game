@@ -141,6 +141,11 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         for (const moId of evidence.measurementOpportunities ?? []) {
             if (!measurementIds.has(moId)) errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown measurement opportunity ${moId}`);
         }
+        for (const ref of evidence.sourceArtifacts ?? []) {
+            if (!existsSync(path.join(root, ref))) {
+                errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references missing sourceArtifact ${ref}`);
+            }
+        }
     }
 
     const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
