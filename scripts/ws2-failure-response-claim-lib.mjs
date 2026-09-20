@@ -68,9 +68,10 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
     },
     derivation: {
       edges: [
-        ...analysis.execution.inputFiles.map(ref => ({
+        ...(analysis.execution.inputArtifacts ?? analysis.execution.inputFiles.map(path => ({ path, contentHash: null }))).map(item => ({
           kind: 'input-artifact',
-          ref,
+          ref: item.path,
+          contentHash: item.contentHash ?? null,
           relation: 'material-evidence-input',
           affects: ['scientific-claim', 'routing-decision'],
         })),
@@ -84,6 +85,7 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
         {
           kind: 'analysis-implementation',
           ref: analysis.execution.implementation,
+          contentHash: analysis.execution.implementationHash ?? null,
           relation: 'observation-transform',
           affects: ['scientific-claim', 'routing-decision'],
         },
