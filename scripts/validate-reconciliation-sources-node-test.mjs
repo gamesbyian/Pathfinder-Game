@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { buildReconciliationContract, validateReconciliationSources } from './validate-reconciliation-sources.mjs';
 
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -113,5 +117,28 @@ assert.throws(() => validateReconciliationSources([{ runId: '1', manifest }, { r
 const incompleteProtocol = clone(manifest);
 delete incompleteProtocol.execution.historyAware;
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest: incompleteProtocol }]), /execution.historyAware/);
+
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'reconciliation-cli-'));
+try {
+  const root = path.join(temp, 'sources');
+  for (const [runId, sourceManifest] of [['1', manifest], ['2', secondManifest]]) {
+    const dir = path.join(root, runId);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(sourceManifest));
+  }
+  const out = path.join(temp, 'provenance.json');
+  const contractOut = path.join(temp, 'contract.json');
+  execFileSync(process.execPath, [
+    'scripts/validate-reconciliation-sources.mjs',
+    `--sources-dir=${root}`, `--out=${out}`, `--contract-out=${contractOut}`,
+  ], {
+    cwd: process.cwd(), stdio: 'pipe',
+    env: { ...process.env, GITHUB_RUN_ID: '99', GITHUB_RUN_ATTEMPT: '1', GITHUB_SHA: 'f'.repeat(40) },
+  });
+  assert.equal(JSON.parse(fs.readFileSync(out, 'utf8')).sources.length, 2);
+  assert.equal(JSON.parse(fs.readFileSync(contractOut, 'utf8')).experiment.reconciliationRun.kind, 'recombine-only');
+} finally {
+  fs.rmSync(temp, { recursive: true, force: true });
+}
 
 console.log('reconciliation source validation tests passed');
