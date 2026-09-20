@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { validateResearchQuestionContract } from './research-question-contract-lib.mjs';
 import { execFileSync } from 'node:child_process';
 
 /** Canonical git-state capture for a family evaluation run manifest's `solver` field — one shared
@@ -63,29 +64,6 @@ const WORKFLOW_REQUIRED_INPUTS = {
 export const levelSelectionHash = levelIds => createHash('sha256').update(levelIds.join('\n')).digest('hex');
 const stableObject = value => JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))));
 
-function validateResearchQuestion(question) {
-    if (question == null) return;
-    if (!question || typeof question !== 'object' || Array.isArray(question)) throw new Error('researchQuestion must be an object');
-    if ('questionId' in question && question.questionId != null &&
-        (typeof question.questionId !== 'string' || !question.questionId.trim())) {
-        throw new Error('researchQuestion.questionId must be a non-empty string when present');
-    }
-    for (const field of ['liveAmbiguity', 'discriminatingObservable', 'outcomeInterpretation']) {
-        if (!(field in question)) throw new Error(`researchQuestion missing ${field}`);
-    }
-    for (const field of ['liveAmbiguity', 'discriminatingObservable']) {
-        if (typeof question[field] !== 'string' || !question[field].trim()) throw new Error(`researchQuestion.${field} must be non-empty`);
-    }
-    if (!question.outcomeInterpretation || typeof question.outcomeInterpretation !== 'object' ||
-        Array.isArray(question.outcomeInterpretation) || Object.keys(question.outcomeInterpretation).length === 0) {
-        throw new Error('researchQuestion.outcomeInterpretation must be a non-empty object');
-    }
-    if ('measurementOpportunity' in question && question.measurementOpportunity != null &&
-        (typeof question.measurementOpportunity !== 'string' || !/^MO-\d{3}$/u.test(question.measurementOpportunity))) {
-        throw new Error('researchQuestion.measurementOpportunity must be null or MO-NNN');
-    }
-}
-
 export function validateExperimentManifest(manifest) {
     for (const field of REQUIRED) if (!(field in manifest)) throw new Error(`experiment manifest missing ${field}`);
     if (manifest.schemaVersion !== 2) throw new Error(`unsupported experiment manifest schema ${manifest.schemaVersion}`);
@@ -103,7 +81,7 @@ export function validateExperimentManifest(manifest) {
     }
     const invalidWorkflowInputs = Object.entries(manifest.workflowInputs).filter(([, value]) => typeof value !== 'string');
     if (invalidWorkflowInputs.length) throw new Error(`workflowInputs values must be strings: ${invalidWorkflowInputs.map(([key]) => key).join(', ')}`);
-    validateResearchQuestion(manifest.researchQuestion);
+    validateResearchQuestionContract(manifest.researchQuestion, { requireQuestionId: false });
     const requiredWorkflowInputs = WORKFLOW_REQUIRED_INPUTS[manifest.workflow] ?? [];
     const missingWorkflowInputs = requiredWorkflowInputs.filter(key => !(key in manifest.workflowInputs));
     if (missingWorkflowInputs.length) throw new Error(`workflowInputs missing for ${manifest.workflow}: ${missingWorkflowInputs.join(', ')}`);
