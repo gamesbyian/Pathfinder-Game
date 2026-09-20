@@ -29,6 +29,19 @@ Reuse the smallest common semantic owners where their meaning genuinely matches:
 
 Do not route a specialist contract through one of these merely because field names resemble each other. Shared ownership applies only to the exact semantic invariant named above.
 
+## Research authority ownership
+
+Do not collapse distinct kinds of state merely because they describe the same line of work.
+
+- **Execution priority and next gate:** `solver-optimization-workstreams.md`.
+- **Scientific-question lifecycle and reopen condition:** `solver-research-question-relations.json`.
+- **New report-local status/decision/remaining gate:** the structured `pathfinder.research-closeout/v1` capsule; the Markdown status block is a human mirror and legacy fallback.
+- **Evidence applicability:** the evidence-family classifier for the stated purpose/regime, using the shared applicability lattice; there is no global timeless applicability flag.
+- **Claim validity/invalidation:** the claim plus its material derivation dependencies, not a report summary.
+- **Production default polarity:** runtime code/config. The opt-in ledger owns promotion disposition for retained default-OFF experiments, not runtime truth.
+
+An active workstream may legitimately reference a `deferred-reopen` scientific question when satisfying its reopen trigger is the current execution gate. A live workstream referencing an unknown or terminal question is an authority error. Derived indexes/inventories may expose these relationships but must not silently become a second owner.
+
 ## Stop rules
 
 These are gates, not aspirations.
