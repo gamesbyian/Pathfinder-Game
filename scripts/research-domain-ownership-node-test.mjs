@@ -59,4 +59,16 @@ const questionRelations = source('scripts/research-question-relations-lib.mjs');
 assert.match(questionRelations, /RESEARCH_QUESTION_STATES/u);
 assert.match(questionRelations, /researchQuestionLifecycleClass/u);
 
+const resolutionEnvelope = source('scripts/research-resolution-envelope-lib.mjs');
+assert.match(resolutionEnvelope, /RESEARCH_OBSERVABILITY_AXES/u);
+assert.match(resolutionEnvelope, /resolutionStatus/u);
+assert.doesNotMatch(resolutionEnvelope, /first-loss|reserve-starvation|producer-consumer-2x2/u,
+  'shared resolution envelope must not absorb specialist route or mechanism semantics');
+
+const ws2Recon = source('scripts/ws2-failure-response-reconnaissance.mjs');
+assert.match(ws2Recon, /research-resolution-envelope-lib\.mjs/u);
+
+const reserveStarvation = source('scripts/analyze-reserve-starvation-probe.mjs');
+assert.match(reserveStarvation, /research-resolution-envelope-lib\.mjs/u);
+
 console.log('research domain ownership contract tests passed');
