@@ -26,7 +26,8 @@ Reuse the smallest common semantic owners where their meaning genuinely matches:
 - `research-question-contract-lib.mjs` — live ambiguity, discriminating observable, outcome interpretation, and MO syntax.
 - `research-evidence-applicability-lib.mjs` — the shared admissible/context-bound/inadmissible lattice; evidence purposes and classifiers remain specialist.
 - `research-claim-lib.mjs` — claim identity, material derivation edges, and bounded reverse invalidation; specialist claim payloads remain specialist.
-- `research-resolution-envelope-lib.mjs` — canonical observability axes/statuses, required-axis declaration, blocker projection, default remediation classes, and resolution readiness; specialist producers still own axis derivation, discriminator choice, and scientific verdicts. `research:resolution-view` is a derived read-only summary, not an authority.
+- `research-resolution-envelope-lib.mjs` — observability axes/statuses, required-axis blockers/remediation and readiness; specialist producers own derivation/discriminator/verdict. `research:resolution-view` is derived only.
+- `research-independence-vector-lib.mjs` — canonical causal-independence axes plus shape validation; specialist artifacts own the actual relationship claims. No aggregate independence/confidence score.
 
 Do not route a specialist contract through one of these merely because field names resemble each other. Shared ownership applies only to the exact semantic invariant named above.
 
