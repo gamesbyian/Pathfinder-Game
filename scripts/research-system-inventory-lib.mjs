@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { buildResearchRelations, RESEARCH_RELATION_CONTRACTS } from './research-relations-lib.mjs';
 import { currentDocumentationReferences } from './documentation-index-lib.mjs';
+import { auditResearchIntegration } from './research-integration-audit-lib.mjs';
 
 const normalize = value => value.split(path.sep).join('/');
 const isLocalImport = value => value.startsWith('./') || value.startsWith('../');
@@ -166,6 +167,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const currentMarkdownBytes = currentMarkdownReferences.reduce((sum, row) =>
         sum + statSync(path.join(root, row.path)).size, 0);
     const relations = relationInventory(model);
+    const integrationAudit = auditResearchIntegration(root);
     return {
         schemaVersion: 1,
         authority: {
@@ -174,6 +176,12 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             methodAuthority: 'docs/solver-research-operating-model.md',
         },
         currentState: currentState(model),
+        integrationHealth: {
+            errorCount: integrationAudit.errorCount,
+            warningCount: integrationAudit.warningCount,
+            errors: integrationAudit.errors,
+            warnings: integrationAudit.warnings,
+        },
         relations,
         commands,
         sharedImplementationDependencies: sharedDependencies(root, commands),
@@ -191,6 +199,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             fragilePlanLifecyclePaths: fragilePlans.map(row => row.path),
             currentReferenceLifecycleMismatchCount: currentReferenceLifecycleMismatches.length,
             currentReferenceLifecycleMismatchPaths: currentReferenceLifecycleMismatches.map(row => row.path),
+            integrationErrorCount: integrationAudit.errorCount,
+            integrationWarningCount: integrationAudit.warningCount,
             derivedRelationCount: relations.filter(row => row.authorityKind === 'derived/composed').length,
             structuredRelationCount: relations.filter(row => row.authorityKind === 'structured-source').length,
         },
