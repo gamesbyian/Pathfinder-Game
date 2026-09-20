@@ -188,11 +188,15 @@ The paired-verdict work also exposed a separate automation blind spot. The expor
 
 A scan of the most recent 2,000 Actions runs found no historical broad/residual confirmation dispatches to salvage, so this particular classifier defect appears latent rather than a lost-result incident.
 
+A follow-up executable-surface inventory found three additional high-consequence scripts whose domain functions were tested but whose workflow-facing CLIs were not: population-integrity combination, static-portfolio combination, and the research-outcome writer. Their existing Node tests now invoke the real CLI with file fixtures. The sweep combiner and CP-SAT combiner were already covered through real subprocess/pipeline tests, so no redundant test layer was added.
+
+The shard-family closure pass also found one remaining combine-boundary gap in method-probe. The publisher's later exact-population check prevented a completely missing outer shard artifact from becoming decision-bearing, but the method-probe combiner itself could still classify the intermediate aggregate as a clean negative because it only knew about shard directories that arrived. The workflow now passes the authored outer-shard count into the combiner; a vanished outer artifact is classified as harness failure at the combine boundary itself.
+
 ## K. Prospective gates must have collection paths
 
 The proposal-method calibration audit exposed a different systems failure: a closeout can correctly defer until future evidence exists while leaving no process that will ever produce that evidence. `docs/investigation-report-conventions.md` now requires a prospective/data-gated remaining gate to name its producer/detection path when known, or explicitly say detection is opportunistic. This keeps “wait for evidence” from becoming a disguised dead end.
 
-## Validation boundary
+## L. Validation boundary
 
 Current validation is split intentionally:
 
