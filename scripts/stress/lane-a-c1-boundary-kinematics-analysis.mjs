@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 
 import { readLevelsWithHints } from '../level-data-io.mjs';
@@ -21,13 +22,43 @@ if (!inputPath) {
 }
 
 const input = JSON.parse(readFileSync(path.resolve(ROOT, inputPath), 'utf8'));
-const rows = input.rows ?? input.levels ?? input.results ?? [];
-if (!Array.isArray(rows) || rows.length === 0) throw new Error(`no rows found in ${inputPath}`);
-
 const casesDocument = JSON.parse(readFileSync(path.resolve(ROOT, casesPath), 'utf8'));
 if (!Array.isArray(casesDocument.cases) || !casesDocument.cases.length) throw new Error(`no cases found in ${casesPath}`);
 const caseById = new Map(casesDocument.cases.map(row => [String(row.id), row]));
 if (caseById.size !== casesDocument.cases.length) throw new Error(`duplicate case id in ${casesPath}`);
+
+function rowsFromInput(document) {
+    const direct = document.rows ?? document.levels ?? document.results ?? null;
+    if (Array.isArray(direct) && direct.length > 0) return direct;
+    if (document.kind !== 'lane-a-exact-label-projection') throw new Error(`no rows found in ${inputPath}`);
+    if (!Number.isInteger(document.rowCount) || document.rowCount !== casesDocument.cases.length) {
+        throw new Error(`label projection rowCount disagrees with frozen cases: ${document.rowCount} != ${casesDocument.cases.length}`);
+    }
+    if (typeof document.labels !== 'string' || document.labels.length !== document.rowCount) {
+        throw new Error('label projection labels length disagrees with rowCount');
+    }
+    const caseOrderText = `${casesDocument.cases.map(row => String(row.id)).join('\n')}\n`;
+    const caseOrderHash = `sha256:${createHash('sha256').update(caseOrderText).digest('hex')}`;
+    if (document.caseOrderHash !== caseOrderHash) {
+        throw new Error(`label projection case-order hash mismatch: ${document.caseOrderHash} != ${caseOrderHash}`);
+    }
+    const encoding = document.labelEncoding ?? {};
+    return casesDocument.cases.map((frozenCase, index) => {
+        const referenceLabel = encoding[document.labels[index]];
+        if (!referenceLabel) throw new Error(`unknown label projection token at index ${index}: ${document.labels[index]}`);
+        return {
+            schemaVersion: 1,
+            caseId: frozenCase.id,
+            levelId: frozenCase.levelId,
+            corpus: casesDocument.corpus,
+            prefix: frozenCase.prefix,
+            referenceLabel,
+            referenceReason: 'retained-projection',
+        };
+    });
+}
+
+const rows = rowsFromInput(input);
 
 const corpusPath = casesDocument.corpus;
 if (typeof corpusPath !== 'string' || !corpusPath) throw new Error(`${casesPath} does not declare corpus`);
