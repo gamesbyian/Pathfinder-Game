@@ -50,6 +50,14 @@ export function createResearchCloseoutCapsule({
   premiseRefs = [],
   measurementOpportunity = null,
   evidenceRole = null,
+  populationIdentity = null,
+  selection = null,
+  inferenceScope = null,
+  claimRefs = [],
+  sourceArtifacts = [],
+  expectation = null,
+  surprise = null,
+  anomaly = null,
 } = {}) {
   return {
     schema: RESEARCH_CLOSEOUT_SCHEMA,
@@ -63,6 +71,18 @@ export function createResearchCloseoutCapsule({
       measurementOpportunity: optionalSingleLine(measurementOpportunity, 'measurementOpportunity'),
     },
     evidenceRole: optionalSingleLine(evidenceRole, 'evidenceRole'),
+    scope: {
+      populationIdentity: optionalSingleLine(populationIdentity, 'populationIdentity'),
+      selection: optionalSingleLine(selection, 'selection'),
+      inferenceScope: optionalSingleLine(inferenceScope, 'inferenceScope'),
+    },
+    claimRefs: normalizeStringList(claimRefs, 'claimRefs'),
+    sourceArtifacts: normalizeStringList(sourceArtifacts, 'sourceArtifacts'),
+    prospective: {
+      expectation: optionalSingleLine(expectation, 'expectation'),
+      surprise: optionalSingleLine(surprise, 'surprise'),
+      anomaly: optionalSingleLine(anomaly, 'anomaly'),
+    },
   };
 }
 
@@ -96,6 +116,14 @@ export function parseResearchCloseoutCapsule(markdown) {
     premiseRefs: parsed.joins?.premiseRefs,
     measurementOpportunity: parsed.joins?.measurementOpportunity,
     evidenceRole: parsed.evidenceRole,
+    populationIdentity: parsed.scope?.populationIdentity,
+    selection: parsed.scope?.selection,
+    inferenceScope: parsed.scope?.inferenceScope,
+    claimRefs: parsed.claimRefs,
+    sourceArtifacts: parsed.sourceArtifacts,
+    expectation: parsed.prospective?.expectation,
+    surprise: parsed.prospective?.surprise,
+    anomaly: parsed.prospective?.anomaly,
   });
 }
 
