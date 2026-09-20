@@ -27,7 +27,25 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   if (contract.evidenceRole !== 'development-discriminator-selection') issues.push('evidenceRole');
   if (contract.decisionPurpose !== 'scientific-question-discrimination') issues.push('decisionPurpose');
   if (contract.independentUnit !== 'parent') issues.push('independentUnit');
+  const topology = contract.unitTopology;
+  if (topology?.observationUnit !== 'failure-response-record') issues.push('unitTopology.observationUnit');
+  if (topology?.opportunityUnit !== 'parent') issues.push('unitTopology.opportunityUnit');
+  if (topology?.dependenceClusterUnit !== 'parent') issues.push('unitTopology.dependenceClusterUnit');
+  if (topology?.analysisUnit !== 'parent') issues.push('unitTopology.analysisUnit');
+  if (topology?.generalizationUnit !== 'current-residual-parent-under-compatible-protocol') issues.push('unitTopology.generalizationUnit');
+  if (topology?.assignmentUnit !== null) issues.push('unitTopology.assignmentUnit');
   if (contract.analysisImplementation !== 'scripts/failure-response-query.mjs') issues.push('analysisImplementation');
+  const instrument = contract.instrument;
+  if (instrument?.kind !== 'pathfinder-compact-failure-response') issues.push('instrument.kind');
+  if (instrument?.supportPolicy !== 'reported-fields-only-missing-remains-unknown') issues.push('instrument.supportPolicy');
+  if (instrument?.calibrationRef !== 'reports/2026-09-19-failure-evidence-prehandoff-direct-work-audit-001.md') {
+    issues.push('instrument.calibrationRef');
+  }
+  const applicability = contract.currentApplicability;
+  if (applicability?.basis !== 'solver-and-protocol-relative') issues.push('currentApplicability.basis');
+  if (!Array.isArray(applicability?.refreshTriggers) || applicability.refreshTriggers.length === 0) {
+    issues.push('currentApplicability.refreshTriggers');
+  }
   if (!Array.isArray(contract.allowedRoutes)
       || contract.allowedRoutes.length !== WS2_FAILURE_RESPONSE_ROUTES.length
       || WS2_FAILURE_RESPONSE_ROUTES.some(route => !contract.allowedRoutes.includes(route))) {
