@@ -29,6 +29,8 @@ Reuse the smallest common semantic owners where their meaning genuinely matches:
 - `research-claim-lib.mjs` — claim identity, material edges, bounded reverse invalidation; payloads stay specialist.
 - `research-resolution-envelope-lib.mjs` — observability axes/blockers/readiness; producers own derivation/discriminator/verdict.
 - `research-independence-vector-lib.mjs` — causal-independence axes/shape only; no aggregate score.
+- `research-unit-topology-lib.mjs` — observation/opportunity/assignment/dependence/analysis/generalization role shape only; studies own the actual units and estimands.
+- `research-repository-ref-lib.mjs` — exact repository-reference syntax/optional tracked existence; consumers own allowed roots, relation semantics, and off-main policy.
 
 Do not route a specialist contract through one of these merely because field names resemble each other. Shared ownership applies only to the exact semantic invariant named above.
 
