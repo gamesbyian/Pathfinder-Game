@@ -98,6 +98,18 @@ assert.match(independenceVector, /RESEARCH_INDEPENDENCE_AXES/u);
 assert.doesNotMatch(independenceVector, /D1|reserve-starvation|failure-response/u,
   'shared independence vector must not absorb specialist study semantics');
 
+const unitTopology = source('scripts/research-unit-topology-lib.mjs');
+assert.match(unitTopology, /RESEARCH_UNIT_TOPOLOGY_FIELDS/u);
+assert.doesNotMatch(unitTopology, /WS2|Class-3|failure-response|reserve-starvation/u,
+  'shared unit topology must own structural vocabulary only, not specialist unit meanings');
+
+assert.match(ws2AnalysisContract, /research-unit-topology-lib\.mjs/u,
+  'WS2 contract must use the shared unit-topology shape');
+
+const class3DoseAnalysis = source('scripts/analyze-class3-dose-exposure.mjs');
+assert.match(class3DoseAnalysis, /research-unit-topology-lib\.mjs/u,
+  'Class-3 dose analysis must validate its frozen unit topology');
+
 const ws2Recon = source('scripts/ws2-failure-response-reconnaissance.mjs');
 assert.match(ws2Recon, /research-resolution-envelope-lib\.mjs/u);
 
