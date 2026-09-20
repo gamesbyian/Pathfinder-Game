@@ -16,6 +16,30 @@ const rows = [
 const groups = groupRowsByKey(rows, row => row.sig);
 assert.equal(groups.size, 3);
 
+const adversarialGroups = groupRowsByKey([
+    { sig: ['a,b', 'c'] },
+    { sig: ['a', 'b,c'] },
+    { sig: ['scope:one', 'case:1'] },
+    { sig: ['scope', 'one:case:1'] },
+    { sig: ['切断群', 'ケース 1'] },
+], row => row.sig);
+assert.equal(adversarialGroups.size, 5,
+    'delimiter-shaped components and Unicode must remain distinct under structured signature serialization');
+assert.equal(adversarialGroups.has(JSON.stringify(['a,b', 'c'])), true);
+assert.equal(adversarialGroups.has(JSON.stringify(['a', 'b,c'])), true);
+
+const scopedDuplicateLocalIds = summarizeSignatureCollisions([
+    { id: 'local-1', parent: 'parent-A', sig: ['parent-A', 'local-1'], label: 'LIVE' },
+    { id: 'local-1', parent: 'parent-B', sig: ['parent-B', 'local-1'], label: 'DEAD' },
+], {
+    signature: row => row.sig,
+    label: 'label',
+    independentUnit: 'parent',
+    rowId: 'id',
+});
+assert.equal(scopedDuplicateLocalIds.distinctSignatures, 2,
+    'repeated local ids under distinct semantic parents must not collapse into one Lane-A signature');
+
 const summary = summarizeSignatureCollisions(rows, {
     signature: row => row.sig,
     label: 'label',
