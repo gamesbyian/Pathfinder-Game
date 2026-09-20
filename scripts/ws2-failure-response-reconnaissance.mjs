@@ -98,7 +98,7 @@ const resolution = buildResearchResolutionEnvelope({
   questionId: contract.questionId,
   liveRivals: contract.liveRivals,
   discriminatingObservable: contract.primaryDiscriminator,
-  requiredAxes: ['eligibility', 'measurementSupport', 'coverage'],
+  requiredAxes: contract.requiredObservabilityAxes,
   axes: {
     eligibility: {
       status: identityComparable ? 'satisfied' : 'blocked',
@@ -136,11 +136,7 @@ const resolution = buildResearchResolutionEnvelope({
     },
   },
   negativeInterpretationPolicy: contract.negativeResolution,
-  outcomeInterpretation: {
-    routeSelected: 'select only under the frozen Stage-A/Stage-B routing rules',
-    routeNone: 'no expensive follow-on is earned; this does not imply no mechanism exists',
-    blocked: 'repair the named observability blocker before treating the routing screen as resolution-ready',
-  },
+  outcomeInterpretation: contract.resolutionOutcomeInterpretation,
   source: {
     kind: 'ws2-failure-response-reconnaissance',
     analysisContractIdentity: contractIdentity,
