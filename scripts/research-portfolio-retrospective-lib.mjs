@@ -30,8 +30,10 @@ function classifyAnswerability(question) {
   const result = String(question.result ?? '');
   const text = `${reopen} ${result}`.toLowerCase();
 
-  const evidenceDeficit = /(?:obtain|population|sample|rows|telemetry|evidence|dispatch|complete the frozen|prospective)/u.test(text);
-  const measurementDeficit = /(?:measure|measurement|instrument|observer|telemetry|exact-action|distance|descriptor|signature|can be completed|construction)/u.test(text);
+  const strongEvidenceGate = /(?:producer emits|dispatch and complete|obtain protocol-compatible|independent shared-budget population|frozen[^.]*population|population[^.]*can test|prospective[^.]*sample|rows[^.]*exist)/u.test(text);
+  const evidenceDeficit = strongEvidenceGate
+    || /(?:obtain|population|sample|rows|telemetry|evidence|dispatch|complete the frozen|prospective)/u.test(text);
+  const measurementDeficit = /(?:missing instrument|missing observer|new measurement|distance-to-solution|descriptor|signature purity|can be completed or relaxed|candidate-construction|construction method)/u.test(text);
   const computeDeficit = /(?:dispatch|run|probe|sweep|compute|budget|canary)/u.test(text);
   const codeDeficit = /(?:implement|implementation|constructor|producer|instrumentation|observer)/u.test(text);
   const conceptDeficit = /(?:ontology|representation|semantic|interface contract|missing primitive|grammar)/u.test(text);
@@ -41,7 +43,8 @@ function classifyAnswerability(question) {
     // Prefer the concrete reopen path over broad conceptual vocabulary. A question
     // that mentions semantic/representation concerns but already names the missing
     // population or measurement is operationally blocked by that acquisition seam.
-    if (measurementDeficit) disposition = 'measurement-blocked';
+    if (strongEvidenceGate) disposition = 'evidence/population-blocked';
+    else if (measurementDeficit) disposition = 'measurement-blocked';
     else if (evidenceDeficit) disposition = 'evidence/population-blocked';
     else if (conceptDeficit) disposition = 'concept-or-representation-blocked';
     else disposition = 'condition-blocked';
@@ -50,6 +53,7 @@ function classifyAnswerability(question) {
   return {
     disposition,
     evidenceDeficit,
+    strongEvidenceGate,
     measurementDeficit,
     computeDeficit,
     codeDeficit,
