@@ -95,6 +95,18 @@ assert.throws(
   () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: mismatchedRevision }]),
   /resolved SHA .* differs .* recombine-only result cannot claim one preserved experiment identity/u,
 );
+const nestedReconciliation = clone(manifest);
+nestedReconciliation.experiment.reconciliationRun = {
+  kind: 'recombine-only',
+  preservesExperimentIdentity: true,
+  acquisitionRecomputed: false,
+  sourceRuns: ['leaf-a', 'leaf-b'],
+};
+assert.throws(
+  () => validateReconciliationSources([{ runId: 'nested', manifest: nestedReconciliation }]),
+  /already a reconciliation result.*leaf acquisition runs/u,
+);
+
 const mismatchedProtocol = clone(secondManifest);
 mismatchedProtocol.limits.cumulativeNodeCeiling = 101;
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: mismatchedProtocol }]), /limits.cumulativeNodeCeiling/);
