@@ -45,6 +45,16 @@ function findShardFiles(dir) {
  * @param {{ cells: object[] } | null} [plan]
  */
 export function combine(shardOutputs, controlArm, plan = null) {
+    const commitValues = shardOutputs.map(shard => shard?.commit ?? null);
+    const presentCommits = commitValues.filter(Boolean);
+    if (presentCommits.length > 0 && presentCommits.length !== commitValues.length) {
+        throw new Error('combine: mixed shard execution-revision metadata; fresh and legacy shard documents cannot share one authoritative combine');
+    }
+    const distinctCommits = new Set(presentCommits);
+    if (distinctCommits.size > 1) {
+        throw new Error(`combine: shard execution revisions disagree: ${[...distinctCommits].join(', ')}`);
+    }
+    const commit = presentCommits[0] ?? null;
     const results = shardOutputs.flatMap((s) => s.results ?? []);
     if (results.length === 0) throw new Error('combine: no results found across any shard output');
 
@@ -138,7 +148,17 @@ export function combine(shardOutputs, controlArm, plan = null) {
             ? 'At least one candidate preserved control coverage while gaining solves or reducing work.'
             : 'No candidate preserved control coverage while gaining solves or reducing work.',
     };
-    return { schemaVersion: 1, controlArm, totalCells: results.length, populationIntegrity, results, armSummaries, comparisons, researchOutcome };
+    return {
+        schemaVersion: 1,
+        ...(commit ? { commit } : {}),
+        controlArm,
+        totalCells: results.length,
+        populationIntegrity,
+        results,
+        armSummaries,
+        comparisons,
+        researchOutcome,
+    };
 }
 
 function toMarkdown(result) {
