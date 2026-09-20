@@ -212,8 +212,91 @@ if (optInStart < 0 || optInEnd < 0) {
   const optInBlock = ablationSource.slice(optInStart, optInEnd);
   const optInFlags = [...optInBlock.matchAll(/'([A-Z0-9_]+)'/g)].map((match) => match[1]);
   const ledger = readFileSync(resolve(ROOT, 'docs/solver-opt-in-experiment-ledger.md'), 'utf8');
+  const currentFlagsStart = ledger.indexOf('## Current production-default-OFF flags');
+  const currentFlagsEnd = currentFlagsStart < 0 ? -1 : ledger.indexOf('## Recently promoted/default-ON mechanisms worth remembering', currentFlagsStart);
+  const currentFlagsSection = currentFlagsStart >= 0
+    ? ledger.slice(currentFlagsStart, currentFlagsEnd >= 0 ? currentFlagsEnd : undefined)
+    : '';
+  const allowedPromotionStates = new Set(['closed', 'open', 'no-current-gate', 'not-promotion-candidate']);
+  const ledgerRows = new Map(
+    [...currentFlagsSection.matchAll(/^\| `([A-Z0-9_]+)` \| `([a-z-]+)` \| (.+) \|$/gmu)]
+      .map(match => [match[1], { promotionState: match[2], disposition: match[3] }]),
+  );
   for (const flag of optInFlags) {
-    if (!ledger.includes(`\`${flag}\``)) failures.push(`docs/solver-opt-in-experiment-ledger.md: missing current OPT_IN_FEATURES member ${flag}`);
+    const row = ledgerRows.get(flag);
+    if (!row) {
+      failures.push(`docs/solver-opt-in-experiment-ledger.md: missing structured current OPT_IN_FEATURES row for ${flag}`);
+      continue;
+    }
+    if (!allowedPromotionStates.has(row.promotionState)) {
+      failures.push(`docs/solver-opt-in-experiment-ledger.md: unknown promotion state ${row.promotionState} for ${flag}`);
+    }
+  }
+  for (const [flag, row] of ledgerRows) {
+    if (!optInFlags.includes(flag)) {
+      failures.push(`docs/solver-opt-in-experiment-ledger.md: structured default-OFF row ${flag} is not in OPT_IN_FEATURES`);
+    }
+    if (!allowedPromotionStates.has(row.promotionState)) {
+      failures.push(`docs/solver-opt-in-experiment-ledger.md: unknown promotion state ${row.promotionState} for ${flag}`);
+    }
+  }
+
+  const promotedStart = ledger.indexOf('## Recently promoted/default-ON mechanisms worth remembering');
+  const promotedSection = promotedStart >= 0 ? ledger.slice(promotedStart) : '';
+  const promotedRows = [...promotedSection.matchAll(/^\| (.+?) \| (.+?) \| (.+) \|$/gmu)]
+    .filter(match => match[1] !== 'Mechanism' && !/^---/u.test(match[1]))
+    .map(match => ({
+      mechanismCell: match[1],
+      mechanisms: [...match[1].matchAll(/`([A-Z0-9_]+)`/gu)].map(item => item[1]),
+      decisionEvidenceRef: match[2] === '—' ? null : match[2].replaceAll('`', '').trim(),
+    }));
+  if (promotedRows.length === 0) {
+    failures.push('docs/solver-opt-in-experiment-ledger.md: missing structured promoted/default-ON rows');
+  }
+  for (const row of promotedRows) {
+    if (row.mechanisms.length === 0) {
+      failures.push(`docs/solver-opt-in-experiment-ledger.md: promoted row has no mechanism identity: ${row.mechanismCell}`);
+    }
+    for (const flag of row.mechanisms) {
+      if (!new RegExp(`^\\s*${flag}\\s*:`, 'mu').test(ablationSource)) {
+        failures.push(`docs/solver-opt-in-experiment-ledger.md: promoted mechanism ${flag} is not a live FEATURES key`);
+      }
+      if (optInFlags.includes(flag)) {
+        failures.push(`docs/solver-opt-in-experiment-ledger.md: promoted mechanism ${flag} is still in OPT_IN_FEATURES`);
+      }
+    }
+    if (row.decisionEvidenceRef) {
+      if (!/^reports\//u.test(row.decisionEvidenceRef)) {
+        failures.push(`docs/solver-opt-in-experiment-ledger.md: promotion decision evidence must be a reports/ path: ${row.decisionEvidenceRef}`);
+      } else if (!existsSync(resolve(ROOT, row.decisionEvidenceRef))) {
+        failures.push(`docs/solver-opt-in-experiment-ledger.md: missing promotion decision evidence ${row.decisionEvidenceRef}`);
+      }
+    }
+  }
+}
+
+// Workstream execution state is a control-plane fact. Keep the rich State/context prose, but
+// require a small explicit token so research tooling never has to infer queue state from adjectives.
+const workstreamsSource = readFileSync(resolve(ROOT, 'docs/solver-optimization-workstreams.md'), 'utf8');
+const workstreamStateStart = workstreamsSource.indexOf('## Workstream state');
+const workstreamStateEnd = workstreamStateStart < 0 ? -1 : workstreamsSource.indexOf('## Standing research rules', workstreamStateStart);
+const workstreamStateSection = workstreamStateStart >= 0
+  ? workstreamsSource.slice(workstreamStateStart, workstreamStateEnd >= 0 ? workstreamStateEnd : undefined)
+  : '';
+const allowedWorkstreamExecutionStates = new Set([
+  'active', 'supporting', 'method-complete', 'subsumed', 'closed', 'on-demand',
+]);
+const workstreamRows = [...workstreamStateSection.matchAll(
+  /^\| ([^|]+?) \| ([^|]+?) \| `([a-z-]+)` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|$/gmu,
+)];
+if (workstreamRows.length === 0) {
+  failures.push('docs/solver-optimization-workstreams.md: missing structured Workstream state rows with explicit execution state');
+}
+for (const row of workstreamRows) {
+  const id = row[1].trim();
+  const executionState = row[3];
+  if (!allowedWorkstreamExecutionStates.has(executionState)) {
+    failures.push(`docs/solver-optimization-workstreams.md: unknown execution state ${executionState} for workstream ${id}`);
   }
 }
 

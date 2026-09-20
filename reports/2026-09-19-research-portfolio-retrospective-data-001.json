@@ -15,8 +15,8 @@
   "counts": {
     "windowQuestions": 28,
     "answerability": {
-      "answerable-or-concluded": 22,
-      "evidence/population-blocked": 5,
+      "answerable-or-concluded": 23,
+      "evidence/population-blocked": 4,
       "measurement-blocked": 1
     },
     "proposalProvenance": {
@@ -996,14 +996,15 @@
     {
       "id": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "mixed",
       "question": "Can the separator/decomposition positive be upgraded into a compact dynamic interface contract that preserves the future-relevant history needed for safe composition?",
       "evidenceRefs": [
         "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
         "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
         "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
         "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md",
-        "reports/2026-09-17-separator-decomposition-census-result-001.md"
+        "reports/2026-09-17-separator-decomposition-census-result-001.md",
+        "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md"
       ],
       "premiseRefs": [
         "P014",
@@ -1013,14 +1014,14 @@
       "measurementOpportunities": [],
       "measurementOpportunityStatus": [],
       "answerability": {
-        "disposition": "evidence/population-blocked",
+        "disposition": "answerable-or-concluded",
         "evidenceDeficit": true,
         "strongEvidenceGate": true,
-        "measurementDeficit": true,
+        "measurementDeficit": false,
         "computeDeficit": false,
         "codeDeficit": false,
         "conceptDeficit": false,
-        "reopenConditionPresent": true
+        "reopenConditionPresent": false
       },
       "proposalProvenance": {
         "triggers": [],
@@ -1209,15 +1210,6 @@
       "needsMeasurement": true,
       "needsCompute": false,
       "needsCode": true,
-      "needsConceptOrRepresentation": false
-    },
-    {
-      "questionId": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
-      "disposition": "evidence/population-blocked",
-      "needsEvidenceOrPopulation": true,
-      "needsMeasurement": true,
-      "needsCompute": false,
-      "needsCode": false,
       "needsConceptOrRepresentation": false
     }
   ],

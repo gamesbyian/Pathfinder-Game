@@ -1,9 +1,9 @@
 # Lane A: C0 signature-collision experiment preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-19 — case batch built and verified against this report's own frozen numbers (144 groups, 98 levels, 581 cases; PR #1899). First dispatch (GHA run [35416526866](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35416526866)) had all 20 shards succeed but its combine step failed on a duplicate-case-id bug (155 of the 581 (cut, prefix) pairs share a `caseId` across two distinct cut-signature groups; fixed in PR #1902, population counts unchanged). Redispatched as GHA run [35417717852](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35417717852) (`cases_file=reports/stress/lane-a-c0-signature-collision-cases-2026-09-19.json`, `case_format=cases`, `time_limit=45`, `max_cases=581`, `shard_count=20`). Not yet combined or labelled.
-> **Decision:** not yet reached. No outcome inspected before or during dispatch, per this report's own precommitment.
-> **Remaining gate:** combine the shard results once the GHA run completes and run the existing `signature-collision-analysis-lib.mjs` primitive against the resulting labelled rows.
+> **Status:** superseded
+> **Last evidence:** 2026-09-19 — the frozen C0 experiment completed: 581/581 cases were combined and the result report found live/dead mixing in two independent-parent cut-signature groups.
+> **Decision:** this preflight is historical design authority only; C0 is concluded insufficient in `reports/2026-09-19-lane-a-c0-signature-collision-result-001.md`, and the live handoff is C1 boundary kinematics.
+> **Remaining gate:** none for C0. Follow current workstream authority and the result report for the C1 precommitment.
 > **Evidence role:** population sizing / precommitment. No new exact labels are computed in this pass.
 > **Population identity:** derived from `reports/stress/lane-a-frozen-prefix-population-2026-09-18.json` (2,012 crossing rows, 118 levels, frozen 2026-09-18) and `reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json`. No new frontier sampling in this pass.
 

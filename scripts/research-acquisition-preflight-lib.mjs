@@ -9,6 +9,16 @@ const ROUTES = Object.freeze({
     none: 'NO_LEVEL_GENERATION',
 });
 
+export const RESEARCH_ACQUISITION_NEEDS = Object.freeze([
+    'reuse-existing',
+    'fresh-independent-parents',
+    'cross-source-transfer',
+    'causal-contrast',
+    'human-origin',
+    'telemetry-or-economics',
+    'representation-or-candidate',
+]);
+
 const NEED_TO_ROUTE = Object.freeze({
     'reuse-existing': ROUTES.existing,
     'fresh-independent-parents': ROUTES.fresh,
@@ -57,7 +67,11 @@ export function chooseAcquisitionRoute({ question, eligibleBlocks = [], requeste
         };
     }
 
-    const need = requestedNeed || inferAcquisitionNeed(question);
+    const structuredNeed = String(question?.acquisitionNeed ?? '').trim();
+    const need = requestedNeed || structuredNeed || inferAcquisitionNeed(question);
+    const basis = requestedNeed
+        ? 'caller-request'
+        : structuredNeed ? 'structured-question-field' : 'lexical-question-text';
     const route = NEED_TO_ROUTE[need];
     if (!route) throw new Error(`unknown acquisition need: ${need}`);
 
@@ -68,7 +82,7 @@ export function chooseAcquisitionRoute({ question, eligibleBlocks = [], requeste
         [ROUTES.human]: 'the gate specifically requires human/editor-origin structure',
         [ROUTES.none]: 'the current blocker is not an established level-population deficit; use observation, exact/reference, representation, candidate, dose, work, or economics tooling first',
     };
-    return { route, need, rationale: rationaleByRoute[route] };
+    return { route, need, basis, rationale: rationaleByRoute[route] };
 }
 
 export const acquisitionRoutes = () => Object.values(ROUTES);
@@ -196,6 +210,7 @@ export function generationGuidanceForRoute(route) {
             distributionClass: method.distributionClass,
             scientificUse: method.scientificUse,
             independenceNote: method.independenceNote,
+            supportEnvelope: method.supportEnvelope ?? null,
         };
     };
     if (route === ROUTES.fresh) {

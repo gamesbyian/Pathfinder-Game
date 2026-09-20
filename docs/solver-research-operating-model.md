@@ -16,6 +16,47 @@ Measurements belong in dated reports, current workstream decisions in the workst
 
 Correctness bugs may go directly to fix + regression/soundness validation. Speculative heuristics should test the premise first with existing observers, oracles, family comparisons, reducers, isolated probes, or replay tools.
 
+## Shared research-domain primitives
+
+Reuse the smallest common semantic owners where their meaning genuinely matches:
+
+- `research-semantic-identity-lib.mjs` — canonical semantic hashing only; each specialist owner still defines its hash domain.
+- `research-population-identity-lib.mjs` — canonical identity sets/parsing and population hashes; not a full sample ontology.
+- `research-observation-integrity-lib.mjs` — generic row outcomes and structural/decision-valid completeness; specialist verdicts stay separate.
+- `research-question-contract-lib.mjs` — live ambiguity, discriminating observable, outcome interpretation, and MO syntax.
+- `research-evidence-applicability-lib.mjs` — the shared admissible/context-bound/inadmissible lattice; evidence purposes and classifiers remain specialist.
+- `research-evaluation-evidence-role-lib.mjs` — development/confirmation/transfer evaluation roles; broader report roles stay separate.
+- `research-claim-lib.mjs` — claim identity, material edges, bounded reverse invalidation; payloads stay specialist.
+- `research-resolution-envelope-lib.mjs` — observability axes/blockers/readiness; producers own derivation/discriminator/verdict.
+- `research-independence-vector-lib.mjs` — causal-independence axes/shape only; no aggregate score.
+- `research-unit-topology-lib.mjs` — observation/opportunity/assignment/dependence/analysis/generalization role shape only; studies own the actual units and estimands.
+- `research-repository-ref-lib.mjs` — exact repository-reference syntax/optional tracked existence; consumers own allowed roots, relation semantics, and off-main policy.
+
+Do not route a specialist contract through one of these merely because field names resemble each other. Shared ownership applies only to the exact semantic invariant named above.
+
+## Research authority ownership
+
+Do not collapse distinct kinds of state merely because they describe the same line of work.
+
+- **Execution priority and next gate:** `solver-optimization-workstreams.md`.
+- **Scientific-question lifecycle and reopen condition:** `solver-research-question-relations.json`.
+- **New report-local status/decision/remaining gate:** the structured `pathfinder.research-closeout/v1` capsule; the Markdown status block is a human mirror and legacy fallback.
+- **Evidence applicability:** the evidence-family classifier for the stated purpose/regime, using the shared applicability lattice; there is no global timeless applicability flag.
+- **Claim validity/invalidation:** the claim plus its material derivation dependencies, not a report summary.
+- **Production default polarity:** runtime code/config. The opt-in ledger owns promotion disposition for retained default-OFF experiments, and its promoted-history rows may carry a primary decision-evidence ref; that provenance edge does not override runtime truth.
+
+An active workstream may legitimately reference a `deferred-reopen` scientific question when satisfying its reopen trigger is the current execution gate. A live workstream referencing an unknown or terminal question is an authority error. Derived indexes/inventories may expose these relationships but must not silently become a second owner.
+
+### Prose versus machine state
+
+Prose is not a defect by itself. Keep scientific reasoning, nuanced constraints, caveats, and open-ended reopen predicates in prose when no machine consumer can honestly evaluate them.
+
+But when software or multiple authorities need a stable categorical meaning, prose must not become an undocumented API. Prefer an explicit enum, stable ID, relation, or structured capsule over keyword-parsing arbitrary sentences. If prose merely explains an existing machine-owned fact, consumers use the machine owner and may validate the prose mirror. See `reports/2026-09-19-research-prose-authority-audit-001.md`.
+
+The same rule applies to relationships: if a stable ID/edge exists, join on it rather than lexical similarity. When only lexical similarity exists, label the result as discovery/fallback rather than authority, and do not backfill a stable relation by inference alone.
+
+For relationship quality, prefer: validated authored ID/edge > authored one-way path/ID with referential integrity > embedded contract identity discovered from candidate files > explicitly labelled lexical/path discovery. If both endpoints author the same relation, check agreement. Co-location, filenames, hyperlinks and shared vocabulary may discover candidates but do not define membership or scientific ancestry. See `reports/2026-09-19-research-relation-authority-audit-001.md`.
+
 ## Stop rules
 
 These are gates, not aspirations.
@@ -34,11 +75,17 @@ These are gates, not aspirations.
 12. **Do not preserve failed code for posterity.** Git/reports are the archive; the opt-in ledger retains code only for current reusable plumbing, counterfactual value, or identified descendants.
 13. **Do not optimize proxies after the real objective stops moving.** Badness, lineage survival, shadow catch, similarity, classifier accuracy, and frontier diversity are diagnostics. Promotion requires cold solve/work/correctness value.
 14. **Do not hide rare capability in an average.** Report denominators, uncertainty, paired gains/losses, unique residual solves, and Pareto tradeoffs. One spectacular selected level also does not buy broad entitlement.
-15. **Frameworks must earn implementation.** Scheduler/configurator/reference/analytics/shadow/learning infrastructure starts with a value-of-information pilot and a stop condition. Before adding a durable registry, identity namespace, evidence store, canonical prose authority, causal taxonomy, or broad observer framework, state which existing primitive is inadequate, whether the deficiency is semantic/scientific or merely ergonomic, which real consumer needs the addition, why an extension or derived view is insufficient, which existing surface becomes simpler/removable, and the stop condition if reuse does not materialize. Prefer a simple rule/helper when it answers the question.
+15. **Frameworks must earn implementation.** Scheduler/configurator/reference/analytics/shadow/learning infrastructure starts with a value-of-information pilot and a stop condition. Before adding a durable registry, identity namespace, evidence store, canonical prose authority, causal taxonomy, or broad observer framework, state which existing primitive is inadequate, whether the deficiency is semantic/scientific or merely ergonomic, which real consumer needs the addition, why an extension or derived view is insufficient, which existing surface becomes simpler/removable, and the stop condition if reuse does not materialize. Prefer a simple rule/helper when it answers the question. When repeated connective glue or distributed knowledge appears, classify it before adding more: retrieval/diagnostic joins stay derived, translations between legitimately different specialist contracts stay adapters, one-current-fact surfaces need a canonical authority, and only repeated correctness-critical semantics become shared primitives. Promote a lifecycle/domain object only after at least two materially different live producers/consumers demonstrate the same invariant or state transition; conceptual elegance alone is not reuse.
 16. **Prefer branch/PR evidence.** Merge before decision-bearing validation only when the required execution/data path cannot exercise the branch; record why. Do not use `main` as experiment scratch space.
 17. **External best practices are hypotheses, not authority.** Literature can nominate methods; Pathfinder still needs a problem-specific comparable-work/correctness pilot.
 18. **State the ambiguity before buying measurement.** When discrimination is the point, record live rivals, the discriminating observable, and outcome interpretations. Preflight may carry this contract; MO IDs confer no queue authority.
 19. **Separate promotion disposition from demonstrated capability.** A treatment can be correctly closed while still proving complementary capability, and a promoted treatment can displace old capability. Preserve material gain/loss/cost/mechanism evidence as offline capability memory without retaining failed code or turning exact historical outcomes into runtime routing. See [`solver-capability-memory.md`](solver-capability-memory.md).
+20. **Prove observability before interpreting a null as negative evidence.** For the claim at issue, establish the required eligibility/applicability, opportunity/headroom, reach, real participation/exposure, measurement support, execution fidelity/comparability, coverage, and censoring conditions. A missing/unsupported/unreached/non-participating/fidelity-mismatched/censored observation is an observability deficit, not ordinary negative evidence. Classify the blocker and route the smallest acquisition/routing/allocation/instrumentation repair before scaling or closing the premise. See [`2026-09-19-research-observability-envelope-audit-001.md`](../reports/2026-09-19-research-observability-envelope-audit-001.md).
+21. **Co-design observability and discrimination.** State the live rivals and smallest discriminating observable, then derive only the observability axes required for that discriminator. Reject discriminators the current population/instrument cannot expose; reject broad data collection that cannot separate the important rivals. A live question is resolution-ready only when the discriminator is decision-changing and its observability envelope is satisfiable. See [`2026-09-19-research-identifiability-and-synchronous-resolution-audit-001.md`](../reports/2026-09-19-research-identifiability-and-synchronous-resolution-audit-001.md).
+22. **Rival sets are decision-bounded by default.** Separating named alternatives does not prove they exhaust explanations; record decision-relevant omissions.
+23. **Freeze decision-bearing numbers with the contract.** Thresholds, caps, sample sizes, action/config identities and cut points live in the frozen machine artifact; CLI overrides must match.
+24. **Calibrate measurement reactivity.** If telemetry can alter search/allocation/work/timing/memory/participation, require parity plus bounded overhead/volume evidence. Under wall-clock termination, a read-only callback can still change observable reach: prove OFF/ON reach/work/opportunity parity, prove wall time non-binding, or label rates/coverage observer-conditioned. Otherwise keep it research-only.
+25. **After the first useful abstraction, run a closure pass.** Ask: staleness, co-transitioning authorities, omitted rivals, observer effect, quantitative owner, target scope, useful joins, adaptive selection, invalidation, and semantic-vs-proxy tests. See `reports/2026-09-20-research-session-local-optima-retrospective-001.md`.
 
 ## Capability and evidence roles
 
@@ -124,7 +171,7 @@ For a valid human/AI/oracle/variant path: referee-validate and record provenance
 
 Production-facing treatments normally require: level-blind execution; identifiable code/protocol; complete intended population or explicit sample; non-binding deadlines when work comparability matters; comparable arms; gains/losses; `workSpent`, nodes, errors/truncation as relevant; no hidden hint/data mutation; and queue/ledger updates when disposition changes.
 
-Selected/tuned treatments normally need sample-independent confirmation, with strength proportional to the candidate search/selection pressure. Cross-generator transfer is reserved for broad claims, heavily tuned/global/learned policies, or cases where distributional robustness is materially in doubt. Report intended population, actual coverage, independent unit, exclusions/missing cells, and denominators. Scheduling additionally requires total-work envelope, current reach, rare unique wins/losses, and a simple-policy comparator. Proxy improvement alone is insufficient. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
+Selected/tuned treatments normally need sample-independent confirmation, with strength proportional to the candidate search/selection pressure. Cross-generator transfer is reserved for broad claims, heavily tuned/global/learned policies, or cases where distributional robustness is materially in doubt. Mechanics/grid/topology support is necessary but not sufficient: the transfer population must also expose the claim's relevant causal opportunity/response region. Report intended population, actual coverage, independent unit, exclusions/missing cells, and denominators. Scheduling additionally requires total-work envelope, current reach, rare unique wins/losses, and a simple-policy comparator. Proxy improvement alone is insufficient. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 At closeout, a production verdict and a capability signature are distinct. Preserve material complementary gains/losses/mechanism evidence through reports or the derived capability-memory interface when it can nominate future generic premises; do not preserve failed implementation code solely to keep that evidence accessible.
 

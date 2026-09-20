@@ -1,14 +1,18 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { buildResearchRelations } from './research-relations-lib.mjs';
 import {
+    isTerminalResearchQuestionState,
     loadResearchQuestionRegistry,
+    researchQuestionLifecycleClass,
     validateResearchQuestionRegistry,
 } from './research-question-relations-lib.mjs';
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
 import { buildQuestionDossier } from './research-question-dossier-lib.mjs';
 import { GENERATION_METHODS, GENERATION_SUITES, crossConstructionStatus } from './research-level-generation-lib.mjs';
+import { isResearchEvaluationEvidenceRole } from './research-evaluation-evidence-role-lib.mjs';
+import { validateSolverResearchDataAssets } from './solver-research-data-assets-lib.mjs';
 
 function refIds(question, keys) {
     return keys.flatMap(key => {
@@ -22,8 +26,9 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     const errors = [];
     const warnings = [];
     const questionRegistry = loadResearchQuestionRegistry(root);
-    errors.push(...validateResearchQuestionRegistry(questionRegistry));
+    errors.push(...validateResearchQuestionRegistry(questionRegistry, { root }));
     const questionIds = new Set(questionRegistry.questions.map(question => question.id));
+    const questionById = new Map(questionRegistry.questions.map(question => [question.id, question]));
 
     const premiseMap = loadPremiseMap(root);
     const premiseIds = new Set(premiseMap.premises.map(row => row.premiseId));
@@ -68,6 +73,14 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         for (const moId of refIds(question, ['measurementOpportunity', 'measurementOpportunities', 'measurementOpportunityIds'])) {
             if (!measurementIds.has(moId)) errors.push(`${question.id} references unknown measurement opportunity ${moId}`);
         }
+        for (const field of ['answeredBy', 'constrainedBy']) {
+            for (const value of question[field] ?? []) {
+                if (!/^(?:docs|reports|scripts|data|logs)\//u.test(String(value))) continue;
+                if (!existsSync(path.join(root, value))) {
+                    errors.push(`${question.id}.${field} references missing repository path ${value}`);
+                }
+            }
+        }
     }
 
     const model = suppliedModel ?? buildResearchRelations(root, { discoverArtifacts: true });
@@ -77,11 +90,47 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     if (!model.relations.queue.some(row => String(row.workstreamId) === '2')) {
         errors.push('research-status queue relation does not expose WS2 from current workstream authority');
     }
-    for (const question of questionRegistry.questions.filter(row => String(row.state ?? '').startsWith('active'))) {
+    for (const row of model.relations.queue) {
+        if (!row.questionRef) continue;
+        const question = questionById.get(row.questionRef);
+        if (!question) {
+            errors.push(`workstream ${row.workstreamId ?? row.topicId} references unknown research question ${row.questionRef}`);
+            continue;
+        }
+        const queueActive = row.executionState === 'active' || row.status === 'active';
+        const questionState = String(question.state ?? '').toLowerCase();
+        if (queueActive && isTerminalResearchQuestionState(questionState)) {
+            errors.push(`active workstream ${row.workstreamId ?? row.topicId} references terminal research question ${row.questionRef} (${question.state})`);
+        }
+    }
+    for (const question of questionRegistry.questions.filter(row =>
+        researchQuestionLifecycleClass(String(row.state ?? '').toLowerCase()) === 'active')) {
         if (!model.relations.queue.some(row => row.questionRef === question.id)) {
             errors.push(`active question ${question.id} is not linked from the structured workstream queue relation`);
         }
     }
+    const evidenceByReport = new Map(
+        model.relations.evidence
+            .map(evidence => [evidence.latestEvidence?.report ?? null, evidence])
+            .filter(([report]) => Boolean(report)),
+    );
+    for (const question of questionRegistry.questions) {
+        for (const reportPath of question.answeredBy ?? []) {
+            if (!/^reports\//u.test(String(reportPath))) continue;
+            const evidence = evidenceByReport.get(reportPath);
+            if (!evidence?.researchQuestion) continue;
+            if (evidence.researchQuestion !== question.id) {
+                errors.push(`${question.id}.answeredBy points to ${reportPath}, whose structured researchQuestion is ${evidence.researchQuestion}`);
+            }
+        }
+    }
+
+    for (const promotion of model.relations.promotions ?? []) {
+        if (promotion.decisionEvidenceRef && !existsSync(path.join(root, promotion.decisionEvidenceRef))) {
+            errors.push(`promotion ${promotion.promotionId} references missing decision evidence ${promotion.decisionEvidenceRef}`);
+        }
+    }
+
     for (const evidence of model.relations.evidence) {
         if (evidence.researchQuestion && !questionIds.has(evidence.researchQuestion)) {
             errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown research question ${evidence.researchQuestion}`);
@@ -92,28 +141,60 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         for (const moId of evidence.measurementOpportunities ?? []) {
             if (!measurementIds.has(moId)) errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown measurement opportunity ${moId}`);
         }
+        for (const ref of evidence.sourceArtifacts ?? []) {
+            if (!existsSync(path.join(root, ref))) {
+                errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references missing sourceArtifact ${ref}`);
+            }
+        }
     }
 
     const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
+    errors.push(...validateSolverResearchDataAssets(root).map(error => `research asset registry: ${error}`));
     const assetIds = new Set((assetsDocument.assets ?? []).map(asset => asset.id));
-    for (const relationship of assetsDocument.relationships ?? []) {
-        for (const assetId of relationship.assets ?? []) {
-            if (!assetIds.has(assetId)) errors.push(`research asset relationship ${relationship.id} references unknown asset ${assetId}`);
+    const resourceAudits = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-resource-contract-audits.json'), 'utf8'));
+    for (const topLevelPath of [resourceAudits.registry, resourceAudits.contractDocument]) {
+        if (topLevelPath && !existsSync(path.join(root, topLevelPath))) {
+            errors.push(`resource contract registry references missing repository path ${topLevelPath}`);
         }
     }
-    const resourceAudits = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-resource-contract-audits.json'), 'utf8'));
+    const auditedAssetIds = new Set();
     for (const audit of resourceAudits.auditedResources ?? []) {
+        if (auditedAssetIds.has(audit.assetId)) errors.push(`resource contract audit duplicates asset ${audit.assetId}`);
+        auditedAssetIds.add(audit.assetId);
         if (!assetIds.has(audit.assetId)) errors.push(`resource contract audit references unknown asset ${audit.assetId}`);
+        for (const field of ['historicalClaimBlastRadius', 'auditAuthorities']) {
+            for (const ref of audit[field] ?? []) {
+                if (!existsSync(path.join(root, ref))) {
+                    errors.push(`resource contract audit ${audit.assetId}.${field} references missing repository path ${ref}`);
+                }
+            }
+        }
+        for (const ref of audit.producerAuthority ?? []) {
+            const value = String(ref);
+            if (/^(?:docs|reports|scripts|data|logs|modules)\//u.test(value)) {
+                if (!/^(?:docs|reports|scripts|data|logs|modules)\/[A-Za-z0-9._/-]+$/u.test(value)) {
+                    errors.push(`resource contract audit ${audit.assetId}.producerAuthority must be one exact repository path, not prose: ${value}`);
+                } else if (!existsSync(path.join(root, value))) {
+                    errors.push(`resource contract audit ${audit.assetId}.producerAuthority references missing repository path ${value}`);
+                }
+            }
+        }
+    }
+    for (const requiredId of resourceAudits.requiredAuditedResources ?? []) {
+        if (!assetIds.has(requiredId)) {
+            errors.push(`resource contract requires unknown asset ${requiredId}`);
+        } else if (!auditedAssetIds.has(requiredId)) {
+            errors.push(`resource contract requires unaudited asset ${requiredId}`);
+        }
     }
 
-    const validEvidenceRoles = new Set(['development', 'confirmation', 'transfer']);
     for (const suite of Object.values(GENERATION_SUITES)) {
         for (const method of suite.methods ?? []) {
             if (!GENERATION_METHODS[method]) errors.push(`generation suite ${suite.id} references unknown method ${method}`);
         }
         for (const [method, role] of Object.entries(suite.defaultEvidenceRoles ?? {})) {
             if (!(suite.methods ?? []).includes(method)) errors.push(`generation suite ${suite.id} assigns a role to non-member method ${method}`);
-            if (!validEvidenceRoles.has(role)) errors.push(`generation suite ${suite.id} uses invalid evidence role ${role}`);
+            if (!isResearchEvaluationEvidenceRole(role)) errors.push(`generation suite ${suite.id} uses invalid evidence role ${role}`);
         }
     }
     const transferPair = GENERATION_SUITES['transfer-pair'];
@@ -124,6 +205,22 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
 
     for (const block of model.relations.researchBlocks) {
         if (!questionIds.has(block.questionId)) errors.push(`research block ${block.blockId} references unknown question ${block.questionId}`);
+        const parentIds = new Set(block.researchBlock?.parentIds ?? []);
+        for (const [index, event] of (block.researchBlock?.consumptionEvents ?? []).entries()) {
+            if (!questionIds.has(event.questionId)) {
+                errors.push(`research block ${block.blockId} consumptionEvents[${index}] references unknown question ${event.questionId}`);
+            }
+            if (/^(?:docs|reports|scripts|data|logs)\//u.test(String(event.decisionRef ?? ''))
+                && !existsSync(path.join(root, event.decisionRef))) {
+                errors.push(`research block ${block.blockId} consumptionEvents[${index}] references missing decisionRef ${event.decisionRef}`);
+            }
+            if (event?.scope?.kind === 'block' && String(event.scope.id) !== String(block.blockId)) {
+                errors.push(`research block ${block.blockId} consumptionEvents[${index}] block scope names ${event.scope.id}`);
+            }
+            if (event?.scope?.kind === 'parent' && !parentIds.has(event.scope.id)) {
+                errors.push(`research block ${block.blockId} consumptionEvents[${index}] parent scope names unknown parent ${event.scope.id}`);
+            }
+        }
     }
 
     for (const bundle of model.relations.durableEvidence) {
@@ -169,7 +266,8 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
     }
 
-    const activeQuestion = questionRegistry.questions.find(question => String(question.state).startsWith('active'));
+    const activeQuestion = questionRegistry.questions.find(question =>
+        researchQuestionLifecycleClass(String(question.state ?? '').toLowerCase()) === 'active');
     if (activeQuestion) {
         const dossier = buildQuestionDossier(root, { questionId: activeQuestion.id });
         if (dossier.authority?.kind !== 'derived-read-only') {

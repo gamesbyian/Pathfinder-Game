@@ -1,4 +1,7 @@
-import { createHash } from 'node:crypto';
+import { canonicalResearchValue, researchSemanticHash } from './research-semantic-identity-lib.mjs';
+import { RESEARCH_OBSERVABILITY_AXES } from './research-resolution-envelope-lib.mjs';
+import { researchIndependenceVectorIssues } from './research-independence-vector-lib.mjs';
+import { researchUnitTopologyIssues } from './research-unit-topology-lib.mjs';
 
 export const WS2_FAILURE_RESPONSE_ROUTES = Object.freeze([
   'rejection-counterfactual',
@@ -8,15 +11,6 @@ export const WS2_FAILURE_RESPONSE_ROUTES = Object.freeze([
   'none',
   'unresolved-needs-compact-diagnostics',
 ]);
-
-function stable(value) {
-  if (Array.isArray(value)) return value.map(stable);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, child]) => [key, stable(child)]));
-  }
-  return value;
-}
 
 export function ws2FailureResponseAnalysisContractIssues(contract) {
   const issues = [];
@@ -28,6 +22,7 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   if (contract.decisionPurpose !== 'scientific-question-discrimination') issues.push('decisionPurpose');
   if (contract.independentUnit !== 'parent') issues.push('independentUnit');
   const topology = contract.unitTopology;
+  issues.push(...researchUnitTopologyIssues(topology));
   if (topology?.observationUnit !== 'failure-response-record') issues.push('unitTopology.observationUnit');
   if (topology?.opportunityUnit !== 'parent') issues.push('unitTopology.opportunityUnit');
   if (topology?.dependenceClusterUnit !== 'parent') issues.push('unitTopology.dependenceClusterUnit');
@@ -80,6 +75,19 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   }
   if (contract.primaryDiscriminator !== 'cheapest-next-ws2-instrument-route') issues.push('primaryDiscriminator');
   if (contract.negativeResolution !== 'route-none-does-not-imply-no-mechanism-exists') issues.push('negativeResolution');
+  if (!Array.isArray(contract.requiredObservabilityAxes)
+      || contract.requiredObservabilityAxes.length !== 3
+      || new Set(contract.requiredObservabilityAxes).size !== contract.requiredObservabilityAxes.length
+      || contract.requiredObservabilityAxes.some(axis => !RESEARCH_OBSERVABILITY_AXES.includes(axis))
+      || !['measurementSupport', 'fidelity', 'coverage'].every(axis => contract.requiredObservabilityAxes.includes(axis))) {
+    issues.push('requiredObservabilityAxes');
+  }
+  const resolutionInterpretation = contract.resolutionOutcomeInterpretation;
+  for (const field of ['routeSelected', 'routeNone', 'blocked']) {
+    if (typeof resolutionInterpretation?.[field] !== 'string' || !resolutionInterpretation[field].trim()) {
+      issues.push(`resolutionOutcomeInterpretation.${field}`);
+    }
+  }
   if (contract.reproducibility?.class !== 'deterministic-under-identical-immutable-inputs') {
     issues.push('reproducibility.class');
   }
@@ -88,18 +96,7 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   if (contract.adaptiveLineage?.descendantEvidenceRole !== 'development-until-new-precommitment') {
     issues.push('adaptiveLineage.descendantEvidenceRole');
   }
-  if (contract.independenceVector?.sampleData !== 'parent-clustered; repeated records/attempts within one parent are dependent') {
-    issues.push('independenceVector.sampleData');
-  }
-  if (contract.independenceVector?.instrumentImplementation !== 'shared compact failure-response implementation') {
-    issues.push('independenceVector.instrumentImplementation');
-  }
-  for (const field of ['taskFramingPrompt', 'authorityContextExposure', 'ontologyVocabulary', 'criticalLibraryCode']) {
-    if (typeof contract.independenceVector?.[field] !== 'string' || !contract.independenceVector[field].trim()) {
-      issues.push(`independenceVector.${field}`);
-    }
-  }
-  if ('framingContext' in (contract.independenceVector ?? {})) issues.push('independenceVector.framingContext');
+  issues.push(...researchIndependenceVectorIssues(contract.independenceVector));
   if (!Array.isArray(contract.liveRivals) || contract.liveRivals.length < 2) issues.push('liveRivals');
   if (typeof contract.prospectiveExpectation?.expectedShape !== 'string'
       || !contract.prospectiveExpectation.expectedShape.trim()) {
@@ -128,8 +125,7 @@ export function validateWs2FailureResponseAnalysisContract(contract) {
 
 export function ws2FailureResponseAnalysisContractIdentity(contract) {
   validateWs2FailureResponseAnalysisContract(contract);
-  const canonical = JSON.stringify(stable(contract));
-  return `sha256:${createHash('sha256').update(canonical).digest('hex')}`;
+  return researchSemanticHash(contract);
 }
 
 
@@ -159,11 +155,11 @@ export function ws2FailureResponseAnalysisIdentity(analysis) {
       rows: Array.isArray(observation.rows)
         ? observation.rows
           .map(({ __sourceFile: _sourceFile, ...row }) => row)
-          .sort((left, right) => JSON.stringify(stable(left)).localeCompare(JSON.stringify(stable(right))))
+          .sort((left, right) => JSON.stringify(canonicalResearchValue(left)).localeCompare(JSON.stringify(canonicalResearchValue(right))))
         : observation.rows,
     },
   };
-  return `sha256:${createHash('sha256').update(JSON.stringify(stable(semanticCore))).digest('hex')}`;
+  return researchSemanticHash(semanticCore);
 }
 
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -144,7 +144,8 @@ try {
 // search-loss-evidence (docs/solver-search-loss-evidence-implementation-plan.md, Phase 2): a
 // capture discovered from its own transient root, using its native population.populationIdentity
 // field rather than the D1 fixture's top-level populationIdentity/corpusIdentity spellings.
-const searchLossRoot = path.join(process.cwd(), 'tmp', 'search-loss-evidence');
+const discoveryRoot = mkdtempSync(path.join(tmpdir(), 'pathfinder-research-discovery-'));
+const searchLossRoot = path.join(discoveryRoot, 'tmp', 'search-loss-evidence');
 mkdirSync(searchLossRoot, { recursive: true });
 try {
     const searchLossPopulationIdentity = `sha256:${'4'.repeat(64)}`;
@@ -172,10 +173,11 @@ try {
         capsules: [],
     }));
 
-    assert.ok(discoverResearchArtifactPaths(process.cwd()).some(p => p.endsWith(path.join('tmp', 'search-loss-evidence', 'capture.json'))),
-        'search-loss capture under its own transient root is discoverable');
+    const discoveredSearchLoss = discoverResearchArtifactPaths(discoveryRoot);
+    assert.deepEqual(discoveredSearchLoss, [path.join('tmp', 'search-loss-evidence', 'capture.json')],
+        'search-loss capture under its own transient root is discoverable without touching the repository fixture space');
 
-    const searchLossModel = buildResearchRelations(process.cwd(), { discoverArtifacts: true });
+    const searchLossModel = buildResearchRelations(process.cwd(), { artifactPaths: [searchLossCapturePath] });
     const searchLossRow = searchLossModel.relations.researchBlocks.find(row => row.blockId === 'SEARCH-LOSS-BLOCK-TEST');
     assert.ok(searchLossRow, 'discovered search-loss capture appears as a research block');
     assert.equal(searchLossRow.enrichments.observation.length, 1);
@@ -184,7 +186,7 @@ try {
         && row._researchSource?.relation === 'assets'), 'search-loss-evidence asset is discoverable with source provenance retained');
     assert.ok(searchLossModel.relations.assetRelationships.some(row => row.id === 'search-loss-to-lifecycle'));
 } finally {
-    rmSync(searchLossRoot, { recursive: true, force: true });
+    rmSync(discoveryRoot, { recursive: true, force: true });
 }
 
 const real = buildResearchRelations(process.cwd());
@@ -196,6 +198,23 @@ assert.equal(real.relations.premiseEdges.length, 184);
 assert.ok(real.relations.premises.some(row => row.premiseId === 'P204'));
 assert.ok(real.relations.premiseEdges.some(row => row.from === 'P204' && row.to === 'P183'));
 assert.ok(Array.isArray(real.relations.durableEvidence));
+assert.ok(Array.isArray(real.relations.promotions));
+assert.ok(real.relations.promotions.some(row =>
+    row.mechanisms.includes('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY')
+    && row.decisionEvidenceRef === 'reports/2026-09-16-class4-113-allocation-promotion-001.md'),
+    'promoted runtime mechanisms should expose their authored decision-evidence edge when retained');
+assert.ok(real.relations.promotions.every(row => row._researchSource?.relation === 'promotions'));
+for (const bundle of real.relations.durableEvidence) {
+    const source = JSON.parse(readFileSync(bundle.bundlePath, 'utf8'));
+    assert.ok(source.manifestStoredPath || (source.files ?? []).some(file => file.source === 'manifest.json'),
+        'durable evidence relation must derive manifest membership from an authored bundle edge');
+    assert.equal(
+        bundle.manifestPath,
+        path.join(path.dirname(bundle.bundlePath), source.manifestStoredPath ?? source.files.find(file => file.source === 'manifest.json').stored)
+            .split(path.sep).join('/'),
+        'durable evidence manifest relation must follow the bundle edge, not assume a sibling filename',
+    );
+}
 assert.ok(real.relations.assets.some(row => row.id === 'experiment-manifests'));
 assert.deepEqual(
     exactPathIntegrityRecords(

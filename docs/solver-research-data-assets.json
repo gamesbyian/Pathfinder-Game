@@ -1019,7 +1019,8 @@
         "exact-reference-labels",
         "experiment-manifests",
         "solver-capability-memory",
-        "search-loss-evidence"
+        "search-loss-evidence",
+        "compact-failure-response"
       ],
       "affordances": [
         "Use controlled transformations to localize structural causes of solver cliffs.",
@@ -1248,7 +1249,8 @@
         "technique-census",
         "solution-space-profiles",
         "variant-family-data",
-        "solver-capability-memory"
+        "solver-capability-memory",
+        "compact-failure-response"
       ],
       "affordances": [
         "Stratify solver outcomes and technique-response cohorts by legal static puzzle descriptors.",
@@ -1361,7 +1363,9 @@
         "lifecycle-telemetry",
         "search-loss-evidence",
         "solver-capability-memory",
-        "hint-discovery-process"
+        "hint-discovery-process",
+        "static-level-descriptors",
+        "variant-family-data"
       ],
       "affordances": [
         "Distinguish non-participation, stage exposure, work/dose, censoring/exhaustion, badness support, and failed attempts inside solved controls without retaining full paths/state.",
@@ -1786,6 +1790,35 @@
         "Do failed technique-census cells preserve compact work/progress/censoring response instead of collapsing to solve/no-solve?"
       ],
       "boundary": "The technique census is both a consumer and a primary prospective producer; complete cell denominator remains the census's own responsibility."
+    },
+    {
+      "id": "failure-response-to-static-descriptors",
+      "assets": [
+        "compact-failure-response",
+        "static-level-descriptors",
+        "production-benchmarks"
+      ],
+      "join": "corpus + levelId/parentId under a named solver/protocol population",
+      "questions": [
+        "Which cheap legal static descriptors stratify recurring failure-response phenotypes such as non-participation, censoring, high-cost progress, or stage exposure?",
+        "Does a nominated failure phenotype persist after conditioning on generator/mechanic/geometry differences rather than merely tracking a selected residual cohort?",
+        "Can a descriptor nominate a smaller prospective confirmation population before richer trace or exact instrumentation is purchased?"
+      ],
+      "boundary": "Descriptor/failure-response associations are observational development evidence. Selected residuals do not estimate unconditional prevalence, and descriptor membership may not become exact-level production steering."
+    },
+    {
+      "id": "failure-response-to-variants",
+      "assets": [
+        "compact-failure-response",
+        "variant-family-data"
+      ],
+      "join": "parent/variant identity + current solver/protocol identity + parent-family lineage",
+      "questions": [
+        "Which controlled transformation moves a failure-response phenotype, work dose, participation boundary, or progress signature?",
+        "Does a family transformation convert a non-participating or censored case into a real mechanism opportunity without requiring rich search-loss capture?",
+        "Does the same phenotype change recur across unrelated parent families strongly enough to nominate a generic mechanism?"
+      ],
+      "boundary": "Sibling variants are dependent observations; use parent family as the independent unit for cross-family claims. Historical family outcomes require protocol reconciliation before decision-bearing reuse."
     }
   ]
 }

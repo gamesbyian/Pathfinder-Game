@@ -10,39 +10,76 @@
  * remain readable because their dispatched id was built as `${cutSignature}::${originalCaseId}`
  * (PR #1902); only that frozen compatibility path recovers the signature from the first `::`.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { summarizeSignatureCollisions } from '../signature-collision-analysis-lib.mjs';
+import { deriveLaneAC0Cases } from './lane-a-c0-population-lib.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); return h === undefined ? d : h.slice(n.length + 3); };
 
 const IN = arg('in', null);
-if (!IN) throw new Error('Usage: lane-a-c0-signature-collision-analysis.mjs --in=<combined.json>');
+const CASES = arg('cases', null);
+const POPULATION = arg('population', 'reports/stress/lane-a-frozen-prefix-population-2026-09-18.json');
+const GEOMETRY = arg('geometry', 'reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json');
+if (!IN) throw new Error('Usage: lane-a-c0-signature-collision-analysis.mjs --in=<combined.json> [--cases=<cases.json>] [--geometry=<geometry.json>]');
 
 const document = JSON.parse(readFileSync(path.resolve(ROOT, IN), 'utf8'));
+const geometryDocument = JSON.parse(readFileSync(path.resolve(ROOT, GEOMETRY), 'utf8'));
+const casesDocument = CASES && existsSync(path.resolve(ROOT, CASES))
+    ? JSON.parse(readFileSync(path.resolve(ROOT, CASES), 'utf8'))
+    : deriveLaneAC0Cases(
+        JSON.parse(readFileSync(path.resolve(ROOT, POPULATION), 'utf8')),
+        geometryDocument,
+    );
+const caseById = new Map((casesDocument.cases ?? []).map(row => [String(row.id), row]));
+const geometryByLevel = new Map((geometryDocument.levels ?? []).map(row => [String(row.id), row]));
 const rows = document.rows ?? document.levels ?? document.results ?? [];
 if (!Array.isArray(rows) || rows.length === 0) throw new Error(`no rows found in ${IN}`);
 
+const frozenCaseFor = row => {
+    const id = String(row.caseId ?? row.id ?? '');
+    const frozenCase = caseById.get(id);
+    if (!frozenCase) throw new Error(`row does not resolve to frozen Lane-A case: ${id}`);
+    return frozenCase;
+};
+
 const cutSignature = row => {
-    const structured = row?.source?.cutSignature;
+    const frozenCase = frozenCaseFor(row);
+    const structured = row?.source?.cutSignature ?? frozenCase?.source?.cutSignature;
     if (typeof structured === 'string' && structured) return structured;
-    // Historical schema-v2 rows produced before structured source metadata was preserved recover
-    // the frozen C0 signature from the legacy case-id disambiguator. New rows must not depend on
-    // this delimiter encoding as their semantic identity boundary.
     const marker = String(row.caseId ?? '').indexOf('::');
     if (marker === -1) throw new Error(`row has no structured source.cutSignature or legacy case-id disambiguator: ${row.caseId}`);
     return row.caseId.slice(0, marker);
 };
+
+const endpointSide = row => {
+    const frozenCase = frozenCaseFor(row);
+    const level = geometryByLevel.get(String(row.levelId));
+    if (!level) throw new Error(`missing Lane-A geometry for level ${row.levelId}`);
+    const iface = (level.interfaces ?? []).find(candidate =>
+        candidate.target === frozenCase.source?.interfaceTarget
+        && Number(candidate.targetKey) === Number(frozenCase.source?.interfaceTargetKey));
+    if (!iface) throw new Error(`missing Lane-A interface geometry for ${row.caseId}`);
+    const prefix = row.prefix ?? frozenCase.prefix;
+    if (!Array.isArray(prefix) || prefix.length === 0) throw new Error(`row has no prefix: ${row.caseId}`);
+    const end = prefix[prefix.length - 1];
+    if ((iface.gateSideCells ?? []).includes(end)) return 'gate';
+    if ((iface.remainderSideCells ?? []).includes(end)) return 'remainder';
+    if ((iface.cutCells ?? []).includes(end)) return 'cut';
+    throw new Error(`prefix endpoint is outside frozen Lane-A interface partition: ${row.caseId}`);
+};
+
+const c0Signature = row => JSON.stringify([cutSignature(row), endpointSide(row)]);
 
 const decisive = rows.filter(row => row.referenceLabel === 'live' || row.referenceLabel === 'dead');
 const abstain = rows.filter(row => row.referenceLabel === 'timeout/abstain');
 const alarmed = rows.filter(row => row.correctnessAlarm || row.inputAlarm);
 
 const summary = summarizeSignatureCollisions(decisive, {
-    signature: cutSignature,
+    signature: c0Signature,
     label: row => row.referenceLabel,
     independentUnit: row => row.levelId,
     rowId: row => row.caseId,
@@ -53,6 +90,10 @@ const output = {
     schemaVersion: 1,
     kind: 'lane-a-c0-signature-collision-analysis',
     source: IN,
+    frozenCases: CASES,
+    geometry: GEOMETRY,
+    signatureDefinition: 'C0 = geometric cut identity + current prefix endpoint side/region',
+    endpointSideCounts: Object.fromEntries(['gate', 'remainder', 'cut'].map(side => [side, decisive.filter(row => endpointSide(row) === side).length])),
     totalRows: rows.length,
     decisiveRows: decisive.length,
     abstainRows: abstain.length,
@@ -76,6 +117,7 @@ console.log(JSON.stringify({
     rowsInMultiMemberGroups: output.rowsInMultiMemberGroups,
     rowsInMixedGroups: output.rowsInMixedGroups,
     largestGroupRows: output.largestGroupRows,
+    endpointSideCounts: output.endpointSideCounts,
     mixedGroupDetail: output.groups.filter(g => g.mixed),
     independentUnitsAcrossMultiMemberGroups: new Set(
         output.groups.filter(g => g.rows > 1).flatMap(g => g.members.map(m => m.independentUnit)),

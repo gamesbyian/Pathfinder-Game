@@ -51,7 +51,7 @@ assert.throws(() => validateExperimentManifest({ ...control, researchQuestion: {
 } }), /outcomeInterpretation/);
 assert.throws(() => validateExperimentManifest({ ...control, researchQuestion: {
     liveAmbiguity: 'x', discriminatingObservable: 'y', outcomeInterpretation: { yes: 'z' }, measurementOpportunity: 'M4',
-} }), /MO-NNN/);
+} }), /researchQuestion\.measurementOpportunity/);
 assert.throws(() => validateExperimentManifest({ ...control, researchQuestion: {
     questionId: '', liveAmbiguity: 'x', discriminatingObservable: 'y', outcomeInterpretation: { yes: 'z' },
 } }), /questionId/);

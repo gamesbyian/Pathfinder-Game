@@ -1,3 +1,5 @@
+import { validateResearchRepositoryRef } from './research-repository-ref-lib.mjs';
+
 export const INVESTIGATION_REPORT_STATUSES = Object.freeze([
   'active',
   'concluded-positive',
@@ -33,6 +35,13 @@ const normalizeStringList = (value, field) => {
   if (!Array.isArray(value)) throw new Error(`${field} must be an array of strings`);
   return value.map((item, index) => singleLine(item, `${field}[${index}]`));
 };
+
+const normalizeRepositoryRefList = (value, field) => normalizeStringList(value, field).map((item, index) =>
+  validateResearchRepositoryRef(item, {
+    allowedRoots: ['docs', 'reports', 'scripts', 'data', 'logs', 'modules', '.github'],
+    allowedTopLevelFiles: ['AGENTS.md', 'README.md', 'package.json'],
+    label: `${field}[${index}]`,
+  }));
 
 const assertKnownStatus = status => {
   if (!INVESTIGATION_REPORT_STATUSES.includes(status)) {
@@ -77,7 +86,7 @@ export function createResearchCloseoutCapsule({
       inferenceScope: optionalSingleLine(inferenceScope, 'inferenceScope'),
     },
     claimRefs: normalizeStringList(claimRefs, 'claimRefs'),
-    sourceArtifacts: normalizeStringList(sourceArtifacts, 'sourceArtifacts'),
+    sourceArtifacts: normalizeRepositoryRefList(sourceArtifacts, 'sourceArtifacts'),
     prospective: {
       expectation: optionalSingleLine(expectation, 'expectation'),
       surprise: optionalSingleLine(surprise, 'surprise'),

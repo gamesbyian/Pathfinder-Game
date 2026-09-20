@@ -2,13 +2,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
+import { buildResearchPopulationIntegrity as buildPopulationIntegrity } from './research-observation-integrity-lib.mjs';
+import { hashResearchPopulation as hashPopulation } from './research-population-identity-lib.mjs';
 import {
   EXPERIMENT_RESULT_KIND,
   EXPERIMENT_SCHEMA_VERSION,
-  buildPopulationIntegrity,
   decisionContractIssues,
   declaredDecisionContractIssues,
-  hashPopulation,
 } from './solver-experiment-contract.mjs';
 import { FAILURE_RESPONSE_SCHEMA_VERSION, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import { SEARCH_LOSS_CAPTURE_KIND } from './solver-search-loss-evidence-lib.mjs';

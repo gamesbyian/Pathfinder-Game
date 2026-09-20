@@ -51,6 +51,8 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { stringifyCorpusJson } from '../level-json-format.mjs';
+import { validateResearchEvaluationEvidenceRole } from '../research-evaluation-evidence-role-lib.mjs';
+import { TOPOLOGY_GENERATION_SUPPORT } from './topology-generation-support-lib.mjs';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
@@ -68,7 +70,7 @@ import {
 } from './witness.mjs';
 import { levelFeatures, structuralComplexity } from './features.mjs';
 
-const GENERATOR_VERSION = '0.1.0';
+const GENERATOR_VERSION = TOPOLOGY_GENERATION_SUPPORT.generatorVersion;
 const CORPUS_NAME = 'topology-composition-v1';
 const ROOT = process.cwd();
 
@@ -90,7 +92,7 @@ const MAX_ATTEMPTS = 80;
 if (!Number.isInteger(COUNT) || COUNT < 1) throw new Error('--count must be a positive integer');
 if (!Number.isFinite(MASTER_SEED)) throw new Error('--master-seed must be numeric');
 if (!/^[A-Za-z]+$/.test(ID_PREFIX)) throw new Error('--id-prefix must contain letters only');
-if (!['development', 'confirmation', 'transfer'].includes(EVIDENCE_ROLE)) throw new Error('--evidence-role must be development, confirmation, or transfer');
+validateResearchEvaluationEvidenceRole(EVIDENCE_ROLE, { path: '--evidence-role' });
 if (BLOCK_ID && !QUESTION_ID) throw new Error('--block-id requires --question-id');
 if (QUESTION_ID && !loadResearchQuestionRegistry(ROOT).questions.some(question => question.id === QUESTION_ID)) {
     throw new Error(`unknown --question-id=${QUESTION_ID}`);
@@ -712,7 +714,8 @@ async function main() {
             'structural, and canonical-referee validation. v0.1 supports blocks, MustPass, ' +
             'MustCross, flipping filters, must-turn landmarks, geese, and false goals; portals, ' +
             'static filters, surround, adjacent-turn, and multi-gate are intentionally absent.',
-        gridSizes: [12, 15],
+        gridSizes: [...TOPOLOGY_GENERATION_SUPPORT.gridSizes],
+        supportEnvelope: TOPOLOGY_GENERATION_SUPPORT,
         mechanicCaps: MECH_CAPS,
         generationStats: stats,
         levels,

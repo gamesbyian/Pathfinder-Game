@@ -2,7 +2,8 @@
 import fs from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { buildPopulationIntegrity, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
+import { buildResearchPopulationIntegrity as buildPopulationIntegrity } from './research-observation-integrity-lib.mjs';
+import { hashResearchPopulation as hashPopulation, parseResearchIdentityLines as parseIdentityLines } from './research-population-identity-lib.mjs';
 
 function parseArgs(argv) {
   return new Map(argv.filter(arg => arg.startsWith('--')).map(arg => {

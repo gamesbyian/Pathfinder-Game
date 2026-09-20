@@ -5,6 +5,7 @@ import { buildResearchRelations, RESEARCH_RELATION_CONTRACTS } from './research-
 import { currentDocumentationReferences } from './documentation-index-lib.mjs';
 import { parseResearchCloseoutCapsule } from './investigation-report-metadata.mjs';
 import { auditResearchIntegration } from './research-integration-audit-lib.mjs';
+import { researchQuestionLifecycleClass } from './research-question-relations-lib.mjs';
 
 const normalize = value => value.split(path.sep).join('/');
 const isLocalImport = value => value.startsWith('./') || value.startsWith('../');
@@ -199,12 +200,26 @@ function sharedDependencies(root, commands) {
         .sort((a, b) => b.consumerCount - a.consumerCount || a.dependency.localeCompare(b.dependency));
 }
 
+const WORKFLOW_ROLES = new Set(['operational', 'evidence-producing']);
+const WORKFLOW_STATUSES = new Set(['maintained']);
+
 function workflowInventory(root) {
     const lifecyclePath = path.join(root, 'docs/solver-workflow-lifecycle.json');
     if (!existsSync(lifecyclePath)) return [];
     const lifecycle = JSON.parse(readFileSync(lifecyclePath, 'utf8'));
     const packageScriptNames = new Set(Object.keys(packageScripts(root)));
+    const seen = new Set();
     return (lifecycle.workflows ?? []).map(row => {
+        if (!row.workflow || seen.has(row.workflow)) {
+            throw new Error(`${lifecyclePath}: workflow identity is missing or duplicated: ${row.workflow ?? '(missing)'}`);
+        }
+        seen.add(row.workflow);
+        if (!WORKFLOW_ROLES.has(row.role)) {
+            throw new Error(`${lifecyclePath}: unknown workflow role ${row.role ?? '(missing)'} for ${row.workflow}`);
+        }
+        if (!WORKFLOW_STATUSES.has(row.status)) {
+            throw new Error(`${lifecyclePath}: unknown workflow status ${row.status ?? '(missing)'} for ${row.workflow}`);
+        }
         const workflowPath = normalize(path.join('.github/workflows', row.workflow));
         const absolute = path.join(root, workflowPath);
         const source = existsSync(absolute) ? readFileSync(absolute, 'utf8') : '';
@@ -264,27 +279,45 @@ function relationInventory(model) {
     })).sort((a, b) => a.relation.localeCompare(b.relation));
 }
 
+function queueQuestionRelation(row, question) {
+    if (!row.questionRef) return 'unlinked';
+    if (!question) return 'missing-question';
+    const state = String(question.state ?? '').trim().toLowerCase();
+    const lifecycle = researchQuestionLifecycleClass(state);
+    if (lifecycle === 'active') return 'active-question';
+    if (state === 'deferred-reopen') return 'reopen-trigger-gate';
+    if (['closed', 'concluded'].includes(lifecycle)) return 'terminal-question';
+    return 'nonterminal-nonactive-question';
+}
+
 function frontDoorInputs(model, plans, documentRoles = []) {
     const questions = model.relations.questions ?? [];
     const questionById = new Map(questions.map(question => [String(question.id), question]));
     const liveQueue = (model.relations.queue ?? [])
-        .filter(row => !/^(?:closed\b|subsumed\b|method complete\b)/iu.test(
-            String(row.state ?? row.status ?? '').trim(),
+        .filter(row => !['closed', 'subsumed', 'method-complete'].includes(
+            String(row.executionState ?? '').trim(),
         ))
-        .map(row => ({
-            workstreamId: row.workstreamId ?? null,
-            question: row.question ?? null,
-            state: row.state ?? row.status ?? null,
-            remainingGate: row.remainingGate ?? null,
-            questionRef: row.questionRef ?? null,
-            questionState: row.questionRef ? questionById.get(String(row.questionRef))?.state ?? null : null,
-        }));
+        .map(row => {
+            const question = row.questionRef ? questionById.get(String(row.questionRef)) ?? null : null;
+            return {
+                workstreamId: row.workstreamId ?? null,
+                question: row.question ?? null,
+                executionState: row.executionState ?? null,
+                state: row.state ?? row.status ?? null,
+                remainingGate: row.remainingGate ?? null,
+                questionRef: row.questionRef ?? null,
+                questionState: question?.state ?? null,
+                questionReopensOn: question?.reopensOn ?? null,
+                questionExecutionRelation: queueQuestionRelation(row, question),
+            };
+        });
     const deferredReopenQuestions = questions
         .filter(question => String(question.state ?? '').toLowerCase() === 'deferred-reopen')
         .map(question => ({
             id: question.id,
             owner: question.owner ?? null,
             question: question.question ?? null,
+            acquisitionNeed: question.acquisitionNeed ?? null,
             reopensOn: question.reopensOn ?? null,
         }))
         .sort((a, b) => String(a.id).localeCompare(String(b.id)));
@@ -311,13 +344,42 @@ function inventoryFindings({
     unknownLifecycle,
     dependencies,
     retiredWorkflows,
+    liveQueue,
 }) {
     return {
-        authority: currentAuthorityClaimOutsideIndex.map(row => ({
-            kind: 'current-authority-claim-outside-index',
-            path: row.path,
-            status: row.status,
-        })),
+        authority: [
+            ...currentAuthorityClaimOutsideIndex.map(row => ({
+                kind: 'current-authority-claim-outside-index',
+                path: row.path,
+                status: row.status,
+            })),
+            ...(liveQueue ?? []).flatMap(row => {
+                const active = row.executionState === 'active' || row.status === 'active';
+                if (!active) return [];
+                if (row.questionExecutionRelation === 'missing-question') {
+                    return [{
+                        kind: 'active-workstream-references-missing-question',
+                        workstreamId: row.workstreamId,
+                        questionRef: row.questionRef,
+                    }];
+                }
+                if (row.questionExecutionRelation === 'terminal-question') {
+                    return [{
+                        kind: 'active-workstream-references-terminal-question',
+                        workstreamId: row.workstreamId,
+                        questionRef: row.questionRef,
+                        questionState: row.questionState,
+                    }];
+                }
+                if (row.questionExecutionRelation === 'unlinked') {
+                    return [{
+                        kind: 'active-workstream-without-stable-question-ref',
+                        workstreamId: row.workstreamId,
+                    }];
+                }
+                return [];
+            }),
+        ],
         lifecycle: [
             ...currentReferenceLifecycleMismatches.map(row => ({
                 kind: 'concluded-current-reference',
@@ -354,13 +416,20 @@ function inventoryFindings({
 function currentState(model) {
     const questions = model.relations.questions ?? [];
     const queue = model.relations.queue ?? [];
+    const promotions = model.relations.promotions ?? [];
+    const evidence = model.relations.evidence ?? [];
     return {
         queueEntries: queue.length,
-        activeQueueEntries: queue.filter(row => String(row.status ?? row.state ?? '').toLowerCase().includes('active')).length,
+        activeQueueEntries: queue.filter(row => row.executionState === 'active' || row.status === 'active').length,
         questions: questions.length,
-        activeQuestions: questions.filter(row => String(row.state ?? '').toLowerCase().startsWith('active')).length,
-        evidenceReports: model.relations.evidence?.length ?? 0,
+        activeQuestions: questions.filter(row => researchQuestionLifecycleClass(String(row.state ?? '').toLowerCase()) === 'active').length,
+        deferredQuestions: questions.filter(row => String(row.state ?? '').toLowerCase() === 'deferred-reopen').length,
+        authoredAcquisitionRelations: questions.filter(row => Boolean(row.acquisitionNeed)).length,
+        evidenceReports: evidence.length,
+        evidenceReportsWithStructuredSourceArtifacts: evidence.filter(row => (row.sourceArtifacts ?? []).length > 0).length,
         durableEvidenceBundles: model.relations.durableEvidence?.length ?? 0,
+        promotions: promotions.length,
+        promotionsWithDecisionEvidence: promotions.filter(row => Boolean(row.decisionEvidenceRef)).length,
         researchBlocks: model.relations.researchBlocks?.length ?? 0,
         measurementOpportunities: model.relations.measurementOpportunities?.length ?? 0,
         assets: model.relations.assets?.length ?? 0,
@@ -385,6 +454,23 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         .map(role => [role, documentRoles.filter(row => row.role === role).length]));
     const currentAuthorityClaimOutsideIndex = documentRoles.filter(row => row.currentAuthorityClaimOutsideIndex);
     const missingCurrentReferences = currentReferences.filter(row => !existsSync(path.join(root, row.path)));
+    const reportMetadataSources = model.relations.evidence ?? [];
+    const structuredCloseoutEvidenceCount = reportMetadataSources
+        .filter(row => row.metadataSource === 'structured-closeout').length;
+    const legacyStatusBlockEvidenceCount = reportMetadataSources
+        .filter(row => row.metadataSource === 'legacy-status-block').length;
+    const structuredWorkstreamExecutionStateCount = (model.relations.queue ?? [])
+        .filter(row => Boolean(row.executionState)).length;
+    const structuredExperimentPromotionStateCount = (model.relations.experiments ?? [])
+        .filter(row => Boolean(row.promotionState)).length;
+    const deferredQuestionCount = (model.relations.questions ?? [])
+        .filter(row => String(row.state ?? '').toLowerCase() === 'deferred-reopen').length;
+    const authoredAcquisitionRelationCount = (model.relations.questions ?? [])
+        .filter(row => Boolean(row.acquisitionNeed)).length;
+    const promotionDecisionEvidenceRelationCount = (model.relations.promotions ?? [])
+        .filter(row => Boolean(row.decisionEvidenceRef)).length;
+    const structuredSourceArtifactEvidenceCount = reportMetadataSources
+        .filter(row => (row.sourceArtifacts ?? []).length > 0).length;
     const relations = relationInventory(model);
     const workflows = workflowInventory(root);
     const retiredWorkflows = retiredWorkflowInventory(root);
@@ -408,6 +494,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             .filter(row => row.rows === 0)
             .map(row => ({ kind: 'empty-relation-surface', relation: row.relation, source: row.canonicalSource })),
     };
+    const frontDoor = frontDoorInputs(model, plans, documentRoles);
     const findings = inventoryFindings({
         currentAuthorityClaimOutsideIndex,
         currentReferenceLifecycleMismatches,
@@ -415,6 +502,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         unknownLifecycle,
         dependencies,
         retiredWorkflows,
+        liveQueue: frontDoor.liveQueue,
     });
     return {
         schemaVersion: 1,
@@ -424,7 +512,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             methodAuthority: 'docs/solver-research-operating-model.md',
         },
         currentState: currentState(model),
-        frontDoorInputs: frontDoorInputs(model, plans, documentRoles),
+        frontDoorInputs: frontDoor,
         findings,
         architectureFindings,
         integrationHealth: {
@@ -460,6 +548,14 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             missingCurrentReferencePaths: missingCurrentReferences.map(row => row.path),
             structuredCloseoutCount,
             closeoutParseErrorCount: closeoutParseErrors.length,
+            structuredCloseoutEvidenceCount,
+            legacyStatusBlockEvidenceCount,
+            structuredWorkstreamExecutionStateCount,
+            structuredExperimentPromotionStateCount,
+            deferredQuestionCount,
+            authoredAcquisitionRelationCount,
+            promotionDecisionEvidenceRelationCount,
+            structuredSourceArtifactEvidenceCount,
             closeoutParseErrors: closeoutParseErrors.map(row => ({ path: row.path, error: row.closeoutError })),
             lifecycleCandidateCount: plans.length,
             currentLifecycleCandidateCount: plans.filter(row => row.currentReference).length,
@@ -525,7 +621,10 @@ export function renderResearchSystemBrief(inventory) {
         for (const row of liveQueue) {
             const id = row.workstreamId == null ? 'workstream ?' : `WS${row.workstreamId}`;
             const questionRef = row.questionRef ? ` / ${row.questionRef}` : '';
-            lines.push(`- ${id}${questionRef} [${compactBriefValue(row.state)}]: ${compactBriefValue(row.question)}; gate: ${compactBriefValue(row.remainingGate)}`);
+            const questionLifecycle = row.questionRef
+                ? `; question: ${compactBriefValue(row.questionState)} (${compactBriefValue(row.questionExecutionRelation)})`
+                : '';
+            lines.push(`- ${id}${questionRef} [${compactBriefValue(row.state)}]: ${compactBriefValue(row.question)}; gate: ${compactBriefValue(row.remainingGate)}${questionLifecycle}`);
         }
     }
 
@@ -546,7 +645,8 @@ export function renderResearchSystemBrief(inventory) {
         lines.push('- none');
     } else {
         for (const row of deferred) {
-            lines.push(`- ${row.id}: ${compactBriefValue(row.question)}; reopen: ${compactBriefValue(row.reopensOn)}`);
+            const acquisition = row.acquisitionNeed ? `; acquisition: ${row.acquisitionNeed}` : '';
+            lines.push(`- ${row.id}: ${compactBriefValue(row.question)}; reopen: ${compactBriefValue(row.reopensOn)}${acquisition}`);
         }
     }
 

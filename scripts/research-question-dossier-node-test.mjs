@@ -11,7 +11,19 @@ assert.ok(dossier.conceptualContext.explicitPremises.some(row => row.premiseId =
 assert.ok(dossier.conceptualContext.measurementOpportunities.some(row => row.id === 'MO-002'));
 assert.ok(dossier.acquisition.route);
 assert.ok(Array.isArray(dossier.currentAuthorityMatches.queue));
+assert.equal(dossier.currentAuthorityMatches.queueMatchMode, 'stable-question-id');
+assert.equal(dossier.currentAuthorityMatches.evidenceApplicability.status, 'not-assessed');
+assert.match(dossier.currentAuthorityMatches.evidenceApplicability.note, /freshness.*protocol.*population.*admissibility/u);
+assert.equal(dossier.currentAuthorityMatches.experimentMatchMode, 'lexical-discovery-only');
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
+assert.ok(Array.isArray(dossier.answerRefs));
+assert.ok(Array.isArray(dossier.constraintRefs));
+assert.deepEqual(
+    new Set(dossier.evidenceRefs),
+    new Set([...dossier.answerRefs, ...dossier.constraintRefs]),
+    'legacy evidenceRefs should remain only the compatibility union of typed answer/constraint refs',
+);
+assert.equal(dossier.evidenceRefsRelation, 'compatibility-union-of-answer-and-constraint-refs');
 assert.ok(Array.isArray(dossier.resources.candidateAssets));
 assert.ok(Array.isArray(dossier.resources.candidateJoins));
 assert.equal(dossier.conceptualContext.premiseDiscoveryHints.authority, 'lexical-discovery-only');
@@ -21,6 +33,14 @@ const activeQuestionId = 'WS2-FAILURE-RESPONSE-RECONNAISSANCE';
 const activeDossier = buildQuestionDossier(process.cwd(), { questionId: activeQuestionId });
 assert.ok(activeDossier.currentAuthorityMatches.queue.some(row => row.questionRef === activeQuestionId),
     'the current WS2 active gate must resolve to the queue row that names it as the stable question ref');
+assert.ok(activeDossier.currentAuthorityMatches.queue.every(row => row.questionRef === activeQuestionId),
+    'queue matches must not fall back to lexical similarity once a stable question reference exists');
+assert.notEqual(activeDossier.currentAuthorityMatches.evidenceMatchMode, 'lexical-fallback');
+assert.equal(activeDossier.currentAuthorityMatches.evidenceDiscoveryMode, 'lexical-discovery-only');
+const activeAnsweredBy = new Set(activeDossier.question.answeredBy ?? []);
+assert.ok(activeDossier.currentAuthorityMatches.evidence.every(row =>
+    row.researchQuestion === activeQuestionId || activeAnsweredBy.has(row.latestEvidence?.report)),
+    'question-linked dossier evidence must come from stable question tags or authored answeredBy paths');
 
 const run = spawnSync(process.execPath, [
     'scripts/research-question-dossier.mjs',

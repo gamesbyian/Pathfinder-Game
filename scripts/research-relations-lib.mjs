@@ -10,7 +10,7 @@ import {
     assertResearchBlock,
     researchBlockEligibility,
 } from './solver-research-block-lineage.mjs';
-import { stableHash } from './solver-experiment-contract.mjs';
+import { researchSemanticHash as stableHash } from './research-semantic-identity-lib.mjs';
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
@@ -22,6 +22,7 @@ export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     evidence: { identity: 'topicId', source: 'reports/*.md via research-status-index' },
     queue: { identity: 'topicId', source: 'docs/solver-optimization-workstreams.md via research-status-index' },
     experiments: { identity: 'experimentId', source: 'docs/solver-opt-in-experiment-ledger.md via research-status-index' },
+    promotions: { identity: 'promotionId', source: 'docs/solver-opt-in-experiment-ledger.md#recently-promoted via research-status-index' },
     premiseSnapshots: { identity: 'snapshotId', source: 'docs/solver-premise-map-snapshot-v*.json' },
     premiseAdmissions: { identity: 'premiseId', source: 'docs/solver-premise-map-v2-admissions.json' },
     premises: { identity: 'premiseId', source: 'active solver-premise-map snapshot canonicalPremiseFiles' },
@@ -136,17 +137,34 @@ export function discoverResearchArtifactPaths(root = process.cwd()) {
     return [...new Set(discovered)].sort();
 }
 
+function durableBundleManifestPath(root, bundlePath, bundle) {
+    const bundleDir = path.dirname(bundlePath);
+    const explicit = bundle?.manifestStoredPath ?? null;
+    const legacyFile = (bundle?.files ?? []).find(file => file?.source === 'manifest.json')?.stored ?? null;
+    const stored = explicit ?? legacyFile;
+    if (!stored) throw new Error(`durable evidence bundle has no explicit manifest edge: ${bundlePath}`);
+
+    const resolved = path.resolve(root, bundleDir, stored);
+    const base = path.resolve(root, bundleDir);
+    const relativeToBundle = path.relative(base, resolved);
+    if (relativeToBundle === '..' || relativeToBundle.startsWith(`..${path.sep}`) || path.isAbsolute(relativeToBundle)) {
+        throw new Error(`durable evidence manifest edge escapes bundle directory: ${bundlePath} -> ${stored}`);
+    }
+    const relative = path.relative(root, resolved).split(path.sep).join('/');
+    if (!existsSync(resolved)) throw new Error(`durable evidence manifest edge is missing: ${bundlePath} -> ${relative}`);
+    return relative;
+}
+
 function buildDurableEvidenceRelations(root) {
     const bundles = walkFiles(root, 'reports/stress/experiment-evidence',
         relative => path.basename(relative) === 'bundle.json');
     return bundles.map(bundlePath => {
         const bundle = JSON.parse(readFileSync(path.join(root, bundlePath), 'utf8'));
-        const manifestPath = path.join(path.dirname(bundlePath), 'manifest.json');
-        const hasManifest = existsSync(path.join(root, manifestPath));
+        const manifestPath = durableBundleManifestPath(root, bundlePath, bundle);
         return {
             ...bundle,
             bundlePath,
-            manifestPath: hasManifest ? manifestPath : null,
+            manifestPath,
             questionId: bundle?.researchQuestion?.questionId ?? bundle?.researchBlock?.questionId ?? null,
             measurementOpportunity: bundle?.researchQuestion?.measurementOpportunity ?? null,
             blockId: bundle?.researchBlock?.blockId ?? null,
@@ -292,6 +310,7 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
         evidence: status.evidence.map(row => withSource(row, 'evidence', RESEARCH_RELATION_CONTRACTS.evidence.source)),
         queue: status.queue.map(row => withSource(row, 'queue', RESEARCH_RELATION_CONTRACTS.queue.source)),
         experiments: status.experiments.map(row => withSource(row, 'experiments', RESEARCH_RELATION_CONTRACTS.experiments.source)),
+        promotions: (status.promotions ?? []).map(row => withSource(row, 'promotions', RESEARCH_RELATION_CONTRACTS.promotions.source)),
         premiseSnapshots: [v1, v2].filter(Boolean).map(row =>
             withSource(row, 'premiseSnapshots', 'docs/solver-premise-map-snapshot-v*.json')),
         researchBlocks: artifactRelations.blockRows,

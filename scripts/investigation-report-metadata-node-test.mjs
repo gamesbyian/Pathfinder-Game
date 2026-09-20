@@ -94,6 +94,14 @@ assert.throws(() => createResearchCloseoutCapsule({
 }), /claimRefs must be an array/);
 assert.throws(() => createResearchCloseoutCapsule({
   ...closeoutInput,
+  sourceArtifacts: ['reports/fixture.json plus commentary'],
+}), /sourceArtifacts\[0\].*exact path/u);
+assert.throws(() => createResearchCloseoutCapsule({
+  ...closeoutInput,
+  sourceArtifacts: ['../reports/fixture.json'],
+}), /sourceArtifacts\[0\]/u);
+assert.throws(() => createResearchCloseoutCapsule({
+  ...closeoutInput,
   inferenceScope: 'line one\nline two',
 }), /single line/);
 assert.throws(() => parseResearchCloseoutCapsule(

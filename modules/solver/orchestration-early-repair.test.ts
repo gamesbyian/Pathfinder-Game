@@ -166,49 +166,61 @@ test('earlyRepairSearchAdaptiveBiasedBadnessGateOverride raises the gate: badnes
 });
 
 test('legacy repairProbeAdaptiveBiasedBadnessGateOverride/MinScaleOverride option names normalize to the canonical earlyRepairSearchAdaptiveBiased* overrides', async () => {
-    const badnessGateDispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
-        const [config, , , prep, , , , , nodeBudget, out] = args;
-        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
-        if (prep._metrics) prep._metrics.nodesExpanded += spent;
-        if (out) {
-            out.nodesExpanded = spent;
-            out.timedOut = true;
-            if (!config.repairMustTurnBiased) out.bestBadness = 20; // above production gate (10), below overridden gate (25)
-        }
-        return null;
+    const gateBudgets = (legacy: boolean) => {
+        const biasedNodeBudgets: number[] = [];
+        const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+            const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+            const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+            if (prep._metrics) prep._metrics.nodesExpanded += spent;
+            if (out) {
+                out.nodesExpanded = spent;
+                out.timedOut = true;
+                if (config.repairMustTurnBiased && budgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+                else if (!config.repairMustTurnBiased) out.bestBadness = 20;
+            }
+            return null;
+        };
+        return solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+            timeBudgetMs: 50,
+            attemptSearchForTesting: dispatch,
+            ...(legacy
+                ? { repairProbeAdaptiveBiasedBadnessGateOverride: 25 }
+                : { earlyRepairSearchAdaptiveBiasedBadnessGateOverride: 25 }),
+        }).then(result => ({ result, biasedNodeBudgets }));
     };
-    const legacyGate = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
-        timeBudgetMs: 50, attemptSearchForTesting: badnessGateDispatch,
-        repairProbeAdaptiveBiasedBadnessGateOverride: 25,
-    });
-    const canonicalGate = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
-        timeBudgetMs: 50, attemptSearchForTesting: badnessGateDispatch,
-        earlyRepairSearchAdaptiveBiasedBadnessGateOverride: 25,
-    });
-    assert.equal(legacyGate.ok, canonicalGate.ok);
-    assert.equal(legacyGate.attempts.length, canonicalGate.attempts.length);
+    const legacyGate = await gateBudgets(true);
+    const canonicalGate = await gateBudgets(false);
+    assert.equal(legacyGate.result.ok, canonicalGate.result.ok);
+    assert.deepEqual(legacyGate.biasedNodeBudgets, canonicalGate.biasedNodeBudgets);
+    assert.deepEqual(legacyGate.biasedNodeBudgets, [EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET]);
 
-    const minScaleDispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
-        const [config, , , prep, , , , , nodeBudget, out] = args;
-        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
-        if (prep._metrics) prep._metrics.nodesExpanded += spent;
-        if (out) {
-            out.nodesExpanded = spent;
-            out.timedOut = true;
-            if (!config.repairMustTurnBiased) out.bestBadness = 1000;
-        }
-        return null;
+    const scaleBudgets = (legacy: boolean) => {
+        const biasedNodeBudgets: number[] = [];
+        const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+            const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+            const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+            if (prep._metrics) prep._metrics.nodesExpanded += spent;
+            if (out) {
+                out.nodesExpanded = spent;
+                out.timedOut = true;
+                if (config.repairMustTurnBiased && budgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+                else if (!config.repairMustTurnBiased) out.bestBadness = 1000;
+            }
+            return null;
+        };
+        return solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+            timeBudgetMs: 50,
+            attemptSearchForTesting: dispatch,
+            ...(legacy
+                ? { repairProbeAdaptiveBiasedMinScaleOverride: 0.1 }
+                : { earlyRepairSearchAdaptiveBiasedMinScaleOverride: 0.1 }),
+        }).then(result => ({ result, biasedNodeBudgets }));
     };
-    const legacyScale = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
-        timeBudgetMs: 50, attemptSearchForTesting: minScaleDispatch,
-        repairProbeAdaptiveBiasedMinScaleOverride: 0.1,
-    });
-    const canonicalScale = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
-        timeBudgetMs: 50, attemptSearchForTesting: minScaleDispatch,
-        earlyRepairSearchAdaptiveBiasedMinScaleOverride: 0.1,
-    });
-    assert.equal(legacyScale.ok, canonicalScale.ok);
-    assert.equal(legacyScale.attempts.length, canonicalScale.attempts.length);
+    const legacyScale = await scaleBudgets(true);
+    const canonicalScale = await scaleBudgets(false);
+    assert.equal(legacyScale.result.ok, canonicalScale.result.ok);
+    assert.deepEqual(legacyScale.biasedNodeBudgets, canonicalScale.biasedNodeBudgets);
+    assert.deepEqual(legacyScale.biasedNodeBudgets, [Math.floor(EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET * 0.1)]);
 });
 
 test('earlyRepairSearchAdaptiveBiasedMinScaleOverride lowers the floor: very poor badness shrinks past the production MIN_SCALE', async () => {

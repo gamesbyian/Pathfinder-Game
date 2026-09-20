@@ -3,6 +3,7 @@
 > **Status:** bounded experiment contract.
 > **Authority:** current Lane-A descendant earned by `reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md`.
 > **Runtime effect:** none. This is an offline/exact representation falsifier.
+> **Progress:** C0 static interface identity concluded mixed on 2026-09-19 (`reports/2026-09-19-lane-a-c0-signature-collision-result-001.md`); the live gate is C1 boundary kinematics on the same frozen 581-case population.
 
 ## Question
 

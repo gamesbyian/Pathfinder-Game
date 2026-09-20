@@ -10,6 +10,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { buildResearchResolutionEnvelope } from './research-resolution-envelope-lib.mjs';
+import { validateResearchIndependenceVector } from './research-independence-vector-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const i = arg.indexOf('=');
@@ -19,22 +21,45 @@ const input = args.get('in');
 const sampleFile = args.get('sample')
     || 'reports/stress/failure-evidence/reserve-starvation-default-profile-sample-2026-09-19.json';
 const outFile = args.get('out') || null;
-const reserveNodes = Number(args.get('reserve-nodes') || 75_000_000);
-const totalNodes = Number(args.get('total-nodes') || 300_000_000);
-const expectedAction = args.get('action') || 'admissible-order|tieBreak=default|lds=off';
 
 if (!input) {
     console.error('Usage: node scripts/analyze-reserve-starvation-probe.mjs --in=<compact-failure-response.json> [--sample=<frozen-sample.json>] [--out=<result.json>]');
     process.exit(2);
 }
-if (!Number.isFinite(reserveNodes) || !Number.isFinite(totalNodes) || reserveNodes < 0 || totalNodes <= reserveNodes) {
-    throw new Error('reserve/total node thresholds must satisfy 0 <= reserve < total');
-}
-
 const document = validateFailureResponseDocument(JSON.parse(fs.readFileSync(input, 'utf8')));
 const sample = JSON.parse(fs.readFileSync(sampleFile, 'utf8'));
+const probeDesign = sample.probeDesign;
+if (!probeDesign || typeof probeDesign !== 'object' || Array.isArray(probeDesign)) {
+    throw new Error('frozen sample is missing probeDesign');
+}
+const reserveNodes = Number(probeDesign.reserveNodes);
+const totalNodes = Number(probeDesign.totalNodes);
+const expectedAction = String(probeDesign.expectedAction ?? '');
+if (!Number.isFinite(reserveNodes) || !Number.isFinite(totalNodes) || reserveNodes < 0 || totalNodes <= reserveNodes) {
+    throw new Error('sample.probeDesign node thresholds must satisfy 0 <= reserve < total');
+}
+if (!expectedAction) throw new Error('sample.probeDesign.expectedAction is required');
+
+for (const [argName, frozenValue] of [
+    ['reserve-nodes', reserveNodes],
+    ['total-nodes', totalNodes],
+    ['action', expectedAction],
+]) {
+    if (!args.has(argName)) continue;
+    const supplied = argName === 'action' ? args.get(argName) : Number(args.get(argName));
+    if (supplied !== frozenValue) {
+        throw new Error(`--${argName} disagrees with frozen sample probeDesign`);
+    }
+}
 const expectedIds = [...new Set(sample.ids ?? [])].map(String).sort();
 if (!expectedIds.length) throw new Error('frozen sample has no ids');
+const resolutionDesign = sample.resolutionDesign;
+if (!resolutionDesign || typeof resolutionDesign !== 'object' || Array.isArray(resolutionDesign)) {
+    throw new Error('frozen sample is missing resolutionDesign');
+}
+const independenceDesign = validateResearchIndependenceVector(sample.independenceDesign, {
+    path: 'sample.independenceDesign',
+});
 
 const recordsByParent = new Map();
 for (const row of document.records) {
@@ -50,10 +75,11 @@ const expectedSet = new Set(expectedIds);
 const missingIds = expectedIds.filter(id => !recordsByParent.has(id));
 const unexpectedIds = observedIds.filter(id => !expectedSet.has(id));
 
-function attemptActionMismatch(row) {
+function attemptActionSupport(row) {
     const attempts = Array.isArray(row.attempts) ? row.attempts : [];
     const known = attempts.map(attempt => attempt.actionKey ?? attempt.configKey).filter(Boolean);
-    return known.length > 0 && known.some(action => action !== expectedAction);
+    if (known.length === 0) return 'unknown';
+    return known.every(action => action === expectedAction) ? 'match' : 'mismatch';
 }
 
 function classify(row) {
@@ -65,7 +91,10 @@ function classify(row) {
     if (row.error != null || row.outcome === 'harnessError' || row.outcome === 'malformed' || row.outcome === 'missing' || row.outcome === 'unknown') {
         return { bucket: 'abstain-error-or-unknown', decisionEligible: false };
     }
-    if (attemptActionMismatch(row)) return { bucket: 'abstain-action-mismatch', decisionEligible: false };
+    const actionSupport = attemptActionSupport(row);
+    if (actionSupport === 'unknown') return { bucket: 'abstain-action-unknown', decisionEligible: false };
+    if (actionSupport === 'mismatch') return { bucket: 'abstain-action-mismatch', decisionEligible: false };
+    if (nodes != null && nodes <= 0) return { bucket: 'abstain-zero-participation', decisionEligible: false };
     if (row.outcome === 'workLimited' || row.workCapped === true) {
         return { bucket: 'abstain-unexpected-work-censor', decisionEligible: false };
     }
@@ -97,7 +126,9 @@ for (const row of rows) bucketCounts[row.bucket] = (bucketCounts[row.bucket] ?? 
 
 const abstentionIds = rows.filter(row => !row.decisionEligible).map(row => row.parentId).sort();
 const protocolKnown = typeof document.protocolHash === 'string' && document.protocolHash.length > 0;
-const decisionReady = protocolKnown
+const solverKnown = typeof document.solverRef === 'string' && document.solverRef.length > 0;
+const baseDecisionReady = protocolKnown
+    && solverKnown
     && missingIds.length === 0
     && unexpectedIds.length === 0
     && duplicateParents.length === 0
@@ -105,6 +136,97 @@ const decisionReady = protocolKnown
     && rows.length === expectedIds.length;
 
 const opportunities = bucketCounts['reserve-starvation-opportunity'] ?? 0;
+
+const fidelityBlockers = rows
+    .filter(row => ['abstain-action-unknown', 'abstain-action-mismatch'].includes(row.bucket))
+    .map(row => row.parentId);
+const participationBlockers = rows
+    .filter(row => row.bucket === 'abstain-zero-participation')
+    .map(row => row.parentId);
+const measurementSupportBlockers = rows
+    .filter(row => ['abstain-solved-without-nodes', 'abstain-unclassified'].includes(row.bucket))
+    .map(row => row.parentId);
+const censoringBlockers = rows
+    .filter(row => [
+        'abstain-deadline',
+        'abstain-error-or-unknown',
+        'abstain-unexpected-work-censor',
+        'abstain-node-censored-below-total',
+        'abstain-solve-over-total-envelope',
+        'abstain-referee-invalid',
+    ].includes(row.bucket))
+    .map(row => row.parentId);
+const coverageComplete = missingIds.length === 0
+    && unexpectedIds.length === 0
+    && duplicateParents.length === 0
+    && rows.length === expectedIds.length;
+const sourceBoundaryEligible = sample?.sourceBoundary?.residual > 0
+    && sample?.selection?.eligibleCount >= expectedIds.length;
+const resolution = buildResearchResolutionEnvelope({
+    questionId: sample.questionId ?? 'WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION',
+    liveRivals: resolutionDesign.liveRivals,
+    discriminatingObservable: resolutionDesign.discriminatingObservable,
+    requiredAxes: resolutionDesign.requiredAxes,
+    axes: {
+        eligibility: {
+            status: protocolKnown && solverKnown ? 'satisfied' : 'blocked',
+            reason: protocolKnown && solverKnown
+                ? 'protocol and solver identities are known'
+                : 'protocol and solver identities must be known before recurrence interpretation',
+        },
+        opportunity: {
+            status: sourceBoundaryEligible ? 'satisfied' : 'unknown',
+            reason: sourceBoundaryEligible
+                ? 'frozen sample is drawn from the current unsolved residual after discovery exclusions'
+                : 'sample source boundary does not establish residual headroom',
+        },
+        reach: {
+            status: 'not-required',
+            reason: 'the isolated method probe has no separate downstream stage-reach gate',
+        },
+        participation: {
+            status: participationBlockers.length === 0 ? 'satisfied' : 'blocked',
+            reason: participationBlockers.length === 0
+                ? 'every interpretable isolated action performs nonzero node work'
+                : `zero-work execution on: ${participationBlockers.join(', ')}`,
+        },
+        measurementSupport: {
+            status: measurementSupportBlockers.length === 0 ? 'satisfied' : 'blocked',
+            reason: measurementSupportBlockers.length === 0
+                ? 'reported node-cost/terminal fields support the prespecified 75M/300M classification when execution is uncensored'
+                : `unsupported cost classification on: ${measurementSupportBlockers.join(', ')}`,
+        },
+        fidelity: {
+            status: fidelityBlockers.length === 0 ? 'satisfied' : 'blocked',
+            reason: fidelityBlockers.length === 0
+                ? 'every observed row identifies the exact prespecified admissible-order action/config'
+                : `missing/mismatched prespecified action identity on: ${fidelityBlockers.join(', ')}`,
+        },
+        coverage: {
+            status: coverageComplete ? 'satisfied' : 'blocked',
+            reason: coverageComplete
+                ? 'the frozen population is present exactly once'
+                : 'missing, unexpected, or duplicate parents prevent complete recurrence sizing',
+        },
+        censoring: {
+            status: censoringBlockers.length === 0 ? 'satisfied' : 'blocked',
+            reason: censoringBlockers.length === 0
+                ? 'no row is deadline/work/node/error/referee censored for the recurrence interpretation'
+                : `censored/indeterminate execution on: ${censoringBlockers.join(', ')}`,
+        },
+    },
+    negativeInterpretationPolicy: resolutionDesign.negativeInterpretationPolicy,
+    outcomeInterpretation: resolutionDesign.outcomeInterpretation,
+    source: {
+        kind: 'reserve-starvation-probe',
+        sample: sampleFile,
+        reserveNodes,
+        totalNodes,
+        expectedAction,
+    },
+});
+
+const decisionReady = baseDecisionReady && resolution.resolutionStatus === 'resolution-ready';
 let decision = 'recover-incomplete-or-censored';
 if (decisionReady) {
     if (opportunities === 0) decision = 'close-first-recurrence-screen-negative';
@@ -117,6 +239,7 @@ const result = {
     kind: 'pathfinder-reserve-starvation-probe-analysis',
     questionId: sample.questionId ?? 'WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION',
     source: { input, sample: sampleFile, protocolHash: document.protocolHash ?? null, solverRef: document.solverRef ?? null },
+    independenceVector: independenceDesign,
     thresholds: { reserveNodes, totalNodes, expectedAction },
     population: {
         expected: expectedIds.length,
@@ -130,6 +253,7 @@ const result = {
     opportunities,
     decisionReady,
     decision,
+    resolution,
     rows,
     interpretation: 'Isolated find-cost recurrence only. A positive screen nominates a matched-total-work allocation A/B; it does not authorize a reserve change.',
 };

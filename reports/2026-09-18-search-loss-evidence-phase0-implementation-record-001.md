@@ -1,9 +1,9 @@
 # Search-loss evidence: Phase 0 impact map and contract freeze
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-09-18 — inspection of the existing producer/consumer seams named by `docs/solver-search-loss-evidence-implementation-plan.md` Phase 0, current HEAD.
+> **Last evidence:** 2026-09-19 — the Phase-0/PR-A contract decision remains historical authority for its slice; later compact failure-response and search-loss phases have since been implemented under successor reports/plans.
 > **Decision:** the plan's PR A scope (Phase 1 shared capsule contract + Phase 2 asset registry/relation discovery, no solver execution changes) is implemented in this pass. No existing generic artifact already carries every required capsule field, bounded retention, denominator semantics, lineage, and queryability together, so the "existing-resource collapse" stop condition (plan section 17) does not apply and a new `scripts/solver-search-loss-evidence-lib.mjs` contract is warranted.
-> **Remaining gate:** Phase 3 (shared compact failure-response projection) and later phases remain unimplemented and unauthorized by this pass; they are separate PRs (B-E) per the plan's own rollout sequence.
+> **Remaining gate:** none owned by this Phase-0 record. Follow `docs/solver-search-loss-evidence-implementation-plan.md`, later phase reports, and current future-work/workstream authorities for surviving evidence-gated descendants.
 > **Evidence role:** implementation record, not an experiment. No solver run, GHA dispatch, or research question is touched.
 > **Population identity:** not applicable (design/contract freeze only).
 

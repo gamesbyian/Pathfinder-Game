@@ -1,6 +1,7 @@
 /** Pure joins/aggregates for family-boundary-report.mjs.  This module never invokes the solver. */
 import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+import { validateResearchUnitTopology } from './research-unit-topology-lib.mjs';
 
 const finite = value => value === null || value === undefined || value === '' ? null : Number.isFinite(Number(value)) ? Number(value) : null;
 const solved = row => row?.ok === true || row?.status === 'success' || row?.solved === true;
@@ -290,12 +291,24 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
     const mutationSummaries=[...conditioned.entries()].map(([key,rows])=>{const comparable=field=>rows.filter(r=>r[field]!==null),failedParents=rows.filter(r=>r.parentSolved===false);const wr=quantiles(rows.map(r=>r.workRatio));return{key,relation:rows[0].relation,mode:rows[0].mode,objectType:rows[0].objectType,count:rows.length,
         rescueRate:failedParents.length?failedParents.filter(r=>r.rescue).length/failedParents.length:null,solveStatusFlipRate:comparable('flip').length?comparable('flip').filter(r=>r.flip).length/comparable('flip').length:null,
         winningConfigSwitchRate:comparable('configSwitch').length?comparable('configSwitch').filter(r=>r.configSwitch).length/comparable('configSwitch').length:null,workRatios:wr};}).sort((a,b)=>a.key.localeCompare(b.key));
-    return { schemaVersion: 2, metadata: { ...metadata, schedulerCensoringWarning: 'Winning configs are scheduler-censored observations, not independent config success probabilities.', thresholds: { severeWorkRatio: spreadThreshold,configConcentration:concentrationThreshold,minFragileSolveRate:fragileThreshold }, solvesExecuted: false }, families, mutationSummaries, costCliffs: cliffs, actionableQueue: queue, diagnostics: { missingFamilyRows: missingFamilyRows.sort((a,b) => a.parentId.localeCompare(b.parentId) || String(a.variantId).localeCompare(String(b.variantId))) } };
+    const unitTopology = validateResearchUnitTopology({
+        observationUnit: 'generated variant solver-result row',
+        opportunityUnit: 'parent + controlled transformation',
+        assignmentUnit: null,
+        dependenceClusterUnit: 'parent family',
+        analysisUnit: 'family findings plus row-weighted descriptive mutation summaries',
+        generalizationUnit: 'independent parent family',
+    });
+    return { schemaVersion: 2, metadata: { ...metadata,
+        schedulerCensoringWarning: 'Winning configs are scheduler-censored observations, not independent config success probabilities.',
+        mutationSummaryDependenceWarning: 'Mutation summary rates are row-weighted descriptive statistics; sibling variants share a parent and are not independent generalization units.',
+        unitTopology,
+        thresholds: { severeWorkRatio: spreadThreshold,configConcentration:concentrationThreshold,minFragileSolveRate:fragileThreshold }, solvesExecuted: false }, families, mutationSummaries, costCliffs: cliffs, actionableQueue: queue, diagnostics: { missingFamilyRows: missingFamilyRows.sort((a,b) => a.parentId.localeCompare(b.parentId) || String(a.variantId).localeCompare(String(b.variantId))) } };
 }
 
 export function renderBoundaryMarkdown(report) {
     const symmetry=report.families.filter(f=>f.kind==='symmetry'),non=report.families.filter(f=>f.kind==='non-symmetry');
-    const lines = ['# Family boundary report', '', '> **Status:** diagnostic artifact', '> **Decision:** triage existing family telemetry only; no solver or scheduler policy change', '> **Next gate:** replay and ablate selected queue entries before drawing a solver conclusion','', '> Read-only analysis of existing artifacts; no levels were solved.', '', `> **Caution:** ${report.metadata.schedulerCensoringWarning}`, '', `Families: **${report.families.length}** (${symmetry.length} symmetry, ${non.length} non-symmetry) · queued findings: **${report.actionableQueue.length}** · missing variant rows: **${report.diagnostics.missingFamilyRows.length}**`, '', '## Actionable queue', '', '| Priority | Finding | Parent | Variant | Score |', '|---:|---|---|---|---:|'];
+    const lines = ['# Family boundary report', '', '> **Status:** diagnostic artifact', '> **Decision:** triage existing family telemetry only; no solver or scheduler policy change', '> **Next gate:** replay and ablate selected queue entries before drawing a solver conclusion','', '> Read-only analysis of existing artifacts; no levels were solved.', '', `> **Caution:** ${report.metadata.schedulerCensoringWarning}`, `> **Dependence:** ${report.metadata.mutationSummaryDependenceWarning}`, '', `Families: **${report.families.length}** (${symmetry.length} symmetry, ${non.length} non-symmetry) · queued findings: **${report.actionableQueue.length}** · missing variant rows: **${report.diagnostics.missingFamilyRows.length}**`, '', '## Actionable queue', '', '| Priority | Finding | Parent | Variant | Score |', '|---:|---|---|---|---:|'];
     for (const q of report.actionableQueue) lines.push(`| ${q.priority} | ${q.findingType} | ${q.parentId} | ${q.variantId ?? '—'} | ${Number(q.score).toFixed(3)} |`);
     if (!report.actionableQueue.length) lines.push('| — | No findings at current thresholds | — | — | — |');
     lines.push('','## Mutation-conditioned summary','','| Relation / mode / object | N | Rescue rate | Flip rate | Config-switch rate | Median work ratio |','|---|---:|---:|---:|---:|---:|');

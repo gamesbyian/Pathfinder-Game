@@ -33,8 +33,12 @@ if (!helper.includes('researchOutcome')) failures.push('publisher must emit the 
 if (!helper.includes('outcome-file')) failures.push('publisher must accept an explicit outcome file');
 
 const contractHelper = fs.readFileSync('scripts/solver-experiment-contract.mjs', 'utf8');
-for (const required of ['coverageComplete', 'decisionValidComplete', 'decisionContractIssues', 'isImmutableCommitSha', 'population.corpusIdentity']) {
+for (const required of ['decisionContractIssues', 'isImmutableCommitSha', 'population.corpusIdentity']) {
   if (!contractHelper.includes(required)) failures.push(`experiment contract must expose/enforce ${required}`);
+}
+const observationIntegrityHelper = fs.readFileSync('scripts/research-observation-integrity-lib.mjs', 'utf8');
+for (const required of ['coverageComplete', 'decisionValidComplete']) {
+  if (!observationIntegrityHelper.includes(required)) failures.push(`shared observation-integrity owner must expose/enforce ${required}`);
 }
 const contractWriter = fs.readFileSync('scripts/write-solver-experiment-contract.mjs', 'utf8');
 for (const required of ['git', 'rev-parse', 'HEAD', 'inferredPairedArms', 'immutable 40-character commit SHAs', 'population-seal.json']) {

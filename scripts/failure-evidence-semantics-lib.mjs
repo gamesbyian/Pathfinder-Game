@@ -1,3 +1,5 @@
+import { RESEARCH_EVIDENCE_APPLICABILITY } from './research-evidence-applicability-lib.mjs';
+
 /**
  * Query-dependent evidence semantics for compact failure-response records.
  *
@@ -13,11 +15,7 @@ export const FAILURE_EVIDENCE_PURPOSES = Object.freeze([
     'population-prevalence',
 ]);
 
-export const FAILURE_EVIDENCE_APPLICABILITY = Object.freeze([
-    'admissible',
-    'context-bound',
-    'inadmissible',
-]);
+export const FAILURE_EVIDENCE_APPLICABILITY = RESEARCH_EVIDENCE_APPLICABILITY;
 
 function nonEmpty(value) {
     return typeof value === 'string' && value.trim().length > 0;

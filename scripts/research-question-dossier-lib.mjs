@@ -85,6 +85,13 @@ export function buildQuestionDossier(root = process.cwd(), {
     const eligibleBlocks = blocks.filter(row => row.eligibility?.eligible === true);
     const durableEvidence = model.relations.durableEvidence.filter(row => row.questionId === questionId);
     const exactTaggedEvidence = model.relations.evidence.filter(row => row.researchQuestion === questionId);
+    const answeredByReports = new Set((question.answeredBy ?? []).filter(value => /^reports\//u.test(String(value))));
+    const answeredByEvidence = model.relations.evidence.filter(row =>
+        answeredByReports.has(row.latestEvidence?.report));
+    const authoritativeEvidence = [...new Map(
+        [...exactTaggedEvidence, ...answeredByEvidence]
+            .map(row => [row.latestEvidence?.report ?? row.topicId, row]),
+    ).values()];
     const measurementIds = new Set([
         ...explicitIds(question, ['measurementOpportunity', 'measurementOpportunities', 'measurementOpportunityIds']),
         ...durableEvidence.map(row => row.measurementOpportunity).filter(Boolean),
@@ -107,18 +114,24 @@ export function buildQuestionDossier(root = process.cwd(), {
         const haystack = flatten(row).join(' ').toLowerCase();
         return authorityTerms.some(term => term && haystack.includes(term));
     };
-    const lexicalEvidenceMatches = model.relations.evidence.filter(authorityMatch);
-    const evidenceMatches = exactTaggedEvidence.length ? exactTaggedEvidence : lexicalEvidenceMatches;
+    const authoritativeEvidenceIds = new Set(authoritativeEvidence.map(row =>
+        row.latestEvidence?.report ?? row.topicId));
+    const lexicalEvidenceHints = model.relations.evidence
+        .filter(authorityMatch)
+        .filter(row => !authoritativeEvidenceIds.has(row.latestEvidence?.report ?? row.topicId));
 
     const acquisition = chooseAcquisitionRoute({ question, eligibleBlocks });
     const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
     const candidateJoins = rankCandidateAssetRelationships(question, model.relations.assetRelationships, {
         candidateAssetIds: candidateAssets.map(asset => asset.id),
     });
-    const evidenceRefs = [...new Set([
-        ...(question.answeredBy ?? []),
-        ...(question.constrainedBy ?? []),
-    ].filter(value => typeof value === 'string' && PATH_RE.test(value)))];
+    const answerRefs = [...new Set(
+        (question.answeredBy ?? []).filter(value => typeof value === 'string' && PATH_RE.test(value)),
+    )];
+    const constraintRefs = [...new Set(
+        (question.constrainedBy ?? []).filter(value => typeof value === 'string' && PATH_RE.test(value)),
+    )];
+    const evidenceRefs = [...new Set([...answerRefs, ...constraintRefs])];
 
     return {
         schemaVersion: 1,
@@ -127,17 +140,31 @@ export function buildQuestionDossier(root = process.cwd(), {
             priorityOwner: 'docs/solver-optimization-workstreams.md',
             questionOwner: 'docs/solver-research-question-relations.json',
             evidenceOwner: 'dated reports/artifacts and their owning contracts',
-            note: 'This dossier joins existing authorities for discovery and planning; it does not change priority, question state, evidence role, or premise admission.',
+            note: 'This dossier joins existing authorities for discovery and planning; stable evidence links prove relationship identity, not current freshness/regime applicability, and do not change priority, question state, evidence role, or premise admission.',
         },
         question,
         questionRelations: questionRelations(question, model.relations.questions),
         currentAuthorityMatches: {
-            queue: model.relations.queue.filter(authorityMatch),
-            evidence: evidenceMatches,
-            evidenceMatchMode: exactTaggedEvidence.length ? 'stable-question-id' : 'lexical-fallback',
+            queue: model.relations.queue.filter(row => row.questionRef === questionId),
+            queueMatchMode: 'stable-question-id',
+            evidence: authoritativeEvidence,
+            evidenceMatchMode: exactTaggedEvidence.length && answeredByEvidence.length
+                ? 'stable-question-id+answeredBy-path'
+                : exactTaggedEvidence.length ? 'stable-question-id'
+                    : answeredByEvidence.length ? 'answeredBy-path' : 'none',
+            evidenceApplicability: {
+                status: 'not-assessed',
+                note: 'Stable question/path linkage does not establish freshness, protocol compatibility, population support, or admissibility for a new claim. Consult the owning evidence/resource contract and claim-specific applicability rules.',
+            },
+            evidenceDiscoveryHints: lexicalEvidenceHints,
+            evidenceDiscoveryMode: 'lexical-discovery-only',
             experiments: model.relations.experiments.filter(authorityMatch),
+            experimentMatchMode: 'lexical-discovery-only',
         },
+        answerRefs,
+        constraintRefs,
         evidenceRefs,
+        evidenceRefsRelation: 'compatibility-union-of-answer-and-constraint-refs',
         populations: {
             knownBlocks: blocks,
             mechanicallyEligibleBlockIds: eligibleBlocks.map(row => row.blockId),
@@ -160,6 +187,7 @@ export function buildQuestionDossier(root = process.cwd(), {
         acquisition: {
             route: acquisition.route,
             need: acquisition.need,
+            basis: acquisition.basis ?? (eligibleBlocks.length ? 'eligible-existing-block' : null),
             rationale: acquisition.rationale,
             generationGuidance: generationGuidanceForRoute(acquisition.route),
         },

@@ -67,5 +67,47 @@
     "R03287",
     "R03291",
     "R03330"
-  ]
+  ],
+  "resolutionDesign": {
+    "liveRivals": [
+      "recurrent-within-total-budget-reserve-starvation",
+      "R00044-isolated-or-too-rare-for-repricing"
+    ],
+    "discriminatingObservable": "independent current-residual frequency of isolated default-profile solves above the 75M reserve and within the fixed 300M total-node envelope",
+    "requiredAxes": [
+      "eligibility",
+      "opportunity",
+      "participation",
+      "measurementSupport",
+      "fidelity",
+      "coverage",
+      "censoring"
+    ],
+    "negativeInterpretationPolicy": "zero opportunities is a negative recurrence screen only when the full required observability envelope is satisfied; it does not establish absence of admissible-order capability",
+    "outcomeInterpretation": {
+      "zero": "close the first recurrence screen negative; do not spend reserve A/B compute from R00044 alone",
+      "one": "freeze one additional disjoint 40-parent sample",
+      "twoOrMore": "design the smallest matched-total-work reserve-fraction A/B",
+      "blocked": "recover the named observability deficit before applying the recurrence rule"
+    }
+  },
+  "independenceDesign": {
+    "reference": "relative-to-R00044-discovery-and-current-research-design-lineage",
+    "sampleData": "independent: frozen 40-parent sample excludes R00044/R01000/R02974 discovery rows and is selected before 300M outcomes",
+    "parentFamily": "independent at level-parent unit for this recurrence estimate; no sibling variants are counted as separate parents",
+    "sourceConstruction": "shared distribution: same current Corpus-2 witness-first random construction family; no cross-distribution claim",
+    "decisionSeam": "partially distinct: isolated default-profile recurrence sizing follows a discovery microscope but does not yet test the production reserve-allocation A/B seam",
+    "instrumentImplementation": "shared Pathfinder method-probe and compact failure-response implementation",
+    "analysisMethod": "prespecified reducer and 0/1/>=2 recurrence rule; not independently reimplemented",
+    "analystModel": "not claimed",
+    "taskFramingPrompt": "shared current WS2 reserve-starvation framing",
+    "authorityContextExposure": "shared current workstream/preflight context",
+    "ontologyVocabulary": "shared Pathfinder allocation/reserve-starvation vocabulary",
+    "criticalLibraryCode": "shared solver/action identity, failure-response normalization, and research helper code"
+  },
+  "probeDesign": {
+    "reserveNodes": 75000000,
+    "totalNodes": 300000000,
+    "expectedAction": "admissible-order|tieBreak=default|lds=off"
+  }
 }

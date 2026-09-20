@@ -11,6 +11,7 @@ import {
   ws2FailureResponseAnalysisIdentity,
   WS2_FAILURE_RESPONSE_ROUTES,
 } from './ws2-failure-response-analysis-contract-lib.mjs';
+import { buildResearchResolutionEnvelope } from './research-resolution-envelope-lib.mjs';
 
 const argv = process.argv.slice(2);
 const value = name => argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -78,8 +79,74 @@ if (selectedRoute && !WS2_FAILURE_RESPONSE_ROUTES.includes(selectedRoute)) {
 if (selectedRoute && !decisionRationale) {
   throw new Error('--decision-rationale=<text> is required when --route is selected');
 }
-if (selectedRoute && !eligible) {
-  throw new Error(`cannot select WS2 route from scientifically ineligible evidence: ${eligibilityReasons.join('; ')}`);
+const allDecisionValid = documents.every(({ document }) =>
+  document.populationIntegrity?.decisionValidComplete === true);
+const identityComparable = documents.every(({ document }) =>
+  typeof document.protocolHash === 'string' && document.protocolHash
+  && typeof document.solverRef === 'string' && document.solverRef)
+  && protocolHashes.size <= 1
+  && solverRefs.size <= 1
+  && observation.summary.protocolComparability.parentsWithUnknownProtocol === 0
+  && observation.summary.protocolComparability.parentsWithMultipleKnownProtocols === 0;
+const completeCoverage = documents.every(({ document }) =>
+  document.populationIntegrity?.coverageComplete === true);
+const resolution = buildResearchResolutionEnvelope({
+  questionId: contract.questionId,
+  liveRivals: contract.liveRivals,
+  discriminatingObservable: contract.primaryDiscriminator,
+  requiredAxes: contract.requiredObservabilityAxes,
+  axes: {
+    eligibility: {
+      status: 'not-required',
+      reason: 'population selection is owned by the prespecified producer/question contract; this reducer verifies coverage and fidelity rather than re-deriving target-population eligibility',
+    },
+    opportunity: {
+      status: 'not-required',
+      reason: 'routing reconnaissance characterizes candidate discriminator routes rather than treatment efficacy',
+    },
+    reach: {
+      status: 'not-required',
+      reason: 'reach is an observed discriminator dimension in this screen, not a precondition for every route',
+    },
+    participation: {
+      status: 'not-required',
+      reason: 'participation is an observed discriminator dimension in this screen, not a global precondition',
+    },
+    measurementSupport: {
+      status: 'satisfied',
+      reason: 'the compact instrument is calibrated for reported fields; unreported or unsupported optional fields remain unknown and cannot support a route',
+    },
+    fidelity: {
+      status: identityComparable ? 'satisfied' : 'blocked',
+      reason: identityComparable
+        ? 'solver/protocol identities are known and comparable'
+        : 'solver/protocol identity is missing, mixed, or internally inconsistent',
+    },
+    coverage: {
+      status: completeCoverage ? 'satisfied' : 'blocked',
+      reason: completeCoverage
+        ? 'the supplied populations have complete structural accounting'
+        : 'primary routing requires complete accounting of the eligible population',
+    },
+    censoring: {
+      status: allDecisionValid ? 'satisfied' : 'unknown',
+      reason: allDecisionValid
+        ? 'no decision-invalid censoring in the supplied population'
+        : 'censored/indeterminate rows remain descriptive and must not be interpreted as ordinary negatives',
+    },
+  },
+  negativeInterpretationPolicy: contract.negativeResolution,
+  outcomeInterpretation: contract.resolutionOutcomeInterpretation,
+  source: {
+    kind: 'ws2-failure-response-reconnaissance',
+    analysisContractIdentity: contractIdentity,
+  },
+});
+
+if (selectedRoute && resolution.resolutionStatus !== 'resolution-ready') {
+  throw new Error(`cannot select WS2 route while resolution is blocked: ${resolution.blockers
+    .map(row => `${row.axis}=${row.status}`)
+    .join('; ')}`);
 }
 
 const resultCore = {
@@ -114,6 +181,7 @@ const resultCore = {
     adaptiveLineage: contract.adaptiveLineage,
     independenceVector: contract.independenceVector,
     treatmentFidelity: contract.treatmentFidelity,
+    resolution,
     protocolHashes: [...protocolHashes].sort(),
     solverRefs: [...solverRefs].sort(),
     censoringPolicy: contract.censoringPolicy,

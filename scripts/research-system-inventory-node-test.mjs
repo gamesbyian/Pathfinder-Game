@@ -9,17 +9,29 @@ assert.equal(inventory.authority.kind, 'derived-read-only');
 assert.equal(inventory.authority.priorityAuthority, 'docs/solver-optimization-workstreams.md');
 assert.ok(inventory.currentState.queueEntries > 0, 'inventory must expose current workstream state');
 assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-question state');
-assert.ok(inventory.frontDoorInputs.liveQueue.some(row => String(row.workstreamId) === '2'));
+const ws2Live = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2');
+assert.ok(ws2Live);
+assert.equal(ws2Live.executionState, 'active');
+assert.equal(ws2Live.questionRef, 'WS2-FAILURE-RESPONSE-RECONNAISSANCE');
+assert.equal(ws2Live.questionState, 'deferred-reopen');
+assert.equal(ws2Live.questionExecutionRelation, 'reopen-trigger-gate',
+    'active execution may legitimately service the reopen trigger of a deferred scientific question');
+assert.match(ws2Live.questionReopensOn, /maintained producer emits/u);
+assert.equal(inventory.findings.authority.some(row =>
+    row.kind === 'active-workstream-references-terminal-question' && String(row.workstreamId) === '2'), false);
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
+assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.every(row => row.acquisitionNeed),
+    'every deferred research question should expose its authored acquisition relation');
 assert.equal(inventory.frontDoorInputs.unfinishedLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'), false,
     'completed consolidation plan must not remain in unfinished front-door execution references');
 assert.ok(Array.isArray(inventory.frontDoorInputs.structuredCloseouts));
-const interoperabilityCloseout = inventory.frontDoorInputs.structuredCloseouts.find(row =>
-    row.path === 'reports/2026-09-19-research-contract-interoperability-audit-001.md');
-assert.ok(interoperabilityCloseout, 'front door should consume the first real structured closeout');
-assert.match(interoperabilityCloseout.scope.inferenceScope, /research-contract interoperability/u);
-assert.ok(interoperabilityCloseout.sourceArtifacts.includes('docs/solver-experiment-result.schema.json'));
+const distributedKnowledgeCloseout = inventory.frontDoorInputs.structuredCloseouts.find(row =>
+    row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md');
+assert.ok(distributedKnowledgeCloseout,
+    'front door should consume a recent real structured closeout inside its bounded recent-evidence window');
+assert.match(distributedKnowledgeCloseout.scope.inferenceScope, /research-system architecture/u);
+assert.ok(distributedKnowledgeCloseout.sourceArtifacts.includes('scripts/research-domain-ownership-node-test.mjs'));
 assert.equal(inventory.integrationHealth.errorCount, 0, 'inventory should surface existing integration-audit errors');
 assert.ok(inventory.integrationHealth.semanticJoinCoverage.authoredAssetRelationships >= 1);
 assert.equal(inventory.integrationHealth.questionCount, inventory.currentState.questions);
@@ -86,6 +98,32 @@ assert.equal(inventory.documentation.structuredCloseoutCount,
 assert.equal(inventory.documentation.closeoutParseErrorCount,
     inventory.documentation.closeoutParseErrors.length);
 assert.equal(inventory.diagnostics.structuredCloseoutCount, inventory.documentation.structuredCloseoutCount);
+assert.ok(inventory.documentation.roles.some(row =>
+    row.path === 'reports/2026-09-19-research-authority-ownership-audit-001.md' && row.closeout),
+    'older structured closeouts must remain in the full documentation inventory even after aging out of the bounded front-door window');
+assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
+    row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md'),
+    'recent distributed-knowledge audit should participate in the bounded structured-closeout front door');
+assert.ok(Number.isInteger(inventory.documentation.legacyStatusBlockEvidenceCount));
+assert.equal(inventory.documentation.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
+    'every current workstream row should carry explicit execution state');
+assert.equal(inventory.documentation.structuredExperimentPromotionStateCount, inventory.relations
+    .find(row => row.relation === 'experiments')?.rows ?? 0,
+    'every default-off experiment row should carry explicit promotion state');
+assert.equal(inventory.documentation.deferredQuestionCount,
+    inventory.frontDoorInputs.deferredReopenQuestions.length);
+assert.equal(inventory.documentation.authoredAcquisitionRelationCount,
+    inventory.currentState.authoredAcquisitionRelations);
+assert.equal(inventory.currentState.deferredQuestions, inventory.documentation.deferredQuestionCount);
+assert.equal(inventory.currentState.authoredAcquisitionRelations >= inventory.currentState.deferredQuestions, true,
+    'every deferred question should be covered by an authored acquisition relation');
+assert.equal(inventory.documentation.promotionDecisionEvidenceRelationCount,
+    inventory.currentState.promotionsWithDecisionEvidence);
+assert.ok(inventory.currentState.promotions > 0);
+assert.ok(inventory.currentState.promotionsWithDecisionEvidence > 0,
+    'retained promoted mechanisms should expose decision-evidence relations where the record supports them');
+assert.equal(inventory.documentation.structuredSourceArtifactEvidenceCount,
+    inventory.currentState.evidenceReportsWithStructuredSourceArtifacts);
 assert.equal(inventory.diagnostics.closeoutParseErrorCount, inventory.documentation.closeoutParseErrorCount);
 assert.ok(inventory.documentation.roles.some(row => row.path === 'docs/solver-optimization-workstreams.md' && row.role === 'canonical-current'));
 assert.ok(inventory.documentation.roles.some(row =>
@@ -130,8 +168,10 @@ assert.ok(inventory.planLifecycle.some(row =>
 const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
 assert.match(brief, /^## Live queue$/m);
+assert.match(brief, /WS2-FAILURE-RESPONSE-RECONNAISSANCE[\s\S]*reopen-trigger-gate/u);
 assert.match(brief, /^## Recent structured closeouts$/m);
 assert.match(brief, /^## Unfinished execution references$/m);
+assert.match(brief, /acquisition: telemetry-or-economics|acquisition: fresh-independent-parents/u);
 assert.match(brief, /Priority authority: `docs\/solver-optimization-workstreams\.md`/);
 assert.equal(researchSystemInventoryView(inventory, 'brief'), brief);
 

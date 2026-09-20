@@ -2,15 +2,15 @@
  * Shared, cross-producer "compact failure-response" projection
  * (docs/solver-search-loss-evidence-implementation-plan.md Phase 3).
  *
- * This wraps solver-experiment-contract.mjs's existing classifyRow/buildPopulationIntegrity outcome
- * taxonomy rather than reinventing it, and adds the standard fields that taxonomy does not already
+ * This wraps the shared research observation-integrity outcome taxonomy rather than reinventing
+ * it, and adds the standard fields that taxonomy does not already
  * carry on its own: explicit referee-invalid visibility, canonical work/node accounting, best/final
  * badness participation, and solved-parent-with-failed-attempt visibility. It intentionally does not
  * synthesize false/zero for a field a row does not report, and it does not require full attempts[]
  * retention -- it works from whatever rows a producer already keeps (a technique-census cell, a
- * stress-refresh/benchmark level row, or any other row classifyRow already understands).
+ * stress-refresh/benchmark level row, or any other row the shared classifier already understands).
  */
-import { buildPopulationIntegrity, classifyRow } from './solver-experiment-contract.mjs';
+import { buildResearchPopulationIntegrity, classifyResearchObservationOutcome } from './research-observation-integrity-lib.mjs';
 
 export const FAILURE_RESPONSE_SCHEMA_VERSION = 1;
 export const FAILURE_RESPONSE_KIND = 'pathfinder-compact-failure-response';
@@ -100,7 +100,7 @@ export function compactFailureResponseRow(row) {
         configurationKey: row?.configurationKey ?? row?.configKey ?? null,
         actionKey: row?.winningConfig ?? row?.winningConfigKey ?? row?.actionKey ?? techniqueKeys ?? null,
         stageId: row?.stageId ?? row?.winningStage ?? null,
-        outcome: classifyRow(row),
+        outcome: classifyResearchObservationOutcome(row),
         refereeInvalid: rowHasRefereeInvalid(row),
         participated: typeof row?.participated === 'boolean' ? row.participated
             : (attempts ? attempts.length > 0 : null),
@@ -188,7 +188,7 @@ export function summarizeFailureResponse(rows, { populationIntegrity = null } = 
     let selfDerivedPopulation = false;
     if (!integrity) {
         const identities = list.map(rowIdentity).filter(id => id != null).map(String);
-        integrity = { ...buildPopulationIntegrity(identities, list), coverageComplete: null, decisionValidComplete: null };
+        integrity = { ...buildResearchPopulationIntegrity(identities, list), coverageComplete: null, decisionValidComplete: null };
         selfDerivedPopulation = true;
     }
 

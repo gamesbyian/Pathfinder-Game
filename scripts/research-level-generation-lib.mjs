@@ -1,4 +1,6 @@
 import path from 'node:path';
+import { validateResearchEvaluationEvidenceRole } from './research-evaluation-evidence-role-lib.mjs';
+import { TOPOLOGY_GENERATION_SUPPORT, generationSupportForClaim } from './stress/topology-generation-support-lib.mjs';
 
 export const GENERATION_METHODS = Object.freeze({
   targeted: Object.freeze({
@@ -40,6 +42,7 @@ export const GENERATION_METHODS = Object.freeze({
     countMode: 'exact',
     defaultPrefix: 'T',
     unsupportedCommonFlags: ['append', 'envelopeCaps'],
+    supportEnvelope: TOPOLOGY_GENERATION_SUPPORT,
   }),
 });
 
@@ -137,9 +140,7 @@ export function compileGeneratorInvocation({
   const descriptor = methodDescriptor(method);
   if (!Number.isFinite(masterSeed)) throw new Error('--master-seed must be numeric');
   if (blockId && !questionId) throw new Error('--block-id requires --question-id');
-  if (evidenceRole && !['development', 'confirmation', 'transfer'].includes(evidenceRole)) {
-    throw new Error('--evidence-role must be development, confirmation, or transfer');
-  }
+  if (evidenceRole) validateResearchEvaluationEvidenceRole(evidenceRole, { path: '--evidence-role' });
   if (append && questionId) throw new Error('--append cannot be combined with frozen question-bound generation');
   if (envelopeCaps && descriptor.unsupportedCommonFlags.includes('envelopeCaps')) {
     throw new Error(`--envelope-caps is not supported by ${method}`);
@@ -175,6 +176,7 @@ export function compileGeneratorInvocation({
     plannedParentCount: plannedParentCount(method, count, targetedCountPerBatch),
     sourceFamily: descriptor.sourceFamily,
     distributionClass: descriptor.distributionClass,
+    supportEnvelope: descriptor.supportEnvelope ?? null,
     args,
   };
 }
@@ -183,6 +185,11 @@ export function crossConstructionStatus(a, b) {
   const left = methodDescriptor(a);
   const right = methodDescriptor(b);
   return left.distributionClass === right.distributionClass ? 'same-construction-family' : 'cross-construction';
+}
+
+export function assessGenerationMethodSupport(method, requirements = {}) {
+  const descriptor = methodDescriptor(method);
+  return generationSupportForClaim(descriptor.supportEnvelope ?? null, requirements);
 }
 
 export function hybridGuidance() {

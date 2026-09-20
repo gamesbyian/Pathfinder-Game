@@ -18,6 +18,8 @@ const contract = validateWs2FailureResponseAnalysisContract(
 );
 assert.match(ws2FailureResponseAnalysisContractIdentity(contract), /^sha256:[0-9a-f]{64}$/u);
 assert.ok(contract.liveRivals.length >= 2);
+assert.deepEqual(contract.requiredObservabilityAxes, ['measurementSupport', 'fidelity', 'coverage']);
+assert.match(contract.resolutionOutcomeInterpretation.routeNone, /does not imply no mechanism exists/u);
 assert.match(contract.independenceVector.taskFramingPrompt, /no prompt-level independence/u);
 assert.match(contract.independenceVector.authorityContextExposure, /no authority\/context-exposure independence/u);
 assert.match(contract.independenceVector.criticalLibraryCode, /no critical-code independence/u);
@@ -40,6 +42,10 @@ assert.throws(() => validateWs2FailureResponseAnalysisContract({
   },
 }), /independenceVector\.taskFramingPrompt|independenceVector\.framingContext/);
 assert.throws(() => validateWs2FailureResponseAnalysisContract({ ...contract, independentUnit: 'attempt' }), /independentUnit/);
+assert.throws(() => validateWs2FailureResponseAnalysisContract({
+  ...contract,
+  requiredObservabilityAxes: ['eligibility', 'coverage'],
+}), /requiredObservabilityAxes/);
 
 const temp = mkdtempSync(path.join(tmpdir(), 'ws2-failure-response-analysis-'));
 try {
@@ -99,6 +105,14 @@ try {
   assert.equal(result.scientificDisposition.currentApplicability.basis, 'solver-and-protocol-relative');
   assert.equal(result.scientificDisposition.adaptiveLineage.descendantEvidenceRole, 'development-until-new-precommitment');
   assert.equal(result.scientificDisposition.treatmentFidelity, 'not-applicable-routing-screen-no-treatment');
+  assert.equal(result.scientificDisposition.resolution.kind, 'pathfinder-research-resolution-envelope');
+  assert.equal(result.scientificDisposition.resolution.resolutionStatus, 'resolution-ready');
+  assert.deepEqual(result.scientificDisposition.resolution.requiredAxes, ['measurementSupport', 'fidelity', 'coverage']);
+  assert.deepEqual(result.scientificDisposition.resolution.outcomeInterpretation,
+    contract.resolutionOutcomeInterpretation);
+  assert.equal(result.scientificDisposition.resolution.axes.reach.status, 'not-required');
+  assert.equal(result.scientificDisposition.resolution.negativeInterpretationPolicy,
+    'route-none-does-not-imply-no-mechanism-exists');
   assert.equal(result.observation.summary.independentParents, 2);
   assert.equal(result.decision.status, 'pending-interpretation');
   assert.equal(result.decision.route, null);
@@ -279,6 +293,10 @@ try {
   const ineligibleResult = JSON.parse(ineligible.stdout);
   assert.equal(ineligibleResult.execution.status, 'completed');
   assert.equal(ineligibleResult.scientificDisposition.status, 'ineligible');
+  assert.equal(ineligibleResult.scientificDisposition.resolution.resolutionStatus, 'observability-blocked');
+  assert.ok(ineligibleResult.scientificDisposition.resolution.blockers.some(row => row.axis === 'fidelity'));
+  assert.ok(ineligibleResult.scientificDisposition.resolution.blockers.some(row =>
+    row.axis === 'fidelity' && row.remediation === 'configuration-or-protocol-reconciliation'));
   assert.ok(ineligibleResult.scientificDisposition.reasons.some(reason => reason.includes('unknown protocolHash')));
 
   const invalidRoute = spawnSync(process.execPath, [
@@ -289,7 +307,7 @@ try {
     '--decision-rationale=Prespecified Stage A route test',
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.notEqual(invalidRoute.status, 0);
-  assert.match(`${invalidRoute.stdout}${invalidRoute.stderr}`, /scientifically ineligible evidence/u);
+  assert.match(`${invalidRoute.stdout}${invalidRoute.stderr}`, /resolution is blocked/u);
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }

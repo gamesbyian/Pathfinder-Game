@@ -1,5 +1,34 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { RESEARCH_ACQUISITION_NEEDS } from './research-acquisition-preflight-lib.mjs';
+import { researchRepositoryRefIssues } from './research-repository-ref-lib.mjs';
+
+export const RESEARCH_QUESTION_STATES = Object.freeze([
+    'active-candidate',
+    'closed-negative',
+    'closed-tested-form',
+    'concluded-negative',
+    'concluded-positive',
+    'deferred-reopen',
+    'mixed',
+]);
+
+export function researchQuestionLifecycleClass(state) {
+    switch (state) {
+        case 'active-candidate': return 'active';
+        case 'closed-negative':
+        case 'closed-tested-form': return 'closed';
+        case 'concluded-negative':
+        case 'concluded-positive': return 'concluded';
+        case 'deferred-reopen': return 'deferred';
+        case 'mixed': return 'mixed';
+        default: return 'unknown';
+    }
+}
+
+export function isTerminalResearchQuestionState(state) {
+    return ['closed', 'concluded'].includes(researchQuestionLifecycleClass(state));
+}
 
 const QUESTION_ID_RELATION_FIELDS = Object.freeze([
     'implies',
@@ -18,9 +47,10 @@ const normalizeSearchText = value => String(value ?? '')
     .trim();
 
 export function normalizeResearchQuestionStatus(state) {
-    const value = String(state ?? '').toLowerCase();
-    if (value.startsWith('active')) return 'active';
-    if (value.startsWith('closed')) return 'closed';
+    const value = String(state ?? '').trim().toLowerCase();
+    const lifecycle = researchQuestionLifecycleClass(value);
+    if (lifecycle === 'active') return 'active';
+    if (lifecycle === 'closed') return 'closed';
     return value;
 }
 
@@ -34,7 +64,7 @@ export function loadResearchQuestionRegistry(root = process.cwd()) {
     };
 }
 
-export function validateResearchQuestionRegistry(registry) {
+export function validateResearchQuestionRegistry(registry, { root = null } = {}) {
     const questions = Array.isArray(registry?.questions) ? registry.questions : [];
     const errors = [];
     const ids = new Set();
@@ -47,14 +77,49 @@ export function validateResearchQuestionRegistry(registry) {
         else ids.add(id);
         if (!String(question?.question ?? '').trim()) errors.push(`${prefix}.question is required`);
         if (!String(question?.owner ?? '').trim()) errors.push(`${prefix}.owner is required`);
-        if (!String(question?.state ?? '').trim()) errors.push(`${prefix}.state is required`);
+        const state = String(question?.state ?? '').trim();
+        if (!state) errors.push(`${prefix}.state is required`);
+        else if (!RESEARCH_QUESTION_STATES.includes(state)) errors.push(`${prefix}.state is unknown: ${state}`);
+        const acquisitionNeed = String(question?.acquisitionNeed ?? '').trim();
+        if (acquisitionNeed && !RESEARCH_ACQUISITION_NEEDS.includes(acquisitionNeed)) {
+            errors.push(`${prefix}.acquisitionNeed is unknown: ${acquisitionNeed}`);
+        }
+        if (state === 'deferred-reopen' && !acquisitionNeed) {
+            errors.push(`${prefix}.acquisitionNeed is required for deferred-reopen questions`);
+        }
         for (const field of ['premiseRefs', 'measurementOpportunities']) {
             if (question?.[field] != null && (!Array.isArray(question[field])
                 || question[field].some(value => typeof value !== 'string' || !value.trim()))) {
                 errors.push(`${prefix}.${field} must be a string array when present`);
             }
         }
+        if (question?.answeredBy != null) {
+            if (!Array.isArray(question.answeredBy)) {
+                errors.push(`${prefix}.answeredBy must be an array when present`);
+            } else {
+                const seenAnsweredBy = new Set();
+                for (const value of question.answeredBy) {
+                    const ref = typeof value === 'string' ? value.trim() : '';
+                    const refIssues = researchRepositoryRefIssues(ref, {
+                        root,
+                        requireFile: Boolean(root),
+                        label: `${prefix}.answeredBy`,
+                    });
+                    if (refIssues.length) {
+                        errors.push(...refIssues);
+                        break;
+                    }
+                    if (seenAnsweredBy.has(ref)) {
+                        errors.push(`${prefix}.answeredBy duplicates ${ref}`);
+                        break;
+                    }
+                    seenAnsweredBy.add(ref);
+                }
+            }
+        }
     }
+
+    const questionById = new Map(questions.map(question => [question.id, question]));
 
     for (const [index, question] of questions.entries()) {
         for (const field of QUESTION_ID_RELATION_FIELDS) {
@@ -64,21 +129,57 @@ export function validateResearchQuestionRegistry(registry) {
                 errors.push(`questions[${index}].${field} must be an array when present`);
                 continue;
             }
+            const seenTargets = new Set();
             for (const target of targets) {
-                if (!ids.has(target)) errors.push(`questions[${index}].${field} references unknown question ${target}`);
+                if (target === question.id) {
+                    errors.push(`questions[${index}].${field} self-references ${target}`);
+                } else if (seenTargets.has(target)) {
+                    errors.push(`questions[${index}].${field} duplicates ${target}`);
+                } else if (!ids.has(target)) {
+                    errors.push(`questions[${index}].${field} references unknown question ${target}`);
+                }
+                seenTargets.add(target);
             }
         }
         if (question?.constrainedBy != null) {
             if (!Array.isArray(question.constrainedBy)) {
                 errors.push(`questions[${index}].constrainedBy must be an array when present`);
             } else {
+                const seenConstraints = new Set();
                 for (const target of question.constrainedBy) {
                     const value = String(target ?? '');
-                    const pathReference = /^(?:docs|reports|scripts)\//u.test(value);
-                    if (!pathReference && !ids.has(value)) {
+                    const pathReference = /^(?:docs|reports|scripts|data|logs)\//u.test(value);
+                    if (pathReference) {
+                        errors.push(...researchRepositoryRefIssues(value, {
+                            root,
+                            requireFile: Boolean(root),
+                            label: `questions[${index}].constrainedBy`,
+                        }));
+                    }
+                    if (value === question.id) {
+                        errors.push(`questions[${index}].constrainedBy self-references ${value}`);
+                    } else if (seenConstraints.has(value)) {
+                        errors.push(`questions[${index}].constrainedBy duplicates ${value}`);
+                    } else if (!pathReference && !ids.has(value)) {
                         errors.push(`questions[${index}].constrainedBy references neither a known question nor a repository path: ${value}`);
                     }
+                    seenConstraints.add(value);
                 }
+            }
+        }
+    }
+
+    for (const [index, question] of questions.entries()) {
+        for (const target of question.calibratedBy ?? []) {
+            if (!ids.has(target) || target === question.id) continue;
+            if (!(questionById.get(target)?.calibrates ?? []).includes(question.id)) {
+                errors.push(`questions[${index}].calibratedBy ${target} is missing reciprocal calibrates edge`);
+            }
+        }
+        for (const target of question.calibrates ?? []) {
+            if (!ids.has(target) || target === question.id) continue;
+            if (!(questionById.get(target)?.calibratedBy ?? []).includes(question.id)) {
+                errors.push(`questions[${index}].calibrates ${target} is missing reciprocal calibratedBy edge`);
             }
         }
     }

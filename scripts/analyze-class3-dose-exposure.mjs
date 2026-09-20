@@ -22,6 +22,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { validateResearchUnitTopology } from './research-unit-topology-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const index = arg.indexOf('=');
@@ -47,6 +48,7 @@ const expectations = JSON.parse(readFileSync(expectationsPath, 'utf8'));
 if (expectations?.schemaVersion !== 1 || expectations?.kind !== 'pathfinder-class3-dose-expectations' || !Array.isArray(expectations?.parents)) {
     throw new Error('invalid Class-3 expectation file');
 }
+const unitTopology = validateResearchUnitTopology(expectations.unitTopology, { path: 'expectations.unitTopology' });
 
 const parentExpectations = new Map();
 for (const [index, parent] of expectations.parents.entries()) {
@@ -201,13 +203,14 @@ const result = {
     solverRef: [...solvers][0] ?? null,
     expectedParents: parentExpectations.size,
     observedExpectedParents: rowsByParent.size,
+    unitTopology,
     missingParents: [...parentExpectations.keys()].filter(id => !rowsByParent.has(id)),
     parentDispositions: countBy(parentRows.map(row => row.disposition)),
     rescuerDispositions: countBy(rescuerRows.map(row => row.disposition)),
     byAction: byActionSummary,
     parents: parentRows,
     rescuers: rescuerRows,
-    denominatorNote: 'Parent is the independent unit. Rescuer/attempt counts are dependent support diagnostics.',
+    denominatorNote: `Analysis/dependence cluster = ${unitTopology.analysisUnit}. Exposure opportunities are ${unitTopology.opportunityUnit}; repeated attempts remain inside that cluster.`,
 };
 
 const output = JSON.stringify(result, null, 2) + '\n';

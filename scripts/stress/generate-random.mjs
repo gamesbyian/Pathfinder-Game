@@ -75,6 +75,7 @@
  * levels too, not just the published/first-stress-corpus pools.
  */
 /* global structuredClone */
+import { validateResearchEvaluationEvidenceRole } from '../research-evaluation-evidence-role-lib.mjs';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -126,7 +127,7 @@ const BLOCK_ID = args.get('--block-id') || null;
 const ENVELOPE_CAPS = args.has('--envelope-caps');
 const ID_PREFIX = args.get('--id-prefix') || 'R';
 
-if (!['development', 'confirmation', 'transfer'].includes(EVIDENCE_ROLE)) throw new Error('--evidence-role must be development, confirmation, or transfer');
+validateResearchEvaluationEvidenceRole(EVIDENCE_ROLE, { path: '--evidence-role' });
 if (BLOCK_ID && !QUESTION_ID) throw new Error('--block-id requires --question-id');
 if (QUESTION_ID && APPEND) throw new Error('research-block generation is frozen; --append cannot be combined with --question-id');
 if (QUESTION_ID && !loadResearchQuestionRegistry(ROOT).questions.some(question => question.id === QUESTION_ID)) {
