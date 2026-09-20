@@ -71,6 +71,8 @@ try {
   assert.equal(result.scientificDisposition.unitTopology.analysisUnit, 'parent');
   assert.equal(result.scientificDisposition.unitTopology.observationUnit, 'failure-response-record');
   assert.equal(result.scientificDisposition.instrument.kind, 'pathfinder-compact-failure-response');
+  assert.equal(result.scientificDisposition.instrument.calibration.semanticParity, true);
+  assert.equal(result.scientificDisposition.instrument.calibration.representativeCompactWallOverheadPct, 0.46);
   assert.equal(result.scientificDisposition.currentApplicability.basis, 'solver-and-protocol-relative');
   assert.equal(result.scientificDisposition.adaptiveLineage.descendantEvidenceRole, 'development-until-new-precommitment');
   assert.equal(result.scientificDisposition.treatmentFidelity, 'not-applicable-routing-screen-no-treatment');
