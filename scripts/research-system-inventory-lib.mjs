@@ -268,7 +268,9 @@ function frontDoorInputs(model, plans, documentRoles = []) {
     const questions = model.relations.questions ?? [];
     const questionById = new Map(questions.map(question => [String(question.id), question]));
     const liveQueue = (model.relations.queue ?? [])
-        .filter(row => !/(?:closed|subsumed|method complete)/iu.test(String(row.state ?? row.status ?? '')))
+        .filter(row => !/^(?:closed\b|subsumed\b|method complete\b)/iu.test(
+            String(row.state ?? row.status ?? '').trim(),
+        ))
         .map(row => ({
             workstreamId: row.workstreamId ?? null,
             question: row.question ?? null,
