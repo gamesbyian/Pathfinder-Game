@@ -97,8 +97,12 @@ assert.equal(inventory.documentation.structuredCloseoutCount,
 assert.equal(inventory.documentation.closeoutParseErrorCount,
     inventory.documentation.closeoutParseErrors.length);
 assert.equal(inventory.diagnostics.structuredCloseoutCount, inventory.documentation.structuredCloseoutCount);
-assert.ok(inventory.diagnostics.structuredCloseoutEvidenceCount >= 2,
-    'new architectural reports should participate in structured closeout indexing');
+assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
+    row.path === 'reports/2026-09-19-research-authority-ownership-audit-001.md'),
+    'authority ownership audit should participate in structured closeout indexing');
+assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
+    row.path === 'reports/2026-09-20-distributed-knowledge-hardening-audit-001.md'),
+    'distributed-knowledge audit should participate in structured closeout indexing');
 assert.ok(inventory.diagnostics.legacyStatusBlockEvidenceCount >= 0);
 assert.equal(inventory.diagnostics.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
     'every current workstream row should carry explicit execution state');
