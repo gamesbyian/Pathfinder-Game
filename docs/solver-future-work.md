@@ -46,7 +46,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 ## Conditional composition/allocation work
 
-Keep these dormant unless an active acquisition lane produces a changed premise.
+Dormant unless an active lane changes the premise.
 
 | Question | Reopen condition |
 |---|---|
@@ -57,10 +57,8 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
-| Independent transfer / human-editor-envelope niches | A broad claim needs independent construction/locked parents or a stable omitted geometry is independently nominated |
 | Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use a bounded work ladder, not standing sweeps |
 | Mechanism interaction | Reopen when one mechanism plausibly creates another's opportunities; test control/A/B/A+B at matched work, not broad flag matrices |
-| Latent response cluster | Reopen only for an unexplained ancestry/protocol-controlled covariance nomination; clustering alone is not capability evidence |
 
 ## Closed forms that stay closed
 
