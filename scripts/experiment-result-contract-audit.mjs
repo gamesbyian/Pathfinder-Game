@@ -3,4 +3,4 @@ import { auditExperimentResultDeclaredShape } from './experiment-result-contract
 
 const result = auditExperimentResultDeclaredShape(process.cwd());
 console.log(JSON.stringify(result, null, 2));
-if (result.mismatchCount) process.exitCode = 1;
+if (result.mismatchCount || result.schemaCoverageIssueCount) process.exitCode = 1;
