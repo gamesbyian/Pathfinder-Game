@@ -20,7 +20,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 ## Deferred plan closeouts
 
 - **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
-- **Failure evidence:** P3 failure-response and P4A Class-3 dose both concluded (2026-09-20) from the shared 53-parent acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md` -> `reports/2026-09-20-ws2-class3-dose-and-reconnaissance-result-001.md`): P4A 0/23 exposure-gap, 20/23 censored-dose (16 repair-family, 5 admissible-order-fraction), 3/23 exposed-and-negative; P3 routes `allocation-specific-follow-up`, nominating a repair-family per-attempt-deadline A/B (distinct question from P4B). P4B reserve starvation concluded positive (2/40, see "Admissible-order retry repricing" above), now cross-validated by P4A's admissible-order rows. P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Failure evidence:** P3/P4A concluded from the shared 53-parent acquisition; P3 routes repair-family censoring to `allocation-specific-follow-up`, while P4B reserve starvation concluded positive independently. P7 still needs repeated compatible populations. [`Class-3 result`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
@@ -53,10 +53,10 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 
 | Question | Reopen condition |
 |---|---|
-| Automatic selector/profile calibration | **Remaining-length transfer condition MET (2026-09-20).** [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md) nominates a bounded matched-work production consumer pilot; that pilot needs its own precommitment before dispatch and does not itself open a WS1 gate |
+| Automatic selector/profile calibration | Remaining-length transfer is confirmed; a bounded matched-work production consumer pilot is nominated but needs its own precommitment and does not open a WS1 gate. [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md) |
 | Cross-attempt basin overlap | A real handoff/allocation question exists; measure canonical action participation and solve-local rediscovery simultaneously |
 | Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates a concrete handoff value proposition |
-| Admissible-order retry repricing | **Recurrence condition MET (2026-09-20): 2/40 independent parents.** [`result`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) nominates the smallest matched-total-work `admissibleOrderNodeReserveFractionOverride` A/B; candidate fractions must be predeclared from the observed cost curve, not fit to the confirmation outcomes, and the A/B itself is not yet designed or dispatched |
+| Admissible-order retry repricing | Recurrence is met (2/40 independent parents). Design the smallest matched-total-work `admissibleOrderNodeReserveFractionOverride` A/B with fractions predeclared from the observed cost curve; do not fit them to confirmation outcomes. [`result`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) |
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
