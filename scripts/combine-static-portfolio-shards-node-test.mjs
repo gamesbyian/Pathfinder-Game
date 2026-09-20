@@ -97,7 +97,51 @@ const dupedShard = { results: [cell('SP-c2-1-full-menu', 'L1', 'full-menu', true
 const planForDupeCheck = { cells: [{ cellId: 'SP-c2-1-full-menu' }] };
 assert.throws(() => combine([shard1, dupedShard], 'full-menu', planForDupeCheck), /duplicated/);
 
-const exactPlan = { cells: [...shard1.results, ...shard2.results].map(({ cellId }) => ({ cellId })) };
+const exactPlan = {
+    cells: [...shard1.results, ...shard2.results].map(({ cellId, levelId, variantLabel }) => ({
+        cellId, levelId, variantLabel,
+    })),
+};
 assert.equal(combine([shard1, shard2], 'full-menu', exactPlan).populationIntegrity.coverageComplete, true);
+
+const wrongArmPlan = structuredClone(exactPlan);
+wrongArmPlan.cells[0].variantLabel = 'not-full-menu';
+assert.throws(
+    () => combine([shard1, shard2], 'full-menu', wrongArmPlan),
+    /disagrees with authored plan on variantLabel/u,
+);
+
+const keyedShard = { results: [{
+    ...cell('SP-c2-9-full-menu', 'L9', 'full-menu', true, 10, 'success'),
+    tier: 'STATIC-PORTFOLIO',
+    corpus: 'corpus2',
+    levelPos: 9,
+    techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=5000|retention=plain'],
+    workBudget: 1000,
+    ablation: null,
+}] };
+const keyedPlan = { cells: [{
+    cellId: 'SP-c2-9-full-menu',
+    tier: 'STATIC-PORTFOLIO',
+    corpus: 'corpus2',
+    levelPos: 9,
+    levelId: 'L9',
+    variantLabel: 'full-menu',
+    techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=5000|retention=plain'],
+    workBudget: 1000,
+    ablation: null,
+}] };
+assert.equal(combine([keyedShard], 'full-menu', keyedPlan).populationIntegrity.coverageComplete, true);
+const wrongTechniquePlan = structuredClone(keyedPlan);
+wrongTechniquePlan.cells[0].techniqueKeys = ['dfs|score=default|bias=none'];
+assert.throws(
+    () => combine([keyedShard], 'full-menu', wrongTechniquePlan),
+    /disagrees with authored plan on techniqueKeys/u,
+);
+
+assert.throws(
+    () => combine([keyedShard], 'full-menu', { cells: [keyedPlan.cells[0], keyedPlan.cells[0]] }),
+    /duplicate cellId in authored plan/u,
+);
 
 console.log('combine-static-portfolio-shards tests passed');
