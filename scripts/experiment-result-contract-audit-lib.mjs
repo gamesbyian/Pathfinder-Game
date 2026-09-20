@@ -22,11 +22,47 @@ function typeMatches(value, type) {
     return typeof value === type;
 }
 
-export function declaredShapeIssues(schema, value, at = '$') {
+function resolveLocalRef(rootSchema, ref) {
+    if (!ref.startsWith('#/')) return null;
+    let node = rootSchema;
+    for (const token of ref.slice(2).split('/')) {
+        const key = token.replaceAll('~1', '/').replaceAll('~0', '~');
+        node = node?.[key];
+        if (node == null) return null;
+    }
+    return node;
+}
+
+function stableValue(value) {
+    if (Array.isArray(value)) return JSON.stringify(value.map(stableValue));
+    if (value && typeof value === 'object') {
+        return JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, child]) => [key, stableValue(child)])));
+    }
+    return JSON.stringify(value);
+}
+
+export function declaredShapeIssues(schema, value, at = '$', rootSchema = schema) {
     const issues = [];
     if (!schema || typeof schema !== 'object') return issues;
-    if ('$ref' in schema) return issues;
+
+    if ('$ref' in schema) {
+        const resolved = resolveLocalRef(rootSchema, schema.$ref);
+        if (!resolved) return [`${at}: unresolved local schema ref ${schema.$ref}`];
+        return declaredShapeIssues(resolved, value, at, rootSchema);
+    }
+
+    if (Array.isArray(schema.anyOf)) {
+        const alternatives = schema.anyOf.map(candidate => declaredShapeIssues(candidate, value, at, rootSchema));
+        if (alternatives.some(candidateIssues => candidateIssues.length === 0)) return [];
+        issues.push(`${at}: value matches no anyOf alternative`);
+        return issues;
+    }
+
     if ('const' in schema && value !== schema.const) issues.push(`${at}: expected const ${JSON.stringify(schema.const)}`);
+    if (Array.isArray(schema.enum) && !schema.enum.some(candidate => candidate === value)) {
+        issues.push(`${at}: value is outside declared enum`);
+    }
     if (schema.type) {
         const allowed = Array.isArray(schema.type) ? schema.type : [schema.type];
         if (!allowed.some(type => typeMatches(value, type))) {
@@ -34,21 +70,37 @@ export function declaredShapeIssues(schema, value, at = '$') {
             return issues;
         }
     }
-    if (value && typeof value === 'object' && !Array.isArray(value) && schema.properties) {
+    if (typeof value === 'number' && Number.isFinite(schema.minimum) && value < schema.minimum) {
+        issues.push(`${at}: value is below minimum ${schema.minimum}`);
+    }
+    if (typeof value === 'string' && schema.pattern && !new RegExp(schema.pattern, 'u').test(value)) {
+        issues.push(`${at}: value does not match declared pattern`);
+    }
+
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
         for (const required of schema.required ?? []) {
             if (!(required in value)) issues.push(`${at}.${required}: missing required property`);
         }
-        if (schema.additionalProperties === false) {
-            for (const key of Object.keys(value)) {
-                if (!(key in schema.properties)) issues.push(`${at}.${key}: property is emitted but forbidden by declared schema`);
+        const properties = schema.properties ?? {};
+        for (const [key, child] of Object.entries(value)) {
+            if (key in properties) {
+                issues.push(...declaredShapeIssues(properties[key], child, `${at}.${key}`, rootSchema));
+            } else if (schema.additionalProperties === false) {
+                issues.push(`${at}.${key}: property is emitted but forbidden by declared schema`);
+            } else if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
+                issues.push(...declaredShapeIssues(schema.additionalProperties, child, `${at}.${key}`, rootSchema));
             }
         }
-        for (const [key, child] of Object.entries(value)) {
-            if (key in schema.properties) issues.push(...declaredShapeIssues(schema.properties[key], child, `${at}.${key}`));
-        }
     }
-    if (Array.isArray(value) && schema.items) {
-        value.forEach((child, index) => issues.push(...declaredShapeIssues(schema.items, child, `${at}[${index}]`)));
+    if (Array.isArray(value)) {
+        if (schema.uniqueItems === true) {
+            const encoded = value.map(stableValue);
+            if (new Set(encoded).size !== encoded.length) issues.push(`${at}: array items are not unique`);
+        }
+        if (schema.items) {
+            value.forEach((child, index) =>
+                issues.push(...declaredShapeIssues(schema.items, child, `${at}[${index}]`, rootSchema)));
+        }
     }
     return issues;
 }
@@ -61,7 +113,18 @@ export function auditExperimentResultDeclaredShape(root = process.cwd()) {
     for (const manifestPath of manifests) {
         const document = JSON.parse(readFileSync(path.join(root, manifestPath), 'utf8'));
         if (document?.schemaVersion !== 3 || document?.kind !== 'pathfinder-solver-experiment-result') continue;
-        const issues = declaredShapeIssues(schema, document);
+        const issues = declaredShapeIssues(schema, document, '
+        results.push({ manifestPath, issueCount: issues.length, issues });
+    }
+    return {
+        schemaVersion: 1,
+        declaredSchema: schemaPath,
+        artifactCount: results.length,
+        mismatchCount: results.filter(row => row.issueCount > 0).length,
+        results,
+    };
+}
+, schema);
         results.push({ manifestPath, issueCount: issues.length, issues });
     }
     return {
