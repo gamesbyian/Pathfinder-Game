@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { RESEARCH_ACQUISITION_NEEDS } from './research-acquisition-preflight-lib.mjs';
+import { researchRepositoryRefIssues } from './research-repository-ref-lib.mjs';
 
 export const RESEARCH_QUESTION_STATES = Object.freeze([
     'active-candidate',
@@ -63,7 +64,7 @@ export function loadResearchQuestionRegistry(root = process.cwd()) {
     };
 }
 
-export function validateResearchQuestionRegistry(registry) {
+export function validateResearchQuestionRegistry(registry, { root = null } = {}) {
     const questions = Array.isArray(registry?.questions) ? registry.questions : [];
     const errors = [];
     const ids = new Set();
@@ -99,8 +100,13 @@ export function validateResearchQuestionRegistry(registry) {
                 const seenAnsweredBy = new Set();
                 for (const value of question.answeredBy) {
                     const ref = typeof value === 'string' ? value.trim() : '';
-                    if (!/^(?:docs|reports|scripts|data|logs)\//u.test(ref)) {
-                        errors.push(`${prefix}.answeredBy must contain repository paths`);
+                    const refIssues = researchRepositoryRefIssues(ref, {
+                        root,
+                        requireFile: Boolean(root),
+                        label: `${prefix}.answeredBy`,
+                    });
+                    if (refIssues.length) {
+                        errors.push(...refIssues);
                         break;
                     }
                     if (seenAnsweredBy.has(ref)) {
@@ -143,6 +149,13 @@ export function validateResearchQuestionRegistry(registry) {
                 for (const target of question.constrainedBy) {
                     const value = String(target ?? '');
                     const pathReference = /^(?:docs|reports|scripts|data|logs)\//u.test(value);
+                    if (pathReference) {
+                        errors.push(...researchRepositoryRefIssues(value, {
+                            root,
+                            requireFile: Boolean(root),
+                            label: `questions[${index}].constrainedBy`,
+                        }));
+                    }
                     if (value === question.id) {
                         errors.push(`questions[${index}].constrainedBy self-references ${value}`);
                     } else if (seenConstraints.has(value)) {
