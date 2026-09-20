@@ -84,11 +84,12 @@ try {
         ...extraArgs,
     ], { cwd: root, encoding: 'utf8' });
 
-    const negative = analyze(writeDoc('negative.json', [
+    const negativeFile = writeDoc('negative.json', [
         row('A', 'solved', 70_000_000),
         row('B', 'nodeLimited', 300_000_000, { nodeCapped: true, nodeCeiling: 300_000_000 }),
         row('C', 'exhaustedNegative', 55_000_000, { exhausted: true }),
-    ]));
+    ]);
+    const negative = analyze(negativeFile);
     assert.equal(negative.decisionReady, true);
     assert.equal(negative.opportunities, 0);
     assert.equal(negative.decision, 'close-first-recurrence-screen-negative');
@@ -109,13 +110,13 @@ try {
         totalNodes: 300_000_000,
         expectedAction: 'admissible-order|tieBreak=default|lds=off',
     });
-    assert.doesNotThrow(() => analyzeArgs('negative.json', [
+    assert.doesNotThrow(() => analyzeArgs(negativeFile, [
         '--reserve-nodes=75000000',
         '--total-nodes=300000000',
         '--action=admissible-order|tieBreak=default|lds=off',
     ]));
-    assert.throws(() => analyzeArgs('negative.json', ['--reserve-nodes=76000000']), /disagrees with frozen sample probeDesign/u);
-    assert.throws(() => analyzeArgs('negative.json', ['--action=admissible-order|tieBreak=other|lds=off']), /disagrees with frozen sample probeDesign/u);
+    assert.throws(() => analyzeArgs(negativeFile, ['--reserve-nodes=76000000']), /disagrees with frozen sample probeDesign/u);
+    assert.throws(() => analyzeArgs(negativeFile, ['--action=admissible-order|tieBreak=other|lds=off']), /disagrees with frozen sample probeDesign/u);
 
     const one = analyze(writeDoc('one.json', [
         row('A', 'solved', 100_000_000),
