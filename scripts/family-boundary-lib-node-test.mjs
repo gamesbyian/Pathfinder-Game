@@ -54,6 +54,9 @@ assert.equal(mixedIdentityReport.families[0].configConcentrationEvidence.canonic
  'historical compact parent attempts and canonical sibling winners must compare as one identity');
 assert.equal(report.families[3].evidence.robustFailureRate,1);
 assert.match(report.metadata.schedulerCensoringWarning,/scheduler-censored/);
+assert.equal(report.metadata.unitTopology.dependenceClusterUnit,'parent family');
+assert.equal(report.metadata.unitTopology.generalizationUnit,'independent parent family');
+assert.match(report.metadata.mutationSummaryDependenceWarning,/row-weighted.*sibling variants.*not independent/u);
 assert.ok(report.mutationSummaries.some(x=>x.relation==='local-mutant'&&x.rescueRate===.5&&x.solveStatusFlipRate===.5));
 assert.equal(report.metadata.solvesExecuted,false);
 assert.ok(report.actionableQueue.some(x=>x.findingType==='symmetry-pathology'));
@@ -65,6 +68,7 @@ assert.equal(report.diagnostics.missingFamilyRows.length,0);
 const again=buildBoundaryReport({manifests:[...manifests].reverse(),canonicalResults,variantResults,thresholds:{severeWorkRatio:10}});
 assert.deepEqual(report.families.map(x=>x.parentId),again.families.map(x=>x.parentId));
 assert.match(renderBoundaryMarkdown(report),/Actionable queue/);
+assert.match(renderBoundaryMarkdown(report),/Dependence:.*row-weighted.*not independent/u);
 const missing=buildBoundaryReport({manifests:[{familyId:'x',parentLevelId:'X',familyMode:'swap',variants:[{variantId:'missing'}]}]});
 assert.deepEqual(missing.diagnostics.missingFamilyRows,[{parentId:'X',variantId:'missing'}]);
 const missingCanonical=buildBoundaryReport({
