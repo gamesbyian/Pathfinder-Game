@@ -23,15 +23,17 @@ The goal is not to eliminate discovery heuristics. It is to stop them from masqu
 
 ## Findings and repairs
 
-### 1. Queue -> question: stable ID beats lexical similarity
+### 1. Queue/evidence -> question: authored edges beat lexical similarity
 
-The question dossier previously used a lexical `authorityMatch` for queue rows even though the queue already carries `questionRef`.
+The question dossier previously used lexical `authorityMatch` behavior for queue rows, and lexical fallback for evidence, even though stronger relations already existed.
 
 Now:
 
 - queue-to-question joins use exact `questionRef`;
-- the dossier declares `queueMatchMode: stable-question-id`;
-- lexical queue similarity no longer competes with the authored edge.
+- authoritative evidence is the union of reports carrying exact structured `researchQuestion` IDs and reports named by the question's authored `answeredBy` paths;
+- lexical evidence matches live in a separate `evidenceDiscoveryHints` collection;
+- the dossier reports the authoritative evidence join mode (`stable-question-id`, `answeredBy-path`, or both);
+- lexical queue/evidence similarity no longer competes with authored edges.
 
 Experiment matches remain `lexical-discovery-only` because most retained opt-ins do not yet carry an authored research-question relation. No IDs were fabricated from historical prose.
 
