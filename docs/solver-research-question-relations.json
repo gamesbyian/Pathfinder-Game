@@ -566,15 +566,16 @@
       "answeredBy": [
         "reports/2026-09-17-separator-decomposition-census-result-001.md",
         "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
-        "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md",
-        "reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md"
+        "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md"
       ],
       "result": "The first C1 boundary-kinematics result is superseded because the retained compact exact-label projection was discovered to encode labels in combined 20-shard row order while that pass aligned them to canonical case order. The 581-case population and exact reference labels remain valid. Projection schema v2 now records canonical and source-row hashes plus the shard transform. Live gate: rerun frozen C1 unchanged; C2 remains prospectively frozen but is not reached unless corrected C1 earns it.",
       "constrainedBy": [
         "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
         "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
         "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md",
-        "docs/solver-separator-dynamic-interface-contract-preflight.md"
+        "docs/solver-separator-dynamic-interface-contract-preflight.md",
+        "reports/2026-09-20-lane-a-c1-boundary-kinematics-preflight-001.md",
+        "reports/2026-09-20-lane-a-c2-global-accounting-preflight-001.md"
       ],
       "constrains": [
         "C0 is closed insufficient; do not repeat raw cut/interface identity or reinterpret its mostly-pure groups as a consumer.",
