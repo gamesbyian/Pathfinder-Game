@@ -13,6 +13,45 @@ function walk(root, out = []) {
   return out;
 }
 
+function newMapConstructorExpression(source, assignment) {
+  const newMap = source.indexOf('new Map', assignment);
+  if (newMap < 0) return null;
+  const open = source.indexOf('(', newMap);
+  if (open < 0) return null;
+  let depth = 0;
+  let quote = null;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+  for (let i = open; i < source.length; i++) {
+    const ch = source[i];
+    const next = source[i + 1] ?? '';
+    if (lineComment) {
+      if (ch === '\n') lineComment = false;
+      continue;
+    }
+    if (blockComment) {
+      if (ch === '*' && next === '/') { blockComment = false; i += 1; }
+      continue;
+    }
+    if (quote) {
+      if (escaped) { escaped = false; continue; }
+      if (ch === '\\') { escaped = true; continue; }
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '/' && next === '/') { lineComment = true; i += 1; continue; }
+    if (ch === '/' && next === '*') { blockComment = true; i += 1; continue; }
+    if (ch === "'" || ch === '"' || ch === '`') { quote = ch; continue; }
+    if (ch === '(') depth += 1;
+    else if (ch === ')') {
+      depth -= 1;
+      if (depth === 0) return source.slice(assignment, i + 1);
+    }
+  }
+  return null;
+}
+
 export function cliOptionContractIssues(source, file = '<source>') {
   // Common parser shape: argv token "--foo=bar" -> key "foo" via slice(2).
   // Tie the lookup to the same Map variable so unrelated dashed-key maps do not become false positives.
@@ -25,11 +64,8 @@ export function cliOptionContractIssues(source, file = '<source>') {
     const letNeedle = `let ${mapName} = new Map(`;
     const assignment = Math.max(before.lastIndexOf(constNeedle), before.lastIndexOf(letNeedle));
     if (assignment < 0) continue;
-    const statementStart = Math.max(0, source.lastIndexOf('\n', assignment) + 1);
-    const semicolon = source.indexOf(';', assignment);
-    const statementEnd = semicolon < 0 ? match.index : Math.min(semicolon + 1, match.index);
-    const constructorRegion = source.slice(statementStart, statementEnd);
-    if (/\b[A-Za-z_$][\w$]*\.slice\(2(?:\)|,)/u.test(constructorRegion)) {
+    const constructorRegion = newMapConstructorExpression(source, assignment);
+    if (constructorRegion && /\b[A-Za-z_$][\w$]*\.slice\(2(?:\)|,)/u.test(constructorRegion)) {
       issues.push(`${file}: Map "${mapName}" strips the leading "--" from CLI keys but later looks up a "--..." key`);
     }
   }
