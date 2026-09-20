@@ -3,6 +3,14 @@ import { researchRepositoryRefIssues, validateResearchRepositoryRef } from './re
 
 assert.deepEqual(researchRepositoryRefIssues('reports/result.json'), []);
 assert.deepEqual(researchRepositoryRefIssues('docs/plan.md', { allowedRoots: ['docs'] }), []);
+assert.deepEqual(researchRepositoryRefIssues('AGENTS.md', {
+  allowedRoots: ['docs'],
+  allowedTopLevelFiles: ['AGENTS.md'],
+}), []);
+assert.ok(researchRepositoryRefIssues('OTHER.md', {
+  allowedRoots: ['docs'],
+  allowedTopLevelFiles: ['AGENTS.md'],
+}).length > 0);
 assert.ok(researchRepositoryRefIssues('reports/result.json and more')[0]?.includes('does not') === false
   || researchRepositoryRefIssues('reports/result.json and more').length > 0);
 assert.ok(researchRepositoryRefIssues('../reports/result.json').length > 0);
