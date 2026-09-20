@@ -31,6 +31,10 @@ assert.ok(inventory.planLifecycle.some(row =>
 assert.ok(inventory.documentation.currentReferenceCount > 0, 'inventory must derive the docs current-reference index');
 assert.ok(inventory.documentation.currentMarkdownReferenceCount > 0);
 assert.ok(inventory.documentation.currentMarkdownBytes > 0);
+assert.ok(inventory.documentation.roleCounts['canonical-current'] > 0);
+assert.ok(inventory.documentation.roleCounts['dated-evidence'] > 0);
+assert.ok(inventory.documentation.roleCounts['historical/archive'] > 0);
+assert.ok(inventory.documentation.roles.some(row => row.path === 'docs/solver-optimization-workstreams.md' && row.role === 'canonical-current'));
 assert.equal(inventory.documentation.lifecycleCandidateCount, inventory.planLifecycle.length);
 assert.equal(
     inventory.documentation.currentLifecycleCandidateCount,
