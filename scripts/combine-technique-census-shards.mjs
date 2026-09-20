@@ -70,11 +70,15 @@ if (PLAN_FILE) {
 let rawResults = [];
 let missing = [];
 let partial = [];
+let executionCommit = null;
+let sawRevisionMetadata = false;
+let sawMissingRevisionMetadata = false;
 if (COMBINED_FILE) {
     const existing = JSON.parse(readFileSync(path.resolve(COMBINED_FILE), 'utf8'));
     rawResults = existing.results ?? [];
     missing = existing.missingShards ?? [];
     partial = existing.partialShards ?? [];
+    executionCommit = existing.commit ?? null;
 } else {
     const dirs = readdirSync(STAGING_DIR).filter(d =>
         statSync(path.join(STAGING_DIR, d)).isDirectory() && d.startsWith('technique-census-shard-'));
@@ -83,9 +87,24 @@ if (COMBINED_FILE) {
         const files = readdirSync(shardPath).filter(f => /^shard-\d+\.json$/.test(f));
         if (files.length === 0) { missing.push(d); continue; }
         const data = JSON.parse(readFileSync(path.join(shardPath, files[0]), 'utf8'));
+        if (data.commit) {
+            sawRevisionMetadata = true;
+            if (executionCommit && executionCommit !== data.commit) {
+                throw new Error(`combine: shard execution revisions disagree: ${executionCommit} != ${data.commit}`);
+            }
+            executionCommit = data.commit;
+        } else {
+            sawMissingRevisionMetadata = true;
+        }
         if (data.partial) partial.push(d);
         rawResults.push(...(data.results || []));
     }
+    if (sawRevisionMetadata && sawMissingRevisionMetadata) {
+        throw new Error('combine: mixed fresh/legacy shard revision metadata; cannot claim one execution identity');
+    }
+}
+if (SOLVER_VERSION && executionCommit && executionCommit !== 'local' && SOLVER_VERSION !== executionCommit) {
+    throw new Error(`combine: shard execution revision ${executionCommit} disagrees with --solver-version ${SOLVER_VERSION}`);
 }
 
 const deduped = dedupeTechniqueCensusResults(rawResults);
@@ -109,6 +128,7 @@ mkdirSync(OUT_DIR, { recursive: true });
 if (!DERIVED_ONLY) {
     writeFileSync(path.join(OUT_DIR, 'combined-cells.json'), JSON.stringify({
         generatedAt: new Date().toISOString(),
+        ...(executionCommit ? { commit: executionCommit } : {}),
         missingShards: missing,
         partialShards: partial,
         duplicateCellsRemoved: deduped.duplicatesRemoved,
