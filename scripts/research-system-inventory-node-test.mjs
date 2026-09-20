@@ -13,6 +13,10 @@ assert.ok(inventory.frontDoorInputs.liveQueue.some(row => row.workstreamId === 2
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
 assert.ok(inventory.frontDoorInputs.unfinishedLifecycle.some(row => row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'));
 assert.equal(inventory.integrationHealth.errorCount, 0, 'inventory should surface existing integration-audit errors');
+assert.equal(inventory.diagnostics.authorityFindingCount, inventory.findings.authority.length);
+assert.equal(inventory.diagnostics.lifecycleFindingCount, inventory.findings.lifecycle.length);
+assert.equal(inventory.diagnostics.fragileProseFindingCount, inventory.findings.fragileProse.length);
+assert.ok(inventory.findings.sharedFailureModes.every(row => row.consumerCount >= 2));
 assert.equal(inventory.diagnostics.integrationErrorCount, inventory.integrationHealth.errorCount);
 assert.ok(inventory.relations.some(row =>
     row.relation === 'questions' && row.source === 'docs/solver-research-question-relations.json'));
@@ -104,6 +108,8 @@ assert.equal('planLifecycle' in architectureView, false);
 const lifecycleView = researchSystemInventoryView(inventory, 'lifecycle');
 assert.ok(Array.isArray(lifecycleView.planLifecycle));
 assert.equal('relations' in lifecycleView, false);
+const findingsView = researchSystemInventoryView(inventory, 'findings');
+assert.deepEqual(findingsView.findings, inventory.findings);
 const briefInputsView = researchSystemInventoryView(inventory, 'brief-inputs');
 assert.deepEqual(briefInputsView.frontDoorInputs, inventory.frontDoorInputs);
 assert.equal('relations' in briefInputsView, false);
