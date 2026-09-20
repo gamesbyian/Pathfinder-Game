@@ -137,6 +137,8 @@ assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_FOUR')?.pr
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
 const taggedEvidence = index.evidence.find(row => row.topicId === 'example');
 assert.equal(taggedEvidence.metadataSource, 'structured-closeout');
+assert.equal(taggedEvidence.authorityRelation, 'hyperlink-discovery-only');
+assert.ok(taggedEvidence.linkedCurrentDocs.includes('docs/topic.md'));
 assert.ok(taggedEvidence.artifacts.includes('logs/example/run.json'),
     'structured closeout source artifacts must participate in status-index artifact discovery');
 assert.equal(taggedEvidence.researchQuestion, 'WS2-CURRENT');
