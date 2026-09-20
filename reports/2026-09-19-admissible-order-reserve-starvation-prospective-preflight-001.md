@@ -1,6 +1,6 @@
 # Admissible-order reserve-starvation prospective probe preflight 001
 
-> **Status:** active / canary complete
+> **Status:** active
 > **Last evidence:** 2026-09-19 — retained-asset audit plus recovery of R00044's original 1.2B targeted-sweep artifact.
 > **Decision:** freeze an independent 40-parent current-residual sample and probe only the demonstrated winning default admissible-order profile at a 300M isolated node ceiling.
 > **Remaining gate:** the R00044 execution-family canary is complete and reproduced the historical 219,802,423-node solve exactly (`reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md`). Dispatch the frozen 40-parent sample next; classify the high-cost tail before any reserve-fraction A/B.
