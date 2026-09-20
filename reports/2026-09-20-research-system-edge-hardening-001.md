@@ -28,7 +28,7 @@ Effects:
 
 - the targeted workflow is back below its existing no-growth ceiling;
 - checkout happens before artifact download;
-- the compact response and manifest remain the only durable outputs from this opt-in path;
+- the compact response and manifest remain the only durable outputs from this opt-in path, and an explicit persistence request now fails if the compact payload is unexpectedly absent;
 - the evidence commit is made once, while fetch/rebase/push is what retries;
 - the existing API-readable work summary now also prints solved and unsolved IDs, removing a redundant inline summary block.
 
