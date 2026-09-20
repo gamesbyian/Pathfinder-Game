@@ -103,6 +103,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     if (opts.pruneDiagnostics) prep._pruneDiagnostics = opts.pruneDiagnostics;
     if (opts.failureProgressObserver) prep._failureProgressObserver = opts.failureProgressObserver;
     if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
+    if (opts.parityCapacityObserver) prep._parityCapacityObserver = opts.parityCapacityObserver;
     if (opts.jointObligationObserver) prep._jointObligationObserver = opts.jointObligationObserver;
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 
