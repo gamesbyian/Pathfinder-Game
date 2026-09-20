@@ -204,6 +204,19 @@ Affordances and caveats are scientific interpretation. Their purpose is to prese
 
 Keep them prose unless a specific caveat becomes a repeated enforcement rule with a real consumer.
 
+## Hostile closeout sweep
+
+After the conversions above, a focused scan of live research control-plane consumers found no remaining material path that classifies arbitrary prose into queue, experiment, question, or report machine state.
+
+The remaining prose classifiers are intentionally bounded to:
+
+- `normalizedLegacyWorkstreamState` for pre-structured workstream-table compatibility;
+- `lifecycleDisposition` and current-authority/active phrase detection inside the derived documentation inventory, where they produce diagnostics rather than execution/scientific authority.
+
+A regression guard now checks that current experiment lifecycle, question lifecycle, and the shared status index continue to use explicit structured state rather than reintroducing prose/prefix inference.
+
+This does not prove the repository contains no other prose-only scientific fact. It closes the narrower question: **is arbitrary prose still functioning as a live research control-plane API in the audited surfaces?** After this pass, not in the identified current paths.
+
 ## Standing rule
 
 Use this order when encountering a prose-only fact:
