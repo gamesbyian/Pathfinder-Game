@@ -2,7 +2,7 @@
 
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-19 — Opportunity sizing, experiment readiness, decision/search-loss observation support, population integrity, failure/hint termination semantics, resource contracts, and the inference-audit framework were compared for repeated observability preconditions.
-> **Decision:** treat observability as a compositional precondition envelope for interpreting null/negative evidence; do not collapse applicability, opportunity, reach, participation, support, coverage, and censoring into one status.
+> **Decision:** treat observability as a compositional precondition envelope for interpreting null/negative evidence; do not collapse applicability, opportunity, reach, participation, support, fidelity/comparability, coverage, and censoring into one status.
 > **Remaining gate:** extract a shared machine primitive when the first two live consumers can delegate envelope validation/classification without losing specialist semantics.
 
 <!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-09-19","decision":"treat observability as a compositional precondition envelope before negative evidence is interpreted","remainingGate":"extract the smallest shared envelope when two live consumers can delegate without semantic loss","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":null,"selection":"cross-system observability semantic audit","inferenceScope":"research-system interpretation and capability-discovery semantics; not solver-efficacy evidence"},"claimRefs":[],"sourceArtifacts":["docs/solver-research-inference-audit-framework.md","docs/solver-experiment-opportunity-sizing.md","scripts/experiment-opportunity-audit.mjs","scripts/ws2-experiment-readiness-lib.mjs","scripts/solver-decision-observation-lib.mjs","scripts/research-observation-integrity-lib.mjs","scripts/failure-evidence-semantics-lib.mjs","scripts/hint-termination-semantics-lib.mjs","docs/solver-research-resource-contract.md"],"prospective":{"expectation":"multiple specialist systems will already implement compatible slices of one observability precondition chain","surprise":"the conceptual chain is already explicit in the inference framework, but no shared executable envelope composes the slices","anomaly":null}} -->
@@ -147,13 +147,19 @@ Use independent axes, with each consumer declaring which axes are required for i
    - unknown
    - not-applicable
 
-6. **coverage**
+6. **execution fidelity / comparability**
+   - matched
+   - mismatched
+   - unknown
+   - not-applicable
+
+7. **coverage**
    - complete
    - incomplete
    - unknown
    - not-applicable
 
-7. **censoring**
+8. **censoring**
    - uncensored
    - censored
    - unknown
@@ -217,6 +223,7 @@ A blocker can route directly to the smallest remediation:
 | not reached | routing/exposure investigation |
 | reached but non-participating | budget/allocation/wiring investigation |
 | unsupported measurement | improve instrument/exact/reference support |
+| solver/config/protocol/intervention mismatch | reconcile execution fidelity before interpreting the comparison |
 | incomplete coverage | repair acquisition/harvest/reconciliation |
 | censored | fix work/deadline envelope or separate censored analysis |
 | all required axes satisfied, still negative | genuine mechanism/search-quality negative |
@@ -286,8 +293,9 @@ For every negative/null/closed result, ask:
 6. Which were supported by the instrument?
 7. Which were completely observed?
 8. Which were uncensored?
-9. What is the denominator after each gate?
-10. If the result is still negative after all required gates, what capability claim does that actually close?
+9. Does the observed execution actually match the solver/config/protocol/intervention named by the claim?
+10. What is the denominator after each gate?
+11. If the result is still negative after all required gates, what capability claim does that actually close?
 
 This should be applied especially to historical “clean negatives” before they are reused as broad premise failures.
 
@@ -298,6 +306,14 @@ The concept has clearly earned an audit lens now.
 That promotion trigger has now been met. `WS2-FAILURE-RESPONSE-RECONNAISSANCE` and `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` both emit the shared `pathfinder-research-resolution-envelope` while retaining different required-axis subsets and specialist verdict logic. The reserve-starvation integration also exposed two concrete false-readiness gaps: missing action identity and missing solver identity.
 
 The shared primitive is now `scripts/research-resolution-envelope-lib.mjs`. It owns canonical axes/statuses, required-axis declaration, blocker projection and resolution readiness only. It does not own specialist derivation or outcome interpretation. See `reports/2026-09-19-synchronous-observability-identifiability-pilot-001.md`.
+
+## Historical calibration
+
+The retrospective in `reports/2026-09-20-historical-negative-resolution-retrospective-001.md` found a known false negative that motivated an eighth axis.
+
+A July high-budget artifact showed 0/483 current-residual overlaps solved, with most rows uncensored and heavily dosed. It nevertheless failed as evidence for the current level-blind solver's 4x-budget capability because the solver revision was seven weeks old and the execution used history-aware `--resume --save-hints`. A clean current-commit, level-blind confirmation later found 3/20 solves at 1.2B.
+
+That failure is neither coverage nor participation nor censoring. It is **execution fidelity/comparability**. The shared envelope therefore now carries a dedicated `fidelity` axis.
 
 ## Standing rule
 
