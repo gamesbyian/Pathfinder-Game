@@ -111,7 +111,7 @@ function canonicalPlanJoinValue(field, value) {
 
 const PLAN_RESULT_JOIN_FIELDS = Object.freeze([
     'tier', 'corpus', 'levelPos', 'levelId', 'variantLabel', 'pairLabel', 'flagExperiment',
-    'techniqueKeys', 'nodeBudget', 'workBudget', 'perTechniqueWorkCap',
+    'techniqueKeys', 'nodeBudget', 'workBudget', 'budgetMs', 'perTechniqueWorkCap',
     'perTechniqueWorkCapByKey', 'ablation',
 ]);
 
