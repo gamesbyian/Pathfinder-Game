@@ -65,9 +65,13 @@ assert.equal(reconciliation.execution.schedulerMode, 'production');
 
 const reversed = validateReconciliationSources([{ runId: '2', manifest: secondManifest }, { runId: '1', manifest }]);
 assert.equal(reversed.protocolHash, result.protocolHash, 'source ordering must not change the protocol identity');
-assert.notEqual(reversed.sourceSetHash, result.sourceSetHash, 'source-set provenance remains order-sensitive to the caller-provided reconciliation sequence');
+assert.equal(reversed.sourceSetHash, result.sourceSetHash, 'source-set provenance must be canonical regardless of caller/source-directory ordering');
 
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest: {} }]), /resolved SHA/);
+assert.throws(
+  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: secondManifest }]),
+  /source run IDs must be unique/u,
+);
 const mismatchedConfiguration = clone(secondManifest);
 mismatchedConfiguration.experiment.configurationHash = `sha256:${'f'.repeat(64)}`;
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: mismatchedConfiguration }]), /configurationHash/);
