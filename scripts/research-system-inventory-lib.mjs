@@ -416,13 +416,20 @@ function inventoryFindings({
 function currentState(model) {
     const questions = model.relations.questions ?? [];
     const queue = model.relations.queue ?? [];
+    const promotions = model.relations.promotions ?? [];
+    const evidence = model.relations.evidence ?? [];
     return {
         queueEntries: queue.length,
         activeQueueEntries: queue.filter(row => row.executionState === 'active' || row.status === 'active').length,
         questions: questions.length,
         activeQuestions: questions.filter(row => researchQuestionLifecycleClass(String(row.state ?? '').toLowerCase()) === 'active').length,
-        evidenceReports: model.relations.evidence?.length ?? 0,
+        deferredQuestions: questions.filter(row => String(row.state ?? '').toLowerCase() === 'deferred-reopen').length,
+        authoredAcquisitionRelations: questions.filter(row => Boolean(row.acquisitionNeed)).length,
+        evidenceReports: evidence.length,
+        evidenceReportsWithStructuredSourceArtifacts: evidence.filter(row => (row.sourceArtifacts ?? []).length > 0).length,
         durableEvidenceBundles: model.relations.durableEvidence?.length ?? 0,
+        promotions: promotions.length,
+        promotionsWithDecisionEvidence: promotions.filter(row => Boolean(row.decisionEvidenceRef)).length,
         researchBlocks: model.relations.researchBlocks?.length ?? 0,
         measurementOpportunities: model.relations.measurementOpportunities?.length ?? 0,
         assets: model.relations.assets?.length ?? 0,
@@ -456,6 +463,14 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         .filter(row => Boolean(row.executionState)).length;
     const structuredExperimentPromotionStateCount = (model.relations.experiments ?? [])
         .filter(row => Boolean(row.promotionState)).length;
+    const deferredQuestionCount = (model.relations.questions ?? [])
+        .filter(row => String(row.state ?? '').toLowerCase() === 'deferred-reopen').length;
+    const authoredAcquisitionRelationCount = (model.relations.questions ?? [])
+        .filter(row => Boolean(row.acquisitionNeed)).length;
+    const promotionDecisionEvidenceRelationCount = (model.relations.promotions ?? [])
+        .filter(row => Boolean(row.decisionEvidenceRef)).length;
+    const structuredSourceArtifactEvidenceCount = reportMetadataSources
+        .filter(row => (row.sourceArtifacts ?? []).length > 0).length;
     const relations = relationInventory(model);
     const workflows = workflowInventory(root);
     const retiredWorkflows = retiredWorkflowInventory(root);
@@ -537,6 +552,10 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             legacyStatusBlockEvidenceCount,
             structuredWorkstreamExecutionStateCount,
             structuredExperimentPromotionStateCount,
+            deferredQuestionCount,
+            authoredAcquisitionRelationCount,
+            promotionDecisionEvidenceRelationCount,
+            structuredSourceArtifactEvidenceCount,
             closeoutParseErrors: closeoutParseErrors.map(row => ({ path: row.path, error: row.closeoutError })),
             lifecycleCandidateCount: plans.length,
             currentLifecycleCandidateCount: plans.filter(row => row.currentReference).length,
