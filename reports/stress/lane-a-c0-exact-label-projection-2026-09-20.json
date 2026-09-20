@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "kind": "lane-a-exact-label-projection",
   "sourceRunId": 35466554891,
   "sourceArtifactId": 10591287305,
@@ -17,5 +17,13 @@
     "dead": 542,
     "timeout/abstain": 35,
     "live": 4
+  },
+  "labelOrder": {
+    "kind": "round-robin-shards-concatenated",
+    "shardCount": 20,
+    "canonicalCaseOrderHash": "sha256:c8071ebc3fe156efda91727611d1b87240084fc693883f3663291e9222d61917",
+    "sourceRowCaseOrderHash": "sha256:79e297b9f1736438fa93bf7ec3720939664e6172906cd593c274190dd3bd8eef",
+    "algorithm": "for shardIndex=0..19, append canonical case indices shardIndex, shardIndex+20, ...; labels follow the combined artifact's shard-major row order",
+    "legacyCaseOrderHashField": "caseOrderHash is retained as an alias of sourceRowCaseOrderHash for schema-v1 provenance compatibility"
   }
 }
