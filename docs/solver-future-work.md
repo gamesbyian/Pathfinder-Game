@@ -22,7 +22,7 @@ Cold procedures may derive exact current-input facts; cross-parent recurrence is
 ## Deferred plan closeouts
 
 - **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
-- **Failure evidence:** P3 -> failure-response; P4A -> class-3 dose; P4B -> reserve starvation; P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Failure evidence:** P3 failure-response + P4A Class-3 dose now share one frozen 53-parent compact-response acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md`); their analyses/dispositions remain separate. P4B -> reserve starvation; P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
