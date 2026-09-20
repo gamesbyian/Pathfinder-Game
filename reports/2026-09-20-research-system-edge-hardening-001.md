@@ -141,6 +141,10 @@ The first broad regex version of that guard intentionally over-reported because 
 
 The same join-proof lens found a separate static-portfolio weakness. Its combiner used to prove only that every authored `cellId` appeared once. It did not prove that the row carrying that ID still described the authored corpus/level/arm/technique/work allocation. The combiner now rejects duplicate plan IDs and validates each result row against its authored plan cell before it contributes to coverage, work or gain/loss comparisons. A correct label with the wrong treatment payload is no longer enough.
 
+That invariant is now shared by the underlying technique-census result domain rather than duplicated in static portfolio. Technique-census analysis validates every observed row against its authored plan while still allowing explicitly partial analytical runs; failed cells retain level identity; and `budgetMs` is now carried as treatment identity because the per-attempt deadline can change outcomes. This distinguishes “planned cell missing” from “cell arrived under the wrong treatment.”
+
+The CP-SAT explicit-prefix combiner received the same treatment at the shard boundary. It now validates declared shard count, filename/index agreement, unique complete shard-index coverage, invariant source metadata, and the exact round-robin row count implied by `selectedCaseCount`. “N files plus N total rows” is no longer accepted as proof of the intended partition.
+
 Historical impact was checked before claiming lost evidence. The classifier file entered the repository on 2026-09-09. There were 96 manual workflow dispatches from 2026-09-09 through 2026-09-20, and none were the broad- or residual-confirmation workflows; the discoverable confirmation dispatches are from 2026-08-26/27, before this CLI existed. No already-paid-for broad/residual experiment lost its verdict because of this bug; it was a latent future failure.
 
 ## H. Decision-bearing eligibility and durable evidence are revalidated
