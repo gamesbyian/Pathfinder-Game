@@ -56,9 +56,9 @@ Directory layout remains storage. It no longer defines membership.
 
 The question registry currently contains dozens of path-valued `answeredBy` and `constrainedBy` edges.
 
-The integration audit now verifies that path-valued edges under `docs/`, `reports/`, `scripts/`, `data/`, or `logs/` actually exist.
+The question contract now requires `answeredBy` to be a duplicate-free array of repository paths. The integration audit verifies that path-valued edges under `docs/`, `reports/`, `scripts/`, `data/`, or `logs/` actually exist.
 
-A stale rename or deleted report can no longer leave the scientific graph silently dangling.
+A stale rename, typo, duplicate edge, or deleted report can no longer leave the scientific graph silently dangling.
 
 ### 4. Question `answeredBy` <-> structured report question: conditional bidirectional agreement
 
@@ -120,6 +120,19 @@ The integration audit now checks:
 - resource-contract audit asset IDs continue to resolve.
 
 The graph is allowed to be descriptive. It is no longer allowed to dangle silently.
+
+### 7. Report -> linked current docs: hyperlink is discovery, not authority
+
+The research status index previously called every current `docs/` hyperlink found in a report an `authority`.
+
+A hyperlink does not establish ownership. Reports routinely link current docs for context, constraints, or navigation.
+
+The index now exposes:
+
+- `linkedCurrentDocs`;
+- `authorityRelation: hyperlink-discovery-only`.
+
+The legacy `authorities` field remains for compatibility, but new consumers have an explicit warning that the relation is navigational/discovery-only rather than scientific or execution authority.
 
 ## Relationships deliberately left inferred or descriptive
 
