@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { buildResearchRelations, RESEARCH_RELATION_CONTRACTS } from './research-relations-lib.mjs';
 import { currentDocumentationReferences } from './documentation-index-lib.mjs';
+import { parseResearchCloseoutCapsule } from './investigation-report-metadata.mjs';
 import { auditResearchIntegration } from './research-integration-audit-lib.mjs';
 
 const normalize = value => value.split(path.sep).join('/');
@@ -98,6 +99,13 @@ function documentationRoles(root, currentReferences) {
                 : 'retained-reference-or-evidence';
         }
         const status = /^> \*\*Status:\*\* (.+)$/mu.exec(source)?.[1]?.trim() ?? null;
+        let closeout = null;
+        let closeoutError = null;
+        try {
+            closeout = parseResearchCloseoutCapsule(source);
+        } catch (error) {
+            closeoutError = error.message;
+        }
         const statusText = String(status ?? '').toLowerCase();
         const claimsCurrentAuthority = /(?:canonical|current authority|live authority)/u.test(statusText);
         const claimsActive = /(?:^|\b)active(?:\b|$)/u.test(statusText);
@@ -109,6 +117,8 @@ function documentationRoles(root, currentReferences) {
             claimsCurrentAuthority,
             claimsActive,
             currentAuthorityClaimOutsideIndex: claimsCurrentAuthority && !currentPaths.has(relative),
+            closeout,
+            closeoutError,
         };
     });
 }
@@ -251,7 +261,7 @@ function relationInventory(model) {
     })).sort((a, b) => a.relation.localeCompare(b.relation));
 }
 
-function frontDoorInputs(model, plans) {
+function frontDoorInputs(model, plans, documentRoles = []) {
     const questions = model.relations.questions ?? [];
     const questionById = new Map(questions.map(question => [String(question.id), question]));
     const liveQueue = (model.relations.queue ?? [])
@@ -281,7 +291,12 @@ function frontDoorInputs(model, plans) {
             status: row.status,
             fragileProse: row.fragileProse,
         }));
-    return { liveQueue, deferredReopenQuestions, unfinishedLifecycle };
+    const structuredCloseouts = documentRoles
+        .filter(row => row.closeout)
+        .map(row => ({ path: row.path, ...row.closeout }))
+        .sort((a, b) => String(b.lastEvidenceDate).localeCompare(String(a.lastEvidenceDate)) || a.path.localeCompare(b.path))
+        .slice(0, 25);
+    return { liveQueue, deferredReopenQuestions, unfinishedLifecycle, structuredCloseouts };
 }
 
 function inventoryFindings({
@@ -359,6 +374,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const currentMarkdownBytes = currentMarkdownReferences.reduce((sum, row) =>
         sum + statSync(path.join(root, row.path)).size, 0);
     const documentRoles = documentationRoles(root, currentReferences);
+    const closeoutParseErrors = documentRoles.filter(row => row.closeoutError);
+    const structuredCloseoutCount = documentRoles.filter(row => row.closeout).length;
     const roleCounts = Object.fromEntries([...new Set(documentRoles.map(row => row.role))].sort()
         .map(role => [role, documentRoles.filter(row => row.role === role).length]));
     const currentAuthorityClaimOutsideIndex = documentRoles.filter(row => row.currentAuthorityClaimOutsideIndex);
@@ -385,7 +402,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             methodAuthority: 'docs/solver-research-operating-model.md',
         },
         currentState: currentState(model),
-        frontDoorInputs: frontDoorInputs(model, plans),
+        frontDoorInputs: frontDoorInputs(model, plans, documentRoles),
         findings,
         integrationHealth: {
             errorCount: integrationAudit.errorCount,
@@ -416,6 +433,9 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             },
             currentAuthorityClaimOutsideIndexCount: currentAuthorityClaimOutsideIndex.length,
             currentAuthorityClaimOutsideIndexPaths: currentAuthorityClaimOutsideIndex.map(row => row.path),
+            structuredCloseoutCount,
+            closeoutParseErrorCount: closeoutParseErrors.length,
+            closeoutParseErrors: closeoutParseErrors.map(row => ({ path: row.path, error: row.closeoutError })),
             lifecycleCandidateCount: plans.length,
             currentLifecycleCandidateCount: plans.filter(row => row.currentReference).length,
         },
@@ -443,6 +463,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             retiredWorkflowReappearanceCount: retiredWorkflows.filter(row => row.presentOnDisk).length,
             workflowBackedResearchCommandCount: commands.filter(row => row.workflowConsumerCount > 0).length,
             directResearchCommandCount: commands.filter(row => row.workflowConsumerCount === 0).length,
+            structuredCloseoutCount,
+            closeoutParseErrorCount: closeoutParseErrors.length,
         },
     };
 }
