@@ -45,6 +45,13 @@ jobs:
             /reports/**/*.md
             /reports/stress/experiment-evidence/**/manifest.json
             /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
+            /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
+            /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
+            /reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json
+            /reports/stress/lane-e-multi-pick-bisection-2026-09-17.json
+            /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
+            /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
+            /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
             !/data/
           sparse-checkout-cone-mode: false
       - name: Derive runtime-data cache key
@@ -96,6 +103,13 @@ jobs:
           /reports/**/*.md
           /reports/stress/experiment-evidence/**/manifest.json
           /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
+          /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
+          /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
+          /reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json
+          /reports/stress/lane-e-multi-pick-bisection-2026-09-17.json
+          /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
+          /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
+          /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
           !/data/*
           /data/levels.json
           /data/level-heatmaps.json
