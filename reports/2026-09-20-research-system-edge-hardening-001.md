@@ -117,7 +117,41 @@ The proposal-method calibration audit correctly deferred a machine `originMethod
 
 `docs/investigation-report-conventions.md` now defines an optional human-readable `Proposal provenance` line for newly nominated questions/candidates when the source is genuinely known before outcome. Multiple contributing methods are allowed; the field is not machine-enforced and must not be retrospectively story-fitted. The proposal-method audit now points to this collection path. This creates observations without prematurely freezing an enum or registry.
 
-## G. What this pass deliberately did not promote
+## G. Reconsidered audit lens: joins and executable surfaces
+
+The initial “ordinary plumbing traps” framing was useful but too implementation-shaped. The stronger recurring failure modes are:
+
+1. **Unproved scientific joins.** Two artifacts can each be locally valid while describing different executions, populations, revisions, or stages. A workflow step order, matching filename, shared label, or caller convention is not proof that they belong to the same scientific object.
+2. **Untested executable surfaces.** A library function can be correct while the CLI/workflow adapter that supplies its arguments is completely dead. Testing only the function can therefore certify code that no workflow can actually invoke correctly.
+
+These are now durable operating-model rules rather than report-only observations.
+
+The paired-outcome path supplied a concrete example of both. `classify-paired-solver-outcome.mjs` stripped the leading `--` while building its argument map, then looked up `--control`, `--treatment`, `--outcome-out`, and gate names with the prefix still present. The exported classifier had unit coverage, so CI was green even though the workflow-facing CLI could not receive its required arguments.
+
+The repair now:
+
+- tests the real CLI entrypoint with files and `--key=value` arguments;
+- requires an explicit paired-integrity artifact before a scientific verdict can be emitted;
+- makes paired integrity carry the exact expected IDs, not only a population hash/count;
+- verifies both control and treatment result identities exactly equal that paired population before classifying gains/losses;
+- requires paired integrity to be coverage-complete and decision-valid;
+- adds a repository CLI-option contract guard for the specific same-map “strip `--`, then lookup `--...`” mismatch.
+
+The first broad regex version of that guard intentionally over-reported because many scripts legitimately preserve `--` in their map keys. It was narrowed to tie the lookup to the same map whose constructor strips the prefix, and test fixtures are excluded from the production scan. Do not interpret the original broad hit list as a list of broken scripts.
+
+Historical impact was checked before claiming lost evidence. The classifier file entered the repository on 2026-09-09. The discoverable broad/residual confirmation dispatches are from 2026-08-26 and 2026-08-27, before that CLI existed. No already-paid-for broad/residual experiment is currently known to have lost its verdict because of this bug; this was a latent future failure.
+
+## H. Decision-bearing eligibility and durable evidence are revalidated
+
+The standard publisher used to own the practical definition of “decision-bearing,” while the durable retention layer simply trusted a manifest that said `decisionBearing: true`. That allowed the two stages to drift.
+
+`solver-experiment-contract.mjs` now owns a shared decision-bearing result predicate. It requires the v3 result kind/schema, a published primary result, an empty declared contract-issue set, a currently valid experiment contract, decision-valid non-inferred population integrity, a completed positive/negative research outcome, and agreement among mirrored population identities. The publisher uses that predicate to set the boolean, and the durable evidence persister re-runs the same predicate before retention. A stale or hand-edited true boolean is insufficient.
+
+The persister's existing self-test is now part of ordinary Node CI rather than dormant code.
+
+Durable experiment bundle identity is also append-only. The harvest workflow already defines source artifacts as immutable and re-harvest as deterministic, so the old “delete destination and rewrite it” behavior had no legitimate conflicting-write use case. Re-harvesting the same experiment/run/attempt now succeeds only when the reconstructed bundle is byte-identical; changed bytes under the same durable identity fail as an integrity collision instead of overwriting retained scientific evidence.
+
+## I. What this pass deliberately did not promote
 
 The scans did not earn:
 
