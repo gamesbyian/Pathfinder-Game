@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
@@ -16,6 +17,7 @@ const input = value('in');
 const contractPath = value('analysis-contract');
 const selectedRoute = value('route') || null;
 const outPath = value('out') || null;
+const sha256 = value => `sha256:${createHash('sha256').update(value).digest('hex')}`;
 
 if (!input || !contractPath) {
   throw new Error('--in=<doc1>[,<doc2>...] and --analysis-contract=<file> are required');
@@ -28,7 +30,12 @@ const inputFiles = input.split(',').map(item => item.trim()).filter(Boolean);
 if (!inputFiles.length) throw new Error('at least one compact failure-response input is required');
 const documents = inputFiles.map(file => {
   if (!existsSync(file)) throw new Error(`missing compact failure-response input: ${file}`);
-  return { file, document: validateFailureResponseDocument(JSON.parse(readFileSync(file, 'utf8'))) };
+  const raw = readFileSync(file, 'utf8');
+  return {
+    file,
+    contentHash: sha256(raw),
+    document: validateFailureResponseDocument(JSON.parse(raw)),
+  };
 });
 
 const query = spawnSync(process.execPath, ['scripts/failure-response-query.mjs', `--in=${input}`], {
@@ -83,7 +90,9 @@ const result = {
   execution: {
     status: 'completed',
     implementation: contract.analysisImplementation,
+    implementationHash: sha256(readFileSync(contract.analysisImplementation)),
     inputFiles,
+    inputArtifacts: documents.map(({ file, contentHash }) => ({ path: file, contentHash })),
   },
   scientificDisposition: {
     status: eligible ? 'eligible-for-prespecified-routing' : 'ineligible',
