@@ -72,9 +72,13 @@ test('prepLevel builds twist-phase-conditioned goal distances on twist-portal le
       [b, { dest: a }],
     ]),
   });
-  const prep = prepLevel(level);
-  assert.equal(prep.parityPortalDistMaps?.length, 1);
-  assert.ok(prep.parityPhaseGoalDistArrs, 'twist levels should build both phase layers');
+  const defaultPrep = prepLevel(level);
+  assert.equal(defaultPrep.parityPortalDistMaps?.length, 1);
+  assert.equal(defaultPrep.parityPhaseGoalDistArrs, null,
+    'ordinary production prep must not pay for research-only phase layers');
+
+  const prep = prepLevel(level, { includeParityPhaseGoalDist: true });
+  assert.ok(prep.parityPhaseGoalDistArrs, 'observer-enabled prep should build both phase layers');
 
   const [even, odd] = prep.parityPhaseGoalDistArrs!;
   assert.equal(getDistanceFromArray(even, a, prep.gridW), 2,
