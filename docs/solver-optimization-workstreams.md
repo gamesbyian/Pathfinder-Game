@@ -29,7 +29,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 #### Lane A — separator / decomposition
 
-**C1 MIXED + REPETITION-SUPPORTED; C2 ACTIVE.** Corrected schema-v2 label alignment leaves 187/546 decisive rows (34.25%) in repeated signatures across 58 parents and two exact LIVE/DEAD mixed signatures. Frozen rule advances to the already-precommitted C2 global-accounting representation; do not edit C1. [`contract`](solver-separator-dynamic-interface-contract-preflight.md) · [`C1 result`](../reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md)
+**TESTED FORM CLOSED NEGATIVE AT C2.** C2 removes all exact-outcome mixing but leaves only 39/546 decisive rows (7.14%) in repeated signatures, below the frozen 20% compactness floor. C3/C4 can only fragment further, so the nested contract stops as representation-explosive. Reopen only with a materially different compact interface idea, not added fields. [`contract`](solver-separator-dynamic-interface-contract-preflight.md) · [`C2 result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
@@ -71,7 +71,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 ### Post-mining premise-map handoff closeout
 
-Frozen-map mining is complete; P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed: A is now at C2, D1's ranking consumer is closed negative, F3 has no compact decision-bearing consumer. Dated reports own chronology; no shared runtime substrate or treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
+Frozen-map mining is complete; P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed: A's tested compact-interface ladder is closed negative at C2, D1's ranking consumer is closed negative, F3 has no compact decision-bearing consumer. Dated reports own chronology; no shared runtime substrate or treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
 **Current WS2 gate:** one frozen **53-parent compact-response acquisition** serves failure-response Stage A and Class-3 dose (23 residual + 30 solved controls). Reserve-starvation canary is complete; its 40-parent recurrence probe is dispatch-ready. First-loss/rejection/2x2 still require explicit selection. [`freeze`](../reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md) · [`future`](solver-future-work.md)
 ### 2. Workstream 1: automatic solver action selection
