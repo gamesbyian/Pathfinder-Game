@@ -6,6 +6,7 @@ import path from 'node:path';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { summarizeSignatureCollisions } from '../signature-collision-analysis-lib.mjs';
 import { laneABoundaryKinematics, laneABoundaryKinematicsSignature } from './lane-a-boundary-kinematics-lib.mjs';
+import { deriveLaneAC0Cases } from './lane-a-c0-population-lib.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
@@ -15,7 +16,8 @@ const arg = (name, fallback = null) => {
 };
 
 const inputPath = arg('in');
-const casesPath = arg('cases', 'reports/stress/lane-a-c0-signature-collision-cases-2026-09-19.json');
+const casesPath = arg('cases', null);
+const populationPath = arg('population', 'reports/stress/lane-a-frozen-prefix-population-2026-09-18.json');
 const geometryPath = arg('geometry', 'reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json');
 const outPath = arg('out', null);
 if (!inputPath) {
@@ -23,10 +25,15 @@ if (!inputPath) {
 }
 
 const input = JSON.parse(readFileSync(path.resolve(ROOT, inputPath), 'utf8'));
-const casesDocument = JSON.parse(readFileSync(path.resolve(ROOT, casesPath), 'utf8'));
 const geometryDocument = JSON.parse(readFileSync(path.resolve(ROOT, geometryPath), 'utf8'));
+const casesDocument = casesPath && existsSync(path.resolve(ROOT, casesPath))
+    ? JSON.parse(readFileSync(path.resolve(ROOT, casesPath), 'utf8'))
+    : deriveLaneAC0Cases(
+        JSON.parse(readFileSync(path.resolve(ROOT, populationPath), 'utf8')),
+        geometryDocument,
+    );
 const geometryByLevel = new Map((geometryDocument.levels ?? []).map(row => [String(row.id), row]));
-if (!Array.isArray(casesDocument.cases) || !casesDocument.cases.length) throw new Error(`no cases found in ${casesPath}`);
+if (!Array.isArray(casesDocument.cases) || !casesDocument.cases.length) throw new Error(`no Lane A C0 cases available from ${casesPath ?? populationPath}`);
 const caseById = new Map(casesDocument.cases.map(row => [String(row.id), row]));
 if (caseById.size !== casesDocument.cases.length) throw new Error(`duplicate case id in ${casesPath}`);
 
@@ -64,7 +71,7 @@ function rowsFromInput(document) {
 const rows = rowsFromInput(input);
 
 const corpusPath = casesDocument.corpus;
-if (typeof corpusPath !== 'string' || !corpusPath) throw new Error(`${casesPath} does not declare corpus`);
+if (typeof corpusPath !== 'string' || !corpusPath) throw new Error(`${casesPath ?? populationPath} does not declare corpus`);
 const levels = readLevelsWithHints(path.resolve(ROOT, corpusPath));
 const levelById = new Map(levels.map(level => [String(level.id), level]));
 
@@ -132,7 +139,7 @@ const output = {
     kind: 'lane-a-c1-boundary-kinematics-analysis',
     source: {
         exactLabels: inputPath,
-        frozenCases: casesPath,
+        frozenCases: casesPath ?? `derived:${populationPath}+${geometryPath}`,
         corpus: corpusPath,
         geometry: geometryPath,
         labelReuse: 'reuses frozen C0 exact labels; no new reference/solver queries',
