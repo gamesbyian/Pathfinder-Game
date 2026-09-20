@@ -70,6 +70,34 @@ assert.equal(support.rows, 4);
 assert.equal(support.independentUnits, 2);
 assert.equal(support.largestUnitRows, 3);
 
+// Selected/development evidence remains explicitly development after outcomes influence selection.
+const developmentBlock = buildResearchBlock({
+    blockId: 'BLOCK-TX-DEV-001',
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    sourceRegime: 'fixture-selected',
+    sourceRevision: 'fixture-v1',
+    evidenceRole: 'development',
+    independentUnit: 'parent-level',
+    parentIds: ['dev-parent'],
+    parentContentIdentities: ['sha256:3333333333333333333333333333333333333333333333333333333333333333'],
+    sourceArtifactRefs: ['selected-fixture.json'],
+    producer: 'research-transaction-node-test',
+    manifestRef: 'selected-fixture-manifest.json',
+});
+const selectedDevelopment = appendResearchConsumption(developmentBlock.researchBlock, {
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    decisionRef: 'selected-after-outcome-inspection',
+    scope: { kind: 'block', id: 'BLOCK-TX-DEV-001' },
+    evidenceRole: 'development',
+    conditioning: ['selected-after-inspecting-outcomes'],
+    openedOutcomeKinds: ['solver-outcome'],
+    runRef: null,
+    consumedAt: '2026-09-19T00:00:00.000Z',
+}, { populationIdentity: developmentBlock.populationIdentity });
+assert.equal(selectedDevelopment.evidenceRole, 'development');
+assert.equal(selectedDevelopment.consumptionEvents[0].evidenceRole, 'development');
+assert.ok(selectedDevelopment.consumptionEvents[0].conditioning.includes('selected-after-inspecting-outcomes'));
+
 // Changing content under the same display ID changes research population identity.
 const blockBase = {
     blockId: 'BLOCK-TX-001',
