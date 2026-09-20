@@ -14,7 +14,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { canonicalizeIdentities, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
+import { canonicalizeResearchIdentities as canonicalizeIdentities, hashResearchPopulation as hashPopulation, parseResearchIdentityLines as parseIdentityLines } from './research-population-identity-lib.mjs';
 
 export function buildCaseIntegrity(expectedIds, rows) {
   const expected = canonicalizeIdentities(expectedIds).identities;
