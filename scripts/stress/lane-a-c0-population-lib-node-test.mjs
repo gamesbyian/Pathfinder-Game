@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 
-import { deriveLaneAC0Cases } from './lane-a-c0-population-lib.mjs';
+import { deriveLaneAC0Cases, laneACaseOrderHash, laneAProjectionOrderedCases } from './lane-a-c0-population-lib.mjs';
 
 const syntheticPopulation = {
     summary: { corpus: 'synthetic.json' },
@@ -41,11 +40,14 @@ if ([populationPath, geometryPath, projectionPath].every(existsSync)) {
     const derived = deriveLaneAC0Cases(population, geometry);
     assert.equal(derived.cases.length, 581, 'retained inputs must reproduce the frozen 581-case C0 population');
     assert.equal(new Set(derived.cases.map(row => row.id)).size, 581, 'derived case ids must remain unique');
-    const caseOrderText = `${derived.cases.map(row => String(row.id)).join('\n')}\n`;
-    const caseOrderHash = `sha256:${createHash('sha256').update(caseOrderText).digest('hex')}`;
-    assert.equal(caseOrderHash, projection.caseOrderHash,
-        'retained-input derivation must reproduce the historical case ordering sealed by the label projection');
-    console.log('Lane A C0 retained population derivation: 581 cases and historical order hash reproduced.');
+    assert.equal(laneACaseOrderHash(derived.cases), projection.labelOrder.canonicalCaseOrderHash,
+        'retained-input derivation must reproduce the canonical case ordering recorded by the projection');
+    const sourceOrdered = laneAProjectionOrderedCases(projection, derived.cases);
+    assert.equal(laneACaseOrderHash(sourceOrdered), projection.labelOrder.sourceRowCaseOrderHash,
+        'projection ordering must reproduce the source combined-reference row order');
+    assert.notEqual(projection.labelOrder.canonicalCaseOrderHash, projection.labelOrder.sourceRowCaseOrderHash,
+        'canonical case order and combined shard-major row order are intentionally distinct');
+    console.log('Lane A C0 retained population derivation: 581 canonical cases + shard-major label order reproduced.');
 } else {
     console.log('Lane A C0 retained population derivation: synthetic contract passed; historical seal skipped in sparse checkout.');
 }
