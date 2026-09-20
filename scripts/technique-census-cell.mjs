@@ -241,7 +241,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
         try { return await runCell(cell); }
         catch (err) {
             return {
-                cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelPos: cell.levelPos,
+                cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: cell.levelId ?? null, levelPos: cell.levelPos,
                 techniqueKeys: cell.techniqueKeys, variantLabel: cell.variantLabel ?? null,
                 pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
                 ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget,
