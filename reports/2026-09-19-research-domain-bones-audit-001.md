@@ -13,7 +13,7 @@ The September consolidation work succeeded at composition strongly enough to exp
 
 The safest promotion rule is **repeated semantic convergence across real producers/consumers**, not conceptual attractiveness. A shared primitive should be extracted only when at least two real call sites need the same invariant and keeping the invariant local would permit semantic drift or duplicated correctness logic.
 
-This pass found four such primitives. It also found several attractive near-misses that should remain separate for now.
+This pass found six such primitives. It also found several attractive near-misses that should remain separate for now.
 
 ## Shared primitives extracted
 
@@ -88,6 +88,42 @@ Hint provenance and failure evidence re-export/use the shared values while keepi
 
 This extraction is intentionally small. It does **not** imply that hint and failure evidence share one schema, purpose taxonomy, dependence model or classifier.
 
+
+### 5. Population identity and canonicalization
+
+Population identity primitives had also accumulated in the wrong owner. Generic sweep validation, population combining and CP-SAT reference integrity all depended on `solver-experiment-contract.mjs` for identity-line parsing, duplicate-safe canonicalization and semantic population hashes.
+
+Those semantics now have a dedicated owner:
+
+- `scripts/research-population-identity-lib.mjs`
+
+It owns:
+
+- one-identity-per-line parsing;
+- canonical unique identity sets;
+- population hash construction over explicit kind/basis/corpus/selection/codec semantics.
+
+The solver experiment contract keeps compatibility exports, while generic consumers now depend on the shared owner directly.
+
+This does **not** create a universal population/sample object. Research blocks still use their stricter parent-id + content-identity seal because that contract protects a different failure mode.
+
+### 6. Observation outcome and population integrity
+
+The v3 experiment contract also owned generic row outcome classification and population coverage/decision-validity logic, even though compact failure response, generic sweep validation and publication use those semantics independently of the experiment-contract lifecycle.
+
+Those semantics now have a dedicated owner:
+
+- `scripts/research-observation-integrity-lib.mjs`
+
+It owns:
+
+- common observation identity extraction;
+- solved / exhausted-negative / budget-limited / deadline-truncated / harness-error / malformed / unknown classification;
+- expected-versus-observed population integrity;
+- the distinction between structural coverage completeness and decision-valid completeness.
+
+Specialist adapters remain specialist. In particular, CP-SAT explicit-prefix reference integrity retains its LIVE/DEAD/timeout-abstain/correctness-alarm taxonomy rather than being forced through the generic solver-row classifier.
+
 ## Near-misses deliberately not unified
 
 ### Measurement support versus evidence applicability
@@ -104,7 +140,7 @@ Hint provenance and failure evidence now share applicability outcomes, but their
 
 The v3 experiment contract canonicalizes logical population identities plus kind/basis/selection/codec semantics. Research blocks instead seal aligned parent display IDs to parent content identities to prevent content drift under stable names.
 
-Both now share semantic hashing, but the population contracts themselves still differ enough that a generic `PopulationSpec` would erase useful distinctions.
+They now also share the low-level identity/canonicalization owner where semantics genuinely match, but the full population contracts still differ enough that a generic `PopulationSpec` would erase useful distinctions.
 
 ## Concepts that look like real future organs but have not yet earned extraction
 
@@ -192,6 +228,6 @@ The target is a small research-domain model embedded inside the existing researc
 
 ## Result
 
-This follow-up now promotes four proven common invariants while explicitly declining several superficially similar abstractions.
+This follow-up now promotes six proven common invariants while explicitly declining several superficially similar abstractions.
 
 That is the intended direction of travel: continue to prefer composition, but once composition repeatedly reconstructs the same correctness-critical meaning, stop adding bridges and give that meaning a proper owner.
