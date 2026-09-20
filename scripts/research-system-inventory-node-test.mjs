@@ -34,6 +34,12 @@ assert.ok(inventory.documentation.currentMarkdownBytes > 0);
 assert.ok(inventory.documentation.roleCounts['canonical-current'] > 0);
 assert.ok(inventory.documentation.roleCounts['dated-evidence'] > 0);
 assert.ok(inventory.documentation.roleCounts['historical/archive'] > 0);
+assert.equal(inventory.documentation.statusClaimCounts.currentAuthority,
+    inventory.documentation.roles.filter(row => row.claimsCurrentAuthority).length);
+assert.equal(inventory.documentation.statusClaimCounts.active,
+    inventory.documentation.roles.filter(row => row.claimsActive).length);
+assert.equal(inventory.documentation.currentAuthorityClaimOutsideIndexCount,
+    inventory.documentation.currentAuthorityClaimOutsideIndexPaths.length);
 assert.ok(inventory.documentation.roles.some(row => row.path === 'docs/solver-optimization-workstreams.md' && row.role === 'canonical-current'));
 assert.equal(inventory.documentation.lifecycleCandidateCount, inventory.planLifecycle.length);
 assert.equal(
