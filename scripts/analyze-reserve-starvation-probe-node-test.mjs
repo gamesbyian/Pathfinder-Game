@@ -103,6 +103,8 @@ try {
     assert.equal(censored.resolution.resolutionStatus, 'observability-blocked');
     assert.ok(censored.resolution.blockers.some(row => row.axis === 'measurementSupport'));
     assert.ok(censored.resolution.blockers.some(row => row.axis === 'censoring'));
+    assert.ok(censored.resolution.blockers.some(row =>
+        row.axis === 'censoring' && row.remediation === 'work-envelope-or-recovery'));
 
     const unknownProtocol = analyze(writeDoc('unknown-protocol.json', [
         row('A', 'solved', 70_000_000),
