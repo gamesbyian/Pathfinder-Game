@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { TOPOLOGY_GENERATION_SUPPORT, generationSupportForMechanics } from './stress/topology-generation-support-lib.mjs';
 
 export const GENERATION_METHODS = Object.freeze({
   targeted: Object.freeze({
@@ -40,6 +41,7 @@ export const GENERATION_METHODS = Object.freeze({
     countMode: 'exact',
     defaultPrefix: 'T',
     unsupportedCommonFlags: ['append', 'envelopeCaps'],
+    supportEnvelope: TOPOLOGY_GENERATION_SUPPORT,
   }),
 });
 
@@ -175,6 +177,7 @@ export function compileGeneratorInvocation({
     plannedParentCount: plannedParentCount(method, count, targetedCountPerBatch),
     sourceFamily: descriptor.sourceFamily,
     distributionClass: descriptor.distributionClass,
+    supportEnvelope: descriptor.supportEnvelope ?? null,
     args,
   };
 }
@@ -183,6 +186,11 @@ export function crossConstructionStatus(a, b) {
   const left = methodDescriptor(a);
   const right = methodDescriptor(b);
   return left.distributionClass === right.distributionClass ? 'same-construction-family' : 'cross-construction';
+}
+
+export function assessGenerationMethodSupport(method, { requiredMechanics = [] } = {}) {
+  const descriptor = methodDescriptor(method);
+  return generationSupportForMechanics(descriptor.supportEnvelope ?? null, requiredMechanics);
 }
 
 export function hybridGuidance() {
