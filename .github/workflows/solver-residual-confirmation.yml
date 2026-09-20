@@ -723,6 +723,7 @@ jobs:
           node scripts/classify-paired-solver-outcome.mjs \
             --control="reports/stress/residual-confirmation-phase2-control.json" \
             --treatment="reports/stress/residual-confirmation-phase2-treatment.json" \
+            --integrity="logs/solver-residual-confirmation/paired-integrity.json" \
             --outcome-out="reports/stress/residual-confirmation-outcome.json" \
             --min-gains="$MIN_GAINS" \
             --max-losses="$MAX_LOSSES" \
