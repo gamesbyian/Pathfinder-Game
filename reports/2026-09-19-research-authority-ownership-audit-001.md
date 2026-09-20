@@ -19,7 +19,7 @@ The stronger problem was narrower:
 2. execution state and scientific-question lifecycle are distinct authorities, but their relationship was implicit enough that an active workstream pointing at a `deferred-reopen` question could look contradictory;
 3. production realization initially looked weaker than the upstream lifecycle, but a deeper pass found substantial existing conformance machinery.
 
-The first two are repaired in this follow-up. The third now looks less like a missing organ and more like a narrower provenance-link gap.
+The first two are repaired in this follow-up. The third turned out to need only a narrow provenance edge, not a new realization subsystem; the promoted/default-ON ledger now carries a primary decision-evidence ref where the retained record supports one.
 
 ## Authority partition
 
@@ -116,20 +116,20 @@ The weaker seam is narrower:
 
 `scientific claim / promotion decision -> specific implementation change and regression proof`.
 
-Today that linkage is usually present in reports, feature descriptions and comments, but is not a common machine-readable relation.
+That linkage is now partially machine-readable without creating a new realization registry:
+
+- the promoted/default-ON ledger has a `Decision evidence ref` column;
+- the research status/relations model exposes promoted mechanisms and their primary decision-evidence ref;
+- documentation validation checks that listed promoted mechanisms are live feature keys, are not still in `OPT_IN_FEATURES`, and that any claimed decision report exists;
+- historical rows with no defensible retained primary report remain explicitly unlinked rather than guessed.
+
+The runtime realization itself still belongs to code/tests. This new edge answers only the narrower provenance question: which retained research decision licensed a listed production default?
 
 ### Trigger for further structure
 
 Do **not** create a production-realization registry now.
 
-Revisit only if multiple future promotions require tooling to answer a concrete question that current code/tests/report links cannot answer reliably, such as:
-
-- which promotion decision licensed this default polarity;
-- which production-shaped regression proves ordinary callers participate;
-- which realization was superseded by a later decision;
-- which claim invalidation should force a realization review.
-
-If that repeatedly becomes operationally necessary, extract the smallest decision-to-realization link required. The runtime realization itself already has an owner.
+Revisit only if a later consumer also needs implementation-target identity, qualification/invalidation state, or supersession history across multiple promotions.
 
 ## What this says about the original “connective tissue versus bones/organs” question
 
