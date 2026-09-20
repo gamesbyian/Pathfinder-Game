@@ -26,8 +26,8 @@ assert.equal(
 assert.ok(result.measurementOpportunityUse.some(row => row.id === 'MO-004' && row.windowQuestionIds.length > 0));
 assert.ok(result.capabilityGaps.some(row => row.questionId === 'WS2-FAILURE-RESPONSE-RECONNAISSANCE'));
 assert.ok(Array.isArray(result.negativeIntersections));
-assert.ok(Array.isArray(result.sharedImplementationDependencies));
-assert.ok(result.sharedImplementationDependencies.every(row => row.consumerCount >= 2));
+assert.equal(result.independenceContext.sharedImplementationDependencySource,
+  'research:system-inventory -- --view=architecture');
 assert.ok(Array.isArray(result.explorationTriggers));
 assert.ok(result.interpretationLimits.some(limit => /do not measure effort or productivity/u.test(limit)));
 assert.ok(result.interpretationLimits.some(limit => /cannot prove that instruments caused the agenda/u.test(limit)));
