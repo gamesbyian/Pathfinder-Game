@@ -129,6 +129,15 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
     }
   }
 
+  // YAML single-quoted scalars escape apostrophes by doubling them, never with a backslash.
+  // Catch the exact parser-killing typo that previously produced a zero-job Actions run.
+  for (const [index, line] of source.split('\n').entries()) {
+    const scalar = line.match(/^\s*[A-Za-z0-9_-]+:\s*'(.*)'\s*$/u);
+    if (scalar && /\\'/u.test(scalar[1])) {
+      failures.push(`${name}:${index + 1}: backslash-escaped apostrophe inside a YAML single-quoted scalar; use two apostrophes instead`);
+    }
+  }
+
   for (const inputName of extractDispatchInputNames(source.split('\n'))) {
     const consumed = new RegExp(`\\binputs\\.${inputName}\\b|github\\.event\\.inputs\\.${inputName}\\b`).test(source);
     if (!consumed) failures.push(`${name}: workflow_dispatch input "${inputName}" is declared but never referenced as inputs.${inputName} anywhere in this file`);
