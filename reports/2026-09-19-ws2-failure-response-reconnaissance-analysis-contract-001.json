@@ -119,8 +119,8 @@
     "anomalyPolicy": "Protocol/solver identity conflicts, missingness contradictions, malformed rows, integrity failures, or instrument-support violations are anomalies that make evidence ineligible; they are not scientific surprises."
   },
   "requiredObservabilityAxes": [
-    "eligibility",
     "measurementSupport",
+    "fidelity",
     "coverage"
   ],
   "resolutionOutcomeInterpretation": {
