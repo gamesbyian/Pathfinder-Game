@@ -99,6 +99,12 @@ try {
   assert.equal(result.scientificDisposition.currentApplicability.basis, 'solver-and-protocol-relative');
   assert.equal(result.scientificDisposition.adaptiveLineage.descendantEvidenceRole, 'development-until-new-precommitment');
   assert.equal(result.scientificDisposition.treatmentFidelity, 'not-applicable-routing-screen-no-treatment');
+  assert.equal(result.scientificDisposition.resolution.kind, 'pathfinder-research-resolution-envelope');
+  assert.equal(result.scientificDisposition.resolution.resolutionStatus, 'resolution-ready');
+  assert.deepEqual(result.scientificDisposition.resolution.requiredAxes, ['eligibility', 'measurementSupport', 'coverage']);
+  assert.equal(result.scientificDisposition.resolution.axes.reach.status, 'not-required');
+  assert.equal(result.scientificDisposition.resolution.negativeInterpretationPolicy,
+    'route-none-does-not-imply-no-mechanism-exists');
   assert.equal(result.observation.summary.independentParents, 2);
   assert.equal(result.decision.status, 'pending-interpretation');
   assert.equal(result.decision.route, null);
@@ -279,6 +285,8 @@ try {
   const ineligibleResult = JSON.parse(ineligible.stdout);
   assert.equal(ineligibleResult.execution.status, 'completed');
   assert.equal(ineligibleResult.scientificDisposition.status, 'ineligible');
+  assert.equal(ineligibleResult.scientificDisposition.resolution.resolutionStatus, 'observability-blocked');
+  assert.ok(ineligibleResult.scientificDisposition.resolution.blockers.some(row => row.axis === 'eligibility'));
   assert.ok(ineligibleResult.scientificDisposition.reasons.some(reason => reason.includes('unknown protocolHash')));
 
   const invalidRoute = spawnSync(process.execPath, [
