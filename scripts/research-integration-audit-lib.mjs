@@ -107,6 +107,22 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
             errors.push(`active question ${question.id} is not linked from the structured workstream queue relation`);
         }
     }
+    const evidenceByReport = new Map(
+        model.relations.evidence
+            .map(evidence => [evidence.latestEvidence?.report ?? null, evidence])
+            .filter(([report]) => Boolean(report)),
+    );
+    for (const question of questionRegistry.questions) {
+        for (const reportPath of question.answeredBy ?? []) {
+            if (!/^reports\//u.test(String(reportPath))) continue;
+            const evidence = evidenceByReport.get(reportPath);
+            if (!evidence?.researchQuestion) continue;
+            if (evidence.researchQuestion !== question.id) {
+                errors.push(`${question.id}.answeredBy points to ${reportPath}, whose structured researchQuestion is ${evidence.researchQuestion}`);
+            }
+        }
+    }
+
     for (const evidence of model.relations.evidence) {
         if (evidence.researchQuestion && !questionIds.has(evidence.researchQuestion)) {
             errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown research question ${evidence.researchQuestion}`);
