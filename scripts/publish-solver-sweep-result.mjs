@@ -169,14 +169,7 @@ function levelStats(file) {
 }
 
 function isDecisionValidIntegrity(integrity) {
-  if (!integrity || typeof integrity !== 'object') return false;
-  if (integrity.decisionValidComplete != null) return integrity.decisionValidComplete === true;
-  if (integrity.complete !== true || !integrity.outcomes || typeof integrity.outcomes !== 'object') return false;
-  return (integrity.outcomes.deadlineTruncated ?? 0) === 0
-    && (integrity.outcomes.harnessError ?? 0) === 0
-    && (integrity.outcomes.malformed ?? 0) === 0
-    && (integrity.outcomes.missing ?? 0) === 0
-    && (integrity.outcomes.unknown ?? 0) === 0;
+  return integrity?.decisionValidComplete === true;
 }
 
 function rowIdentity(row) {
