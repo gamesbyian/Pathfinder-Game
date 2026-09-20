@@ -1,3 +1,4 @@
+import { researchQuestionContractIssues } from './research-question-contract-lib.mjs';
 import { researchSemanticHash } from './research-semantic-identity-lib.mjs';
 
 export const EXPERIMENT_SCHEMA_VERSION = 3;
@@ -22,24 +23,6 @@ function isNonEmptyString(value) {
 
 function isOptionalNonNegativeNumber(value) {
   return value === null || (Number.isFinite(value) && value >= 0);
-}
-
-function researchQuestionIssues(question) {
-  if (question == null) return [];
-  const issues = [];
-  if (!question || typeof question !== 'object' || Array.isArray(question)) return ['researchQuestion'];
-  for (const field of ['questionId', 'liveAmbiguity', 'discriminatingObservable']) {
-    if (!isNonEmptyString(question[field])) issues.push(`researchQuestion.${field}`);
-  }
-  if (!question.outcomeInterpretation || typeof question.outcomeInterpretation !== 'object' ||
-      Array.isArray(question.outcomeInterpretation) || Object.keys(question.outcomeInterpretation).length === 0) {
-    issues.push('researchQuestion.outcomeInterpretation');
-  }
-  if (question.measurementOpportunity != null &&
-      (!isNonEmptyString(question.measurementOpportunity) || !/^MO-\d{3}$/u.test(question.measurementOpportunity))) {
-    issues.push('researchQuestion.measurementOpportunity');
-  }
-  return issues;
 }
 
 export function parseIdentityLines(content) {
@@ -150,7 +133,7 @@ export function decisionContractIssues(contract) {
   const limits = contract?.limits;
   const sideEffects = contract?.sideEffects;
 
-  issues.push(...researchQuestionIssues(contract?.researchQuestion));
+  issues.push(...researchQuestionContractIssues(contract?.researchQuestion));
   issues.push(...recoveryProvenanceIssues(experiment));
 
   for (const field of ['workflowFamily', 'producer', 'entrypoint']) {
