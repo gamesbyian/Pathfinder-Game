@@ -1,6 +1,33 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+export const RESEARCH_QUESTION_STATES = Object.freeze([
+    'active-candidate',
+    'closed-negative',
+    'closed-tested-form',
+    'concluded-negative',
+    'concluded-positive',
+    'deferred-reopen',
+    'mixed',
+]);
+
+export function researchQuestionLifecycleClass(state) {
+    switch (state) {
+        case 'active-candidate': return 'active';
+        case 'closed-negative':
+        case 'closed-tested-form': return 'closed';
+        case 'concluded-negative':
+        case 'concluded-positive': return 'concluded';
+        case 'deferred-reopen': return 'deferred';
+        case 'mixed': return 'mixed';
+        default: return 'unknown';
+    }
+}
+
+export function isTerminalResearchQuestionState(state) {
+    return ['closed', 'concluded'].includes(researchQuestionLifecycleClass(state));
+}
+
 const QUESTION_ID_RELATION_FIELDS = Object.freeze([
     'implies',
     'triggeredBy',
@@ -18,10 +45,7 @@ const normalizeSearchText = value => String(value ?? '')
     .trim();
 
 export function normalizeResearchQuestionStatus(state) {
-    const value = String(state ?? '').toLowerCase();
-    if (value.startsWith('active')) return 'active';
-    if (value.startsWith('closed')) return 'closed';
-    return value;
+    return researchQuestionLifecycleClass(String(state ?? '').trim().toLowerCase());
 }
 
 export function loadResearchQuestionRegistry(root = process.cwd()) {
@@ -47,7 +71,9 @@ export function validateResearchQuestionRegistry(registry) {
         else ids.add(id);
         if (!String(question?.question ?? '').trim()) errors.push(`${prefix}.question is required`);
         if (!String(question?.owner ?? '').trim()) errors.push(`${prefix}.owner is required`);
-        if (!String(question?.state ?? '').trim()) errors.push(`${prefix}.state is required`);
+        const state = String(question?.state ?? '').trim();
+        if (!state) errors.push(`${prefix}.state is required`);
+        else if (!RESEARCH_QUESTION_STATES.includes(state)) errors.push(`${prefix}.state is unknown: ${state}`);
         for (const field of ['premiseRefs', 'measurementOpportunities']) {
             if (question?.[field] != null && (!Array.isArray(question[field])
                 || question[field].some(value => typeof value !== 'string' || !value.trim()))) {
