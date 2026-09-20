@@ -152,6 +152,13 @@ assert.ok(decisionBearingExperimentResultIssues({
   ...decisionBearingManifest,
   populationIntegrity: { ...decisionBearingManifest.populationIntegrity, decisionValidComplete: false },
 }).includes('populationIntegrity.decisionValidComplete'));
+const legacyDecisionValidity = { ...decisionBearingManifest.populationIntegrity };
+delete legacyDecisionValidity.decisionValidComplete;
+assert.ok(decisionBearingExperimentResultIssues({
+  ...decisionBearingManifest,
+  populationIntegrity: legacyDecisionValidity,
+}).includes('populationIntegrity.decisionValidComplete'),
+'legacy structural completeness must not substitute for an explicit decision-valid integrity verdict');
 assert.ok(decisionBearingExperimentResultIssues({
   ...decisionBearingManifest,
   researchOutcome: { outcome: 'invariant-violation' },
