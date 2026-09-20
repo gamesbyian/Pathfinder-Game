@@ -553,7 +553,7 @@
       "id": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
       "question": "Can the separator/decomposition positive be upgraded into a compact dynamic interface contract that preserves the future-relevant history needed for safe composition?",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "active-candidate",
       "aliases": [
         "Lane A",
         "separator interface",
@@ -561,9 +561,10 @@
       ],
       "answeredBy": [
         "reports/2026-09-17-separator-decomposition-census-result-001.md",
-        "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md"
+        "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
+        "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md"
       ],
-      "result": "Retained A/D3/F3 evidence now nominates a nested C0-C4 contract falsifier: static interface -> boundary kinematics -> exact global accounting -> mutable mechanic history -> bounded path-history/topology. Existing evidence already falsifies raw cut identity, matched endpoints/obligations, length equality alone, local mechanic-contact flags, and the cheap tied-case topology descriptor as sufficient.",
+      "result": "C0 static interface identity has now been tested exactly on the frozen Lane-A population and is decisively insufficient: 581/581 cases were labelled, 546 were decisive, and two independent-parent cut-signature groups mixed LIVE/DEAD. The question is actively advanced to C1 boundary kinematics on the same frozen cases; no resampling is earned.",
       "constrainedBy": [
         "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
         "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
@@ -571,17 +572,17 @@
         "docs/solver-separator-dynamic-interface-contract-preflight.md"
       ],
       "constrains": [
-        "Do not implement decomposition from separator prevalence alone; first run the frozen-prefix nested signature-collision falsifier.",
+        "C0 is closed insufficient; do not repeat raw cut/interface identity or reinterpret its mostly-pure groups as a consumer.",
+        "Proceed in the frozen nested order to C1 boundary kinematics on the same 581-case population before adding C2-C4 fields.",
         "Treat near-unique/full-prefix signatures or unsound tied-case topology shortcuts as contract explosion, not success."
       ],
-      "reopensOn": "A frozen, independently selected balanced-interface legal-prefix population with exact completion labels can test C0-C4 signature purity, independent-parent support, abstention, and compression.",
+      "reopensOn": null,
       "premiseRefs": [
         "P014",
         "P074",
         "P093"
       ],
-      "measurementOpportunities": [],
-      "acquisitionNeed": "representation-or-candidate"
+      "measurementOpportunities": []
     },
     {
       "id": "WS2-G1-COMPLETE-PATH-LNS",
