@@ -3,6 +3,7 @@ import path from 'node:path';
 import { attemptIdentityTerms } from '../modules/solver/attempt-identity.mjs';
 import { SOLVER_STAGE_IDS, solverStageIdentityTerms } from '../modules/solver/stage-id-normalization.mjs';
 import { ROUTING_REGIMES, routingRegimeIdentityTerms } from '../modules/solver/routing-regime-normalization.mjs';
+import { parseResearchCloseoutCapsule } from './investigation-report-metadata.mjs';
 
 const REPORT_NAME = /^(\d{4}-\d{2}-\d{2})-(.+)\.md$/;
 const METADATA = /^# (.+)\r?\n\r?\n> \*\*Status:\*\* ([a-z-]+)\r?\n> \*\*Last evidence:\*\* (\d{4}-\d{2}-\d{2}) — (.+)\r?\n> \*\*Decision:\*\* (.+)\r?\n> \*\*Remaining gate:\*\* (.+)$/m;
@@ -69,6 +70,63 @@ function reportHeadings(source) {
     return [...source.matchAll(/^##\s+(.+)$/gm)].map(match => match[1].trim()).slice(0, 16);
 }
 
+function reportMachineMetadata(source, reportPath) {
+    const legacy = METADATA.exec(source);
+    const closeout = parseResearchCloseoutCapsule(source);
+    if (!closeout) {
+        if (!legacy) return null;
+        return {
+            source: 'legacy-status-block',
+            status: legacy[2],
+            title: legacy[1],
+            lastEvidenceDate: legacy[3],
+            lastEvidenceSummary: legacy[4],
+            decision: legacy[5],
+            remainingGate: legacy[6],
+            researchQuestion: metadataScalar(source, 'Research question'),
+            premiseRefs: metadataList(source, 'Premise refs'),
+            measurementOpportunities: metadataList(source, 'Measurement opportunity'),
+            evidenceRole: metadataScalar(source, 'Evidence role'),
+            selection: metadataScalar(source, 'Selection'),
+            populationIdentity: metadataScalar(source, 'Population identity'),
+            selectionHistory: metadataScalar(source, 'Selection history'),
+            inferenceScope: metadataScalar(source, 'Inference scope'),
+            sourceArtifacts: [],
+        };
+    }
+
+    if (legacy) {
+        const mismatches = [];
+        if (legacy[2] !== closeout.status) mismatches.push('status');
+        if (legacy[3] !== closeout.lastEvidenceDate) mismatches.push('lastEvidenceDate');
+        if (legacy[5] !== closeout.decision) mismatches.push('decision');
+        if (legacy[6] !== closeout.remainingGate) mismatches.push('remainingGate');
+        if (mismatches.length) {
+            throw new Error(`${reportPath}: structured research closeout disagrees with status block: ${mismatches.join(', ')}`);
+        }
+    }
+
+    const measurementOpportunity = closeout.joins?.measurementOpportunity;
+    return {
+        source: 'structured-closeout',
+        status: closeout.status,
+        title: reportTitle(source, reportPath),
+        lastEvidenceDate: closeout.lastEvidenceDate,
+        lastEvidenceSummary: legacy?.[4] ?? 'Structured research closeout recorded.',
+        decision: closeout.decision,
+        remainingGate: closeout.remainingGate,
+        researchQuestion: closeout.joins?.researchQuestion ?? metadataScalar(source, 'Research question'),
+        premiseRefs: closeout.joins?.premiseRefs?.length ? closeout.joins.premiseRefs : metadataList(source, 'Premise refs'),
+        measurementOpportunities: measurementOpportunity ? [measurementOpportunity] : metadataList(source, 'Measurement opportunity'),
+        evidenceRole: closeout.evidenceRole ?? metadataScalar(source, 'Evidence role'),
+        selection: closeout.scope?.selection ?? metadataScalar(source, 'Selection'),
+        populationIdentity: closeout.scope?.populationIdentity ?? metadataScalar(source, 'Population identity'),
+        selectionHistory: metadataScalar(source, 'Selection history'),
+        inferenceScope: closeout.scope?.inferenceScope ?? metadataScalar(source, 'Inference scope'),
+        sourceArtifacts: closeout.sourceArtifacts ?? [],
+    };
+}
+
 export function buildResearchStatusIndex(root) {
     const reportsRoot = path.join(root, 'reports');
     const topics = [];
@@ -78,7 +136,7 @@ export function buildResearchStatusIndex(root) {
         if (!filename) continue;
         const reportPath = `reports/${name}`;
         const source = readFileSync(path.join(root, reportPath), 'utf8');
-        const metadata = METADATA.exec(source);
+        const metadata = reportMachineMetadata(source, reportPath);
         if (!metadata) {
             legacyEvidence.push({
                 topicId: filename[2], date: filename[1], title: reportTitle(source, filename[2]),
@@ -93,20 +151,22 @@ export function buildResearchStatusIndex(root) {
         const artifacts = new Set([
             ...linkedPaths.filter(link => /^(?:data|logs|reports)\//.test(link)),
             ...[...source.matchAll(ARTIFACT_PATH)].map(match => match[1]),
+            ...metadata.sourceArtifacts,
         ]);
         topics.push({
-            topicId: filename[2], status: metadata[2], title: metadata[1],
+            topicId: filename[2], status: metadata.status, title: metadata.title,
+            metadataSource: metadata.source,
             authorities: [...new Set(currentAuthorities)].sort(),
-            latestEvidence: { date: metadata[3], summary: metadata[4], report: reportPath },
-            decision: metadata[5], remainingGate: metadata[6], artifacts: [...artifacts].sort(),
-            researchQuestion: metadataScalar(source, 'Research question'),
-            premiseRefs: metadataList(source, 'Premise refs'),
-            measurementOpportunities: metadataList(source, 'Measurement opportunity'),
-            evidenceRole: metadataScalar(source, 'Evidence role'),
-            selection: metadataScalar(source, 'Selection'),
-            populationIdentity: metadataScalar(source, 'Population identity'),
-            selectionHistory: metadataScalar(source, 'Selection history'),
-            inferenceScope: metadataScalar(source, 'Inference scope'),
+            latestEvidence: { date: metadata.lastEvidenceDate, summary: metadata.lastEvidenceSummary, report: reportPath },
+            decision: metadata.decision, remainingGate: metadata.remainingGate, artifacts: [...artifacts].sort(),
+            researchQuestion: metadata.researchQuestion,
+            premiseRefs: metadata.premiseRefs,
+            measurementOpportunities: metadata.measurementOpportunities,
+            evidenceRole: metadata.evidenceRole,
+            selection: metadata.selection,
+            populationIdentity: metadata.populationIdentity,
+            selectionHistory: metadata.selectionHistory,
+            inferenceScope: metadata.inferenceScope,
         });
     }
     const workstreamsPath = 'docs/solver-optimization-workstreams.md';
