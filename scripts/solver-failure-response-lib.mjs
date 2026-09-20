@@ -125,15 +125,23 @@ export function compactFailureResponseRow(row) {
 }
 
 export function createFailureResponseDocument(rows, { populationIntegrity = null, sourceFiles = [], missingSourceFiles = [], invalidSourceFiles = [], protocolHash = null, solverRef = null } = {}) {
-    const records = (Array.isArray(rows) ? rows : []).map(compactFailureResponseRow);
+    const documentProtocolHash = typeof protocolHash === 'string' && protocolHash.length ? protocolHash : null;
+    const documentSolverRef = typeof solverRef === 'string' && solverRef.length ? solverRef : null;
+    const hasDocumentExecutionIdentity = documentProtocolHash !== null || documentSolverRef !== null;
+    const records = (Array.isArray(rows) ? rows : []).map(row => {
+        const record = compactFailureResponseRow(row);
+        return hasDocumentExecutionIdentity
+            ? { ...record, protocolHash: documentProtocolHash, solverRef: documentSolverRef }
+            : record;
+    });
     return {
         schemaVersion: FAILURE_RESPONSE_SCHEMA_VERSION,
         kind: FAILURE_RESPONSE_KIND,
         records,
         summary: summarizeFailureResponse(rows, { populationIntegrity }),
         populationIntegrity,
-        protocolHash: typeof protocolHash === 'string' && protocolHash.length ? protocolHash : null,
-        solverRef: typeof solverRef === 'string' && solverRef.length ? solverRef : null,
+        protocolHash: documentProtocolHash,
+        solverRef: documentSolverRef,
         sourceFiles,
         missingSourceFiles,
         invalidSourceFiles,
