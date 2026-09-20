@@ -33,11 +33,6 @@ assert.ok(Array.isArray(result.explorationTriggers));
 assert.ok(result.interpretationLimits.some(limit => /do not measure effort or productivity/u.test(limit)));
 assert.ok(result.interpretationLimits.some(limit => /cannot prove that instruments caused the agenda/u.test(limit)));
 const frozen = JSON.parse(readFileSync('reports/2026-09-19-research-portfolio-retrospective-data-001.json', 'utf8'));
-if (JSON.stringify(result) !== JSON.stringify(frozen)) {
-  console.error('RESEARCH_PORTFOLIO_RETROSPECTIVE_ACTUAL_BEGIN');
-  console.error(JSON.stringify(result, null, 2));
-  console.error('RESEARCH_PORTFOLIO_RETROSPECTIVE_ACTUAL_END');
-}
 assert.deepEqual(result, frozen, 'checked-in retrospective dataset must be reproducible from current authorities');
 
 const narrow = buildResearchPortfolioRetrospective(process.cwd(), {
