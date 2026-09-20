@@ -10,6 +10,7 @@
  * --spec must be a JSON file shaped:
  *   {
  *     "configuration": { ... arbitrary, hashed for experiment.configurationHash ... },
+ *     "configurationHash": "sha256:..." optional observed-execution identity overriding that hash,
  *     "workflowFamily": "...", "producer": "...", "entrypoint": "...",
  *     "experiment": { ... optional provenance, refs, or paired arms ... },
  *     "researchQuestion": { ... optional stable question/discriminator/MO metadata ... },
@@ -110,7 +111,13 @@ function populationWithSeal(population, populationSeal) {
 }
 
 export function buildContract(spec, { resolvedSha = null, populationSeal = null } = {}) {
-  const { configuration, workflowFamily, producer, entrypoint, experiment = {}, researchQuestion = null, population, execution, limits, sideEffects } = spec;
+  const {
+    configuration, configurationHash = null, workflowFamily, producer, entrypoint,
+    experiment = {}, researchQuestion = null, population, execution, limits, sideEffects,
+  } = spec;
+  if (configurationHash != null && !SHA256_RE.test(String(configurationHash))) {
+    throw new Error('configurationHash must be sha256:<64 hex> when supplied');
+  }
   const inferredArms = experiment.arms ?? inferredPairedArms(configuration);
   const executionIdentity = inferredArms != null
     ? { arms: inferredArms }
@@ -122,7 +129,7 @@ export function buildContract(spec, { resolvedSha = null, populationSeal = null 
       workflowFamily,
       producer,
       entrypoint,
-      configurationHash: hashConfiguration(configuration ?? {}),
+      configurationHash: configurationHash ?? hashConfiguration(configuration ?? {}),
     },
     ...(researchQuestion ? { researchQuestion: validateResearchQuestionReference(researchQuestion) } : {}),
     population: populationWithSeal(population, populationSeal), execution, limits, sideEffects,
