@@ -1,7 +1,12 @@
 # Research authority-ownership audit 001
 
-> **Date:** 2026-09-19  
-> **Status:** concluded architectural follow-up  
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-19 — Authority reconstruction was traced through the live workstream queue, question registry, report status index, claim semantics, runtime default-polarity contracts, and production-shaped regressions.
+> **Decision:** keep execution priority, scientific-question lifecycle, report-local disposition, evidence applicability, claim validity, and runtime polarity as distinct authorities; make their joins explicit instead of creating a new research-state registry.
+> **Remaining gate:** reopen only if another repeated authority ambiguity cannot be resolved by an existing owner plus an explicit relation.
+
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-09-19","decision":"preserve distinct authority owners and make their joins explicit; do not add a research-state registry","remainingGate":"reopen only on another repeated unresolved authority ambiguity","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":null,"selection":"targeted current research-authority ownership audit","inferenceScope":"research control-plane authority ownership; not solver-efficacy evidence"},"claimRefs":[],"sourceArtifacts":["docs/solver-research-operating-model.md","docs/solver-optimization-workstreams.md","docs/solver-research-question-relations.json","scripts/research-status-index-lib.mjs","scripts/research-system-inventory-lib.mjs","scripts/research-integration-audit-lib.mjs","modules/solver/ablation-default-polarity.test.ts","modules/solver/production-default-equivalence.test.ts"],"prospective":{"expectation":null,"surprise":null,"anomaly":null}} -->
+
 > **Question:** where is Pathfinder still reconstructing scientific state or authority from several otherwise-valid artifacts, and where does that reconstruction indicate missing ownership rather than useful connective tissue?
 
 ## Bottom line
