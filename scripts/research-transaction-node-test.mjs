@@ -4,6 +4,7 @@ import { buildPopulationIntegrity, recoveryProvenanceIssues } from './solver-exp
 import { combinePopulationIntegrity } from './combine-population-integrity.mjs';
 import { summarizeIndependentSupport } from './research-relations-lib.mjs';
 import { classifyProbeProcess } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
+import { formatInvestigationReportStatusBlock } from './investigation-report-metadata.mjs';
 import {
     appendResearchConsumption,
     buildResearchBlock,
@@ -117,6 +118,23 @@ const consumedEligibility = researchBlockEligibility(consumedBlock, {
 });
 assert.equal(consumedEligibility.eligible, false);
 assert.ok(consumedEligibility.reasons.includes('matching-consumption-recorded'));
+
+// Report status creation uses the shared constructor, not free-form prose.
+const reportStatusBlock = formatInvestigationReportStatusBlock({
+    status: 'concluded-negative',
+    lastEvidenceDate: '2026-09-19',
+    lastEvidenceSummary: 'synthetic transaction completed',
+    decision: 'close the tested form',
+    remainingGate: 'none',
+});
+assert.match(reportStatusBlock, /^> \*\*Status:\*\* concluded-negative$/m);
+assert.throws(() => formatInvestigationReportStatusBlock({
+    status: 'done-ish',
+    lastEvidenceDate: '2026-09-19',
+    lastEvidenceSummary: 'synthetic transaction completed',
+    decision: 'close the tested form',
+    remainingGate: 'none',
+}), /unknown report status/);
 
 // Successful acquisition can survive a combine-layer failure and be recombined without new solver work.
 const validShardOne = buildPopulationIntegrity(['one'], [{ id: 'one', ok: true, status: 'success' }]);
