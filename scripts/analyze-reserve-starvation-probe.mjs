@@ -11,6 +11,7 @@ import path from 'node:path';
 
 import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import { buildResearchResolutionEnvelope } from './research-resolution-envelope-lib.mjs';
+import { validateResearchIndependenceVector } from './research-independence-vector-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const i = arg.indexOf('=');
@@ -40,6 +41,9 @@ const resolutionDesign = sample.resolutionDesign;
 if (!resolutionDesign || typeof resolutionDesign !== 'object' || Array.isArray(resolutionDesign)) {
     throw new Error('frozen sample is missing resolutionDesign');
 }
+const independenceDesign = validateResearchIndependenceVector(sample.independenceDesign, {
+    path: 'sample.independenceDesign',
+});
 
 const recordsByParent = new Map();
 for (const row of document.records) {
@@ -219,6 +223,7 @@ const result = {
     kind: 'pathfinder-reserve-starvation-probe-analysis',
     questionId: sample.questionId ?? 'WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION',
     source: { input, sample: sampleFile, protocolHash: document.protocolHash ?? null, solverRef: document.solverRef ?? null },
+    independenceVector: independenceDesign,
     thresholds: { reserveNodes, totalNodes, expectedAction },
     population: {
         expected: expectedIds.length,
