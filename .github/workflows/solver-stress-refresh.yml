@@ -488,15 +488,16 @@ jobs:
           for (const [name, file] of [['corpus1', 'reports/stress/solver-corpus1-latest.json'], ['corpus2', 'reports/stress/solver-corpus2-latest.json']]) {
             if (fs.existsSync(file)) observedExecution[name] = JSON.parse(fs.readFileSync(file, 'utf8')).configurationHash ?? null;
           }
-          const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE), corpus2NodeBudget: Number(process.env.C2_NODE), corpus1DeadlineMs: Number(process.env.C1_MS), corpus2DeadlineMs: Number(process.env.C2_MS), strictTotalWorkBudget: process.env.STRICT === 'true', enableFlags: process.env.ENABLE, disableFlags: process.env.DISABLE, observedExecution };
+          const deterministic = process.env.DETERMINISTIC === 'true';
+          const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE), corpus2NodeBudget: Number(process.env.C2_NODE), corpus1DeadlineMs: deterministic ? 86400000 : Number(process.env.C1_MS), corpus2DeadlineMs: deterministic ? 86400000 : Number(process.env.C2_MS), strictTotalWorkBudget: process.env.STRICT === 'true', enableFlags: process.env.ENABLE, disableFlags: process.env.DISABLE, observedExecution };
           fs.writeFileSync('logs/solver-sweep-result-inputs/experiment-contract-spec.json', `${JSON.stringify({
             configuration,
             workflowFamily: 'solver-stress-refresh',
             producer: 'solver-stress-refresh.yml',
             entrypoint: 'scripts/level-blind-capability-sweep.mjs',
             population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
-            execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: process.env.DETERMINISTIC === 'true', producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
-            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: true, representation: { kind: 'heterogeneous-by-corpus', corpora: { 'corpus-1': { nodeCeiling: configuration.corpus1NodeBudget, wallSafetyDeadlineMs: configuration.corpus1DeadlineMs }, 'corpus-2': { nodeCeiling: configuration.corpus2NodeBudget, wallSafetyDeadlineMs: configuration.corpus2DeadlineMs } } } },
+            execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: deterministic, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
+            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: !deterministic, representation: { kind: 'heterogeneous-by-corpus', corpora: { 'corpus-1': { nodeCeiling: configuration.corpus1NodeBudget, wallSafetyDeadlineMs: configuration.corpus1DeadlineMs }, 'corpus-2': { nodeCeiling: configuration.corpus2NodeBudget, wallSafetyDeadlineMs: configuration.corpus2DeadlineMs } } } },
             sideEffects: { hints: 'harvest-permitted', canonicalBaseline: process.env.DETERMINISTIC === 'true' ? 'none' : 'refresh', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
