@@ -102,6 +102,8 @@ assert.ok(inventory.planLifecycle.some(row =>
 
 const architectureView = researchSystemInventoryView(inventory, 'architecture');
 assert.ok(Array.isArray(architectureView.relations));
+assert.deepEqual(architectureView.authoritySurfaces, inventory.documentation.currentReferences);
+assert.ok(architectureView.authoritySurfaces.some(row => row.path === 'docs/solver-optimization-workstreams.md'));
 assert.deepEqual(architectureView.workflows, inventory.workflows);
 assert.deepEqual(architectureView.retiredWorkflows, inventory.retiredWorkflows);
 assert.deepEqual(architectureView.contractOwnership, inventory.contractOwnership);
