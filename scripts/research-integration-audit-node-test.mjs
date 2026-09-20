@@ -18,6 +18,28 @@ const prebuiltResult = auditResearchIntegration(process.cwd(), { model: prebuilt
 assert.deepEqual(prebuiltResult, result,
     'integration audit must be identical when the inventory supplies the already-built relation model');
 
+const withQueueRef = questionRef => ({
+    ...prebuiltModel,
+    relations: {
+        ...prebuiltModel.relations,
+        queue: prebuiltModel.relations.queue.map(row =>
+            String(row.workstreamId) === '2' ? { ...row, questionRef } : row),
+    },
+});
+const terminalQueue = auditResearchIntegration(process.cwd(), {
+    model: withQueueRef('WS2-WORK-LADDER-ECONOMICS'),
+});
+assert.ok(terminalQueue.errors.some(error =>
+    /active workstream 2 references terminal research question WS2-WORK-LADDER-ECONOMICS/u.test(error)),
+'active execution must not silently point at a concluded scientific question');
+
+const missingQueueQuestion = auditResearchIntegration(process.cwd(), {
+    model: withQueueRef('WS2-NOT-A-REAL-QUESTION'),
+});
+assert.ok(missingQueueQuestion.errors.some(error =>
+    /workstream 2 references unknown research question WS2-NOT-A-REAL-QUESTION/u.test(error)),
+'stable queue question references must resolve through the question authority');
+
 
 const run = spawnSync(process.execPath, ['scripts/research-integration-audit.mjs'], {
     cwd: process.cwd(),
