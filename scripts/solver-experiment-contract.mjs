@@ -52,6 +52,11 @@ function researchQuestionIssues(question) {
   return issues;
 }
 
+export function parseIdentityLines(content) {
+  if (typeof content !== 'string') throw new Error('identity file content must be a string');
+  return content.split(/\r?\n/u).map(value => value.trim()).filter(Boolean);
+}
+
 export function canonicalizeIdentities(ids, { rejectDuplicates = true } = {}) {
   if (!Array.isArray(ids)) throw new Error('population identities must be an array');
   const normalized = ids.map(id => String(id).trim());
