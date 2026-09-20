@@ -1,10 +1,10 @@
 import { researchSemanticHash as stableHash } from './research-semantic-identity-lib.mjs';
-
-const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 import {
     isResearchEvaluationEvidenceRole,
     validateResearchEvaluationEvidenceRole,
 } from './research-evaluation-evidence-role-lib.mjs';
+
+const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 const SCOPE_KINDS = new Set(['block', 'parent', 'family']);
 
 const nonEmpty = value => typeof value === 'string' && value.trim().length > 0;
