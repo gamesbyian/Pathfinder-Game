@@ -67,13 +67,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane H — parity invariants
 
-**ACTIVE CHEAP PREMISE TESTS; production decisions unchanged.** A first-principles audit found ordinary endpoint parity sound in its current domains while two stronger representations have concrete incremental synthetic witnesses and production-inert observers. Stable questions: `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY`. [`audit`](../reports/2026-09-19-solver-parity-invariant-audit-001.md) · [`preflight`](solver-parity-phase-capacity-preflight.md)
-
-1. **Phase-conditioned relaxed distance (`WS2-PARITY-PHASE-DISTANCE`):** shadow a two-layer `(cell, futureTwistParity)` 0-1 goal-distance bound at the existing scalar-distance seam. Count incremental dead states where scalar distance passes. This is materially different from the closed August existence-only portal envelope.
-2. **Checkerboard-split connectivity capacity (`WS2-CHECKERBOARD-CAPACITY`):** on zero-twist states, reuse the existing connectivity reached set to compare exact per-color future-arrival demand with an over-generous per-color fresh+intersection capacity. Count incremental deaths where total scalar volume passes; no second flood fill.
-3. **Downstream only:** admissible-order propagation, repair residual explanation, all-gates exact infeasibility, hint-enumeration reuse, phase-aware scoring/routing and any dynamic phase-connectivity extension remain contingent consumers, not separate live premises.
-
-The combined `solver:parity-invariant-shadow` probe measures both questions under one strict whole-solve work envelope and emits canonical research-resolution envelopes. **Stop** a premise on negligible incremental incidence with satisfied observability axes; **advance** only through synthetic witness -> stored/referee-valid prefix replay -> differential/reference validation -> smallest consumer -> matched-work economics. Lane H may run in parallel with the current WS2 failure-response gate; it does not replace or reorder it.
+**PARALLEL CHEAP PREMISE OBSERVERS; production unchanged.** `WS2-PARITY-PHASE-DISTANCE` shadows a two-layer future-twist-parity distance bound; `WS2-CHECKERBOARD-CAPACITY` shadows per-color reachable capacity using the existing flood result. Run them together with `solver:parity-invariant-shadow`; advance only through resolution-ready incidence, replay/soundness, then the smallest matched-work consumer. Full derivation, gates and downstream seams: [preflight](solver-parity-phase-capacity-preflight.md) · [audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
 
 ### Post-mining premise-map handoff closeout
 
