@@ -67,7 +67,8 @@ The status index now:
 - prefers the structured closeout capsule;
 - uses the old status block only for reports without a capsule;
 - includes structured source-artifact references;
-- fails if a report carries both forms and their core status/date/decision/gate fields disagree.
+- requires canonical mirrored fields such as status/date and stable IDs to agree when both forms carry them;
+- treats human decision/gate prose as presentation only once a capsule exists, so a fuller paraphrase does not become a second machine authority.
 
 This removes a real parallel-authority seam without introducing a new registry.
 
