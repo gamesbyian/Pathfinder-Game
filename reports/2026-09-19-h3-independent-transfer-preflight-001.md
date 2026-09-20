@@ -21,6 +21,41 @@
 
 **Draw:** all 239 remaining eligible rows for the phenotype screen. Seed `h3-independent-transfer-2026-09-19` remains reserved only for a future separately precommitted subsample if the full phenotype-positive cohort proves too expensive. The current preflight does **not** authorize choosing a reachability subsample after seeing phenotype identities or other row content. Exclude nothing further from the phenotype screen: the 239-row remainder is already independent of every row used by the original H3 finding.
 
+## Independence and transfer dimensions
+
+“Independent transfer” here means **disjoint row/sample population under the same already-defined eligibility frame**. It deliberately does not vary every ancestry dimension.
+
+Held independent/fresh:
+
+- no row used in the original H3 Card-E analysis is reused;
+- the transfer cohort is selected from the untouched remainder before any transfer outcome is observed.
+
+Held common-mode by design:
+
+- source construction / eligibility frame;
+- the `searchCompletionFromPartialPath` operator;
+- phenotype screen and reachability instrumentation;
+- remaining-length representation;
+- allocation simulation and budget grid;
+- repository implementation and current research framing.
+
+Therefore this experiment answers whether the allocation-value effect recurs on new eligible rows from the same broader source frame. It does not establish cross-generator transport, technique-independent scheduling value, robustness to another completion-search representation, or robustness to an independent observer/analysis implementation.
+
+A positive result is a **population transfer within one technique/source frame**. A negative result is scoped there as well.
+
+### Target-support checks
+
+Before interpreting the transfer, report descriptive overlap between the new and original Card-E cohorts on dimensions that directly shape the scheduling problem:
+
+- remaining-length range/distribution;
+- reconstructable fraction;
+- reach-node/work range for reconstructable rows;
+- beam-cull depth/routing regime;
+- path/intersection-demand range where already available;
+- mechanics/gate-count mix where retained descriptors already expose it.
+
+These support checks may explain a transfer failure or constrain generalization, but they must not alter the frozen population or primary decision rule.
+
 ## Instrument (identical to Card-E's, unchanged)
 
 Reuse Card-E's exact three-step pipeline verbatim -- no new code, no parameter changes, since introducing any variation here would confound "does the effect transfer" with "does a different protocol produce it":
