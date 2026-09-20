@@ -17,7 +17,7 @@ export function researchRepositoryRefIssues(value, {
   const issues = [];
   if (typeof value !== 'string' || !value) return [`${label} must be a non-empty string`];
   if (value !== value.trim()) issues.push(`${label} must not contain surrounding whitespace`);
-  if (/[\r\n`]/u.test(value)) issues.push(`${label} must be one exact path, not prose/markup`);
+  if (/[\s`]/u.test(value)) issues.push(`${label} must be one exact path, not prose/markup`);
 
   const normalized = asPosix(value);
   if (path.posix.isAbsolute(normalized)) issues.push(`${label} must be repository-relative`);
