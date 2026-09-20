@@ -1,0 +1,1242 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-research-portfolio-retrospective",
+  "frozenWindow": {
+    "startDate": "2026-09-12",
+    "endDate": "2026-09-19",
+    "basis": "dated report references retained by current question relations"
+  },
+  "authority": {
+    "questions": "docs/solver-research-question-relations.json",
+    "measurementOpportunities": "docs/solver-premise-map-measurement-opportunities.json",
+    "priority": "docs/solver-optimization-workstreams.md",
+    "derivedInventory": "scripts/research-system-inventory-lib.mjs"
+  },
+  "counts": {
+    "windowQuestions": 28,
+    "answerability": {
+      "answerable-or-concluded": 22,
+      "evidence/population-blocked": 5,
+      "measurement-blocked": 1
+    },
+    "proposalProvenance": {
+      "explicitTrigger": 14,
+      "candidateSetVisible": 17,
+      "neitherTriggerNorCandidateSet": 5
+    },
+    "instrumentShaping": {
+      "questionsWithMeasurementOpportunity": 5,
+      "questionsWithoutMeasurementOpportunity": 23,
+      "uniqueMeasurementOpportunitiesUsed": 3,
+      "underExplicitOpportunitiesUsed": [
+        "MO-005"
+      ]
+    }
+  },
+  "questions": [
+    {
+      "id": "WS1-CROSS-HINT-EVENT-COLLISIONS",
+      "owner": "WS1",
+      "state": "closed-tested-form",
+      "question": "Does one canonical provenance discovery-event identity appearing on multiple accepted paths reveal current determinism or provenance-schema defects?",
+      "evidenceRefs": [
+        "reports/2026-09-12-cross-hint-provenance-relations-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": false,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": true,
+        "conceptDeficit": true,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [],
+        "aliases": [],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS1-REMAINING-LENGTH-ALLOCATION",
+      "owner": "WS1",
+      "state": "deferred-reopen",
+      "question": "Does remaining path length provide transferable current-input allocation value under a shared fixed work budget beyond the Card-E completion-search population?",
+      "evidenceRefs": [
+        "reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md"
+      ],
+      "premiseRefs": [
+        "P065",
+        "P123"
+      ],
+      "measurementOpportunities": [
+        "MO-004"
+      ],
+      "measurementOpportunityStatus": [
+        {
+          "id": "MO-004",
+          "status": "covered-parent; conditional experimental primitive"
+        }
+      ],
+      "answerability": {
+        "disposition": "evidence/population-blocked",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": true,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-H3-REPAIR-COMMITMENT-INTERFACE"
+        ],
+        "constraints": [
+          "docs/solver-failure-evidence-research-integration-plan.md"
+        ],
+        "aliases": [
+          "H3 allocation",
+          "length-first scheduling",
+          "remaining length allocation"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "question": "Does fixed stage-reserve allocation recurrently starve admissible-order fallback (or another later stage) that could solve within the existing total work budget if more of that fixed budget reached it?",
+      "evidenceRefs": [
+        "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
+        "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md",
+        "reports/2026-09-19-expensive-success-divergence-microscope-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [
+        "MO-004"
+      ],
+      "measurementOpportunityStatus": [
+        {
+          "id": "MO-004",
+          "status": "covered-parent; conditional experimental primitive"
+        }
+      ],
+      "answerability": {
+        "disposition": "evidence/population-blocked",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": true,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-WORK-LADDER-ECONOMICS"
+        ],
+        "constraints": [
+          "docs/solver-failure-evidence-research-integration-plan.md",
+          "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
+          "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md",
+          "reports/2026-09-19-expensive-success-divergence-microscope-001.md"
+        ],
+        "aliases": [
+          "R00044 allocation-order artifact",
+          "admissible-order reserve starvation",
+          "reserve starvation"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 4,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-BEHAVIORAL-STATE-QUOTIENT",
+      "owner": "WS2",
+      "state": "mixed",
+      "question": "Does a compact syntactic-state signature collapse without mixing known LIVE/DEAD (or a proxy outcome) behavior, across held-out parents (Moonshot G / behavioral-state quotient)?",
+      "evidenceRefs": [
+        "reports/2026-09-17-behavioral-state-quotient-probe-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [],
+        "aliases": [
+          "Moonshot G",
+          "behavioral-state quotient",
+          "future-language equivalence",
+          "residual-language probe"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-CATEGORICAL-FULL-POOL",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Do current exact-labelled extinction pools contain a recurring categorical/interface-state distinction that preserves LIVE material even though scalar future-feasibility summaries fail?",
+      "evidenceRefs": [
+        "reports/2026-09-13-class5-categorical-projection-archaeology-correction-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-SIMPLE-FUTURE-FEASIBILITY"
+        ],
+        "constraints": [
+          "WS2-GENERIC-STRUCTURAL-DIVERSITY"
+        ],
+        "aliases": [
+          "categorical projection",
+          "full pool",
+          "full-pool survivor projection"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-CLASS123-CHEAP-HARVEST",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Does the corrected class-1/2/3 residual contain already-demonstrated capability that can be collected without reopening a measured contention mechanism?",
+      "evidenceRefs": [
+        "reports/2026-09-12-class123-cheap-harvest-rejoin-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [],
+        "aliases": [],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-CLASS3-DOSE-EXPOSURE",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "question": "Did the Class-3 residual receive enough exact-action work from its historically implicated techniques to support any negative capability inference?",
+      "evidenceRefs": [
+        "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md",
+        "reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md"
+      ],
+      "premiseRefs": [
+        "P123",
+        "P206"
+      ],
+      "measurementOpportunities": [
+        "MO-004"
+      ],
+      "measurementOpportunityStatus": [
+        {
+          "id": "MO-004",
+          "status": "covered-parent; conditional experimental primitive"
+        }
+      ],
+      "answerability": {
+        "disposition": "evidence/population-blocked",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": true,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-CLASS123-CHEAP-HARVEST"
+        ],
+        "constraints": [
+          "docs/solver-failure-evidence-research-integration-plan.md",
+          "reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md",
+          "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
+          "scripts/analyze-class3-dose-exposure.mjs",
+          "scripts/build-class3-dose-expectations.mjs",
+          "scripts/failure-response-query.mjs",
+          "scripts/freeze-current-class3-dose-expectations.mjs",
+          "scripts/solver-failure-response-lib.mjs"
+        ],
+        "aliases": [
+          "Class 3 exposure",
+          "Class-3 dose",
+          "dose reconciliation"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 8,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-CLASS4-PORTAL-COARSE-FRESHNESS",
+      "owner": "WS2",
+      "state": "concluded-positive",
+      "question": "Does the September 9 portal coarse-state-merge positive basin still reproduce on current class-4 residual rows under current code and production-shaped work semantics?",
+      "evidenceRefs": [
+        "reports/2026-09-13-class4-portal-coarse-freshness-replay-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": false
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-KNOWN-CAPABILITY-COMPLEMENTARITY",
+          "WS2-PORTAL-COARSE-GLOBAL-MERGE"
+        ],
+        "constraints": [
+          "reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"
+        ],
+        "aliases": [],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Can a recurring solve-local failure shape be reduced to a small sound dead cause with enough repeated-work value for bounded reason reuse?",
+      "evidenceRefs": [
+        "reports/2026-09-13-class5-dead-cause-current-population-rejoin-result-001.md",
+        "reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": true,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-SIMPLE-FUTURE-FEASIBILITY"
+        ],
+        "constraints": [
+          "reports/2026-08-24-learned-failure-certificate-audit.md"
+        ],
+        "aliases": [],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-D1-PRODUCTION-INERT-OBSERVATION",
+      "owner": "WS2",
+      "state": "closed-negative",
+      "question": "Does D1 future-intersection commitment realizability disagree with actual production beam rank/cutoff decisions often enough, across independent parents, to justify an economics test at the existing ranking consumer?",
+      "evidenceRefs": [
+        "reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md",
+        "reports/2026-09-17-lane-d1-multi-pick-realizability-result-001.md",
+        "reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md"
+      ],
+      "premiseRefs": [
+        "P065",
+        "P091",
+        "P206"
+      ],
+      "measurementOpportunities": [
+        "MO-002"
+      ],
+      "measurementOpportunityStatus": [
+        {
+          "id": "MO-002",
+          "status": "covered-parent; explicit counterfactual measurement specialization"
+        }
+      ],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [
+          "docs/solver-d1-production-inert-evidence-preflight.md",
+          "reports/solver-premise-map-consumer-contract/03-d1-retained-evidence-economics.md"
+        ],
+        "aliases": [
+          "D1",
+          "D1 observation",
+          "future-intersection commitment realizability"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 2,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-DEAD-CORE-RELAXATION",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Does single-commitment constraint relaxation (per Moonshot A's cheapest falsifier) find small, board-independent-recurring causal cores for exact-DEAD states?",
+      "evidenceRefs": [
+        "reports/2026-09-17-dead-core-relaxation-pilot-001.md",
+        "reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-H1-EVENT-FEASIBILITY"
+        ],
+        "constraints": [],
+        "aliases": [
+          "DEAD-core",
+          "minimum-relaxation",
+          "moonshot A"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "question": "What does protocol-compatible compact failure-response evidence say about the cheapest next WS2 discriminator: operational divergence/first-loss, rejection counterfactuals, a producer-consumer 2x2, or no expensive follow-on yet?",
+      "evidenceRefs": [
+        "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md",
+        "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "evidence/population-blocked",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": true,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": true,
+        "conceptDeficit": true,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-WORK-LADDER-ECONOMICS"
+        ],
+        "constraints": [
+          "docs/solver-failure-evidence-research-integration-plan.md",
+          "docs/solver-future-work.md",
+          "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json",
+          "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md",
+          "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md",
+          "scripts/failure-evidence-purpose-query.mjs",
+          "scripts/failure-response-query.mjs"
+        ],
+        "aliases": [
+          "failure data reconnaissance",
+          "failure-response reconnaissance",
+          "post-work-ladder discriminator"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 7,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-G1-COMPLETE-PATH-LNS",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "question": "Are production-search-derived relaxed candidates close enough to the accepted-solution manifold, and locally repairable often enough, to justify a complete-path LNS implementation?",
+      "evidenceRefs": [
+        "reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md",
+        "reports/2026-09-17-production-search-sibling-construction-result-001.md"
+      ],
+      "premiseRefs": [
+        "P073",
+        "P143"
+      ],
+      "measurementOpportunities": [
+        "MO-005"
+      ],
+      "measurementOpportunityStatus": [
+        {
+          "id": "MO-005",
+          "status": "under-explicit measurement opportunity"
+        }
+      ],
+      "answerability": {
+        "disposition": "measurement-blocked",
+        "evidenceDeficit": false,
+        "strongEvidenceGate": false,
+        "measurementDeficit": true,
+        "computeDeficit": false,
+        "codeDeficit": true,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [
+          "docs/solver-failure-evidence-research-integration-plan.md"
+        ],
+        "aliases": [
+          "G1",
+          "complete-path LNS",
+          "local neighborhood search"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-GENERIC-STRUCTURAL-DIVERSITY",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Is generic structural-progress diversity/retention sufficient to fix the recurring class-5 extinction phenotype?",
+      "evidenceRefs": [
+        "reports/2026-09-12-class5-microscope-branch-reconciliation-001.md",
+        "reports/2026-09-12-ws1-stage5-first-divergence-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": false,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [],
+        "aliases": [],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-H1-EVENT-FEASIBILITY",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Does a compact categorical relation over individual/joint event realizability (which specific interface/order resolves a pending obligation) recur across unrelated parents, distinguishing LIVE from DEAD siblings where scalar summaries do not?",
+      "evidenceRefs": [
+        "reports/2026-09-17-h1-event-feasibility-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": true,
+        "measurementDeficit": true,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-SIMPLE-FUTURE-FEASIBILITY"
+        ],
+        "constraints": [],
+        "aliases": [
+          "H1",
+          "completion regime",
+          "event feasibility"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-H2-STRUCTURAL-STASIS",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Does a compact, cheaply-observable within-run stasis signal predict near-zero marginal continuation value from additional workSpent, beyond generic difficulty/depth/work controls?",
+      "evidenceRefs": [
+        "reports/2026-09-17-h2-structural-stasis-observer-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [],
+        "aliases": [
+          "H2",
+          "marginal information velocity",
+          "structural stasis"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-H3-REPAIR-COMMITMENT-INTERFACE",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Is repair locality governed by a small set of coupled earlier commitments rather than rollback distance or prefix length?",
+      "evidenceRefs": [
+        "reports/2026-09-17-h3-repair-commitment-interface-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [],
+        "aliases": [
+          "H3",
+          "commitment interface",
+          "dependency-defined repair"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-HOMOTOPY-COMPLETION-CLASSES",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Does the rigorous fixed-endpoint homotopy/winding formulation distinguish exact-LIVE from exact-DEAD frontier material?",
+      "evidenceRefs": [
+        "reports/2026-09-13-class5-homotopy-prefix-census-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": true,
+        "reopenConditionPresent": false
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-CATEGORICAL-FULL-POOL",
+          "WS2-COMPACT-DEAD-CAUSE-RECURRENCE"
+        ],
+        "constraints": [
+          "docs/solver-archaeology-register.md"
+        ],
+        "aliases": [
+          "fixed endpoint topology",
+          "homotopy",
+          "winding"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-KNOWN-CAPABILITY-COMPLEMENTARITY",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Can already-demonstrated capability from materially distinct historical/current evidence sources explain a meaningful share of the current class-5 residual?",
+      "evidenceRefs": [
+        "reports/2026-09-12-capability-memory-union-reconciliation-001.md",
+        "reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [],
+        "aliases": [],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-MECHANIC-COMPOSITION-CAUSALITY",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Can structural mechanic relocation causally identify a missing mechanic-composition capability rather than merely make puzzles generically easier?",
+      "evidenceRefs": [
+        "reports/2026-09-12-class5-family-reference-comparison-001.md",
+        "reports/2026-09-12-mechanic-composition-pilot-001-result.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [],
+        "aliases": [],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-MUST-TURN-LATE-ADDITIVE",
+      "owner": "WS2",
+      "state": "closed-negative",
+      "question": "Does the correctly integrated default-off 7M late must-turn-biased repair tier improve solve/work economics on its bounded eligible population without material collateral?",
+      "evidenceRefs": [
+        "reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md",
+        "reports/2026-09-16-class2-must-turn-economics-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-CLASS123-CHEAP-HARVEST"
+        ],
+        "constraints": [],
+        "aliases": [],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR",
+      "owner": "WS2",
+      "state": "mixed",
+      "question": "Which generic current-input topology successor is useful after the earned open-path contrast: a compact reusable puncture-side descriptor, a richer per-instance topology derivation, or neither?",
+      "evidenceRefs": [
+        "reports/2026-09-17-lane-f3-topology-cheap-side-descriptor-result-001.md",
+        "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": true,
+        "computeDeficit": false,
+        "codeDeficit": true,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"
+        ],
+        "constraints": [],
+        "aliases": [
+          "per-instance topology",
+          "puncture-side descriptor",
+          "topology descriptor",
+          "topology reasoning"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 0,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-OPEN-PATH-TOPOLOGY-SIGNATURE",
+      "owner": "WS2",
+      "state": "concluded-positive",
+      "question": "Can a mathematically defensible open-path topological signature/reference encode already-incurred commitment and distinguish exact-LIVE from exact-DEAD material without arbitrary endpoint-closure signal?",
+      "evidenceRefs": [
+        "reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": false,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": false
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-HOMOTOPY-COMPLETION-CLASSES"
+        ],
+        "constraints": [
+          "WS2-CATEGORICAL-FULL-POOL",
+          "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
+          "WS2-GENERIC-STRUCTURAL-DIVERSITY",
+          "WS2-SIMPLE-FUTURE-FEASIBILITY"
+        ],
+        "aliases": [
+          "H signature",
+          "open path topology",
+          "topological acquisition",
+          "topology"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 4,
+        "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION",
+      "owner": "WS2",
+      "state": "concluded-positive",
+      "question": "Can fresh portal coarse-state capability be exposed only in a true dead-last additive whole-ladder retry without unacceptable collateral or fixed-work displacement?",
+      "evidenceRefs": [
+        "reports/2026-09-16-class4-113-allocation-promotion-001.md",
+        "reports/2026-09-16-class4-dead-last-frozen-canary-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": false
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-CLASS4-PORTAL-COARSE-FRESHNESS"
+        ],
+        "constraints": [
+          "WS2-PORTAL-COARSE-GLOBAL-MERGE"
+        ],
+        "aliases": [
+          "dead last portal retry",
+          "portal coarse allocation",
+          "portal coarse exposure"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-POST-D1-DISCRIMINATOR",
+      "owner": "WS2",
+      "state": "concluded-positive",
+      "question": "With D1 exact-query ranking closed negative, which smallest live discriminator (work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or a 2x2 interaction for a plausible producer/consumer pair) is justified next for WS2, if any?",
+      "evidenceRefs": [
+        "reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": false,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [
+          "docs/solver-optimization-workstreams.md"
+        ],
+        "aliases": [
+          "post-D1 discriminator",
+          "smallest live discriminator"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "question": "Can the separator/decomposition positive be upgraded into a compact dynamic interface contract that preserves the future-relevant history needed for safe composition?",
+      "evidenceRefs": [
+        "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
+        "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
+        "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
+        "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md",
+        "reports/2026-09-17-separator-decomposition-census-result-001.md"
+      ],
+      "premiseRefs": [
+        "P014",
+        "P074",
+        "P093"
+      ],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "evidence/population-blocked",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": true,
+        "measurementDeficit": true,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [
+          "docs/solver-separator-dynamic-interface-contract-preflight.md",
+          "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
+          "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
+          "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md"
+        ],
+        "aliases": [
+          "Lane A",
+          "dynamic decomposition interface",
+          "separator interface"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 4,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-SIMPLE-FUTURE-FEASIBILITY",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "question": "Can a small runtime-legal scalar summary of residual capacity, topology scarcity, or joint-obligation compatibility separate exact-LIVE from exact-DEAD extinction states?",
+      "evidenceRefs": [
+        "reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": false,
+        "strongEvidenceGate": false,
+        "measurementDeficit": true,
+        "computeDeficit": false,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [
+          "WS2-GENERIC-STRUCTURAL-DIVERSITY"
+        ],
+        "aliases": [],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 1,
+        "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-WORK-LADDER-ECONOMICS",
+      "owner": "WS2",
+      "state": "concluded-negative",
+      "question": "Given a 15% (3/20) recovery rate at 4x node-budget escalation (300M->1.2B) on a level-blind current-commit sample, does a matched-work counterfactual show spending that extra budget on already-ceiling-bound levels beats spending the same total work elsewhere (more levels at normal budget, or a different technique), enough to justify a bounded production node-budget change?",
+      "evidenceRefs": [
+        "reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md",
+        "reports/2026-09-18-ws2-work-ladder-economics-preflight-001.md",
+        "reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": true
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [
+          "docs/solver-optimization-workstreams.md",
+          "reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md",
+          "reports/2026-09-18-ws2-work-ladder-economics-preflight-001.md",
+          "reports/2026-09-19-ws2-work-ladder-4x-only-matched-work-costing-result-001.md"
+        ],
+        "aliases": [
+          "node-budget matched-work economics",
+          "work-ladder economics"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 4,
+        "candidateSetVisible": true
+      }
+    }
+  ],
+  "measurementOpportunityUse": [
+    {
+      "id": "MO-004",
+      "name": "budget response / solve elasticity",
+      "status": "covered-parent; conditional experimental primitive",
+      "windowQuestionIds": [
+        "WS1-REMAINING-LENGTH-ALLOCATION",
+        "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
+        "WS2-CLASS3-DOSE-EXPOSURE"
+      ]
+    },
+    {
+      "id": "MO-002",
+      "name": "heuristic rejection false-negative opportunity cost",
+      "status": "covered-parent; explicit counterfactual measurement specialization",
+      "windowQuestionIds": [
+        "WS2-D1-PRODUCTION-INERT-OBSERVATION"
+      ]
+    },
+    {
+      "id": "MO-005",
+      "name": "residual distance-to-solution / progress representation",
+      "status": "under-explicit measurement opportunity",
+      "windowQuestionIds": [
+        "WS2-G1-COMPLETE-PATH-LNS"
+      ]
+    },
+    {
+      "id": "MO-001",
+      "name": "regime search-state / trajectory overlap",
+      "status": "covered-parent; explicit measurement specialization",
+      "windowQuestionIds": []
+    },
+    {
+      "id": "MO-003",
+      "name": "mechanism interaction residual",
+      "status": "covered-parent; operational discriminator",
+      "windowQuestionIds": []
+    },
+    {
+      "id": "MO-006",
+      "name": "cross-experiment gain/loss covariance and latent capability structure",
+      "status": "covered-parent; under-explicit measurement formulation",
+      "windowQuestionIds": []
+    },
+    {
+      "id": "MO-007",
+      "name": "research-process yield / premise fertility",
+      "status": "under-explicit research-metrology opportunity",
+      "windowQuestionIds": []
+    }
+  ],
+  "capabilityGaps": [
+    {
+      "questionId": "WS1-REMAINING-LENGTH-ALLOCATION",
+      "disposition": "evidence/population-blocked",
+      "needsEvidenceOrPopulation": true,
+      "needsMeasurement": false,
+      "needsCompute": true,
+      "needsCode": false,
+      "needsConceptOrRepresentation": false
+    },
+    {
+      "questionId": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
+      "disposition": "evidence/population-blocked",
+      "needsEvidenceOrPopulation": true,
+      "needsMeasurement": false,
+      "needsCompute": true,
+      "needsCode": false,
+      "needsConceptOrRepresentation": false
+    },
+    {
+      "questionId": "WS2-CLASS3-DOSE-EXPOSURE",
+      "disposition": "evidence/population-blocked",
+      "needsEvidenceOrPopulation": true,
+      "needsMeasurement": false,
+      "needsCompute": true,
+      "needsCode": false,
+      "needsConceptOrRepresentation": false
+    },
+    {
+      "questionId": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
+      "disposition": "evidence/population-blocked",
+      "needsEvidenceOrPopulation": true,
+      "needsMeasurement": false,
+      "needsCompute": true,
+      "needsCode": true,
+      "needsConceptOrRepresentation": true
+    },
+    {
+      "questionId": "WS2-G1-COMPLETE-PATH-LNS",
+      "disposition": "measurement-blocked",
+      "needsEvidenceOrPopulation": false,
+      "needsMeasurement": true,
+      "needsCompute": false,
+      "needsCode": true,
+      "needsConceptOrRepresentation": false
+    },
+    {
+      "questionId": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
+      "disposition": "evidence/population-blocked",
+      "needsEvidenceOrPopulation": true,
+      "needsMeasurement": true,
+      "needsCompute": false,
+      "needsCode": false,
+      "needsConceptOrRepresentation": false
+    }
+  ],
+  "negativeIntersections": [],
+  "independenceContext": {
+    "sharedImplementationDependencySource": "research:system-inventory -- --view=architecture",
+    "note": "Interpret apparent corroboration against the architecture inventory shared-dependency view; this retrospective does not duplicate that dependency graph."
+  },
+  "explorationTriggers": [
+    {
+      "kind": "candidate-provenance-gap",
+      "detail": "5 recent questions expose neither an explicit trigger nor a visible candidate set"
+    }
+  ],
+  "interpretationLimits": [
+    "Question relations are the unit of this retrospective, not individual commits, agent sessions, or researcher-hours.",
+    "Dated report references approximate recent research attention; they do not measure effort or productivity.",
+    "Keyword-based answerability decomposition is a transparent screening heuristic and must not replace the owning question/reopen semantics.",
+    "Measurement-opportunity association can reveal instrumentation concentration but cannot prove that instruments caused the agenda.",
+    "Shared negative intersections nominate common assumptions for review; they do not reopen closed tested forms by themselves."
+  ]
+}

@@ -14,7 +14,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { canonicalizeIdentities, hashPopulation } from './solver-experiment-contract.mjs';
+import { canonicalizeIdentities, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
 
 export function buildCaseIntegrity(expectedIds, rows) {
   const expected = canonicalizeIdentities(expectedIds).identities;
@@ -53,13 +53,8 @@ export function buildCaseIntegrity(expectedIds, rows) {
 }
 
 export function parseExpectedIdsFile(content) {
-  // One id per line (the only producer, cpsat-explicit-prefix-reference.yml, writes
-  // `cases.map(c => c.id).join('\n')`). Splitting on commas too -- as a generic comma-or-whitespace
-  // id-list reader would -- corrupts any id that legitimately embeds a comma, such as this
-  // producer's own `${levelId}:${sortedCutCells.join(',')}::${caseId}` disambiguated ids (needed
-  // because the same physical prefix can cross two distinct cuts and therefore share a caseId
-  // across two groups; see PR #1902). Do not reintroduce comma-splitting here.
-  return content.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  // One id per line. The shared parser deliberately preserves commas/colons inside identities.
+  return parseIdentityLines(content);
 }
 
 function parseArgs(argv) {

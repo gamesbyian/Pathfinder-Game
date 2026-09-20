@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=24000 max=32000 -->
 # Solver research-system consolidation and epistemic-coverage plan
 
-> **Status:** proposed implementation plan; not an execution-priority authority.
+> **Status:** completed implementation record; maintenance/history only, not an execution-priority authority.
 > **Created:** 2026-09-19.
 > **Purpose:** consolidate the September 2026 solver-research infrastructure expansion; repair control-plane weaknesses exposed by recent execution; establish a small common scientific-semantic kernel across otherwise specialist research machinery; strengthen pre-outcome design, analysis, claim formation, provenance, invalidation and research-to-production conversion fidelity; reduce documentation and agent-context burden; and add a bounded research-portfolio/reflexivity layer that can detect instrument-shaped attention, preserve live rival explanations, expose answerability gaps and ontology escapes, and trigger independent exploration without displacing the solve-directed objective.
 > **Priority authority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
@@ -14,6 +14,24 @@
 > **Resource authority:** [`solver-research-data-assets.json`](solver-research-data-assets.json), [`solver-research-resource-contract.md`](solver-research-resource-contract.md), and audit declarations.
 > **Historical rationale:** this plan extends rather than replaces the August process critique, September inference-audit/resource work, premise-map program, capability-atlas program, higher-order infrastructure composition work, search-loss/failure-evidence work, and planning-authority cleanup.
 > **Second-order audit:** [`2026-09-19-solver-research-system-prompt-overfit-second-order-audit-001.md`](../reports/2026-09-19-solver-research-system-prompt-overfit-second-order-audit-001.md) records the later prompt-overfit/contradiction-hunt pass that added conversion fidelity and framing/context independence.
+
+> **Implementation progress (2026-09-19):** complete on PR #1922 after current-head CI, solver-evidence-integrity, and premise-map-hardening validation. Bundles A-F are closed at the scope earned by the evidence; Bundle G was correctly not triggered. Progress updates below are retained execution history, not a second checklist or priority authority.
+> **Execution note (2026-09-19, current slice):** Phase 0 is applied in `solver-research-operating-model.md`. Bundle A now has one derived read-only inventory spine (`research:system-inventory`) over existing relation authorities, current package entrypoints, maintained/retired workflow lifecycle, producer entrypoints, shared implementation dependencies, shared constructor/validator ownership, current-reference/document lifecycle routing, documentation cognitive roles/status-claim entropy, simple burden metrics and the existing integration audit. The integration audit reuses the inventory's already-built relation model rather than rescanning it. The inventory renders architecture, lifecycle, diagnostics, actionable findings, and front-door briefing inputs; the findings view groups stale authority claims, concluded current references, fragile/unknown lifecycle state, and shared implementation failure modes. Bundle B now has an emitted-v3-result/declared-schema audit with local schema conformance and self-audited checker coverage, a reconciled v3 schema for maintained publisher semantics, delimiter-safe structured population identity hashing with the declared codec in the hash domain, canonical scoped diagnostics, independent-unit propagation through the shared publisher, typed recovery provenance carried through contract creation/validation/publication, and shared report/enrichment constructors. Persisted scientific identity lists now use one-identity-per-line parsing across exact/reference integrity, generic sweep integrity, timeout recovery, high-budget frozen cohorts, the generic sweep combiner and historical evidence-integrity cohorts; comma syntax remains only on explicit user-input surfaces. The real CP-SAT exact-prefix recombine path now publishes `recombine-only` provenance naming the original acquisition run and declaring that acquisition was not recomputed. The synthetic transaction/conformance fixture now covers partial acquisition, combine-layer failure/recombination without solver compute, abstention/indeterminate outcomes, unit propagation, treatment nonparticipation, selected-development evidence, confirmation consumption, cross-resource enrichment, stale evidence-index rejection, supersession/report status, workflow retirement and identity/content changes. The historical Lane-A identity failures are pinned at their actual parser/grouping/transport seams, with current C0 analysis using structured `source.cutSignature` and delimiter parsing retained only for frozen legacy artifacts.  Bundle B's Phase-6.1 cross-contract pass is recorded in [`2026-09-19-research-contract-interoperability-audit-001.md`](../reports/2026-09-19-research-contract-interoperability-audit-001.md): v3 remains the shared decision-bearing sweep envelope, while family-run, compact failure-response, exact/reference and hint provenance contracts remain specialist where their semantics or useful failure modes differ.Bundle C is now active on the live `WS2-FAILURE-RESPONSE-RECONNAISSANCE` path: the existing prose preflight has a frozen slice-specific machine analysis contract and identity; the existing generic reducer remains unchanged; a thin WS2 wrapper separates execution, scientific eligibility, observation and routing decision; unit topology, instrument support/abstention/calibration, solver/protocol-relative applicability, target envelope, negative-resolution semantics and adaptive lineage are explicit; selected analyses can produce a scoped claim capsule with content-hashed derivation edges and a bounded reverse-invalidation drill. The question graph/preflight route agents to the machine contract. In parallel, the already-promoted Class-4 portal coarse-state dead-last retry now has a production-conversion fidelity regression pinning default polarity, ordinary no-ablation product callers, and actual bare-production participation. A/B remain open for final cleanup/verification, but their remaining scientific-contract gaps now intentionally hand off into C rather than spawning parallel plumbing. Draft PR #1922 remains the execution anchor.
+
+> **Execution note (2026-09-19, Bundle C vertical slice):** The live `WS2-FAILURE-RESPONSE-RECONNAISSANCE` path now exercises the missing scientific middle layer without altering the generic failure-response reducer. A frozen slice-specific analysis contract records purpose, target scope, outcome-blind population selection, parent-level unit topology, independence vector, instrument support/abstention/calibration, deterministic reproducibility, solver/protocol-relative freshness, target envelope, primary discriminator, negative-resolution rule, adaptive lineage and treatment-fidelity applicability. The WS2 wrapper emits separate execution, scientific-disposition, observation and decision sections, carries content hashes for inputs and reducer implementation, and assigns a path/order-independent semantic analysis identity. Eligible route-selected analyses can produce a slice-specific claim capsule with its own identity, selection/unit/target scope, explicit scientific limitations, separate routing consequence, structured derivation edges and bounded reverse-invalidation behavior; tampered analysis/claim artifacts are rejected. Cross-producer semantic compatibility and input-order invariance are regression-tested without treating shared instrumentation as independent confirmation. The machine contract is discoverable from the WS2 question relation, failure-evidence plan and preflight. Production-realization is being validated separately on the already-promoted Class-4 portal coarse-state dead-last retry: the regression pins default-on registry polarity, ordinary product/review callers that omit ablation overrides, portal-only participation, dead-last placement and bare production-shaped treatment activation. No real WS2 claim/result artifact has been fabricated because the eligible post-instrumentation population gate remains closed.
+
+> **Execution note (2026-09-19, Bundle C hardening):** The WS2 slice now requires a durable decision rationale for every selected route; the rationale survives into the claim capsule alongside the prespecified legal next action and an explicit `productionChangeLicensed: false` boundary. Analysis envelopes receive canonical path/order-independent identities; claim capsules receive their own canonical identities; both reject tampering. Claim creation reloads the referenced frozen analysis contract and rejects even a freshly rehashed analysis when its embedded contract identity diverges from the pre-outcome contract. Input artifacts and the reducer implementation carry content hashes into the derivation spine. Cross-producer compact-response documents normalize compatibly without being misrepresented as implementation-independent evidence. The bounded interoperability audit is recorded at `reports/2026-09-19-research-contract-interoperability-audit-001.md`. The WS2 future-work reopen route now points directly to the machine contract/command. A fresh eligible compact-response population still does not exist in tracked evidence, and the available GitHub connector cannot dispatch a new parameterized workflow; no historical population has been relabeled to force a result.
+
+> **Execution note (2026-09-19, Bundle D first slice):** Structured closeout metadata now reuses the existing investigation-report metadata owner rather than creating a second registry or report schema. `scripts/investigation-report-metadata.mjs` owns a small versioned `pathfinder.research-closeout/v1` codec covering only already-common lifecycle/join semantics; malformed/duplicate/unknown-version capsules fail explicitly. The derived research-system inventory consumes valid capsules into a bounded recent-closeout front-door feed and surfaces parse failures diagnostically, so retrieval can stop scraping decision prose without making the generated view authoritative. The research-contract interoperability audit is the first real prospective report carrying the capsule. The convention is documented in `docs/investigation-report-conventions.md`; specialist experiment, claim, population and selection semantics remain in their existing owners. Bundle D remains active: the next useful work is compact front-door rendering/current-context reduction and then the bounded Bundle-E retrospective, not another closeout datastore. The same inventory now renders `--view=brief`, a compact human-facing derived orientation over live queue state, recent structured closeouts, deferred/reopen questions, integration health and consolidation findings; `docs/README.md` routes cheap discovery there while preserving `brief-inputs` as the machine-facing view. This completes the first useful front-door cut without adding another generated authority.
+> **Execution note (2026-09-19, A-D hostile closeout pass):** A requirement-by-requirement audit of Bundles A-D is recorded in [`2026-09-19-research-system-bundles-a-d-closeout-audit-001.md`](../reports/2026-09-19-research-system-bundles-a-d-closeout-audit-001.md). It found and repaired four seams that prior progress notes overstated: Bundle A now exposes stable relation identity/join domains plus missing-reference/workflow/empty-relation architecture findings; Bundle B's transaction spine now reaches a real experiment contract, frozen analysis-contract identity and structured closeout/claim provenance; Bundle C now separates task-framing/prompt from authority/context-exposure independence, adds critical-code dependence and an explicit live rival set; Bundle D's closeout capsule now carries the optional population/selection/inference/claim/source/prospective state required by Phase 8.5 and the brief exposes unfinished execution references. No further A-D design gap is currently known; current-head validation is the remaining closeout gate before Bundle E.
+> **Execution note (2026-09-19, Bundle E retrospective):** The first bounded portfolio/answerability retrospective is complete over the frozen 2026-09-12 through 2026-09-19 question population. A reproducible machine snapshot lives at `reports/2026-09-19-research-portfolio-retrospective-data-001.json` with the decision report at `reports/2026-09-19-research-portfolio-answerability-retrospective-001.md`. It covers attention topology, decomposed answerability, MO operational coverage, proposal provenance, research-capability gaps, negative-result intersections and architecture-dependence handoff in one dataset. The 28-question window contains 22 answerable/concluded questions, five primarily evidence/population blocked questions and one primarily measurement/construction blocked question. Only 5/28 carry formal MO links, across three MOs, so the formal MO layer does not support a simple instrument-dominates-agenda conclusion. No repeated structured negative intersection was found. A five-question candidate-provenance alarm was then audited in `reports/2026-09-19-research-candidate-provenance-gap-audit-001.md`: four were sparse-structured-memory false positives and one was an incomplete historical genesis on a closed tested form with no live consequence. Bundle E therefore does not fire Bundle G and earns no permanent reflexivity scheduler/database.
+
+> **Execution note (2026-09-19, Bundle F earned scope):** Bundle C/E earned only lightweight prospective protections already natural to the WS2 analysis contract. The frozen WS2 contract now carries an explicit live rival set, separated framing/context/code independence axes, target envelope, adaptive lineage, prospective expected shape, scientific surprise conditions and an anomaly policy that keeps integrity/protocol/instrument failures out of the scientific-surprise bucket. `reports/2026-09-19-research-prospective-rigor-earned-scope-001.md` records why hard-blind confirmation, a proposal registry and universal target-envelope fields are not earned. Bundle F is complete for the currently demonstrated scope; stronger protections remain proportional to future selection pressure/claim breadth.
+> **Execution note (2026-09-19, final verification):** Part VIII has been audited requirement-by-requirement in `reports/2026-09-19-research-system-consolidation-final-verification-audit-001.md`. Real evidence audits cover the two requirements that could not be satisfied credibly by infrastructure alone: D1 supplies the multidimensional independence/disagreement example (`reports/2026-09-19-research-independence-triangulation-audit-001.md`), and the precommitted work-ladder/economics lineage supplies the confirmation-boundary example (`reports/2026-09-19-research-confirmation-boundary-audit-001.md`). A cross-bundle closeout guard is wired into the ordinary Node test suite. Current-head repository validation then exposed and repaired CI sparse-checkout coverage, population-integrity composition, active-queue state parsing, and two stale test expectations. The validated implementation head cleared deep verification, solver-evidence-integrity, premise-map hardening, validators, lint, Node/CLI contracts, solver canary, and production build. This plan is now maintenance/history; reusable commands, contracts, tests, reports, and front-door views remain operational.
+
+
+
+
 
 ## 1. Why this plan exists now
 
@@ -379,6 +397,8 @@ For every identity establish:
 ### Required fix class
 
 Composite identities used for scientific integrity must use structured serialization or an escaping-safe canonical codec. Informal delimiter parsing must not be the semantic boundary.
+
+Implementation-derived rule: persisted scientific identity lists are one identity per line unless a specific structured format owns them. Comma/whitespace list parsing is acceptable only on an explicit user-input/list-syntax surface, never as the implicit reader for a persisted population/cohort file whose identities may themselves contain delimiters.
 
 ### Required adversarial fixtures
 
@@ -1012,7 +1032,7 @@ Scientific interoperability should make disagreement legible, not erase it.
 
 The repository can retain rich history without requiring agents to treat it all as live.
 
-Classify documents into four roles.
+Classify documents into five cognitive roles. Implementation showed that a useful current execution plan/preflight is not necessarily a canonical authority; collapsing those concepts would make authority-count and retrieval-entropy diagnostics misleading.
 
 ### A. Small canonical current authorities
 
@@ -1036,7 +1056,18 @@ Each authority must have:
 - explicit information that belongs elsewhere;
 - a generated/detail source where appropriate.
 
-### B. Generated current-state views
+### B. Active execution references
+
+Current plans, preflights and handoffs may be routed prominently while work is genuinely active, but they do not thereby become canonical method/priority/product authorities.
+
+They should:
+
+- state their lifecycle explicitly;
+- point back to the authority that owns priority/policy;
+- stop presenting themselves as current once completed/superseded;
+- route surviving obligations outward before demotion/archive.
+
+### C. Generated current-state views
 
 Prefer generated views for volatile multi-system state, for example:
 
@@ -1051,11 +1082,11 @@ Prefer generated views for volatile multi-system state, for example:
 
 Generated views are not authorities.
 
-### C. Dated evidence reports
+### D. Dated evidence reports
 
 Retain them. Index/query them. Keep them out of ordinary context unless relevant.
 
-### D. Historical/archive material
+### E. Historical/archive material
 
 Completed plans, superseded authorities, old notebooks and handoffs should be frozen and excluded from normal "what is current?" retrieval.
 
@@ -1126,7 +1157,7 @@ Do not delete valuable evidence merely to make counts smaller. The objective is 
 
 The repository has already begun retiring completed plans. Generalize the process.
 
-Audit plans/preflights/handoffs from the recent eight-week period and classify each:
+Audit plans/preflights/handoffs from the recent eight-week period **together with the current-reference/index surfaces that route agents to them**, and classify each:
 
 - live authority;
 - active execution plan;
@@ -1722,7 +1753,7 @@ Do together:
 - Phase 1 architecture/dependency map;
 - Phase 10 documentation cognitive-role classification;
 - Phase 12 documentation-entropy diagnostics;
-- Phase 13 plan lifecycle classification;
+- Phase 13 plan/preflight/handoff lifecycle classification plus current-reference/index routing mismatches;
 - Phase 9.4 question/premise/capability/MO/queue consistency;
 - the inventory portion of Phase 11 research front door;
 - shared-implementation/dependency visibility needed by Phase 6.4-6.5.
@@ -1731,12 +1762,14 @@ Implementation principle:
 
 > build one machine-derived inventory/composition layer, then render the architecture map, authority/lifecycle findings, entropy warnings and front-door inputs from it.
 
+Compose existing checks instead of cloning them: use the current research-integration audit as the Phase 9.4 consistency input, and use one shared parser for the documentation index's explicit `Current references` authority boundary so historical/navigation links do not become current authorities merely by being linked.
+
 Do not write four scanners that independently rediscover files, authorities and ownership.
 
 Immediate outputs should include:
 
 1. duplicate/stale authority findings;
-2. plan/archive/lifecycle findings;
+2. plan/preflight/handoff archive/lifecycle findings, including concluded material still routed through current-reference indexes;
 3. dependency and shared-failure-mode findings;
 4. current-state fields the eventual the generated research brief can already consume;
 5. a list of information that still requires fragile prose parsing and therefore motivates structured closeout work.
@@ -1772,6 +1805,8 @@ Use one tiny deterministic transaction fixture as the spine. Add adversarial cas
 Repair real constructors/schemas when the fixture exposes a defect. Do not create a separate harness for identity, another for recovery, and another for epistemic conformance unless a real implementation boundary requires it.
 
 ## Bundle C - One scientific vertical slice from design to production realization
+
+**Implementation status:** active vertical slice. Bundles A/B are substantially implemented in their intended inventory/control-plane scope; remaining analysis/claim obligations are being exercised here rather than duplicated back into Bundle B. Full closeout/future-work outward reconciliation remains a Bundle D concern.
 
 **Purpose:** prove the scientific middle layer on a real high-value path and discover the genuinely reusable common kernel.
 

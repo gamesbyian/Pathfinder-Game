@@ -5,11 +5,10 @@
  * cpsat-explicit-prefix-reference.yml result: groups labelled rows by their true C0 signature
  * (levelId + sorted cutCells) and reports mixing/purity per group, independent-unit-deduplicated.
  *
- * The combined result's own row.caseId does not carry the cutSignature as a separate field (the
- * shard runner only forwards {caseId, levelId, corpus, prefix, depth, sourceLabel, referenceLabel,
- * ...}, not the input case's `source` object) -- but the dispatched id was deliberately built as
- * `${cutSignature}::${originalCaseId}` (PR #1902's collision fix), so the signature is recovered by
- * splitting the id on its first `::`, with no re-derivation from the geometry census needed.
+ * Current schema-v2 rows preserve the input case's structured `source.cutSignature`, which is
+ * the semantic identity used by this analysis. Historical rows produced before that transport fix
+ * remain readable because their dispatched id was built as `${cutSignature}::${originalCaseId}`
+ * (PR #1902); only that frozen compatibility path recovers the signature from the first `::`.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -28,8 +27,13 @@ const rows = document.rows ?? document.levels ?? document.results ?? [];
 if (!Array.isArray(rows) || rows.length === 0) throw new Error(`no rows found in ${IN}`);
 
 const cutSignature = row => {
+    const structured = row?.source?.cutSignature;
+    if (typeof structured === 'string' && structured) return structured;
+    // Historical schema-v2 rows produced before structured source metadata was preserved recover
+    // the frozen C0 signature from the legacy case-id disambiguator. New rows must not depend on
+    // this delimiter encoding as their semantic identity boundary.
     const marker = String(row.caseId ?? '').indexOf('::');
-    if (marker === -1) throw new Error(`case id missing cutSignature disambiguator: ${row.caseId}`);
+    if (marker === -1) throw new Error(`row has no structured source.cutSignature or legacy case-id disambiguator: ${row.caseId}`);
     return row.caseId.slice(0, marker);
 };
 

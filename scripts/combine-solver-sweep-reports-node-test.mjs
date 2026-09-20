@@ -72,6 +72,21 @@ async function main() {
         assert.match(exactCombined.population.identityHash, /^sha256:[0-9a-f]{64}$/);
         console.log('  ✓ intended ID input makes exact completeness and denominator explicit');
 
+        const commaBatch = path.join(tempDir, 'comma-batch.json');
+        const commaExpected = path.join(tempDir, 'comma-expected.txt');
+        const commaOut = path.join(tempDir, 'comma-combined.json');
+        const commaId = 'R00046:131081,196618::frontier-4758';
+        await writeFile(commaBatch, JSON.stringify(batchReport({
+            levels: [{ level: 3, id: commaId, ok: true, status: 'success', totalMs: 1, elapsedMs: 1, attempts: [], attemptCount: 0, failedStrategies: [] }],
+        })));
+        await writeFile(commaExpected, `${commaId}\n`);
+        await run([`--in=${commaBatch}`, `--expected-ids=${commaExpected}`, `--out=${commaOut}`]);
+        const commaCombined = JSON.parse(await readFile(commaOut, 'utf8'));
+        assert.equal(commaCombined.populationIntegrity.complete, true,
+            'comma-bearing expected ids must survive as one scientific identity');
+        assert.deepEqual(commaCombined.populationIntegrity.expectedIds, [commaId]);
+        console.log('  ✓ comma-bearing expected ids survive sweep-combiner identity parsing');
+
         const exact = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002'], levels: combined.levels });
         assert.equal(exact.complete, true);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels }), /missing results: R00003/);

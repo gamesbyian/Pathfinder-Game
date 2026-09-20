@@ -209,6 +209,7 @@ jobs:
           CORPUS: ${{ inputs.corpus }}
           MAX_CASES: ${{ inputs.max_cases }}
           TIME_LIMIT: ${{ inputs.time_limit }}
+          RECOMBINE_RUN_ID: ${{ inputs.recombine_run_id }}
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
@@ -217,6 +218,59 @@ jobs:
           const cases = extractExplicitPrefixCases(document, { format: process.env.CASE_FORMAT, corpus: process.env.CORPUS || null })
             .slice(0, Number(process.env.MAX_CASES));
           fs.writeFileSync('reports/stress/cpsat-explicit-prefix-reference-expected-ids.txt', `${cases.map(c => c.id).join('\n')}\n`);
+
+          const recombineRunId = String(process.env.RECOMBINE_RUN_ID ?? '').trim();
+          const sourceRun = recombineRunId || String(process.env.GITHUB_RUN_ID ?? '').trim();
+          const experiment = {
+            sourceRuns: sourceRun ? [sourceRun] : [],
+            ...(recombineRunId ? {
+              reconciliationRun: {
+                kind: 'recombine-only',
+                sourceRuns: [recombineRunId],
+                preservesExperimentIdentity: true,
+                acquisitionRecomputed: false,
+              },
+            } : {}),
+          };
+          const spec = {
+            configuration: {
+              casesFile: process.env.CASES_FILE,
+              caseFormat: process.env.CASE_FORMAT,
+              corpus: process.env.CORPUS,
+              maxCases: Number(process.env.MAX_CASES),
+              timeLimitSec: Number(process.env.TIME_LIMIT),
+            },
+            workflowFamily: 'cpsat-explicit-prefix-reference',
+            producer: 'cpsat-explicit-prefix-reference.yml',
+            entrypoint: 'scripts/stress/cpsat-explicit-prefix-reference.mjs',
+            experiment,
+            population: { kind: 'explicit-cpsat-prefix-cases', identityBasis: 'stable-case-id' },
+            execution: {
+              levelBlind: true,
+              historyAware: false,
+              historicalInputs: [],
+              reproducibilityExpected: false,
+              producerFamily: 'cpsat-reference-probe',
+              schedulerMode: 'isolated-reference-model',
+            },
+            limits: {
+              cumulativeNodeCeiling: null,
+              initialWorkAllocation: null,
+              totalWorkCeiling: null,
+              wallSafetyDeadlineMs: Number(process.env.TIME_LIMIT) * 1000,
+              wallDeadlineBinding: true,
+            },
+            sideEffects: {
+              hints: 'none',
+              canonicalBaseline: 'none',
+              telemetry: 'none',
+              reports: 'artifact-only',
+            },
+          };
+          fs.writeFileSync(
+            'reports/stress/cpsat-explicit-prefix-reference-contract-spec.json',
+            `${JSON.stringify(spec, null, 2)}\n`,
+          );
           NODE
           RESULT="reports/stress/cpsat-explicit-prefix-reference-${{ github.run_id }}.json"
           if [ -f "$RESULT" ]; then
@@ -225,14 +279,6 @@ jobs:
               --result="$RESULT" \
               --out=reports/stress/cpsat-explicit-prefix-reference-integrity.json
           fi
-          cat > reports/stress/cpsat-explicit-prefix-reference-contract-spec.json <<SPEC
-          {"configuration": {"casesFile": "$CASES_FILE", "caseFormat": "$CASE_FORMAT", "corpus": "$CORPUS", "maxCases": $MAX_CASES, "timeLimitSec": $TIME_LIMIT},
-          "workflowFamily": "cpsat-explicit-prefix-reference", "producer": "cpsat-explicit-prefix-reference.yml", "entrypoint": "scripts/stress/cpsat-explicit-prefix-reference.mjs",
-          "population": {"kind": "explicit-cpsat-prefix-cases", "identityBasis": "stable-case-id"},
-          "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": false, "producerFamily": "cpsat-reference-probe", "schedulerMode": "isolated-reference-model"},
-          "limits": {"cumulativeNodeCeiling": null, "initialWorkAllocation": null, "totalWorkCeiling": null, "wallSafetyDeadlineMs": $(( TIME_LIMIT * 1000 )), "wallDeadlineBinding": true},
-          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
-          SPEC
           node scripts/write-solver-experiment-contract.mjs \
             --spec=reports/stress/cpsat-explicit-prefix-reference-contract-spec.json \
             --out=reports/stress/cpsat-explicit-prefix-reference-contract.json

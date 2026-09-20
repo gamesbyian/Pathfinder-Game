@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { assertResearchBlock } from './solver-research-block-lineage.mjs';
+import { buildResearchEnrichmentLink, RESEARCH_ENRICHMENT_KINDS } from './research-enrichment-link-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -21,8 +21,8 @@ const out = required('out');
 const stateRef = value('state-ref') || null;
 const runRef = value('run-ref') || null;
 
-if (!['observation', 'exact', 'treatment', 'artifact'].includes(kind)) {
-    throw new Error('--kind must be observation, exact, treatment, or artifact');
+if (!RESEARCH_ENRICHMENT_KINDS.includes(kind)) {
+    throw new Error(`--kind must be one of ${RESEARCH_ENRICHMENT_KINDS.join(', ')}`);
 }
 if (!existsSync(path.resolve(ROOT, blockArtifact))) throw new Error(`missing block artifact: ${blockArtifact}`);
 if (!existsSync(path.resolve(ROOT, artifact))) throw new Error(`missing enrichment artifact: ${artifact}`);
@@ -30,20 +30,15 @@ if (!existsSync(path.resolve(ROOT, artifact))) throw new Error(`missing enrichme
 const blockDoc = JSON.parse(readFileSync(path.resolve(ROOT, blockArtifact), 'utf8'));
 const researchBlock = blockDoc?.researchBlock ?? blockDoc?.population?.researchBlock ?? null;
 const populationIdentity = blockDoc?.populationIdentity ?? blockDoc?.population?.corpusIdentity ?? null;
-assertResearchBlock(researchBlock, { populationIdentity });
-
-const link = {
-    schemaVersion: 1,
-    kind: 'pathfinder-research-enrichment-link',
-    researchEnrichmentKind: kind,
-    createdAt: new Date().toISOString(),
+const link = buildResearchEnrichmentLink({
     sourceBlockArtifact: blockArtifact,
     sourceArtifact: artifact,
-    stateRef,
-    runRef,
+    researchEnrichmentKind: kind,
     populationIdentity,
     researchBlock,
-};
+    stateRef,
+    runRef,
+});
 
 const absoluteOut = path.resolve(ROOT, out);
 mkdirSync(path.dirname(absoluteOut), { recursive: true });

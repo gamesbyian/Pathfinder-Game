@@ -10,6 +10,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { parseIdentityLines } from './solver-experiment-contract.mjs';
 
 function parseArgs(argv) {
   return new Map(argv.filter(a => a.startsWith('--')).map(a => {
@@ -35,7 +36,7 @@ function main() {
     console.error('Usage: select-highbudget-gap-fill-ids.mjs --frozen-ids-file=<file> [--override=<text>] --out=<file>');
     process.exit(2);
   }
-  const frozenIds = fs.readFileSync(frozenFile, 'utf8').split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
+  const frozenIds = parseIdentityLines(fs.readFileSync(frozenFile, 'utf8'));
   const selected = selectGapFillIds(frozenIds, args.get('override'));
   fs.writeFileSync(out, `${selected.join('\n')}\n`);
   console.log(`Selected ${selected.length}/${frozenIds.length} id(s) from ${frozenFile}${selected.length === frozenIds.length ? '' : ' (gap-fill subset)'}.`);

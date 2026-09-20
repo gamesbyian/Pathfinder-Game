@@ -96,7 +96,7 @@ for (const item of cases) {
         inputAlarms++;
         rows.push({
             schemaVersion: 2, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix,
-            depth: item.depth, sourceLabel: item.sourceLabel, referenceLabel: 'timeout/abstain', referenceReason: 'native-prefix-illegal',
+            source: item.source ?? null, depth: item.depth, sourceLabel: item.sourceLabel, referenceLabel: 'timeout/abstain', referenceReason: 'native-prefix-illegal',
             inputAlarm: true, inputReason: legality.reason, invalidAt: legality.invalidAt, from: legality.from, next: legality.next,
             timeLimitSec: timeLimit,
         });
@@ -116,7 +116,7 @@ for (const item of cases) {
     const exitCode = result.status ?? (result.error ? -1 : 0);
     const classified = classifyProbeProcess({ stdout: result.stdout ?? '', stderr: result.stderr ?? '', exitCode });
     const row = {
-        schemaVersion: 2, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix, pin: item.pin ?? null,
+        schemaVersion: 2, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix, source: item.source ?? null, pin: item.pin ?? null,
         pinRevisit: item.pinRevisit ?? null,
         depth: item.depth, sourceLabel: item.sourceLabel, referenceLabel: classified.label, referenceReason: classified.reason,
         cpSatStatus: classified.status ?? null, timeLimitSec: timeLimit, exitCode, informationCostMs,

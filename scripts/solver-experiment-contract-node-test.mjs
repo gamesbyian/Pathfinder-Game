@@ -8,19 +8,38 @@ import {
   hashConfiguration,
   hashPopulation,
   isImmutableCommitSha,
+  parseIdentityLines,
 } from './solver-experiment-contract.mjs';
 
 const a = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['b', 'a'] });
 const b = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['a', 'b'] });
 assert.equal(a.identityHash, b.identityHash);
+const codedA = hashPopulation({
+  kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['a', 'b'], identityCodec: 'json-tuple-v1',
+});
+const codedB = hashPopulation({
+  kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['b', 'a'], identityCodec: 'json-tuple-v1',
+});
+assert.equal(codedA.identityHash, codedB.identityHash);
+assert.notEqual(codedA.identityHash, a.identityHash,
+  'an explicitly declared identity codec must be part of the scientific hash domain');
+assert.throws(() => hashPopulation({
+  kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['a'], identityCodec: '',
+}), /identityCodec/);
 assert.throws(() => hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['a', 'a'] }), /duplicate/);
 assert.equal(hashConfiguration({ b: 2, a: 1 }), hashConfiguration({ a: 1, b: 2 }));
 assert.equal(isImmutableCommitSha('a'.repeat(40)), true);
 assert.equal(isImmutableCommitSha('main'), false);
+assert.deepEqual(
+  parseIdentityLines('scope:a,b::case\n切断群:ケース 1\n'),
+  ['scope:a,b::case', '切断群:ケース 1'],
+  'comma-bearing line identity and Unicode must remain intact',
+);
 
 const integrity = buildPopulationIntegrity(['a', 'b', 'c'], [
   { id: 'a', ok: true }, { id: 'b', status: 'deadline-truncated' }, { id: 'x', error: 'boom' },
 ]);
+assert.deepEqual(integrity.expectedIds, ['a', 'b', 'c']);
 assert.deepEqual(integrity.missingIds, ['c']);
 assert.deepEqual(integrity.unexpectedIds, ['x']);
 assert.equal(integrity.outcomes.solved, 1);
@@ -67,6 +86,33 @@ const common = {
 };
 const clone = value => JSON.parse(JSON.stringify(value));
 assert.deepEqual(decisionContractIssues(common), []);
+const recombineOnly = clone(common);
+recombineOnly.experiment.sourceRuns = ['run-1', 'run-2'];
+recombineOnly.experiment.reconciliationRun = {
+  kind: 'recombine-only',
+  sourceRuns: ['run-1', 'run-2'],
+  preservesExperimentIdentity: true,
+  acquisitionRecomputed: false,
+};
+assert.deepEqual(decisionContractIssues(recombineOnly), []);
+const retryMissing = clone(common);
+retryMissing.experiment.sourceRuns = ['run-1', 'run-2'];
+retryMissing.experiment.reconciliationRun = {
+  kind: 'retry-missing-acquisition',
+  sourceRuns: ['run-1', 'run-2'],
+  preservesExperimentIdentity: true,
+  acquisitionRecomputed: true,
+};
+assert.deepEqual(decisionContractIssues(retryMissing), []);
+const fakeRecombine = clone(recombineOnly);
+fakeRecombine.experiment.reconciliationRun.acquisitionRecomputed = true;
+assert.ok(decisionContractIssues(fakeRecombine).includes('experiment.reconciliationRun.acquisitionRecomputed'));
+const unknownRecoveryRun = clone(recombineOnly);
+unknownRecoveryRun.experiment.reconciliationRun.sourceRuns = ['run-3'];
+assert.ok(decisionContractIssues(unknownRecoveryRun).includes('experiment.reconciliationRun.sourceRuns(not-in-experiment-sourceRuns)'));
+const duplicateSourceRuns = clone(recombineOnly);
+duplicateSourceRuns.experiment.sourceRuns = ['run-1', 'run-1'];
+assert.ok(decisionContractIssues(duplicateSourceRuns).includes('experiment.sourceRuns'));
 assert.deepEqual(declaredDecisionContractIssues(common), []);
 const withResearchQuestion = {
   ...clone(common),

@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-ws2-failure-response-analysis-contract",
+  "questionId": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
+  "evidenceRole": "development-discriminator-selection",
+  "decisionPurpose": "scientific-question-discrimination",
+  "targetScope": "Choose the cheapest next WS2 discriminator for the current residual from protocol-compatible compact failure-response evidence; this contract does not estimate solver efficacy.",
+  "independentUnit": "parent",
+  "populationEligibility": {
+    "knownProtocolHash": true,
+    "knownSolverRef": true,
+    "completeMissingnessAccounting": true,
+    "mixedProtocolPolicy": "partition-or-reject-primary-comparison"
+  },
+  "solvedControlPolicy": "required-for-failure-specific-nomination-when-not-naturally-present",
+  "censoringPolicy": "indeterminate-not-negative",
+  "selectionPolicy": "prespecified-stage-a-then-stage-b-only-if-unresolved",
+  "analysisImplementation": "scripts/failure-response-query.mjs",
+  "primaryQuantities": [
+    "parent terminal composition",
+    "action/stage participation and reach",
+    "exact attempt work/node dose by action and stage",
+    "solved parents containing failed attempts",
+    "protocol partitions and identity completeness",
+    "badness support only where reported"
+  ],
+  "allowedRoutes": [
+    "rejection-counterfactual",
+    "first-loss",
+    "producer-consumer-2x2",
+    "allocation-specific-follow-up",
+    "none",
+    "unresolved-needs-compact-diagnostics"
+  ],
+  "stopRule": "Stage A may select a route only under the frozen routing rules in the preflight. If automatic compact response does not discriminate, advance only to the bounded compact-diagnostic Stage B. If Stage B remains diffuse or mirrors controls, route none.",
+  "preflightRef": "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md",
+  "unitTopology": {
+    "observationUnit": "failure-response-record",
+    "assignmentUnit": null,
+    "opportunityUnit": "parent",
+    "dependenceClusterUnit": "parent",
+    "analysisUnit": "parent",
+    "generalizationUnit": "current-residual-parent-under-compatible-protocol"
+  },
+  "instrument": {
+    "kind": "pathfinder-compact-failure-response",
+    "supportPolicy": "reported-fields-only-missing-remains-unknown",
+    "calibrationRef": "reports/2026-09-19-failure-evidence-prehandoff-direct-work-audit-001.md",
+    "calibrationNote": "Automatic compact failure-response is the low-overhead broad instrument; rich capture remains a separate selected microscope.",
+    "schemaVersion": 1,
+    "abstentionConditions": [
+      "unreported compact-response fields remain unknown",
+      "deadline-truncated, harness-error, malformed, missing, and unknown outcomes remain indeterminate",
+      "unknown or mixed protocol/solver identity is ineligible for primary routing",
+      "failure-specific nominations require protocol-compatible solved controls"
+    ],
+    "calibration": {
+      "runId": "35423841173",
+      "semanticParity": true,
+      "representativeCompactWallOverheadPct": 0.46,
+      "representativeRichWallOverheadPct": 10.32,
+      "representativeCompactPayloadBytesApprox": 35700,
+      "representativeRichPayloadBytesApprox": 246000,
+      "caveat": "Hosted timing and payload values are bounded calibration evidence for the tested producer/search shape, not universal constants."
+    }
+  },
+  "currentApplicability": {
+    "basis": "solver-and-protocol-relative",
+    "refreshTriggers": [
+      "solver revision materially changes the relevant action/stage semantics",
+      "protocol hash changes",
+      "current residual population boundary changes materially",
+      "compact failure-response semantics or observer instrumentation changes materially"
+    ]
+  },
+  "populationSelection": "first-eligible-post-instrumentation-population-no-outcome-based-population-selection",
+  "primaryDiscriminator": "cheapest-next-ws2-instrument-route",
+  "negativeResolution": "route-none-does-not-imply-no-mechanism-exists",
+  "reproducibility": {
+    "class": "deterministic-under-identical-immutable-inputs",
+    "note": "The offline reducer and routing envelope are deterministic for the same compact-response inputs and frozen analysis contract; hosted acquisition timing is outside this claim."
+  },
+  "targetEnvelope": {
+    "benchmarkObjective": "inform the next WS2 discriminator choice for the current production residual",
+    "developmentLaboratory": "current-ws2-residual",
+    "confirmationPopulation": "protocol-compatible post-instrumentation compact-response population when available",
+    "broadDeploymentClaim": false
+  },
+  "adaptiveLineage": {
+    "selectionEvent": "A route is chosen only after Stage-A/Stage-B observations are visible.",
+    "descendantEvidenceRole": "development-until-new-precommitment",
+    "consequence": "Any selected rejection, first-loss, allocation, or 2x2 descendant must freeze its own design before treatment outcomes and cannot treat the reconnaissance population as untouched confirmation."
+  },
+  "treatmentFidelity": "not-applicable-routing-screen-no-treatment",
+  "independenceVector": {
+    "sampleData": "parent-clustered; repeated records/attempts within one parent are dependent",
+    "sourceConstruction": "not claimed by this routing screen",
+    "instrumentImplementation": "shared compact failure-response implementation",
+    "analysisMethod": "shared prespecified reducer",
+    "analystModel": "not claimed",
+    "taskFramingPrompt": "shared prespecified WS2 reconnaissance task framing and routing rules; no prompt-level independence is claimed",
+    "authorityContextExposure": "shared current WS2 authorities, preflight, and failure-evidence vocabulary; no authority/context-exposure independence is claimed",
+    "ontologyVocabulary": "shared Pathfinder failure-response vocabulary",
+    "criticalLibraryCode": "analysis and compact-response normalization share Pathfinder research code; no critical-code independence is claimed"
+  },
+  "liveRivals": [
+    "rejection-counterfactual",
+    "first-loss",
+    "producer-consumer-2x2",
+    "allocation-specific-follow-up",
+    "no-expensive-follow-on-yet"
+  ],
+  "prospectiveExpectation": {
+    "expectedShape": "Stage A should select a frozen route only when protocol-compatible parent-level compact evidence exposes a route-specific concentration or contrast strong enough for the preflight rule; otherwise the expected disposition is bounded Stage B or no expensive follow-on.",
+    "surpriseConditions": [
+      "A route-specific signal recurs across independent parents and differs materially from solved controls despite not being the route favored by prior WS2 narrative.",
+      "A protocol-compatible, sufficiently supported population produces a stable cross-parent pattern that none of the frozen route rules can represent."
+    ],
+    "anomalyPolicy": "Protocol/solver identity conflicts, missingness contradictions, malformed rows, integrity failures, or instrument-support violations are anomalies that make evidence ineligible; they are not scientific surprises."
+  }
+}

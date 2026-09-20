@@ -34,7 +34,7 @@
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { buildPopulationIntegrity, hashConfiguration, hashPopulation } from './solver-experiment-contract.mjs';
+import { buildPopulationIntegrity, hashConfiguration, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
 
 const EXECUTION_CONFIG_FIELDS = [
     'levelBlind',
@@ -195,7 +195,7 @@ function main() {
     const totalMs = levels.reduce((sum, l) => sum + (l.totalMs ?? l.elapsedMs ?? 0), 0);
     const levelIds = levels.map(l => l.id ?? l.levelId ?? l.level).map(String);
     const expectedIds = expectedIdsFile
-        ? readFileSync(path.resolve(ROOT, expectedIdsFile), 'utf8').split(/[\s,]+/).map(value => value.trim()).filter(Boolean)
+        ? parseIdentityLines(readFileSync(path.resolve(ROOT, expectedIdsFile), 'utf8'))
         : reports.flatMap(r => r.summary.expectedIds ?? r.population?.expectedIds ?? []);
     const intendedPopulationKnown = expectedIds.length > 0;
     const populationIdentities = intendedPopulationKnown ? expectedIds : levelIds;

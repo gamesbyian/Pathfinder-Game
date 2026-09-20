@@ -52,6 +52,11 @@ function researchQuestionIssues(question) {
   return issues;
 }
 
+export function parseIdentityLines(content) {
+  if (typeof content !== 'string') throw new Error('identity file content must be a string');
+  return content.split(/\r?\n/u).map(value => value.trim()).filter(Boolean);
+}
+
 export function canonicalizeIdentities(ids, { rejectDuplicates = true } = {}) {
   if (!Array.isArray(ids)) throw new Error('population identities must be an array');
   const normalized = ids.map(id => String(id).trim());
@@ -67,12 +72,22 @@ export function canonicalizeIdentities(ids, { rejectDuplicates = true } = {}) {
   return { identities: [...new Set(normalized)].sort(), duplicates };
 }
 
-export function hashPopulation({ kind, identityBasis, identities, corpusIdentity = null, selection = null }) {
+export function hashPopulation({
+  kind,
+  identityBasis,
+  identities,
+  corpusIdentity = null,
+  selection = null,
+  identityCodec = null,
+}) {
   if (!kind || !identityBasis) throw new Error('population kind and identityBasis are required');
+  if (identityCodec != null && !isNonEmptyString(identityCodec)) throw new Error('identityCodec must be null or a non-empty string');
   const canonical = canonicalizeIdentities(identities);
+  const hashInput = { kind, identityBasis, corpusIdentity, selection, identities: canonical.identities };
+  if (identityCodec != null) hashInput.identityCodec = identityCodec;
   return {
     identities: canonical.identities,
-    identityHash: stableHash({ kind, identityBasis, corpusIdentity, selection, identities: canonical.identities }),
+    identityHash: stableHash(hashInput),
   };
 }
 
@@ -87,6 +102,56 @@ export function hashConfiguration(configuration) {
  * semantics, limits, and side-effect posture. Explicit null is allowed for numeric limit fields
  * where "there is no such ceiling" is meaningful; omission/undefined is not.
  */
+export const RECOVERY_RECONCILIATION_KINDS = Object.freeze([
+  'recombine-only',
+  'reanalyze-only',
+  'retry-missing-acquisition',
+]);
+
+export function recoveryProvenanceIssues(experiment) {
+  const issues = [];
+  const sourceRuns = experiment?.sourceRuns;
+  if (sourceRuns != null && (!Array.isArray(sourceRuns)
+      || sourceRuns.some(value => typeof value !== 'string' || !value.trim())
+      || new Set(sourceRuns).size !== sourceRuns.length)) {
+    issues.push('experiment.sourceRuns');
+  }
+
+  const reconciliation = experiment?.reconciliationRun;
+  if (reconciliation == null) return issues;
+  if (!reconciliation || typeof reconciliation !== 'object' || Array.isArray(reconciliation)) {
+    issues.push('experiment.reconciliationRun');
+    return issues;
+  }
+  if (!RECOVERY_RECONCILIATION_KINDS.includes(reconciliation.kind)) {
+    issues.push('experiment.reconciliationRun.kind');
+  }
+  if (typeof reconciliation.preservesExperimentIdentity !== 'boolean') {
+    issues.push('experiment.reconciliationRun.preservesExperimentIdentity');
+  }
+  if (typeof reconciliation.acquisitionRecomputed !== 'boolean') {
+    issues.push('experiment.reconciliationRun.acquisitionRecomputed');
+  }
+  if (!Array.isArray(reconciliation.sourceRuns) || reconciliation.sourceRuns.length === 0
+      || reconciliation.sourceRuns.some(value => typeof value !== 'string' || !value.trim())
+      || new Set(reconciliation.sourceRuns).size !== reconciliation.sourceRuns.length) {
+    issues.push('experiment.reconciliationRun.sourceRuns');
+  }
+  if (Array.isArray(sourceRuns) && Array.isArray(reconciliation.sourceRuns)
+      && reconciliation.sourceRuns.some(value => !sourceRuns.includes(value))) {
+    issues.push('experiment.reconciliationRun.sourceRuns(not-in-experiment-sourceRuns)');
+  }
+  if (['recombine-only', 'reanalyze-only'].includes(reconciliation.kind)
+      && reconciliation.acquisitionRecomputed !== false) {
+    issues.push('experiment.reconciliationRun.acquisitionRecomputed');
+  }
+  if (reconciliation.kind === 'retry-missing-acquisition'
+      && reconciliation.acquisitionRecomputed !== true) {
+    issues.push('experiment.reconciliationRun.acquisitionRecomputed');
+  }
+  return [...new Set(issues)];
+}
+
 export function decisionContractIssues(contract) {
   const issues = [];
   const experiment = contract?.experiment;
@@ -96,6 +161,7 @@ export function decisionContractIssues(contract) {
   const sideEffects = contract?.sideEffects;
 
   issues.push(...researchQuestionIssues(contract?.researchQuestion));
+  issues.push(...recoveryProvenanceIssues(experiment));
 
   for (const field of ['workflowFamily', 'producer', 'entrypoint']) {
     if (!isNonEmptyString(experiment?.[field])) issues.push(`experiment.${field}`);
@@ -206,6 +272,7 @@ export function buildPopulationIntegrity(expectedIds, rows) {
     && outcomes.unknown === 0;
 
   return {
+    expectedIds: expected,
     expectedCount: expected.length,
     observedCount: (rows ?? []).length,
     duplicateIds: actual.duplicates,

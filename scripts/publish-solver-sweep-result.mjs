@@ -291,6 +291,11 @@ const contract = {
     corpusIdentity: declaredContract?.population?.corpusIdentity ?? primaryDocument?.population?.corpusIdentity ?? null,
     selection: declaredContract?.population?.selection ?? primaryDocument?.population?.selection ?? null,
     researchBlock: declaredContract?.population?.researchBlock ?? primaryDocument?.population?.researchBlock ?? null,
+    independentUnit: declaredContract?.population?.independentUnit
+      ?? primaryDocument?.population?.independentUnit
+      ?? declaredContract?.population?.researchBlock?.independentUnit
+      ?? primaryDocument?.population?.researchBlock?.independentUnit
+      ?? null,
     identityHash: populationIdentity,
     expectedCount: populationIntegrity?.expectedCount ?? null,
     observedCount: populationIntegrity?.observedCount ?? null,

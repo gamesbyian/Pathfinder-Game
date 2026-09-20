@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 
 import { auditResearchIntegration } from './research-integration-audit-lib.mjs';
+import { buildResearchRelations } from './research-relations-lib.mjs';
 
 const result = auditResearchIntegration(process.cwd());
 assert.equal(result.errorCount, 0, JSON.stringify(result.errors, null, 2));
@@ -12,6 +13,10 @@ assert.ok(result.semanticJoinCoverage.authoredAssetRelationships >= 16);
 assert.ok(result.semanticJoinCoverage.questionsWithPremiseRefs >= 5);
 assert.ok(result.semanticJoinCoverage.questionsWithMeasurementOpportunities >= 4);
 assert.ok(result.errorCount === 0);
+const prebuiltModel = buildResearchRelations(process.cwd(), { discoverArtifacts: true });
+const prebuiltResult = auditResearchIntegration(process.cwd(), { model: prebuiltModel });
+assert.deepEqual(prebuiltResult, result,
+    'integration audit must be identical when the inventory supplies the already-built relation model');
 
 
 const run = spawnSync(process.execPath, ['scripts/research-integration-audit.mjs'], {

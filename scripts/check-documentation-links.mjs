@@ -6,6 +6,8 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { readRepositoryText, repositoryPathKind } from './repository-file-view.mjs';
 import { validateSolverResearchDataAssets } from './solver-research-data-assets-lib.mjs';
+import { currentDocumentationMarkdownPaths } from './documentation-index-lib.mjs';
+import { INVESTIGATION_REPORT_STATUSES } from './investigation-report-metadata.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: ROOT })
@@ -134,18 +136,11 @@ for (const issue of validateSolverResearchDataAssets(ROOT)) {
 // the authority boundary: unindexed legacy design notes and dated reports remain searchable, but
 // do not make historical commands/paths current contracts merely by existing in Git. An index may
 // still link to history for navigation; that does not promote the historical file into current truth.
-const docsIndex = readFileSync(resolve(ROOT, 'docs/README.md'), 'utf8');
 const currentAuthorityFiles = new Set([
   'AGENTS.md', 'CLAUDE.md', 'DEVELOPER_REFERENCE.md', 'docs/README.md', 'reports/README.md',
   'scripts/README.md', '.github/workflows/README.md', 'modules/solver/README.md',
+  ...currentDocumentationMarkdownPaths(ROOT).filter(target => !historicalDocumentation(target)),
 ]);
-for (const match of docsIndex.matchAll(markdownLink)) {
-  const destination = match[1].split('#', 1)[0];
-  if (destination && !/^[a-z][a-z0-9+.-]*:/i.test(destination)) {
-    const target = relative(ROOT, resolve(ROOT, 'docs', destination)).split('\\').join('/');
-    if (target.endsWith('.md') && !historicalDocumentation(target)) currentAuthorityFiles.add(target);
-  }
-}
 
 // Current reference docs must name actual TypeScript source paths, not the .js import specifiers
 // used inside TypeScript source. Import statements are outside this Markdown-only authority set.
@@ -228,7 +223,7 @@ for (const name of readdirSync(workflowDir).filter((name) => /\.ya?ml$/i.test(na
   if (!workflowIndex.includes(name)) failures.push(`.github/workflows/${name}: not named in .github/workflows/README.md`);
 }
 
-const reportStatusValues = 'active|concluded-positive|concluded-negative|inconclusive|superseded|cancelled';
+const reportStatusValues = INVESTIGATION_REPORT_STATUSES.join('|');
 const reportMetadataPattern = new RegExp(
   `^# .+\\r?\\n\\r?\\n> \\*\\*Status:\\*\\* (${reportStatusValues})\\r?\\n` +
   '> \\*\\*Last evidence:\\*\\* \\d{4}-\\d{2}-\\d{2} — .+\\r?\\n' +

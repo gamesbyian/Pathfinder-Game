@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { buildResearchEnrichmentLink } from './research-enrichment-link-lib.mjs';
 
 const tempDir = mkdtempSync(path.join(tmpdir(), 'pathfinder-research-enrichment-link-'));
 try {
@@ -10,6 +11,16 @@ try {
     const sourcePath = path.join(tempDir, 'exact.json');
     const outPath = path.join(tempDir, 'link.json');
     const populationIdentity = `sha256:${'4'.repeat(64)}`;
+    const constructorFixture = {
+        sourceBlockArtifact: blockPath,
+        sourceArtifact: sourcePath,
+        researchEnrichmentKind: 'exact',
+        populationIdentity,
+        researchBlock: null,
+        stateRef: 'state-1',
+        runRef: 'run-1',
+        createdAt: '2026-09-19T00:00:00.000Z',
+    };
     const researchBlock = {
         blockId: 'LINK-BLOCK',
         questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
@@ -25,6 +36,18 @@ try {
         consumptionEvents: [],
     };
     writeFileSync(blockPath, JSON.stringify({ populationIdentity, researchBlock }));
+    const constructed = buildResearchEnrichmentLink({ ...constructorFixture, researchBlock });
+    assert.equal(constructed.researchEnrichmentKind, 'exact');
+    assert.equal(constructed.populationIdentity, populationIdentity);
+    assert.throws(() => buildResearchEnrichmentLink({
+        ...constructorFixture,
+        researchBlock,
+        researchEnrichmentKind: 'unknown-kind',
+    }), /researchEnrichmentKind/);
+    assert.throws(() => buildResearchEnrichmentLink({
+        ...constructorFixture,
+        researchBlock: { ...researchBlock, blockId: '' },
+    }), /invalid research block/);
     writeFileSync(sourcePath, JSON.stringify({ kind: 'test-exact-result', rows: [] }));
 
     const run = spawnSync(process.execPath, [
