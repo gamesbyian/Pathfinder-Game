@@ -45,6 +45,27 @@ function tableRows(source, heading) {
     return rows.slice(1);
 }
 
+const WORKSTREAM_EXECUTION_STATES = Object.freeze([
+    'active',
+    'supporting',
+    'method-complete',
+    'subsumed',
+    'closed',
+    'on-demand',
+]);
+
+function workstreamStatusFromExecutionState(value) {
+    switch (value) {
+        case 'active': return 'active';
+        case 'supporting': return 'pending';
+        case 'method-complete': return 'completed';
+        case 'subsumed': return 'superseded';
+        case 'closed': return 'rejected';
+        case 'on-demand': return 'pending';
+        default: throw new Error(`unknown workstream execution state: ${value}`);
+    }
+}
+
 const EXPERIMENT_PROMOTION_STATES = Object.freeze([
     'closed',
     'open',
@@ -200,15 +221,34 @@ export function buildResearchStatusIndex(root) {
     const workstreamsSource = existsSync(path.join(root, workstreamsPath)) ? readFileSync(path.join(root, workstreamsPath), 'utf8') : '';
     // Preserve the public `queue` collection name for index consumers, but source it from the
     // current authority. Workstream IDs are stable identifiers, explicitly not execution ranks.
-    const workstreamRows = tableRows(workstreamsSource, '## Workstream state').length
-        ? tableRows(workstreamsSource, '## Workstream state')
-        : tableRows(workstreamsSource, '## Active workstreams');
-    const queue = workstreamRows.map(([id, question, state, gate, questionRef]) => ({
-        topicId: `workstream-${id}`, workstreamId: /^\d+$/u.test(id) ? Number(id) : id, question,
-        status: normalizedState(state), authority: workstreamsPath, authorityKind: 'workstreams',
-        state, remainingGate: gate,
-        questionRef: questionRef && questionRef !== '—' ? questionRef.replaceAll('`', '').trim() : null,
-    }));
+    const structuredWorkstreamRows = tableRows(workstreamsSource, '## Workstream state');
+    const legacyWorkstreamRows = structuredWorkstreamRows.length ? [] : tableRows(workstreamsSource, '## Active workstreams');
+    const queue = structuredWorkstreamRows.length
+        ? structuredWorkstreamRows.map(([id, question, executionStateRaw, state, gate, questionRef]) => {
+            const executionState = String(executionStateRaw ?? '').replaceAll('`', '').trim();
+            if (!WORKSTREAM_EXECUTION_STATES.includes(executionState)) {
+                throw new Error(`${workstreamsPath}: unknown workstream execution state ${executionState || '(missing)'} for ${id}`);
+            }
+            return {
+                topicId: `workstream-${id}`,
+                workstreamId: /^\d+$/u.test(id) ? Number(id) : id,
+                question,
+                executionState,
+                status: workstreamStatusFromExecutionState(executionState),
+                authority: workstreamsPath,
+                authorityKind: 'workstreams',
+                state,
+                remainingGate: gate,
+                questionRef: questionRef && questionRef !== '—' ? questionRef.replaceAll('`', '').trim() : null,
+            };
+        })
+        : legacyWorkstreamRows.map(([id, question, state, gate, questionRef]) => ({
+            topicId: `workstream-${id}`, workstreamId: /^\d+$/u.test(id) ? Number(id) : id, question,
+            executionState: null,
+            status: normalizedState(state), authority: workstreamsPath, authorityKind: 'workstreams',
+            state, remainingGate: gate,
+            questionRef: questionRef && questionRef !== '—' ? questionRef.replaceAll('`', '').trim() : null,
+        }));
     const ledgerPath = 'docs/solver-opt-in-experiment-ledger.md';
     const ledgerSource = existsSync(path.join(root, ledgerPath)) ? readFileSync(path.join(root, ledgerPath), 'utf8') : '';
     const experiments = tableRows(ledgerSource, '## Current production-default-OFF flags')
@@ -234,6 +274,7 @@ export function buildResearchStatusIndex(root) {
 
 function compactEntry(kind, entry) {
     if (kind === 'queue') return { kind, id: entry.topicId, workstreamId: entry.workstreamId ?? null, status: entry.status,
+        executionState: entry.executionState ?? null,
         question: entry.question, questionRef: entry.questionRef ?? null, gate: entry.remainingGate, authority: entry.authority };
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
         promotionState: entry.promotionState ?? null,
