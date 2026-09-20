@@ -152,6 +152,13 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
     failures.push(`${name}: writes experiment-contract.json directly; use scripts/write-solver-experiment-contract.mjs so execution identity and shared v3 validation cannot drift`);
   }
 
+  const consumesExperimentContract = /--contract-file=[^\n]*experiment-contract\.json/iu.test(source);
+  const hasExperimentContractOwner = /write-solver-experiment-contract\.mjs/iu.test(source)
+    || (/validate-reconciliation-sources\.mjs/iu.test(source) && /--contract-out=[^\n]*experiment-contract\.json/iu.test(source));
+  if (consumesExperimentContract && !hasExperimentContractOwner) {
+    failures.push(`${name}: publishes experiment-contract.json without a recognized contract constructor in this workflow`);
+  }
+
   // Workflow shell steps are a live consumer surface. A renamed/deleted local script must not
   // survive here merely because package.json and unit tests never execute that workflow.
   for (const match of source.matchAll(/\b(?:node|tsx)\s+((?:\.\/)?scripts\/[A-Za-z0-9_./-]+\.(?:mjs|js|cjs|ts|tsx))/g)) {
