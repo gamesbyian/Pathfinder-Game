@@ -562,9 +562,10 @@
       "answeredBy": [
         "reports/2026-09-17-separator-decomposition-census-result-001.md",
         "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
-        "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md"
+        "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md",
+        "reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md"
       ],
-      "result": "C0 static interface identity plus current side/region is decisively insufficient on the frozen Lane-A population: 581 cases / 546 decisive labels, with 3 repeated signatures mixing LIVE/DEAD across 3 independent parents (R02792, R02996, R03156); 487/546 decisive rows remain in repeated C0 signatures across 94 parents. The original 2026-09-19 cut-only reducer omitted the prespecified side/region field and is superseded by the corrected reduction. The nested contract remains mixed/open at C1 boundary kinematics on the same frozen population; no resampling is earned.",
+      "result": "C0 remained mixed under cut + endpoint-side identity. C1 boundary kinematics substantially reduced ambiguity without exploding the representation: 195/546 decisive rows (35.7%) remain in repeated signatures across 58 independent parents, but one same-parent 2-row R02996 signature still mixes exact LIVE/DEAD. C1 is therefore insufficient and the frozen nested contract advances to C2 global accounting on the same 581 cases/retained labels; no C1 post-outcome feature repair is allowed.",
       "constrainedBy": [
         "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
         "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
@@ -573,8 +574,8 @@
       ],
       "constrains": [
         "C0 is closed insufficient; do not repeat raw cut/interface identity or reinterpret its mostly-pure groups as a consumer.",
-        "Proceed in the frozen nested order to C1 boundary kinematics on the same 581-case population before adding C2-C4 fields.",
-        "Treat near-unique/full-prefix signatures or unsound tied-case topology shortcuts as contract explosion, not success."
+        "Treat near-unique/full-prefix signatures or unsound tied-case topology shortcuts as contract explosion, not success.",
+        "C1 is frozen and concluded mixed; proceed in the prespecified nested order to C2 global accounting on the same 581-case population before adding C3-C4 fields."
       ],
       "reopensOn": null,
       "premiseRefs": [
