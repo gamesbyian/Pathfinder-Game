@@ -65,6 +65,8 @@ try {
   assert.equal(run.status, 0, run.stderr);
   const result = JSON.parse(run.stdout);
   assert.equal(result.execution.status, 'completed');
+  assert.match(result.execution.implementationHash, /^sha256:[0-9a-f]{64}$/u);
+  assert.match(result.execution.inputArtifacts[0].contentHash, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(result.scientificDisposition.status, 'eligible-for-prespecified-routing');
   assert.equal(result.scientificDisposition.unitTopology.analysisUnit, 'parent');
   assert.equal(result.scientificDisposition.unitTopology.observationUnit, 'failure-response-record');
@@ -109,6 +111,8 @@ try {
   assert.equal(claim.decisionDisposition.route, 'none');
   assert.equal(claim.populationScope.unitTopology.analysisUnit, 'parent');
   assert.match(claim.analysisIdentity, /^sha256:[0-9a-f]{64}$/u);
+  assert.match(claim.derivation.edges.find(edge => edge.kind === 'input-artifact').contentHash, /^sha256:[0-9a-f]{64}$/u);
+  assert.match(claim.derivation.edges.find(edge => edge.kind === 'analysis-implementation').contentHash, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(claim.reverseInvalidation.policy, 'flag-material-descendants-do-not-auto-rewrite');
   const contractImpact = ws2FailureResponseInvalidationImpact(claim, {
     kind: 'analysis-contract',
