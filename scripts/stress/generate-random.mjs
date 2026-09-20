@@ -22,8 +22,7 @@
  *     None are deliberately left out or under-weighted relative to the others.
  *   - no imports from modules/solver/attempts.ts, policy.ts, routingRegime.ts, or any other
  *     solver-STRATEGY module, and no audit-history-fitted model. The only solver-adjacent
- *     import { validateResearchEvaluationEvidenceRole } from '../research-evaluation-evidence-role-lib.mjs';
-import is normalizeRawLevel (pure wire-format normalization, required by the
+ *     import is normalizeRawLevel (pure wire-format normalization, required by the
  *     referee) — the solver's SEARCH never runs during generation, same as before, but
  *     here nothing about the solver's decision-making is read at all, not even for
  *     labeling.
@@ -76,6 +75,7 @@ import is normalizeRawLevel (pure wire-format normalization, required by the
  * levels too, not just the published/first-stress-corpus pools.
  */
 /* global structuredClone */
+import { validateResearchEvaluationEvidenceRole } from '../research-evaluation-evidence-role-lib.mjs';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
