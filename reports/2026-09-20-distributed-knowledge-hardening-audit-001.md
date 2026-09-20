@@ -126,6 +126,8 @@ The fix was not to weaken the validator.
 
 Explanatory meaning remains in the contract's semantic fields.
 
+The integration audit now also validates the field's *shape*: any authority value that begins as a repository path must be one exact path token rather than prose with conjunctions or trailing explanation.
+
 ### Question lifecycle spelling was copied into a transaction fixture
 
 The lifecycle owner already defines `active-candidate` and maps it to lifecycle class `active`.
@@ -138,6 +140,13 @@ Rather than merely replacing one literal with another, the fixture now derives t
 - `researchQuestionLifecycleClass()`.
 
 The test therefore asks for the semantic class it needs rather than today's spelling.
+
+The same pass found the stronger version of the defect in current authority surfaces:
+
+- `docs/solver-research-question-relations.md` still named the removed `active-diagnostic` token;
+- `research-question-authority-audit-lib.mjs` still inferred activity with `state.startsWith('active')` even though the shared lifecycle classifier already existed.
+
+Those are now repaired together. The authority audit consumes `researchQuestionLifecycleClass()`, and it checks the human State-semantics section against the exact canonical state vocabulary. The ownership guard forbids reintroducing prefix-based active-state inference there.
 
 ### Contract wording was copied into descendant tests
 
