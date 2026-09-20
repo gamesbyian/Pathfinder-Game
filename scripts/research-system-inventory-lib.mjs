@@ -470,8 +470,73 @@ export function buildResearchSystemInventory(root = process.cwd()) {
 }
 
 
+function compactBriefValue(value, fallback = 'none') {
+    const text = String(value ?? '').replace(/\s+/gu, ' ').trim();
+    return text || fallback;
+}
+
+export function renderResearchSystemBrief(inventory) {
+    const lines = [
+        '# Solver research brief',
+        '',
+        '> Derived read-only orientation. It does not rank work or replace the owning authorities.',
+        `> Priority authority: \`${inventory.authority.priorityAuthority}\``,
+        '',
+        '## Current state',
+        `- queue: ${inventory.currentState.activeQueueEntries} active / ${inventory.currentState.queueEntries} total entries`,
+        `- questions: ${inventory.currentState.activeQuestions} active / ${inventory.currentState.questions} total`,
+        `- evidence: ${inventory.currentState.evidenceReports} reports; ${inventory.currentState.durableEvidenceBundles} durable bundles; ${inventory.currentState.researchBlocks} research blocks`,
+        `- integration health: ${inventory.integrationHealth.errorCount} errors; ${inventory.integrationHealth.warningCount} warnings`,
+        '',
+        '## Live queue',
+    ];
+
+    const liveQueue = inventory.frontDoorInputs.liveQueue.slice(0, 8);
+    if (liveQueue.length === 0) {
+        lines.push('- none');
+    } else {
+        for (const row of liveQueue) {
+            const id = row.workstreamId == null ? 'workstream ?' : `WS${row.workstreamId}`;
+            const questionRef = row.questionRef ? ` / ${row.questionRef}` : '';
+            lines.push(`- ${id}${questionRef} [${compactBriefValue(row.state)}]: ${compactBriefValue(row.question)}; gate: ${compactBriefValue(row.remainingGate)}`);
+        }
+    }
+
+    lines.push('', '## Recent structured closeouts');
+    const closeouts = inventory.frontDoorInputs.structuredCloseouts.slice(0, 8);
+    if (closeouts.length === 0) {
+        lines.push('- none yet');
+    } else {
+        for (const row of closeouts) {
+            const question = row.joins?.researchQuestion ? ` / ${row.joins.researchQuestion}` : '';
+            lines.push(`- ${row.lastEvidenceDate} ${row.status}${question}: ${compactBriefValue(row.decision)} (gate: ${compactBriefValue(row.remainingGate)}) [${row.path}]`);
+        }
+    }
+
+    lines.push('', '## Deferred/reopen questions');
+    const deferred = inventory.frontDoorInputs.deferredReopenQuestions.slice(0, 6);
+    if (deferred.length === 0) {
+        lines.push('- none');
+    } else {
+        for (const row of deferred) {
+            lines.push(`- ${row.id}: ${compactBriefValue(row.question)}; reopen: ${compactBriefValue(row.reopensOn)}`);
+        }
+    }
+
+    lines.push('', '## Consolidation signals');
+    lines.push(`- authority findings: ${inventory.findings.authority.length}`);
+    lines.push(`- lifecycle findings: ${inventory.findings.lifecycle.length}`);
+    lines.push(`- fragile/unknown prose findings: ${inventory.findings.fragileProse.length}`);
+    lines.push(`- structured closeouts: ${inventory.diagnostics.structuredCloseoutCount}; malformed: ${inventory.diagnostics.closeoutParseErrorCount}`);
+    lines.push(`- shared implementation dependencies surfaced: ${inventory.sharedImplementationDependencies.length}`);
+
+    return lines.join('\n') + '\n';
+}
+
+
 export function researchSystemInventoryView(inventory, view = 'all') {
     if (view === 'all') return inventory;
+    if (view === 'brief') return renderResearchSystemBrief(inventory);
     if (view === 'architecture') {
         return {
             schemaVersion: inventory.schemaVersion,
