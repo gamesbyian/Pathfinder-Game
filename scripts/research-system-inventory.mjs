@@ -12,8 +12,11 @@ const rendered = researchSystemInventoryView(inventory, viewArg);
 
 if (outArg) {
     const output = path.resolve(outArg);
-    writeFileSync(output, JSON.stringify(rendered, null, 2) + '\n');
+    const payload = typeof rendered === 'string' ? rendered : JSON.stringify(rendered, null, 2) + '\n';
+    writeFileSync(output, payload);
     console.log(JSON.stringify({ output, ...inventory.currentState, diagnostics: inventory.diagnostics }, null, 2));
+} else if (typeof rendered === 'string') {
+    process.stdout.write(rendered);
 } else {
     console.log(JSON.stringify(rendered, null, 2));
 }
