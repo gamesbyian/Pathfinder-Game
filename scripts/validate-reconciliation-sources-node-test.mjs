@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { validateReconciliationSources } from './validate-reconciliation-sources.mjs';
+import { buildReconciliationContract, validateReconciliationSources } from './validate-reconciliation-sources.mjs';
 
 const clone = value => JSON.parse(JSON.stringify(value));
 const manifest = {
@@ -47,6 +47,21 @@ assert.equal(result.population.corpusIdentity, `sha256:${'c'.repeat(64)}`);
 assert.equal(result.sourceExperiment.producer, 'solver-level-blind-targeted-sweep.yml');
 assert.match(result.protocolHash, /^sha256:[0-9a-f]{64}$/);
 assert.match(result.sourceSetHash, /^sha256:[0-9a-f]{64}$/);
+
+const reconciliation = buildReconciliationContract(result, {
+  runId: '99',
+  runAttempt: '2',
+  reconciliationSha: 'f'.repeat(40),
+});
+assert.deepEqual(reconciliation.experiment.sourceRuns, ['1', '2']);
+assert.equal(reconciliation.experiment.resolvedSha, 'a'.repeat(40), 'recombine preserves source execution identity');
+assert.equal(reconciliation.experiment.reconciliationRun.kind, 'recombine-only');
+assert.equal(reconciliation.experiment.reconciliationRun.preservesExperimentIdentity, true);
+assert.equal(reconciliation.experiment.reconciliationRun.acquisitionRecomputed, false);
+assert.deepEqual(reconciliation.experiment.reconciliationRun.sourceRuns, ['1', '2']);
+assert.equal(reconciliation.experiment.reconciliationRun.resolvedSha, 'f'.repeat(40));
+assert.equal(reconciliation.population.kind, 'explicit-reconciled-population');
+assert.equal(reconciliation.execution.schedulerMode, 'production');
 
 const reversed = validateReconciliationSources([{ runId: '2', manifest: secondManifest }, { runId: '1', manifest }]);
 assert.equal(reversed.protocolHash, result.protocolHash, 'source ordering must not change the protocol identity');

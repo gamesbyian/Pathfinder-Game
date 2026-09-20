@@ -18,7 +18,6 @@ const expected = new Map([
 // migration rather than a blind mechanical rewrite. Keep the debt explicit and prevent new manual
 // contract writers from appearing elsewhere.
 const LEGACY_MANUAL_EXPERIMENT_CONTRACT_WORKFLOWS = new Set([
-  'solver-combine-sweep-runs.yml',
   'solver-highbudget-unsolved-sweep.yml',
 ]);
 

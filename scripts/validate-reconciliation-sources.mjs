@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { assertCompatibleExperiments, decisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
+import { assertCompatibleExperiments, decisionContractIssues, declaredDecisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
 
 function sourceContract(manifest, runId) {
   const resolvedSha = manifest?.experiment?.resolvedSha ?? manifest?.sha ?? null;
@@ -102,10 +102,50 @@ export function validateReconciliationSources(sources) {
   };
 }
 
+
+export function buildReconciliationContract(provenance, {
+  runId = null,
+  runAttempt = null,
+  reconciliationSha = null,
+} = {}) {
+  const sourceRuns = (provenance?.sources ?? []).map(source => String(source?.runId ?? '').trim()).filter(Boolean);
+  const contract = {
+    experiment: {
+      ...(provenance?.sourceExperiment ?? {}),
+      resolvedSha: provenance?.resolvedSha ?? null,
+      configurationHash: provenance?.configurationHash ?? null,
+      sourceRuns,
+      sourceProtocolHash: provenance?.protocolHash ?? null,
+      reconciliationRun: {
+        kind: 'recombine-only',
+        preservesExperimentIdentity: true,
+        acquisitionRecomputed: false,
+        sourceRuns,
+        runId,
+        runAttempt,
+        resolvedSha: reconciliationSha,
+        producer: 'solver-combine-sweep-runs.yml',
+        entrypoint: 'scripts/combine-solver-sweep-reports.mjs',
+      },
+    },
+    population: {
+      kind: 'explicit-reconciled-population',
+      identityBasis: provenance?.population?.identityBasis ?? null,
+      corpusIdentity: provenance?.population?.corpusIdentity ?? null,
+    },
+    execution: provenance?.execution ?? null,
+    limits: provenance?.limits ?? null,
+    sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
+  };
+  const issues = declaredDecisionContractIssues(contract);
+  if (issues.length) throw new Error(`invalid reconciliation experiment contract: ${issues.join(', ')}`);
+  return contract;
+}
+
 function main() {
   const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('='))
     .map(arg => { const [key, ...rest] = arg.slice(2).split('='); return [key, rest.join('=')]; }));
-  const root = args.get('sources-dir'); const out = args.get('out');
+  const root = args.get('sources-dir'); const out = args.get('out'); const contractOut = args.get('contract-out') || null;
   if (!root || !out) throw new Error('--sources-dir=<dir> and --out=<file> are required');
   const sources = fs.readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => {
     const manifestPath = path.join(root, entry.name, 'manifest.json');
@@ -114,6 +154,15 @@ function main() {
   });
   const result = validateReconciliationSources(sources);
   fs.writeFileSync(out, `${JSON.stringify(result, null, 2)}\n`);
+  if (contractOut) {
+    const contract = buildReconciliationContract(result, {
+      runId: process.env.GITHUB_RUN_ID ?? null,
+      runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
+      reconciliationSha: process.env.GITHUB_SHA ?? null,
+    });
+    fs.mkdirSync(path.dirname(contractOut), { recursive: true });
+    fs.writeFileSync(contractOut, `${JSON.stringify(contract, null, 2)}\n`);
+  }
   console.log(`Validated ${sources.length} compatible source run manifests (${result.sourceSetHash}; protocol ${result.protocolHash}).`);
 }
 

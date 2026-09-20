@@ -81,8 +81,12 @@ jobs:
             fi
           done
 
-      - name: Validate source-run provenance and scientific-protocol compatibility
-        run: node scripts/validate-reconciliation-sources.mjs --sources-dir=logs/solver-combined/sources --out=logs/solver-combined/source-provenance.json
+      - name: Validate source-run provenance and build typed recombination lineage
+        run: >-
+          node scripts/validate-reconciliation-sources.mjs
+          --sources-dir=logs/solver-combined/sources
+          --out=logs/solver-combined/source-provenance.json
+          --contract-out=logs/solver-combined/experiment-contract.json
 
       - name: Combine every source run's report into one
         shell: bash
@@ -101,38 +105,6 @@ jobs:
             --expected-ids="${{ inputs.expected_ids_file }}" \
             --result=logs/solver-combined/combined.json \
             --integrity-out=logs/solver-combined/population-integrity.json
-
-      - name: Build reconciliation experiment contract
-        shell: bash
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const provenance = JSON.parse(fs.readFileSync('logs/solver-combined/source-provenance.json'));
-          fs.writeFileSync('logs/solver-combined/experiment-contract.json', `${JSON.stringify({
-            experiment: {
-              ...provenance.sourceExperiment,
-              resolvedSha: provenance.resolvedSha,
-              configurationHash: provenance.configurationHash,
-              sourceRuns: provenance.sources,
-              sourceProtocolHash: provenance.protocolHash,
-              reconciliationRun: {
-                runId: process.env.GITHUB_RUN_ID ?? null,
-                runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
-                resolvedSha: process.env.GITHUB_SHA ?? null,
-                producer: 'solver-combine-sweep-runs.yml',
-                entrypoint: 'scripts/combine-solver-sweep-reports.mjs',
-              },
-            },
-            population: {
-              kind: 'explicit-reconciled-population',
-              identityBasis: provenance.population.identityBasis,
-              corpusIdentity: provenance.population.corpusIdentity,
-            },
-            execution: provenance.execution,
-            limits: provenance.limits,
-            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
-          }, null, 2)}\n`);
-          NODE
 
       - name: Print a solved-count summary to the job log
         if: always()
