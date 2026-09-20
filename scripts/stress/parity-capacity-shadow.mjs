@@ -110,7 +110,6 @@ for (const entry of selected) {
             timeBudgetMs: budgetMs,
             workBudget,
             strictTotalWorkBudget: true,
-            repairAdditiveBudgetMultiplierOverride: 0,
             parityCapacityObserver: observer,
         });
     } catch (error) {
@@ -168,8 +167,7 @@ const report = {
         workBudget,
         wallDeadlineMs: budgetMs,
         strictTotalWorkBudget: true,
-        repairAdditiveBudgetMultiplierOverride: 0,
-        solverPath: 'real sequential production solveLevel ladder; observer-only H2 instrumentation',
+        solverPath: 'real sequential production solveLevel ladder under one strict whole-solve work cap; observer-only H2 instrumentation',
         observerEffect: 'grid scan after existing connectivity flood fill; no canonical work units charged and no solver decision reads observer output',
     },
     resolutionInputs: {
@@ -177,7 +175,7 @@ const report = {
         reach: { levelsWithObserverRecords: totals.observerReached, eligibleNoTwist: totals.eligibleNoTwist },
         participation: { evaluatedStates: totals.evaluatedStates },
         measurementSupport: { status: 'supported', basis: 'observer reads the exact reached set already used by isConnected; synthetic incremental witness covered by topology.test.ts' },
-        fidelity: { status: 'supported', basis: 'sequential production solveLevel with no ablation changes and fixed whole-solve work cap' },
+        fidelity: { status: 'supported', basis: 'sequential production solveLevel with no ablation/profile changes and a fixed whole-solve work cap; ordinary additive-tier policy remains intact inside that cap' },
         coverage: { completedWithoutDeadline: totals.completedWithoutDeadline, selected: totals.selected },
         censoring: { deadlineTruncated: rows.filter(row => row.deadlineTruncated).length, errors: rows.filter(row => row.status === 'error').length },
     },
