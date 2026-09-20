@@ -307,7 +307,7 @@ try {
     '--decision-rationale=Prespecified Stage A route test',
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.notEqual(invalidRoute.status, 0);
-  assert.match(`${invalidRoute.stdout}${invalidRoute.stderr}`, /scientifically ineligible evidence/u);
+  assert.match(`${invalidRoute.stdout}${invalidRoute.stderr}`, /resolution is blocked/u);
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }
