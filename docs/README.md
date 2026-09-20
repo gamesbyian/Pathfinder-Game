@@ -127,7 +127,7 @@ Retained for evidence/history and targeted archaeology, not as current authoriti
 - [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) — completed PR #1740 remediation program.
 - [`solver-workflow-remediation-implementation-handoff.md`](solver-workflow-remediation-implementation-handoff.md) — historical implementation contract for that program.
 - [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) — completed closeout/review record.
-- [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) — completed research-system consolidation/epistemic-coverage program; retained for history and maintenance rationale.
+- [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) — completed research-system consolidation program; history/maintenance rationale.
 
 Superseded plans, concluded experiments, and old authority states live in [`archive/snapshots/`](archive/snapshots/README.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
 
