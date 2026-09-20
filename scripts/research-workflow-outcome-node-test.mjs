@@ -21,6 +21,21 @@ assert.throws(() => validateResearchWorkflowOutcome({ outcome: 'success', reason
 assert.throws(() => validateResearchWorkflowOutcome({ outcome: 'completed-negative', reason: '' }), /non-empty/);
 assert.throws(() => validateResearchWorkflowOutcome({ schemaVersion: 2, outcome: 'completed-negative', reason: 'no' }), /schemaVersion/);
 assert.throws(() => validateResearchWorkflowOutcome({ outcome: 'harness-error', reason: 'line one\nline two' }), /single line/);
+const bound = validateResearchWorkflowOutcome({
+  outcome: 'completed-positive',
+  reason: 'bound verdict',
+  binding: {
+    populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+    resultConfigurationHashes: [`sha256:${'c'.repeat(64)}`, `sha256:${'b'.repeat(64)}`],
+  },
+});
+assert.deepEqual(bound.binding, {
+  populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+  resultConfigurationHashes: [`sha256:${'b'.repeat(64)}`, `sha256:${'c'.repeat(64)}`],
+});
+assert.throws(() => validateResearchWorkflowOutcome({
+  outcome: 'completed-positive', reason: 'bad binding', binding: { populationIdentityHash: 'bad' },
+}), /populationIdentityHash/);
 
 const primary = path.join(temp, 'primary.json');
 writeFileSync(primary, '{"levels":[]}\n');
