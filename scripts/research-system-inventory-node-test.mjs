@@ -24,15 +24,15 @@ assert.ok(inventory.planLifecycle.some(row =>
     row.archived === false &&
     row.status?.includes('proposed implementation plan')));
 assert.ok(inventory.documentation.currentReferenceCount > 0, 'inventory must derive the docs current-reference index');
-assert.ok(inventory.documentation.currentReferences.some(row =>
-    row.path === 'docs/solver-workflow-evidence-remediation-plan.md'));
-const completedCurrentRef = inventory.planLifecycle.find(row =>
+assert.equal(inventory.documentation.currentReferences.some(row =>
+    row.path === 'docs/solver-workflow-evidence-remediation-plan.md'), false,
+    'completed remediation plan should remain navigable as history without being a current reference');
+const completedHistoricalPlan = inventory.planLifecycle.find(row =>
     row.path === 'docs/solver-workflow-evidence-remediation-plan.md');
-assert.equal(completedCurrentRef?.kind, 'plan');
-assert.equal(completedCurrentRef?.currentReference, true);
-assert.equal(completedCurrentRef?.appearsConcluded, true);
-assert.equal(completedCurrentRef?.currentReferenceMismatch, true,
-    'completed historical plans still routed as current references should be visible as retrieval-entropy findings');
+assert.equal(completedHistoricalPlan?.kind, 'plan');
+assert.equal(completedHistoricalPlan?.currentReference, false);
+assert.equal(completedHistoricalPlan?.appearsConcluded, true);
+assert.equal(completedHistoricalPlan?.currentReferenceMismatch, false);
 assert.ok(inventory.planLifecycle.some(row => row.kind === 'preflight'),
     'lifecycle inventory must cover preflights, not only *-plan.md files');
 assert.ok(inventory.planLifecycle.some(row => row.kind === 'handoff'),
