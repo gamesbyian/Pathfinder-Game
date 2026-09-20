@@ -95,9 +95,15 @@ const allResults = deduped.results.map(r => {
 });
 const hasEqualWork = allResults.some(r => r.tier === 'EW1');
 const planJoin = planDocument
-    ? validateTechniqueCensusPlanJoin(planDocument, allResults, { requireComplete: false })
+    ? validateTechniqueCensusPlanJoin(planDocument, allResults, {
+        requireComplete: false,
+        allowLegacyOmissions: Boolean(COMBINED_FILE),
+    })
     : null;
 console.log(`technique-census combine: ${rawResults.length} raw cell result(s), ${allResults.length} unique (${deduped.duplicatesRemoved} duplicate(s) removed; ${missing.length} missing shard(s), ${partial.length} partial marker(s)${planJoin ? `; ${planJoin.missing.length} planned cell(s) not observed` : ''})`);
+if (planJoin && !planJoin.identityFullyVerified) {
+    console.log(`technique-census plan join: legacy-partial identity (${planJoin.unverifiedJoinFields.length} echoed field(s) unavailable in the historical matrix)`);
+}
 
 mkdirSync(OUT_DIR, { recursive: true });
 if (!DERIVED_ONLY) {
@@ -106,6 +112,7 @@ if (!DERIVED_ONLY) {
         missingShards: missing,
         partialShards: partial,
         duplicateCellsRemoved: deduped.duplicatesRemoved,
+        ...(planJoin ? { planJoin } : {}),
         budgetProtocol: hasEqualWork ? 'mixed-node-depth-and-equal-work' : 'technique-local-node-depth',
         equalCostAcrossTechniques: false,
         costSemantics: hasEqualWork
