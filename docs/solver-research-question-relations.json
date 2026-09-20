@@ -629,16 +629,17 @@
       "id": "WS1-REMAINING-LENGTH-ALLOCATION",
       "question": "Does remaining path length provide transferable current-input allocation value under a shared fixed work budget beyond the Card-E completion-search population?",
       "owner": "WS1",
-      "state": "deferred-reopen",
+      "state": "concluded-positive",
       "aliases": [
         "remaining length allocation",
         "H3 allocation",
         "length-first scheduling"
       ],
       "answeredBy": [
-        "reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md"
+        "reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md",
+        "reports/2026-09-20-h3-independent-transfer-result-001.md"
       ],
-      "result": "Strong one-population positive: on Card-E completion searches, ascending remaining length captures 16/17 achievable rescues at 20% of full-cap-for-all budget. This establishes practical allocation value for that population/search model, not general scheduler value.",
+      "result": "Independent transfer CONFIRMED (2026-09-20) on a genuinely disjoint 175-row population (never drawn by the original Card-E cohort): ascending-remaining-length order clears 83.3% (10/12) of achievable rescues at 20% shared budget (original: 94%), well above the prespecified 50% confirmation bar; descending order solves 0/12 below the full shared budget on every tier. Population-transfer confirmed; technique was held fixed (searchCompletionFromPartialPath only) per the transfer preflights own scope.",
       "triggeredBy": [
         "WS2-H3-REPAIR-COMMITMENT-INTERFACE"
       ],
@@ -647,7 +648,7 @@
         "The next test should be one independent shared-budget completion/repair population, preferably with a bounded work ladder, before opening a WS1 policy gate.",
         "Failure-response telemetry from the precommitted transfer may be analyzed only as secondary explanatory evidence; it must not alter the frozen primary transfer decision rule."
       ],
-      "reopensOn": "An independent shared-budget population exposes the same legal current-input signal and a prespecified length-first order materially improves fixed-work outcome versus an unprioritized control.",
+      "reopensOn": "Transfer condition met. Next: design a bounded, matched-work production consumer pilot ordering near-miss completion-search candidates by ascending remaining length within one fixed shared budget, with its own precommitment (population, budget grid, solved/regression tracking) -- not yet designed or dispatched.",
       "premiseRefs": [
         "P065",
         "P123"
@@ -656,7 +657,8 @@
         "MO-004"
       ],
       "constrainedBy": [
-        "docs/solver-failure-evidence-research-integration-plan.md"
+        "docs/solver-failure-evidence-research-integration-plan.md",
+        "reports/2026-09-20-h3-independent-transfer-result-001.md"
       ],
       "acquisitionNeed": "fresh-independent-parents"
     },
@@ -798,7 +800,7 @@
       "id": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
       "question": "Does fixed stage-reserve allocation recurrently starve admissible-order fallback (or another later stage) that could solve within the existing total work budget if more of that fixed budget reached it?",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "concluded-positive",
       "aliases": [
         "reserve starvation",
         "admissible-order reserve starvation",
@@ -807,9 +809,10 @@
       "answeredBy": [
         "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
         "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
-        "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md"
+        "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
+        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
       ],
-      "result": "R00044 nominates a distinct allocation-order mechanism, and its frozen execution-family canary is now complete: the canonical default admissible-order action solved at exactly 219,802,423 nodes under the 300M isolated ceiling with complete durable compact evidence. The canary is calibration only. The live gate is the already-frozen independent 40-parent current-residual recurrence sample.",
+      "result": "Stage-1 40-parent probe concluded (2026-09-20): 2/40 independent parents show a genuine reserve-starvation opportunity (R01154 at 179.0M nodes, R03270 at 172.7M nodes, both between the 75M reserve and 300M total envelope). Clears the prespecified >=2-opportunity recurrence bar. Nominates, does not authorize, the smallest matched-total-work admissibleOrderNodeReserveFractionOverride A/B; candidate fractions must be predeclared from the observed cost curve, not fit to these two rows.",
       "triggeredBy": [
         "WS2-WORK-LADDER-ECONOMICS"
       ],
@@ -818,14 +821,15 @@
         "docs/solver-failure-evidence-research-integration-plan.md",
         "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
         "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md",
-        "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md"
+        "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
+        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
       ],
       "constrains": [
         "Do not reopen the closed-negative broad 4x escalation economics question from one allocation-order example.",
         "First size recurrence from existing/prospective compact attempt response: later-stage participation, allocated ceiling/work, censoring, and any comparable higher-budget or alternate-allocation evidence.",
         "Only if recurrent within-total-budget starvation is non-trivial should a matched-total-work A/B vary the existing admissibleOrderNodeReserveFractionOverride."
       ],
-      "reopensOn": "Dispatch and complete the frozen 40-parent prospective probe in reports/stress/failure-evidence/reserve-starvation-default-profile-sample-2026-09-19.json, then apply its prespecified 0/1/>=2 recurrence rule.",
+      "reopensOn": "Design the smallest matched-total-work reserve-fraction A/B with predeclared candidate fractions and explicit earlier-stage loss controls, per reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md.",
       "premiseRefs": [],
       "measurementOpportunities": [
         "MO-004"

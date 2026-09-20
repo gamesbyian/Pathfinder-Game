@@ -5,7 +5,7 @@
 > **Decision:** the allocation-value effect **transfers**. Ascending-remaining-length ordering clears 83.3% (10/12) of achievable rescues at 20% of the shared full-cap-for-all-rows budget on this independent, disjoint 175-row cohort, well above the preflight's 50%-at-20% confirmation bar. This clears the "one prespecified independent shared-budget transfer" `docs/solver-optimization-workstreams.md` required before H3 can open a WS1 gate. Descending-length order solves 0 rows below 50% of the shared budget on every tier tested, a stark contrast.
 > **Remaining gate:** transfer confirmed nominates, but does not itself authorize, the smallest production consumer: a bounded, matched-work pilot ordering near-miss completion-search candidates by ascending remaining length within a fixed shared budget. That pilot is not designed or run here and needs its own precommitment.
 > **Evidence role:** independent-transfer confirmation per the preflight's frozen decision rule; not itself a production change or a WS1 gate opening.
-> **Research question:** H3 remaining-length allocation-value / WS1 selector-gate transfer requirement.
+> **Research question:** `WS1-REMAINING-LENGTH-ALLOCATION`
 > **Population identity:** 239-row remainder of `reports/2026-09-16-card-e-sizing-and-state-selection-001.md`'s 439-row eligible pool (never drawn by that report's own 200-row Card-E cohort), seed `h3-independent-transfer-2026-09-19`. Phenotype-screen cohort (per Card-E's own predicate: `solved===false && lossCause==='score-width-culled'`): 175/239 (73.2%), matching the original report's ~78% conversion rate.
 
 ## Pipeline, run exactly as precommitted, no parameter changes
