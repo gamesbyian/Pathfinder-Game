@@ -244,6 +244,29 @@ The exact set now belongs to `scripts/stress/topology-generation-support-lib.mjs
 
 The ownership test requires that pointer to remain.
 
+## Repeated terminology that should remain claim-relative: independent unit
+
+`independent unit` appears across research blocks, experiment populations, opportunity sizing, family research and evaluation doctrine.
+
+That repetition does **not** imply one global independent-unit enum.
+
+The unit depends on the claim:
+
+- ordinary level-population inference may use one level as the unit;
+- variant-family generalization uses parent family;
+- repeated attempts/records on one parent collapse to that parent;
+- opportunity sizing may use an explicitly supplied cluster field;
+- other causal designs may need another legitimate unit.
+
+The existing hardening is correctly about **propagation and agreement**, not vocabulary centralization:
+
+- research blocks author `independentUnit`;
+- decision-grade experiment populations propagate it;
+- the experiment contract rejects disagreement with its source block;
+- the integration audit warns on legacy evidence that failed to propagate it.
+
+Do not replace this with a universal independent-unit taxonomy unless two live consumers need the same finite categorical semantics rather than merely the same field name.
+
 ## A practical audit procedure
 
 When "the repo already knows X, but..." appears during research or implementation:
