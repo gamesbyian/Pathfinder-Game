@@ -337,7 +337,9 @@
     "test:research-independence-vector": "node scripts/research-independence-vector-lib-node-test.mjs",
     "test:research-evaluation-evidence-role": "node scripts/research-evaluation-evidence-role-lib-node-test.mjs",
     "test:research-unit-topology": "node scripts/research-unit-topology-lib-node-test.mjs",
-    "test:research-repository-ref": "node scripts/research-repository-ref-lib-node-test.mjs"
+    "test:research-repository-ref": "node scripts/research-repository-ref-lib-node-test.mjs",
+    "solver:lane-a-c2-accounting": "node scripts/run-bundled.mjs scripts/stress/lane-a-c2-global-accounting-analysis.mjs --",
+    "test:lane-a-c2-accounting": "node scripts/stress/lane-a-global-accounting-lib-node-test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
