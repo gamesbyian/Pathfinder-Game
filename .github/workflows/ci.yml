@@ -41,7 +41,9 @@ jobs:
             /logs/**/*.md
             !/reports/*
             /reports/*.md
+            /reports/*.json
             /reports/**/*.md
+            /reports/stress/experiment-evidence/**/manifest.json
             /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
             !/data/
           sparse-checkout-cone-mode: false
@@ -90,7 +92,9 @@ jobs:
           /logs/**/*.md
           !/reports/*
           /reports/*.md
+          /reports/*.json
           /reports/**/*.md
+          /reports/stress/experiment-evidence/**/manifest.json
           /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
           !/data/*
           /data/levels.json
