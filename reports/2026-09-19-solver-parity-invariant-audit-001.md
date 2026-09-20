@@ -1,9 +1,9 @@
 # Solver parity invariant audit
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-09-20 — H1/H2 production-inert shadow observers and the combined fixed-work corpus probe are implemented; production decisions remain unchanged.
+> **Last evidence:** 2026-09-20 — the phase-distance and checkerboard-capacity premises production-inert shadow observers and the combined fixed-work corpus probe are implemented; production decisions remain unchanged.
 > **Decision:** ordinary parity handling is sound in its current domains, while phase-conditioned distance and checkerboard-split connectivity capacity merit bounded premise measurement before any production treatment.
-> **Remaining gate:** run the combined H1/H2 observer on a representative fixed-work population, interpret opportunity through the canonical resolution machinery, then advance only premises that earn replay/differential/economic gates.
+> **Remaining gate:** run the combined the phase-distance and checkerboard-capacity premises observer on a representative fixed-work population, interpret opportunity through the canonical resolution machinery, then advance only premises that earn replay/differential/economic gates.
 > **Started:** 2026-09-19
 > **Branch:** `chatgpt/solver-parity-invariant-audit-2026-09-19`
 > **Scope:** solver correctness, feasibility, search ordering, state identity, scheduling, repair, portal semantics, and research surfaces where checkerboard/grid parity or equivalent bipartite-walk invariants can affect decisions.
@@ -340,9 +340,9 @@ This report is an audit/evidence artifact, not a live queue.
 Surviving obligations have been routed as follows:
 
 - **H1 phase-conditioned relaxed goal distance** and **H2 checkerboard-split connectivity capacity** are active cheap premise tests in `docs/solver-optimization-workstreams.md` Lane H, with their protocol in `docs/solver-parity-phase-capacity-preflight.md`.
-- **Admissible-order propagation, repair residual observation, all-gates infeasibility and complete/random hint enumeration** are secondary/downstream seams in the same preflight. They do not outrank H1/H2.
+- **Admissible-order propagation, repair residual observation, all-gates infeasibility and complete/random hint enumeration** are secondary/downstream seams in the same preflight. They do not outrank the phase-distance and checkerboard-capacity premises.
 - **Phase-aware portal scoring, dynamic phase connectivity, a color-capacity hard prune, parity-aware repair treatment, parity-derived routing, all-gates fast exit and hint-enumeration production changes** are contingent descendants in `docs/solver-future-work.md` with explicit reopen conditions.
 - The parity-specific proof obligations and common category errors are now part of `docs/solver-correctness-hardening.md`.
 - The stale ablation descriptions for ordinary parity prune/gate filtering were corrected to reflect current same-parity-portal coverage.
 
-No production solver decision was changed by this audit. The next justified implementation is observational instrumentation for H1/H2, not a default-on prune or scoring change.
+No production solver decision was changed by this audit. The next justified implementation is observational instrumentation for the phase-distance and checkerboard-capacity premises, not a default-on prune or scoring change.
