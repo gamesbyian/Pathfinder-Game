@@ -24,6 +24,28 @@ try {
     assert.equal(compact.invalidSourceFiles.length, 0, 'publication includes are not implicit failure populations');
     assert.equal(compact.protocolHash, 'proto-contract');
     assert.equal(compact.solverRef, 'solver-contract');
+
+    const weakContract = path.join(temp, 'weak-contract.json');
+    const weakOut = path.join(temp, 'weak-published');
+    fs.writeFileSync(weakContract, JSON.stringify({
+        experiment: { configurationHash: 'proto-weak' },
+        solverRef: 'legacy-top-level-solver',
+    }));
+    execFileSync('node', [
+        'scripts/sweep-publish.mjs',
+        `--primary=${primary}`,
+        `--failure-source=${primary}`,
+        `--contract-file=${weakContract}`,
+        `--out=${weakOut}`,
+    ], {
+        cwd: root,
+        env: { ...process.env, GITHUB_SHA: 'f'.repeat(40) },
+    });
+    const weakManifest = JSON.parse(fs.readFileSync(path.join(weakOut, 'manifest.json')));
+    const weakCompact = JSON.parse(fs.readFileSync(path.join(weakOut, weakManifest.failureEvidence.publishedPath)));
+    assert.equal(weakCompact.protocolHash, 'proto-weak');
+    assert.equal(weakCompact.solverRef, null,
+        'workflow/legacy SHA metadata must not upgrade weak provenance into comparable-run solver identity');
     assert.ok(manifest.entries.some(entry => entry.source === unrelated && entry.role === 'include'));
     console.log('sweep-publish tests passed');
 } finally {
