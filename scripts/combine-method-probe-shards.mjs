@@ -22,9 +22,19 @@ const STAGING_DIR = args.get('--staging-dir') || 'artifact-staging';
 const OUT_DIR = args.get('--out-dir') || 'logs/method-probe-shards';
 const OUTCOME_OUT = args.get('--outcome-out') || null;
 const DETERMINISTIC_WORK_MODE_ARG = args.get('--deterministic-work-mode');
+const EXPECTED_SHARDS_ARG = args.get('--expected-shards');
+const expectedOuterShards = EXPECTED_SHARDS_ARG == null ? null : Number(EXPECTED_SHARDS_ARG);
+if (expectedOuterShards != null && (!Number.isSafeInteger(expectedOuterShards) || expectedOuterShards < 1)) {
+    throw new Error('--expected-shards must be a positive integer when supplied');
+}
 const TIMEOUT_EXIT_CODES = new Set([124, 143]);
 
 const dirs = resolveMethodProbeShardDirs(STAGING_DIR);
+const observedOuterShards = dirs.length;
+if (expectedOuterShards != null && observedOuterShards > expectedOuterShards) {
+    throw new Error(`observed ${observedOuterShards} outer shard artifact(s), expected only ${expectedOuterShards}`);
+}
+const missingOuterShardCount = expectedOuterShards == null ? 0 : expectedOuterShards - observedOuterShards;
 let allLevels = [];
 let meta = null;
 const missing = [];
@@ -82,7 +92,10 @@ const deadlineTruncatedIds = allLevels.filter(l => l.deadlineTruncated).map(l =>
 const deterministicWorkMode = DETERMINISTIC_WORK_MODE_ARG == null
     ? meta?.workBudget != null
     : DETERMINISTIC_WORK_MODE_ARG === 'true';
-const validDeterministicEvidence = deterministicWorkMode && missing.length === 0 && deadlineTruncatedIds.length === 0;
+const validDeterministicEvidence = deterministicWorkMode
+    && missing.length === 0
+    && missingOuterShardCount === 0
+    && deadlineTruncatedIds.length === 0;
 const combined = {
     ...meta,
     totalTested: allLevels.length,
@@ -91,11 +104,16 @@ const combined = {
     validDeterministicEvidence,
     deadlineTruncatedIds,
     missingShards: missing,
+    expectedOuterShards,
+    observedOuterShards,
+    missingOuterShardCount,
     levels: allLevels,
 };
 
 const timeoutCount = deadlineTruncatedIds.length + timedOutWithoutResult.length;
-const researchOutcome = missing.length
+const researchOutcome = missingOuterShardCount > 0
+    ? { outcome: 'harness-error', reason: `${missingOuterShardCount} outer shard artifact(s) were missing.` }
+    : missing.length
     ? { outcome: 'harness-error', reason: `${missing.length} launched worker result(s) were missing.` }
     : timeoutCount
         ? { outcome: 'timeout', reason: `${timeoutCount} probe worker(s) or row(s) reached a deadline.` }
@@ -124,7 +142,7 @@ const summaryLines = [
     '```',
 ];
 const summaryText = summaryLines.join('\n');
-console.log(`Combined: ${allLevels.length} tested, ${solved.length} solved, ${missing.length} missing worker result(s)`);
+console.log(`Combined: ${allLevels.length} tested, ${solved.length} solved, ${missing.length} missing worker result(s), ${missingOuterShardCount} missing outer shard artifact(s)`);
 
 if (process.env.GITHUB_STEP_SUMMARY) {
     writeFileSync(process.env.GITHUB_STEP_SUMMARY, summaryText, { flag: 'a' });
@@ -135,4 +153,4 @@ if (process.env.GITHUB_STEP_SUMMARY) {
 // A deadline in deterministic work mode invalidates the intended equal-work evidence and remains
 // red. In legacy wall-bounded mode it is the probe's expected bounded stopping condition: publish
 // `timeout`, preserve the partial evidence, and leave the workflow green.
-if (missing.length || (deterministicWorkMode && timeoutCount)) process.exitCode = 2;
+if (missingOuterShardCount > 0 || missing.length || (deterministicWorkMode && timeoutCount)) process.exitCode = 2;
