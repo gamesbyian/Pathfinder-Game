@@ -13,7 +13,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 | Region/AND-OR decomposition engine | The prespecified C0-C4 separator contract falsifier yields a compact repeated exact-outcome-pure signature across independent parents without near-unique/full-prefix state |
 | Production topology-aware state relation | Fresh independent parents show a reliable compact descriptor with non-zero decision-bearing discordance; then seek a sound actionable consequence beyond raw phase |
 | Targeted local surgery / causal backjump operator | New independent evidence finds an actionable causal interface materially smaller than naive divergence/ordinary rollback; Lane E's tested form stays closed |
-| Dependency-conditioned repair neighborhood | **OBSERVER ACTIVE.** Lane E's rollback-distance form stays closed; run the retained R03147 semantic-delta observer before any broader study or repair operator. [`preflight`](../reports/2026-09-20-ws6-dependency-interface-observer-reopen-001.md) |
+| Dependency-conditioned repair neighborhood | **DEVELOPMENT POSITIVE.** R03147 nominates path-resource + relational-bound state; require independent-parent replication before any consumer. [`result`](../reports/2026-09-20-ws6-dependency-interface-observer-result-001.md) |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
 
