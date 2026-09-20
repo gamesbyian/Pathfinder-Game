@@ -121,20 +121,34 @@ export function validateResearchQuestionRegistry(registry) {
                 errors.push(`questions[${index}].${field} must be an array when present`);
                 continue;
             }
+            const seenTargets = new Set();
             for (const target of targets) {
-                if (!ids.has(target)) errors.push(`questions[${index}].${field} references unknown question ${target}`);
+                if (target === question.id) {
+                    errors.push(`questions[${index}].${field} self-references ${target}`);
+                } else if (seenTargets.has(target)) {
+                    errors.push(`questions[${index}].${field} duplicates ${target}`);
+                } else if (!ids.has(target)) {
+                    errors.push(`questions[${index}].${field} references unknown question ${target}`);
+                }
+                seenTargets.add(target);
             }
         }
         if (question?.constrainedBy != null) {
             if (!Array.isArray(question.constrainedBy)) {
                 errors.push(`questions[${index}].constrainedBy must be an array when present`);
             } else {
+                const seenConstraints = new Set();
                 for (const target of question.constrainedBy) {
                     const value = String(target ?? '');
-                    const pathReference = /^(?:docs|reports|scripts)\//u.test(value);
-                    if (!pathReference && !ids.has(value)) {
+                    const pathReference = /^(?:docs|reports|scripts|data|logs)\//u.test(value);
+                    if (value === question.id) {
+                        errors.push(`questions[${index}].constrainedBy self-references ${value}`);
+                    } else if (seenConstraints.has(value)) {
+                        errors.push(`questions[${index}].constrainedBy duplicates ${value}`);
+                    } else if (!pathReference && !ids.has(value)) {
                         errors.push(`questions[${index}].constrainedBy references neither a known question nor a repository path: ${value}`);
                     }
+                    seenConstraints.add(value);
                 }
             }
         }
