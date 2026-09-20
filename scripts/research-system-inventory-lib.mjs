@@ -430,6 +430,15 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         .map(role => [role, documentRoles.filter(row => row.role === role).length]));
     const currentAuthorityClaimOutsideIndex = documentRoles.filter(row => row.currentAuthorityClaimOutsideIndex);
     const missingCurrentReferences = currentReferences.filter(row => !existsSync(path.join(root, row.path)));
+    const reportMetadataSources = model.relations.evidence ?? [];
+    const structuredCloseoutEvidenceCount = reportMetadataSources
+        .filter(row => row.metadataSource === 'structured-closeout').length;
+    const legacyStatusBlockEvidenceCount = reportMetadataSources
+        .filter(row => row.metadataSource === 'legacy-status-block').length;
+    const structuredWorkstreamExecutionStateCount = (model.relations.queue ?? [])
+        .filter(row => Boolean(row.executionState)).length;
+    const structuredExperimentPromotionStateCount = (model.relations.experiments ?? [])
+        .filter(row => Boolean(row.promotionState)).length;
     const relations = relationInventory(model);
     const workflows = workflowInventory(root);
     const retiredWorkflows = retiredWorkflowInventory(root);
@@ -507,6 +516,10 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             missingCurrentReferencePaths: missingCurrentReferences.map(row => row.path),
             structuredCloseoutCount,
             closeoutParseErrorCount: closeoutParseErrors.length,
+            structuredCloseoutEvidenceCount,
+            legacyStatusBlockEvidenceCount,
+            structuredWorkstreamExecutionStateCount,
+            structuredExperimentPromotionStateCount,
             closeoutParseErrors: closeoutParseErrors.map(row => ({ path: row.path, error: row.closeoutError })),
             lifecycleCandidateCount: plans.length,
             currentLifecycleCandidateCount: plans.filter(row => row.currentReference).length,
