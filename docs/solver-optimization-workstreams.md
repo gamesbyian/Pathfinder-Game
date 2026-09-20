@@ -64,6 +64,11 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
+
+#### Lane H — parity invariants
+
+**PARALLEL PREMISE OBSERVERS; production unchanged.** `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` run together via `solver:parity-invariant-shadow`. Advance only after resolution-ready incidence and soundness; details: [preflight](solver-parity-phase-capacity-preflight.md) · [audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
+
 ### Post-mining premise-map handoff closeout
 
 Frozen-map mining is complete. P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed its pass condition: Lane A is at C1 after C0 mixed, D1's production ranking consumer is closed negative, and F3 has no decision-bearing compact consumer. Use the lane states above and the question registry for current descendants; dated reports own the experiment chronology. No shared signal bus, blackboard, decomposition engine, oracle campaign, or production treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
@@ -78,6 +83,8 @@ Frozen-map mining is complete. P201-P206 remain evidence/method premises only. T
 | ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|
 | 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
+| 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |

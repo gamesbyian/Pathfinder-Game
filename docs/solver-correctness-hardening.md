@@ -142,3 +142,29 @@ Do not tune scheduler caps or technique value around unexplained stage-history d
 - The August 2026 hardening pass already added explicit attempt errors, multi-arbiter oracle/referee checks, representation contracts, scratch-lifecycle coverage, telemetry projection tests, prune-harness activation/positive controls, and admissibility-direction tests.
 
 For exact bug stories, measurements, hypotheses, and chronology, use the snapshot and its dated reports. Keep this file about what future changes must preserve.
+
+## Parity / bipartite-grid hardening contract
+
+The solver's orthogonal grid is bipartite, but special mechanics make careless parity reasoning unusually easy to get almost right. The canonical derivation and current research lane live in [solver parity-phase and checkerboard-capacity preflight](solver-parity-phase-capacity-preflight.md); the originating inventory is [the 2026-09-19 parity audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
+
+For any hard parity consumer:
+
+1. State whether the quantity is **checkerboard cell parity**, **counted path-length parity**, **portal-jump count parity**, or **twist-jump parity**. Do not use “parity” without naming the domain in implementation comments or evidence.
+2. Ordinary cardinal moves cost one counted step and toggle cell parity. Portal jumps cost zero counted steps; only opposite-parity portal pairs toggle checkerboard phase.
+3. The suffix identity at a stable state is
+   `parity(pos) XOR parity(goal) XOR (remainingCountedSteps & 1) XOR futureTwistParity = 0`.
+   Any stronger reject must preserve this relationship rather than treating portal presence as a blanket exemption or blanket permission.
+4. Relaxed parity/phase reachability must err toward **extra routes / cheaper distances / extra capacity**, never toward removing a possible route. A hard reject is licensed only when even the over-permissive relaxation cannot complete.
+5. At portal entry/jump boundaries, identify whether the candidate move has already been applied. Do not infer completed twist phase from “terminal visited”; the source terminal can be visited immediately before its forced zero-cost jump.
+6. Do not independently round every waypoint/MST/lower-bound segment to a desired parity unless an additional non-telescoping resource constraint is proved. On an ordinary bipartite walk, waypoint segment parities telescope to the endpoint relation.
+7. Turn count, intersection count, and flipping-filter used-count parity are not checkerboard invariants by themselves.
+8. A proposed production hardening requires the ordinary prune gates plus a parity-specific counterexample set:
+   - no portals;
+   - same-parity portals;
+   - one twist portal;
+   - multiple twist portals with even and odd use;
+   - transient portal-source state before the forced jump;
+   - exact-length boundary cases;
+   - a case where total connectivity volume passes but any proposed color/phase refinement rejects.
+
+Existing default production behavior remains authoritative until those gates pass. The August existence-only twist-envelope experiment remains form-closed; materially stronger conditioned phase/distance logic is a distinct premise, not evidence that the old envelope should simply be switched on.
