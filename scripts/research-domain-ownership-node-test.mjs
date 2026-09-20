@@ -76,6 +76,11 @@ const questionRelations = source('scripts/research-question-relations-lib.mjs');
 assert.match(questionRelations, /RESEARCH_QUESTION_STATES/u);
 assert.match(questionRelations, /researchQuestionLifecycleClass/u);
 
+const questionAuthorityAudit = source('scripts/research-question-authority-audit-lib.mjs');
+assert.match(questionAuthorityAudit, /researchQuestionLifecycleClass/u);
+assert.doesNotMatch(questionAuthorityAudit, /startsWith\(['"]active['"]\)/u,
+  'question authority audit must use lifecycle semantics, not state-name prefix inference');
+
 const resolutionEnvelope = source('scripts/research-resolution-envelope-lib.mjs');
 assert.match(resolutionEnvelope, /RESEARCH_OBSERVABILITY_AXES/u);
 assert.match(resolutionEnvelope, /resolutionStatus/u);
