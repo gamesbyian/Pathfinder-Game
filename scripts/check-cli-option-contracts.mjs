@@ -52,6 +52,16 @@ function newMapConstructorExpression(source, assignment) {
   return null;
 }
 
+function constructorStripsMappedTokenPrefix(constructorRegion) {
+  const mapper = /\.map\(\s*\(?\s*([A-Za-z_$][\w$]*)\s*\)?\s*=>/gu;
+  for (const match of constructorRegion.matchAll(mapper)) {
+    const token = match[1];
+    const callbackTail = constructorRegion.slice(match.index + match[0].length);
+    if (callbackTail.includes(token + '.slice(2)') || callbackTail.includes(token + '.slice(2,')) return true;
+  }
+  return false;
+}
+
 export function cliOptionContractIssues(source, file = '<source>') {
   // Common parser shape: argv token "--foo=bar" -> key "foo" via slice(2).
   // Tie the lookup to the same Map variable so unrelated dashed-key maps do not become false positives.
@@ -65,7 +75,7 @@ export function cliOptionContractIssues(source, file = '<source>') {
     const assignment = Math.max(before.lastIndexOf(constNeedle), before.lastIndexOf(letNeedle));
     if (assignment < 0) continue;
     const constructorRegion = newMapConstructorExpression(source, assignment);
-    if (constructorRegion && /\b[A-Za-z_$][\w$]*\.slice\(2(?:\)|,)/u.test(constructorRegion)) {
+    if (constructorRegion && constructorStripsMappedTokenPrefix(constructorRegion)) {
       issues.push(`${file}: Map "${mapName}" strips the leading "--" from CLI keys but later looks up a "--..." key`);
     }
   }
