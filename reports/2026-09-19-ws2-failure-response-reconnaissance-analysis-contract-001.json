@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-ws2-failure-response-analysis-contract",
+  "questionId": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
+  "evidenceRole": "development-discriminator-selection",
+  "decisionPurpose": "scientific-question-discrimination",
+  "targetScope": "Choose the cheapest next WS2 discriminator for the current residual from protocol-compatible compact failure-response evidence; this contract does not estimate solver efficacy.",
+  "independentUnit": "parent",
+  "populationEligibility": {
+    "knownProtocolHash": true,
+    "knownSolverRef": true,
+    "completeMissingnessAccounting": true,
+    "mixedProtocolPolicy": "partition-or-reject-primary-comparison"
+  },
+  "solvedControlPolicy": "required-for-failure-specific-nomination-when-not-naturally-present",
+  "censoringPolicy": "indeterminate-not-negative",
+  "selectionPolicy": "prespecified-stage-a-then-stage-b-only-if-unresolved",
+  "analysisImplementation": "scripts/failure-response-query.mjs",
+  "primaryQuantities": [
+    "parent terminal composition",
+    "action/stage participation and reach",
+    "exact attempt work/node dose by action and stage",
+    "solved parents containing failed attempts",
+    "protocol partitions and identity completeness",
+    "badness support only where reported"
+  ],
+  "allowedRoutes": [
+    "rejection-counterfactual",
+    "first-loss",
+    "producer-consumer-2x2",
+    "allocation-specific-follow-up",
+    "none",
+    "unresolved-needs-compact-diagnostics"
+  ],
+  "stopRule": "Stage A may select a route only under the frozen routing rules in the preflight. If automatic compact response does not discriminate, advance only to the bounded compact-diagnostic Stage B. If Stage B remains diffuse or mirrors controls, route none.",
+  "preflightRef": "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md"
+}
