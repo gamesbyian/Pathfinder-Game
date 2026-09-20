@@ -33,5 +33,28 @@
     "unresolved-needs-compact-diagnostics"
   ],
   "stopRule": "Stage A may select a route only under the frozen routing rules in the preflight. If automatic compact response does not discriminate, advance only to the bounded compact-diagnostic Stage B. If Stage B remains diffuse or mirrors controls, route none.",
-  "preflightRef": "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md"
+  "preflightRef": "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md",
+  "unitTopology": {
+    "observationUnit": "failure-response-record",
+    "assignmentUnit": null,
+    "opportunityUnit": "parent",
+    "dependenceClusterUnit": "parent",
+    "analysisUnit": "parent",
+    "generalizationUnit": "current-residual-parent-under-compatible-protocol"
+  },
+  "instrument": {
+    "kind": "pathfinder-compact-failure-response",
+    "supportPolicy": "reported-fields-only-missing-remains-unknown",
+    "calibrationRef": "reports/2026-09-19-failure-evidence-prehandoff-direct-work-audit-001.md",
+    "calibrationNote": "Automatic compact failure-response is the low-overhead broad instrument; rich capture remains a separate selected microscope."
+  },
+  "currentApplicability": {
+    "basis": "solver-and-protocol-relative",
+    "refreshTriggers": [
+      "solver revision materially changes the relevant action/stage semantics",
+      "protocol hash changes",
+      "current residual population boundary changes materially",
+      "compact failure-response semantics or observer instrumentation changes materially"
+    ]
+  }
 }
