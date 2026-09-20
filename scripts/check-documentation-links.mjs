@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { readRepositoryText, repositoryPathKind } from './repository-file-view.mjs';
 import { validateSolverResearchDataAssets } from './solver-research-data-assets-lib.mjs';
 import { currentDocumentationMarkdownPaths } from './documentation-index-lib.mjs';
+import { INVESTIGATION_REPORT_STATUSES } from './investigation-report-metadata.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: ROOT })
@@ -222,7 +223,7 @@ for (const name of readdirSync(workflowDir).filter((name) => /\.ya?ml$/i.test(na
   if (!workflowIndex.includes(name)) failures.push(`.github/workflows/${name}: not named in .github/workflows/README.md`);
 }
 
-const reportStatusValues = 'active|concluded-positive|concluded-negative|inconclusive|superseded|cancelled';
+const reportStatusValues = INVESTIGATION_REPORT_STATUSES.join('|');
 const reportMetadataPattern = new RegExp(
   `^# .+\\r?\\n\\r?\\n> \\*\\*Status:\\*\\* (${reportStatusValues})\\r?\\n` +
   '> \\*\\*Last evidence:\\*\\* \\d{4}-\\d{2}-\\d{2} — .+\\r?\\n' +
