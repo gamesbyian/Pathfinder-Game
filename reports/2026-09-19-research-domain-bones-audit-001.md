@@ -1,7 +1,12 @@
 # Research-domain bones audit 001
 
-> **Date:** 2026-09-19  
-> **Status:** concluded architectural follow-up  
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-19 — Shared semantic ownership was traced across experiment contracts, research blocks, WS2 analysis/claims, hint/failure evidence, sweep integrity, CP-SAT integrity, report closeouts, and authority routing.
+> **Decision:** extract only repeated correctness-critical scientific invariants; keep specialist payloads, adapters, derived views, and orthogonal authorities separate.
+> **Remaining gate:** promote another shared primitive or lifecycle owner only after a second materially different live consumer demonstrates the same invariant or state transition.
+
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-09-19","decision":"extract repeated correctness-critical invariants only; keep specialist semantics and derived connective tissue separate","remainingGate":"another materially different live consumer must demonstrate the same invariant before further promotion","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":null,"selection":"cross-system ownership and semantic-convergence audit","inferenceScope":"research-system architecture and semantic ownership; not solver-efficacy evidence"},"claimRefs":[],"sourceArtifacts":["scripts/research-semantic-identity-lib.mjs","scripts/research-population-identity-lib.mjs","scripts/research-observation-integrity-lib.mjs","scripts/research-question-contract-lib.mjs","scripts/research-evidence-applicability-lib.mjs","scripts/research-claim-lib.mjs","reports/2026-09-19-research-authority-ownership-audit-001.md"],"prospective":{"expectation":null,"surprise":null,"anomaly":null}} -->
+
 > **Scope:** identify places where research-system connective tissue is carrying a domain concept that has become stable enough to deserve a first-class implementation owner.
 
 ## Bottom line
