@@ -22,7 +22,7 @@ The classification and promotion rules live in the [capability invention program
 
 Implementation-readiness is not priority. A weakly nominated tuning descendant competes with a causally grounded capability-acquisition probe. As harvest descendants become null, displacement-only, or pure repricing, research capacity moves toward acquisition rather than manufacturing new tuning axes.
 
-The seed demand register deliberately contains both outcomes: R01154/R03270 are **HARVEST** (F7 work starvation; existing admissible-order capability), while R03147 is a cautious **EXTENSION** nomination (F4 causal divergence; path-resource + relational-bound interface, independent-parent replication still required). This is not prevalence evidence yet.
+The retained-evidence seed census now contains **26 rows: 22 HARVEST, 1 EXTENSION, 3 UNKNOWN, 0 INVENTION**. This is not prevalence evidence: 23/26 rows come from Class 3, which is selected on known historical rescuer capability and is therefore harvest-enriched by construction. The three UNKNOWN beam rows (R02196/R02206/R02258) first require a fresh current-head isolated replay of their exact historical rescuers before any missing-capability claim. R03147 remains the cautious EXTENSION nomination pending independent-parent replication. [`seed census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md)
 
 ## Current execution priority
 
