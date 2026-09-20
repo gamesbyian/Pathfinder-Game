@@ -480,7 +480,11 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const configuration = { nodeBudget: Number(process.env.NODE_BUDGET), budgetMs: Number(process.env.BUDGET_MS), schedulerMode: 'production' };
+          const observedExecution = {};
+          for (const [name, file] of [['corpus1', 'reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json'], ['corpus2', 'reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json']]) {
+            if (fs.existsSync(file)) observedExecution[name] = JSON.parse(fs.readFileSync(file, 'utf8')).configurationHash ?? null;
+          }
+          const configuration = { nodeBudget: Number(process.env.NODE_BUDGET), budgetMs: Number(process.env.BUDGET_MS), schedulerMode: 'production', observedExecution };
           fs.writeFileSync('logs/solver-highbudget-sweep/contract-spec.json', `${JSON.stringify({
             configuration,
             workflowFamily: 'history-aware-highbudget',
