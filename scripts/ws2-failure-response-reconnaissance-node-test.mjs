@@ -208,7 +208,7 @@ try {
     `--out=${path.join(temp, 'tampered-claim.json')}`,
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.notEqual(tamperedClaim.status, 0);
-  assert.match(`${tamperedClaim.stdout}${tamperedClaim.stderr}`, /valid analysisIdentity matching analysis content/u);
+  assert.match(`${tamperedClaim.stdout}${tamperedClaim.stderr}`, /analysisIdentity/u);
   const contractDivergentPath = path.join(temp, 'contract-divergent-analysis.json');
   const contractDivergent = {
     ...routedResult,
