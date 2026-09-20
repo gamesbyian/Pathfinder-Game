@@ -172,16 +172,15 @@ assert.throws(() => validateSweepIntegrity({
 const supersessionRegistry = {
     schemaVersion: 1,
     questions: [
-        { id: 'TX-OLD', question: 'old tested form?', owner: 'TX', state: 'closed-tested-form', supersedes: ['TX-OLDER'] },
-        { id: 'TX-OLDER', question: 'older tested form?', owner: 'TX', state: 'closed-tested-form' },
-        { id: 'TX-NEXT', question: 'successor ambiguity?', owner: 'TX', state: 'active' },
+        { id: 'TX-OLD', question: 'old tested form?', owner: 'TX', state: 'closed-tested-form' },
+        { id: 'TX-NEXT', question: 'successor ambiguity?', owner: 'TX', state: 'active', supersedes: ['TX-OLD'] },
     ],
 };
 assert.deepEqual(validateResearchQuestionRegistry(supersessionRegistry), []);
 assert.ok(validateResearchQuestionRegistry({
     ...supersessionRegistry,
     questions: supersessionRegistry.questions.map(question =>
-        question.id === 'TX-OLD' ? { ...question, supersedes: ['TX-MISSING'] } : question),
+        question.id === 'TX-NEXT' ? { ...question, supersedes: ['TX-MISSING'] } : question),
 }).some(issue => issue.includes('references unknown question TX-MISSING')));
 
 const supersededStatusBlock = formatInvestigationReportStatusBlock({
