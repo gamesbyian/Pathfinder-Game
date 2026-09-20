@@ -268,6 +268,18 @@ invalidSupersession.questions[0].supersedes = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidSupersession), [
     'questions[0].supersedes references unknown question WS2-MISSING',
 ]);
+
+const duplicateQuestionEdge = JSON.parse(JSON.stringify(questionRegistry));
+duplicateQuestionEdge.questions[0].implies = ['WS2-FOLLOWUP', 'WS2-FOLLOWUP'];
+assert.deepEqual(validateResearchQuestionRegistry(duplicateQuestionEdge), [
+    'questions[0].implies duplicates WS2-FOLLOWUP',
+]);
+
+const selfQuestionEdge = JSON.parse(JSON.stringify(questionRegistry));
+selfQuestionEdge.questions[0].implies = ['WS2-CURRENT'];
+assert.deepEqual(validateResearchQuestionRegistry(selfQuestionEdge), [
+    'questions[0].implies self-references WS2-CURRENT',
+]);
 const invalidConstraint = JSON.parse(JSON.stringify(questionRegistry));
 invalidConstraint.questions[0].constrainedBy = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidConstraint), [
