@@ -22,8 +22,6 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md) | Bounded observer-first plan to measure repeated derivation and potential typed reuse of expensive current-instance facts within one cold solve |
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
 | [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md) | Observer-first test of whether DEAD near-misses trace to a compact dependency-defined commitment set, not path-distance rollback |
-| [`solver-separator-decomposition-census-preflight.md`](solver-separator-decomposition-census-preflight.md) | Static/mechanic-aware/portal-mediated/path-history separator census on the current Class-5 residual; concluded |
-| [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md) | Fresh exact LIVE/DEAD sibling population for DEAD-core/topology/relational microscopes; concluded, construction gap found |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
 | [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) | Research-system consolidation/epistemic-coverage plan; not priority authority |
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
@@ -34,12 +32,9 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer and holdout discipline |
 | [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Action selection and fixed-work allocation research |
 | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline semantics |
-| [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) | **Completed PR #1740 workflow/evidence-remediation program; retained historical route and durable-rule summary** |
-| [`solver-workflow-remediation-implementation-handoff.md`](solver-workflow-remediation-implementation-handoff.md) | Historical implementation contract used by the completed remediation |
 | [`solver-evidence-integrity-index.schema.json`](solver-evidence-integrity-index.schema.json) | Machine-readable contract for the rebuildable historical solver-evidence integrity index |
 | [`solver-experiment-result.schema.json`](solver-experiment-result.schema.json) | Version 3 shared solver experiment publication contract |
 | [`solver-workflow-lifecycle.json`](solver-workflow-lifecycle.json) | Maintained workflow inventory, consumers, and retirement triggers |
-| [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) | Completed remediation closeout and hostile-review conclusions |
 | [`solver-residual-state-representation.md`](solver-residual-state-representation.md) | Residual/future representation vocabulary |
 | [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | Operational technique/configuration meaning |
 | [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Current profile-led speed gates/dispositions |
@@ -121,6 +116,16 @@ Phase 0–15 is complete. Current naming authority is [`naming-and-vocabulary.md
 `naming-cleanup-plan.md`, `naming-cleanup-ledger.json`, `naming-cleanup-history-and-lessons.md`, `naming-cleanup-process-hardening.md`, `naming-cleanup-future-phase-preparation.md`, `naming-cleanup-phase-record-template.md`, and `naming-cleanup-phase-records/` are implementation evidence, not ordinary current-task reading. Frozen reports keep historical names/paths where provenance requires it.
 
 ## History
+
+### Concluded solver research routes
+
+Retained for evidence/history and targeted archaeology, not as current authorities:
+
+- [`solver-separator-decomposition-census-preflight.md`](solver-separator-decomposition-census-preflight.md) — concluded Class-5 separator census.
+- [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md) — concluded fresh exact sibling-harvest preflight and construction-gap record.
+- [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) — completed PR #1740 remediation program.
+- [`solver-workflow-remediation-implementation-handoff.md`](solver-workflow-remediation-implementation-handoff.md) — historical implementation contract for that program.
+- [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) — completed closeout/review record.
 
 Superseded plans, concluded experiments, and old authority states live in [`archive/snapshots/`](archive/snapshots/README.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
 
