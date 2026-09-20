@@ -248,6 +248,7 @@ function selfTest() {
 
     const retained = persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 });
     assert.equal(retained.length, 1);
+    assert.equal(retained[0].disposition, 'created');
     const destination = path.join(output, 'fixture-experiment__run-123__attempt-2');
     const bundle = JSON.parse(fs.readFileSync(path.join(destination, 'bundle.json'), 'utf8'));
     assert.equal(bundle.decisionBearing, true);
@@ -271,6 +272,18 @@ function selfTest() {
     assert.ok(compactRecord, 'published compact response follows the ordinary durable evidence rail');
     assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, compactRecord.stored))), compact);
     assert.equal(fs.existsSync(path.join(output, 'experiment__run-123__attempt-2')), false);
+
+    const bundleBeforeReharvest = fs.readFileSync(path.join(destination, 'bundle.json'));
+    const reharvested = persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 });
+    assert.equal(reharvested[0].disposition, 'unchanged', 'same immutable run/attempt reharvest is idempotent');
+    assert.deepEqual(fs.readFileSync(path.join(destination, 'bundle.json')), bundleBeforeReharvest);
+
+    fs.writeFileSync(path.join(artifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 13 }] }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 }),
+      /durable evidence identity collision.*immutable source run\/attempt bytes differ/u,
+      'same run/attempt identity with changed source bytes must fail rather than overwrite retained science',
+    );
 
     const forgedStaging = path.join(temp, 'forged-staging');
     const forgedArtifact = path.join(forgedStaging, 'forged');
