@@ -200,7 +200,7 @@ export function buildResearchStatusIndex(root) {
             latestEvidenceOrGate: evidence, authority: ledgerPath, authorityKind: 'opt-in-ledger',
         }));
     return { schemaVersion: 3, scope: 'current-authority-and-top-level-evidence',
-        authorityOrder: ['workstreams', 'opt-in-ledger', 'structured-report', 'legacy-report'], queue, experiments,
+        authorityOrder: ['workstreams', 'opt-in-ledger', 'structured-closeout-report', 'legacy-status-block-report', 'legacy-report'], queue, experiments,
         evidence: topics, legacyEvidence };
 }
 
@@ -213,6 +213,7 @@ function compactEntry(kind, entry) {
         headings: entry.headings, report: entry.report };
     return { kind, id: entry.topicId, status: entry.status, title: entry.title,
         date: entry.latestEvidence.date, decision: entry.decision, gate: entry.remainingGate,
+        metadataSource: entry.metadataSource ?? null,
         report: entry.latestEvidence.report, authorities: entry.authorities,
         researchQuestion: entry.researchQuestion ?? null,
         premiseRefs: entry.premiseRefs ?? [],
