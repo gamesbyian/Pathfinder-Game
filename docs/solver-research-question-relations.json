@@ -566,9 +566,10 @@
       "answeredBy": [
         "reports/2026-09-17-separator-decomposition-census-result-001.md",
         "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
-        "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md"
+        "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md",
+        "reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md"
       ],
-      "result": "The first C1 boundary-kinematics result is superseded because the retained compact exact-label projection was discovered to encode labels in combined 20-shard row order while that pass aligned them to canonical case order. The 581-case population and exact reference labels remain valid. Projection schema v2 now records canonical and source-row hashes plus the shard transform. Live gate: rerun frozen C1 unchanged; C2 remains prospectively frozen but is not reached unless corrected C1 earns it.",
+      "result": "Corrected C1 boundary kinematics is mixed + repetition-supported under explicit schema-v2 shard-major label ordering: 187/546 decisive rows (34.25%) remain in repeated signatures across 58 independent parents, with two exact LIVE/DEAD mixed signatures. C1 is insufficient without becoming representation-explosive. Live gate is the already-frozen C2 global-accounting representation on the same retained truth.",
       "constrainedBy": [
         "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
         "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
@@ -580,7 +581,7 @@
       "constrains": [
         "C0 is closed insufficient; do not repeat raw cut/interface identity or reinterpret its mostly-pure groups as a consumer.",
         "Treat near-unique/full-prefix signatures or unsound tied-case topology shortcuts as contract explosion, not success.",
-        "Do not interpret or extend C2 until corrected C1 has been rerun using the explicit schema-v2 shard-major label order and the original frozen C1 decision rule."
+        "Run the already-frozen C2 global-accounting representation unchanged on the same 581-case population; do not edit C1 after observing its two corrected mixed signatures."
       ],
       "reopensOn": null,
       "premiseRefs": [
