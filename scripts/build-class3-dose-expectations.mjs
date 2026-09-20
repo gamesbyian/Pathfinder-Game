@@ -63,6 +63,14 @@ const result = {
         residualClassificationSchemaVersion: atlas.residualClassificationSchemaVersion ?? null,
     },
     expectedParentCount: parents.length,
+    unitTopology: {
+        observationUnit: 'compact-failure-response-attempt',
+        opportunityUnit: 'parent-exact-rescuer',
+        assignmentUnit: null,
+        dependenceClusterUnit: 'parent',
+        analysisUnit: 'parent',
+        generalizationUnit: 'current-class3-parent-under-compatible-shared-production-protocol',
+    },
     parents,
 };
 
