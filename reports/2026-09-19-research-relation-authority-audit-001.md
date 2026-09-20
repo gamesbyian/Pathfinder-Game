@@ -159,6 +159,48 @@ Rows whose historical prose does not identify a defensible primary licensing rep
 
 This is the smallest useful decision-to-realization provenance link. Runtime polarity and behavior remain owned by code/tests.
 
+### 9. Report -> artifact: authored provenance separated from discovered references
+
+The status index previously collapsed:
+
+- structured closeout `sourceArtifacts`;
+- linked `data/`, `logs/`, or `reports/` paths;
+- inline backticked artifact-looking paths
+
+into one undifferentiated `artifacts` list.
+
+That erased the difference between authored provenance and incidental navigation.
+
+The index now exposes:
+
+- `sourceArtifacts` for structured closeout provenance;
+- `linkedArtifacts` for hyperlink/inline discovery;
+- `artifactRelation` describing the relation basis;
+- legacy `artifacts` only as a compatibility union.
+
+If the same path appears both as an authored source and in prose, the stronger authored edge wins and it is not duplicated as a weaker discovery link.
+
+### 10. Research-block consumption lineage: structured does not mean referentially valid
+
+Research-block consumption events already carry structured:
+
+- `questionId`;
+- `decisionRef`;
+- scope kind/id;
+- evidence role;
+- conditioning and opened outcome kinds.
+
+The local block validator checked shape but could not resolve repository/global foreign keys.
+
+The integration audit now additionally verifies:
+
+- consumed question IDs exist;
+- repository-shaped decision refs exist;
+- block-scoped events name the block that contains them;
+- parent-scoped events name a parent in that block.
+
+Logical/non-repository decision refs remain allowed, and family-scope IDs are not guessed against a registry that does not exist.
+
 ## Relationships deliberately left inferred or descriptive
 
 ### Experiment -> question
