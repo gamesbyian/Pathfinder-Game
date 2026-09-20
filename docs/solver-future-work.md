@@ -7,11 +7,7 @@ Cold procedures may derive exact current-input facts; cross-parent recurrence is
 
 ## Promoted out of future work
 
-Only deferred descendants/reopen boundaries belong here.
-
 ## Deferred descendants of active premises
-
-Eligible only after the active premise gate above is positive.
 
 | Descendant | Reopen / advancement condition |
 |---|---|
