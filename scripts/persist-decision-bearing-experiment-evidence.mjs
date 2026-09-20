@@ -137,6 +137,7 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
       sourceArtifact: manifest?.sourceArtifact ?? null,
       runUrl: manifest?.runUrl ?? null,
       decisionBearing: true,
+      manifestStoredPath: files.find(file => file.source === 'manifest.json')?.stored ?? null,
       files,
     };
     fs.writeFileSync(path.join(destinationRoot, 'bundle.json'), `${JSON.stringify(bundle, null, 2)}\n`);
@@ -198,6 +199,7 @@ function selfTest() {
     assert.equal(bundle.researchQuestion.measurementOpportunity, 'MO-002');
     assert.equal(bundle.researchBlock.blockId, 'BLOCK-001');
     assert.equal(bundle.researchBlock.evidenceRole, 'development');
+    assert.equal(bundle.manifestStoredPath, 'manifest.json');
     assert.equal(bundle.files.length, 3);
     const manifestRecord = bundle.files.find(file => file.source === 'manifest.json');
     assert.ok(manifestRecord);
