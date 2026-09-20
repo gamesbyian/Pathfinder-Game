@@ -91,12 +91,50 @@
           ]
         },
         "sourceRuns": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
         },
         "reconciliationRun": {
-          "type": [
-            "object",
-            "null"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "sourceRuns",
+                "preservesExperimentIdentity",
+                "acquisitionRecomputed"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "recombine-only",
+                    "reanalyze-only",
+                    "retry-missing-acquisition"
+                  ]
+                },
+                "sourceRuns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "preservesExperimentIdentity": {
+                  "type": "boolean"
+                },
+                "acquisitionRecomputed": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
           ]
         },
         "configurationHash": {
