@@ -37,6 +37,8 @@ The frozen artifact is:
 
 `reports/stress/failure-evidence/reserve-starvation-default-profile-sample-2026-09-19.json`
 
+The frozen artifact also carries the machine-readable `resolutionDesign`: live rivals, discriminating observable, required observability axes, negative-interpretation policy, and the 0/1/>=2 outcome meanings. `analyze-reserve-starvation-probe.mjs` consumes that design rather than hardcoding a second copy of the scientific contract.
+
 Frozen ids:
 
 ```text
