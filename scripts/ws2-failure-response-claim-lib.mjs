@@ -83,6 +83,7 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
     decisionDisposition: {
       action: 'select-next-ws2-discriminator',
       route,
+      rationale: analysis.decision.rationale,
       consequence: ROUTE_CONSEQUENCE[route],
       productionChangeLicensed: false,
     },
