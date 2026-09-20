@@ -20,7 +20,7 @@ Seed census: **26 rows = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; n
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / ECONOMICS CLOSED NEGATIVE; failure-response gate.
+**State:** ACTIVE / two-front portfolio.
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
@@ -78,7 +78,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 Frozen-map mining is complete; P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed: A's tested compact-interface ladder is closed negative at C2, D1's ranking consumer is closed negative, F3 has no compact decision-bearing consumer. Dated reports own chronology; no shared runtime substrate or treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** the frozen **53-parent compact-response acquisition** resolved both Class-3 dose (see above) and reconnaissance Stage A: **route: allocation-specific-follow-up**, nominating a bounded matched-work repair-family per-attempt-deadline experiment (distinct from the reserve-fraction mechanism below). **Reserve-starvation Stage-1 CONCLUDED POSITIVE:** 2/40 independent parents (R01154 at 179.0M nodes, R03270 at 172.7M) show a genuine reserve-starvation opportunity (solved above the 75M reserve, within the 300M total envelope), clearing the `>=2` bar to design (not yet dispatch) a matched-total-work `admissibleOrderNodeReserveFractionOverride` A/B, now cross-validated by the Class-3/recon acquisition at a different total budget. Rejection-counterfactual/first-loss/2x2 remain unselected. [`freeze`](../reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md) · [`class3+recon result`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [`reserve-starvation result`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) · [`future`](solver-future-work.md)
+**Current WS2 gate:** HARVEST designs the matched-work repair-family deadline A/B; admissible-order reserve repricing is independently nominated by 2/40 recurrence. ACQUISITION runs the 3-row beam freshness gate, then broadens first-loss demand sampling outside capability-selected Class 3. [`class3`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [`reserve`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) · [`invention`](solver-capability-invention-program.md)
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed. Do not restart the completed structural-response ladder. **H3 remaining-length ordering: INDEPENDENT TRANSFER CONFIRMED (2026-09-20).** Ascending-length order clears 83.3% (10/12) of achievable rescues at 20% shared budget on a disjoint 175-row population (vs the 50% confirmation bar), descending order 0/12 below full budget on every tier. The prespecified transfer requirement is satisfied; this nominates, but does not itself authorize, a bounded matched-work production consumer pilot. [`transfer result`](../reports/2026-09-20-h3-independent-transfer-result-001.md)
