@@ -317,6 +317,7 @@ function frontDoorInputs(model, plans, documentRoles = []) {
             id: question.id,
             owner: question.owner ?? null,
             question: question.question ?? null,
+            acquisitionNeed: question.acquisitionNeed ?? null,
             reopensOn: question.reopensOn ?? null,
         }))
         .sort((a, b) => String(a.id).localeCompare(String(b.id)));
@@ -625,7 +626,8 @@ export function renderResearchSystemBrief(inventory) {
         lines.push('- none');
     } else {
         for (const row of deferred) {
-            lines.push(`- ${row.id}: ${compactBriefValue(row.question)}; reopen: ${compactBriefValue(row.reopensOn)}`);
+            const acquisition = row.acquisitionNeed ? `; acquisition: ${row.acquisitionNeed}` : '';
+            lines.push(`- ${row.id}: ${compactBriefValue(row.question)}; reopen: ${compactBriefValue(row.reopensOn)}${acquisition}`);
         }
     }
 
