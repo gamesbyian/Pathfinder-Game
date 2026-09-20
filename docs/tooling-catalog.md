@@ -55,6 +55,7 @@ Tool choice does not determine evidence quality. Decision-bearing solver work st
 | Research question authority audit | `npm run research:question-authority-audit` | Validate question evidence-path references and active/deferred gate shape; warn on live questions missing from current queue/future-work without making semantic reopen decisions |
 | Signature-collision analysis | `scripts/signature-collision-analysis-lib.mjs` | Reusable grouping/mixed-outcome/independent-unit accounting for behavioral quotients and nested representation falsifiers |
 | Research assets | `node scripts/research-asset-query.mjs --query=<term>` | Existing evidence families, joins, boundaries, entry points |
+| Capability demand | `npm run research:capability-demand [-- --json]` | Validate/summarize HARVEST / EXTENSION / INVENTION demand rows and recurrent acquisition nominations |
 | Raw artifact metadata | `node scripts/artifact-query.mjs [--query=...] [--role=...]` | Meaning/provenance of tracked raw artifacts |
 | Completed GHA result retrieval | `npm run gha:fetch-result -- --run=<run-id>` | Standard result/manifest retrieval without enumerating shards |
 | Tool inventory/health | `node scripts/tooling-census.mjs --compact`, `--health`, `--orphans` | Existing tool discovery, surfaced import health, unindexed specialists |
@@ -77,9 +78,7 @@ A tool's presence does not imply an active hypothesis or a production recommenda
 
 ## Remote execution
 
-GitHub Actions is execution infrastructure. Use [`.github/workflows/README.md`](../.github/workflows/README.md) for workflow-specific inputs/sharding/retrieval. A successful workflow run is not by itself research evidence; reports/manifests must state the protocol, population, code/data ref, work envelope, and evidence role.
-
-Prefer branch/PR execution. Merge experimental code to `main` only when the required workflow/data path genuinely cannot exercise the branch, and record why.
+GitHub Actions is execution infrastructure; workflow inputs/sharding live in [`.github/workflows/README.md`](../.github/workflows/README.md). A green run is not evidence by itself: retain protocol, population, code/data ref, work envelope, and evidence role. Prefer branch/PR execution.
 
 ## Adding or changing tooling
 

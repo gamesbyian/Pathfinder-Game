@@ -18,6 +18,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
 | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority, workstream state, and next gates** |
 | [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Solver reasoning capability map; not a queue |
+| [`solver-capability-invention-program.md`](solver-capability-invention-program.md) | HARVEST / EXTENSION / INVENTION acquisition rules and demand pipeline |
 | [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) | Reconciles historical experiment closure against capability gaps |
 | [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md) | Bounded observer-first plan to measure repeated derivation and potential typed reuse of expensive current-instance facts within one cold solve |
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
@@ -84,7 +85,7 @@ Default orientation:
 
 Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance and [`solver-research-resource-contract.md`](solver-research-resource-contract.md) when a decision depends on a resource's independence, identity, conditioning, missingness, freshness, information loss, or audited consumer semantics. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence. Use [`solver-archaeology-register.md`](solver-archaeology-register.md) only when tracing historical premises/dispositions; it does not rank current work.
 
-The September 11 workflow/evidence remediation is complete. For current workflow/evidence maintenance, start from [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`solver-research-operating-model.md`](solver-research-operating-model.md), the maintained workflow lifecycle/indexes, and the workflow/scripts being changed. Use [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) for the completed program's conclusions; the remediation plan and implementation handoff are historical records, not active queues.
+Workflow/evidence remediation is complete. Current maintenance starts from [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`solver-research-operating-model.md`](solver-research-operating-model.md), maintained lifecycle/indexes, and the code being changed. Historical conclusions remain in [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md).
 
 ### Research instruments
 

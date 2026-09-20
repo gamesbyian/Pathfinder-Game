@@ -350,7 +350,7 @@ assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must r
 assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'active'),
     'WS2 active gate must remain discoverable through the research-status queue relation');
 assert.equal(repositoryIndex.queue.find(row => String(row.workstreamId) === '2')?.questionRef,
-    'WS2-FAILURE-RESPONSE-RECONNAISSANCE',
+    'WS2-REPAIR-DEADLINE-ALLOCATION',
     'active WS2 gate must carry the stable question reference');
 assert.ok(repositoryIndex.queue.some(row => row.workstreamId === '6/7'),
     'composite workstream identities must survive indexing without numeric coercion');
@@ -361,11 +361,12 @@ assert.deepEqual(validateResearchQuestionRegistry(repositoryRegistry), [],
 const idsFor = filters => queryResearchQuestions(repositoryRegistry, filters).map(entry => entry.id);
 assert(idsFor({ query: 'portal coarse', status: 'concluded-positive' }).includes('WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION'),
     'ordinary portal vocabulary must expose the concluded allocation successor, not only the closed global form');
-assert.deepEqual(idsFor({ query: 'admissible order', status: 'deferred-reopen' }).sort(), [
-    'WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION',
+assert.deepEqual(idsFor({ query: 'admissible order', status: 'deferred-reopen' }), [
     'WS2-ADMISSIBLE-ORDER-RETRY-REPRICING',
-].sort(),
-    'admissible-order descendants must remain deferred until their distinct evidence gates reopen them');
+], 'retry repricing remains deferred');
+assert(idsFor({ query: 'admissible order', status: 'concluded-positive' })
+    .includes('WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION'),
+    'reserve-starvation recurrence is now concluded-positive and nominates the matched-work A/B');
 assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICAL-FULL-POOL'),
     'ordinary full-pool vocabulary must find the already-run categorical projection');
 assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), [],

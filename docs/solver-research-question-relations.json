@@ -881,6 +881,75 @@
         "No hard prune is earned until stored/referee-valid prefix replay and differential soundness checks show zero false rejects."
       ],
       "reopensOn": null
+    },
+    {
+      "id": "WS2-REPAIR-DEADLINE-ALLOCATION",
+      "question": "Can a bounded increase in repair-family per-attempt deadline recover already-demonstrated Class-3 capability at matched total work without displacing production winners?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "repair deadline allocation",
+        "repair-family per-attempt deadline"
+      ],
+      "answeredBy": [],
+      "result": "Nominated, not yet treatment-tested: 16 Class-3 censored rows show repair-family node caps well below known isolated solve cost, corroborated by residual-vs-solved-control evidence. Current production has fixed early-repair caps (2M ordinary, up to 6M biased) but no dedicated top-level experiment override for them.",
+      "triggeredBy": [
+        "WS2-CLASS3-DOSE-EXPOSURE",
+        "WS2-FAILURE-RESPONSE-RECONNAISSANCE"
+      ],
+      "constrainedBy": [
+        "docs/solver-capability-invention-program.md",
+        "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
+        "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md"
+      ],
+      "constrains": [
+        "Treat this as HARVEST: do not infer a missing semantic capability until the matched-work allocation question is resolved.",
+        "Implementation prerequisite: add narrow experiment-only SolveOpts for ordinary and biased early-repair node caps; keep them separate so the 2M ordinary and 6M biased calibrations cannot silently move together.",
+        "Predeclare treatment caps from the frozen isolated-cost distribution and protect earlier-stage winners under fixed total work; the wall-clock cap is already a non-binding safety tripwire and is not the treatment."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [
+        "P123",
+        "P206"
+      ],
+      "measurementOpportunities": [
+        "MO-004"
+      ],
+      "acquisitionNeed": "telemetry-or-economics"
+    },
+    {
+      "id": "WS2-CAPABILITY-INVENTION-DEMAND",
+      "question": "What capabilities does the current residual actually demand after cheaper exposure, dose, and deployment explanations are ruled out?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "capability invention demand",
+        "invention backlog",
+        "first-loss demand sampling"
+      ],
+      "answeredBy": [
+        "reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md"
+      ],
+      "result": "Seed census established the acquisition instrument but is selection-biased: 26 retained-evidence rows classify 22 HARVEST, 1 EXTENSION, 3 UNKNOWN, 0 INVENTION; 23/26 are Class-3 rows selected on known historical capability. The three UNKNOWN beam rows first require current-head isolated freshness replay. Broader prevalence remains open.",
+      "triggeredBy": [],
+      "constrainedBy": [
+        "docs/solver-capability-invention-program.md",
+        "docs/solver-first-loss-causal-taxonomy.md",
+        "docs/solver-reasoning-capability-atlas.md",
+        "reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md",
+        "reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md"
+      ],
+      "constrains": [
+        "Do not infer invention prevalence from the harvest-enriched Class-3 seed.",
+        "Promote only recurrent decision-bearing semantic gaps after cheaper earlier first-loss classes are excluded.",
+        "The immediate beam-UNKNOWN gate is current-head isolated freshness, not a new beam architecture."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [
+        "P135"
+      ],
+      "measurementOpportunities": [],
+      "acquisitionNeed": "fresh-independent-parents"
     }
   ]
 }

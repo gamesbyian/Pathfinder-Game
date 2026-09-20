@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method.
+Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method; [invention program](solver-capability-invention-program.md) owns capability-acquisition classification. Queue shrinkage does not reopen architecture.
 
 ## Deferred descendants of active premises
 
@@ -19,19 +19,16 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 ## Deferred plan closeouts
 
-- **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
-- **Failure evidence:** P3 failure-response and P4A Class-3 dose both concluded (2026-09-20) from the shared 53-parent acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md` -> `reports/2026-09-20-ws2-class3-dose-and-reconnaissance-result-001.md`): P4A 0/23 exposure-gap, 20/23 censored-dose (16 repair-family, 5 admissible-order-fraction), 3/23 exposed-and-negative; P3 routes `allocation-specific-follow-up`, nominating a repair-family per-attempt-deadline A/B (distinct question from P4B). P4B reserve starvation concluded positive (2/40, see "Admissible-order retry repricing" above), now cross-validated by P4A's admissible-order rows. P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Parity:** [preflight](solver-parity-phase-capacity-preflight.md).
+- **Failure evidence:** Class-3 dose and reconnaissance are concluded; repair-deadline allocation is active, reserve repricing independently nominated, and P7 still needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
 ## Hint/failure reopen hooks
 
-- Compatible compact-response rows -> identity/novelty/frontier audits; never backfill pre-contract attempts.
-- Repeated compatible populations + ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
-- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins. Require a valid denominator/protocol/dependence unit; R00044's canary is not prevalence evidence.
-- Recurring rich producer -> search-loss P8 decision.
-- Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
-- Whole-space extinction is not deferred; sampled hints cannot prove it.
+- Use compatible compact-response evidence first; never backfill pre-contract attempts. Repeated compatible populations may earn phenotype reducers.
+- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins with valid denominator/protocol/dependence unit.
+- Recurring rich producer -> P8; explicit first-loss selection -> P9. Sampled hints cannot prove whole-space extinction.
 
 ## Deferred architectural questions
 
@@ -49,7 +46,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 ## Conditional composition/allocation work
 
-Keep these dormant unless an active acquisition lane produces a changed premise.
+Dormant unless an active lane changes the premise.
 
 | Question | Reopen condition |
 |---|---|
@@ -60,10 +57,8 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
-| Independent transfer / human-editor-envelope niches | A broad claim needs independent construction/locked parents or a stable omitted geometry is independently nominated |
 | Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use a bounded work ladder, not standing sweeps |
 | Mechanism interaction | Reopen when one mechanism plausibly creates another's opportunities; test control/A/B/A+B at matched work, not broad flag matrices |
-| Latent response cluster | Reopen only for an unexplained ancestry/protocol-controlled covariance nomination; clustering alone is not capability evidence |
 
 ## Closed forms that stay closed
 
@@ -93,6 +88,4 @@ Measurement opportunities are non-queue. Promote one only for a live ambiguity w
 
 ## Research hygiene
 
-Before reviving history, classify its disposition: **FORM-CLOSED, DESCRIPTOR-CLOSED, CROSS-LEVEL-CLOSED, PARTICIPATION-INVALID, DIRTY-REVERT, POPULATION-LIMITED, ECONOMICS-CLOSED, SEMANTIC-CLOSED, or OPEN-PER-INSTANCE**. Only `SEMANTIC-CLOSED` blocks a materially different form of the same question.
-
-Keep this file short. Active execution belongs in the workstream authority; measurements/chronology belong in dated reports; historical interpretation belongs in the archaeology register.
+Classify historical negatives with the stop taxonomy in [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md); only `SEMANTIC-CLOSED` blocks a materially different form. Active execution stays in workstreams and chronology in reports.

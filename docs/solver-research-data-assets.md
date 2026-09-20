@@ -58,6 +58,7 @@ Broad asset/feature mining creates selection pressure; discovered relationships 
 | Static descriptors | level × legal feature | Which geometry/mechanics stratify an effect? |
 | Compact failure response | run × parent × attempt/stage | Participation, dose, censoring, termination, solved controls. |
 | Search-loss evidence | run × parent × selected event | Where did search lose or retain material, including solved-run controls? |
+| Capability-invention demand | parent × first-loss diagnosis | Is this miss HARVEST, EXTENSION/INVENTION, or still unresolved? |
 
 ## High-value joins
 
