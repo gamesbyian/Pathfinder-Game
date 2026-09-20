@@ -25,7 +25,10 @@ export function cliOptionContractIssues(source, file = '<source>') {
     const letNeedle = `let ${mapName} = new Map(`;
     const assignment = Math.max(before.lastIndexOf(constNeedle), before.lastIndexOf(letNeedle));
     if (assignment < 0) continue;
-    const constructorRegion = before.slice(assignment);
+    const statementStart = Math.max(0, source.lastIndexOf('\n', assignment) + 1);
+    const semicolon = source.indexOf(';', assignment);
+    const statementEnd = semicolon < 0 ? match.index : Math.min(semicolon + 1, match.index);
+    const constructorRegion = source.slice(statementStart, statementEnd);
     if (/\b[A-Za-z_$][\w$]*\.slice\(2(?:\)|,)/u.test(constructorRegion)) {
       issues.push(`${file}: Map "${mapName}" strips the leading "--" from CLI keys but later looks up a "--..." key`);
     }
