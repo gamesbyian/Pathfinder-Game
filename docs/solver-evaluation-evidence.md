@@ -77,7 +77,7 @@ Current cross-distribution sources include:
   the candidate.
 
 Match the claim to the mechanics actually represented by the transfer source. The topology generator
-v0.1 intentionally omits portals, static filters, surround, adjacent-turn, and multi-gate levels, so
+v0.1 has an intentionally narrower mechanic/topology envelope; the current machine-owned support set is `scripts/stress/topology-generation-support-lib.mjs`, and generated topology corpora carry that same envelope. Therefore
 it cannot establish transfer across those mechanics.
 
 ## Evidence intensity follows selection pressure
@@ -168,7 +168,7 @@ and check it against the generator's actual support.
 | Situation | Action |
 |---|---|
 | Candidate depends only on mechanics/topology already represented by v0.1 and the claim is limited to that represented scope | Use the generator as-is. Do not broaden it merely for completeness. |
-| Candidate's activation/routing rule requires an omitted mechanic (currently portals, static filters, surround, adjacent-turn, or multi-gate) | **Do not use a null/non-participating topology run as evidence against the candidate.** Either choose another independent source that represents the mechanic or expand the generator first. |
+| Candidate's activation/routing rule requires a mechanic the producer support envelope marks unsupported | **Do not use a null/non-participating topology run as evidence against the candidate.** Either choose another independent source that represents the mechanic or expand the generator first. |
 | Candidate concerns scale/grid size outside 12x12/15x15, or a topology property absent from perfect-maze-diameter construction (for example macro cycles, multiple competing routes, large open regions, room/corridor structure, or a specific separator/bottleneck regime) | Treat v0.1 as out of scope for that claim. Prefer another source or add a deliberately different construction grammar/scale before the decision-bearing run. |
 | Existing topology generator participates adequately and already challenges the causal property at issue | **Do not expand it.** Extra mechanics/topologies add confounds and maintenance without improving the current test. |
 | Repeated ranked research questions are blocked by the same missing mechanic/topology family, or a broad promotion claim materially requires coverage the current generator cannot represent | Expansion is justified. Add the smallest missing capability/family, validate solvability/provenance, document the new support boundary, and bump generator version before decision-bearing use. |
