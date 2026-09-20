@@ -4,6 +4,7 @@ export const RESEARCH_OBSERVABILITY_AXES = Object.freeze([
   'reach',
   'participation',
   'measurementSupport',
+  'fidelity',
   'coverage',
   'censoring',
 ]);
@@ -21,6 +22,7 @@ export const RESEARCH_OBSERVABILITY_DEFAULT_REMEDIATION = Object.freeze({
   reach: 'routing-or-exposure',
   participation: 'allocation-or-wiring',
   measurementSupport: 'instrumentation-or-reference',
+  fidelity: 'configuration-or-protocol-reconciliation',
   coverage: 'acquisition-or-reconciliation',
   censoring: 'work-envelope-or-recovery',
 });
