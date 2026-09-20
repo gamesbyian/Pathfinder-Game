@@ -178,6 +178,22 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
 
     for (const block of model.relations.researchBlocks) {
         if (!questionIds.has(block.questionId)) errors.push(`research block ${block.blockId} references unknown question ${block.questionId}`);
+        const parentIds = new Set(block.researchBlock?.parentIds ?? []);
+        for (const [index, event] of (block.researchBlock?.consumptionEvents ?? []).entries()) {
+            if (!questionIds.has(event.questionId)) {
+                errors.push(`research block ${block.blockId} consumptionEvents[${index}] references unknown question ${event.questionId}`);
+            }
+            if (/^(?:docs|reports|scripts|data|logs)\//u.test(String(event.decisionRef ?? ''))
+                && !existsSync(path.join(root, event.decisionRef))) {
+                errors.push(`research block ${block.blockId} consumptionEvents[${index}] references missing decisionRef ${event.decisionRef}`);
+            }
+            if (event?.scope?.kind === 'block' && String(event.scope.id) !== String(block.blockId)) {
+                errors.push(`research block ${block.blockId} consumptionEvents[${index}] block scope names ${event.scope.id}`);
+            }
+            if (event?.scope?.kind === 'parent' && !parentIds.has(event.scope.id)) {
+                errors.push(`research block ${block.blockId} consumptionEvents[${index}] parent scope names unknown parent ${event.scope.id}`);
+            }
+        }
     }
 
     for (const bundle of model.relations.durableEvidence) {
