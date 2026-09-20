@@ -195,7 +195,7 @@ export function buildResearchStatusIndex(root) {
         }
         const linkedPaths = [...source.matchAll(MARKDOWN_LINK)]
             .map(match => repositoryPath(root, reportPath, match[1])).filter(Boolean);
-        const currentAuthorities = linkedPaths.filter(link => link.startsWith('docs/') &&
+        const linkedCurrentDocs = linkedPaths.filter(link => link.startsWith('docs/') &&
             !link.startsWith('docs/archive/') && existsSync(path.join(root, link)));
         const artifacts = new Set([
             ...linkedPaths.filter(link => /^(?:data|logs|reports)\//.test(link)),
@@ -205,7 +205,9 @@ export function buildResearchStatusIndex(root) {
         topics.push({
             topicId: filename[2], status: metadata.status, title: metadata.title,
             metadataSource: metadata.source,
-            authorities: [...new Set(currentAuthorities)].sort(),
+            linkedCurrentDocs: [...new Set(linkedCurrentDocs)].sort(),
+            authorities: [...new Set(linkedCurrentDocs)].sort(),
+            authorityRelation: 'hyperlink-discovery-only',
             latestEvidence: { date: metadata.lastEvidenceDate, summary: metadata.lastEvidenceSummary, report: reportPath },
             decision: metadata.decision, remainingGate: metadata.remainingGate, artifacts: [...artifacts].sort(),
             researchQuestion: metadata.researchQuestion,
@@ -285,7 +287,10 @@ function compactEntry(kind, entry) {
     return { kind, id: entry.topicId, status: entry.status, title: entry.title,
         date: entry.latestEvidence.date, decision: entry.decision, gate: entry.remainingGate,
         metadataSource: entry.metadataSource ?? null,
-        report: entry.latestEvidence.report, authorities: entry.authorities,
+        report: entry.latestEvidence.report,
+        linkedCurrentDocs: entry.linkedCurrentDocs ?? entry.authorities ?? [],
+        authorityRelation: entry.authorityRelation ?? 'legacy-unknown',
+        authorities: entry.authorities,
         researchQuestion: entry.researchQuestion ?? null,
         premiseRefs: entry.premiseRefs ?? [],
         measurementOpportunities: entry.measurementOpportunities ?? [],
