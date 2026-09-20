@@ -13,6 +13,11 @@ assert.ok(inventory.frontDoorInputs.liveQueue.some(row => row.workstreamId === 2
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
 assert.ok(inventory.frontDoorInputs.unfinishedLifecycle.some(row => row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'));
 assert.ok(Array.isArray(inventory.frontDoorInputs.structuredCloseouts));
+const interoperabilityCloseout = inventory.frontDoorInputs.structuredCloseouts.find(row =>
+    row.path === 'reports/2026-09-19-research-contract-interoperability-audit-001.md');
+assert.ok(interoperabilityCloseout, 'front door should consume the first real structured closeout');
+assert.match(interoperabilityCloseout.scope.inferenceScope, /research-contract interoperability/u);
+assert.ok(interoperabilityCloseout.sourceArtifacts.includes('docs/solver-experiment-result.schema.json'));
 assert.equal(inventory.integrationHealth.errorCount, 0, 'inventory should surface existing integration-audit errors');
 assert.ok(inventory.integrationHealth.semanticJoinCoverage.authoredAssetRelationships >= 1);
 assert.equal(inventory.integrationHealth.questionCount, inventory.currentState.questions);
