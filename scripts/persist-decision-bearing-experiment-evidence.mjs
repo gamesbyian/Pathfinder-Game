@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { decisionBearingExperimentResultIssues } from './solver-experiment-contract.mjs';
 
 const args = process.argv.slice(2);
 const values = new Map();
@@ -98,6 +99,12 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
   const retained = [];
 
   for (const { file: manifestFile, manifest } of findDecisionBearingManifests(staging)) {
+    const eligibilityIssues = decisionBearingExperimentResultIssues(manifest);
+    if (eligibilityIssues.length > 0) {
+      throw new Error(
+        `refusing to persist manifest that claims decisionBearing=true but fails shared eligibility: ${path.relative(staging, manifestFile)}: ${eligibilityIssues.join(', ')}`,
+      );
+    }
     const artifactRoot = path.dirname(manifestFile);
     const experimentId = safeSegment(manifest?.experiment?.experimentId, 'experiment');
     const runId = safeSegment(manifest?.experiment?.workflowRunId ?? manifest?.runId, 'unknown-run');
