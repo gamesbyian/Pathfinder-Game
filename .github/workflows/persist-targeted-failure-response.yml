@@ -35,6 +35,9 @@ jobs:
           fi
 
           DEST_DIR="reports/stress/failure-evidence/targeted-sweep-runs/${{ github.run_id }}"
+          if [ "${{ github.run_attempt }}" != "1" ]; then
+            DEST_DIR="${DEST_DIR}-attempt-${{ github.run_attempt }}"
+          fi
           mkdir -p "$DEST_DIR"
           cp "$SRC" "$DEST_DIR/compact-failure-response.json"
           cp artifact-staging/solver-sweep-result/manifest.json "$DEST_DIR/manifest.json"
