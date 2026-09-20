@@ -32,6 +32,12 @@ writeFileSync(path.join(root, 'docs/solver-opt-in-experiment-ledger.md'), `# Led
 | \`FLAG_TWO\` | \`open\` | **OPEN.** Awaiting a bounded promotion test. |
 | \`FLAG_THREE\` | \`no-current-gate\` | **RETAINED, NO CURRENT PROMOTION GATE.** Counterfactual only. |
 | \`FLAG_FOUR\` | \`not-promotion-candidate\` | **NEW architecture prerequisite, not itself a promotion candidate.** |
+
+## Recently promoted/default-ON mechanisms worth remembering
+| Mechanism | Decision evidence ref | Current disposition |
+|---|---|---|
+| \`PROMOTED_ONE\` + \`PROMOTED_TWO\` | \`reports/2026-08-21-example.md\` | Both default-ON after the fixture decision. |
+| \`PROMOTED_HISTORICAL\` | — | Historical default-ON mechanism without a retained primary decision report. |
 `);
 writeFileSync(path.join(root, 'docs/solver-research-question-relations.json'), JSON.stringify({
     schemaVersion: 1,
@@ -134,6 +140,17 @@ assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_TWO')?.sta
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_THREE')?.promotionState, 'no-current-gate');
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_THREE')?.status, 'pending');
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_FOUR')?.promotionState, 'not-promotion-candidate');
+assert.deepEqual(index.promotions.map(row => row.promotionId), [
+    'PROMOTED_ONE+PROMOTED_TWO',
+    'PROMOTED_HISTORICAL',
+]);
+assert.deepEqual(index.promotions[0].mechanisms, ['PROMOTED_ONE', 'PROMOTED_TWO']);
+assert.equal(index.promotions[0].decisionEvidenceRef, 'reports/2026-08-21-example.md');
+assert.equal(index.promotions[1].decisionEvidenceRef, null);
+assert.deepEqual(queryResearchStatusIndex(index, { kind: 'promotion' }).map(x => x.id), [
+    'PROMOTED_ONE+PROMOTED_TWO',
+    'PROMOTED_HISTORICAL',
+]);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
 const taggedEvidence = index.evidence.find(row => row.topicId === 'example');
 assert.equal(taggedEvidence.metadataSource, 'structured-closeout');
