@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7000 max=9500 -->
 # Solver parity-phase and checkerboard-capacity preflight
 
-> **Status:** ACTIVE CHEAP PREMISE TESTS. Production behavior unchanged.
+> **Status:** ACTIVE CHEAP PREMISE TESTS; H1/H2 shadow observers implemented, corpus evidence pending. Production decisions unchanged.
 > **Owner:** `docs/solver-optimization-workstreams.md` Lane H.
 > **Origin:** [parity invariant audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
 > **Question:** can exact checkerboard/twist-phase structure prove enough additional dead search states, or explain enough decision-bearing ordering/repair failures, to justify a production consumer?
@@ -200,3 +200,53 @@ Any soft consumer follows the ordinary matched-work research rules:
 Lane H is a cheap premise-acquisition lane and may run in parallel with the current Workstream-2 failure-response gate. It does not replace or reorder that gate.
 
 Only H1 and H2 are active premise tests. H3-H6 are downstream or secondary measurements. Contingent architectures/treatments belong in `solver-future-work.md`, not here or in the audit report as a second queue.
+
+
+## 8. Implemented observational seam
+
+The first falsifier machinery is now implemented on this branch.
+
+### H1
+
+- `distance.ts` owns a static two-layer 0-1 relaxation keyed by future twist-jump parity.
+- `prepLevel()` builds the two goal-distance layers only on twist-bearing levels.
+- `evaluatePrunedMove()` compares the required phase layer with the existing scalar goal distance at the same distance-prune seam.
+- `ParityPhaseDistanceObserver` is research-only and cannot affect the returned prune verdict.
+- A synthetic regression witness proves an incremental H1 case: scalar goal distance fits while the required twist phase cannot fit.
+
+### H2
+
+- `isConnected()` reuses the exact reached set from its existing flood fill.
+- The observer performs only a bounded grid scan; it never launches a second fill.
+- It records the existing scalar-volume result and the over-generous checkerboard-capacity result at the same decision seam.
+- `ParityCapacityObserver` is research-only and cannot affect the connectivity verdict.
+- A synthetic regression witness has compatible endpoint parity and enough total volume, but insufficient fresh capacity on one checkerboard color.
+
+### Synchronous corpus probe
+
+Run:
+
+```bash
+npm run solver:parity-invariant-shadow -- \
+  --corpus=data/stress/stress-levels.json \
+  --work-budget=<fixed-whole-solve-work> \
+  --budget-ms=<generous-wall-safety-deadline> \
+  --out=reports/stress/parity-invariant-shadow/<run>.json
+```
+
+The probe:
+
+- uses the real sequential production `solveLevel` ladder;
+- changes no ablation/profile or solver decision;
+- uses `strictTotalWorkBudget=true` so the scientific work envelope is deterministic;
+- leaves ordinary additive-tier policy intact inside that cap;
+- records H1 and H2 participation/opportunity in the same solve;
+- reports observer reach, measurement support, fidelity, coverage, deadline truncation and errors separately;
+- treats no observer reach / deadline truncation / ineligible mechanic regime as indeterminate, never as a clean negative;
+- keeps only bounded example records while aggregating all observer calls.
+
+This is deliberately compatible in spirit with PR #1923's resolution-envelope discipline without duplicating that shared library on this branch. Once #1923 is in the base, the raw `resolutionInputs` should be adapted through the canonical resolution-envelope owner rather than growing a second validator here.
+
+### Decision boundary
+
+The new code is still **observer machinery**, not an earned treatment. No H1/H2 result may change pruning, ordering, scoring, routing or repair until the preflight's stated witness/replay/differential/economic gates are met.
