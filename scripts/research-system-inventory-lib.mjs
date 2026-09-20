@@ -200,12 +200,26 @@ function sharedDependencies(root, commands) {
         .sort((a, b) => b.consumerCount - a.consumerCount || a.dependency.localeCompare(b.dependency));
 }
 
+const WORKFLOW_ROLES = new Set(['operational', 'evidence-producing']);
+const WORKFLOW_STATUSES = new Set(['maintained']);
+
 function workflowInventory(root) {
     const lifecyclePath = path.join(root, 'docs/solver-workflow-lifecycle.json');
     if (!existsSync(lifecyclePath)) return [];
     const lifecycle = JSON.parse(readFileSync(lifecyclePath, 'utf8'));
     const packageScriptNames = new Set(Object.keys(packageScripts(root)));
+    const seen = new Set();
     return (lifecycle.workflows ?? []).map(row => {
+        if (!row.workflow || seen.has(row.workflow)) {
+            throw new Error(`${lifecyclePath}: workflow identity is missing or duplicated: ${row.workflow ?? '(missing)'}`);
+        }
+        seen.add(row.workflow);
+        if (!WORKFLOW_ROLES.has(row.role)) {
+            throw new Error(`${lifecyclePath}: unknown workflow role ${row.role ?? '(missing)'} for ${row.workflow}`);
+        }
+        if (!WORKFLOW_STATUSES.has(row.status)) {
+            throw new Error(`${lifecyclePath}: unknown workflow status ${row.status ?? '(missing)'} for ${row.workflow}`);
+        }
         const workflowPath = normalize(path.join('.github/workflows', row.workflow));
         const absolute = path.join(root, workflowPath);
         const source = existsSync(absolute) ? readFileSync(absolute, 'utf8') : '';
