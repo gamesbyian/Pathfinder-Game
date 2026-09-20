@@ -53,7 +53,16 @@
       "deadline-truncated, harness-error, malformed, missing, and unknown outcomes remain indeterminate",
       "unknown or mixed protocol/solver identity is ineligible for primary routing",
       "failure-specific nominations require protocol-compatible solved controls"
-    ]
+    ],
+    "calibration": {
+      "runId": "35423841173",
+      "semanticParity": true,
+      "representativeCompactWallOverheadPct": 0.46,
+      "representativeRichWallOverheadPct": 10.32,
+      "representativeCompactPayloadBytesApprox": 35700,
+      "representativeRichPayloadBytesApprox": 246000,
+      "caveat": "Hosted timing and payload values are bounded calibration evidence for the tested producer/search shape, not universal constants."
+    }
   },
   "currentApplicability": {
     "basis": "solver-and-protocol-relative",
