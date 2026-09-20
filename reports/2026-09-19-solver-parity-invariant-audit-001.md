@@ -1,10 +1,14 @@
 # Solver parity invariant audit
 
-> **Status:** in progress
+> **Status:** audit complete; live premise work routed to canonical authorities
 > **Started:** 2026-09-19
 > **Branch:** `chatgpt/solver-parity-invariant-audit-2026-09-19`
 > **Scope:** solver correctness, feasibility, search ordering, state identity, scheduling, repair, portal semantics, and research surfaces where checkerboard/grid parity or equivalent bipartite-walk invariants can affect decisions.
-> **Production behavior:** unchanged by this initial inventory commit.
+> **Production behavior:** unchanged by this audit branch.
+> **Live owner:** [solver optimization workstreams](../docs/solver-optimization-workstreams.md), Lane H.
+> **Execution preflight:** [parity phase + checkerboard capacity](../docs/solver-parity-phase-capacity-preflight.md).
+> **Deferred descendants:** [solver future work](../docs/solver-future-work.md).
+> **Hard-consumer safety contract:** [solver correctness hardening](../docs/solver-correctness-hardening.md).
 
 ## Question
 
@@ -324,3 +328,18 @@ plus whether a phase-compatible relaxed route remains. If frozen near-miss plate
 6. Only after conditioned-distance opportunity exists, replace the portal scorer's first-twist proxy with current-phase guidance and compare at matched work.
 
 This order tries to make one new representation — phase-conditioned distance — answer several audit questions before proliferating mechanisms.
+
+
+## Routing closeout
+
+This report is an audit/evidence artifact, not a live queue.
+
+Surviving obligations have been routed as follows:
+
+- **H1 phase-conditioned relaxed goal distance** and **H2 checkerboard-split connectivity capacity** are active cheap premise tests in `docs/solver-optimization-workstreams.md` Lane H, with their protocol in `docs/solver-parity-phase-capacity-preflight.md`.
+- **Admissible-order propagation, repair residual observation, all-gates infeasibility and complete/random hint enumeration** are secondary/downstream seams in the same preflight. They do not outrank H1/H2.
+- **Phase-aware portal scoring, dynamic phase connectivity, a color-capacity hard prune, parity-aware repair treatment, parity-derived routing, all-gates fast exit and hint-enumeration production changes** are contingent descendants in `docs/solver-future-work.md` with explicit reopen conditions.
+- The parity-specific proof obligations and common category errors are now part of `docs/solver-correctness-hardening.md`.
+- The stale ablation descriptions for ordinary parity prune/gate filtering were corrected to reflect current same-parity-portal coverage.
+
+No production solver decision was changed by this audit. The next justified implementation is observational instrumentation for H1/H2, not a default-on prune or scoring change.
