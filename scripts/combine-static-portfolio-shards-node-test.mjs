@@ -98,7 +98,9 @@ assert.throws(() => combine([shard1, shard2], 'full-menu', incompletePlan), /abs
 
 // A duplicated cellId (two shards both produced the same cell) must also fail loudly.
 const dupedShard = { results: [cell('SP-c2-1-full-menu', 'L1', 'full-menu', true, 1, 'success')] };
-const planForDupeCheck = { cells: [{ cellId: 'SP-c2-1-full-menu' }] };
+const planForDupeCheck = {
+    cells: shard1.results.map(({ cellId, levelId, variantLabel }) => ({ cellId, levelId, variantLabel })),
+};
 assert.throws(() => combine([shard1, dupedShard], 'full-menu', planForDupeCheck), /duplicated/);
 
 const exactPlan = {
