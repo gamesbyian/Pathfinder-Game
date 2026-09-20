@@ -75,26 +75,47 @@ function rawEffectiveConfigDigest(value) {
     return createHash('sha256').update(stableStringify(value)).digest('hex');
 }
 
-function collectEffectiveConfig(reports) {
-    const withConfig = reports.filter(report => report.summary?.effectiveConfig && typeof report.summary.effectiveConfig === 'object');
-    if (withConfig.length === 0 || withConfig.length !== reports.length) return null;
-
-    const firstConfig = withConfig[0].summary.effectiveConfig;
+function validatedEffectiveConfig(reports) {
+    const firstConfig = reports[0].summary.effectiveConfig;
     const firstCanonical = stableStringify(firstConfig);
-    for (const report of withConfig) {
+    for (const report of reports) {
         const canonical = stableStringify(report.summary.effectiveConfig);
         if (canonical !== firstCanonical) {
-            throw new Error(`Mismatched effectiveConfig: ${withConfig[0].path} and ${report.path} did not execute the same solver configuration.`);
+            throw new Error(`Mismatched effectiveConfig: ${reports[0].path} and ${report.path} did not execute the same solver configuration.`);
         }
         const recorded = report.summary.effectiveConfigDigest;
         if (recorded != null && recorded !== rawEffectiveConfigDigest(report.summary.effectiveConfig)) {
             throw new Error(`${report.path}: effectiveConfigDigest does not match effectiveConfig.`);
         }
     }
-    return {
-        value: firstConfig,
-        digest: rawEffectiveConfigDigest(firstConfig),
-    };
+    return firstConfig;
+}
+
+function collectEffectiveConfig(reports, { allowMixedCorpora = false } = {}) {
+    const withConfig = reports.filter(report => report.summary?.effectiveConfig && typeof report.summary.effectiveConfig === 'object');
+    if (withConfig.length === 0 || withConfig.length !== reports.length) return null;
+
+    let value;
+    if (!allowMixedCorpora) {
+        value = validatedEffectiveConfig(withConfig);
+    } else {
+        const groups = new Map();
+        for (const report of withConfig) {
+            const corpusKey = stableStringify(report.summary.corpus);
+            if (!groups.has(corpusKey)) groups.set(corpusKey, []);
+            groups.get(corpusKey).push(report);
+        }
+        if (groups.size === 1) {
+            value = validatedEffectiveConfig(withConfig);
+        } else {
+            const byCorpus = {};
+            for (const corpusKey of [...groups.keys()].sort()) {
+                byCorpus[corpusKey] = validatedEffectiveConfig(groups.get(corpusKey));
+            }
+            value = { byCorpus };
+        }
+    }
+    return { value, digest: rawEffectiveConfigDigest(value) };
 }
 
 function collectExecutionConfig(reports) {
@@ -210,7 +231,7 @@ function main() {
         }
     }
     const executionConfig = collectExecutionConfig(reports);
-    const effectiveConfig = collectEffectiveConfig(reports);
+    const effectiveConfig = collectEffectiveConfig(reports, { allowMixedCorpora });
     const producerMetadata = consistentMetadata(reports, ['producer', 'entrypoint', 'workflowFamily', 'levelBlind', 'historyAware', 'schedulerMode']);
 
     const scopedIdentity = (corpus, subjectId) => allowMixedCorpora
