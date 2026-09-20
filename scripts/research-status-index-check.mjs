@@ -370,8 +370,13 @@ assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICA
     'ordinary full-pool vocabulary must find the already-run categorical projection');
 assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), [],
     'the topology microscope is no longer active after the F3 descriptor/expansion closeout');
-assert.deepEqual(idsFor({ query: 'topology', status: 'mixed' }), ['WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR'],
-    'topology discovery must route to the qualified F3 descriptor disposition after its microscope ran');
+{
+    const mixedTopology = idsFor({ query: 'topology', status: 'mixed' });
+    assert(mixedTopology.includes('WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR'),
+        'topology discovery must retain the qualified F3 descriptor disposition after its microscope ran');
+    assert(mixedTopology.includes('WS2-SEPARATOR-DYNAMIC-INTERFACE'),
+        'topology discovery must expose the mixed Lane-A dynamic-interface successor once C0 advances to C1');
+}
 assert(idsFor({ query: 'topology', status: 'concluded-positive' }).includes('WS2-OPEN-PATH-TOPOLOGY-SIGNATURE'),
     'the open-path topology signature question must remain discoverable as the concluded premise upstream of F3');
 assert.deepEqual(idsFor({ query: 'D1', status: 'active' }), [],
