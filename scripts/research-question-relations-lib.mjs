@@ -92,6 +92,25 @@ export function validateResearchQuestionRegistry(registry) {
                 errors.push(`${prefix}.${field} must be a string array when present`);
             }
         }
+        if (question?.answeredBy != null) {
+            if (!Array.isArray(question.answeredBy)) {
+                errors.push(`${prefix}.answeredBy must be an array when present`);
+            } else {
+                const seenAnsweredBy = new Set();
+                for (const value of question.answeredBy) {
+                    const ref = typeof value === 'string' ? value.trim() : '';
+                    if (!/^(?:docs|reports|scripts|data|logs)\//u.test(ref)) {
+                        errors.push(`${prefix}.answeredBy must contain repository paths`);
+                        break;
+                    }
+                    if (seenAnsweredBy.has(ref)) {
+                        errors.push(`${prefix}.answeredBy duplicates ${ref}`);
+                        break;
+                    }
+                    seenAnsweredBy.add(ref);
+                }
+            }
+        }
     }
 
     for (const [index, question] of questions.entries()) {
