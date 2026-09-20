@@ -46,7 +46,14 @@
     "kind": "pathfinder-compact-failure-response",
     "supportPolicy": "reported-fields-only-missing-remains-unknown",
     "calibrationRef": "reports/2026-09-19-failure-evidence-prehandoff-direct-work-audit-001.md",
-    "calibrationNote": "Automatic compact failure-response is the low-overhead broad instrument; rich capture remains a separate selected microscope."
+    "calibrationNote": "Automatic compact failure-response is the low-overhead broad instrument; rich capture remains a separate selected microscope.",
+    "schemaVersion": 1,
+    "abstentionConditions": [
+      "unreported compact-response fields remain unknown",
+      "deadline-truncated, harness-error, malformed, missing, and unknown outcomes remain indeterminate",
+      "unknown or mixed protocol/solver identity is ineligible for primary routing",
+      "failure-specific nominations require protocol-compatible solved controls"
+    ]
   },
   "currentApplicability": {
     "basis": "solver-and-protocol-relative",
@@ -69,5 +76,11 @@
     "developmentLaboratory": "current-ws2-residual",
     "confirmationPopulation": "protocol-compatible post-instrumentation compact-response population when available",
     "broadDeploymentClaim": false
-  }
+  },
+  "adaptiveLineage": {
+    "selectionEvent": "A route is chosen only after Stage-A/Stage-B observations are visible.",
+    "descendantEvidenceRole": "development-until-new-precommitment",
+    "consequence": "Any selected rejection, first-loss, allocation, or 2x2 descendant must freeze its own design before treatment outcomes and cannot treat the reconnaissance population as untouched confirmation."
+  },
+  "treatmentFidelity": "not-applicable-routing-screen-no-treatment"
 }
