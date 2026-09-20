@@ -129,7 +129,9 @@ export function ws2FailureResponseAnalysisIdentity(analysis) {
       inputs: undefined,
       filters,
       rows: Array.isArray(observation.rows)
-        ? observation.rows.map(({ __sourceFile: _sourceFile, ...row }) => row)
+        ? observation.rows
+          .map(({ __sourceFile: _sourceFile, ...row }) => row)
+          .sort((left, right) => JSON.stringify(stable(left)).localeCompare(JSON.stringify(stable(right))))
         : observation.rows,
     },
   };
