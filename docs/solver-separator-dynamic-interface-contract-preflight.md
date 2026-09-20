@@ -3,7 +3,7 @@
 > **Status:** bounded experiment contract.
 > **Authority:** current Lane-A descendant earned by `reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md`.
 > **Runtime effect:** none. This is an offline/exact representation falsifier.
-> **Progress:** C0 concluded mixed on 2026-09-19. Corrected C1 is **mixed + repetition-supported**: 187/546 decisive rows (34.25%) remain in repeated signatures across 58 parents, with two exact LIVE/DEAD mixed signatures. The live gate is the already-frozen C2 global-accounting representation on the same population (`reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md`).
+> **Progress:** tested form concluded negative at C2. C0 was compressive/mixed; corrected C1 remained compressive/mixed; C2 became exact-outcome pure but left only 39/546 decisive rows (7.14%) in repeated signatures, below the frozen 20% support floor. Because C3/C4 are additive, they cannot restore compression. The C0-C4 ladder stops as representation-explosive (`reports/2026-09-20-lane-a-c2-global-accounting-result-001.md`).
 
 ## Question
 
