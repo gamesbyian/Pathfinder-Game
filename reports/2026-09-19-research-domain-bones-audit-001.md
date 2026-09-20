@@ -18,7 +18,7 @@ The September consolidation work succeeded at composition strongly enough to exp
 
 The safest promotion rule is **repeated semantic convergence across real producers/consumers**, not conceptual attractiveness. A shared primitive should be extracted only when at least two real call sites need the same invariant and keeping the invariant local would permit semantic drift or duplicated correctness logic.
 
-This pass found six such primitives. It also found several attractive near-misses that should remain separate for now.
+This pass initially found six such primitives; the subsequent synchronous observability/identifiability pilot earned a seventh. It also found several attractive near-misses that should remain separate for now.
 
 ## Shared primitives extracted
 
@@ -128,6 +128,34 @@ It owns:
 - the distinction between structural coverage completeness and decision-valid completeness.
 
 Specialist adapters remain specialist. In particular, CP-SAT explicit-prefix reference integrity retains its LIVE/DEAD/timeout-abstain/correctness-alarm taxonomy rather than being forced through the generic solver-row classifier.
+
+### 7. Research resolution envelope
+
+A later paired observability/identifiability pilot supplied the required second live consumer for another repeated invariant.
+
+The shared owner is now:
+
+- `scripts/research-resolution-envelope-lib.mjs`
+
+It owns only:
+
+- canonical observability axes;
+- canonical axis statuses;
+- required-axis declaration;
+- structural validation;
+- blocker projection;
+- `resolution-ready | observability-blocked` readiness classification.
+
+The two proving consumers are materially different:
+
+- WS2 failure-response reconnaissance, a discriminator-routing screen;
+- admissible-order reserve-starvation recurrence, a prospective isolated cost-curve probe.
+
+Their required axes differ, and neither delegates specialist scientific verdicts to the shared helper.
+
+The reserve-starvation integration immediately found two false-readiness paths: missing action identity and missing solver identity could previously survive into decision readiness. That is concrete evidence that the shared invariant is correctness-bearing rather than cosmetic.
+
+See `reports/2026-09-19-synchronous-observability-identifiability-pilot-001.md`.
 
 ## Near-misses deliberately not unified
 
@@ -243,6 +271,6 @@ The target is a small research-domain model embedded inside the existing researc
 
 ## Result
 
-This follow-up now promotes six proven common invariants while explicitly declining several superficially similar abstractions.
+This follow-up now promotes seven proven common invariants while explicitly declining several superficially similar abstractions.
 
 That is the intended direction of travel: continue to prefer composition, but once composition repeatedly reconstructs the same correctness-critical meaning, stop adding bridges and give that meaning a proper owner.
