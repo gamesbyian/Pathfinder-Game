@@ -179,6 +179,63 @@ function isDecisionValidIntegrity(integrity) {
     && (integrity.outcomes.unknown ?? 0) === 0;
 }
 
+function rowIdentity(row) {
+  const value = row?.id ?? row?.levelId ?? row?.level ?? null;
+  return value == null ? null : String(value);
+}
+
+function exactPopulationIssues(rows, expectedIds, label) {
+  if (!Array.isArray(rows) || !Array.isArray(expectedIds)) {
+    return [`${label}: exact row/expected identity is unavailable`];
+  }
+  const actual = rows.map(rowIdentity);
+  if (actual.some(value => value == null)) return [`${label}: result contains a row without identity`];
+  if (new Set(actual).size !== actual.length) return [`${label}: result contains duplicate row identities`];
+  const expected = expectedIds.map(String);
+  if (new Set(expected).size !== expected.length) return [`${label}: integrity expectedIds contain duplicates`];
+  const a = [...actual].sort();
+  const b = [...expected].sort();
+  return JSON.stringify(a) === JSON.stringify(b) ? [] : [`${label}: result rows do not match integrity expectedIds`];
+}
+
+function populationIntegrityBindingIssues(primary, integrity, publishedStats) {
+  if (!integrity || typeof integrity !== 'object') return [];
+  const issues = [];
+
+  if (Array.isArray(integrity.components) && integrity.components.length > 0) {
+    const resultHashes = publishedStats.map(stat => {
+      const document = JSON.parse(fs.readFileSync(stat.file, 'utf8'));
+      return document?.population?.identityHash ?? document?.populationIntegrity?.populationIdentityHash ?? null;
+    }).filter(Boolean);
+    for (const component of integrity.components) {
+      if (!component?.populationIdentityHash) {
+        issues.push(`populationIntegrity component ${component?.label ?? '(unlabeled)'} lacks populationIdentityHash`);
+        continue;
+      }
+      const matches = resultHashes.filter(hash => hash === component.populationIdentityHash).length;
+      if (matches !== 1) {
+        issues.push(`populationIntegrity component ${component.label ?? '(unlabeled)'} matches ${matches} published result population(s), expected exactly 1`);
+      }
+    }
+    return issues;
+  }
+
+  if (!Array.isArray(integrity.expectedIds)) {
+    return ['populationIntegrity lacks expectedIds needed to bind it to the published result'];
+  }
+
+  if (integrity.arms && typeof integrity.arms === 'object') {
+    for (const stat of publishedStats) {
+      issues.push(...exactPopulationIssues(stat.levels, integrity.expectedIds, path.basename(stat.file)));
+    }
+    if (publishedStats.length < 2) issues.push('paired populationIntegrity has fewer than two published level-bearing results');
+    return issues;
+  }
+
+  issues.push(...exactPopulationIssues(primary?.levels, integrity.expectedIds, 'primary result'));
+  return issues;
+}
+
 const stats = collectJsonFiles(outDir).map(levelStats).filter(Boolean);
 function statsForSource(re) {
   const e = entries.find(x => !x.missing && re.test(x.source));
@@ -337,12 +394,14 @@ const sourceIdentityIssue = declaredContract?.experiment?.resolvedSha
     && declaredContract.experiment.resolvedSha !== primaryResolvedSha
   ? ['experiment.resolvedSha disagrees with primary result commit']
   : [];
+const populationBindingIssues = populationIntegrityBindingIssues(primaryDocument, populationIntegrity, stats);
 const contractIssues = declaredContract
   ? [...new Set([
       ...declaredDecisionContractIssues(declaredContract),
       ...decisionContractIssues(contract),
       ...compactTelemetryIssue,
       ...sourceIdentityIssue,
+      ...populationBindingIssues,
     ])]
   : ['missing declared experiment contract'];
 const contractDecisionEligible = contractIssues.length === 0;
