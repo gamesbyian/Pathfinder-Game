@@ -56,6 +56,7 @@ try {
   assert.equal(manifest.researchQuestion.measurementOpportunity, 'MO-002');
   assert.equal(manifest.population.researchBlock.blockId, 'BLOCK-001');
   assert.equal(manifest.population.researchBlock.evidenceRole, 'development');
+  assert.equal(manifest.population.independentUnit, 'parent-level');
   assert.equal(manifest.decisionBearing, true);
   assert.deepEqual(manifest.decisionContractIssues, []);
   assert.deepEqual(manifest.sideEffects, { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' });
