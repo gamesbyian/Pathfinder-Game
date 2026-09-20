@@ -165,7 +165,7 @@ for (const entry of shard) {
         if (existsSync(familyFile) && existsSync(solveOutExisting)) {
             const { solved, total } = solvedCount(solveOutExisting);
             log(`    already have this (family + solve result exist) -- skipping regeneration/re-solve`);
-            summarize({ id, mode, solved, total });
+            summarize({ corpus, id, mode, solved, total });
             continue;
         }
 
@@ -176,7 +176,7 @@ for (const entry of shard) {
         if (mode === 'group-reshuffle') genArgs.push(`--group=${group}`);
         const gen = run('node', genArgs, 300_000);
         if (!gen.ok) { log(`    generate failed: ${gen.error}`); log((gen.out || '').slice(-2000)); continue; }
-        if (!existsSync(familyFile)) { log(`    generate produced 0 variants (no file written) -- skipping solve/hint-workbench`); summarize({ id, mode, solved: 0, total: 0 }); continue; }
+        if (!existsSync(familyFile)) { log(`    generate produced 0 variants (no file written) -- skipping solve/hint-workbench`); summarize({ corpus, id, mode, solved: 0, total: 0 }); continue; }
 
         const solveOut = solveOutExisting;
         // 3h hard ceiling per sweep call: generous headroom over the realistic case (node-budget
@@ -203,7 +203,7 @@ for (const entry of shard) {
         if (!hw.ok) log(`    hint-workbench failed/timed out: ${hw.error}`);
 
         const { solved, total } = solvedCount(solveOut);
-        summarize({ id, mode, solved, total });
+        summarize({ corpus, id, mode, solved, total });
         log(`    ${mode}: solved=${solved}/${total}`);
     }
     log(`[${nowStamp()}] DONE ${id}`);
