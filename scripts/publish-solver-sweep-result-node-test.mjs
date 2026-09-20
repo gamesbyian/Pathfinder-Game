@@ -163,6 +163,45 @@ try {
   assert.equal(wrongRevisionManifest.decisionBearing, false);
   assert.ok(wrongRevisionManifest.decisionContractIssues.includes('experiment.resolvedSha disagrees with primary result commit'));
 
+  const missingRevisionPrimary = path.join(temp, 'missing-revision-result.json');
+  fs.writeFileSync(missingRevisionPrimary, JSON.stringify({
+    producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
+    configurationHash: primaryConfigurationHash,
+    levels: [{ id: 'A', ok: true, status: 'success' }],
+  }));
+  const missingRevisionOut = path.join(temp, 'missing-revision-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${missingRevisionPrimary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${outcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${missingRevisionOut}`,
+  ], { cwd: root });
+  const missingRevisionManifest = JSON.parse(fs.readFileSync(path.join(missingRevisionOut, 'manifest.json')));
+  assert.equal(missingRevisionManifest.decisionBearing, false);
+  assert.ok(missingRevisionManifest.decisionContractIssues.includes(
+    'primary result lacks immutable execution SHA needed to bind experiment.resolvedSha',
+  ));
+
+  const solverRefPrimary = path.join(temp, 'solver-ref-result.json');
+  fs.writeFileSync(solverRefPrimary, JSON.stringify({
+    producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
+    solverRef: 'b'.repeat(40), configurationHash: primaryConfigurationHash,
+    levels: [{ id: 'A', ok: true, status: 'success' }],
+  }));
+  const solverRefOut = path.join(temp, 'solver-ref-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${solverRefPrimary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${outcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${solverRefOut}`,
+  ], { cwd: root });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(solverRefOut, 'manifest.json'))).decisionBearing, true,
+    'an exact/reference-style solverRef is valid independent execution revision evidence');
+
   const noContractOut = path.join(temp, 'no-contract');
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--out=${noContractOut}`], { cwd: root });
   const noContractManifest = JSON.parse(fs.readFileSync(path.join(noContractOut, 'manifest.json')));
