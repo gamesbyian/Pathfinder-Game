@@ -278,14 +278,15 @@ function frontDoorInputs(model, plans, documentRoles = []) {
     const questions = model.relations.questions ?? [];
     const questionById = new Map(questions.map(question => [String(question.id), question]));
     const liveQueue = (model.relations.queue ?? [])
-        .filter(row => !/^(?:closed\b|subsumed\b|method complete\b)/iu.test(
-            String(row.state ?? row.status ?? '').trim(),
+        .filter(row => !['closed', 'subsumed', 'method-complete'].includes(
+            String(row.executionState ?? '').trim(),
         ))
         .map(row => {
             const question = row.questionRef ? questionById.get(String(row.questionRef)) ?? null : null;
             return {
                 workstreamId: row.workstreamId ?? null,
                 question: row.question ?? null,
+                executionState: row.executionState ?? null,
                 state: row.state ?? row.status ?? null,
                 remainingGate: row.remainingGate ?? null,
                 questionRef: row.questionRef ?? null,
@@ -336,7 +337,7 @@ function inventoryFindings({
                 status: row.status,
             })),
             ...(liveQueue ?? []).flatMap(row => {
-                const active = String(row.state ?? '').toLowerCase().includes('active');
+                const active = row.executionState === 'active' || row.status === 'active';
                 if (!active) return [];
                 if (row.questionExecutionRelation === 'missing-question') {
                     return [{
@@ -400,7 +401,7 @@ function currentState(model) {
     const queue = model.relations.queue ?? [];
     return {
         queueEntries: queue.length,
-        activeQueueEntries: queue.filter(row => String(row.status ?? row.state ?? '').toLowerCase().includes('active')).length,
+        activeQueueEntries: queue.filter(row => row.executionState === 'active' || row.status === 'active').length,
         questions: questions.length,
         activeQuestions: questions.filter(row => String(row.state ?? '').toLowerCase().startsWith('active')).length,
         evidenceReports: model.relations.evidence?.length ?? 0,
