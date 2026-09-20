@@ -54,4 +54,14 @@ assert.throws(() => validateResearchResolutionEnvelope({
   axes: { ...ready.axes, inventedAxis: { status: 'satisfied' } },
 }), /resolution\.axes\.inventedAxis/u);
 
+assert.throws(() => validateResearchResolutionEnvelope({
+  ...ready,
+  resolutionStatus: 'observability-blocked',
+}), /resolution\.resolutionStatus/u);
+
+assert.throws(() => validateResearchResolutionEnvelope({
+  ...blocked,
+  blockers: [],
+}), /resolution\.blockers/u);
+
 console.log('research resolution envelope tests passed');
