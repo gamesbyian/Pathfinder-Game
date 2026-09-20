@@ -44,8 +44,6 @@ jobs:
             /reports/*.json
             /reports/**/*.md
             /reports/stress/experiment-evidence/**/manifest.json
-          /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
-          /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
             /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
             /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
             /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
@@ -106,6 +104,8 @@ jobs:
           /reports/*.json
           /reports/**/*.md
           /reports/stress/experiment-evidence/**/manifest.json
+          /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
+          /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
           /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
           /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
           /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
