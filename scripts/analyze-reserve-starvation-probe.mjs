@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { buildResearchResolutionEnvelope } from './research-resolution-envelope-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const i = arg.indexOf('=');
@@ -50,10 +51,11 @@ const expectedSet = new Set(expectedIds);
 const missingIds = expectedIds.filter(id => !recordsByParent.has(id));
 const unexpectedIds = observedIds.filter(id => !expectedSet.has(id));
 
-function attemptActionMismatch(row) {
+function attemptActionSupport(row) {
     const attempts = Array.isArray(row.attempts) ? row.attempts : [];
     const known = attempts.map(attempt => attempt.actionKey ?? attempt.configKey).filter(Boolean);
-    return known.length > 0 && known.some(action => action !== expectedAction);
+    if (known.length === 0) return 'unknown';
+    return known.every(action => action === expectedAction) ? 'match' : 'mismatch';
 }
 
 function classify(row) {
@@ -65,7 +67,9 @@ function classify(row) {
     if (row.error != null || row.outcome === 'harnessError' || row.outcome === 'malformed' || row.outcome === 'missing' || row.outcome === 'unknown') {
         return { bucket: 'abstain-error-or-unknown', decisionEligible: false };
     }
-    if (attemptActionMismatch(row)) return { bucket: 'abstain-action-mismatch', decisionEligible: false };
+    const actionSupport = attemptActionSupport(row);
+    if (actionSupport === 'unknown') return { bucket: 'abstain-action-unknown', decisionEligible: false };
+    if (actionSupport === 'mismatch') return { bucket: 'abstain-action-mismatch', decisionEligible: false };
     if (row.outcome === 'workLimited' || row.workCapped === true) {
         return { bucket: 'abstain-unexpected-work-censor', decisionEligible: false };
     }
@@ -112,6 +116,81 @@ if (decisionReady) {
     else decision = 'design-smallest-matched-total-work-reserve-ab';
 }
 
+const exactActionKnown = rows.every(row => !['abstain-action-unknown', 'abstain-action-mismatch'].includes(row.bucket));
+const coverageComplete = missingIds.length === 0
+    && unexpectedIds.length === 0
+    && duplicateParents.length === 0
+    && rows.length === expectedIds.length;
+const censoringClear = abstentionIds.length === 0;
+const sourceBoundaryEligible = sample?.sourceBoundary?.residual > 0
+    && sample?.selection?.eligibleCount >= expectedIds.length;
+const solverKnown = typeof document.solverRef === 'string' && document.solverRef.length > 0;
+const resolution = buildResearchResolutionEnvelope({
+    questionId: sample.questionId ?? 'WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION',
+    liveRivals: [
+        'recurrent-within-total-budget-reserve-starvation',
+        'R00044-isolated-or-too-rare-for-repricing',
+    ],
+    discriminatingObservable: 'independent current-residual frequency of isolated default-profile solves above the 75M reserve and within the fixed 300M total-node envelope',
+    requiredAxes: ['eligibility', 'opportunity', 'participation', 'measurementSupport', 'coverage', 'censoring'],
+    axes: {
+        eligibility: {
+            status: protocolKnown && solverKnown ? 'satisfied' : 'blocked',
+            reason: protocolKnown && solverKnown
+                ? 'protocol and solver identities are known'
+                : 'protocol and solver identities must be known before recurrence interpretation',
+        },
+        opportunity: {
+            status: sourceBoundaryEligible ? 'satisfied' : 'unknown',
+            reason: sourceBoundaryEligible
+                ? 'frozen sample is drawn from the current unsolved residual after discovery exclusions'
+                : 'sample source boundary does not establish residual headroom',
+        },
+        reach: {
+            status: 'not-required',
+            reason: 'the isolated method probe has no separate downstream stage-reach gate',
+        },
+        participation: {
+            status: exactActionKnown ? 'satisfied' : 'blocked',
+            reason: exactActionKnown
+                ? 'every interpretable row identifies the exact prespecified admissible-order action'
+                : 'one or more rows lack or mismatch the prespecified action identity',
+        },
+        measurementSupport: {
+            status: rows.every(row => row.decisionEligible) ? 'satisfied' : 'unknown',
+            reason: rows.every(row => row.decisionEligible)
+                ? 'node-cost/terminal observations support the prespecified 75M/300M classification'
+                : 'one or more rows do not support the prespecified cost classification',
+        },
+        coverage: {
+            status: coverageComplete ? 'satisfied' : 'blocked',
+            reason: coverageComplete
+                ? 'the frozen population is present exactly once'
+                : 'missing, unexpected, or duplicate parents prevent complete recurrence sizing',
+        },
+        censoring: {
+            status: censoringClear ? 'satisfied' : 'blocked',
+            reason: censoringClear
+                ? 'no row is censored or otherwise abstaining'
+                : 'censored/unknown rows must be recovered before applying the 0/1/>=2 rule',
+        },
+    },
+    negativeInterpretationPolicy: 'zero opportunities is a negative recurrence screen only when the full required observability envelope is satisfied; it does not establish absence of admissible-order capability',
+    outcomeInterpretation: {
+        zero: 'close the first recurrence screen negative; do not spend reserve A/B compute from R00044 alone',
+        one: 'freeze one additional disjoint 40-parent sample',
+        twoOrMore: 'design the smallest matched-total-work reserve-fraction A/B',
+        blocked: 'recover the named observability deficit before applying the recurrence rule',
+    },
+    source: {
+        kind: 'reserve-starvation-probe',
+        sample: sampleFile,
+        reserveNodes,
+        totalNodes,
+        expectedAction,
+    },
+});
+
 const result = {
     schemaVersion: 1,
     kind: 'pathfinder-reserve-starvation-probe-analysis',
@@ -130,6 +209,7 @@ const result = {
     opportunities,
     decisionReady,
     decision,
+    resolution,
     rows,
     interpretation: 'Isolated find-cost recurrence only. A positive screen nominates a matched-total-work allocation A/B; it does not authorize a reserve change.',
 };
