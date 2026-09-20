@@ -5,6 +5,7 @@ import { combinePopulationIntegrity } from './combine-population-integrity.mjs';
 import { summarizeIndependentSupport } from './research-relations-lib.mjs';
 import { classifyProbeProcess } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
 import { formatInvestigationReportStatusBlock } from './investigation-report-metadata.mjs';
+import { validateSweepIntegrity } from './validate-solver-sweep-integrity.mjs';
 import {
     appendResearchConsumption,
     buildResearchBlock,
@@ -146,6 +147,18 @@ const consumedEligibility = researchBlockEligibility(consumedBlock, {
 });
 assert.equal(consumedEligibility.eligible, false);
 assert.ok(consumedEligibility.reasons.includes('matching-consumption-recorded'));
+
+// Treatment nonparticipation fails the manipulation/participation gate before a negative verdict can be claimed.
+assert.throws(() => validateSweepIntegrity({
+    expectedIds: ['np-a', 'np-b'],
+    levels: [
+        { id: 'np-a', ok: false, status: 'exhausted', attempts: [{ stageId: 'baseline', workSpent: 10 }] },
+        { id: 'np-b', ok: false, status: 'exhausted', attempts: [{ stageId: 'baseline', workSpent: 10 }] },
+    ],
+    requiredStage: 'treatment-stage',
+    minParticipatingLevels: 1,
+}), /target stage treatment-stage participated on 0 level\(s\)/,
+'treatment nonparticipation must stop interpretation rather than becoming an ordinary negative');
 
 // Report status creation uses the shared constructor, not free-form prose.
 const reportStatusBlock = formatInvestigationReportStatusBlock({
