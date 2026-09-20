@@ -11,6 +11,7 @@ function asPosix(value) {
 export function researchRepositoryRefIssues(value, {
   root = null,
   allowedRoots = DEFAULT_ROOTS,
+  allowedTopLevelFiles = [],
   requireFile = false,
   label = 'repository ref',
 } = {}) {
@@ -26,8 +27,10 @@ export function researchRepositoryRefIssues(value, {
     issues.push(`${label} must not contain empty, dot, or parent segments`);
   }
   const first = segments[0] ?? '';
-  if (!allowedRoots.includes(first)) {
-    issues.push(`${label} must start with one of ${allowedRoots.join(', ')}`);
+  const explicitlyAllowedTopLevelFile = segments.length === 1 && allowedTopLevelFiles.includes(first);
+  if (!allowedRoots.includes(first) && !explicitlyAllowedTopLevelFile) {
+    const allowed = [...allowedRoots, ...allowedTopLevelFiles];
+    issues.push(`${label} must start with one of ${allowed.join(', ')}`);
   }
   if (/[?#]/u.test(normalized)) issues.push(`${label} must not contain URL query/fragment syntax`);
 
