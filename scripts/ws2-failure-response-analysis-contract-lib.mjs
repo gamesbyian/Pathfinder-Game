@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { canonicalResearchValue, researchSemanticHash } from './research-semantic-identity-lib.mjs';
 
 export const WS2_FAILURE_RESPONSE_ROUTES = Object.freeze([
   'rejection-counterfactual',
@@ -8,15 +8,6 @@ export const WS2_FAILURE_RESPONSE_ROUTES = Object.freeze([
   'none',
   'unresolved-needs-compact-diagnostics',
 ]);
-
-function stable(value) {
-  if (Array.isArray(value)) return value.map(stable);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, child]) => [key, stable(child)]));
-  }
-  return value;
-}
 
 export function ws2FailureResponseAnalysisContractIssues(contract) {
   const issues = [];
@@ -128,8 +119,7 @@ export function validateWs2FailureResponseAnalysisContract(contract) {
 
 export function ws2FailureResponseAnalysisContractIdentity(contract) {
   validateWs2FailureResponseAnalysisContract(contract);
-  const canonical = JSON.stringify(stable(contract));
-  return `sha256:${createHash('sha256').update(canonical).digest('hex')}`;
+  return researchSemanticHash(contract);
 }
 
 
@@ -159,11 +149,11 @@ export function ws2FailureResponseAnalysisIdentity(analysis) {
       rows: Array.isArray(observation.rows)
         ? observation.rows
           .map(({ __sourceFile: _sourceFile, ...row }) => row)
-          .sort((left, right) => JSON.stringify(stable(left)).localeCompare(JSON.stringify(stable(right))))
+          .sort((left, right) => JSON.stringify(canonicalResearchValue(left)).localeCompare(JSON.stringify(canonicalResearchValue(right))))
         : observation.rows,
     },
   };
-  return `sha256:${createHash('sha256').update(JSON.stringify(stable(semanticCore))).digest('hex')}`;
+  return researchSemanticHash(semanticCore);
 }
 
 
