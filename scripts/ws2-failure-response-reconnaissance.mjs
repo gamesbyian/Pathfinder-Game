@@ -17,6 +17,7 @@ const value = name => argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name
 const input = value('in');
 const contractPath = value('analysis-contract');
 const selectedRoute = value('route') || null;
+const decisionRationale = value('decision-rationale') || null;
 const outPath = value('out') || null;
 const sha256 = value => `sha256:${createHash('sha256').update(value).digest('hex')}`;
 
@@ -74,6 +75,9 @@ const eligible = eligibilityReasons.length === 0;
 if (selectedRoute && !WS2_FAILURE_RESPONSE_ROUTES.includes(selectedRoute)) {
   throw new Error(`--route must be one of ${WS2_FAILURE_RESPONSE_ROUTES.join(', ')}`);
 }
+if (selectedRoute && !decisionRationale) {
+  throw new Error('--decision-rationale=<text> is required when --route is selected');
+}
 if (selectedRoute && !eligible) {
   throw new Error(`cannot select WS2 route from scientifically ineligible evidence: ${eligibilityReasons.join('; ')}`);
 }
@@ -119,6 +123,7 @@ const resultCore = {
   decision: {
     status: selectedRoute ? 'selected' : 'pending-interpretation',
     route: selectedRoute,
+    rationale: decisionRationale,
     allowedRoutes: contract.allowedRoutes,
     note: selectedRoute
       ? 'Route selection is a decision over the prespecified observation; it is not the observation itself.'
