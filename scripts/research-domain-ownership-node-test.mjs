@@ -6,6 +6,7 @@ const source = path => readFileSync(path, 'utf8');
 const blockLineage = source('scripts/solver-research-block-lineage.mjs');
 assert.doesNotMatch(blockLineage, /from ['"]\.\/solver-experiment-contract\.mjs['"]/u);
 assert.match(blockLineage, /research-semantic-identity-lib\.mjs/u);
+assert.match(blockLineage, /research-evaluation-evidence-role-lib\.mjs/u);
 
 const failureResponse = source('scripts/solver-failure-response-lib.mjs');
 assert.doesNotMatch(failureResponse, /from ['"]\.\/solver-experiment-contract\.mjs['"]/u);
@@ -41,6 +42,22 @@ const failureEvidence = source('scripts/failure-evidence-semantics-lib.mjs');
 assert.match(hintEvidence, /research-evidence-applicability-lib\.mjs/u);
 assert.match(failureEvidence, /research-evidence-applicability-lib\.mjs/u);
 
+
+const evaluationEvidenceRole = source('scripts/research-evaluation-evidence-role-lib.mjs');
+assert.match(evaluationEvidenceRole, /RESEARCH_EVALUATION_EVIDENCE_ROLES/u);
+assert.doesNotMatch(evaluationEvidenceRole, /forensic|historical/u,
+  'shared evaluation evidence roles must not absorb broader report-role vocabulary');
+
+for (const path of [
+  'scripts/research-level-generation-lib.mjs',
+  'scripts/stress/generate.mjs',
+  'scripts/stress/generate-random.mjs',
+  'scripts/stress/generate-topology.mjs',
+  'scripts/research-integration-audit-lib.mjs',
+]) {
+  assert.match(source(path), /research-evaluation-evidence-role-lib\.mjs/u,
+    `${path} must use the shared evaluation evidence-role owner`);
+}
 
 const statusIndex = source('scripts/research-status-index-lib.mjs');
 assert.match(statusIndex, /WORKSTREAM_EXECUTION_STATES/u);
