@@ -197,11 +197,13 @@ export function buildResearchStatusIndex(root) {
             .map(match => repositoryPath(root, reportPath, match[1])).filter(Boolean);
         const linkedCurrentDocs = linkedPaths.filter(link => link.startsWith('docs/') &&
             !link.startsWith('docs/archive/') && existsSync(path.join(root, link)));
-        const artifacts = new Set([
+        const sourceArtifacts = [...new Set(metadata.sourceArtifacts ?? [])].sort();
+        const sourceArtifactSet = new Set(sourceArtifacts);
+        const linkedArtifacts = [...new Set([
             ...linkedPaths.filter(link => /^(?:data|logs|reports)\//.test(link)),
             ...[...source.matchAll(ARTIFACT_PATH)].map(match => match[1]),
-            ...metadata.sourceArtifacts,
-        ]);
+        ])].filter(link => !sourceArtifactSet.has(link)).sort();
+        const artifacts = [...new Set([...sourceArtifacts, ...linkedArtifacts])].sort();
         topics.push({
             topicId: filename[2], status: metadata.status, title: metadata.title,
             metadataSource: metadata.source,
@@ -209,7 +211,11 @@ export function buildResearchStatusIndex(root) {
             authorities: [...new Set(linkedCurrentDocs)].sort(),
             authorityRelation: 'hyperlink-discovery-only',
             latestEvidence: { date: metadata.lastEvidenceDate, summary: metadata.lastEvidenceSummary, report: reportPath },
-            decision: metadata.decision, remainingGate: metadata.remainingGate, artifacts: [...artifacts].sort(),
+            decision: metadata.decision, remainingGate: metadata.remainingGate,
+            sourceArtifacts,
+            linkedArtifacts,
+            artifactRelation: sourceArtifacts.length ? 'structured-source+linked-discovery' : 'linked-discovery-only',
+            artifacts,
             researchQuestion: metadata.researchQuestion,
             premiseRefs: metadata.premiseRefs,
             measurementOpportunities: metadata.measurementOpportunities,
@@ -314,6 +320,10 @@ function compactEntry(kind, entry) {
         linkedCurrentDocs: entry.linkedCurrentDocs ?? entry.authorities ?? [],
         authorityRelation: entry.authorityRelation ?? 'legacy-unknown',
         authorities: entry.authorities,
+        sourceArtifacts: entry.sourceArtifacts ?? [],
+        linkedArtifacts: entry.linkedArtifacts ?? [],
+        artifactRelation: entry.artifactRelation ?? 'legacy-unknown',
+        artifacts: entry.artifacts ?? [],
         researchQuestion: entry.researchQuestion ?? null,
         premiseRefs: entry.premiseRefs ?? [],
         measurementOpportunities: entry.measurementOpportunities ?? [],
