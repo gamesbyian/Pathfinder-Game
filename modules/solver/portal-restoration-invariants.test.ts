@@ -116,7 +116,7 @@ test('phase-distance observer finds a twist-required dead state that scalar goal
         [PACK(1, 0), { dest: PACK(0, 0), color: '#fff' }],
     ]);
 
-    const prep = prepLevel(level);
+    const prep = prepLevel(level, { includeParityPhaseGoalDist: true });
     const records: any[] = [];
     prep._parityPhaseDistanceObserver = { observe: (record: any) => records.push(record) };
 
