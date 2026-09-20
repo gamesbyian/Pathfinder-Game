@@ -215,6 +215,20 @@ function workflowInventory(root) {
     }).sort((a, b) => a.workflow.localeCompare(b.workflow));
 }
 
+function attachWorkflowConsumers(commands, workflows) {
+    return commands.map(command => {
+        const consumers = workflows.filter(workflow =>
+            workflow.npmAliases.includes(command.name)
+            || (command.entrypoint && workflow.scriptEntrypoints.includes(command.entrypoint)));
+        return {
+            ...command,
+            workflowConsumerCount: consumers.length,
+            workflowConsumers: consumers.map(row => row.workflow).sort(),
+            invocationSurface: consumers.length ? 'workflow-and-cli' : 'direct-cli-or-library',
+        };
+    });
+}
+
 function retiredWorkflowInventory(root) {
     const lifecyclePath = path.join(root, 'docs/solver-workflow-lifecycle.json');
     if (!existsSync(lifecyclePath)) return [];
@@ -335,7 +349,7 @@ function currentState(model) {
 
 export function buildResearchSystemInventory(root = process.cwd()) {
     const model = buildResearchRelations(root, { discoverArtifacts: true });
-    const commands = researchCommandRoots(root);
+    const rawCommands = researchCommandRoots(root);
     const currentReferences = currentDocumentationReferences(root);
     const plans = planLifecycle(root, currentReferences);
     const fragilePlans = plans.filter(row => row.fragileProse);
@@ -351,6 +365,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const relations = relationInventory(model);
     const workflows = workflowInventory(root);
     const retiredWorkflows = retiredWorkflowInventory(root);
+    const commands = attachWorkflowConsumers(rawCommands, workflows);
     const dependencies = sharedDependencies(root, commands);
     const contractOwners = dependencies.filter(row => row.contractFunctions.length > 0);
     const integrationAudit = auditResearchIntegration(root, { model });
@@ -426,6 +441,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             evidenceProducingWorkflowCount: workflows.filter(row => row.role === 'evidence-producing').length,
             retiredWorkflowCount: retiredWorkflows.length,
             retiredWorkflowReappearanceCount: retiredWorkflows.filter(row => row.presentOnDisk).length,
+            workflowBackedResearchCommandCount: commands.filter(row => row.workflowConsumerCount > 0).length,
+            directResearchCommandCount: commands.filter(row => row.workflowConsumerCount === 0).length,
         },
     };
 }
