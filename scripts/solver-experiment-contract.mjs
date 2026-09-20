@@ -272,6 +272,7 @@ export function buildPopulationIntegrity(expectedIds, rows) {
     && outcomes.unknown === 0;
 
   return {
+    expectedIds: expected,
     expectedCount: expected.length,
     observedCount: (rows ?? []).length,
     duplicateIds: actual.duplicates,
