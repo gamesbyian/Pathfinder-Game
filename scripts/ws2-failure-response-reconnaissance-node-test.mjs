@@ -18,6 +18,8 @@ const contract = validateWs2FailureResponseAnalysisContract(
 );
 assert.match(ws2FailureResponseAnalysisContractIdentity(contract), /^sha256:[0-9a-f]{64}$/u);
 assert.ok(contract.liveRivals.length >= 2);
+assert.deepEqual(contract.requiredObservabilityAxes, ['eligibility', 'measurementSupport', 'coverage']);
+assert.match(contract.resolutionOutcomeInterpretation.routeNone, /does not imply no mechanism exists/u);
 assert.match(contract.independenceVector.taskFramingPrompt, /no prompt-level independence/u);
 assert.match(contract.independenceVector.authorityContextExposure, /no authority\/context-exposure independence/u);
 assert.match(contract.independenceVector.criticalLibraryCode, /no critical-code independence/u);
@@ -40,6 +42,10 @@ assert.throws(() => validateWs2FailureResponseAnalysisContract({
   },
 }), /independenceVector\.taskFramingPrompt|independenceVector\.framingContext/);
 assert.throws(() => validateWs2FailureResponseAnalysisContract({ ...contract, independentUnit: 'attempt' }), /independentUnit/);
+assert.throws(() => validateWs2FailureResponseAnalysisContract({
+  ...contract,
+  requiredObservabilityAxes: ['eligibility', 'coverage'],
+}), /requiredObservabilityAxes/);
 
 const temp = mkdtempSync(path.join(tmpdir(), 'ws2-failure-response-analysis-'));
 try {
@@ -102,6 +108,8 @@ try {
   assert.equal(result.scientificDisposition.resolution.kind, 'pathfinder-research-resolution-envelope');
   assert.equal(result.scientificDisposition.resolution.resolutionStatus, 'resolution-ready');
   assert.deepEqual(result.scientificDisposition.resolution.requiredAxes, ['eligibility', 'measurementSupport', 'coverage']);
+  assert.deepEqual(result.scientificDisposition.resolution.outcomeInterpretation,
+    contract.resolutionOutcomeInterpretation);
   assert.equal(result.scientificDisposition.resolution.axes.reach.status, 'not-required');
   assert.equal(result.scientificDisposition.resolution.negativeInterpretationPolicy,
     'route-none-does-not-imply-no-mechanism-exists');
