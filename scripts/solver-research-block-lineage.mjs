@@ -1,7 +1,10 @@
 import { researchSemanticHash as stableHash } from './research-semantic-identity-lib.mjs';
 
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
-const EVIDENCE_ROLES = new Set(['development', 'confirmation', 'transfer']);
+import {
+    isResearchEvaluationEvidenceRole,
+    validateResearchEvaluationEvidenceRole,
+} from './research-evaluation-evidence-role-lib.mjs';
 const SCOPE_KINDS = new Set(['block', 'parent', 'family']);
 
 const nonEmpty = value => typeof value === 'string' && value.trim().length > 0;
@@ -17,7 +20,7 @@ export function researchBlockIssues(block, { populationIdentity = null } = {}) {
     for (const field of ['blockId', 'questionId', 'sourceRegime', 'sourceRevision', 'independentUnit']) {
         if (!nonEmpty(block[field])) issues.push(`researchBlock.${field}`);
     }
-    if (!EVIDENCE_ROLES.has(block.evidenceRole)) issues.push('researchBlock.evidenceRole');
+    if (!isResearchEvaluationEvidenceRole(block.evidenceRole)) issues.push('researchBlock.evidenceRole');
     if (!SHA256_RE.test(String(populationIdentity ?? ''))) issues.push('populationIdentity');
 
     issues.push(...stringArrayIssues(block.parentIds, 'researchBlock.parentIds', { allowEmpty: false }));
@@ -46,7 +49,7 @@ export function researchBlockIssues(block, { populationIdentity = null } = {}) {
                 if (!nonEmpty(event?.[field])) issues.push(`${base}.${field}`);
             }
             if (nonEmpty(event?.consumedAt) && Number.isNaN(Date.parse(event.consumedAt))) issues.push(`${base}.consumedAt`);
-            if (!EVIDENCE_ROLES.has(event?.evidenceRole)) issues.push(`${base}.evidenceRole`);
+            if (!isResearchEvaluationEvidenceRole(event?.evidenceRole)) issues.push(`${base}.evidenceRole`);
             if (!SCOPE_KINDS.has(event?.scope?.kind) || !nonEmpty(event?.scope?.id)) issues.push(`${base}.scope`);
             issues.push(...stringArrayIssues(event?.conditioning, `${base}.conditioning`, { allowEmpty: false }));
             issues.push(...stringArrayIssues(event?.openedOutcomeKinds, `${base}.openedOutcomeKinds`));
@@ -75,7 +78,7 @@ export function researchBlockEligibility(block, {
     scope = null,
 } = {}) {
     if (!nonEmpty(questionId)) throw new Error('questionId is required');
-    if (!EVIDENCE_ROLES.has(evidenceRole)) throw new Error('invalid evidenceRole');
+    validateResearchEvaluationEvidenceRole(evidenceRole);
     if (relatedQuestionIds != null && !Array.isArray(relatedQuestionIds)) throw new Error('relatedQuestionIds must be an array or null');
 
     const ids = relatedQuestionIds == null ? null : new Set([questionId, ...relatedQuestionIds.map(String)]);
