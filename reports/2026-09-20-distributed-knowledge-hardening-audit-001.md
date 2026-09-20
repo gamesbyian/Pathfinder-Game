@@ -267,6 +267,21 @@ The existing hardening is correctly about **propagation and agreement**, not voc
 
 Do not replace this with a universal independent-unit taxonomy unless two live consumers need the same finite categorical semantics rather than merely the same field name.
 
+## Retrospective extension: complementary knowledge
+
+The first pass of this audit emphasized duplicated truth and authority. The session retrospective identified a second form of distributed knowledge: different assets can contain complementary pieces of a fact that becomes knowable only after a scientifically valid join.
+
+Two such joins are now authored in the asset registry:
+
+- compact failure response + static descriptors + production boundary;
+- compact failure response + variant-family data.
+
+These are research relationships, not inferred truths. Their boundaries preserve selected-population and parent-family dependence.
+
+The standing extension is to look for **latent compositional answerability** without auto-generating edges from lexical join-key overlap.
+
+See `reports/2026-09-20-research-session-local-optima-retrospective-001.md`.
+
 ## A practical audit procedure
 
 When "the repo already knows X, but..." appears during research or implementation:
