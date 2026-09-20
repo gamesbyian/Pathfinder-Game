@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { createFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { ws2FailureResponseInvalidationImpact } from './ws2-failure-response-claim-lib.mjs';
 import {
   validateWs2FailureResponseAnalysisContract,
   ws2FailureResponseAnalysisContractIdentity,
@@ -108,7 +109,18 @@ try {
   assert.equal(claim.decisionDisposition.route, 'none');
   assert.equal(claim.populationScope.unitTopology.analysisUnit, 'parent');
   assert.match(claim.analysisIdentity, /^sha256:[0-9a-f]{64}$/u);
-  assert.ok(claim.reverseInvalidation.materialTriggers.length > 0);
+  assert.equal(claim.reverseInvalidation.policy, 'flag-material-descendants-do-not-auto-rewrite');
+  const contractImpact = ws2FailureResponseInvalidationImpact(claim, {
+    kind: 'analysis-contract',
+    ref: contractPath,
+  });
+  assert.deepEqual(contractImpact.affected.map(row => row.target).sort(), ['routing-decision', 'scientific-claim']);
+  assert.equal(contractImpact.automaticRewrite, false);
+  const unrelatedImpact = ws2FailureResponseInvalidationImpact(claim, {
+    kind: 'input-artifact',
+    ref: 'not-used.json',
+  });
+  assert.deepEqual(unrelatedImpact.affected, []);
 
   const ineligibleDoc = {
     ...eligibleDoc,
