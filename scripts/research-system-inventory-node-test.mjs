@@ -23,6 +23,11 @@ assert.ok(inventory.findings.sharedFailureModes.every(row => row.consumerCount >
 assert.equal(inventory.diagnostics.integrationErrorCount, inventory.integrationHealth.errorCount);
 assert.ok(inventory.relations.some(row =>
     row.relation === 'questions' && row.source === 'docs/solver-research-question-relations.json'));
+assert.ok(inventory.relations.every(row => row.stableIdentityDomain && row.primaryJoinKey && row.canonicalSource));
+assert.equal(inventory.diagnostics.architectureGapCount,
+    Object.values(inventory.architectureFindings).reduce((sum, rows) => sum + rows.length, 0));
+assert.equal(inventory.documentation.missingCurrentReferenceCount,
+    inventory.documentation.missingCurrentReferencePaths.length);
 assert.ok(inventory.relations.some(row =>
     row.relation === 'durableEvidence' && row.authorityKind === 'derived/composed'));
 assert.ok(inventory.workflows.some(row =>
@@ -128,6 +133,7 @@ assert.ok(architectureView.authoritySurfaces.some(row => row.path === 'docs/solv
 assert.deepEqual(architectureView.workflows, inventory.workflows);
 assert.deepEqual(architectureView.retiredWorkflows, inventory.retiredWorkflows);
 assert.deepEqual(architectureView.contractOwnership, inventory.contractOwnership);
+assert.deepEqual(architectureView.architectureFindings, inventory.architectureFindings);
 assert.equal(architectureView.integrationHealth, inventory.integrationHealth);
 assert.equal('planLifecycle' in architectureView, false);
 const lifecycleView = researchSystemInventoryView(inventory, 'lifecycle');
