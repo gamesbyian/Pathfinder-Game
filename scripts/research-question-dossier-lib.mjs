@@ -162,6 +162,7 @@ export function buildQuestionDossier(root = process.cwd(), {
         acquisition: {
             route: acquisition.route,
             need: acquisition.need,
+            basis: acquisition.basis ?? (eligibleBlocks.length ? 'eligible-existing-block' : null),
             rationale: acquisition.rationale,
             generationGuidance: generationGuidanceForRoute(acquisition.route),
         },
