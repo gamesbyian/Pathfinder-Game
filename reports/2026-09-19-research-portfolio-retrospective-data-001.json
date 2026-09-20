@@ -13,20 +13,20 @@
     "derivedInventory": "scripts/research-system-inventory-lib.mjs"
   },
   "counts": {
-    "windowQuestions": 28,
+    "windowQuestions": 30,
     "answerability": {
-      "answerable-or-concluded": 23,
+      "answerable-or-concluded": 25,
       "evidence/population-blocked": 4,
       "measurement-blocked": 1
     },
     "proposalProvenance": {
       "explicitTrigger": 14,
       "candidateSetVisible": 17,
-      "neitherTriggerNorCandidateSet": 5
+      "neitherTriggerNorCandidateSet": 7
     },
     "instrumentShaping": {
       "questionsWithMeasurementOpportunity": 5,
-      "questionsWithoutMeasurementOpportunity": 23,
+      "questionsWithoutMeasurementOpportunity": 25,
       "uniqueMeasurementOpportunitiesUsed": 3,
       "underExplicitOpportunitiesUsed": [
         "MO-005"
@@ -233,6 +233,43 @@
         "explicitTrigger": true,
         "explicitConstraintSources": 1,
         "candidateSetVisible": true
+      }
+    },
+    {
+      "id": "WS2-CHECKERBOARD-CAPACITY",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "question": "On current-input zero-twist states, does checkerboard-split reachable capacity prove decision-bearing dead states that the existing scalar connectivity-volume bound misses often enough to justify a solver consumer?",
+      "evidenceRefs": [
+        "reports/2026-09-19-solver-parity-invariant-audit-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": true,
+        "conceptDeficit": false,
+        "reopenConditionPresent": false
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [
+          "docs/solver-parity-phase-capacity-preflight.md",
+          "reports/2026-09-19-solver-parity-invariant-audit-001.md"
+        ],
+        "aliases": [
+          "checkerboard capacity",
+          "color-split connectivity capacity",
+          "parity capacity"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 2,
+        "candidateSetVisible": false
       }
     },
     {
@@ -920,6 +957,43 @@
       }
     },
     {
+      "id": "WS2-PARITY-PHASE-DISTANCE",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "question": "Does a current-input two-layer relaxed goal-distance bound conditioned on required future twist-jump parity prove decision-bearing dead states that the existing scalar goal distance misses often enough to justify a solver consumer?",
+      "evidenceRefs": [
+        "reports/2026-09-19-solver-parity-invariant-audit-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": false,
+        "codeDeficit": true,
+        "conceptDeficit": false,
+        "reopenConditionPresent": false
+      },
+      "proposalProvenance": {
+        "triggers": [],
+        "constraints": [
+          "docs/solver-parity-phase-capacity-preflight.md",
+          "reports/2026-09-19-solver-parity-invariant-audit-001.md"
+        ],
+        "aliases": [
+          "parity phase distance",
+          "phase-conditioned distance",
+          "twist-phase distance"
+        ],
+        "explicitTrigger": false,
+        "explicitConstraintSources": 2,
+        "candidateSetVisible": false
+      }
+    },
+    {
       "id": "WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION",
       "owner": "WS2",
       "state": "concluded-positive",
@@ -1221,7 +1295,7 @@
   "explorationTriggers": [
     {
       "kind": "candidate-provenance-gap",
-      "detail": "5 recent questions expose neither an explicit trigger nor a visible candidate set"
+      "detail": "7 recent questions expose neither an explicit trigger nor a visible candidate set"
     }
   ],
   "interpretationLimits": [
