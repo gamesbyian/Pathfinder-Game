@@ -907,17 +907,22 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download standard solver sweep result
-        uses: actions/download-artifact@v8
-        with:
-          name: solver-sweep-result
-          path: artifact-staging/solver-sweep-result
-
+      # Checkout MUST come before the artifact download: actions/checkout defaults to clean:true,
+      # which runs a working-tree clean (removing untracked files) as part of checking out the ref
+      # -- if the artifact were downloaded first, checkout would silently delete it before the next
+      # step could read it. (Discovered the hard way: GHA run 35530215844's first attempt at this
+      # job downloaded successfully but then reported the file missing, because checkout ran second.)
       - name: Check out main
         uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
+
+      - name: Download standard solver sweep result
+        uses: actions/download-artifact@v8
+        with:
+          name: solver-sweep-result
+          path: artifact-staging/solver-sweep-result
 
       - name: Persist the compact failure-response document
         shell: bash
