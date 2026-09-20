@@ -7,6 +7,20 @@
 > **Evidence role:** discovery (zero-compute reuse) superseded by confirmation (the dispatched slice: precommitted population/budgets/decision rule, current commit, level-blind, complete population coverage).
 > **Population identity:** current 531-row Class 1-5 residual, production run `35066677597` @ `16114b80` (`docs/solver-optimization-workstreams.md`'s boundary). The confirmation slice narrows to the deterministic 20-id sample below, run at current commit `c29047d9` (tier 1, tier 2 first pass) / `4ed64bf0` (tier 2 recovery pass; an intervening automated hint-store maintenance commit, no solver-logic change).
 
+## Independence dimensions
+
+The dispatched slice is confirmation-role evidence because population, tiers and decision rule were frozen before current-run outcomes, but its independence is deliberately limited.
+
+- sample/data: current-run outcomes are fresh, but eligibility was selected using a historical 1.2B-unsolved snapshot plus the current residual boundary; this is not an untouched population;
+- parent/family: 20 distinct level parents form the analysis units;
+- source construction: all rows remain in the same Corpus-2 development/capability laboratory;
+- instrument implementation: confirmation uses the repository's maintained level-blind targeted-sweep/solver stack, not an independent implementation;
+- analysis method: same work-ladder semantics and repository work/node accounting;
+- ontology/framing/authority: shared WS2 underdose framing and current workstream context;
+- critical code: solver, workflow and result reducers remain common-mode repository machinery.
+
+So “confirmation” here means a precommitted fresh execution that removes the identified commit/history confounds. It does not mean cross-generator, independently implemented, independently framed, or ontology-independent replication.
+
 ## Why this ran
 
 `docs/solver-optimization-workstreams.md`'s WS2 gate closed D1 negative and named four candidate "smallest live discriminators": work-ladder (absent-vs-underdosed capability), operational divergence (distinct failure basins), rejection counterfactuals (retention boundaries), and a 2x2 interaction (producer/consumer pair). Per standing research rules ("prefer the cheapest information-value test" and "use current research-data/status tooling to verify no retained asset already contains the required decision context" before new collection, the same Stage-0 discipline D1's own preflight used), this pass first checked whether work-ladder evidence for the *current* residual already exists in committed artifacts before proposing any new GHA campaign.
