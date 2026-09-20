@@ -2,13 +2,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { hashResearchPopulation as hashPopulation } from './research-population-identity-lib.mjs';
+import { encodeResearchScopedIdentity, hashResearchPopulation as hashPopulation } from './research-population-identity-lib.mjs';
 
-export function encodeScopedPopulationIdentity(scope, subjectId) {
-  if (typeof scope !== 'string' || scope.length === 0) throw new Error('population identity scope must be a non-empty string');
-  if (typeof subjectId !== 'string' || subjectId.length === 0) throw new Error('population subject id must be a non-empty string');
-  return JSON.stringify([scope, subjectId]);
-}
+export const encodeScopedPopulationIdentity = encodeResearchScopedIdentity;
 
 export function combinePopulationIntegrity(inputs, { kind = 'multi-population', identityBasis = 'population-label-and-subject-id' } = {}) {
   if (!Array.isArray(inputs) || inputs.length === 0) throw new Error('at least one labeled integrity input is required');
