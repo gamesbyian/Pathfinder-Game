@@ -41,6 +41,8 @@ queue/status/assets
 | `random` | solver-blind random witness-first, existing `stress:generate-random` | fresh confirmation blocks, broad solver-blind acquisition | sample-independent seeds are not distributionally independent from other witness-first construction |
 | `topology` | solver-blind topology composition, existing `stress:generate-topology` | cross-construction transfer/challenge and topology-sensitive acquisition | narrower mechanic support; absence of unsupported mechanics is not negative evidence |
 
+The topology producer's current support boundary is machine-readable through `scripts/stress/topology-generation-support-lib.mjs` and is embedded in generated corpus output plus the research dispatcher descriptor. Use `assessGenerationMethodSupport()` when a planned claim names required mechanics. `cross-construction` alone is not evidence that a source supports the phenomenon; `unknown` support must not be upgraded to supported by assumption.
+
 The targeted and random generators have different selection philosophies but share the broad witness-first construction family. The topology generator creates a macro topology before compiling a Pathfinder witness and is the current procedural cross-construction source.
 
 Each underlying generator remains directly callable. Its own CLI is the authority for method-specific options.
