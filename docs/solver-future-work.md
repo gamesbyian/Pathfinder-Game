@@ -21,14 +21,14 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 - **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
 - **Failure evidence:** P3/P4A concluded from the shared 53-parent acquisition; P3 routes repair-family censoring to `allocation-specific-follow-up`, while P4B reserve starvation concluded positive independently. P7 still needs repeated compatible populations. [`Class-3 result`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [plan](solver-failure-evidence-research-integration-plan.md)
-- **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
+- **Search loss:** P8 waits for recurring rich production; P9 waits for explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
 ## Hint/failure reopen hooks
 
 - Compatible compact-response rows -> identity/novelty/frontier audits; never backfill pre-contract attempts.
 - Repeated compatible populations + ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
-- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins. Require a valid denominator/protocol/dependence unit; R00044's canary is not prevalence evidence.
+- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins; require a valid denominator, protocol, and dependence unit.
 - Recurring rich producer -> search-loss P8 decision.
 - Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
 - Whole-space extinction is not deferred; sampled hints cannot prove it.
