@@ -94,6 +94,13 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   if (contract.independenceVector?.instrumentImplementation !== 'shared compact failure-response implementation') {
     issues.push('independenceVector.instrumentImplementation');
   }
+  for (const field of ['taskFramingPrompt', 'authorityContextExposure', 'ontologyVocabulary', 'criticalLibraryCode']) {
+    if (typeof contract.independenceVector?.[field] !== 'string' || !contract.independenceVector[field].trim()) {
+      issues.push(`independenceVector.${field}`);
+    }
+  }
+  if ('framingContext' in (contract.independenceVector ?? {})) issues.push('independenceVector.framingContext');
+  if (!Array.isArray(contract.liveRivals) || contract.liveRivals.length < 2) issues.push('liveRivals');
   if (contract.treatmentFidelity !== 'not-applicable-routing-screen-no-treatment') issues.push('treatmentFidelity');
   if (!Array.isArray(contract.primaryQuantities) || contract.primaryQuantities.length === 0) issues.push('primaryQuantities');
   if (!contract.stopRule || typeof contract.stopRule !== 'string') issues.push('stopRule');
