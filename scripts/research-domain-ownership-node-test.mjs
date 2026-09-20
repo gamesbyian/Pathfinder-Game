@@ -41,4 +41,22 @@ const failureEvidence = source('scripts/failure-evidence-semantics-lib.mjs');
 assert.match(hintEvidence, /research-evidence-applicability-lib\.mjs/u);
 assert.match(failureEvidence, /research-evidence-applicability-lib\.mjs/u);
 
+
+const statusIndex = source('scripts/research-status-index-lib.mjs');
+assert.match(statusIndex, /WORKSTREAM_EXECUTION_STATES/u);
+assert.match(statusIndex, /EXPERIMENT_PROMOTION_STATES/u);
+assert.doesNotMatch(
+  statusIndex.slice(statusIndex.indexOf('const experiments =')),
+  /normalizedLegacyWorkstreamState\(disposition\)/u,
+  'current experiment lifecycle must not be inferred from disposition prose',
+);
+
+const integrationAudit = source('scripts/research-integration-audit-lib.mjs');
+assert.doesNotMatch(integrationAudit, /startsWith\(['"]active['"]\)|\^\(\?:closed\|concluded/u,
+  'question lifecycle conformance must use the explicit state classifier rather than prose/prefix inference');
+
+const questionRelations = source('scripts/research-question-relations-lib.mjs');
+assert.match(questionRelations, /RESEARCH_QUESTION_STATES/u);
+assert.match(questionRelations, /researchQuestionLifecycleClass/u);
+
 console.log('research domain ownership contract tests passed');
