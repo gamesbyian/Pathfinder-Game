@@ -5,7 +5,7 @@
 // every other extracted module — and orchestration.ts itself — can depend on this one without a
 // cycle. See modules/solver/orchestration.ts's own header for the split this file is part of.
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, JointObligationObserver, BeamResearchObserver } from './types.js';
+import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, JointObligationObserver, BeamResearchObserver, ParityCapacityObserver, ParityPhaseDistanceObserver } from './types.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
 import { canonicalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
 import { normalizeSolverStageId } from './stage-policy.js';
@@ -320,6 +320,11 @@ export interface SolveOpts {
      *  types.ts and docs/solver-optimization-workstreams.md item #0's learned-failure Stage A).
      *  Never persisted or exposed by Solver's facade; absent in every production caller. */
     connectivityRejectionObserver?: ConnectivityRejectionObserver;
+    /** Research-only Lane H2 checkerboard-capacity shadow observer. Reuses the real connectivity
+     *  reached set, never changes pruning, and is intentionally direct/on-thread only. */
+    parityCapacityObserver?: ParityCapacityObserver;
+    /** Research-only Lane H1 phase-conditioned goal-distance shadow observer. */
+    parityPhaseDistanceObserver?: ParityPhaseDistanceObserver;
     /** Research-only joint-obligation propagation observer (see JointObligationObserver's doc in
      *  types.ts and reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md). Never
      *  persisted or exposed by Solver's facade; absent in every production caller. */
