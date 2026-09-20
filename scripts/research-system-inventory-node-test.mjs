@@ -18,6 +18,15 @@ assert.ok(inventory.relations.some(row =>
     row.relation === 'questions' && row.source === 'docs/solver-research-question-relations.json'));
 assert.ok(inventory.relations.some(row =>
     row.relation === 'durableEvidence' && row.authorityKind === 'derived/composed'));
+assert.ok(inventory.workflows.some(row =>
+    row.workflow === 'cpsat-explicit-prefix-reference.yml' &&
+    row.role === 'evidence-producing' &&
+    row.status === 'maintained' &&
+    row.scriptEntrypoints.includes('scripts/stress/cpsat-explicit-prefix-reference.mjs')));
+assert.equal(inventory.diagnostics.maintainedWorkflowCount,
+    inventory.workflows.filter(row => row.status === 'maintained').length);
+assert.equal(inventory.diagnostics.evidenceProducingWorkflowCount,
+    inventory.workflows.filter(row => row.role === 'evidence-producing').length);
 assert.ok(inventory.commands.some(row => row.name === 'research:integration-audit'));
 assert.equal(
     inventory.commands.find(row => row.name === 'research:canary-search-loss')?.entrypoint,
@@ -82,6 +91,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 
 const architectureView = researchSystemInventoryView(inventory, 'architecture');
 assert.ok(Array.isArray(architectureView.relations));
+assert.deepEqual(architectureView.workflows, inventory.workflows);
 assert.deepEqual(architectureView.contractOwnership, inventory.contractOwnership);
 assert.equal(architectureView.integrationHealth, inventory.integrationHealth);
 assert.equal('planLifecycle' in architectureView, false);
