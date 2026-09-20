@@ -125,10 +125,13 @@ export function buildQuestionDossier(root = process.cwd(), {
     const candidateJoins = rankCandidateAssetRelationships(question, model.relations.assetRelationships, {
         candidateAssetIds: candidateAssets.map(asset => asset.id),
     });
-    const evidenceRefs = [...new Set([
-        ...(question.answeredBy ?? []),
-        ...(question.constrainedBy ?? []),
-    ].filter(value => typeof value === 'string' && PATH_RE.test(value)))];
+    const answerRefs = [...new Set(
+        (question.answeredBy ?? []).filter(value => typeof value === 'string' && PATH_RE.test(value)),
+    )];
+    const constraintRefs = [...new Set(
+        (question.constrainedBy ?? []).filter(value => typeof value === 'string' && PATH_RE.test(value)),
+    )];
+    const evidenceRefs = [...new Set([...answerRefs, ...constraintRefs])];
 
     return {
         schemaVersion: 1,
@@ -154,7 +157,10 @@ export function buildQuestionDossier(root = process.cwd(), {
             experiments: model.relations.experiments.filter(authorityMatch),
             experimentMatchMode: 'lexical-discovery-only',
         },
+        answerRefs,
+        constraintRefs,
         evidenceRefs,
+        evidenceRefsRelation: 'compatibility-union-of-answer-and-constraint-refs',
         populations: {
             knownBlocks: blocks,
             mechanicallyEligibleBlockIds: eligibleBlocks.map(row => row.blockId),
