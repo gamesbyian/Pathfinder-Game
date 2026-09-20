@@ -89,8 +89,12 @@ assert.throws(() => combine([shard1], 'nonexistent-arm'), /control arm "nonexist
 
 // Plan completeness check: a plan naming a cellId no shard produced must fail loudly, not silently
 // report a partial population as complete.
-const incompletePlan = { cells: [{ cellId: 'SP-c2-1-full-menu' }, { cellId: 'SP-c2-1-portfolio-11' }, { cellId: 'SP-c2-99-full-menu' }] };
-assert.throws(() => combine([shard1, shard2], 'full-menu', incompletePlan), /missing/);
+const incompletePlan = {
+    cells: [...shard1.results, ...shard2.results]
+        .filter(row => row.cellId !== 'SP-c2-3-portfolio-11')
+        .map(({ cellId, levelId, variantLabel }) => ({ cellId, levelId, variantLabel })),
+};
+assert.throws(() => combine([shard1, shard2], 'full-menu', incompletePlan), /absent from authored plan|missing/u);
 
 // A duplicated cellId (two shards both produced the same cell) must also fail loudly.
 const dupedShard = { results: [cell('SP-c2-1-full-menu', 'L1', 'full-menu', true, 1, 'success')] };
@@ -104,7 +108,7 @@ const exactPlan = {
 };
 assert.equal(combine([shard1, shard2], 'full-menu', exactPlan).populationIntegrity.coverageComplete, true);
 
-const wrongArmPlan = structuredClone(exactPlan);
+const wrongArmPlan = JSON.parse(JSON.stringify(exactPlan));
 wrongArmPlan.cells[0].variantLabel = 'not-full-menu';
 assert.throws(
     () => combine([shard1, shard2], 'full-menu', wrongArmPlan),
@@ -132,7 +136,7 @@ const keyedPlan = { cells: [{
     ablation: null,
 }] };
 assert.equal(combine([keyedShard], 'full-menu', keyedPlan).populationIntegrity.coverageComplete, true);
-const wrongTechniquePlan = structuredClone(keyedPlan);
+const wrongTechniquePlan = JSON.parse(JSON.stringify(keyedPlan));
 wrongTechniquePlan.cells[0].techniqueKeys = ['dfs|score=default|bias=none'];
 assert.throws(
     () => combine([keyedShard], 'full-menu', wrongTechniquePlan),
