@@ -24,12 +24,12 @@ Eligible only after the active premise gate above is positive.
 | Dependency-conditioned repair neighborhood | Current exact-labelled/repair-retreat evidence shows rescue requires revising an interior/early commitment outside the append-only neighborhood; trace the coupled commitment before designing a new repair operator |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
-| Phase-aware portal guidance / scoring | Lane H H1 shows non-trivial decision-bearing phase-conditioned distance opportunity; then compare current-phase guidance against the existing first-twist proxy at matched work |
-| Dynamic parity-phase connectivity | H1 static conditioned distance is positive but remaining false negatives plausibly come from state-dependent reachability; extend connectivity to `(cell, phase)` only if the static representation earns the extra state/cost |
-| Checkerboard-capacity hard prune | Lane H H2 shadow incidence is non-trivial, synthetic witnesses exist, and stored/referee-valid prefix replay plus differential checks show zero false rejects |
-| Parity-aware repair treatment | Lane H H4 observer shows repair plateaus/near-misses concentrate in phase- or color-capacity-incompatible states and identifies a specific operator/scoring consequence; do not add a generic parity penalty |
-| Parity-derived action/routing selector | A legal current-input parity/phase feature predicts differentiated technique response on an independent shared-budget transfer; observer incidence alone does not earn routing |
-| All-gates exact-parity unsat fast exit | H5 shows meaningful work is actually spent after parity proves zero feasible gates and empty/no-feasible-gate semantics are clean across production/static/legacy orchestration |
+| Phase-aware portal guidance / scoring | `WS2-PARITY-PHASE-DISTANCE` shows non-trivial decision-bearing conditioned-distance opportunity; then compare current-phase guidance against the existing first-twist proxy at matched work |
+| Dynamic parity-phase connectivity | Static phase-conditioned distance is positive but remaining false negatives plausibly come from state-dependent phase reachability; extend connectivity to `(cell, phase)` only if the static representation earns the extra state/cost |
+| Checkerboard-capacity hard prune | `WS2-CHECKERBOARD-CAPACITY` shows non-trivial shadow incidence, synthetic witnesses exist, and stored/referee-valid prefix replay plus differential checks show zero false rejects |
+| Parity-aware repair treatment | A diagnostic-only phase/capacity residual shows repair plateaus or near-misses concentrate in incompatible states and identifies a specific operator/scoring consequence; do not add a generic parity penalty |
+| Parity-derived action/routing selector | A legal current-input phase/capacity feature predicts differentiated technique response on an independent shared-budget transfer; observer incidence alone does not earn routing |
+| All-gates exact-parity unsat fast exit | Measurement shows meaningful work is spent after exact no-twist parity proves zero feasible gates and empty/no-feasible-gate semantics are clean across production/static/legacy orchestration |
 | Complete/random hint-enumeration parity prune | Independent hint-enumeration cost/opportunity justifies it; use only sound no-twist parity or later proved phase-conditioned logic without changing completeness |
 
 ## Deferred plan closeouts
@@ -40,13 +40,14 @@ Eligible only after the active premise gate above is positive.
 
 ## Hint/failure reopen hooks
 
-- Repeated compatible compact-response rows -> identity/novelty/saturation/frontier audits with parent dependence + controls; never backfill pre-contract attempts.
-- Repeated compatible populations + live ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
-- Recurring rich producer -> search-loss P8 Resource Contract decision.
+- Compatible compact-response rows -> identity/novelty/frontier audits; never backfill pre-contract attempts.
+- Repeated compatible populations + ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
+- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins. Require a valid denominator/protocol/dependence unit; R00044's canary is not prevalence evidence.
+- Recurring rich producer -> search-loss P8 decision.
 - Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
-- Whole-solution-space extinction is not deferred; sampled hints cannot prove it.
+- Whole-space extinction is not deferred; sampled hints cannot prove it.
 
-## Other deferred architectural questions
+## Deferred architectural questions
 
 | Question | Reopen condition |
 |---|---|
