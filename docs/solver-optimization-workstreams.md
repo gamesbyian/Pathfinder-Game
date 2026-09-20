@@ -34,7 +34,7 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 #### Lane A — separator / decomposition
 
-**TESTED FORM CLOSED NEGATIVE AT C2.** C2 removes all exact-outcome mixing but leaves only 39/546 decisive rows (7.14%) in repeated signatures, below the frozen 20% compactness floor. C3/C4 can only fragment further, so the nested contract stops as representation-explosive. Reopen only with a materially different compact interface idea, not added fields. [`contract`](solver-separator-dynamic-interface-contract-preflight.md) · [`C2 result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md)
+**TESTED FORM CLOSED NEGATIVE AT C2.** C2 is outcome-pure but representation-explosive: only 39/546 decisive rows (7.14%) repeat, below the frozen 20% compactness floor; C3/C4 only fragment further. Reopen only with a materially different compact interface. [`result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
@@ -43,7 +43,7 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 #### Lane C — solve-local typed knowledge reuse
 
-**PHASE-0 NEGATIVE.** No new fact family earned an observer: class B is shipped/audited, class C correctly unmemoized, class D showed no opportunistic recurrence. No generic blackboard. Reopen on demonstrated recurring typed reason/state evidence. [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md)
+**PHASE-0 NEGATIVE.** No new fact family earned an observer: shipped knowledge is already covered and remaining candidates show no useful recurrence. Reopen on demonstrated recurring typed reason/state evidence. [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md)
 
 #### Lane D — per-instance relational feasibility
 
@@ -65,20 +65,20 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane G — independent search-object nursery
 
-**G1 complete-path LNS:** real-frontier completion is 0/45 at both 2M and 16M; modest dose is closed. Next gate remains a fair full relaxed candidate from frozen real-search partials, then local repairability. [`dose`](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
+**G1 complete-path LNS:** 0/45 at both 2M and 16M closes modest dose escalation. Reopen only with a fair full relaxed candidate from frozen real-search partials. [`dose`](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
 
 #### Lane H — parity invariants
 
-**PARALLEL PREMISE OBSERVERS; production unchanged.** `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` run together via `solver:parity-invariant-shadow`. Advance only after resolution-ready incidence and soundness; details: [preflight](solver-parity-phase-capacity-preflight.md) · [audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
+**PARALLEL PREMISE OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` together; advance only after resolution-ready incidence and soundness. [preflight](solver-parity-phase-capacity-preflight.md)
 
 ### Post-mining premise-map handoff closeout
 
 Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: A closes at C2, D1's ranking consumer is negative, and F3 has no compact decision-bearing consumer. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** HARVEST adds the repair node-cap experiment seam, then designs the matched-work A/B; admissible-order repricing is independently nominated by 2/40. ACQUISITION runs the 3-row beam freshness gate, then broadens first-loss demand sampling outside capability-selected Class 3. [`class3`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [`reserve`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) · [`invention`](solver-capability-invention-program.md)
+**Current WS2 gate:** HARVEST adds the repair node-cap seam and designs its matched-work A/B; reserve repricing is separately nominated. ACQUISITION runs the 3-row beam freshness gate, then broadens first-loss sampling beyond capability-selected Class 3. [`invention`](solver-capability-invention-program.md)
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. H3 remaining-length ordering independently transferred: 10/12 achievable rescues at 20% shared budget, nominating a bounded matched-work production consumer pilot. [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md)
