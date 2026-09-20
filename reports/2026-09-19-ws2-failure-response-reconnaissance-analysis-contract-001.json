@@ -93,8 +93,11 @@
   },
   "treatmentFidelity": "not-applicable-routing-screen-no-treatment",
   "independenceVector": {
+    "reference": "relative-to-any-descendant-routing/treatment claim and to other evidence channels used for triangulation",
     "sampleData": "parent-clustered; repeated records/attempts within one parent are dependent",
+    "parentFamily": "parent is the independence/cluster unit; repeated records and attempts from one parent are dependent",
     "sourceConstruction": "not claimed by this routing screen",
+    "decisionSeam": "routing-screen seam only; no production treatment seam is exercised by this reconnaissance",
     "instrumentImplementation": "shared compact failure-response implementation",
     "analysisMethod": "shared prespecified reducer",
     "analystModel": "not claimed",
