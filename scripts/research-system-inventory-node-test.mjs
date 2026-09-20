@@ -63,6 +63,8 @@ assert.ok(inventory.planLifecycle.some(row => row.kind === 'preflight'),
 assert.ok(inventory.planLifecycle.some(row => row.kind === 'handoff'),
     'lifecycle inventory must cover handoffs, not only *-plan.md files');
 assert.ok(Array.isArray(inventory.sharedImplementationDependencies));
+assert.equal(inventory.diagnostics.sharedContractOwnerCount, inventory.contractOwnership.length);
+assert.ok(inventory.contractOwnership.every(row => row.contractFunctions.length > 0));
 assert.ok(inventory.sharedImplementationDependencies.some(row =>
     row.contractFunctions.some(name => /^(?:build|validate|assert|write|format|parse|canonicalize)/u.test(name))),
     'shared research dependencies should expose constructor/validator ownership when exported');
@@ -80,6 +82,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 
 const architectureView = researchSystemInventoryView(inventory, 'architecture');
 assert.ok(Array.isArray(architectureView.relations));
+assert.deepEqual(architectureView.contractOwnership, inventory.contractOwnership);
 assert.equal(architectureView.integrationHealth, inventory.integrationHealth);
 assert.equal('planLifecycle' in architectureView, false);
 const lifecycleView = researchSystemInventoryView(inventory, 'lifecycle');
