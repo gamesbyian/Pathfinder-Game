@@ -72,6 +72,8 @@ try {
   assert.equal(result.scientificDisposition.unitTopology.observationUnit, 'failure-response-record');
   assert.equal(result.scientificDisposition.instrument.kind, 'pathfinder-compact-failure-response');
   assert.equal(result.scientificDisposition.currentApplicability.basis, 'solver-and-protocol-relative');
+  assert.equal(result.scientificDisposition.adaptiveLineage.descendantEvidenceRole, 'development-until-new-precommitment');
+  assert.equal(result.scientificDisposition.treatmentFidelity, 'not-applicable-routing-screen-no-treatment');
   assert.equal(result.observation.summary.independentParents, 2);
   assert.equal(result.decision.status, 'pending-interpretation');
   assert.equal(result.decision.route, null);
@@ -110,6 +112,7 @@ try {
   assert.equal(claim.scientificDisposition.status, 'supports-prespecified-routing-decision');
   assert.equal(claim.decisionDisposition.route, 'none');
   assert.equal(claim.populationScope.unitTopology.analysisUnit, 'parent');
+  assert.equal(claim.scientificDisposition.adaptiveLineage.descendantEvidenceRole, 'development-until-new-precommitment');
   assert.match(claim.analysisIdentity, /^sha256:[0-9a-f]{64}$/u);
   assert.match(claim.derivation.edges.find(edge => edge.kind === 'input-artifact').contentHash, /^sha256:[0-9a-f]{64}$/u);
   assert.match(claim.derivation.edges.find(edge => edge.kind === 'analysis-implementation').contentHash, /^sha256:[0-9a-f]{64}$/u);
