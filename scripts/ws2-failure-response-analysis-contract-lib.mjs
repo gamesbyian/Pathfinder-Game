@@ -1,5 +1,6 @@
 import { canonicalResearchValue, researchSemanticHash } from './research-semantic-identity-lib.mjs';
 import { RESEARCH_OBSERVABILITY_AXES } from './research-resolution-envelope-lib.mjs';
+import { researchIndependenceVectorIssues } from './research-independence-vector-lib.mjs';
 
 export const WS2_FAILURE_RESPONSE_ROUTES = Object.freeze([
   'rejection-counterfactual',
@@ -93,18 +94,7 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   if (contract.adaptiveLineage?.descendantEvidenceRole !== 'development-until-new-precommitment') {
     issues.push('adaptiveLineage.descendantEvidenceRole');
   }
-  if (contract.independenceVector?.sampleData !== 'parent-clustered; repeated records/attempts within one parent are dependent') {
-    issues.push('independenceVector.sampleData');
-  }
-  if (contract.independenceVector?.instrumentImplementation !== 'shared compact failure-response implementation') {
-    issues.push('independenceVector.instrumentImplementation');
-  }
-  for (const field of ['taskFramingPrompt', 'authorityContextExposure', 'ontologyVocabulary', 'criticalLibraryCode']) {
-    if (typeof contract.independenceVector?.[field] !== 'string' || !contract.independenceVector[field].trim()) {
-      issues.push(`independenceVector.${field}`);
-    }
-  }
-  if ('framingContext' in (contract.independenceVector ?? {})) issues.push('independenceVector.framingContext');
+  issues.push(...researchIndependenceVectorIssues(contract.independenceVector));
   if (!Array.isArray(contract.liveRivals) || contract.liveRivals.length < 2) issues.push('liveRivals');
   if (typeof contract.prospectiveExpectation?.expectedShape !== 'string'
       || !contract.prospectiveExpectation.expectedShape.trim()) {
