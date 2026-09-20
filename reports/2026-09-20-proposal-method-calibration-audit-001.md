@@ -3,7 +3,7 @@
 > **Status:** inconclusive
 > **Last evidence:** 2026-09-20 — compared question relations, recent portfolio retrospective proposal-provenance fields and report-local nomination histories against the proposed idea-origin categories.
 > **Decision:** do not add a question-origin enum or proposal-method registry yet. Existing `triggeredBy`/`constrainedBy` ancestry and report provenance are useful, but method-of-discovery is not prospectively captured consistently enough for fair yield calibration.
-> **Remaining gate:** revisit after multiple new questions prospectively record a stable origin method before outcome, without reconstructing origin labels from hindsight.
+> **Remaining gate:** revisit after multiple newly nominated questions use the optional `Proposal provenance` line prospectively, before outcome, across more than one method family.
 
 <!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"inconclusive","lastEvidenceDate":"2026-09-20","decision":"do not structure proposal-method origin until enough prospective non-retrofitted observations exist","remainingGate":"revisit after multiple new questions prospectively record stable origin methods before outcome","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":null,"selection":"current question registry plus 2026-09-12..19 portfolio retrospective proposal provenance","inferenceScope":"proposal-generation method calibration only"},"claimRefs":[],"sourceArtifacts":["docs/solver-research-question-relations.json","scripts/research-portfolio-retrospective-lib.mjs","reports/2026-09-19-research-portfolio-retrospective-data-001.json","reports/2026-09-20-session-change-taxonomy-and-adjacent-opportunities-001.md"],"prospective":{"expectation":"question ancestry will be better captured than origin-method identity","surprise":"the retrospective already exposes trigger/candidate-set visibility, which covers much of the practical anti-rediscovery value without pretending to know how the idea was generated","anomaly":null}} -->
 
@@ -70,9 +70,9 @@ Even then, the goal should be calibration of proposal channels, not ranking them
 
 Use `triggeredBy` and other stable relations whenever a real question-to-question ancestry exists.
 
-Keep discovery-method history in the report that actually knows it.
+For newly nominated questions/candidates whose source is genuinely known before outcome, use the human-readable `Proposal provenance` line defined in [`docs/investigation-report-conventions.md`](../docs/investigation-report-conventions.md). It may name multiple contributing methods and is intentionally not machine-enforced.
 
-Do not create a machine origin label merely because a later reader can tell a plausible story about where the idea came from.
+Keep discovery-method history in the report that actually knows it. Do not create or retrospectively backfill a machine origin label merely because a later reader can tell a plausible story about where the idea came from.
 
 ## Promotion trigger
 
