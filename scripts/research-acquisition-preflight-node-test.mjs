@@ -84,6 +84,10 @@ assert.match(acquisitionStopRule('NO_LEVEL_GENERATION'), /stop before generation
 assert.match(acquisitionStopRule('FRESH_SAME_SOURCE'), /pilot first/u);
 assert.deepEqual(generationGuidanceForRoute('FRESH_SAME_SOURCE').candidateMethods.map(row => row.id), ['targeted', 'random', 'topology']);
 assert.deepEqual(generationGuidanceForRoute('CROSS_SOURCE_TRANSFER').candidateMethods.map(row => row.id), ['random', 'topology']);
+const transferGuidance = generationGuidanceForRoute('CROSS_SOURCE_TRANSFER');
+const topologyGuidance = transferGuidance.candidateMethods.find(row => row.id === 'topology');
+assert.ok(topologyGuidance.supportEnvelope.unsupportedMechanics.includes('portal'));
+assert.equal(transferGuidance.candidateMethods.find(row => row.id === 'random').supportEnvelope, null);
 assert.equal(generationGuidanceForRoute('NO_LEVEL_GENERATION').automaticGeneration, false);
 
 
