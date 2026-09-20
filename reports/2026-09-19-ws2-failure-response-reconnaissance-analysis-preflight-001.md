@@ -184,7 +184,7 @@ The generic `failure-response-query.mjs` remains the reducer. The WS2 wrapper bi
 - the reducer observation;
 - the routing decision.
 
-A successful reducer execution is not sufficient for a scientific routing decision. Unknown/mixed protocol or solver identity, incomplete population accounting, or other contract eligibility failures leave the analysis explicitly ineligible. Route selection remains a separate action over the prespecified observation.
+A successful reducer execution is not sufficient for a scientific routing decision. Unknown/mixed protocol or solver identity, incomplete population accounting, or other contract eligibility failures leave the analysis explicitly ineligible. Route selection remains a separate action over the prespecified observation. When selecting `--route=<route>`, also provide `--decision-rationale=<text>` so the scientific judgment connecting observation to route survives into the persisted analysis and claim capsule.
 
 When and only when an eligible analysis has an explicit selected route, persist the analysis envelope with `--out=<analysis.json>`, then derive the machine claim capsule with:
 
