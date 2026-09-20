@@ -553,7 +553,7 @@
       "id": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
       "question": "Can the separator/decomposition positive be upgraded into a compact dynamic interface contract that preserves the future-relevant history needed for safe composition?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "mixed",
       "aliases": [
         "Lane A",
         "separator interface",
@@ -564,7 +564,7 @@
         "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
         "reports/2026-09-19-lane-a-c0-signature-collision-result-001.md"
       ],
-      "result": "C0 static interface identity has now been tested exactly on the frozen Lane-A population and is decisively insufficient: 581/581 cases were labelled, 546 were decisive, and two independent-parent cut-signature groups mixed LIVE/DEAD. The question is actively advanced to C1 boundary kinematics on the same frozen cases; no resampling is earned.",
+      "result": "C0 static interface identity is decisively insufficient on the frozen Lane-A population: 581/581 cases labelled, 546 decisive, with two independent-parent cut-signature groups mixing LIVE/DEAD. The nested contract question remains mixed/open at C1 boundary kinematics on the same frozen 581-case population; no resampling is earned.",
       "constrainedBy": [
         "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
         "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
