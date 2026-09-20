@@ -224,6 +224,21 @@ assert.deepEqual(validateResearchQuestionRegistry(invalidAcquisition), [
     'questions[0].acquisitionNeed is unknown: generate-something',
 ]);
 
+const invalidAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
+invalidAnsweredBy.questions[0].answeredBy = ['not-a-repository-edge'];
+assert.deepEqual(validateResearchQuestionRegistry(invalidAnsweredBy), [
+    'questions[0].answeredBy must contain repository paths',
+]);
+
+const duplicateAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
+duplicateAnsweredBy.questions[0].answeredBy = [
+    'reports/example.md',
+    'reports/example.md',
+];
+assert.deepEqual(validateResearchQuestionRegistry(duplicateAnsweredBy), [
+    'questions[0].answeredBy duplicates reports/example.md',
+]);
+
 const invalidRelations = JSON.parse(JSON.stringify(questionRegistry));
 invalidRelations.questions[0].implies = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidRelations), [
