@@ -30,8 +30,8 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
   }
   const route = analysis.decision.route;
   const analysisIdentity = expectedAnalysisIdentity;
-  return {
-    schemaVersion: 1,
+  const capsuleCore = {
+    schemaVersion: 1;
     kind: 'pathfinder-ws2-failure-response-claim-capsule',
     questionId: analysis.questionId,
     claimType: 'routing-discriminator',
@@ -122,12 +122,24 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
       action: 're-evaluate this claim and downstream routing decision; do not automatically rewrite either disposition',
     },
   };
+  return { ...capsuleCore, claimIdentity: hash(capsuleCore) };
+}
+
+export function ws2FailureResponseClaimIdentity(capsule) {
+  if (!capsule || typeof capsule !== 'object' || Array.isArray(capsule)) {
+    throw new Error('claim capsule must be an object');
+  }
+  const { claimIdentity: _identity, ...core } = capsule;
+  return hash(core);
 }
 
 
 export function ws2FailureResponseInvalidationImpact(capsule, { kind, ref }) {
   if (!capsule || capsule.kind !== 'pathfinder-ws2-failure-response-claim-capsule') {
     throw new Error('WS2 invalidation query requires a WS2 claim capsule');
+  }
+  if (capsule.claimIdentity !== ws2FailureResponseClaimIdentity(capsule)) {
+    throw new Error('WS2 invalidation query requires a valid claimIdentity matching claim content');
   }
   if (typeof kind !== 'string' || !kind || typeof ref !== 'string' || !ref) {
     throw new Error('invalidation kind/ref must be non-empty strings');
