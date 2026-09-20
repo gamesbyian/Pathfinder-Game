@@ -189,6 +189,32 @@ function sharedDependencies(root, commands) {
         .sort((a, b) => b.consumerCount - a.consumerCount || a.dependency.localeCompare(b.dependency));
 }
 
+function workflowInventory(root) {
+    const lifecyclePath = path.join(root, 'docs/solver-workflow-lifecycle.json');
+    if (!existsSync(lifecyclePath)) return [];
+    const lifecycle = JSON.parse(readFileSync(lifecyclePath, 'utf8'));
+    const packageScriptNames = new Set(Object.keys(packageScripts(root)));
+    return (lifecycle.workflows ?? []).map(row => {
+        const workflowPath = normalize(path.join('.github/workflows', row.workflow));
+        const absolute = path.join(root, workflowPath);
+        const source = existsSync(absolute) ? readFileSync(absolute, 'utf8') : '';
+        const scriptEntrypoints = [...new Set([...source.matchAll(/(?:^|\s)(scripts\/[A-Za-z0-9_./-]+\.mjs)(?=\s|$|['"])/gmu)]
+            .map(match => match[1]))].sort();
+        const npmAliases = [...new Set([...source.matchAll(/npm\s+run\s+([A-Za-z0-9:_-]+)/gu)]
+            .map(match => match[1]).filter(name => packageScriptNames.has(name)))].sort();
+        return {
+            workflow: row.workflow,
+            path: workflowPath,
+            role: row.role,
+            status: row.status,
+            currentConsumer: row.currentConsumer,
+            retirementTrigger: row.retirementTrigger,
+            scriptEntrypoints,
+            npmAliases,
+        };
+    }).sort((a, b) => a.workflow.localeCompare(b.workflow));
+}
+
 function relationInventory(model) {
     return Object.entries(RESEARCH_RELATION_CONTRACTS).map(([relation, contract]) => ({
         relation,
@@ -264,6 +290,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         .map(role => [role, documentRoles.filter(row => row.role === role).length]));
     const currentAuthorityClaimOutsideIndex = documentRoles.filter(row => row.currentAuthorityClaimOutsideIndex);
     const relations = relationInventory(model);
+    const workflows = workflowInventory(root);
     const dependencies = sharedDependencies(root, commands);
     const contractOwners = dependencies.filter(row => row.contractFunctions.length > 0);
     const integrationAudit = auditResearchIntegration(root, { model });
@@ -284,6 +311,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         },
         relations,
         commands,
+        workflows,
         sharedImplementationDependencies: dependencies,
         contractOwnership: contractOwners,
         documentation: {
@@ -317,6 +345,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             sharedContractOwnerCount: contractOwners.length,
             derivedRelationCount: relations.filter(row => row.authorityKind === 'derived/composed').length,
             structuredRelationCount: relations.filter(row => row.authorityKind === 'structured-source').length,
+            maintainedWorkflowCount: workflows.filter(row => row.status === 'maintained').length,
+            evidenceProducingWorkflowCount: workflows.filter(row => row.role === 'evidence-producing').length,
         },
     };
 }
@@ -333,6 +363,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             integrationHealth: inventory.integrationHealth,
             relations: inventory.relations,
             commands: inventory.commands,
+            workflows: inventory.workflows,
             sharedImplementationDependencies: inventory.sharedImplementationDependencies,
             contractOwnership: inventory.contractOwnership,
         };
