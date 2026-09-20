@@ -40,6 +40,12 @@ export function combinePopulationIntegrity(inputs, { kind = 'multi-population', 
     duplicateIds: inputs.flatMap(({ label, integrity }) => integrity.duplicateIds.map(id => `${label}:${id}`)),
     unexpectedIds: inputs.flatMap(({ label, integrity }) => integrity.unexpectedIds.map(id => `${label}:${id}`)),
     missingIds: inputs.flatMap(({ label, integrity }) => integrity.missingIds.map(id => `${label}:${id}`)),
+    canonicalDuplicateIds: inputs.flatMap(({ label, integrity }) =>
+      integrity.duplicateIds.map(id => encodeScopedPopulationIdentity(String(label), String(id)))),
+    canonicalUnexpectedIds: inputs.flatMap(({ label, integrity }) =>
+      integrity.unexpectedIds.map(id => encodeScopedPopulationIdentity(String(label), String(id)))),
+    canonicalMissingIds: inputs.flatMap(({ label, integrity }) =>
+      integrity.missingIds.map(id => encodeScopedPopulationIdentity(String(label), String(id)))),
     expectedIds,
     canonicalExpectedIds,
     identityCodec: 'json-tuple-v1',
