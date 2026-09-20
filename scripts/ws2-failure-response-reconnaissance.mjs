@@ -11,6 +11,7 @@ import {
   ws2FailureResponseAnalysisIdentity,
   WS2_FAILURE_RESPONSE_ROUTES,
 } from './ws2-failure-response-analysis-contract-lib.mjs';
+import { buildResearchResolutionEnvelope } from './research-resolution-envelope-lib.mjs';
 
 const argv = process.argv.slice(2);
 const value = name => argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -82,6 +83,62 @@ if (selectedRoute && !eligible) {
   throw new Error(`cannot select WS2 route from scientifically ineligible evidence: ${eligibilityReasons.join('; ')}`);
 }
 
+const allDecisionValid = documents.every(({ document }) =>
+  document.populationIntegrity?.decisionValidComplete === true);
+const hasUnknownInstrumentSupport = observation.rows?.some(row =>
+  row.badness?.support === 'UNKNOWN' || row.badness?.support === 'UNSUPPORTED') ?? false;
+const resolution = buildResearchResolutionEnvelope({
+  questionId: contract.questionId,
+  liveRivals: contract.liveRivals,
+  discriminatingObservable: contract.primaryDiscriminator,
+  requiredAxes: ['eligibility', 'measurementSupport', 'coverage'],
+  axes: {
+    eligibility: {
+      status: eligible ? 'satisfied' : 'blocked',
+      reason: eligible ? 'solver/protocol-relative population eligibility satisfied' : eligibilityReasons.join('; '),
+    },
+    opportunity: {
+      status: 'not-required',
+      reason: 'routing reconnaissance characterizes candidate discriminator routes rather than treatment efficacy',
+    },
+    reach: {
+      status: 'not-required',
+      reason: 'reach is an observed discriminator dimension in this screen, not a precondition for every route',
+    },
+    participation: {
+      status: 'not-required',
+      reason: 'participation is an observed discriminator dimension in this screen, not a global precondition',
+    },
+    measurementSupport: {
+      status: hasUnknownInstrumentSupport ? 'unknown' : 'satisfied',
+      reason: hasUnknownInstrumentSupport
+        ? 'one or more reported badness annotations are unsupported/unknown; route only on supported compact fields'
+        : 'compact instrument support policy is satisfied for reported routing fields',
+    },
+    coverage: {
+      status: documents.every(({ document }) => document.populationIntegrity?.coverageComplete === true)
+        ? 'satisfied' : 'blocked',
+      reason: 'primary routing requires complete accounting of the eligible population',
+    },
+    censoring: {
+      status: allDecisionValid ? 'satisfied' : 'unknown',
+      reason: allDecisionValid
+        ? 'no decision-invalid censoring in the supplied population'
+        : 'censored/indeterminate rows remain descriptive and must not be interpreted as ordinary negatives',
+    },
+  },
+  negativeInterpretationPolicy: contract.negativeResolution,
+  outcomeInterpretation: {
+    routeSelected: 'select only under the frozen Stage-A/Stage-B routing rules',
+    routeNone: 'no expensive follow-on is earned; this does not imply no mechanism exists',
+    blocked: 'repair the named observability blocker before treating the routing screen as resolution-ready',
+  },
+  source: {
+    kind: 'ws2-failure-response-reconnaissance',
+    analysisContractIdentity: contractIdentity,
+  },
+});
+
 const resultCore = {
   schemaVersion: 1,
   kind: 'pathfinder-ws2-failure-response-reconnaissance-analysis',
@@ -114,6 +171,7 @@ const resultCore = {
     adaptiveLineage: contract.adaptiveLineage,
     independenceVector: contract.independenceVector,
     treatmentFidelity: contract.treatmentFidelity,
+    resolution,
     protocolHashes: [...protocolHashes].sort(),
     solverRefs: [...solverRefs].sort(),
     censoringPolicy: contract.censoringPolicy,
