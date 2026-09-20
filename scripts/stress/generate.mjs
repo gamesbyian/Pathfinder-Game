@@ -20,6 +20,7 @@
  * can never appear in the normal level selector.
  */
 /* global structuredClone */
+import { validateResearchEvaluationEvidenceRole } from '../research-evaluation-evidence-role-lib.mjs';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -61,7 +62,7 @@ const EVIDENCE_ROLE = args.get('--evidence-role') || 'development';
 const BLOCK_ID = args.get('--block-id') || null;
 const ID_PREFIX = args.get('--id-prefix') || 'S';
 
-if (!['development', 'confirmation', 'transfer'].includes(EVIDENCE_ROLE)) throw new Error('--evidence-role must be development, confirmation, or transfer');
+validateResearchEvaluationEvidenceRole(EVIDENCE_ROLE, { path: '--evidence-role' });
 if (BLOCK_ID && !QUESTION_ID) throw new Error('--block-id requires --question-id');
 if (!/^[A-Za-z]+$/.test(ID_PREFIX)) throw new Error('--id-prefix must contain letters only');
 if (QUESTION_ID && !loadResearchQuestionRegistry(ROOT).questions.some(question => question.id === QUESTION_ID)) {
