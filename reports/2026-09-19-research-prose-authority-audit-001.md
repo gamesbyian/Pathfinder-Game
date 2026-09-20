@@ -204,6 +204,25 @@ Affordances and caveats are scientific interpretation. Their purpose is to prese
 
 Keep them prose unless a specific caveat becomes a repeated enforcement rule with a real consumer.
 
+### 12. Lexical relationships — stable IDs where earned, lexical discovery where not
+
+The prose lens also applies to joins, not only state.
+
+The question dossier previously used one lexical `authorityMatch` over flattened rows for queue, evidence, and experiment discovery. That meant the live workstream queue could be matched to a question by vocabulary even though the queue already carries a stable `questionRef`.
+
+This has been corrected:
+
+- queue-to-question dossier joins now use exact `questionRef`;
+- evidence uses exact structured question tags when available and reports `lexical-fallback` only when it has no stable tag;
+- premise hints remain explicitly `lexical-discovery-only`;
+- experiment matches remain `lexical-discovery-only` because the opt-in ledger does not yet carry an authored question relation for most rows.
+
+Do not invent experiment-to-question IDs from archaeology merely to eliminate lexical discovery. Promote that relation only when it is explicitly authored or another real consumer requires it.
+
+The rule is:
+
+> if a stable relation already exists, prose similarity must not compete with it; if only lexical similarity exists, label the result as discovery rather than authority.
+
 ## Hostile closeout sweep
 
 After the conversions above, a focused scan of live research control-plane consumers found no remaining material path that classifies arbitrary prose into queue, experiment, question, or report machine state.
