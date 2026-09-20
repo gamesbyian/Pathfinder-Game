@@ -87,6 +87,16 @@ try {
   assert.notEqual(pendingClaim.status, 0);
   assert.match(`${pendingClaim.stdout}${pendingClaim.stderr}`, /explicit selected routing decision/u);
   assert.equal(result.analysisContract.identityHash, ws2FailureResponseAnalysisContractIdentity(contract));
+  const relocatedEligiblePath = path.join(temp, 'relocated-eligible.json');
+  writeFileSync(relocatedEligiblePath, JSON.stringify(eligibleDoc));
+  const relocated = spawnSync(process.execPath, [
+    'scripts/ws2-failure-response-reconnaissance.mjs',
+    `--in=${relocatedEligiblePath}`,
+    `--analysis-contract=${contractPath}`,
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.equal(relocated.status, 0, relocated.stderr);
+  assert.equal(JSON.parse(relocated.stdout).analysisIdentity, result.analysisIdentity,
+    'scientific analysis identity must be invariant to local evidence file location');
 
   const routedAnalysisPath = path.join(temp, 'routed-analysis.json');
   const routed = spawnSync(process.execPath, [
