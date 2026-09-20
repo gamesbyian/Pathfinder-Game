@@ -23,7 +23,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
 | [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md) | Observer-first test of whether DEAD near-misses trace to a compact dependency-defined commitment set, not path-distance rollback |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
-| [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) | Research-system consolidation/epistemic-coverage plan; not priority authority |
+| [`solver-research-system-consolidation-and-epistemic-coverage-plan.md`](solver-research-system-consolidation-and-epistemic-coverage-plan.md) | Consolidation plan/history |
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
 | [`solver-research-data-assets.json`](solver-research-data-assets.json) | Structured per-asset locations, authorities, joins, relationships, roles, and caveats |
@@ -64,8 +64,8 @@ Before broad catalogs, reports, corpora, or histories:
 
 - solver priority/state: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md);
 - prior evidence: `node scripts/research-status-index.mjs --compact --query=<term>`;
-- research-system orientation: `npm run research:system-inventory -- --view=brief` (compact derived read-only brief; not priority authority);\n- research-system machine briefing inputs: `npm run research:system-inventory -- --view=brief-inputs` (structured derived view for tools/agents);
-- research-system consolidation findings: `npm run research:system-inventory -- --view=findings` (derived stale-authority/lifecycle/shared-failure diagnostics; not authority);
+- research-system orientation: `npm run research:system-inventory -- --view=brief`;
+- machine inputs/findings: `npm run research:system-inventory -- --view=brief-inputs|findings`;
 - historical solver premise/disposition memory: [`solver-archaeology-register.md`](solver-archaeology-register.md) when the question is explicitly about old/retired work;
 - existing tooling: `node scripts/tooling-census.mjs --compact --query=<term>`;
 - solver evidence assets/joins: `node scripts/research-asset-query.mjs --query=<term>`;
