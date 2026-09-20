@@ -3,7 +3,9 @@ import path from 'node:path';
 
 import { buildResearchRelations } from './research-relations-lib.mjs';
 import {
+    isTerminalResearchQuestionState,
     loadResearchQuestionRegistry,
+    researchQuestionLifecycleClass,
     validateResearchQuestionRegistry,
 } from './research-question-relations-lib.mjs';
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
@@ -87,11 +89,12 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
         const queueActive = row.executionState === 'active' || row.status === 'active';
         const questionState = String(question.state ?? '').toLowerCase();
-        if (queueActive && /^(?:closed|concluded|superseded|cancelled)/u.test(questionState)) {
+        if (queueActive && isTerminalResearchQuestionState(questionState)) {
             errors.push(`active workstream ${row.workstreamId ?? row.topicId} references terminal research question ${row.questionRef} (${question.state})`);
         }
     }
-    for (const question of questionRegistry.questions.filter(row => String(row.state ?? '').startsWith('active'))) {
+    for (const question of questionRegistry.questions.filter(row =>
+        researchQuestionLifecycleClass(String(row.state ?? '').toLowerCase()) === 'active')) {
         if (!model.relations.queue.some(row => row.questionRef === question.id)) {
             errors.push(`active question ${question.id} is not linked from the structured workstream queue relation`);
         }
@@ -183,7 +186,8 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
     }
 
-    const activeQuestion = questionRegistry.questions.find(question => String(question.state).startsWith('active'));
+    const activeQuestion = questionRegistry.questions.find(question =>
+        researchQuestionLifecycleClass(String(question.state ?? '').toLowerCase()) === 'active');
     if (activeQuestion) {
         const dossier = buildQuestionDossier(root, { questionId: activeQuestion.id });
         if (dossier.authority?.kind !== 'derived-read-only') {
