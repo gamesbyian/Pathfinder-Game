@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
 
@@ -15,6 +15,7 @@ const value = name => argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name
 const input = value('in');
 const contractPath = value('analysis-contract');
 const selectedRoute = value('route') || null;
+const outPath = value('out') || null;
 
 if (!input || !contractPath) {
   throw new Error('--in=<doc1>[,<doc2>...] and --analysis-contract=<file> are required');
@@ -107,4 +108,6 @@ const result = {
   },
 };
 
-process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+const serialized = JSON.stringify(result, null, 2) + '\n';
+if (outPath) writeFileSync(outPath, serialized);
+process.stdout.write(serialized);
