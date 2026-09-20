@@ -7,8 +7,6 @@
 
 Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability memory: [`capability memory`](solver-capability-memory.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
 
-Program lens: **composition** exposes demonstrated capability; **acquisition** creates missing generic capability. Emphasis: acquire.
-
 ## Data-audit guardrail
 
 C1 is not cross-generator transfer; C2 is a mixed development laboratory; residual claims are population-conditional. Level-blind cold procedures may derive exact board facts but may not consume historical identity/outcome/hints/capability-memory membership. Historical negatives close only the tested claim.
@@ -29,11 +27,9 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### Premise-acquisition lanes
 
-Cheap premise tests may run in parallel; expensive treatments require a positive premise.
-
 #### Lane A — separator / decomposition
 
-**C0 MIXED (expected); PROCEED TO C1.** 121/390 balanced width<=4 Class-5 levels. C0 falsifier (581 cases/144 groups): 2 groups mix live/dead, falsified. Next: precommit C1. [`preflight`](solver-separator-dynamic-interface-contract-preflight.md) · [`result`](../reports/2026-09-19-lane-a-c0-signature-collision-result-001.md)
+**C0 MIXED (expected); PROCEED TO C1.** 121/390 balanced width<=4 Class-5 levels. Corrected intended C0 (cut + side/region) reuses the 581 frozen labels: 3 groups / 10 rows mix LIVE/DEAD across 3 independent parents, with 487/546 decisive rows still in repeated signatures. Next: precommit C1. [`preflight`](solver-separator-dynamic-interface-contract-preflight.md) · [`result`](../reports/2026-09-19-lane-a-c0-signature-collision-result-001.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
@@ -68,45 +64,37 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
-#### Lane H — parity phase + checkerboard capacity
 
-**ACTIVE CHEAP PREMISE TESTS; production behavior unchanged.** A first-principles solver audit found that ordinary endpoint parity is already soundly implemented, including the 2026-09-09 restoration on same-parity-portal-only levels, but stronger invariant information is not yet represented across several decision seams. [`audit`](../reports/2026-09-19-solver-parity-invariant-audit-001.md) · [`preflight`](solver-parity-phase-capacity-preflight.md)
+#### Lane H — parity invariants
 
-1. **H1 phase-conditioned relaxed distance:** shadow a two-layer `(cell, futureTwistParity)` 0-1 shortest-path bound. Count incremental decision-bearing deaths over current scalar goal distance/parity before nominating any prune/order/scoring consumer. This is materially different from the closed August existence-only portal envelope.
-2. **H2 checkerboard-split connectivity capacity:** on future-no-twist states, reuse the existing reached set to shadow per-color fresh capacity against the exact remaining arrival schedule. Count incremental rejects where total volume passes; no second flood fill.
-3. **H3-H6 downstream only:** admissible-order parity propagation, repair residual explanation, all-gates exact infeasibility, and complete/random hint-enumeration parity reuse do not outrank H1/H2 and should reuse their representation rather than spawning parallel machinery.
+**ACTIVE CHEAP PREMISE TESTS; production decisions unchanged.** A first-principles audit found ordinary endpoint parity sound in its current domains while two stronger representations have concrete incremental synthetic witnesses and production-inert observers. Stable questions: `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY`. [`audit`](../reports/2026-09-19-solver-parity-invariant-audit-001.md) · [`preflight`](solver-parity-phase-capacity-preflight.md)
 
-**Stop:** negligible incremental incidence or clearly disproportionate overhead at the cheapest representative pilot. **Advance:** non-trivial opportunity -> minimal synthetic witness -> stored/referee-valid prefix replay with zero false rejects -> differential/reference validation -> smallest consumer -> matched-work economics. Lane H may proceed in parallel with the current WS2 failure-response gate; it does not replace or reorder it.
+1. **Phase-conditioned relaxed distance (`WS2-PARITY-PHASE-DISTANCE`):** shadow a two-layer `(cell, futureTwistParity)` 0-1 goal-distance bound at the existing scalar-distance seam. Count incremental dead states where scalar distance passes. This is materially different from the closed August existence-only portal envelope.
+2. **Checkerboard-split connectivity capacity (`WS2-CHECKERBOARD-CAPACITY`):** on zero-twist states, reuse the existing connectivity reached set to compare exact per-color future-arrival demand with an over-generous per-color fresh+intersection capacity. Count incremental deaths where total scalar volume passes; no second flood fill.
+3. **Downstream only:** admissible-order propagation, repair residual explanation, all-gates exact infeasibility, hint-enumeration reuse, phase-aware scoring/routing and any dynamic phase-connectivity extension remain contingent consumers, not separate live premises.
+
+The combined `solver:parity-invariant-shadow` probe measures both questions under one strict whole-solve work envelope and emits canonical research-resolution envelopes. **Stop** a premise on negligible incremental incidence with satisfied observability axes; **advance** only through synthetic witness -> stored/referee-valid prefix replay -> differential/reference validation -> smallest consumer -> matched-work economics. Lane H may run in parallel with the current WS2 failure-response gate; it does not replace or reorder it.
 
 ### Post-mining premise-map handoff closeout
 
-The frozen-map mining execution plan's three phases are complete. P201-P206 remain evidence/method premises; no additional solver-mechanism premise survives the bounded post-mining consumer-contract work.
+Frozen-map mining is complete. P201-P206 remain evidence/method premises only. The shared A/D1/F3 runtime-interface hypothesis failed its pass condition: Lane A is at C1 after C0 mixed, D1's production ranking consumer is closed negative, and F3 has no decision-bearing compact consumer. Use the lane states above and the question registry for current descendants; dated reports own the experiment chronology. No shared signal bus, blackboard, decomposition engine, oracle campaign, or production treatment is earned. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only D1 reaches a ready existing decision seam. A has advanced to a prespecified compact-contract falsifier but has no validated contract; F3 still stops at reliable decision-bearing opportunity; D1 stops at retained-evidence economics. Shared producer/consumer vocabulary is research discipline, not evidence for a runtime bus/blackboard/subsystem. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
-
-No post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from lane triggers above.
-
-**D1 closed (2026-09-18):** [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md) Stages 1-2 ran to completion: parity canary, an 8-parent frozen capture, a GHA exact-annotation seam (`cpsat-explicit-prefix-reference.yml` + `pinRevisit`), and a 1,960-case independent confirmation slice — 0/120 candidates disagreed with production retention. **Closed-negative**, no ranking change earned. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
-
-**Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-19).** A precommitted 20-id, 3-tier (300M/600M/1.2B node) confirmation slice found 0/20 at 300M and 600M, 3/20 (15%) at 1.2B: threshold-shaped, so the useful escalation is 4x, not 2x. Genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
-
-**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` **closed negative (2026-09-19)**. Next: [failure-response reconnaissance](solver-failure-evidence-research-integration-plan.md) on compatible rows, including purpose/dependence + novelty/saturation, before first-loss/rejection/2x2. First-loss needs explicit selection. Reserve starvation is **dispatch-ready**; Class-3 awaits exact-action telemetry. Deferred: [`solver-future-work.md`](solver-future-work.md).
-
+**Current WS2 gate:** failure-response reconnaissance on compatible rows; reserve starvation is dispatch-ready; Class-3 remains exact-action-telemetry gated. First-loss/rejection/2x2 require explicit selection after reconnaissance. Deferred forms live in [`solver-future-work.md`](solver-future-work.md).
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed. Do not restart the completed structural-response ladder. H3 remaining-length ordering is a one-population nomination only; one prespecified independent shared-budget transfer is required before a WS1 gate.
 
 ## Workstream state
 
-| ID | Workstream | State | Next gate | Stable question ref |
-|---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
-| 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
-| 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
-| 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
-| 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
-| 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence | — |
-| 5 | Exact/reference model | **ON DEMAND / BUSIER** | Truth/query service for microscopes | — |
+| ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
+|---:|---|---|---|---|---|
+| 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
+| 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
+| 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | New reachability evidence / fresh profiling | — |
+| 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
+| 8 | Isolated capability | `subsumed` | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
+| 0/4 | Restart/randomization / beam retention | `closed` | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence | — |
+| 5 | Exact/reference model | `on-demand` | **ON DEMAND / BUSIER** | Truth/query service for microscopes | — |
 
 ## Standing research rules
 
