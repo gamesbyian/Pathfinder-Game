@@ -158,6 +158,10 @@ assert.equal(taggedEvidence.authorityRelation, 'hyperlink-discovery-only');
 assert.ok(taggedEvidence.linkedCurrentDocs.includes('docs/topic.md'));
 assert.ok(taggedEvidence.artifacts.includes('logs/example/run.json'),
     'structured closeout source artifacts must participate in status-index artifact discovery');
+assert.deepEqual(taggedEvidence.sourceArtifacts, ['logs/example/run.json']);
+assert.equal(taggedEvidence.linkedArtifacts.includes('logs/example/run.json'), false,
+    'an authored source edge should not be duplicated as a weaker discovered link');
+assert.equal(taggedEvidence.artifactRelation, 'structured-source+linked-discovery');
 assert.equal(taggedEvidence.researchQuestion, 'WS2-CURRENT');
 assert.deepEqual(taggedEvidence.premiseRefs, ['P032', 'P204']);
 assert.deepEqual(taggedEvidence.measurementOpportunities, ['MO-002']);
