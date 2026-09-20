@@ -51,6 +51,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { stringifyCorpusJson } from '../level-json-format.mjs';
+import { validateResearchEvaluationEvidenceRole } from '../research-evaluation-evidence-role-lib.mjs';
 import { TOPOLOGY_GENERATION_SUPPORT } from './topology-generation-support-lib.mjs';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
@@ -91,7 +92,7 @@ const MAX_ATTEMPTS = 80;
 if (!Number.isInteger(COUNT) || COUNT < 1) throw new Error('--count must be a positive integer');
 if (!Number.isFinite(MASTER_SEED)) throw new Error('--master-seed must be numeric');
 if (!/^[A-Za-z]+$/.test(ID_PREFIX)) throw new Error('--id-prefix must contain letters only');
-if (!['development', 'confirmation', 'transfer'].includes(EVIDENCE_ROLE)) throw new Error('--evidence-role must be development, confirmation, or transfer');
+validateResearchEvaluationEvidenceRole(EVIDENCE_ROLE, { path: '--evidence-role' });
 if (BLOCK_ID && !QUESTION_ID) throw new Error('--block-id requires --question-id');
 if (QUESTION_ID && !loadResearchQuestionRegistry(ROOT).questions.some(question => question.id === QUESTION_ID)) {
     throw new Error(`unknown --question-id=${QUESTION_ID}`);
