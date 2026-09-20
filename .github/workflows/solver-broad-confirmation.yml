@@ -519,6 +519,7 @@ jobs:
           node scripts/classify-paired-solver-outcome.mjs \
             --control="reports/stress/broad-confirmation-control.json" \
             --treatment="reports/stress/broad-confirmation-treatment.json" \
+            --integrity="logs/solver-broad-confirmation/paired-integrity.json" \
             --outcome-out="reports/stress/broad-confirmation-outcome.json" \
             --min-gains="$MIN_GAINS" \
             --max-losses="$MAX_LOSSES" \
