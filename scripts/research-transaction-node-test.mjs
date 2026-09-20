@@ -118,6 +118,21 @@ const consumedEligibility = researchBlockEligibility(consumedBlock, {
 assert.equal(consumedEligibility.eligible, false);
 assert.ok(consumedEligibility.reasons.includes('matching-consumption-recorded'));
 
+// Successful acquisition can survive a combine-layer failure and be recombined without new solver work.
+const validShardOne = buildPopulationIntegrity(['one'], [{ id: 'one', ok: true, status: 'success' }]);
+const validShardTwo = buildPopulationIntegrity(['two'], [{ id: 'two', ok: false, status: 'infeasible' }]);
+assert.throws(() => combinePopulationIntegrity([
+    { label: 'duplicate-scope', integrity: validShardOne },
+    { label: 'duplicate-scope', integrity: validShardTwo },
+]), /unique/, 'combine-layer identity/configuration failure must not invalidate already-valid shard evidence');
+const recombinedAfterCombineFix = combinePopulationIntegrity([
+    { label: 'scope-one', integrity: validShardOne },
+    { label: 'scope-two', integrity: validShardTwo },
+]);
+assert.equal(recombinedAfterCombineFix.coverageComplete, true);
+assert.equal(recombinedAfterCombineFix.decisionValidComplete, true);
+assert.equal(recombinedAfterCombineFix.observedCount, 2);
+
 // Recovery provenance distinguishes recombination from missing-acquisition retry.
 const recombineProvenance = {
     sourceRuns: ['first-pass', 'recovery-pass'],
