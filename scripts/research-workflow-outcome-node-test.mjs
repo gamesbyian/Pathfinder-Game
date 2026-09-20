@@ -27,15 +27,20 @@ const bound = validateResearchWorkflowOutcome({
   binding: {
     populationIdentityHash: `sha256:${'a'.repeat(64)}`,
     resultConfigurationHashes: [`sha256:${'c'.repeat(64)}`, `sha256:${'b'.repeat(64)}`],
+    resultResolvedShas: ['c'.repeat(40), 'b'.repeat(40)],
   },
 });
 assert.deepEqual(bound.binding, {
   populationIdentityHash: `sha256:${'a'.repeat(64)}`,
   resultConfigurationHashes: [`sha256:${'b'.repeat(64)}`, `sha256:${'c'.repeat(64)}`],
+  resultResolvedShas: ['b'.repeat(40), 'c'.repeat(40)],
 });
 assert.throws(() => validateResearchWorkflowOutcome({
   outcome: 'completed-positive', reason: 'bad binding', binding: { populationIdentityHash: 'bad' },
 }), /populationIdentityHash/);
+assert.throws(() => validateResearchWorkflowOutcome({
+  outcome: 'completed-positive', reason: 'bad revision binding', binding: { resultResolvedShas: ['not-a-sha'] },
+}), /resultResolvedShas/);
 
 const primary = path.join(temp, 'primary.json');
 writeFileSync(primary, '{"levels":[]}\n');
