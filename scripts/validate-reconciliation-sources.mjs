@@ -5,9 +5,9 @@ import process from 'node:process';
 import { assertCompatibleExperiments, decisionContractIssues, declaredDecisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
 
 function sourceContract(manifest, runId) {
-  const resolvedSha = manifest?.experiment?.resolvedSha ?? manifest?.sha ?? null;
+  const resolvedSha = manifest?.experiment?.resolvedSha ?? null;
   const configurationHash = manifest?.experiment?.configurationHash ?? manifest?.configurationHash ?? null;
-  if (!resolvedSha) throw new Error(`source run ${runId} has no actual resolved SHA`);
+  if (!resolvedSha) throw new Error(`source run ${runId} has no declared experiment resolved SHA`);
   if (!configurationHash) throw new Error(`source run ${runId} has no configuration hash`);
 
   const contract = {
