@@ -142,7 +142,9 @@ function crossingPortalState(prefix, sets, level, portalMap) {
         const transition = portalMap.get(stableJson([prefix[i - 1], prefix[i]]));
         if (!transition) continue;
         const pairKey = stableJson(transition.ordered);
-        used.set(pairKey, transition.direction);
+        const from = rawCoordinate(prefix[i - 1]);
+        const state = coordKey(from) === coordKey(transition.ordered[0]) ? 'first-to-second' : 'second-to-first';
+        used.set(pairKey, state);
     }
 
     return portalPairs(level)
