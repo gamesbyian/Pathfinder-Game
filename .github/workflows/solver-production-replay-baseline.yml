@@ -687,7 +687,9 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const configuration={ corpus1NodeBudget: Number(process.env.C1_NODE_BUDGET), corpus2NodeBudget: Number(process.env.C2_NODE_BUDGET), corpus1WorkBudget: Number(process.env.C1_WORK_BUDGET), corpus2WorkBudget: Number(process.env.C2_WORK_BUDGET), schedulerMode: 'production' };
+          const observedExecution={};
+          for(const [name,file] of [['corpus1','reports/stress/typical-budget-corpus1.json'],['corpus2','reports/stress/typical-budget-corpus2.json']]) if(fs.existsSync(file)) observedExecution[name]=JSON.parse(fs.readFileSync(file,'utf8')).configurationHash??null;
+          const configuration={corpus1NodeBudget:Number(process.env.C1_NODE_BUDGET),corpus2NodeBudget:Number(process.env.C2_NODE_BUDGET),corpus1WorkBudget:Number(process.env.C1_WORK_BUDGET),corpus2WorkBudget:Number(process.env.C2_WORK_BUDGET),schedulerMode:'production',observedExecution};
           fs.writeFileSync('logs/production-replay-baseline/contract-spec.json', `${JSON.stringify({
             configuration,
             workflowFamily: 'history-aware-production-replay',
