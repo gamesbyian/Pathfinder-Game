@@ -85,6 +85,13 @@ export function buildQuestionDossier(root = process.cwd(), {
     const eligibleBlocks = blocks.filter(row => row.eligibility?.eligible === true);
     const durableEvidence = model.relations.durableEvidence.filter(row => row.questionId === questionId);
     const exactTaggedEvidence = model.relations.evidence.filter(row => row.researchQuestion === questionId);
+    const answeredByReports = new Set((question.answeredBy ?? []).filter(value => /^reports\//u.test(String(value))));
+    const answeredByEvidence = model.relations.evidence.filter(row =>
+        answeredByReports.has(row.latestEvidence?.report));
+    const authoritativeEvidence = [...new Map(
+        [...exactTaggedEvidence, ...answeredByEvidence]
+            .map(row => [row.latestEvidence?.report ?? row.topicId, row]),
+    ).values()];
     const measurementIds = new Set([
         ...explicitIds(question, ['measurementOpportunity', 'measurementOpportunities', 'measurementOpportunityIds']),
         ...durableEvidence.map(row => row.measurementOpportunity).filter(Boolean),
@@ -107,8 +114,11 @@ export function buildQuestionDossier(root = process.cwd(), {
         const haystack = flatten(row).join(' ').toLowerCase();
         return authorityTerms.some(term => term && haystack.includes(term));
     };
-    const lexicalEvidenceMatches = model.relations.evidence.filter(authorityMatch);
-    const evidenceMatches = exactTaggedEvidence.length ? exactTaggedEvidence : lexicalEvidenceMatches;
+    const authoritativeEvidenceIds = new Set(authoritativeEvidence.map(row =>
+        row.latestEvidence?.report ?? row.topicId));
+    const lexicalEvidenceHints = model.relations.evidence
+        .filter(authorityMatch)
+        .filter(row => !authoritativeEvidenceIds.has(row.latestEvidence?.report ?? row.topicId));
 
     const acquisition = chooseAcquisitionRoute({ question, eligibleBlocks });
     const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
@@ -134,8 +144,13 @@ export function buildQuestionDossier(root = process.cwd(), {
         currentAuthorityMatches: {
             queue: model.relations.queue.filter(row => row.questionRef === questionId),
             queueMatchMode: 'stable-question-id',
-            evidence: evidenceMatches,
-            evidenceMatchMode: exactTaggedEvidence.length ? 'stable-question-id' : 'lexical-fallback',
+            evidence: authoritativeEvidence,
+            evidenceMatchMode: exactTaggedEvidence.length && answeredByEvidence.length
+                ? 'stable-question-id+answeredBy-path'
+                : exactTaggedEvidence.length ? 'stable-question-id'
+                    : answeredByEvidence.length ? 'answeredBy-path' : 'none',
+            evidenceDiscoveryHints: lexicalEvidenceHints,
+            evidenceDiscoveryMode: 'lexical-discovery-only',
             experiments: model.relations.experiments.filter(authorityMatch),
             experimentMatchMode: 'lexical-discovery-only',
         },
