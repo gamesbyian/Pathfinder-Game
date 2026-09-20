@@ -440,6 +440,7 @@ export function researchSystemInventoryView(inventory, view = 'all') {
             currentState: inventory.currentState,
             frontDoorInputs: inventory.frontDoorInputs,
             integrationHealth: inventory.integrationHealth,
+            authoritySurfaces: inventory.documentation.currentReferences,
             relations: inventory.relations,
             commands: inventory.commands,
             workflows: inventory.workflows,
