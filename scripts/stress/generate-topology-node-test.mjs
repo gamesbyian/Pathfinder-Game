@@ -25,6 +25,7 @@ const { validateLevelDetailed } = await import('../../modules/domain/level-valid
 const { validateCandidatePath } = await import('../../modules/domain/path-validator.js');
 const { getLevelFingerprintSource } = await import('../../modules/domain/level-fingerprint.js');
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
+const { TOPOLOGY_GENERATION_SUPPORT } = await import('./topology-generation-support-lib.mjs');
 
 async function generate(outFile) {
     return execFile(process.execPath, [
@@ -84,6 +85,9 @@ async function main() {
         const corpusA = JSON.parse(await readFile(outA, 'utf8'));
         assert.equal(corpusA.generatorVersion, '0.1.0');
         assert.equal(corpusA.corpusName, 'topology-composition-v1');
+        assert.deepEqual(corpusA.supportEnvelope, TOPOLOGY_GENERATION_SUPPORT);
+        assert.ok(corpusA.supportEnvelope.supportedMechanics.includes('flipping-filter'));
+        assert.ok(corpusA.supportEnvelope.unsupportedMechanics.includes('portal'));
         assert.equal(corpusA.levels.length, 12);
         assert.match(corpusA.populationIdentity, /^sha256:[0-9a-f]{64}$/u);
         assert.equal(corpusA.researchBlock.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
