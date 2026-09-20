@@ -211,6 +211,19 @@ assert.deepEqual(validateResearchQuestionRegistry(invalidState), [
     'questions[0].state is unknown: active-ish',
 ]);
 
+const missingDeferredAcquisition = JSON.parse(JSON.stringify(questionRegistry));
+missingDeferredAcquisition.questions[0].state = 'deferred-reopen';
+delete missingDeferredAcquisition.questions[0].acquisitionNeed;
+assert.deepEqual(validateResearchQuestionRegistry(missingDeferredAcquisition), [
+    'questions[0].acquisitionNeed is required for deferred-reopen questions',
+]);
+
+const invalidAcquisition = JSON.parse(JSON.stringify(questionRegistry));
+invalidAcquisition.questions[0].acquisitionNeed = 'generate-something';
+assert.deepEqual(validateResearchQuestionRegistry(invalidAcquisition), [
+    'questions[0].acquisitionNeed is unknown: generate-something',
+]);
+
 const invalidRelations = JSON.parse(JSON.stringify(questionRegistry));
 invalidRelations.questions[0].implies = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidRelations), [
