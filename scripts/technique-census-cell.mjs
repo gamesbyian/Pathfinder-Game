@@ -219,7 +219,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: entry.id ?? null, levelPos: cell.levelPos,
             techniqueKeys: canonicalTechniqueKeys, variantLabel: cell.variantLabel ?? null,
             pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
-            ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget,
+            ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget, budgetMs: cell.budgetMs,
             ...(useWork ? { workBudget: cell.workBudget, workSpent, deadlineTruncated } : {}),
             ...(useWork && Number.isFinite(cell.perTechniqueWorkCap) ? { perTechniqueWorkCap: cell.perTechniqueWorkCap } : {}),
             ...(useWork && cell.perTechniqueWorkCapByKey ? { perTechniqueWorkCapByKey: cell.perTechniqueWorkCapByKey } : {}),
@@ -244,7 +244,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
                 cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: cell.levelId ?? null, levelPos: cell.levelPos,
                 techniqueKeys: cell.techniqueKeys, variantLabel: cell.variantLabel ?? null,
                 pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
-                ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget,
+                ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget, budgetMs: cell.budgetMs,
                 ...(Number.isFinite(cell.workBudget) ? { workBudget: cell.workBudget } : {}),
                 ok: false, status: 'error', error: err?.message ?? String(err),
             };
