@@ -210,6 +210,7 @@ export function generationGuidanceForRoute(route) {
             distributionClass: method.distributionClass,
             scientificUse: method.scientificUse,
             independenceNote: method.independenceNote,
+            supportEnvelope: method.supportEnvelope ?? null,
         };
     };
     if (route === ROUTES.fresh) {
