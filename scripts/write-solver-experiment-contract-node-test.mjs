@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { buildContract } from './write-solver-experiment-contract.mjs';
 
 const resolvedSha = 'a'.repeat(40);
@@ -184,5 +188,28 @@ assert.throws(() => buildContract({
     outcomeInterpretation: { yes: 'z' }, measurementOpportunity: 'MO-002',
   },
 }, { resolvedSha }), /not mapped to researchQuestion\.questionId/);
+
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'experiment-contract-cli-'));
+try {
+  const spec = path.join(temp, 'spec.json');
+  const out = path.join(temp, 'contract.json');
+  fs.writeFileSync(spec, JSON.stringify({
+    configuration: { corpus: 'fixture', nodeBudget: 1 },
+    workflowFamily: 'cli-fixture', producer: 'fixture.yml', entrypoint: 'fixture.mjs',
+    population: { kind: 'explicit-ids', identityBasis: 'stable-level-id' },
+    execution: { levelBlind: true, historyAware: false },
+    limits: { cumulativeNodeCeiling: 1 },
+    sideEffects: { hints: 'none' },
+  }));
+  execFileSync(process.execPath, [
+    'scripts/write-solver-experiment-contract.mjs',
+    `--spec=${spec}`, `--out=${out}`,
+  ], { cwd: process.cwd(), stdio: 'pipe' });
+  const written = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert.equal(written.experiment.workflowFamily, 'cli-fixture');
+  assert.match(written.experiment.resolvedSha, /^[0-9a-f]{40}$/u);
+} finally {
+  fs.rmSync(temp, { recursive: true, force: true });
+}
 
 console.log('write solver experiment contract tests passed');
