@@ -11,6 +11,7 @@ assert.ok(inventory.currentState.queueEntries > 0, 'inventory must expose curren
 assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-question state');
 const ws2Live = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2');
 assert.ok(ws2Live);
+assert.equal(ws2Live.executionState, 'active');
 assert.equal(ws2Live.questionRef, 'WS2-FAILURE-RESPONSE-RECONNAISSANCE');
 assert.equal(ws2Live.questionState, 'deferred-reopen');
 assert.equal(ws2Live.questionExecutionRelation, 'reopen-trigger-gate',
@@ -94,6 +95,14 @@ assert.equal(inventory.documentation.structuredCloseoutCount,
 assert.equal(inventory.documentation.closeoutParseErrorCount,
     inventory.documentation.closeoutParseErrors.length);
 assert.equal(inventory.diagnostics.structuredCloseoutCount, inventory.documentation.structuredCloseoutCount);
+assert.ok(inventory.diagnostics.structuredCloseoutEvidenceCount >= 2,
+    'new architectural reports should participate in structured closeout indexing');
+assert.ok(inventory.diagnostics.legacyStatusBlockEvidenceCount >= 0);
+assert.equal(inventory.diagnostics.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
+    'every current workstream row should carry explicit execution state');
+assert.equal(inventory.diagnostics.structuredExperimentPromotionStateCount, inventory.relations
+    .find(row => row.relation === 'experiments')?.rows ?? 0,
+    'every default-off experiment row should carry explicit promotion state');
 assert.equal(inventory.diagnostics.closeoutParseErrorCount, inventory.documentation.closeoutParseErrorCount);
 assert.ok(inventory.documentation.roles.some(row => row.path === 'docs/solver-optimization-workstreams.md' && row.role === 'canonical-current'));
 assert.ok(inventory.documentation.roles.some(row =>
