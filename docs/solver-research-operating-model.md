@@ -47,6 +47,8 @@ Do not collapse distinct kinds of state merely because they describe the same li
 
 An active workstream may legitimately reference a `deferred-reopen` scientific question when satisfying its reopen trigger is the current execution gate. A live workstream referencing an unknown or terminal question is an authority error. Derived indexes/inventories may expose these relationships but must not silently become a second owner.
 
+When a workflow joins separately produced artifacts (result + integrity, control + treatment, result + contract, source runs + reconciliation, manifest + durable persistence), prove the join at the boundary that consumes it. Matching filenames, step order, shared labels, or individually valid documents are not identity evidence. Prefer one canonical identity owner; when duplication is necessary, validate equality. If a stronger identity is present for only part of a join, fail closed rather than silently downgrading the whole operation to a weaker legacy representation.
+
 ### Prose versus machine state
 
 Prose is not a defect by itself. Keep scientific reasoning, nuanced constraints, caveats, and open-ended reopen predicates in prose when no machine consumer can honestly evaluate them.
@@ -187,6 +189,8 @@ Use [`investigation-report-conventions.md`](investigation-report-conventions.md)
 6. **Budget and wall scale:** size enforced solver-side caps from representative production/control evidence. Use existing per-level runtime telemetry for shard packing/timeouts when available; scheduling telemetry is infrastructure metadata and must not steer cold solver policy.
 7. **Schema/feature assertions:** use canonical helpers for derived level features and assert required report-row fields before filtering or stratifying. Missing/undefined derived inputs are configuration errors, not false predicates.
 8. **Decision contract:** record treatment/control/ref, evidence role, outcome/cost, candidate search, success/stop/escalation and framework gates. If live rivals remain, add ambiguity, discriminator and outcome interpretation; available telemetry alone is not a reason to collect it.
+9. **Join proof:** any scientific verdict that consumes separate result/integrity/contract/arm artifacts must consume or validate the machine identity proof for those exact artifacts. Do not rely on a preceding workflow step having happened to validate a similarly named file.
+10. **Executable-surface test:** if a workflow invokes a CLI entrypoint, exercise at least one real CLI invocation in CI when argument parsing, file wiring, or side effects are correctness-bearing. Unit-testing only the exported library function does not establish that the workflow-facing wrapper can receive its arguments.
 
 If a cheap preflight invalidates any of these, fix the design before scaling. A successful large workflow does not repair a non-informative population, a semantically identical A/B, a non-binding treatment, or a mismatched budget contract.
 
