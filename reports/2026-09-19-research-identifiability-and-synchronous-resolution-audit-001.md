@@ -223,12 +223,7 @@ resolutionStatus
 nextResolutionAction
 ```
 
-Do not add this as a universal registry yet.
-
-Most of the first half already exists in `researchQuestion` contracts.
-The second half should first be demonstrated by live observability-envelope consumers.
-
-The first implementation should probably be a **derived resolution view** composing existing question contracts and specialist observability evidence, not a new authority.
+Do not add this as a universal registry. The first implementation is deliberately a small shared envelope emitted by specialist producers. It is a derived interpretation surface, not a new scientific authority. Question contracts still own the ambiguity/discriminator contract; specialist producers still own axis derivation and verdicts.
 
 ## Candidate synchronous pilots
 
@@ -259,7 +254,7 @@ Ask simultaneously:
 - what work/exposure/opportunity envelope is required?
 - which result would justify an allocation intervention versus merely preserve historical capability memory?
 
-Two successful pilots would provide the evidence needed to decide whether a shared `research-resolution` helper is earned.
+Those two pilots have now been implemented. Both live consumers emit the same small resolution envelope while retaining materially different specialist semantics, so the helper is earned and exists as `scripts/research-resolution-envelope-lib.mjs`. The result is documented in `reports/2026-09-19-synchronous-observability-identifiability-pilot-001.md`.
 
 ## What comes after both concepts
 
