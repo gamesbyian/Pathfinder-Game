@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { buildResearchStatusIndex, compactResearchStatusIndex, queryResearchStatusIndex } from './research-status-index-lib.mjs';
+import { formatResearchCloseoutCapsule } from './investigation-report-metadata.mjs';
 import {
     loadResearchQuestionRegistry,
     normalizeResearchQuestionStatus,
@@ -49,6 +50,20 @@ writeFileSync(path.join(root, 'docs/solver-research-question-relations.json'), J
         },
     ],
 }, null, 2));
+const exampleCloseout = formatResearchCloseoutCapsule({
+    status: 'active',
+    lastEvidenceDate: '2026-08-21',
+    decision: 'Continue measurement.',
+    remainingGate: 'Run the held-out corpus.',
+    researchQuestion: 'WS2-CURRENT',
+    premiseRefs: ['P032', 'P204'],
+    measurementOpportunity: 'MO-002',
+    evidenceRole: 'confirmation',
+    populationIdentity: 'fixture-population',
+    selection: 'prespecified',
+    inferenceScope: 'fixture-only',
+    sourceArtifacts: ['logs/example/run.json'],
+});
 writeFileSync(path.join(root, 'reports/2026-08-21-example.md'), `# Example investigation
 
 > **Status:** active
@@ -65,6 +80,13 @@ writeFileSync(path.join(root, 'reports/2026-08-21-example.md'), `# Example inves
 > **Inference scope:** fixture-only
 
 Authority: [topic](../docs/topic.md). Artifact: \`logs/example/run.json\`.
+`);
+writeFileSync(path.join(root, 'reports/2026-08-22-legacy-metadata.md'), `# Legacy structured-status report
+
+> **Status:** concluded-negative
+> **Last evidence:** 2026-08-22 — Legacy metadata-only fixture.
+> **Decision:** Keep the tested form closed.
+> **Remaining gate:** none
 `);
 writeFileSync(path.join(root, 'reports/2026-01-01-legacy.md'), `# Legacy report without metadata
 
@@ -97,6 +119,9 @@ assert.equal(index.queue[0].questionRef, 'WS2-CURRENT');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), ['FLAG_ONE']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
 const taggedEvidence = index.evidence.find(row => row.topicId === 'example');
+assert.equal(taggedEvidence.metadataSource, 'structured-closeout');
+assert.ok(taggedEvidence.artifacts.includes('logs/example/run.json'),
+    'structured closeout source artifacts must participate in status-index artifact discovery');
 assert.equal(taggedEvidence.researchQuestion, 'WS2-CURRENT');
 assert.deepEqual(taggedEvidence.premiseRefs, ['P032', 'P204']);
 assert.deepEqual(taggedEvidence.measurementOpportunities, ['MO-002']);
@@ -104,6 +129,8 @@ assert.equal(taggedEvidence.evidenceRole, 'confirmation');
 assert.equal(taggedEvidence.selection, 'prespecified');
 assert.equal(taggedEvidence.populationIdentity, 'fixture-population');
 assert.equal(taggedEvidence.inferenceScope, 'fixture-only');
+assert.equal(index.evidence.find(row => row.topicId === 'legacy-metadata')?.metadataSource, 'legacy-status-block',
+    'historical metadata-only reports must remain indexed through the legacy fallback');
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'orientation anomaly' }).map(x => x.id), ['legacy']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'early-repair-search' }).map(x => x.id), ['legacy'],
     'canonical stage query must discover reports written only with the historical repair-probe name');
@@ -167,6 +194,25 @@ invalidConstraint.questions[0].constrainedBy = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidConstraint), [
     'questions[0].constrainedBy references neither a known question nor a repository path: WS2-MISSING',
 ]);
+
+const conflictingPath = path.join(root, 'reports/2026-08-23-conflicting-closeout.md');
+writeFileSync(conflictingPath, `# Conflicting closeout
+
+> **Status:** active
+> **Last evidence:** 2026-08-23 — Human-readable mirror.
+> **Decision:** Continue.
+> **Remaining gate:** next
+
+${formatResearchCloseoutCapsule({
+    status: 'concluded-negative',
+    lastEvidenceDate: '2026-08-23',
+    decision: 'Close.',
+    remainingGate: 'none',
+})}
+`);
+assert.throws(() => buildResearchStatusIndex(root), /structured research closeout disagrees with status block: status, decision, remainingGate/u,
+    'structured/prose authority disagreement must fail instead of choosing a parser implicitly');
+unlinkSync(conflictingPath);
 
 const repositoryIndex = buildResearchStatusIndex(process.cwd());
 assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must remain visible through the research-status queue relation');
