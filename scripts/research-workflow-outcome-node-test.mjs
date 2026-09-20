@@ -55,6 +55,20 @@ const manifest = JSON.parse(readFileSync(path.join(out, 'manifest.json'), 'utf8'
 assert.equal(manifest.researchOutcome.outcome, 'completed-negative');
 assert.match(readFileSync(path.join(out, 'summary.md'), 'utf8'), /Research outcome: \*\*completed-negative\*\*/);
 
+const directCliFile = path.join(temp, 'direct-cli-outcome.json');
+const directCli = spawnSync(process.execPath, [
+  'scripts/research-workflow-outcome.mjs',
+  `--out=${directCliFile}`,
+  '--outcome=completed-positive',
+  '--reason=direct CLI fixture passed',
+], { cwd: new URL('..', import.meta.url), encoding: 'utf8' });
+assert.equal(directCli.status, 0, directCli.stderr);
+assert.deepEqual(JSON.parse(readFileSync(directCliFile, 'utf8')), {
+  schemaVersion: 1,
+  outcome: 'completed-positive',
+  reason: 'direct CLI fixture passed',
+});
+
 writeFileSync(outcomeFile, '{"outcome":"made-up","reason":"bad"}\n');
 const invalid = spawnSync(process.execPath, [
   'scripts/publish-solver-sweep-result.mjs',
