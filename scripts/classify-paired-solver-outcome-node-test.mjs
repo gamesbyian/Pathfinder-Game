@@ -59,10 +59,12 @@ try {
   const integrityFile = path.join(temp, 'integrity.json');
   const outcomeFile = path.join(temp, 'outcome.json');
   fs.writeFileSync(controlFile, JSON.stringify({
+    commitSha: '1'.repeat(40),
     configurationHash: `sha256:${'a'.repeat(64)}`,
     levels: [row('A', false, 10)],
   }));
   fs.writeFileSync(treatmentFile, JSON.stringify({
+    commitSha: '2'.repeat(40),
     configurationHash: `sha256:${'b'.repeat(64)}`,
     levels: [row('A', true, 10)],
   }));
@@ -84,6 +86,7 @@ try {
   assert.deepEqual(cliOutcome.binding.resultConfigurationHashes, [
     `sha256:${'a'.repeat(64)}`, `sha256:${'b'.repeat(64)}`,
   ]);
+  assert.deepEqual(cliOutcome.binding.resultResolvedShas, ['1'.repeat(40), '2'.repeat(40)]);
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
 }
