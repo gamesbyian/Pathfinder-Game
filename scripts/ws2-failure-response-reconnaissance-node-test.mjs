@@ -72,18 +72,43 @@ try {
   assert.equal(result.observation.summary.independentParents, 2);
   assert.equal(result.decision.status, 'pending-interpretation');
   assert.equal(result.decision.route, null);
+  const pendingAnalysisPath = path.join(temp, 'pending-analysis.json');
+  writeFileSync(pendingAnalysisPath, JSON.stringify(result));
+  const pendingClaim = spawnSync(process.execPath, [
+    'scripts/ws2-failure-response-claim.mjs',
+    `--analysis=${pendingAnalysisPath}`,
+    `--out=${path.join(temp, 'pending-claim.json')}`,
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.notEqual(pendingClaim.status, 0);
+  assert.match(`${pendingClaim.stdout}${pendingClaim.stderr}`, /explicit selected routing decision/u);
   assert.equal(result.analysisContract.identityHash, ws2FailureResponseAnalysisContractIdentity(contract));
 
+  const routedAnalysisPath = path.join(temp, 'routed-analysis.json');
   const routed = spawnSync(process.execPath, [
     'scripts/ws2-failure-response-reconnaissance.mjs',
     `--in=${eligiblePath}`,
     `--analysis-contract=${contractPath}`,
     '--route=none',
+    `--out=${routedAnalysisPath}`,
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.equal(routed.status, 0, routed.stderr);
   const routedResult = JSON.parse(routed.stdout);
   assert.equal(routedResult.decision.status, 'selected');
   assert.equal(routedResult.decision.route, 'none');
+  const claimPath = path.join(temp, 'claim.json');
+  const claimRun = spawnSync(process.execPath, [
+    'scripts/ws2-failure-response-claim.mjs',
+    `--analysis=${routedAnalysisPath}`,
+    `--out=${claimPath}`,
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.equal(claimRun.status, 0, claimRun.stderr);
+  const claim = JSON.parse(await import('node:fs').then(({ readFileSync }) => readFileSync(claimPath, 'utf8')));
+  assert.equal(claim.kind, 'pathfinder-ws2-failure-response-claim-capsule');
+  assert.equal(claim.scientificDisposition.status, 'supports-prespecified-routing-decision');
+  assert.equal(claim.decisionDisposition.route, 'none');
+  assert.equal(claim.populationScope.unitTopology.analysisUnit, 'parent');
+  assert.match(claim.analysisIdentity, /^sha256:[0-9a-f]{64}$/u);
+  assert.ok(claim.reverseInvalidation.materialTriggers.length > 0);
 
   const ineligibleDoc = {
     ...eligibleDoc,
