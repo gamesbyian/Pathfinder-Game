@@ -21,6 +21,16 @@ assert.ok(contract.liveRivals.length >= 2);
 assert.match(contract.independenceVector.taskFramingPrompt, /no prompt-level independence/u);
 assert.match(contract.independenceVector.authorityContextExposure, /no authority\/context-exposure independence/u);
 assert.match(contract.independenceVector.criticalLibraryCode, /no critical-code independence/u);
+assert.match(contract.prospectiveExpectation.expectedShape, /Stage A/u);
+assert.ok(contract.prospectiveExpectation.surpriseConditions.length >= 2);
+assert.match(contract.prospectiveExpectation.anomalyPolicy, /not scientific surprises/u);
+assert.throws(() => validateWs2FailureResponseAnalysisContract({
+  ...contract,
+  prospectiveExpectation: {
+    ...contract.prospectiveExpectation,
+    surpriseConditions: [],
+  },
+}), /prospectiveExpectation\.surpriseConditions/);
 assert.throws(() => validateWs2FailureResponseAnalysisContract({
   ...contract,
   independenceVector: {
