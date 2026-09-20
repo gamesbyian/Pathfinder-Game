@@ -30,10 +30,12 @@ test('Class-4 promotion conversion-fidelity contract matches ordinary production
 
     const solverController = readFileSync(new URL('../input/solver-controller.ts', import.meta.url), 'utf8');
     const reviewController = readFileSync(new URL('../input/review-controller.ts', import.meta.url), 'utf8');
-    assert.equal(solverController.includes('ablation:'), false,
-        'ordinary solver-controller calls intentionally rely on production defaults');
-    assert.equal(reviewController.includes('ablation:'), false,
-        'ordinary review-controller calls intentionally rely on production defaults');
+    assert.ok(solverController.includes(
+        'solverApi.solveLevel(level, { timeBudgetMs: budgetMs, yieldFn, disableExtraBudgetPasses: true })'),
+    'ordinary solver-controller solveLevel call must continue to exercise production defaults');
+    assert.ok(reviewController.includes(
+        'solverApi.solveLevel(solveLevel, { timeBudgetMs: budgetMs, yieldFn, disableExtraBudgetPasses: true })'),
+    'ordinary review-controller solveLevel call must continue to exercise production defaults');
 });
 
 test('Class-4 retry is portal-only, default-on, true-final, and enables merge only inside its fresh dispatch', async () => {
