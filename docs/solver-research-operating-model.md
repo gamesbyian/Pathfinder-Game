@@ -48,6 +48,8 @@ Prose is not a defect by itself. Keep scientific reasoning, nuanced constraints,
 
 But when software or multiple authorities need a stable categorical meaning, prose must not become an undocumented API. Prefer an explicit enum, stable ID, relation, or structured capsule over keyword-parsing arbitrary sentences. If prose merely explains an existing machine-owned fact, consumers use the machine owner and may validate the prose mirror. See `reports/2026-09-19-research-prose-authority-audit-001.md`.
 
+The same rule applies to relationships: if a stable ID/edge exists, join on it rather than lexical similarity. When only lexical similarity exists, label the result as discovery/fallback rather than authority, and do not backfill a stable relation by inference alone.
+
 ## Stop rules
 
 These are gates, not aspirations.
