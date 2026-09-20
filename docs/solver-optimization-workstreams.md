@@ -7,8 +7,6 @@
 
 Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability memory: [`capability memory`](solver-capability-memory.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
 
-Program lens: **composition** exposes demonstrated capability; **acquisition** creates missing generic capability. Emphasis: acquire.
-
 ## Data-audit guardrail
 
 C1 is not cross-generator transfer; C2 is a mixed development laboratory; residual claims are population-conditional. Level-blind cold procedures may derive exact board facts but may not consume historical identity/outcome/hints/capability-memory membership. Historical negatives close only the tested claim.
@@ -28,8 +26,6 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 - **Post-topology:** H1 vocabulary closed; DEAD-core size-1 clean negative on the fresh matched population; H3/H2 negative; behavioral quotient mixed/capability-memory only. H3 allocation-value remains positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md) · [`sim`](../reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md)
 
 ### Premise-acquisition lanes
-
-Cheap premise tests may run in parallel; expensive treatments require a positive premise.
 
 #### Lane A — separator / decomposition
 
