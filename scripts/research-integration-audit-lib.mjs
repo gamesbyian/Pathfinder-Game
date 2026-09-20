@@ -136,7 +136,14 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     }
 
     const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
-    const assetIds = new Set((assetsDocument.assets ?? []).map(asset => asset.id));
+    const assets = assetsDocument.assets ?? [];
+    const assetIds = new Set(assets.map(asset => asset.id));
+    if (assetIds.size !== assets.length) errors.push('research asset registry contains duplicate asset ids');
+    for (const asset of assets) {
+        for (const relatedId of asset.relatedAssets ?? []) {
+            if (!assetIds.has(relatedId)) errors.push(`research asset ${asset.id} references unknown related asset ${relatedId}`);
+        }
+    }
     for (const relationship of assetsDocument.relationships ?? []) {
         for (const assetId of relationship.assets ?? []) {
             if (!assetIds.has(assetId)) errors.push(`research asset relationship ${relationship.id} references unknown asset ${assetId}`);
