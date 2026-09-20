@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'vitest';
+import { FEATURES, OPT_IN_FEATURES } from './ablation-config.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
 import { PACK } from './encoding.js';
 import { solveLevel } from './orchestration.js';
