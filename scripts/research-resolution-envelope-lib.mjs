@@ -29,6 +29,19 @@ function nonEmpty(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function projectedBlockers(envelope) {
+  if (!Array.isArray(envelope?.requiredAxes) || !envelope?.axes || typeof envelope.axes !== 'object') return [];
+  return envelope.requiredAxes
+    .filter(axis => envelope.axes?.[axis]?.status !== 'satisfied')
+    .map(axis => ({
+      axis,
+      status: envelope.axes?.[axis]?.status ?? 'unknown',
+      reason: envelope.axes?.[axis]?.reason ?? null,
+      remediation: envelope.axes?.[axis]?.remediation
+        ?? RESEARCH_OBSERVABILITY_DEFAULT_REMEDIATION[axis],
+    }));
+}
+
 export function researchResolutionEnvelopeIssues(envelope, { path = 'resolution' } = {}) {
   if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope)) return [path];
   const issues = [];
@@ -69,6 +82,25 @@ export function researchResolutionEnvelopeIssues(envelope, { path = 'resolution'
 
   if (!nonEmpty(envelope.negativeInterpretationPolicy)) {
     issues.push(`${path}.negativeInterpretationPolicy`);
+  }
+
+  const expectedBlockers = projectedBlockers(envelope);
+  const expectedResolutionStatus = expectedBlockers.length ? 'observability-blocked' : 'resolution-ready';
+  if (envelope.resolutionStatus != null && envelope.resolutionStatus !== expectedResolutionStatus) {
+    issues.push(`${path}.resolutionStatus`);
+  }
+  if (envelope.blockers != null) {
+    if (!Array.isArray(envelope.blockers)) {
+      issues.push(`${path}.blockers`);
+    } else {
+      const observed = envelope.blockers.map(row => ({
+        axis: row?.axis ?? null,
+        status: row?.status ?? null,
+        reason: row?.reason ?? null,
+        remediation: row?.remediation ?? null,
+      }));
+      if (JSON.stringify(observed) !== JSON.stringify(expectedBlockers)) issues.push(`${path}.blockers`);
+    }
   }
   return [...new Set(issues)];
 }
@@ -114,15 +146,7 @@ export function buildResearchResolutionEnvelope({
   };
   validateResearchResolutionEnvelope(envelope);
 
-  const blockers = envelope.requiredAxes
-    .filter(axis => envelope.axes[axis].status !== 'satisfied')
-    .map(axis => ({
-      axis,
-      status: envelope.axes[axis].status,
-      reason: envelope.axes[axis].reason ?? null,
-      remediation: envelope.axes[axis].remediation
-        ?? RESEARCH_OBSERVABILITY_DEFAULT_REMEDIATION[axis],
-    }));
+  const blockers = projectedBlockers(envelope);
 
   return {
     ...envelope,
