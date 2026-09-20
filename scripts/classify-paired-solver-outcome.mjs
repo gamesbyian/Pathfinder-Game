@@ -95,11 +95,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (resultConfigurationHashes.some(value => typeof value !== 'string' || !/^sha256:[0-9a-f]{64}$/u.test(value))) {
       throw new Error('paired control/treatment results must carry sha256 configurationHash values');
     }
+    const resultResolvedShas = [controlDocument.commitSha ?? controlDocument.commit ?? controlDocument.solverRef,
+      treatmentDocument.commitSha ?? treatmentDocument.commit ?? treatmentDocument.solverRef];
+    if (resultResolvedShas.some(value => typeof value !== 'string' || !/^[0-9a-f]{40}$/u.test(value))) {
+      throw new Error('paired control/treatment results must carry immutable execution commit SHAs');
+    }
     writeResearchWorkflowOutcome(out, {
       ...result.researchOutcome,
       binding: {
         populationIdentityHash: integrity.populationIdentityHash,
         resultConfigurationHashes,
+        resultResolvedShas,
       },
     });
     console.log(`control solved: ${result.controlSolved}/${control.length}, work=${result.controlWork}`);
