@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { buildResearchSystemInventory, researchSystemInventoryView } from './research-system-inventory-lib.mjs';
+import { buildResearchSystemInventory, renderResearchSystemBrief, researchSystemInventoryView } from './research-system-inventory-lib.mjs';
 
 const inventory = buildResearchSystemInventory(process.cwd());
 
@@ -112,6 +112,13 @@ assert.equal(
 assert.ok(inventory.planLifecycle.some(row =>
     row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md' &&
     row.lifecycleDisposition === 'active-execution'));
+
+const brief = renderResearchSystemBrief(inventory);
+assert.match(brief, /^# Solver research brief$/m);
+assert.match(brief, /^## Live queue$/m);
+assert.match(brief, /^## Recent structured closeouts$/m);
+assert.match(brief, /Priority authority: `docs\/solver-optimization-workstreams\.md`/);
+assert.equal(researchSystemInventoryView(inventory, 'brief'), brief);
 
 const architectureView = researchSystemInventoryView(inventory, 'architecture');
 assert.ok(Array.isArray(architectureView.relations));
