@@ -170,12 +170,25 @@ function selfTest() {
     const manifest = {
       schemaVersion: 3,
       kind: 'pathfinder-solver-experiment-result',
+      status: 'published',
+      decisionContractIssues: [],
       decisionBearing: true,
       runId: '123',
       runAttempt: '2',
-      experiment: { experimentId: 'fixture/experiment', workflowFamily: 'fixture', workflowRunId: '123', workflowRunAttempt: '2', resolvedSha: 'a'.repeat(40), configurationHash: `sha256:${'b'.repeat(64)}` },
+      experiment: {
+        experimentId: 'fixture/experiment', workflowFamily: 'fixture', producer: 'fixture.yml',
+        entrypoint: 'fixture.mjs', workflowRunId: '123', workflowRunAttempt: '2',
+        resolvedSha: 'a'.repeat(40), configurationHash: `sha256:${'b'.repeat(64)}`,
+      },
+      populationIdentityHash: `sha256:${'c'.repeat(64)}`,
+      populationIntegrity: {
+        complete: true, coverageComplete: true, decisionValidComplete: true,
+        inferredExpectedPopulation: false, populationIdentityHash: `sha256:${'c'.repeat(64)}`,
+        outcomes: { deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 },
+      },
       population: {
-        identityHash: `sha256:${'c'.repeat(64)}`,
+        kind: 'explicit-ids', identityBasis: 'stable-level-id',
+        identityHash: `sha256:${'c'.repeat(64)}`, independentUnit: 'parent-level',
         researchBlock: {
           blockId: 'BLOCK-001', questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
           evidenceRole: 'development', independentUnit: 'parent-level',
@@ -188,6 +201,15 @@ function selfTest() {
         outcomeInterpretation: { disagreement: 'economics gate earned' },
         measurementOpportunity: 'MO-002',
       },
+      execution: {
+        levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true,
+        producerFamily: 'fixture', schedulerMode: 'production',
+      },
+      limits: {
+        cumulativeNodeCeiling: 1, initialWorkAllocation: 1, totalWorkCeiling: 1,
+        wallSafetyDeadlineMs: 1000, wallDeadlineBinding: false,
+      },
+      sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
       researchOutcome: { outcome: 'completed-positive' },
       entries: [
         { role: '../primary', source: 'fixture', published: 'result.json', missing: false },
@@ -222,6 +244,19 @@ function selfTest() {
     assert.ok(compactRecord, 'published compact response follows the ordinary durable evidence rail');
     assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, compactRecord.stored))), compact);
     assert.equal(fs.existsSync(path.join(output, 'experiment__run-123__attempt-2')), false);
+
+    const forgedStaging = path.join(temp, 'forged-staging');
+    const forgedArtifact = path.join(forgedStaging, 'forged');
+    fs.mkdirSync(forgedArtifact, { recursive: true });
+    fs.writeFileSync(path.join(forgedArtifact, 'manifest.json'), JSON.stringify({
+      ...manifest,
+      status: 'missing-primary',
+      decisionBearing: true,
+    }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: forgedStaging, outRoot: path.join(temp, 'forged-out') }),
+      /claims decisionBearing=true but fails shared eligibility.*status/u,
+    );
     console.log('persist decision-bearing experiment evidence self-test passed');
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });
