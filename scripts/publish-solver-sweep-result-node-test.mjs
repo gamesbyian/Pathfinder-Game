@@ -13,7 +13,7 @@ try {
   const outcome = path.join(temp, 'outcome.json');
   const contractFile = path.join(temp, 'contract.json');
   const out = path.join(temp, 'published');
-  fs.writeFileSync(primary, JSON.stringify({ producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family', levels: [{ id: 'A', ok: true, status: 'success' }] }));
+  fs.writeFileSync(primary, JSON.stringify({ producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family', commitSha: 'b'.repeat(40), levels: [{ id: 'A', ok: true, status: 'success' }] }));
   fs.writeFileSync(integrity, JSON.stringify({ complete: true, coverageComplete: true, decisionValidComplete: true, expectedCount: 1, observedCount: 1, expectedIds: ['A'], duplicateIds: [], unexpectedIds: [], missingIds: [], outcomes: { solved: 1, exhaustedNegative: 0, nodeLimited: 0, workLimited: 0, deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 }, populationIdentityHash: `sha256:${'a'.repeat(64)}` }));
   fs.writeFileSync(outcome, JSON.stringify({ schemaVersion: 1, outcome: 'completed-positive', reason: 'frozen gate passed' }));
   fs.writeFileSync(contractFile, JSON.stringify({
@@ -74,6 +74,24 @@ try {
   assert.equal(manifest.failureEvidence.compactPresent, false);
   assert.equal(manifest.failureEvidence.summary, null);
   assert.equal(manifest.failureEvidence.richCapturePresent, false);
+
+  const wrongRevisionPrimary = path.join(temp, 'wrong-revision-result.json');
+  fs.writeFileSync(wrongRevisionPrimary, JSON.stringify({
+    producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
+    commitSha: 'c'.repeat(40), levels: [{ id: 'A', ok: true, status: 'success' }],
+  }));
+  const wrongRevisionOut = path.join(temp, 'wrong-revision-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${wrongRevisionPrimary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${outcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${wrongRevisionOut}`,
+  ], { cwd: root });
+  const wrongRevisionManifest = JSON.parse(fs.readFileSync(path.join(wrongRevisionOut, 'manifest.json')));
+  assert.equal(wrongRevisionManifest.decisionBearing, false);
+  assert.ok(wrongRevisionManifest.decisionContractIssues.includes('experiment.resolvedSha disagrees with primary result commit'));
 
   const noContractOut = path.join(temp, 'no-contract');
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--out=${noContractOut}`], { cwd: root });
