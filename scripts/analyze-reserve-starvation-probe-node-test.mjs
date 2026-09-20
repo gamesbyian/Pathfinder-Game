@@ -12,6 +12,20 @@ try {
         questionId: 'Q',
         sourceBoundary: { residual: 10 },
         selection: { eligibleCount: 9, sampleCount: 3 },
+        independenceDesign: {
+            reference: 'relative-to-discovery-lineage',
+            sampleData: 'independent fresh sample',
+            parentFamily: 'independent parent rows',
+            sourceConstruction: 'shared generator family',
+            decisionSeam: 'isolated recurrence seam',
+            instrumentImplementation: 'shared method-probe implementation',
+            analysisMethod: 'prespecified reducer',
+            analystModel: 'not claimed',
+            taskFramingPrompt: 'shared framing',
+            authorityContextExposure: 'shared authority context',
+            ontologyVocabulary: 'shared reserve-starvation vocabulary',
+            criticalLibraryCode: 'shared solver/research code',
+        },
         resolutionDesign: {
             liveRivals: ['reserve-starvation', 'too-rare'],
             discriminatingObservable: 'isolated find-cost recurrence inside the fixed total-node envelope',
@@ -72,6 +86,8 @@ try {
         'eligibility', 'opportunity', 'participation', 'measurementSupport', 'fidelity', 'coverage', 'censoring',
     ]);
     assert.equal(negative.resolution.axes.reach.status, 'not-required');
+    assert.equal(negative.independenceVector.sourceConstruction, 'shared generator family');
+    assert.equal(negative.independenceVector.sampleData, 'independent fresh sample');
     assert.match(negative.resolution.negativeInterpretationPolicy, /negative recurrence screen/u);
 
     const one = analyze(writeDoc('one.json', [
