@@ -196,6 +196,12 @@ assert.equal(real.relations.premiseEdges.length, 184);
 assert.ok(real.relations.premises.some(row => row.premiseId === 'P204'));
 assert.ok(real.relations.premiseEdges.some(row => row.from === 'P204' && row.to === 'P183'));
 assert.ok(Array.isArray(real.relations.durableEvidence));
+assert.ok(Array.isArray(real.relations.promotions));
+assert.ok(real.relations.promotions.some(row =>
+    row.mechanisms.includes('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY')
+    && row.decisionEvidenceRef === 'reports/2026-09-16-class4-113-allocation-promotion-001.md'),
+    'promoted runtime mechanisms should expose their authored decision-evidence edge when retained');
+assert.ok(real.relations.promotions.every(row => row._researchSource?.relation === 'promotions'));
 for (const bundle of real.relations.durableEvidence) {
     const source = JSON.parse(readFileSync(bundle.bundlePath, 'utf8'));
     assert.ok(source.manifestStoredPath || (source.files ?? []).some(file => file.source === 'manifest.json'),
