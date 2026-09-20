@@ -12,7 +12,7 @@ import {
     ws2FailureResponseAnalysisContractIdentity,
 } from './ws2-failure-response-analysis-contract-lib.mjs';
 import { validateSweepIntegrity } from './validate-solver-sweep-integrity.mjs';
-import { validateResearchQuestionRegistry } from './research-question-relations-lib.mjs';
+import { RESEARCH_QUESTION_STATES, researchQuestionLifecycleClass, validateResearchQuestionRegistry } from './research-question-relations-lib.mjs';
 import { buildResearchEnrichmentLink } from './research-enrichment-link-lib.mjs';
 import { createFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import {
@@ -249,11 +249,13 @@ assert.throws(() => validateSweepIntegrity({
 'treatment nonparticipation must stop interpretation rather than becoming an ordinary negative');
 
 // Question closeout/supersession must retain a valid outbound relation to the successor.
+const activeQuestionState = RESEARCH_QUESTION_STATES.find(state => researchQuestionLifecycleClass(state) === 'active');
+assert.ok(activeQuestionState, 'question lifecycle owner must expose an active state');
 const supersessionRegistry = {
     schemaVersion: 1,
     questions: [
         { id: 'TX-OLD', question: 'old tested form?', owner: 'TX', state: 'closed-tested-form' },
-        { id: 'TX-NEXT', question: 'successor ambiguity?', owner: 'TX', state: 'active-candidate', supersedes: ['TX-OLD'] },
+        { id: 'TX-NEXT', question: 'successor ambiguity?', owner: 'TX', state: activeQuestionState, supersedes: ['TX-OLD'] },
     ],
 };
 assert.deepEqual(validateResearchQuestionRegistry(supersessionRegistry), []);
