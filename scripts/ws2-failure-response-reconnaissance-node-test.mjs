@@ -182,6 +182,7 @@ try {
   assert.equal(claim.populationScope.unitTopology.analysisUnit, 'parent');
   assert.equal(claim.scientificDisposition.adaptiveLineage.descendantEvidenceRole, 'development-until-new-precommitment');
   assert.match(claim.analysisIdentity, /^sha256:[0-9a-f]{64}$/u);
+  assert.match(claim.claimIdentity, /^sha256:[0-9a-f]{64}$/u);
   assert.match(claim.derivation.edges.find(edge => edge.kind === 'input-artifact').contentHash, /^sha256:[0-9a-f]{64}$/u);
   assert.match(claim.derivation.edges.find(edge => edge.kind === 'analysis-implementation').contentHash, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(claim.reverseInvalidation.policy, 'flag-material-descendants-do-not-auto-rewrite');
@@ -191,6 +192,14 @@ try {
   });
   assert.deepEqual(contractImpact.affected.map(row => row.target).sort(), ['routing-decision', 'scientific-claim']);
   assert.equal(contractImpact.automaticRewrite, false);
+  const tamperedClaimCapsule = {
+    ...claim,
+    decisionDisposition: { ...claim.decisionDisposition, route: 'first-loss' },
+  };
+  assert.throws(() => ws2FailureResponseInvalidationImpact(tamperedClaimCapsule, {
+    kind: 'analysis-contract',
+    ref: contractPath,
+  }), /valid claimIdentity matching claim content/u);
   const unrelatedImpact = ws2FailureResponseInvalidationImpact(claim, {
     kind: 'input-artifact',
     ref: 'not-used.json',
