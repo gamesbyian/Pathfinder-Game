@@ -1,5 +1,11 @@
 import { researchSemanticHash } from './research-semantic-identity-lib.mjs';
 
+export function encodeResearchScopedIdentity(scope, subjectId) {
+  if (!nonEmptyString(scope)) throw new Error('population identity scope must be a non-empty string');
+  if (!nonEmptyString(subjectId)) throw new Error('population subject id must be a non-empty string');
+  return JSON.stringify([String(scope), String(subjectId)]);
+}
+
 function nonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
