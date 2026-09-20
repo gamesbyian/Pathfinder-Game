@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 
 function rowId(row) {
@@ -100,12 +101,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (resultResolvedShas.some(value => typeof value !== 'string' || !/^[0-9a-f]{40}$/u.test(value))) {
       throw new Error('paired control/treatment results must carry immutable execution commit SHAs');
     }
+    const resultContentHashes = [controlFile, treatmentFile]
+      .map(file => `sha256:${createHash('sha256').update(fs.readFileSync(file)).digest('hex')}`);
     writeResearchWorkflowOutcome(out, {
       ...result.researchOutcome,
       binding: {
         populationIdentityHash: integrity.populationIdentityHash,
         resultConfigurationHashes,
         resultResolvedShas,
+        resultContentHashes,
       },
     });
     console.log(`control solved: ${result.controlSolved}/${control.length}, work=${result.controlWork}`);
