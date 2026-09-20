@@ -42,11 +42,10 @@ Use [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post
 4. Use cheap discovery before broad context: `tooling-census --compact`, `research-status-index --compact`, `research:dossier` for a known question, `research-asset-query.mjs` for resources.
 5. Audit cross-boundary propagation with [`docs/change-recipes.md`](docs/change-recipes.md).
 6. Prefer branch/PR validation; use `main` for experiments only when branch execution is impossible and record why.
-7. Before push, follow [`docs/ci-preflight.md`](docs/ci-preflight.md): ordinary `npm run ci:fast && npm run build`; deep solver `npm run ci && npm run build`. Do not use GHA as first deterministic feedback.
-8. When a repeated CI/workflow failure exposes a general agent gotcha, repair the smallest durable owner: executable guard first when cheap, otherwise `ci-preflight.md`, `change-recipes.md`, or shared tooling. Do not merely patch the current instance.
-9. Do not weaken validation; root-cause invariant, CSP, architecture, referee, or type failures.
-10. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
-11. Honor file-size declarations: stay below `warn` when practical, never cross `max`; if already over, reduce with margin and re-measure.
+7. Before push, follow [`docs/ci-preflight.md`](docs/ci-preflight.md): ordinary `npm run ci:fast && npm run build`; deep solver `npm run ci && npm run build`. Do not use GHA as first deterministic feedback; promote recurring CI gotchas into a guard or owning procedure.
+8. Do not weaken validation; root-cause invariant, CSP, architecture, referee, or type failures.
+9. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
+10. Honor file-size declarations: stay below `warn` when practical, never cross `max`; if already over, reduce with margin and re-measure.
 
 ## Solver research invariants
 
