@@ -19,6 +19,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority, workstream state, and next gates** |
 | [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Solver reasoning capability map; not a queue |
 | [`solver-capability-invention-program.md`](solver-capability-invention-program.md) | HARVEST / EXTENSION / INVENTION acquisition rules and demand pipeline |
+| [`solver-protocol-schema-contraction-plan.md`](solver-protocol-schema-contraction-plan.md) | Active contraction of overlapping solver/research schemas, protocols, identities, compatibility inputs, and mutable representations |
 | [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) | Reconciles historical experiment closure against capability gaps |
 | [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md) | Bounded observer-first plan to measure repeated derivation and potential typed reuse of expensive current-instance facts within one cold solve |
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
