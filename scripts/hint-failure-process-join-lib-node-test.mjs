@@ -41,7 +41,7 @@ assert.equal(joined.rows[0].parentId, 'P1');
 assert.equal(joined.rows[0].precedingAttemptCount, 1);
 assert.equal(joined.rows[0].populationIdentity, 'population-a');
 
-const otherPopulation = structuredClone(failures[0]);
+const otherPopulation = JSON.parse(JSON.stringify(failures[0]));
 otherPopulation.populationIntegrity.populationIdentityHash = 'population-b';
 assert.equal(
     joinHintDiscoveryAndFailureProcesses(discovery, [otherPopulation]).summary.joinedDiscoveryRecords,
@@ -49,7 +49,7 @@ assert.equal(
     'same parent/protocol/solver in a different population must not join',
 );
 
-const ambiguousPopulation = structuredClone(failures[0]);
+const ambiguousPopulation = JSON.parse(JSON.stringify(failures[0]));
 ambiguousPopulation.populationIntegrity.canonicalExpectedIds = [
     JSON.stringify(['corpus-1', 'P1']),
     JSON.stringify(['corpus-2', 'P1']),
