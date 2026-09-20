@@ -37,7 +37,17 @@ Question-ID relation fields are mechanically checked for dangling targets where 
 
 ## State semantics
 
-`active-candidate` and `active-diagnostic` indicate live questions, not priority rank. `deferred-reopen` preserves a question with an explicit trigger/reopen boundary but does not authorize current execution. `closed-tested-form` means the stated form is answered; its evidence may still have outgoing relationships. `reopensOn` records the changed premise/evidence needed to revisit it.
+The machine-owned state vocabulary is:
+
+- `active-candidate` — live scientific question; this says nothing about priority rank;
+- `closed-negative` — the tracked question is closed negative at its stated scope;
+- `closed-tested-form` — one explicitly tested form is closed while broader descendants/reformulations may remain live;
+- `concluded-negative` — a completed question with a negative conclusion;
+- `concluded-positive` — a completed question with a positive conclusion;
+- `deferred-reopen` — not currently live; preserves an explicit trigger/reopen boundary;
+- `mixed` — materially mixed evidence/disposition that should not be flattened into positive or negative.
+
+`reopensOn` records the changed premise/evidence needed to revisit a deferred or scoped-closed question.
 
 Do not use `closed-tested-form` for a causal question that the nominal experiment failed to observe. If execution or participation made the intended question unanswered, preserve that question as deferred/open as appropriate and close only the actually tested form in dated evidence.
 
