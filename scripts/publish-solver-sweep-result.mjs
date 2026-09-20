@@ -345,6 +345,8 @@ const contractIssues = declaredContract
       ...sourceIdentityIssue,
     ])]
   : ['missing declared experiment contract'];
+const contractDecisionEligible = contractIssues.length === 0;
+const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
 const manifest = {
   schemaVersion: EXPERIMENT_SCHEMA_VERSION,
   kind: EXPERIMENT_RESULT_KIND,
