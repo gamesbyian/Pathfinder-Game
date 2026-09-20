@@ -21,6 +21,33 @@ assert.deepEqual(contract.population, { kind: 'explicit-ids', identityBasis: 'st
 assert.deepEqual(contract.execution, { levelBlind: true, historyAware: false });
 assert.deepEqual(contract.limits, { cumulativeNodeCeiling: 50_000_000 });
 assert.deepEqual(contract.sideEffects, { hints: 'none' });
+const recoveryContract = buildContract({
+  configuration: { corpus: 'fixture' },
+  workflowFamily: 'fixture', producer: 'fixture.yml', entrypoint: 'fixture.mjs',
+  experiment: {
+    sourceRuns: ['run-a', 'run-b'],
+    reconciliationRun: {
+      kind: 'recombine-only',
+      sourceRuns: ['run-a', 'run-b'],
+      preservesExperimentIdentity: true,
+      acquisitionRecomputed: false,
+    },
+  },
+}, { resolvedSha });
+assert.equal(recoveryContract.experiment.reconciliationRun.kind, 'recombine-only');
+assert.throws(() => buildContract({
+  configuration: { corpus: 'fixture' },
+  workflowFamily: 'fixture', producer: 'fixture.yml', entrypoint: 'fixture.mjs',
+  experiment: {
+    sourceRuns: ['run-a'],
+    reconciliationRun: {
+      kind: 'recombine-only',
+      sourceRuns: ['run-a'],
+      preservesExperimentIdentity: true,
+      acquisitionRecomputed: true,
+    },
+  },
+}, { resolvedSha }), /invalid experiment recovery provenance/);
 
 const paired = buildContract({
   configuration: { corpus: 'x' }, workflowFamily: 'a', producer: 'b', entrypoint: 'c',
