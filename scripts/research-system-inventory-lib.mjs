@@ -75,6 +75,30 @@ function dependencyClosure(root, entrypoint) {
     return [...seen].sort();
 }
 
+function documentationRoles(root, currentReferences) {
+    const currentPaths = new Set(currentReferences.map(row => row.path));
+    const markdown = [
+        ...walk(root, 'docs', relative => relative.endsWith('.md')),
+        ...walk(root, 'reports', relative => relative.endsWith('.md')),
+    ];
+    return [...new Set(markdown)].sort().map(relative => {
+        let role;
+        if (relative.startsWith('docs/archive/') || relative.startsWith('docs/history/')) {
+            role = 'historical/archive';
+        } else if (currentPaths.has(relative)) {
+            role = 'canonical-current';
+        } else if (/^reports\/\d{4}-\d{2}-\d{2}-.+\.md$/u.test(relative)) {
+            role = 'dated-evidence';
+        } else {
+            const source = readFileSync(path.join(root, relative), 'utf8');
+            role = source.includes('<!-- generated-current-state -->')
+                ? 'generated-current-state'
+                : 'retained-reference-or-evidence';
+        }
+        return { path: relative, role, bytes: statSync(path.join(root, relative)).size };
+    });
+}
+
 function lifecycleCandidate(relative) {
     const name = path.basename(relative);
     return /(?:-plan|-preflight|-handoff)\.md$/u.test(name);
@@ -199,6 +223,9 @@ export function buildResearchSystemInventory(root = process.cwd()) {
     const currentMarkdownReferences = currentReferences.filter(row => row.path.endsWith('.md') && existsSync(path.join(root, row.path)));
     const currentMarkdownBytes = currentMarkdownReferences.reduce((sum, row) =>
         sum + statSync(path.join(root, row.path)).size, 0);
+    const documentRoles = documentationRoles(root, currentReferences);
+    const roleCounts = Object.fromEntries([...new Set(documentRoles.map(row => row.role))].sort()
+        .map(role => [role, documentRoles.filter(row => row.role === role).length]));
     const relations = relationInventory(model);
     const integrationAudit = auditResearchIntegration(root);
     return {
@@ -224,6 +251,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             currentReferenceCount: currentReferences.length,
             currentMarkdownReferenceCount: currentMarkdownReferences.length,
             currentMarkdownBytes,
+            roleCounts,
+            roles: documentRoles,
             lifecycleCandidateCount: plans.length,
             currentLifecycleCandidateCount: plans.filter(row => row.currentReference).length,
         },
