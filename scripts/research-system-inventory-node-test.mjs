@@ -27,6 +27,11 @@ assert.equal(inventory.diagnostics.maintainedWorkflowCount,
     inventory.workflows.filter(row => row.status === 'maintained').length);
 assert.equal(inventory.diagnostics.evidenceProducingWorkflowCount,
     inventory.workflows.filter(row => row.role === 'evidence-producing').length);
+assert.equal(inventory.diagnostics.retiredWorkflowCount, inventory.retiredWorkflows.length);
+assert.equal(inventory.diagnostics.retiredWorkflowReappearanceCount,
+    inventory.retiredWorkflows.filter(row => row.presentOnDisk).length);
+assert.equal(inventory.diagnostics.retiredWorkflowReappearanceCount, 0,
+    'retired workflow ledger entries must not silently reappear on disk');
 assert.ok(inventory.commands.some(row => row.name === 'research:integration-audit'));
 assert.equal(
     inventory.commands.find(row => row.name === 'research:canary-search-loss')?.entrypoint,
@@ -92,6 +97,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 const architectureView = researchSystemInventoryView(inventory, 'architecture');
 assert.ok(Array.isArray(architectureView.relations));
 assert.deepEqual(architectureView.workflows, inventory.workflows);
+assert.deepEqual(architectureView.retiredWorkflows, inventory.retiredWorkflows);
 assert.deepEqual(architectureView.contractOwnership, inventory.contractOwnership);
 assert.equal(architectureView.integrationHealth, inventory.integrationHealth);
 assert.equal('planLifecycle' in architectureView, false);
