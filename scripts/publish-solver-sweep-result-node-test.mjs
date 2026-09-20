@@ -108,6 +108,7 @@ try {
     binding: {
       populationIdentityHash: `sha256:${'a'.repeat(64)}`,
       resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
     },
   }));
   const boundOut = path.join(temp, 'bound-out');
@@ -129,6 +130,7 @@ try {
     binding: {
       populationIdentityHash: `sha256:${'a'.repeat(64)}`,
       resultConfigurationHashes: [`sha256:${'f'.repeat(64)}`],
+      resultResolvedShas: ['b'.repeat(40)],
     },
   }));
   const staleBoundOut = path.join(temp, 'stale-bound-out');
@@ -144,6 +146,31 @@ try {
   assert.equal(staleBoundManifest.decisionBearing, false);
   assert.ok(staleBoundManifest.decisionContractIssues.includes(
     'researchOutcome.binding.resultConfigurationHashes disagree with published result files'));
+
+  const staleRevisionOutcome = path.join(temp, 'stale-revision-outcome.json');
+  fs.writeFileSync(staleRevisionOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'stale revision verdict',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['c'.repeat(40)],
+    },
+  }));
+  const staleRevisionOut = path.join(temp, 'stale-revision-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${staleRevisionOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${staleRevisionOut}`,
+  ], { cwd: root });
+  const staleRevisionManifest = JSON.parse(fs.readFileSync(path.join(staleRevisionOut, 'manifest.json')));
+  assert.equal(staleRevisionManifest.decisionBearing, false);
+  assert.ok(staleRevisionManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultResolvedShas disagree with published result files'));
 
   const wrongRevisionPrimary = path.join(temp, 'wrong-revision-result.json');
   fs.writeFileSync(wrongRevisionPrimary, JSON.stringify({
