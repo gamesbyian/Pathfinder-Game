@@ -255,6 +255,16 @@ function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStat
       issues.push('researchOutcome.binding.resultConfigurationHashes disagree with published result files');
     }
   }
+  if (Array.isArray(binding.resultResolvedShas)) {
+    const observed = publishedStats.map(stat => {
+      const document = JSON.parse(fs.readFileSync(stat.file, 'utf8'));
+      return document?.commitSha ?? document?.summary?.commit ?? document?.commit ?? document?.solverRef ?? null;
+    }).filter(Boolean).sort();
+    const expected = [...binding.resultResolvedShas].sort();
+    if (JSON.stringify(observed) !== JSON.stringify(expected)) {
+      issues.push('researchOutcome.binding.resultResolvedShas disagree with published result files');
+    }
+  }
   return issues;
 }
 
