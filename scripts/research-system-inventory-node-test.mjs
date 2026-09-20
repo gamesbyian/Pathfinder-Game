@@ -13,6 +13,8 @@ assert.ok(inventory.frontDoorInputs.liveQueue.some(row => row.workstreamId === 2
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
 assert.ok(inventory.frontDoorInputs.unfinishedLifecycle.some(row => row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'));
 assert.equal(inventory.integrationHealth.errorCount, 0, 'inventory should surface existing integration-audit errors');
+assert.ok(inventory.integrationHealth.semanticJoinCoverage.authoredAssetRelationships >= 1);
+assert.equal(inventory.integrationHealth.questionCount, inventory.currentState.questions);
 assert.equal(inventory.diagnostics.authorityFindingCount, inventory.findings.authority.length);
 assert.equal(inventory.diagnostics.lifecycleFindingCount, inventory.findings.lifecycle.length);
 assert.equal(inventory.diagnostics.fragileProseFindingCount, inventory.findings.fragileProse.length);
