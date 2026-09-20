@@ -33,9 +33,9 @@ Eligible only after the active premise gate above is positive.
 
 ## Hint/failure reopen hooks
 
-- Compatible compact-response rows -> identity/novelty/saturation/frontier audits with parent dependence; never backfill pre-contract attempts.
-- Repeated compatible populations + live ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
-- Before richer exact/search-loss instrumentation, try cheap descriptor/source, family/variant and comparable hint-process joins on the first eligible population. Require an honest denominator/protocol/dependence unit; exclude the one-row R00044 canary from prevalence.
+- Compatible compact-response rows -> identity/novelty/saturation/frontier audits; never backfill pre-contract attempts.
+- Repeated compatible populations + ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
+- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and comparable hint-process joins. Require an honest denominator/protocol/dependence unit; R00044's one-row canary is not prevalence evidence.
 - Recurring rich producer -> search-loss P8 Resource Contract decision.
 - Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
 - Whole-solution-space extinction is not deferred; sampled hints cannot prove it.
