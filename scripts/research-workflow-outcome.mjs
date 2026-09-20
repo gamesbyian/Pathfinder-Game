@@ -11,6 +11,7 @@ export const RESEARCH_WORKFLOW_OUTCOMES = Object.freeze([
 ]);
 
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/u;
+const COMMIT_SHA_RE = /^[0-9a-f]{40}$/u;
 
 function validateOutcomeBinding(binding) {
   if (binding == null) return null;
@@ -30,6 +31,13 @@ function validateOutcomeBinding(binding) {
       throw new Error('research outcome binding resultConfigurationHashes must be a non-empty sha256 array');
     }
     result.resultConfigurationHashes = binding.resultConfigurationHashes.map(String).sort();
+  }
+  if (binding.resultResolvedShas != null) {
+    if (!Array.isArray(binding.resultResolvedShas) || binding.resultResolvedShas.length === 0
+        || binding.resultResolvedShas.some(value => !COMMIT_SHA_RE.test(String(value)))) {
+      throw new Error('research outcome binding resultResolvedShas must be a non-empty 40-hex commit array');
+    }
+    result.resultResolvedShas = binding.resultResolvedShas.map(String).sort();
   }
   if (Object.keys(result).length === 0) throw new Error('research outcome binding must declare at least one identity');
   return result;
