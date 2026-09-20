@@ -23,7 +23,7 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { hashConfiguration, isImmutableCommitSha } from './solver-experiment-contract.mjs';
+import { hashConfiguration, isImmutableCommitSha, recoveryProvenanceIssues } from './solver-experiment-contract.mjs';
 import { assertResearchBlock } from './solver-research-block-lineage.mjs';
 import { loadResearchQuestionRegistry } from './research-question-relations-lib.mjs';
 
@@ -115,7 +115,7 @@ export function buildContract(spec, { resolvedSha = null, populationSeal = null 
   const executionIdentity = inferredArms != null
     ? { arms: inferredArms }
     : (experiment.resolvedSha == null && resolvedSha ? { resolvedSha } : {});
-  return {
+  const contract = {
     experiment: {
       ...experiment,
       ...executionIdentity,
@@ -127,6 +127,11 @@ export function buildContract(spec, { resolvedSha = null, populationSeal = null 
     ...(researchQuestion ? { researchQuestion: validateResearchQuestionReference(researchQuestion) } : {}),
     population: populationWithSeal(population, populationSeal), execution, limits, sideEffects,
   };
+  const recoveryIssues = recoveryProvenanceIssues(contract.experiment);
+  if (recoveryIssues.length) {
+    throw new Error(`invalid experiment recovery provenance: ${recoveryIssues.join(', ')}`);
+  }
+  return contract;
 }
 
 function main() {
