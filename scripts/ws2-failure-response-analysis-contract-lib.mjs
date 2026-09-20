@@ -38,6 +38,10 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   const instrument = contract.instrument;
   if (instrument?.kind !== 'pathfinder-compact-failure-response') issues.push('instrument.kind');
   if (instrument?.supportPolicy !== 'reported-fields-only-missing-remains-unknown') issues.push('instrument.supportPolicy');
+  if (instrument?.schemaVersion !== 1) issues.push('instrument.schemaVersion');
+  if (!Array.isArray(instrument?.abstentionConditions) || instrument.abstentionConditions.length === 0) {
+    issues.push('instrument.abstentionConditions');
+  }
   if (instrument?.calibrationRef !== 'reports/2026-09-19-failure-evidence-prehandoff-direct-work-audit-001.md') {
     issues.push('instrument.calibrationRef');
   }
@@ -73,6 +77,10 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   }
   if (contract.targetEnvelope?.developmentLaboratory !== 'current-ws2-residual') issues.push('targetEnvelope.developmentLaboratory');
   if (contract.targetEnvelope?.broadDeploymentClaim !== false) issues.push('targetEnvelope.broadDeploymentClaim');
+  if (contract.adaptiveLineage?.descendantEvidenceRole !== 'development-until-new-precommitment') {
+    issues.push('adaptiveLineage.descendantEvidenceRole');
+  }
+  if (contract.treatmentFidelity !== 'not-applicable-routing-screen-no-treatment') issues.push('treatmentFidelity');
   if (!Array.isArray(contract.primaryQuantities) || contract.primaryQuantities.length === 0) issues.push('primaryQuantities');
   if (!contract.stopRule || typeof contract.stopRule !== 'string') issues.push('stopRule');
   return [...new Set(issues)];
