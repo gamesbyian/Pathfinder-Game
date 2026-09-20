@@ -186,6 +186,12 @@ The generic `failure-response-query.mjs` remains the reducer. The WS2 wrapper bi
 
 A successful reducer execution is not sufficient for a scientific routing decision. Unknown/mixed protocol or solver identity, incomplete population accounting, or other contract eligibility failures leave the analysis explicitly ineligible. Route selection remains a separate action over the prespecified observation.
 
+When and only when an eligible analysis has an explicit selected route, persist the analysis envelope with `--out=<analysis.json>`, then derive the machine claim capsule with:
+
+`npm run research:ws2-failure-response-claim -- --analysis=<analysis.json> --out=<claim.json>`
+
+The claim capsule preserves analysis-contract/analysis/claim identities, unit and target scope, scientific limitations, the separate routing decision, content-hashed derivation edges and bounded reverse-invalidation semantics. A pending or scientifically ineligible analysis cannot produce a claim capsule.
+
 ## Output
 
 Write one dated result report that ends with exactly one of:
