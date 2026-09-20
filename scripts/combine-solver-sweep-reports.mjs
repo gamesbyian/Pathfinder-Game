@@ -35,6 +35,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { buildPopulationIntegrity, hashConfiguration, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
+import { encodeResearchScopedIdentity } from './research-population-identity-lib.mjs';
 
 const EXECUTION_CONFIG_FIELDS = [
     'levelBlind',
@@ -171,14 +172,16 @@ function main() {
     const executionConfig = collectExecutionConfig(reports);
     const producerMetadata = consistentMetadata(reports, ['producer', 'entrypoint', 'workflowFamily', 'levelBlind', 'historyAware', 'schedulerMode']);
 
+    const scopedIdentity = (corpus, subjectId) => allowMixedCorpora
+        ? encodeResearchScopedIdentity(String(corpus), String(subjectId))
+        : String(subjectId);
     const seenIds = new Map();
     const seenPositions = new Map();
     const levels = [];
     for (const r of reports) {
         for (const lv of r.levels) {
-            const identityPrefix = allowMixedCorpora ? `${r.summary.corpus}:` : '';
-            const idKey = lv.id ? identityPrefix + lv.id : null;
-            const positionKey = Number.isFinite(lv.level) ? identityPrefix + lv.level : null;
+            const idKey = lv.id != null ? scopedIdentity(r.summary.corpus, lv.id) : null;
+            const positionKey = Number.isFinite(lv.level) ? scopedIdentity(r.summary.corpus, lv.level) : null;
             if (idKey && seenIds.has(idKey)) {
                 throw new Error(`Duplicate level id ${lv.id} in both ${seenIds.get(idKey)} and ${r.path}; batch ranges or inputs overlap.`);
             }
@@ -193,21 +196,38 @@ function main() {
 
     const solved = levels.filter(l => l.ok).length;
     const totalMs = levels.reduce((sum, l) => sum + (l.totalMs ?? l.elapsedMs ?? 0), 0);
-    const levelIds = levels.map(l => l.id ?? l.levelId ?? l.level).map(String);
+    const levelIds = levels.map(l => scopedIdentity(
+        allowMixedCorpora ? l.corpus : first.corpus,
+        l.id ?? l.levelId ?? l.level,
+    ));
     const expectedIds = expectedIdsFile
         ? parseIdentityLines(readFileSync(path.resolve(ROOT, expectedIdsFile), 'utf8'))
-        : reports.flatMap(r => r.summary.expectedIds ?? r.population?.expectedIds ?? []);
+        : reports.flatMap(r => (r.summary.expectedIds ?? r.population?.expectedIds ?? [])
+            .map(id => scopedIdentity(r.summary.corpus, id)));
+    if (expectedIdsFile && allowMixedCorpora) {
+        for (const id of expectedIds) {
+            let tuple;
+            try { tuple = JSON.parse(id); } catch { tuple = null; }
+            if (!Array.isArray(tuple) || tuple.length !== 2 || tuple.some(value => typeof value !== 'string' || !value)) {
+                throw new Error('--expected-ids with --allow-mixed-corpora requires one json-tuple-v1 [corpus,id] identity per line');
+            }
+        }
+    }
     const intendedPopulationKnown = expectedIds.length > 0;
     const populationIdentities = intendedPopulationKnown ? expectedIds : levelIds;
     const populationDescriptor = hashPopulation({
         kind: intendedPopulationKnown ? 'intended-level-ids' : 'observed-level-ids',
         identityBasis: allowMixedCorpora ? 'corpus-and-level-id' : 'stable-level-id',
+        identityCodec: allowMixedCorpora ? 'json-tuple-v1' : null,
         identities: populationIdentities,
         corpusIdentity: allowMixedCorpora ? [...new Set(reports.map(r => r.summary.corpus))].sort() : first.corpus,
     });
+    const integrityRows = allowMixedCorpora
+        ? levels.map(level => ({ ...level, id: scopedIdentity(level.corpus, level.id ?? level.levelId ?? level.level) }))
+        : levels;
     const integrity = intendedPopulationKnown
-        ? buildPopulationIntegrity(expectedIds, levels)
-        : { ...buildPopulationIntegrity(levelIds, levels), complete: false, coverageComplete: false,
+        ? buildPopulationIntegrity(expectedIds, integrityRows)
+        : { ...buildPopulationIntegrity(levelIds, integrityRows), complete: false, coverageComplete: false,
             decisionValidComplete: false, expectedCount: null, missingIds: [], intendedPopulationKnown: false };
     integrity.populationIdentityHash = populationDescriptor.identityHash;
     if (intendedPopulationKnown) integrity.expectedIds = populationDescriptor.identities;
@@ -255,6 +275,7 @@ function main() {
         population: {
             kind: intendedPopulationKnown ? 'intended-level-ids' : 'observed-level-ids',
             identityBasis: allowMixedCorpora ? 'corpus-and-level-id' : 'stable-level-id',
+            ...(allowMixedCorpora ? { identityCodec: 'json-tuple-v1' } : {}),
             identityHash: populationDescriptor.identityHash,
         },
         execution: {
