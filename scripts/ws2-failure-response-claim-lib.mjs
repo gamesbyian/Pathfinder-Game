@@ -67,25 +67,71 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
         : `Only the prespecified ${route} route is nominated for the next WS2 design step; no production solver change is licensed.`,
     },
     derivation: {
-      inputArtifacts: analysis.execution.inputFiles,
-      analysisImplementation: analysis.execution.implementation,
-      analysisContractPath: analysis.analysisContract.path,
-      dependencies: [
-        'pathfinder-compact-failure-response semantics',
-        'parent-level dependence semantics',
-        'protocol/solver identity compatibility',
-        'WS2 reconnaissance routing preflight',
+      edges: [
+        ...analysis.execution.inputFiles.map(ref => ({
+          kind: 'input-artifact',
+          ref,
+          relation: 'material-evidence-input',
+          affects: ['scientific-claim', 'routing-decision'],
+        })),
+        {
+          kind: 'analysis-contract',
+          ref: analysis.analysisContract.path,
+          identityHash: analysis.analysisContract.identityHash,
+          relation: 'interpretation-contract',
+          affects: ['scientific-claim', 'routing-decision'],
+        },
+        {
+          kind: 'analysis-implementation',
+          ref: analysis.execution.implementation,
+          relation: 'observation-transform',
+          affects: ['scientific-claim', 'routing-decision'],
+        },
+        ...analysis.scientificDisposition.protocolHashes.map(ref => ({
+          kind: 'protocol-hash',
+          ref,
+          relation: 'comparability-boundary',
+          affects: ['scientific-claim', 'routing-decision'],
+        })),
+        ...analysis.scientificDisposition.solverRefs.map(ref => ({
+          kind: 'solver-ref',
+          ref,
+          relation: 'architecture-applicability-boundary',
+          affects: ['scientific-claim', 'routing-decision'],
+        })),
+        {
+          kind: 'semantic-contract',
+          ref: 'parent-level-dependence',
+          relation: 'independence-assumption',
+          affects: ['scientific-claim', 'routing-decision'],
+        },
       ],
     },
     reverseInvalidation: {
-      materialTriggers: [
-        'an input compact-response artifact is invalidated or its population integrity changes',
-        'the frozen analysis contract is revised',
-        'failure-response reducer semantics materially change',
-        'protocol/solver identity was misclassified',
-        'parent/dependence semantics are found incorrect',
-      ],
+      policy: 'flag-material-descendants-do-not-auto-rewrite',
       action: 're-evaluate this claim and downstream routing decision; do not automatically rewrite either disposition',
     },
+  };
+}
+
+
+export function ws2FailureResponseInvalidationImpact(capsule, { kind, ref }) {
+  if (!capsule || capsule.kind !== 'pathfinder-ws2-failure-response-claim-capsule') {
+    throw new Error('WS2 invalidation query requires a WS2 claim capsule');
+  }
+  if (typeof kind !== 'string' || !kind || typeof ref !== 'string' || !ref) {
+    throw new Error('invalidation kind/ref must be non-empty strings');
+  }
+  const matches = (capsule.derivation?.edges ?? []).filter(edge => edge.kind === kind && edge.ref === ref);
+  return {
+    invalidated: { kind, ref },
+    affected: matches.flatMap(edge => edge.affects.map(target => ({
+      target,
+      relation: edge.relation,
+      dependencyKind: edge.kind,
+      dependencyRef: edge.ref,
+    }))),
+    bounded: true,
+    automaticRewrite: false,
   };
 }
