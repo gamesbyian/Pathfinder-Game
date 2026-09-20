@@ -13,13 +13,18 @@ try {
   const outcome = path.join(temp, 'outcome.json');
   const contractFile = path.join(temp, 'contract.json');
   const out = path.join(temp, 'published');
-  fs.writeFileSync(primary, JSON.stringify({ producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family', commitSha: 'b'.repeat(40), levels: [{ id: 'A', ok: true, status: 'success' }] }));
+  const primaryConfigurationHash = hashConfiguration({ budget: 1 });
+  fs.writeFileSync(primary, JSON.stringify({
+    producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
+    commitSha: 'b'.repeat(40), configurationHash: primaryConfigurationHash,
+    levels: [{ id: 'A', ok: true, status: 'success' }],
+  }));
   fs.writeFileSync(integrity, JSON.stringify({ complete: true, coverageComplete: true, decisionValidComplete: true, expectedCount: 1, observedCount: 1, expectedIds: ['A'], duplicateIds: [], unexpectedIds: [], missingIds: [], outcomes: { solved: 1, exhaustedNegative: 0, nodeLimited: 0, workLimited: 0, deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 }, populationIdentityHash: `sha256:${'a'.repeat(64)}` }));
   fs.writeFileSync(outcome, JSON.stringify({ schemaVersion: 1, outcome: 'completed-positive', reason: 'frozen gate passed' }));
   fs.writeFileSync(contractFile, JSON.stringify({
     experiment: {
       workflowFamily: 'fixture-family', producer: 'fixture-producer', entrypoint: 'fixture.mjs',
-      configurationHash: hashConfiguration({ budget: 1 }), resolvedSha: 'b'.repeat(40),
+      configurationHash: primaryConfigurationHash, resolvedSha: 'b'.repeat(40),
       sourceRuns: ['fixture-acquisition-a', 'fixture-acquisition-b'],
       reconciliationRun: {
         kind: 'recombine-only',
@@ -94,6 +99,51 @@ try {
   assert.ok(wrongPopulationManifest.decisionContractIssues.some(issue =>
     issue.includes('primary result: result rows do not match integrity expectedIds')),
     'an integrity file for a different population must not certify the primary result');
+
+  const boundOutcome = path.join(temp, 'bound-outcome.json');
+  fs.writeFileSync(boundOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'bound gate passed',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+    },
+  }));
+  const boundOut = path.join(temp, 'bound-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${boundOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${boundOut}`,
+  ], { cwd: root });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(boundOut, 'manifest.json'))).decisionBearing, true);
+
+  const staleBoundOutcome = path.join(temp, 'stale-bound-outcome.json');
+  fs.writeFileSync(staleBoundOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'stale verdict',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [`sha256:${'f'.repeat(64)}`],
+    },
+  }));
+  const staleBoundOut = path.join(temp, 'stale-bound-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${staleBoundOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${staleBoundOut}`,
+  ], { cwd: root });
+  const staleBoundManifest = JSON.parse(fs.readFileSync(path.join(staleBoundOut, 'manifest.json')));
+  assert.equal(staleBoundManifest.decisionBearing, false);
+  assert.ok(staleBoundManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultConfigurationHashes disagree with published result files'));
 
   const wrongRevisionPrimary = path.join(temp, 'wrong-revision-result.json');
   fs.writeFileSync(wrongRevisionPrimary, JSON.stringify({
