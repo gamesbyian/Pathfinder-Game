@@ -13,33 +13,397 @@
   },
   "expectedParentCount": 23,
   "parents": [
-    {"parentId":"R00306","rescuers":[{"actionKey":"repair|score=repair|guidance=must-turn-biased","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":20823229,"isolatedWinningGate":262145}]},
-    {"parentId":"R01011","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":37210562,"isolatedWinningGate":589825}]},
-    {"parentId":"R01086","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":2190036,"isolatedWinningGate":458758}]},
-    {"parentId":"R01269","rescuers":[{"actionKey":"admissible-order|tieBreak=none|lds=off","family":"admissible-order","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":33782273,"isolatedWinningGate":524288}]},
-    {"parentId":"R01724","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":20436729,"isolatedWinningGate":262156}]},
-    {"parentId":"R02138","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":14583047,"isolatedWinningGate":524301}]},
-    {"parentId":"R02160","rescuers":[{"actionKey":"repair|score=repair|guidance=must-turn-biased","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":37136975,"isolatedWinningGate":589824},{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":13806334,"isolatedWinningGate":589824}]},
-    {"parentId":"R02196","rescuers":[{"actionKey":"beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets","family":"beam","offered":true,"dispatched":true,"familyReached":null,"familyStarved":null,"observability":"dispatched-dose-unverified","isolatedNodesExpanded":293389,"isolatedWinningGate":327682}]},
-    {"parentId":"R02206","rescuers":[{"actionKey":"beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets","family":"beam","offered":true,"dispatched":true,"familyReached":null,"familyStarved":null,"observability":"dispatched-dose-unverified","isolatedNodesExpanded":257117,"isolatedWinningGate":720900}]},
-    {"parentId":"R02219","rescuers":[{"actionKey":"admissible-order|tieBreak=none|lds=off","family":"admissible-order","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":14300785,"isolatedWinningGate":262150}]},
-    {"parentId":"R02258","rescuers":[{"actionKey":"beam|score=objectiveFirst|bias=none|width=5000|retention=plain","family":"beam","offered":true,"dispatched":true,"familyReached":null,"familyStarved":null,"observability":"dispatched-dose-unverified","isolatedNodesExpanded":578195,"isolatedWinningGate":8}]},
-    {"parentId":"R02277","rescuers":[{"actionKey":"admissible-order|tieBreak=none|lds=off","family":"admissible-order","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":31237421,"isolatedWinningGate":262152}]},
-    {"parentId":"R02458","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":1730495,"isolatedWinningGate":131078}]},
-    {"parentId":"R02561","rescuers":[{"actionKey":"repair|score=repair|guidance=must-turn-biased","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":38656658,"isolatedWinningGate":196615}]},
-    {"parentId":"R02835","rescuers":[{"actionKey":"repair|score=repair|guidance=must-turn-biased","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":4084816,"isolatedWinningGate":589835}]},
-    {"parentId":"R02844","rescuers":[{"actionKey":"repair|score=repair|guidance=must-turn-biased","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":27959034,"isolatedWinningGate":196609}]},
-    {"parentId":"R02892","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":5503860,"isolatedWinningGate":917505}]},
-    {"parentId":"R02979","rescuers":[{"actionKey":"admissible-order|tieBreak=none|lds=off","family":"admissible-order","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":48231138,"isolatedWinningGate":393223}]},
-    {"parentId":"R02997","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":36458318,"isolatedWinningGate":720910}]},
-    {"parentId":"R03109","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":12710452,"isolatedWinningGate":851972}]},
-    {"parentId":"R03251","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":10547738,"isolatedWinningGate":4}]},
-    {"parentId":"R03323","rescuers":[{"actionKey":"repair|score=repair|guidance=standard","family":"repair","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":349380,"isolatedWinningGate":786434}]},
-    {"parentId":"R03354","rescuers":[{"actionKey":"admissible-order|tieBreak=none|lds=off","family":"admissible-order","offered":null,"dispatched":true,"familyReached":true,"familyStarved":false,"observability":"exact-dispatched-family-not-starved-dose-unverified","isolatedNodesExpanded":16076371,"isolatedWinningGate":2}]}
+    {
+      "parentId": "R00306",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 20823229,
+          "isolatedWinningGate": 262145
+        }
+      ]
+    },
+    {
+      "parentId": "R01011",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 37210562,
+          "isolatedWinningGate": 589825
+        }
+      ]
+    },
+    {
+      "parentId": "R01086",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 2190036,
+          "isolatedWinningGate": 458758
+        }
+      ]
+    },
+    {
+      "parentId": "R01269",
+      "rescuers": [
+        {
+          "actionKey": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 33782273,
+          "isolatedWinningGate": 524288
+        }
+      ]
+    },
+    {
+      "parentId": "R01724",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 20436729,
+          "isolatedWinningGate": 262156
+        }
+      ]
+    },
+    {
+      "parentId": "R02138",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 14583047,
+          "isolatedWinningGate": 524301
+        }
+      ]
+    },
+    {
+      "parentId": "R02160",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 37136975,
+          "isolatedWinningGate": 589824
+        },
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 13806334,
+          "isolatedWinningGate": 589824
+        }
+      ]
+    },
+    {
+      "parentId": "R02196",
+      "rescuers": [
+        {
+          "actionKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "family": "beam",
+          "offered": true,
+          "dispatched": true,
+          "familyReached": null,
+          "familyStarved": null,
+          "observability": "dispatched-dose-unverified",
+          "isolatedNodesExpanded": 293389,
+          "isolatedWinningGate": 327682
+        }
+      ]
+    },
+    {
+      "parentId": "R02206",
+      "rescuers": [
+        {
+          "actionKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "family": "beam",
+          "offered": true,
+          "dispatched": true,
+          "familyReached": null,
+          "familyStarved": null,
+          "observability": "dispatched-dose-unverified",
+          "isolatedNodesExpanded": 257117,
+          "isolatedWinningGate": 720900
+        }
+      ]
+    },
+    {
+      "parentId": "R02219",
+      "rescuers": [
+        {
+          "actionKey": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 14300785,
+          "isolatedWinningGate": 262150
+        }
+      ]
+    },
+    {
+      "parentId": "R02258",
+      "rescuers": [
+        {
+          "actionKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "family": "beam",
+          "offered": true,
+          "dispatched": true,
+          "familyReached": null,
+          "familyStarved": null,
+          "observability": "dispatched-dose-unverified",
+          "isolatedNodesExpanded": 578195,
+          "isolatedWinningGate": 8
+        }
+      ]
+    },
+    {
+      "parentId": "R02277",
+      "rescuers": [
+        {
+          "actionKey": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 31237421,
+          "isolatedWinningGate": 262152
+        }
+      ]
+    },
+    {
+      "parentId": "R02458",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 1730495,
+          "isolatedWinningGate": 131078
+        }
+      ]
+    },
+    {
+      "parentId": "R02561",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 38656658,
+          "isolatedWinningGate": 196615
+        }
+      ]
+    },
+    {
+      "parentId": "R02835",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 4084816,
+          "isolatedWinningGate": 589835
+        }
+      ]
+    },
+    {
+      "parentId": "R02844",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=must-turn-biased",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 27959034,
+          "isolatedWinningGate": 196609
+        }
+      ]
+    },
+    {
+      "parentId": "R02892",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 5503860,
+          "isolatedWinningGate": 917505
+        }
+      ]
+    },
+    {
+      "parentId": "R02979",
+      "rescuers": [
+        {
+          "actionKey": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 48231138,
+          "isolatedWinningGate": 393223
+        }
+      ]
+    },
+    {
+      "parentId": "R02997",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 36458318,
+          "isolatedWinningGate": 720910
+        }
+      ]
+    },
+    {
+      "parentId": "R03109",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 12710452,
+          "isolatedWinningGate": 851972
+        }
+      ]
+    },
+    {
+      "parentId": "R03251",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 10547738,
+          "isolatedWinningGate": 4
+        }
+      ]
+    },
+    {
+      "parentId": "R03323",
+      "rescuers": [
+        {
+          "actionKey": "repair|score=repair|guidance=standard",
+          "family": "repair",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 349380,
+          "isolatedWinningGate": 786434
+        }
+      ]
+    },
+    {
+      "parentId": "R03354",
+      "rescuers": [
+        {
+          "actionKey": "admissible-order|tieBreak=none|lds=off",
+          "family": "admissible-order",
+          "offered": null,
+          "dispatched": true,
+          "familyReached": true,
+          "familyStarved": false,
+          "observability": "exact-dispatched-family-not-starved-dose-unverified",
+          "isolatedNodesExpanded": 16076371,
+          "isolatedWinningGate": 2
+        }
+      ]
+    }
   ],
   "freeze": {
     "date": "2026-09-19",
     "command": "npm run research:freeze-current-class3-dose-expectations",
     "solverSearchPerformed": false
+  },
+  "unitTopology": {
+    "observationUnit": "compact-failure-response-attempt",
+    "opportunityUnit": "parent-exact-rescuer",
+    "assignmentUnit": null,
+    "dependenceClusterUnit": "parent",
+    "analysisUnit": "parent",
+    "generalizationUnit": "current-class3-parent-under-compatible-shared-production-protocol"
   }
 }
