@@ -39,6 +39,7 @@ assert.deepEqual(
 const integrity = buildPopulationIntegrity(['a', 'b', 'c'], [
   { id: 'a', ok: true }, { id: 'b', status: 'deadline-truncated' }, { id: 'x', error: 'boom' },
 ]);
+assert.deepEqual(integrity.expectedIds, ['a', 'b', 'c']);
 assert.deepEqual(integrity.missingIds, ['c']);
 assert.deepEqual(integrity.unexpectedIds, ['x']);
 assert.equal(integrity.outcomes.solved, 1);
