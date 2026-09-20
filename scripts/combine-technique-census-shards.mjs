@@ -15,6 +15,7 @@ import {
     dedupeTechniqueCensusResults,
     inferredVariantLabel,
     techniqueCensusIdentityKey,
+    validateTechniqueCensusPlanJoin,
 } from './technique-census-result-lib.mjs';
 
 const argv = process.argv.slice(2);
@@ -46,10 +47,15 @@ const CORPUS_FILES = {
 // reference population by contract; stress rows require the frozen baseline supplied by --plan.
 let wasSolvedBaseline = corpus => corpus === 'published' ? true : null;
 let baselineStatus = PLAN_FILE ? 'unavailable' : 'not-provided';
+let planDocument = null;
 if (PLAN_FILE) {
     try {
-        const plan = JSON.parse(readFileSync(path.resolve(PLAN_FILE), 'utf8'));
-        const baseline = JSON.parse(readFileSync(path.resolve(plan.baselineFile), 'utf8'));
+        planDocument = JSON.parse(readFileSync(path.resolve(PLAN_FILE), 'utf8'));
+    } catch (err) {
+        throw new Error(`combine: could not read authored plan ${PLAN_FILE}: ${err?.message ?? err}`);
+    }
+    try {
+        const baseline = JSON.parse(readFileSync(path.resolve(planDocument.baselineFile), 'utf8'));
         const solvedIds = {
             corpus1: new Set(baseline.corpus1?.solvedIds ?? []),
             corpus2: new Set(baseline.corpus2?.solvedIds ?? []),
@@ -88,7 +94,10 @@ const allResults = deduped.results.map(r => {
     return variantLabel && !r.variantLabel ? { ...r, variantLabel } : r;
 });
 const hasEqualWork = allResults.some(r => r.tier === 'EW1');
-console.log(`technique-census combine: ${rawResults.length} raw cell result(s), ${allResults.length} unique (${deduped.duplicatesRemoved} duplicate(s) removed; ${missing.length} missing shard(s), ${partial.length} partial marker(s))`);
+const planJoin = planDocument
+    ? validateTechniqueCensusPlanJoin(planDocument, allResults, { requireComplete: false })
+    : null;
+console.log(`technique-census combine: ${rawResults.length} raw cell result(s), ${allResults.length} unique (${deduped.duplicatesRemoved} duplicate(s) removed; ${missing.length} missing shard(s), ${partial.length} partial marker(s)${planJoin ? `; ${planJoin.missing.length} planned cell(s) not observed` : ''})`);
 
 mkdirSync(OUT_DIR, { recursive: true });
 if (!DERIVED_ONLY) {
@@ -103,6 +112,13 @@ if (!DERIVED_ONLY) {
             ? 'T1/T3/T4 are node-depth evidence; EW1 rows use equal canonical work budgets for cross-technique pricing'
             : 'isolated nodesExpanded is within-technique depth; use canonical workSpent for cross-technique allocation',
         totalCells: allResults.length,
+        ...(planJoin ? {
+            planCoverage: {
+                expectedCount: planJoin.expectedIds.length,
+                observedCount: allResults.length,
+                missingCount: planJoin.missing.length,
+            },
+        } : {}),
         results: allResults,
     }));
 }
