@@ -250,7 +250,7 @@ assert.deepEqual(validateResearchQuestionRegistry(invalidAcquisition), [
 const invalidAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
 invalidAnsweredBy.questions[0].answeredBy = ['not-a-repository-edge'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidAnsweredBy), [
-    'questions[0].answeredBy must contain repository paths',
+    'questions[0].answeredBy must start with one of docs, reports, scripts, data, logs',
 ]);
 
 const duplicateAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
