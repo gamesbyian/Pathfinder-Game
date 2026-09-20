@@ -38,9 +38,12 @@ function classifyAnswerability(question) {
 
   let disposition = 'answerable-or-concluded';
   if (state === 'deferred-reopen') {
-    if (conceptDeficit) disposition = 'concept-or-representation-blocked';
-    else if (measurementDeficit) disposition = 'measurement-blocked';
+    // Prefer the concrete reopen path over broad conceptual vocabulary. A question
+    // that mentions semantic/representation concerns but already names the missing
+    // population or measurement is operationally blocked by that acquisition seam.
+    if (measurementDeficit) disposition = 'measurement-blocked';
     else if (evidenceDeficit) disposition = 'evidence/population-blocked';
+    else if (conceptDeficit) disposition = 'concept-or-representation-blocked';
     else disposition = 'condition-blocked';
   }
 
