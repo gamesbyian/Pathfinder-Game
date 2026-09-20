@@ -110,5 +110,25 @@ export function ws2FailureResponseAnalysisIdentity(analysis) {
     throw new Error('analysis must be an object');
   }
   const { analysisIdentity: _identity, ...core } = analysis;
-  return `sha256:${createHash('sha256').update(JSON.stringify(stable(core))).digest('hex')}`;
+  const execution = core.execution ?? {};
+  const observation = core.observation ?? {};
+  const filters = { ...(observation.filters ?? {}) };
+  delete filters.in;
+  const semanticCore = {
+    ...core,
+    execution: {
+      ...execution,
+      inputFiles: undefined,
+      inputArtifacts: (execution.inputArtifacts ?? [])
+        .map(item => item?.contentHash ?? null)
+        .filter(Boolean)
+        .sort(),
+    },
+    observation: {
+      ...observation,
+      inputs: undefined,
+      filters,
+    },
+  };
+  return `sha256:${createHash('sha256').update(JSON.stringify(stable(semanticCore))).digest('hex')}`;
 }
