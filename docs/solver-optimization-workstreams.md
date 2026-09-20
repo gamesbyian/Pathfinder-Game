@@ -13,17 +13,9 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ## Portfolio posture
 
-Solver work now runs on two explicit fronts:
+Run two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing semantic operations. Classification, acquisition ladder, and demand-register rules: [capability invention program](solver-capability-invention-program.md). Register: `data/stress/capability-invention-demand.json` (`npm run research:capability-demand`).
 
-- **Harvest:** recover already-demonstrated capability through exposure, placement, allocation, scheduling, dose, retention, or composition.
-- **Acquisition:** identify a completion-relevant operation the solver does not yet possess, then climb existence -> distinction -> action -> solves -> economics.
-
-The classification and promotion rules live in the [capability invention program](solver-capability-invention-program.md). The machine-readable demand register is `data/stress/capability-invention-demand.json`; `npm run research:capability-demand` validates and summarizes it.
-
-Implementation-readiness is not priority. A weakly nominated tuning descendant competes with a causally grounded capability-acquisition probe. As harvest descendants become null, displacement-only, or pure repricing, research capacity moves toward acquisition rather than manufacturing new tuning axes.
-
-The retained-evidence seed census now contains **26 rows: 22 HARVEST, 1 EXTENSION, 3 UNKNOWN, 0 INVENTION**. This is not prevalence evidence: 23/26 rows come from Class 3, which is selected on known historical rescuer capability and is therefore harvest-enriched by construction. The three UNKNOWN beam rows (R02196/R02206/R02258) first require a fresh current-head isolated replay of their exact historical rescuers before any missing-capability claim; the probe is frozen and dispatch-ready. R03147 remains the cautious EXTENSION nomination pending independent-parent replication. [`seed census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`beam freshness preflight`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
-
+Seed census: **26 rows = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence evidence because 23/26 are capability-selected Class 3. Unknown beam rows R02196/R02206/R02258 have a frozen current-head freshness replay; R03147 remains an EXTENSION nomination pending independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
 
 ### 1. Workstream 2: residual capability + premise acquisition
@@ -57,7 +49,7 @@ The retained-evidence seed census now contains **26 rows: 22 HARVEST, 1 EXTENSIO
 
 See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
-1. **D1 future-intersection commitment realizability: PREMISE POSITIVE, PRODUCTION CONSUMER CLOSED NEGATIVE.** Forensic replication (R03147) cleanly separates matched LIVE/DEAD states, but a production-inert multi-parent confirmation slice (24 real cull decisions, 120 candidates, 1,960 revisit-cell queries, all 8 independent Class-5 parents, 84% definitive support) found **0 disagreements** with actual beam retention: the forensic discriminator does not recur on real production retention-boundary candidates. Closes the exact-query ranking-consumer path in its tested form. **Reopen:** only a materially different eligibility predicate/decision seam/population, not more parents under the same predicate. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
+1. **D1: premise positive, tested ranking consumer closed.** Independent production slice: 24 culls / 120 candidates / 1,960 queries / 8 parents, 84% definitive, **0 retention disagreements**. Reopen only at a materially different seam/population. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
 2. **Constrained-event feasibility: NARROWED POSITIVE.** H1 re-analysis: DEAD infeasibility trivial; LIVE states show within-state commitment viability, not a LIVE/DEAD classifier. [`result`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md)
 3. **Residual-interface commutativity: POSITIVE, NARROW SUPPORT.** 12,277 splice pairs: 46.6% legal pooled; 0% flipper-bearing, but support is 3 levels and not explained by segment-flipper contact. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md) · [`correction`](../reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md)
 
@@ -69,11 +61,11 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 1. **Class-3 dose: RESOLVED.** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative. [`gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md) · [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
 2. **Card-E quotient: MIXED.** Board-independent signal survives Card-E permutation tests but is insufficient for canonicalization/classifier. [`result`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md)
-3. **F3 topology microscope: QUALIFIED POSITIVE; CONSUMER GATE STOPS AT DECISION-BEARING COVERAGE.** Cheap descriptor is 8/8 when closest point unique, but that subset has zero decision-relevant discordance. All 9 decisive-puncture discordant rows are tied; tied reliability is 7/9 and cheap tie refinement does not improve it. No selector/prune consumer earned. **Reopen:** fresh independent parents only if a reliable compact descriptor has non-zero decision-bearing discordance. [`result`](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md) · [`census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
+3. **F3 topology: qualified positive, no consumer.** Untied descriptor is 8/8 but covers zero discordant decisions; tied discordant reliability 7/9. Reopen only with a reliable compact descriptor showing non-zero decision-bearing discordance. [`result`](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md)
 
 #### Lane G — independent search-object nursery
 
-**G1 complete-path LNS:** Stage 1 positive; naive Stage 2 method-limited. Real-frontier completion: 0/45 solves at 2M and 16M nodes, so modest dose is not the fix. The frontier-constructor blocker is closed. Next gate: build a fair full relaxed candidate from frozen real-search partials and test local repairability without answer leakage; no more blind dose escalation. [`falsifier`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md) · [`constructor`](../reports/2026-09-17-production-search-sibling-construction-result-001.md) · [`dose`](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
+**G1 complete-path LNS:** real-frontier completion is 0/45 at both 2M and 16M; modest dose is closed. Next gate remains a fair full relaxed candidate from frozen real-search partials, then local repairability. [`dose`](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
@@ -95,7 +87,8 @@ Frozen-map mining is complete; P201-P206 remain evidence/method premises only. T
 
 | ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|
-| 2 | Residual capability + premise acquisition | `active` | **ACTIVE / TWO-FRONT PORTFOLIO** | Harvest: nominated repair-deadline + reserve-fraction experiments. Acquisition: expand first-loss demand sampling from retained current-residual evidence and promote only recurrent decision-bearing gaps | — |
+| 2 | Residual capability + premise acquisition | `active` | **HARVEST** | Design repair-deadline A/B; reserve-fraction A/B remains independently nominated | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2I | Capability invention demand | `active` | **ACQUISITION** | Run 3-row beam freshness gate; expand first-loss sampling outside capability-selected Class 3 | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
