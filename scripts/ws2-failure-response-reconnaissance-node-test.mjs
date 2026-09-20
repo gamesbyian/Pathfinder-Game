@@ -154,12 +154,22 @@ try {
     `--in=${eligiblePath}`,
     `--analysis-contract=${contractPath}`,
     '--route=none',
+    '--decision-rationale=Stage A contains no prespecified contrast that earns expensive follow-up',
     `--out=${routedAnalysisPath}`,
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.equal(routed.status, 0, routed.stderr);
   const routedResult = JSON.parse(routed.stdout);
   assert.equal(routedResult.decision.status, 'selected');
   assert.equal(routedResult.decision.route, 'none');
+  assert.match(routedResult.decision.rationale, /no prespecified contrast/u);
+  const missingRationale = spawnSync(process.execPath, [
+    'scripts/ws2-failure-response-reconnaissance.mjs',
+    `--in=${eligiblePath}`,
+    `--analysis-contract=${contractPath}`,
+    '--route=none',
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.notEqual(missingRationale.status, 0);
+  assert.match(`${missingRationale.stdout}${missingRationale.stderr}`, /decision-rationale/u);
   const claimPath = path.join(temp, 'claim.json');
   const claimRun = spawnSync(process.execPath, [
     'scripts/ws2-failure-response-claim.mjs',
@@ -237,6 +247,7 @@ try {
     `--in=${ineligiblePath}`,
     `--analysis-contract=${contractPath}`,
     '--route=first-loss',
+    '--decision-rationale=Prespecified Stage A route test',
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.notEqual(invalidRoute.status, 0);
   assert.match(`${invalidRoute.stdout}${invalidRoute.stderr}`, /scientifically ineligible evidence/u);
