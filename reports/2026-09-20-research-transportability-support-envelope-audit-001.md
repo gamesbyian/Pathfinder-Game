@@ -254,6 +254,14 @@ Possible future machine semantics would need to prove repeated use of:
 
 Until a second live transfer decision reconstructs those same meanings, keep transportability as an audit/design lens and reuse producer support contracts.
 
+## Retrospective extension
+
+The whole-session closure pass found that the first machine hardening in this audit was too narrow: `assessGenerationMethodSupport()` initially checked mechanics only even though the producer envelope and evaluation doctrine already knew grid-size and topology-family boundaries.
+
+The helper now assesses mechanics, grid sizes, and topology families separately and combines them conservatively. Target-population overlap/representativeness remains claim-relative and is not inferred from source novelty or mechanic support.
+
+See `reports/2026-09-20-research-session-local-optima-retrospective-001.md`.
+
 ## Standing rule
 
 **A different source is not transfer evidence unless it can express the phenomenon the claim needs.**
