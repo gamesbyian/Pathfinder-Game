@@ -18,7 +18,7 @@ function refIds(question, keys) {
     }).map(String).filter(Boolean);
 }
 
-export function auditResearchIntegration(root = process.cwd()) {
+export function auditResearchIntegration(root = process.cwd(), { model: suppliedModel = null } = {}) {
     const errors = [];
     const warnings = [];
     const questionRegistry = loadResearchQuestionRegistry(root);
@@ -70,7 +70,7 @@ export function auditResearchIntegration(root = process.cwd()) {
         }
     }
 
-    const model = buildResearchRelations(root, { discoverArtifacts: true });
+    const model = suppliedModel ?? buildResearchRelations(root, { discoverArtifacts: true });
     if (model.relations.queue.length === 0) {
         errors.push('research-status queue relation is empty; current workstream authority is not reaching research relations');
     }
