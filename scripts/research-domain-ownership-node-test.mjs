@@ -65,10 +65,19 @@ assert.match(resolutionEnvelope, /resolutionStatus/u);
 assert.doesNotMatch(resolutionEnvelope, /first-loss|reserve-starvation|producer-consumer-2x2/u,
   'shared resolution envelope must not absorb specialist route or mechanism semantics');
 
+const independenceVector = source('scripts/research-independence-vector-lib.mjs');
+assert.match(independenceVector, /RESEARCH_INDEPENDENCE_AXES/u);
+assert.doesNotMatch(independenceVector, /D1|reserve-starvation|failure-response/u,
+  'shared independence vector must not absorb specialist study semantics');
+
 const ws2Recon = source('scripts/ws2-failure-response-reconnaissance.mjs');
 assert.match(ws2Recon, /research-resolution-envelope-lib\.mjs/u);
 
+const ws2AnalysisContract = source('scripts/ws2-failure-response-analysis-contract-lib.mjs');
+assert.match(ws2AnalysisContract, /research-independence-vector-lib\.mjs/u);
+
 const reserveStarvation = source('scripts/analyze-reserve-starvation-probe.mjs');
 assert.match(reserveStarvation, /research-resolution-envelope-lib\.mjs/u);
+assert.match(reserveStarvation, /research-independence-vector-lib\.mjs/u);
 
 console.log('research domain ownership contract tests passed');
