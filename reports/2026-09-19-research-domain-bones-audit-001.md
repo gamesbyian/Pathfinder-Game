@@ -191,13 +191,21 @@ Observation, opportunity/exposure, assignment, dependence-cluster, analysis and 
 
 ### 5. Production realization
 
-The Class-4 portal retry regression established a real post-decision lifecycle:
+A deeper authority pass found more existing structure than this audit initially credited.
 
-`decision intent -> implementation target -> production reachability -> behavioral participation -> qualification`
+Production realization is already protected by:
 
-For now this is correctly protected by production-shaped tests rather than a deployment subsystem.
+- the runtime `OPT_IN_FEATURES`/default-config owner;
+- generic default-polarity conformance tests;
+- generic null-config versus empty-config production-default equivalence tests across routing/scheduling/allocation;
+- documentation coverage requiring every retained default-OFF flag to have a disposition;
+- specialist production-shaped participation tests where a promotion exposes a unique realization hazard.
 
-**Promotion trigger:** a second evidence-backed production change needs the same realization metadata and invalidation behavior. Then extract a compact `ChangeRealization` value object.
+That is already a functioning organ rather than mere connective tissue.
+
+The remaining seam is narrower: promotion decisions and their evidence are usually linked to implementation/regression proof through reports, feature descriptions and comments rather than one common machine-readable relation.
+
+**Promotion trigger:** extract only the smallest decision-to-realization provenance link if multiple future promotions need tooling to answer that relation reliably. Do not create a `ChangeRealization` registry merely to restate runtime truth.
 
 ## Connective tissue that should remain connective tissue
 
