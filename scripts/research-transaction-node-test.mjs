@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 
 import { buildPopulationIntegrity, recoveryProvenanceIssues } from './solver-experiment-contract.mjs';
+import { buildContract } from './write-solver-experiment-contract.mjs';
 import { combinePopulationIntegrity } from './combine-population-integrity.mjs';
 import { summarizeIndependentSupport } from './research-relations-lib.mjs';
 import { classifyProbeProcess } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
@@ -170,6 +171,28 @@ const changedContentBlock = buildResearchBlock({
     ...blockBase,
     parentContentIdentities: ['sha256:2222222222222222222222222222222222222222222222222222222222222222'],
 });
+const transactionExperimentContract = buildContract({
+    configuration: { fixture: 'research-transaction' },
+    workflowFamily: 'research-transaction-fixture',
+    producer: 'research-transaction-node-test',
+    entrypoint: 'scripts/research-transaction-node-test.mjs',
+    population: {
+        kind: 'synthetic-research-transaction',
+        identityBasis: 'content-addressed-parent',
+        researchBlock: firstBlock.researchBlock,
+    },
+    execution: { levelBlind: true, historyAware: false },
+    limits: { cumulativeNodeCeiling: 0 },
+    sideEffects: { hints: 'none' },
+}, {
+    resolvedSha: 'a'.repeat(40),
+    populationSeal: { identityHash: firstBlock.populationIdentity, count: 1 },
+});
+assert.equal(transactionExperimentContract.population.researchBlock.blockId, blockBase.blockId);
+assert.equal(transactionExperimentContract.population.corpusIdentity, firstBlock.populationIdentity);
+assert.equal(transactionExperimentContract.population.independentUnit, 'parent-level');
+assert.equal(transactionExperimentContract.experiment.workflowFamily, 'research-transaction-fixture');
+
 assert.notEqual(firstBlock.populationIdentity, changedContentBlock.populationIdentity,
     'content changes under a stable display id must change population identity');
 
