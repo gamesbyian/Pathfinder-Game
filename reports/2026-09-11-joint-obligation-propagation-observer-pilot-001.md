@@ -65,6 +65,12 @@ Both arms solved 0/N levels in this run (uniform, deliberately small fixed budge
 
 All four gates clear. Per PR #1716/#1717's added near-control requirement, the differential (1.6x median reject rate, depth-confound-controlled) is genuine nomination evidence for `joint-feasibility-unrepresented` rather than a pure mechanic-concentration artifact — though it is observational/discovery-role evidence, not a confirmatory claim, and this run did not stratify by operational family (DFS vs beam vs repair) to test the capability map's cross-action-recurrence criterion directly.
 
+## Measurement-reactivity qualification (2026-09-20)
+
+The observer is decision-inert in code and had unit-level verdict parity, but this historical real-search pilot did not run full observer-OFF/ON twins. Because its production solves were bounded by wall time as well as nodes, callback cost could in principle change how much search is observed before termination even without changing any pruning/ordering decision.
+
+Accordingly, the recorded rejects and zero sampled false rejects remain valid observations, but the exact firing/reject-rate prevalence should be read as **observer-conditioned discovery evidence**, consistent with this report's original nomination-only role. This does not weaken the later promotion decision: the actual hard-prune mechanism subsequently earned its result from a separate frozen matched-work A/B, not from treating this observer-rate estimate as efficacy evidence.
+
 ## What this does not establish
 
 - Not a solve-count or work-benefit claim — this stayed observer-only throughout; no production pruning behavior changed.
