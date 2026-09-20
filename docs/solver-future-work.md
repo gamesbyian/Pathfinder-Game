@@ -20,7 +20,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 ## Deferred plan closeouts
 
 - **Parity descendants:** reopen only through [the parity preflight](solver-parity-phase-capacity-preflight.md).
-- **Failure evidence:** P3 failure-response + P4A Class-3 dose now share one frozen 53-parent compact-response acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md`); their analyses/dispositions remain separate. P4B reserve starvation concluded positive (2/40, see "Admissible-order retry repricing" above); P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Failure evidence:** P3 failure-response and P4A Class-3 dose both concluded (2026-09-20) from the shared 53-parent acquisition (`reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md` -> `reports/2026-09-20-ws2-class3-dose-and-reconnaissance-result-001.md`): P4A 0/23 exposure-gap, 20/23 censored-dose (16 repair-family, 5 admissible-order-fraction), 3/23 exposed-and-negative; P3 routes `allocation-specific-follow-up`, nominating a repair-family per-attempt-deadline A/B (distinct question from P4B). P4B reserve starvation concluded positive (2/40, see "Admissible-order retry repricing" above), now cross-validated by P4A's admissible-order rows. P7 needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 

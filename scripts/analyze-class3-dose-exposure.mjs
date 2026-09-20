@@ -109,9 +109,29 @@ function countBy(values) {
     }
     return Object.fromEntries([...map.entries()].sort(([a], [b]) => a.localeCompare(b)));
 }
+/**
+ * Frozen Class-3 rescuer expectations carry the bare technique-census actionKey (e.g.
+ * "repair|score=repair|guidance=must-turn-biased"), because T1 census cells run one isolated
+ * technique with no stage/seed context. Production compact-response attempts instead carry
+ * "<stageId>|<bare actionKey>[|seedSalt=N]" (e.g.
+ * "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0"), because
+ * production dispatches the same technique from multiple stages/seed salts. Strip exactly that
+ * stage prefix and seed-salt suffix before comparing, so a real production participation is not
+ * misclassified as exact-not-participated merely because the two producers key attempts
+ * differently for the same semantic action.
+ */
+function normalizedActionKey(attempt) {
+    let key = attempt.actionKey;
+    if (typeof key !== 'string') return key;
+    if (typeof attempt.stageId === 'string' && attempt.stageId.length && key.startsWith(`${attempt.stageId}|`)) {
+        key = key.slice(attempt.stageId.length + 1);
+    }
+    key = key.replace(/\|seedSalt=\d+$/, '');
+    return key;
+}
 function matchingAttempts(parentRows, rescuer) {
     return parentRows.flatMap(row => row.attempts ?? []).filter(attempt =>
-        attempt.actionKey === rescuer.actionKey && (rescuer.stageId == null || attempt.stageId === rescuer.stageId));
+        normalizedActionKey(attempt) === rescuer.actionKey && (rescuer.stageId == null || attempt.stageId === rescuer.stageId));
 }
 function classifyAttempts(attempts) {
     if (!attempts.length) return 'exact-not-participated';

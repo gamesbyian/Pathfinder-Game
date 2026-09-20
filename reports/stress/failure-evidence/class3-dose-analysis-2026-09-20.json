@@ -1,0 +1,1171 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-class3-dose-exposure-analysis",
+  "inputs": [
+    "/tmp/ws2-class3-compact-failure-response.json"
+  ],
+  "expectations": "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
+  "protocolHash": "sha256:ba0885890293cf4c29bf5d1b2d76e424814bf4226e2eda824c729753e371d1f8",
+  "solverRef": "39ee4937159370de8c99766f8d2f4acc9cdc05d6",
+  "expectedParents": 23,
+  "observedExpectedParents": 23,
+  "unitTopology": {
+    "observationUnit": "compact-failure-response-attempt",
+    "opportunityUnit": "parent-exact-rescuer",
+    "assignmentUnit": null,
+    "dependenceClusterUnit": "parent",
+    "analysisUnit": "parent",
+    "generalizationUnit": "current-class3-parent-under-compatible-shared-production-protocol"
+  },
+  "missingParents": [],
+  "parentDispositions": {
+    "censored-dose": 20,
+    "exposed-and-negative": 3
+  },
+  "rescuerDispositions": {
+    "exact-participated-censored": 21,
+    "exact-participated-exhausted-negative": 3
+  },
+  "byAction": {
+    "admissible-order|tieBreak=none|lds=off": {
+      "parents": 5,
+      "attempts": 5,
+      "outcomes": {
+        "deadline-truncated": 5
+      },
+      "dispositions": {
+        "exact-participated-censored": 5
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 5,
+        "min": 12499968,
+        "max": 12499968,
+        "median": 12499968
+      }
+    },
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets": {
+      "parents": 2,
+      "attempts": 14,
+      "outcomes": {
+        "exhausted": 14
+      },
+      "dispositions": {
+        "exact-participated-exhausted-negative": 2
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 14,
+        "min": 236957,
+        "max": 319366,
+        "median": 264562
+      }
+    },
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain": {
+      "parents": 1,
+      "attempts": 7,
+      "outcomes": {
+        "deadline-truncated": 1,
+        "exhausted": 6
+      },
+      "dispositions": {
+        "exact-participated-exhausted-negative": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 7,
+        "min": 0,
+        "max": 522501,
+        "median": 521329
+      }
+    },
+    "repair|score=repair|guidance=must-turn-biased": {
+      "parents": 5,
+      "attempts": 5,
+      "outcomes": {
+        "deadline-truncated": 5
+      },
+      "dispositions": {
+        "exact-participated-censored": 5
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 5,
+        "min": 2100024,
+        "max": 6000000,
+        "median": 3000058
+      }
+    },
+    "repair|score=repair|guidance=standard": {
+      "parents": 11,
+      "attempts": 33,
+      "outcomes": {
+        "deadline-truncated": 33
+      },
+      "dispositions": {
+        "exact-participated-censored": 11
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 33,
+        "min": 734095,
+        "max": 3594551,
+        "median": 2000001
+      }
+    }
+  },
+  "parents": [
+    {
+      "parentId": "R00306",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R01011",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R01086",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R01269",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R01724",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02138",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02160",
+      "sourceRecordCount": 1,
+      "rescuerCount": 2,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 2
+      }
+    },
+    {
+      "parentId": "R02196",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "exposed-and-negative",
+      "rescuerDispositions": {
+        "exact-participated-exhausted-negative": 1
+      }
+    },
+    {
+      "parentId": "R02206",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "exposed-and-negative",
+      "rescuerDispositions": {
+        "exact-participated-exhausted-negative": 1
+      }
+    },
+    {
+      "parentId": "R02219",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02258",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "exposed-and-negative",
+      "rescuerDispositions": {
+        "exact-participated-exhausted-negative": 1
+      }
+    },
+    {
+      "parentId": "R02277",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02458",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02561",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02835",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02844",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02892",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02979",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R02997",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R03109",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R03251",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R03323",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    },
+    {
+      "parentId": "R03354",
+      "sourceRecordCount": 1,
+      "rescuerCount": 1,
+      "disposition": "censored-dose",
+      "rescuerDispositions": {
+        "exact-participated-censored": 1
+      }
+    }
+  ],
+  "rescuers": [
+    {
+      "parentId": "R00306",
+      "actionKey": "repair|score=repair|guidance=must-turn-biased",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 3000058,
+        "max": 3000058,
+        "median": 3000058
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R01011",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 2000000,
+        "max": 2533729,
+        "median": 2000000
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R01086",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 820205,
+        "max": 2000000,
+        "median": 2000000
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R01269",
+      "actionKey": "admissible-order|tieBreak=none|lds=off",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 12499968,
+        "max": 12499968,
+        "median": 12499968
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R01724",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 1819243,
+        "max": 2000014,
+        "median": 2000012
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02138",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 772548,
+        "max": 2000000,
+        "median": 2000000
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02160",
+      "actionKey": "repair|score=repair|guidance=must-turn-biased",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 3272740,
+        "max": 3272740,
+        "median": 3272740
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02160",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 2000043,
+        "max": 3594551,
+        "median": 2000046
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02196",
+      "actionKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "stageId": null,
+      "disposition": "exact-participated-exhausted-negative",
+      "attemptCount": 7,
+      "outcomes": {
+        "exhausted": 7
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 7,
+        "min": 269230,
+        "max": 319366,
+        "median": 272572
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02206",
+      "actionKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "stageId": null,
+      "disposition": "exact-participated-exhausted-negative",
+      "attemptCount": 7,
+      "outcomes": {
+        "exhausted": 7
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 7,
+        "min": 236957,
+        "max": 259894,
+        "median": 239045
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02219",
+      "actionKey": "admissible-order|tieBreak=none|lds=off",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 12499968,
+        "max": 12499968,
+        "median": 12499968
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02258",
+      "actionKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "stageId": null,
+      "disposition": "exact-participated-exhausted-negative",
+      "attemptCount": 7,
+      "outcomes": {
+        "deadline-truncated": 1,
+        "exhausted": 6
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 7,
+        "min": 0,
+        "max": 522501,
+        "median": 521329
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02277",
+      "actionKey": "admissible-order|tieBreak=none|lds=off",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 12499968,
+        "max": 12499968,
+        "median": 12499968
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02458",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 803486,
+        "max": 2000009,
+        "median": 2000006
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02561",
+      "actionKey": "repair|score=repair|guidance=must-turn-biased",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 2571430,
+        "max": 2571430,
+        "median": 2571430
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02835",
+      "actionKey": "repair|score=repair|guidance=must-turn-biased",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 2100024,
+        "max": 2100024,
+        "median": 2100024
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02844",
+      "actionKey": "repair|score=repair|guidance=must-turn-biased",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 6000000,
+        "max": 6000000,
+        "median": 6000000
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02892",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 773432,
+        "max": 2000017,
+        "median": 2000008
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02979",
+      "actionKey": "admissible-order|tieBreak=none|lds=off",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 12499968,
+        "max": 12499968,
+        "median": 12499968
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R02997",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 734095,
+        "max": 2000028,
+        "median": 2000000
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R03109",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 2000001,
+        "max": 3297996,
+        "median": 2000010
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R03251",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 1204888,
+        "max": 2000039,
+        "median": 2000022
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R03323",
+      "actionKey": "repair|score=repair|guidance=standard",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 3,
+      "outcomes": {
+        "deadline-truncated": 3
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 3,
+        "min": 2000000,
+        "max": 2220189,
+        "median": 2000000
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    },
+    {
+      "parentId": "R03354",
+      "actionKey": "admissible-order|tieBreak=none|lds=off",
+      "stageId": null,
+      "disposition": "exact-participated-censored",
+      "attemptCount": 1,
+      "outcomes": {
+        "deadline-truncated": 1
+      },
+      "workSpent": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "nodesExpanded": {
+        "count": 1,
+        "min": 12499968,
+        "max": 12499968,
+        "median": 12499968
+      },
+      "nodeCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      },
+      "workCeilings": {
+        "count": 0,
+        "min": null,
+        "max": null,
+        "median": null
+      }
+    }
+  ],
+  "denominatorNote": "Analysis/dependence cluster = parent. Exposure opportunities are parent-exact-rescuer; repeated attempts remain inside that cluster."
+}
