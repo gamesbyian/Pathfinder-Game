@@ -8,14 +8,14 @@
 // when touching this file or regenerating the committed index.
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { buildPopulationIntegrity, hashPopulation } from './solver-experiment-contract.mjs';
+import { buildPopulationIntegrity, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
 
 const OUT = 'reports/stress/solver-evidence-integrity-index.json';
 const emptyLimits = { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: null };
 const emptyOutcomes = { solved: null, exhaustedNegative: null, nodeLimited: null, workLimited: null, deadlineTruncated: null, errors: null, malformed: null, missing: null, unknown: null };
 
 function read(path) { return JSON.parse(fs.readFileSync(path, 'utf8')); }
-function readIds(path) { return fs.readFileSync(path, 'utf8').split(/\s+/).map(value => value.trim()).filter(Boolean); }
+function readIds(path) { return parseIdentityLines(fs.readFileSync(path, 'utf8')); }
 function ids(document) { return (document.levels ?? []).map(row => String(row.id ?? row.levelId ?? row.level)); }
 function record(evidenceId, overrides) {
   return {
