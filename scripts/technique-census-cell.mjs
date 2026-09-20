@@ -216,7 +216,8 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             : 'exhausted';
 
         return {
-            cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: entry.id ?? null, levelPos: cell.levelPos,
+            cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: entry.id ?? cell.levelId ?? null, levelPos: cell.levelPos,
+            budgetMs: cell.budgetMs,
             techniqueKeys: canonicalTechniqueKeys, variantLabel: cell.variantLabel ?? null,
             pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
             ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget, budgetMs: cell.budgetMs,
@@ -242,6 +243,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
         catch (err) {
             return {
                 cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: cell.levelId ?? null, levelPos: cell.levelPos,
+                budgetMs: cell.budgetMs,
                 techniqueKeys: cell.techniqueKeys, variantLabel: cell.variantLabel ?? null,
                 pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
                 ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget, budgetMs: cell.budgetMs,
