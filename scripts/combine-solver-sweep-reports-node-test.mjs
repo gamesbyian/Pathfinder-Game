@@ -87,6 +87,37 @@ async function main() {
         assert.deepEqual(commaCombined.populationIntegrity.expectedIds, [commaId]);
         console.log('  ✓ comma-bearing expected ids survive sweep-combiner identity parsing');
 
+        const mixedA = path.join(tempDir, 'mixed-a.json');
+        const mixedB = path.join(tempDir, 'mixed-b.json');
+        const mixedOut = path.join(tempDir, 'mixed-out.json');
+        await writeFile(mixedA, JSON.stringify(batchReport({
+            summary: { corpus: 'scope:a', expectedIds: ['b'] },
+            levels: [{ level: 1, id: 'b', ok: true, status: 'success', totalMs: 1, elapsedMs: 1, attempts: [], attemptCount: 0, failedStrategies: [] }],
+        })));
+        await writeFile(mixedB, JSON.stringify(batchReport({
+            summary: { corpus: 'scope', expectedIds: ['a:b'] },
+            levels: [{ level: 1, id: 'a:b', ok: false, status: 'exhausted', totalMs: 1, elapsedMs: 1, attempts: [], attemptCount: 0, failedStrategies: [] }],
+        })));
+        await run([`--in=${mixedA},${mixedB}`, `--out=${mixedOut}`, '--allow-mixed-corpora']);
+        const mixedCombined = JSON.parse(await readFile(mixedOut, 'utf8'));
+        assert.equal(mixedCombined.populationIntegrity.complete, true);
+        assert.equal(mixedCombined.populationIntegrity.expectedCount, 2);
+        assert.equal(mixedCombined.population.identityCodec, 'json-tuple-v1');
+        assert.deepEqual(mixedCombined.populationIntegrity.expectedIds, [
+            '["scope","a:b"]',
+            '["scope:a","b"]',
+        ]);
+        console.log('  ✓ mixed-corpus identities cannot alias across colon placement');
+
+        const mixedExpectedLegacy = path.join(tempDir, 'mixed-expected-legacy.txt');
+        await writeFile(mixedExpectedLegacy, 'scope:a:b\n');
+        await assert.rejects(
+            run([`--in=${mixedA},${mixedB}`, `--out=${path.join(tempDir, 'mixed-legacy-out.json')}`,
+                '--allow-mixed-corpora', `--expected-ids=${mixedExpectedLegacy}`]),
+            /json-tuple-v1/u,
+        );
+        console.log('  ✓ mixed-corpus expected-id files require structured tuple identities');
+
         const exact = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002'], levels: combined.levels });
         assert.equal(exact.complete, true);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels }), /missing results: R00003/);
