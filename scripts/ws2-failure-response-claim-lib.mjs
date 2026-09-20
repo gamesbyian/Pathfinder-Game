@@ -31,7 +31,7 @@ export function buildWs2FailureResponseClaimCapsule(analysis) {
   const route = analysis.decision.route;
   const analysisIdentity = expectedAnalysisIdentity;
   const capsuleCore = {
-    schemaVersion: 1;
+    schemaVersion: 1,
     kind: 'pathfinder-ws2-failure-response-claim-capsule',
     questionId: analysis.questionId,
     claimType: 'routing-discriminator',
