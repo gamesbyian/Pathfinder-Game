@@ -1,6 +1,6 @@
 # Lane A C1 boundary-kinematics preflight 001
 
-> **Status:** active precommitment
+> **Status:** active
 > **Last evidence:** 2026-09-20 — C0 exact labels are complete on the frozen 581-case population; this preflight freezes the first additive C1 representation before inspecting any C1 collision outcome.
 > **Decision:** reuse the existing C0 exact labels and derive one bounded boundary-kinematics signature from frozen prefixes plus raw level portal semantics. No new CP-SAT/reference or solver search is required for this pass.
 > **Remaining gate:** run the frozen C1 reducer on the already-combined C0 exact-label artifact and apply the decision rule below without changing the signature.
