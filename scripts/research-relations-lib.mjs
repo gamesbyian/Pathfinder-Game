@@ -10,7 +10,7 @@ import {
     assertResearchBlock,
     researchBlockEligibility,
 } from './solver-research-block-lineage.mjs';
-import { stableHash } from './solver-experiment-contract.mjs';
+import { researchSemanticHash as stableHash } from './research-semantic-identity-lib.mjs';
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
