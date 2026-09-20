@@ -88,6 +88,4 @@ Measurement opportunities are non-queue. Promote one only for a live ambiguity w
 
 ## Research hygiene
 
-Before reviving history, classify its disposition: **FORM-CLOSED, DESCRIPTOR-CLOSED, CROSS-LEVEL-CLOSED, PARTICIPATION-INVALID, DIRTY-REVERT, POPULATION-LIMITED, ECONOMICS-CLOSED, SEMANTIC-CLOSED, or OPEN-PER-INSTANCE**. Only `SEMANTIC-CLOSED` blocks a materially different form of the same question.
-
-Keep this file short. Active execution belongs in the workstream authority; measurements/chronology belong in dated reports; historical interpretation belongs in the archaeology register.
+Classify historical negatives with the stop taxonomy in [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md); only `SEMANTIC-CLOSED` blocks a materially different form. Active execution stays in workstreams and chronology in reports.
