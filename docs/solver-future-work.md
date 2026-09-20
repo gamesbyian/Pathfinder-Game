@@ -24,10 +24,10 @@ Eligible only after the active premise gate above is positive.
 | Dependency-conditioned repair neighborhood | Current exact-labelled/repair-retreat evidence shows rescue requires revising an interior/early commitment outside the append-only neighborhood; trace the coupled commitment before designing a new repair operator |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
-| Parity descendants | Only after `WS2-PARITY-PHASE-DISTANCE` / `WS2-CHECKERBOARD-CAPACITY` earn incidence and soundness: consider scoring/routing, dynamic phase connectivity, hard prune, repair residual, all-gates exit or hint-enumeration reuse exactly as gated in [the parity preflight](solver-parity-phase-capacity-preflight.md) |
 
 ## Deferred plan closeouts
 
+- **Parity descendants:** scoring/routing, phase connectivity, pruning, repair, gate-exit and hint reuse reopen only through the gates in [the parity preflight](solver-parity-phase-capacity-preflight.md).
 - **[Failure evidence](solver-failure-evidence-research-integration-plan.md):** P3 -> `WS2-FAILURE-RESPONSE-RECONNAISSANCE` (data-gated); P4A -> `WS2-CLASS3-DOSE-EXPOSURE`; P4B -> `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION`; P7 needs repeated compatible populations.
 - **[Search loss](solver-search-loss-evidence-implementation-plan.md):** P8 needs genuine recurring rich production; P9 needs explicit first-loss selection.
 - **[Population/family](solver-research-population-family-integration-plan.md):** after two pilots, run P7.
