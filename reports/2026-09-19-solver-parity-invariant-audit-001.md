@@ -1,6 +1,9 @@
 # Solver parity invariant audit
 
-> **Status:** audit complete; live premise work routed to canonical authorities
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — H1/H2 production-inert shadow observers and the combined fixed-work corpus probe are implemented; production decisions remain unchanged.
+> **Decision:** ordinary parity handling is sound in its current domains, while phase-conditioned distance and checkerboard-split connectivity capacity merit bounded premise measurement before any production treatment.
+> **Remaining gate:** run the combined H1/H2 observer on a representative fixed-work population, interpret opportunity through the canonical resolution machinery, then advance only premises that earn replay/differential/economic gates.
 > **Started:** 2026-09-19
 > **Branch:** `chatgpt/solver-parity-invariant-audit-2026-09-19`
 > **Scope:** solver correctness, feasibility, search ordering, state identity, scheduling, repair, portal semantics, and research surfaces where checkerboard/grid parity or equivalent bipartite-walk invariants can affect decisions.
