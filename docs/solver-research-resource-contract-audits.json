@@ -98,9 +98,8 @@
       ],
       "producerAuthority": [
         "docs/variant-level-research.md",
-        "data/families/README.md",
-        "scripts/family-index.mjs",
-        "family generation/run manifests"
+        "scripts/family-generate.mjs",
+        "scripts/family-index.mjs"
       ],
       "selectionConditioning": [
         "generation is selected by operator eligibility, placement attempts, witness/referee checks and deduplication",
@@ -233,11 +232,12 @@
         "treatment-lineage exposure state"
       ],
       "producerAuthority": [
-        "data/stress/README.md",
-        "scripts/stress/generate.mjs and scripts/stress/generate-random.mjs",
+        "docs/solver-research-generation.md",
         "docs/solver-corpus-selection-provenance.md",
-        "scripts/corpus-selection-lineage.mjs for the current standing C1/C2 selection strata",
-        "decision-bearing population manifests/reports"
+        "scripts/stress/generate.mjs",
+        "scripts/stress/generate-random.mjs",
+        "scripts/stress/generate-topology.mjs",
+        "scripts/corpus-selection-lineage.mjs"
       ],
       "selectionConditioning": [
         "generator acceptance is conditioned on witness generation, mechanic placement, schema/referee validity and novelty retention",
