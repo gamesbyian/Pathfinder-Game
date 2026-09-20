@@ -103,6 +103,7 @@ assert.match(unitTopology, /RESEARCH_UNIT_TOPOLOGY_FIELDS/u);
 assert.doesNotMatch(unitTopology, /WS2|Class-3|failure-response|reserve-starvation/u,
   'shared unit topology must own structural vocabulary only, not specialist unit meanings');
 
+const ws2AnalysisContract = source('scripts/ws2-failure-response-analysis-contract-lib.mjs');
 assert.match(ws2AnalysisContract, /research-unit-topology-lib\.mjs/u,
   'WS2 contract must use the shared unit-topology shape');
 
@@ -113,7 +114,6 @@ assert.match(class3DoseAnalysis, /research-unit-topology-lib\.mjs/u,
 const ws2Recon = source('scripts/ws2-failure-response-reconnaissance.mjs');
 assert.match(ws2Recon, /research-resolution-envelope-lib\.mjs/u);
 
-const ws2AnalysisContract = source('scripts/ws2-failure-response-analysis-contract-lib.mjs');
 assert.match(ws2AnalysisContract, /research-independence-vector-lib\.mjs/u);
 
 const reserveStarvation = source('scripts/analyze-reserve-starvation-probe.mjs');
