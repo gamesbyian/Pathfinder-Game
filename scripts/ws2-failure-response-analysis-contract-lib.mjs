@@ -1,6 +1,7 @@
 import { canonicalResearchValue, researchSemanticHash } from './research-semantic-identity-lib.mjs';
 import { RESEARCH_OBSERVABILITY_AXES } from './research-resolution-envelope-lib.mjs';
 import { researchIndependenceVectorIssues } from './research-independence-vector-lib.mjs';
+import { researchUnitTopologyIssues } from './research-unit-topology-lib.mjs';
 
 export const WS2_FAILURE_RESPONSE_ROUTES = Object.freeze([
   'rejection-counterfactual',
@@ -21,6 +22,7 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   if (contract.decisionPurpose !== 'scientific-question-discrimination') issues.push('decisionPurpose');
   if (contract.independentUnit !== 'parent') issues.push('independentUnit');
   const topology = contract.unitTopology;
+  issues.push(...researchUnitTopologyIssues(topology));
   if (topology?.observationUnit !== 'failure-response-record') issues.push('unitTopology.observationUnit');
   if (topology?.opportunityUnit !== 'parent') issues.push('unitTopology.opportunityUnit');
   if (topology?.dependenceClusterUnit !== 'parent') issues.push('unitTopology.dependenceClusterUnit');
