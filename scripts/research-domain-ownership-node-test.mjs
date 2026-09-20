@@ -58,8 +58,11 @@ for (const path of [
   'scripts/stress/generate-topology.mjs',
   'scripts/research-integration-audit-lib.mjs',
 ]) {
-  assert.match(source(path), /research-evaluation-evidence-role-lib\.mjs/u,
+  const consumer = source(path);
+  assert.match(consumer, /research-evaluation-evidence-role-lib\.mjs/u,
     `${path} must use the shared evaluation evidence-role owner`);
+  assert.doesNotMatch(consumer, /\[['"]development['"],\s*['"]confirmation['"],\s*['"]transfer['"]\]/u,
+    `${path} must not redeclare the shared evaluation evidence-role vocabulary`);
 }
 
 const statusIndex = source('scripts/research-status-index-lib.mjs');
