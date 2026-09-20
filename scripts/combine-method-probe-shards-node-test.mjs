@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -110,7 +110,7 @@ try {
   assert.equal(mismatch.status, 1);
   assert.match(mismatch.stderr, /metadata mismatch/u);
 } finally {
-  // Temporary test roots are under the OS temp directory and disappear with the test process.
+  rmSync(mismatchTemp, { recursive: true, force: true });
 }
 
 console.log('combine method-probe shard outcome tests passed');
