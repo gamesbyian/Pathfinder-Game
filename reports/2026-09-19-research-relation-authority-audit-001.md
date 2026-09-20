@@ -201,6 +201,59 @@ The integration audit now additionally verifies:
 
 Logical/non-repository decision refs remain allowed, and family-scope IDs are not guessed against a registry that does not exist.
 
+### 11. Question dossier answer versus constraint edges: preserve relation type
+
+The dossier previously exposed one `evidenceRefs` union containing both:
+
+- reports/docs that answered the question;
+- paths that merely constrain the question.
+
+That erased relation semantics.
+
+The dossier now exposes:
+
+- `answerRefs`;
+- `constraintRefs`;
+- legacy `evidenceRefs` only as a compatibility union, explicitly labelled as such.
+
+### 12. Calibration edges: reciprocal relation, enforced both ways
+
+The registry uses `calibratedBy` and `calibrates` as reciprocal views of one relation.
+
+A hostile graph check found one missing inverse edge:
+
+`WS2-HOMOTOPY-COMPLETION-CLASSES calibratedBy WS2-OPEN-PATH-TOPOLOGY-SIGNATURE`
+
+without the corresponding `calibrates` edge.
+
+The inverse has been restored and registry validation now requires reciprocity.
+
+By contrast, `triggeredBy` and `implies` are **not** strict inverses in the live graph and remain deliberately asymmetric.
+
+### 13. Resource-contract audits: validate only real foreign keys
+
+The resource-contract audit registry crosses into:
+
+- research asset IDs;
+- required audited-resource IDs;
+- audit-authority reports;
+- historical-claim blast-radius reports;
+- some repository-shaped producer-authority paths.
+
+The integration audit now validates those actual foreign keys and repository paths.
+
+Descriptive producer-authority strings remain prose. They are not coerced into fake path relations.
+
+### 14. Asset validation ownership: reuse the real owner
+
+During this pass the integration audit briefly duplicated some asset-registry checks.
+
+That was corrected.
+
+`solver-research-data-assets-lib.mjs` remains the owning validator for asset IDs, related assets, relationship targets, tracked locations and authority paths. The integration audit consumes that validator and adds only genuinely cross-registry checks.
+
+This is the same architectural rule at the validator level: do not build connective-tissue copies of an existing bone.
+
 ## Relationships deliberately left inferred or descriptive
 
 ### Experiment -> question
