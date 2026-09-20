@@ -97,3 +97,12 @@ export function ws2FailureResponseAnalysisContractIdentity(contract) {
   const canonical = JSON.stringify(stable(contract));
   return `sha256:${createHash('sha256').update(canonical).digest('hex')}`;
 }
+
+
+export function ws2FailureResponseAnalysisIdentity(analysis) {
+  if (!analysis || typeof analysis !== 'object' || Array.isArray(analysis)) {
+    throw new Error('analysis must be an object');
+  }
+  const { analysisIdentity: _identity, ...core } = analysis;
+  return `sha256:${createHash('sha256').update(JSON.stringify(stable(core))).digest('hex')}`;
+}
