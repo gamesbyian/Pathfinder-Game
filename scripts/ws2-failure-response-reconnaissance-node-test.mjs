@@ -9,6 +9,7 @@ import { ws2FailureResponseInvalidationImpact } from './ws2-failure-response-cla
 import {
   validateWs2FailureResponseAnalysisContract,
   ws2FailureResponseAnalysisContractIdentity,
+  ws2FailureResponseAnalysisIdentity,
 } from './ws2-failure-response-analysis-contract-lib.mjs';
 
 const contractPath = 'reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json';
@@ -186,6 +187,21 @@ try {
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.notEqual(tamperedClaim.status, 0);
   assert.match(`${tamperedClaim.stdout}${tamperedClaim.stderr}`, /valid analysisIdentity matching analysis content/u);
+  const contractDivergentPath = path.join(temp, 'contract-divergent-analysis.json');
+  const contractDivergent = {
+    ...routedResult,
+    analysisContract: { ...routedResult.analysisContract, identityHash: `sha256:${'f'.repeat(64)}` },
+  };
+  contractDivergent.analysisIdentity = ws2FailureResponseAnalysisIdentity(contractDivergent);
+  writeFileSync(contractDivergentPath, JSON.stringify(contractDivergent));
+  const contractDivergentClaim = spawnSync(process.execPath, [
+    'scripts/ws2-failure-response-claim.mjs',
+    `--analysis=${contractDivergentPath}`,
+    `--out=${path.join(temp, 'contract-divergent-claim.json')}`,
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.notEqual(contractDivergentClaim.status, 0);
+  assert.match(`${contractDivergentClaim.stdout}${contractDivergentClaim.stderr}`, /analysisContract\.identityHash/u,
+    'a rehashed analysis cannot silently replace the frozen pre-outcome contract');
   assert.equal(claimRun.status, 0, claimRun.stderr);
   const claim = JSON.parse(await import('node:fs').then(({ readFileSync }) => readFileSync(claimPath, 'utf8')));
   assert.equal(claim.kind, 'pathfinder-ws2-failure-response-claim-capsule');
