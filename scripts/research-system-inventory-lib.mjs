@@ -571,7 +571,10 @@ export function renderResearchSystemBrief(inventory) {
         for (const row of liveQueue) {
             const id = row.workstreamId == null ? 'workstream ?' : `WS${row.workstreamId}`;
             const questionRef = row.questionRef ? ` / ${row.questionRef}` : '';
-            lines.push(`- ${id}${questionRef} [${compactBriefValue(row.state)}]: ${compactBriefValue(row.question)}; gate: ${compactBriefValue(row.remainingGate)}`);
+            const questionLifecycle = row.questionRef
+                ? `; question: ${compactBriefValue(row.questionState)} (${compactBriefValue(row.questionExecutionRelation)})`
+                : '';
+            lines.push(`- ${id}${questionRef} [${compactBriefValue(row.state)}]: ${compactBriefValue(row.question)}; gate: ${compactBriefValue(row.remainingGate)}${questionLifecycle}`);
         }
     }
 
