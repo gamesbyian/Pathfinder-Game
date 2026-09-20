@@ -2,7 +2,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-19.
+> **Reconciled:** 2026-09-20.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability memory: [`capability memory`](solver-capability-memory.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
@@ -29,7 +29,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 #### Lane A — separator / decomposition
 
-**C0 MIXED (expected); PROCEED TO C1.** 121/390 balanced width<=4 Class-5 levels. Corrected intended C0 (cut + side/region) reuses the 581 frozen labels: 3 groups / 10 rows mix LIVE/DEAD across 3 independent parents, with 487/546 decisive rows still in repeated signatures. Next: precommit C1. [`preflight`](solver-separator-dynamic-interface-contract-preflight.md) · [`result`](../reports/2026-09-19-lane-a-c0-signature-collision-result-001.md)
+**C1 MIXED + REPETITION-SUPPORTED; PROCEED TO C2.** The same 581 frozen cases / 546 decisive exact labels were reanalyzed with the prospectively frozen boundary-kinematics signature, with no new solver/reference compute. C1 leaves 195/546 decisive rows (35.7%) in repeated signatures across 58 independent parents, but one 2-row same-parent signature on R02996 still mixes LIVE/DEAD. C1 is therefore insufficient without being representation-explosive. Next: precommit C2 global accounting on the same frozen population; do not edit C1 to repair the observed collision. [`contract`](solver-separator-dynamic-interface-contract-preflight.md) · [`C1 result`](../reports/2026-09-20-lane-a-c1-boundary-kinematics-result-001.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
