@@ -70,6 +70,13 @@ assert.equal(
     inventory.diagnostics.fragilePlanLifecycleCount,
     inventory.planLifecycle.filter(row => row.fragileProse).length,
 );
+assert.equal(
+    inventory.diagnostics.unknownLifecycleDispositionCount,
+    inventory.planLifecycle.filter(row => row.lifecycleDisposition === 'unknown').length,
+);
+assert.ok(inventory.planLifecycle.some(row =>
+    row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md' &&
+    row.lifecycleDisposition === 'active-execution'));
 
 const architectureView = researchSystemInventoryView(inventory, 'architecture');
 assert.ok(Array.isArray(architectureView.relations));
