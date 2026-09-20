@@ -85,7 +85,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
             errors.push(`workstream ${row.workstreamId ?? row.topicId} references unknown research question ${row.questionRef}`);
             continue;
         }
-        const queueActive = String(row.status ?? row.state ?? '').toLowerCase().includes('active');
+        const queueActive = row.executionState === 'active' || row.status === 'active';
         const questionState = String(question.state ?? '').toLowerCase();
         if (queueActive && /^(?:closed|concluded|superseded|cancelled)/u.test(questionState)) {
             errors.push(`active workstream ${row.workstreamId ?? row.topicId} references terminal research question ${row.questionRef} (${question.state})`);
