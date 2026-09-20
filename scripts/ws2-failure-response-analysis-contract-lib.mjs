@@ -80,6 +80,12 @@ export function ws2FailureResponseAnalysisContractIssues(contract) {
   if (contract.adaptiveLineage?.descendantEvidenceRole !== 'development-until-new-precommitment') {
     issues.push('adaptiveLineage.descendantEvidenceRole');
   }
+  if (contract.independenceVector?.sampleData !== 'parent-clustered; repeated records/attempts within one parent are dependent') {
+    issues.push('independenceVector.sampleData');
+  }
+  if (contract.independenceVector?.instrumentImplementation !== 'shared compact failure-response implementation') {
+    issues.push('independenceVector.instrumentImplementation');
+  }
   if (contract.treatmentFidelity !== 'not-applicable-routing-screen-no-treatment') issues.push('treatmentFidelity');
   if (!Array.isArray(contract.primaryQuantities) || contract.primaryQuantities.length === 0) issues.push('primaryQuantities');
   if (!contract.stopRule || typeof contract.stopRule !== 'string') issues.push('stopRule');
