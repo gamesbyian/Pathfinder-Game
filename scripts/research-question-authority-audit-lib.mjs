@@ -2,7 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+    RESEARCH_QUESTION_STATES,
     loadResearchQuestionRegistry,
+    researchQuestionLifecycleClass,
     validateResearchQuestionRegistry,
 } from './research-question-relations-lib.mjs';
 
@@ -21,6 +23,25 @@ export function auditResearchQuestionAuthorities(root = process.cwd()) {
 
     const workstreamsPath = path.join(root, 'docs/solver-optimization-workstreams.md');
     const workstreamsText = existsSync(workstreamsPath) ? readFileSync(workstreamsPath, 'utf8').toLowerCase() : '';
+    const questionDocPath = path.join(root, 'docs/solver-research-question-relations.md');
+    if (existsSync(questionDocPath)) {
+        const questionDoc = readFileSync(questionDocPath, 'utf8');
+        const stateSection = questionDoc.match(/## State semantics([\s\S]*?)(?:\n## |$)/u)?.[1] ?? '';
+        const documentedStates = new Set(
+            [...stateSection.matchAll(/`((?:active|closed|concluded|deferred)[a-z-]*|mixed)`/gu)]
+                .map(match => match[1]),
+        );
+        for (const state of RESEARCH_QUESTION_STATES) {
+            if (!documentedStates.has(state)) {
+                errors.push(`question-relations state semantics omits canonical state ${state}`);
+            }
+        }
+        for (const state of documentedStates) {
+            if (!RESEARCH_QUESTION_STATES.includes(state)) {
+                errors.push(`question-relations state semantics names non-canonical state ${state}`);
+            }
+        }
+    }
     const liveText = LIVE_AUTHORITY_PATHS
         .filter(relative => existsSync(path.join(root, relative)))
         .map(relative => readFileSync(path.join(root, relative), 'utf8').toLowerCase())
@@ -44,18 +65,19 @@ export function auditResearchQuestionAuthorities(root = process.cwd()) {
         if (state === 'deferred-reopen' && !String(reopensOn ?? '').trim()) {
             errors.push(`${id} is deferred-reopen but has no reopen condition`);
         }
-        if (state.startsWith('active') && reopensOn != null) {
+        const lifecycle = researchQuestionLifecycleClass(state);
+        if (lifecycle === 'active' && reopensOn != null) {
             warnings.push({
                 id,
                 kind: 'active-with-reopen-condition',
                 detail: 'Active questions normally should describe their current gate directly rather than retain a deferred reopen condition.',
             });
         }
-        if (state.startsWith('active') && !workstreamsText.includes(id.toLowerCase())) {
+        if (lifecycle === 'active' && !workstreamsText.includes(id.toLowerCase())) {
             errors.push(`${id} is active but its stable question id is absent from solver-optimization-workstreams.md`);
         }
 
-        if (state.startsWith('active') || state === 'deferred-reopen') {
+        if (lifecycle === 'active' || lifecycle === 'deferred') {
             const needles = [id, ...aliases]
                 .map(value => String(value).trim().toLowerCase())
                 .filter(value => value.length >= 3);
