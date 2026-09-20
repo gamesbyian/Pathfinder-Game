@@ -128,3 +128,13 @@ Do not migrate other research producers merely to increase envelope coverage.
 A third consumer should adopt the primitive only if it currently rebuilds the same required-axis/blocker/readiness semantics or if a real null/negative interpretation is vulnerable to an observability confusion.
 
 The abstraction has earned existence. It has not earned ubiquity.
+
+## Operational hardening after the first extraction
+
+The first integration pass was then tightened in three ways:
+
+1. specialist decisions are now gated on `resolutionStatus=resolution-ready`, so a blocked required axis cannot coexist with a positive specialist readiness flag;
+2. blocker axes project to default remediation classes such as `allocation-or-wiring`, `instrumentation-or-reference`, or `work-envelope-or-recovery`, making unobservability directly actionable without making remediation authoritative;
+3. `research:resolution-view` provides a read-only cross-producer summary of validated envelopes, blockers and remediation classes.
+
+The vector semantics also caught an early implementation mistake: "any abstention" had briefly been allowed to contaminate the censoring axis. The reserve producer now keeps participation, measurement support, coverage and censoring blockers orthogonal.
