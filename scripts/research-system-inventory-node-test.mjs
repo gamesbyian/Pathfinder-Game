@@ -9,7 +9,7 @@ assert.equal(inventory.authority.kind, 'derived-read-only');
 assert.equal(inventory.authority.priorityAuthority, 'docs/solver-optimization-workstreams.md');
 assert.ok(inventory.currentState.queueEntries > 0, 'inventory must expose current workstream state');
 assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-question state');
-assert.ok(inventory.frontDoorInputs.liveQueue.some(row => row.workstreamId === 2));
+assert.ok(inventory.frontDoorInputs.liveQueue.some(row => String(row.workstreamId) === '2'));
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
 assert.ok(inventory.frontDoorInputs.unfinishedLifecycle.some(row => row.path === 'docs/solver-research-system-consolidation-and-epistemic-coverage-plan.md'));
 assert.ok(Array.isArray(inventory.frontDoorInputs.structuredCloseouts));
