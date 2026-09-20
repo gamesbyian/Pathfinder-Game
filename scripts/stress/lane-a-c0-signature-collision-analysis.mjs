@@ -28,8 +28,13 @@ const rows = document.rows ?? document.levels ?? document.results ?? [];
 if (!Array.isArray(rows) || rows.length === 0) throw new Error(`no rows found in ${IN}`);
 
 const cutSignature = row => {
+    const structured = row?.source?.cutSignature;
+    if (typeof structured === 'string' && structured) return structured;
+    // Historical schema-v2 rows produced before structured source metadata was preserved recover
+    // the frozen C0 signature from the legacy case-id disambiguator. New rows must not depend on
+    // this delimiter encoding as their semantic identity boundary.
     const marker = String(row.caseId ?? '').indexOf('::');
-    if (marker === -1) throw new Error(`case id missing cutSignature disambiguator: ${row.caseId}`);
+    if (marker === -1) throw new Error(`row has no structured source.cutSignature or legacy case-id disambiguator: ${row.caseId}`);
     return row.caseId.slice(0, marker);
 };
 
