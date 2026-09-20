@@ -26,14 +26,17 @@ The capsule is deliberately small. Version 1 carries only the already-common lif
 - current decision;
 - remaining gate;
 - exact existing research-question / premise / measurement-opportunity joins when present;
-- evidence role when it is already meaningful for the report.
+- evidence role when it is already meaningful for the report;
+- population identity, selection basis, and inference scope when the conclusion depends on them;
+- local claim references and source/derivation artifacts when the report is downstream of machine evidence;
+- prospective expectation, surprise, or anomaly labels when they were actually recorded.
 
 It does **not** replace the report body, experiment contract, claim capsule, population/selection detail, or priority authority. Specialist semantics remain in their existing owners.
 
 Example:
 
 ```markdown
-<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-negative","lastEvidenceDate":"2026-09-19","decision":"close the tested form","remainingGate":"none","joins":{"researchQuestion":"WS2-...","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"confirmation"} -->
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-negative","lastEvidenceDate":"2026-09-19","decision":"close the tested form","remainingGate":"none","joins":{"researchQuestion":"WS2-...","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"confirmation","scope":{"populationIdentity":"sha256:...","selection":"prespecified","inferenceScope":"recorded confirmation population only"},"claimRefs":["claim:..."],"sourceArtifacts":["reports/...json"],"prospective":{"expectation":null,"surprise":null,"anomaly":null}} -->
 ```
 
 `research:system-inventory -- --view=brief-inputs` consumes valid capsules as a bounded recent-closeout feed and reports malformed capsules as diagnostics. This lets generated retrieval use structured state without parsing decision prose while keeping the Markdown report authoritative for its own evidence narrative.
