@@ -812,8 +812,11 @@ jobs:
         run: |
           node_ceiling=null; [ "$NODE_BUDGET_ADVISORY_ONLY" = true ] || node_ceiling="${NODE_BUDGET:-null}"
           work_ceiling=null; [ "$STRICT_TOTAL_WORK_BUDGET" != true ] || work_ceiling="${WORK_BUDGET:-null}"
+          observed_hash=null
+          [ -f logs/solver-targeted-sweep/combined.json ] && observed_hash=$(node -p "JSON.stringify(require('./logs/solver-targeted-sweep/combined.json').configurationHash)")
           cat > logs/solver-targeted-sweep/experiment-contract-spec.json <<SPEC
           {"configuration": {"corpus": "$CORPUS", "nodeBudget": ${NODE_BUDGET:-null}, "nodeBudgetAdvisoryOnly": $NODE_BUDGET_ADVISORY_ONLY, "workBudget": ${WORK_BUDGET:-null}, "budgetMs": ${BUDGET_MS:-null}, "strictTotalWorkBudget": $STRICT_TOTAL_WORK_BUDGET, "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS"},
+          "configurationHash": $observed_hash,
           "workflowFamily": "level-blind-targeted-sweep", "producer": "solver-level-blind-targeted-sweep.yml", "entrypoint": "scripts/level-blind-capability-sweep.mjs",
           "population": {"kind": "explicit-ids", "identityBasis": "stable-level-id"},
           "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $STRICT_TOTAL_WORK_BUDGET, "producerFamily": "level-blind-targeted-sweep", "schedulerMode": "level-blind-capability"},
