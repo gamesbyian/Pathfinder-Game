@@ -51,6 +51,14 @@ const closeoutInput = {
   premiseRefs: ['P032', 'P204'],
   measurementOpportunity: 'MO-002',
   evidenceRole: 'confirmation',
+  populationIdentity: 'sha256:fixture-population',
+  selection: 'prespecified outcome-blind fixture selection',
+  inferenceScope: 'fixture parents under the recorded protocol',
+  claimRefs: ['claim:fixture-1'],
+  sourceArtifacts: ['reports/fixture-analysis.json'],
+  expectation: 'the tested form should separate the fixture arms',
+  surprise: 'none',
+  anomaly: 'none',
 };
 const closeout = createResearchCloseoutCapsule(closeoutInput);
 assert.equal(closeout.schema, RESEARCH_CLOSEOUT_SCHEMA);
@@ -58,6 +66,18 @@ assert.deepEqual(closeout.joins, {
   researchQuestion: 'WS2-FIXTURE',
   premiseRefs: ['P032', 'P204'],
   measurementOpportunity: 'MO-002',
+});
+assert.deepEqual(closeout.scope, {
+  populationIdentity: 'sha256:fixture-population',
+  selection: 'prespecified outcome-blind fixture selection',
+  inferenceScope: 'fixture parents under the recorded protocol',
+});
+assert.deepEqual(closeout.claimRefs, ['claim:fixture-1']);
+assert.deepEqual(closeout.sourceArtifacts, ['reports/fixture-analysis.json']);
+assert.deepEqual(closeout.prospective, {
+  expectation: 'the tested form should separate the fixture arms',
+  surprise: 'none',
+  anomaly: 'none',
 });
 const encodedCloseout = formatResearchCloseoutCapsule(closeoutInput);
 assert.match(encodedCloseout, /^<!-- research-closeout \{/u);
@@ -68,6 +88,14 @@ assert.throws(() => createResearchCloseoutCapsule({
   ...closeoutInput,
   premiseRefs: 'P032',
 }), /premiseRefs must be an array/);
+assert.throws(() => createResearchCloseoutCapsule({
+  ...closeoutInput,
+  claimRefs: 'claim:fixture-1',
+}), /claimRefs must be an array/);
+assert.throws(() => createResearchCloseoutCapsule({
+  ...closeoutInput,
+  inferenceScope: 'line one\nline two',
+}), /single line/);
 assert.throws(() => parseResearchCloseoutCapsule(
   '<!-- research-closeout {"schema":"pathfinder.research-closeout/v0"} -->'
 ), /unsupported research-closeout schema/);
