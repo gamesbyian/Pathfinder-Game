@@ -11,6 +11,7 @@ import {
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
 import { buildQuestionDossier } from './research-question-dossier-lib.mjs';
 import { GENERATION_METHODS, GENERATION_SUITES, crossConstructionStatus } from './research-level-generation-lib.mjs';
+import { isResearchEvaluationEvidenceRole } from './research-evaluation-evidence-role-lib.mjs';
 import { validateSolverResearchDataAssets } from './solver-research-data-assets-lib.mjs';
 
 function refIds(question, keys) {
@@ -178,14 +179,13 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
     }
 
-    const validEvidenceRoles = new Set(['development', 'confirmation', 'transfer']);
     for (const suite of Object.values(GENERATION_SUITES)) {
         for (const method of suite.methods ?? []) {
             if (!GENERATION_METHODS[method]) errors.push(`generation suite ${suite.id} references unknown method ${method}`);
         }
         for (const [method, role] of Object.entries(suite.defaultEvidenceRoles ?? {})) {
             if (!(suite.methods ?? []).includes(method)) errors.push(`generation suite ${suite.id} assigns a role to non-member method ${method}`);
-            if (!validEvidenceRoles.has(role)) errors.push(`generation suite ${suite.id} uses invalid evidence role ${role}`);
+            if (!isResearchEvaluationEvidenceRole(role)) errors.push(`generation suite ${suite.id} uses invalid evidence role ${role}`);
         }
     }
     const transferPair = GENERATION_SUITES['transfer-pair'];
