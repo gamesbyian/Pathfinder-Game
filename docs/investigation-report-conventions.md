@@ -15,6 +15,29 @@ Place immediately after the title:
 
 Use those status values exactly. Put implementation detail in `Decision` or the body, not free-form status text.
 
+### Structured closeout capsule
+
+For new or materially revised reports whose conclusion should feed current-state retrieval, add a machine-readable closeout capsule immediately after the human status/join metadata. Use `formatResearchCloseoutCapsule` from `scripts/investigation-report-metadata.mjs`; do not invent another report registry or duplicate specialist experiment payloads.
+
+The capsule is deliberately small. Version 1 carries only the already-common lifecycle/join meanings:
+
+- canonical report status;
+- last-evidence date;
+- current decision;
+- remaining gate;
+- exact existing research-question / premise / measurement-opportunity joins when present;
+- evidence role when it is already meaningful for the report.
+
+It does **not** replace the report body, experiment contract, claim capsule, population/selection detail, or priority authority. Specialist semantics remain in their existing owners.
+
+Example:
+
+```markdown
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-negative","lastEvidenceDate":"2026-09-19","decision":"close the tested form","remainingGate":"none","joins":{"researchQuestion":"WS2-...","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"confirmation"} -->
+```
+
+`research:system-inventory -- --view=brief-inputs` consumes valid capsules as a bounded recent-closeout feed and reports malformed capsules as diagnostics. This lets generated retrieval use structured state without parsing decision prose while keeping the Markdown report authoritative for its own evidence narrative.
+
 When a report is materially about an entry in an existing structured research registry, add the corresponding stable join metadata immediately below the core status block:
 
 ```markdown
