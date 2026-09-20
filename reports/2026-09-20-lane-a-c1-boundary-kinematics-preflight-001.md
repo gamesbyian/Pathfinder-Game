@@ -33,38 +33,64 @@ Exactly the C0 population:
 
 The 35 C0 timeout/abstain rows remain abstentions. C1 must not rerun them merely to improve support after seeing the new grouping.
 
+## Pre-outcome semantic correction
+
+The first helper draft interpreted “crossing cell(s)” as literal sampled-prefix visits to the min-cut cells. That is inconsistent with Lane A's own frozen-population definition: `reports/2026-09-18-lane-a-frozen-prefix-stage1-canary-001.md` established that a genuine interface crossing is a transition between `gateSideCells` and `remainderSideCells`, and a separator cell need not appear as a recorded waypoint.
+
+That mismatch was caught before the corrected C1 outcome was inspected.
+
+C1 therefore uses the interface partition itself. Literal cut-cell incidence remains one bounded component of the signature, but it is not the crossing detector.
+
 ## Frozen C1 signature
 
-C1 starts with C0's `levelId + sorted cutCells` and adds a bounded local state for every cut cell.
+C1 starts with the intended C0 state: geometric cut identity plus the frozen prefix endpoint's current interface region (`gate`, `remainder`, or `cut`).
 
-For each cut cell, record:
+It adds three bounded kinematic components derived from the current level, interface partition and frozen prefix.
 
-- cell coordinate;
-- whether the frozen prefix uses it;
-- every local visit as an `(entry, exit)` pair;
-- entry/exit token from `N`, `S`, `E`, `W`, `portal`, `start`, `end`;
-- whether any local incident transition is a portal transition.
+### 1. Side-to-side crossing-event shapes
 
-Visit tuples are sorted within a cut cell. Global temporal ordering of different cut crossings is deliberately discarded.
+Scan the prefix against `gateSideCells` / `remainderSideCells`. Whenever the last classified side changes, record one local crossing event:
 
-Portal transitions are identified from the level's actual portal map **before** cardinal geometry. This matters because a valid portal pair may occupy geometrically adjacent cells; adjacency alone cannot classify a transition soundly.
+- from-side and to-side;
+- any intervening literal cut cells;
+- the move-token sequence through that local crossing (`N/S/E/W/portal`);
+- incoming heading immediately before the crossing segment;
+- outgoing heading immediately after it;
+- whether the crossing segment contains a portal jump.
+
+Crossing events are sorted as a multiset. Their global temporal order is deliberately discarded at C1.
+
+### 2. Cut-cell local incidence
+
+For every cut cell, record its local prefix visits with:
+
+- incoming/outgoing move token;
+- incoming/outgoing interface region.
+
+These visit records are also sorted locally rather than preserving full path chronology.
+
+### 3. Crossing-relevant portal-pair state
+
+For portal pairs whose endpoints occupy different interface regions, record the canonical endpoint pair and whether the frozen prefix has consumed it, including canonical direction of use.
+
+Portal transitions are identified from the level's actual portal map **before** cardinal geometry. Adjacent portal endpoints therefore remain portal jumps rather than being misclassified as ordinary grid steps.
 
 ### Deliberate omissions
 
 C1 does not include:
 
 - full prefix identity or history;
-- global ordering of separator crossings;
+- global temporal ordering among separator crossings;
 - exact length/intersection used or remaining;
 - outstanding global obligation accounting;
-- mutable filter/flipper/portal state beyond whether the local boundary transition itself is a portal jump;
+- mutable filter/flipper state and portal state unrelated to this interface;
 - F3/topological history tokens.
 
 Those belong to later C2-C4 layers. Adding them now would convert a nested falsifier into feature shopping.
 
 ## Frozen implementation
 
-`scripts/stress/lane-a-boundary-kinematics-lib.mjs` owns the C1 representation.
+`scripts/stress/lane-a-boundary-kinematics-lib.mjs` owns the corrected side-partition-aware C1 representation.
 
 `scripts/stress/lane-a-c1-boundary-kinematics-analysis.mjs` joins existing exact-label rows to the frozen case set and corpus, derives C1 signatures, and passes decisive rows through the shared signature-collision reducer.
 
@@ -81,7 +107,7 @@ Call C1 **repetition-supported** only when both are true:
 
 These thresholds are frozen before C1 outcome inspection. They are intentionally coarse. They ask whether C1 still compresses a meaningful slice of the already-large C0 population rather than rewarding purity created by almost identifying each prefix.
 
-Also report signature byte-size distribution, boundary-visit count and prefix-length distribution as compression diagnostics. Byte count is a proxy only, not the scientific decision rule.
+Also report signature byte-size distribution, crossing-event count, cut-visit count and prefix-length distribution as compression diagnostics. Byte count is a proxy only, not the scientific decision rule.
 
 ## Fixed decision rule
 
@@ -131,4 +157,4 @@ If confirmation later succeeds, the next consumer remains the smallest local int
 
 ## Outcome blindness
 
-This report, the signature helper, its tests and the reducer were committed before C1 collision outcomes were inspected. The two known C0 mixed-parent examples were used only to understand the type of boundary information C0 omitted; their LIVE/DEAD assignment was not used to select C1 fields.
+This report's corrected signature definition, helper, tests and reducer were committed before the corrected C1 collision outcome was inspected. A discarded draft treated literal cut-waypoint incidence as the crossing detector; the repo's own pre-existing Stage-1 side-transition contract falsified that implementation assumption before any corrected C1 verdict. No LIVE/DEAD assignment was used to choose the corrected C1 fields.
