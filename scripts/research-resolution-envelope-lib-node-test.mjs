@@ -11,12 +11,13 @@ const ready = buildResearchResolutionEnvelope({
   questionId: 'Q1',
   liveRivals: ['allocation', 'representation'],
   discriminatingObservable: 'decision-point exposure and counterfactual retention',
-  requiredAxes: ['eligibility', 'reach', 'participation', 'measurementSupport'],
+  requiredAxes: ['eligibility', 'reach', 'participation', 'measurementSupport', 'fidelity'],
   axes: {
     eligibility: { status: 'satisfied', reason: 'target population is in scope' },
     reach: { status: 'satisfied' },
     participation: { status: 'satisfied' },
     measurementSupport: { status: 'satisfied' },
+    fidelity: { status: 'satisfied' },
   },
   negativeInterpretationPolicy: 'negative only resolves the prespecified rival contrast',
 });
@@ -43,6 +44,7 @@ assert.deepEqual(blocked.blockers.map(row => row.remediation), [
   'allocation-or-wiring',
   'work-envelope-or-recovery',
 ]);
+assert.equal(ready.axes.fidelity.status, 'satisfied');
 
 assert.deepEqual(researchResolutionEnvelopeIssues({
   ...ready,
