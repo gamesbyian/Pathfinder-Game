@@ -15,7 +15,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 | Targeted local surgery / causal backjump operator | New independent evidence finds an actionable causal interface materially smaller than naive divergence/ordinary rollback; Lane E's tested form stays closed |
 | Dependency-conditioned repair neighborhood | **DEVELOPMENT POSITIVE.** R03147 nominates path-resource + relational-bound state; require independent-parent replication before any consumer. [`result`](../reports/2026-09-20-ws6-dependency-interface-observer-result-001.md) |
 | Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
-| Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
+| Per-level search-plan compiler | Two distinct solver architectures show predictable current-input niches and a compiler can choose/compose them without historical identity |
 
 ## Deferred plan closeouts
 
@@ -44,7 +44,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 | Cooperative multi-engine search | Two solver families expose complementary typed artifacts that the other cannot cheaply derive; start from one handoff rather than a framework |
 | Declarative mechanic automata | Repeated active descendants need a shared mechanic-state contract enough to justify migration-scale complexity |
 | Adversarial counterexample generation | A frozen semantic hypothesis can be attacked through solver-belief versus exact-reality disagreement without construction leakage |
-| Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules remain nominations until independently confirmed |
+| Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules still require independent confirmation |
 | Heuristic-to-theorem subdomain audit | An active microscope reveals a soft relation with a clearly identifiable exact subdomain worth a prune, lower bound, forced move, decomposition, or exact-mode switch |
 
 ## Conditional composition/allocation work
@@ -83,7 +83,7 @@ Do not reopen unchanged:
 - hazard/bandit/ML scheduling before a fixed-work marginal-value premise;
 - bulk variant generation without a frozen causal question.
 
-Closure is form-scoped: cross-level connectivity does not close solve-local rediscovery; detour gadgets do not close per-instance commutativity; blueprint implementations do not close future-intersection realizability; positional repair does not close dependency-defined revision; H1 vocabulary does not close bounded per-instance feasibility.
+Closure is form-scoped: cross-level connectivity does not close solve-local rediscovery; positional repair does not close dependency-defined revision; H1 vocabulary does not close bounded per-instance feasibility.
 
 ## Premise-map-derived research gates
 
