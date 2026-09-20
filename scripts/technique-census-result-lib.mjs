@@ -115,7 +115,11 @@ const PLAN_RESULT_JOIN_FIELDS = Object.freeze([
     'perTechniqueWorkCapByKey', 'ablation',
 ]);
 
-export function validateTechniqueCensusPlanJoin(plan, results, { requireComplete = false } = {}) {
+export function validateTechniqueCensusPlanJoin(
+    plan,
+    results,
+    { requireComplete = false, allowLegacyOmissions = false } = {},
+) {
     if (!plan || !Array.isArray(plan.cells)) throw new Error('technique-census plan must carry cells[]');
     const planById = new Map();
     for (const rawCell of plan.cells) {
@@ -125,6 +129,7 @@ export function validateTechniqueCensusPlanJoin(plan, results, { requireComplete
     }
 
     const seen = new Map();
+    const unverifiedJoinFields = [];
     for (const rawResult of results) {
         const result = canonicalizeTechniqueCensusResult(rawResult);
         if (!result?.cellId) throw new Error('Technique census result is missing cellId');
@@ -134,6 +139,12 @@ export function validateTechniqueCensusPlanJoin(plan, results, { requireComplete
 
         for (const field of PLAN_RESULT_JOIN_FIELDS) {
             if (!Object.prototype.hasOwnProperty.call(cell, field)) continue;
+            if (allowLegacyOmissions
+                && !Object.prototype.hasOwnProperty.call(result, field)
+                && (field === 'budgetMs' || field === 'levelId')) {
+                unverifiedJoinFields.push({ cellId: result.cellId, field });
+                continue;
+            }
             const planned = canonicalPlanJoinValue(field, cell[field]);
             const observed = canonicalPlanJoinValue(field, result[field]);
             if (stableValue(observed) !== stableValue(planned)) {
@@ -154,7 +165,13 @@ export function validateTechniqueCensusPlanJoin(plan, results, { requireComplete
             + `${duplicated.length} duplicated. First few missing: ${missing.slice(0, 5).join(', ')}`,
         );
     }
-    return { expectedIds, missing, duplicated };
+    return {
+        expectedIds,
+        missing,
+        duplicated,
+        identityFullyVerified: unverifiedJoinFields.length === 0,
+        unverifiedJoinFields,
+    };
 }
 
 export function dedupeTechniqueCensusResults(results) {
