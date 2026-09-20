@@ -64,6 +64,40 @@ function extractDispatchInputNames(lines) {
   return names;
 }
 
+
+/**
+ * Artifact staging belongs after checkout. actions/checkout defaults to clean:true, so downloading
+ * into the worktree before a later checkout can silently delete the just-downloaded untracked files.
+ * Keep this deliberately structural: a job with download-artifact before any later checkout is
+ * rejected rather than trying to prove that one particular staging path happens to be safe.
+ */
+function artifactBeforeCheckoutHazards(lines) {
+  const hazards = [];
+  const jobsIdx = lines.findIndex(line => /^jobs:\s*$/u.test(line));
+  if (jobsIdx === -1) return hazards;
+
+  let job = null;
+  let sawDownload = false;
+  for (let i = jobsIdx + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim() && /^\S/u.test(line)) break;
+
+    const jobMatch = line.match(/^  ([A-Za-z0-9_-]+):\s*$/u);
+    if (jobMatch) {
+      job = jobMatch[1];
+      sawDownload = false;
+      continue;
+    }
+    if (!job) continue;
+
+    if (/uses:\s*actions\/download-artifact@/u.test(line)) sawDownload = true;
+    if (sawDownload && /uses:\s*actions\/checkout@/u.test(line)) {
+      hazards.push({ job, line: i + 1 });
+    }
+  }
+  return hazards;
+}
+
 for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name)).sort()) {
   const source = readFileSync(path.join(workflowDir, name), 'utf8');
 
@@ -90,6 +124,13 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
   for (const inputName of extractDispatchInputNames(source.split('\n'))) {
     const consumed = new RegExp(`\\binputs\\.${inputName}\\b|github\\.event\\.inputs\\.${inputName}\\b`).test(source);
     if (!consumed) failures.push(`${name}: workflow_dispatch input "${inputName}" is declared but never referenced as inputs.${inputName} anywhere in this file`);
+  }
+
+  for (const hazard of artifactBeforeCheckoutHazards(source.split('\n'))) {
+    failures.push(
+      `${name}: job "${hazard.job}" downloads an artifact before a later checkout (line ${hazard.line}); `
+      + 'checkout can clean untracked artifact staging. Check out first, then download.',
+    );
   }
 
   // Workflow shell steps are a live consumer surface. A renamed/deleted local script must not

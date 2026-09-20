@@ -123,7 +123,7 @@ on:
         required: false
         default: ''
       persist_failure_response:
-        description: 'Opt-in only. When true, durably commit this run''s standard compact-failure-response document (the small, bounded per-parent/attempt evidence layer -- never the full result, never hints, never baseline files) to reports/stress/failure-evidence/targeted-sweep-runs/<run id>/ on main once combine-final succeeds. This workflow is otherwise artifact-only by design; use this only for a specific acquisition that a sandboxed research session needs to read back, since GitHub Actions artifact downloads are blocked from some environments (see docs/solver-failure-evidence-research-integration-plan.md). Default false preserves the existing artifact-only behavior for ordinary dispatches.'
+        description: 'Persist this run\'s compact failure-response evidence to main after a successful combine.'
         required: false
         default: 'false'
 
@@ -824,33 +824,8 @@ jobs:
             --spec=logs/solver-targeted-sweep/experiment-contract-spec.json \
             --out=logs/solver-targeted-sweep/experiment-contract.json
 
-      - name: Print a solved-count summary to the job log
-        # Runs even when the population-completeness check above fails: that's exactly the
-        # case (a partial/short run) where this per-level breakdown is most needed, since
-        # artifact downloads are blocked in some sandboxed environments and this printed log
-        # is otherwise the only way to recover which ids actually finished and how.
-        if: always()
-        shell: bash
-        run: |
-          node -e "
-          let d;
-          try {
-            d = JSON.parse(require('fs').readFileSync('logs/solver-targeted-sweep/combined.json', 'utf8'));
-          } catch (e) {
-            console.log('No combined.json present (' + e.message + ') -- every shard likely failed before writing output.');
-            process.exit(0);
-          }
-          const solved = d.levels.filter(l => l.ok).length;
-          console.log('Targeted sweep: ' + solved + '/' + d.levels.length + ' solved.');
-          console.log('Solved: ' + d.levels.filter(l => l.ok).map(l => l.id).join(', '));
-          console.log('Unsolved: ' + d.levels.filter(l => !l.ok).map(l => l.id + ' (' + l.status + ')').join(', '));
-          "
-
       - name: Print an aggregate/per-level workSpent and per-stage breakdown to the job log
-        # See the note on "Print a solved-count summary" above -- same reasoning: a partial
-        # run's per-level detail (this step's per-stage tables include every id's ok/status,
-        # not just the ones that reached that stage) is exactly what's needed to recover
-        # results when validation failed and artifact downloads aren't available.
+        # Keep complete per-level status in the API-readable job log when artifacts are unavailable.
         if: always()
         shell: bash
         run: |
@@ -896,67 +871,7 @@ jobs:
   persist-failure-response:
     name: Persist compact failure-response evidence (opt-in)
     needs: [combine-final]
-    # Opt-in and best-effort: this durability path exists only so a sandboxed research session
-    # whose egress policy blocks GitHub Actions artifact downloads can still read back this run's
-    # small, bounded compact-failure-response document. It commits nothing else -- never the full
-    # combined result, never hints, never baseline files -- preserving this workflow's existing
-    # artifact-only invariant for every other input/output.
     if: always() && needs.combine-final.result == 'success' && inputs.persist_failure_response == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
     permissions:
       contents: write
-    steps:
-      # Checkout MUST come before the artifact download: actions/checkout defaults to clean:true,
-      # which runs a working-tree clean (removing untracked files) as part of checking out the ref
-      # -- if the artifact were downloaded first, checkout would silently delete it before the next
-      # step could read it. (Discovered the hard way: GHA run 35530215844's first attempt at this
-      # job downloaded successfully but then reported the file missing, because checkout ran second.)
-      - name: Check out main
-        uses: actions/checkout@v7
-        with:
-          ref: main
-          fetch-depth: 0
-
-      - name: Download standard solver sweep result
-        uses: actions/download-artifact@v8
-        with:
-          name: solver-sweep-result
-          path: artifact-staging/solver-sweep-result
-
-      - name: Persist the compact failure-response document
-        shell: bash
-        run: |
-          set -euo pipefail
-          SRC="artifact-staging/solver-sweep-result/failure-response/compact.json"
-          if [ ! -f "$SRC" ]; then
-            echo "No compact failure-response document was published for this run; nothing to persist."
-            exit 0
-          fi
-
-          DEST_DIR="reports/stress/failure-evidence/targeted-sweep-runs/${{ github.run_id }}"
-          mkdir -p "$DEST_DIR"
-          cp "$SRC" "$DEST_DIR/compact-failure-response.json"
-          cp artifact-staging/solver-sweep-result/manifest.json "$DEST_DIR/manifest.json"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if [ -z "$(git status --porcelain -- "$DEST_DIR")" ]; then
-            echo "No new failure-response evidence to persist."
-            exit 0
-          fi
-
-          for attempt in 1 2 3 4; do
-            git add "$DEST_DIR"
-            git commit -m "Persist compact failure-response evidence (run ${{ github.run_id }})"
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            git fetch origin main
-            git rebase origin/main
-            sleep $((attempt * 5))
-          done
-
-          echo "Failed to persist failure-response evidence after four retries." >&2
-          exit 1
+    uses: ./.github/workflows/persist-targeted-failure-response.yml
