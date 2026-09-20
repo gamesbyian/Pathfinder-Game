@@ -329,16 +329,21 @@ jobs:
           fi
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
           const plan = JSON.parse(fs.readFileSync('logs/static-portfolio-confirmation/plan.json'));
-          fs.writeFileSync('logs/static-portfolio-confirmation/experiment-contract.json', `${JSON.stringify({
-            experiment: { workflowFamily: 'static-portfolio-confirmation', producer: 'static-portfolio-confirmation.yml', entrypoint: 'scripts/technique-census.mjs', configurationHash: hashConfiguration(plan) },
+          fs.writeFileSync('logs/static-portfolio-confirmation/experiment-contract-spec.json', `${JSON.stringify({
+            configuration: plan,
+            workflowFamily: 'static-portfolio-confirmation',
+            producer: 'static-portfolio-confirmation.yml',
+            entrypoint: 'scripts/technique-census.mjs',
             population: { kind: 'static-portfolio-cells', identityBasis: 'sealed-plan-cell-id' },
             execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'static-portfolio', schedulerMode: 'isolated-techniques' },
             limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: false },
             sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
           }, null, 2)}\n`);
           NODE
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/static-portfolio-confirmation/experiment-contract-spec.json \
+            --out=logs/static-portfolio-confirmation/experiment-contract.json
           node scripts/sweep-publish.mjs --failure-in=p \
             --primary="logs/static-portfolio-confirmation/combined.json" \
             --include="logs/static-portfolio-confirmation/combined-summary.md" \

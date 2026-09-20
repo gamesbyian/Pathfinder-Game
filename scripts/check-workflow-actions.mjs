@@ -14,6 +14,14 @@ const expected = new Map([
   ['actions/deploy-pages', 'v5'],
 ]);
 
+// These two maintained workflows predate the shared native-v3 writer and still need a semantic
+// migration rather than a blind mechanical rewrite. Keep the debt explicit and prevent new manual
+// contract writers from appearing elsewhere.
+const LEGACY_MANUAL_EXPERIMENT_CONTRACT_WORKFLOWS = new Set([
+  'solver-combine-sweep-runs.yml',
+  'solver-highbudget-unsolved-sweep.yml',
+]);
+
 const root = process.cwd();
 const workflowDir = path.join(root, '.github', 'workflows');
 const failures = [];
@@ -131,6 +139,11 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
       `${name}: job "${hazard.job}" downloads an artifact before a later checkout (line ${hazard.line}); `
       + 'checkout can clean untracked artifact staging. Check out first, then download.',
     );
+  }
+
+  const manuallyWritesExperimentContract = /writeFileSync\([^\n]*experiment-contract\.json/iu.test(source);
+  if (manuallyWritesExperimentContract && !LEGACY_MANUAL_EXPERIMENT_CONTRACT_WORKFLOWS.has(name)) {
+    failures.push(`${name}: writes experiment-contract.json directly; use scripts/write-solver-experiment-contract.mjs so execution identity and shared v3 validation cannot drift`);
   }
 
   // Workflow shell steps are a live consumer surface. A renamed/deleted local script must not

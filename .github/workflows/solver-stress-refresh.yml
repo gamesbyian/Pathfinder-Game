@@ -484,16 +484,21 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
           const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE), corpus2NodeBudget: Number(process.env.C2_NODE), corpus1DeadlineMs: Number(process.env.C1_MS), corpus2DeadlineMs: Number(process.env.C2_MS), strictTotalWorkBudget: process.env.STRICT === 'true', enableFlags: process.env.ENABLE, disableFlags: process.env.DISABLE };
-          fs.writeFileSync('logs/solver-sweep-result-inputs/experiment-contract.json', `${JSON.stringify({
-            experiment: { workflowFamily: 'solver-stress-refresh', producer: 'solver-stress-refresh.yml', entrypoint: 'scripts/level-blind-capability-sweep.mjs', configurationHash: hashConfiguration(configuration) },
+          fs.writeFileSync('logs/solver-sweep-result-inputs/experiment-contract-spec.json', `${JSON.stringify({
+            configuration,
+            workflowFamily: 'solver-stress-refresh',
+            producer: 'solver-stress-refresh.yml',
+            entrypoint: 'scripts/level-blind-capability-sweep.mjs',
             population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
             execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: process.env.DETERMINISTIC === 'true', producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
             limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: true, representation: { kind: 'heterogeneous-by-corpus', corpora: { 'corpus-1': { nodeCeiling: configuration.corpus1NodeBudget, wallSafetyDeadlineMs: configuration.corpus1DeadlineMs }, 'corpus-2': { nodeCeiling: configuration.corpus2NodeBudget, wallSafetyDeadlineMs: configuration.corpus2DeadlineMs } } } },
             sideEffects: { hints: 'harvest-permitted', canonicalBaseline: process.env.DETERMINISTIC === 'true' ? 'none' : 'refresh', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/solver-sweep-result-inputs/experiment-contract-spec.json \
+            --out=logs/solver-sweep-result-inputs/experiment-contract.json
           node scripts/sweep-publish.mjs --failure-in=p,i \
             --primary="reports/stress/solver-corpus1-latest.json" \
             --include="reports/stress/solver-corpus2-latest.json" \

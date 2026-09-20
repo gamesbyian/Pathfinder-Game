@@ -688,16 +688,21 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
           const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE_BUDGET), corpus2NodeBudget: Number(process.env.C2_NODE_BUDGET), corpus1WorkBudget: Number(process.env.C1_WORK_BUDGET), corpus2WorkBudget: Number(process.env.C2_WORK_BUDGET), schedulerMode: 'production' };
-          fs.writeFileSync('logs/production-replay-baseline/experiment-contract.json', `${JSON.stringify({
-            experiment: { workflowFamily: 'history-aware-production-replay', producer: 'solver-production-replay-baseline.yml', entrypoint: 'scripts/portfolio-solve-sweep.mjs', configurationHash: hashConfiguration(configuration) },
+          fs.writeFileSync('logs/production-replay-baseline/experiment-contract-spec.json', `${JSON.stringify({
+            configuration,
+            workflowFamily: 'history-aware-production-replay',
+            producer: 'solver-production-replay-baseline.yml',
+            entrypoint: 'scripts/portfolio-solve-sweep.mjs',
             population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
-            execution: { levelBlind: false, historyAware: true, historicalInputs: ['continuity baseline', 'prime winner', 'saved hints'], reproducibilityExpected: null, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
+            execution: { levelBlind: false, historyAware: true, historicalInputs: ['continuity baseline', 'prime winner', 'saved hints'], reproducibilityExpected: false, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
             limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: true },
-            sideEffects: {hints:'harvest-permitted',canonicalBaseline:'none',telemetry: 'compact', reports: 'report-write'},
+            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/production-replay-baseline/experiment-contract-spec.json \
+            --out=logs/production-replay-baseline/experiment-contract.json
           node scripts/sweep-publish.mjs --failure-in=p,i \
             --primary="reports/stress/typical-budget-corpus1.json" \
             --include="reports/stress/typical-budget-corpus2.json" \
