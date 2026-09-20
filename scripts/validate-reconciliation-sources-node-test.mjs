@@ -75,6 +75,13 @@ assert.throws(
   () => validateReconciliationSources([{ runId: 'legacy', manifest: orchestrationOnlySha }]),
   /no declared experiment resolved SHA/u,
 );
+const legacyTopLevelConfiguration = clone(manifest);
+delete legacyTopLevelConfiguration.experiment.configurationHash;
+legacyTopLevelConfiguration.configurationHash = `sha256:${'b'.repeat(64)}`;
+assert.throws(
+  () => validateReconciliationSources([{ runId: 'legacy-config', manifest: legacyTopLevelConfiguration }]),
+  /no declared experiment configuration hash/u,
+);
 assert.throws(
   () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: secondManifest }]),
   /source run IDs must be unique/u,
