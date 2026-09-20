@@ -33,6 +33,12 @@ candidates inside ALIASED groups: 30,688 (2.2% of grouped candidates)
 
 Every one of the 80 sampled levels reached at least one merge-eligible phase (a large, representative base rate, not a sparse/rare-participation artifact). Aliasing is present in the large majority of levels — per-level aliased-group counts range from 0 up to several hundred (e.g. `R00756`: 295/4,979 aliased groups; `R00342`: 348/3,254; `R00537`: 335/3,403), with only a minority of levels showing zero aliased groups in this sample.
 
+## Measurement-reactivity qualification (2026-09-20)
+
+This historical observer predates the later OFF/ON parity discipline used by search-loss, D1 and known-prefix-survival instrumentation. Its beam callback reconstructs candidate paths and groups them while the enclosing attempt retains a 60s wall-safety limit. The study did **not** run an observer-OFF twin proving equal wall reach.
+
+Therefore the observed aliases themselves remain valid structural evidence, and 4,014 aliased groups across all 80 reached levels is more than enough for the conservative design decision “do not knowingly collapse used-pair identity.” The exact 1.7%/2.2% prevalence figures and phase-coverage denominator should, however, be treated as **observer-conditioned measurements** unless separate evidence establishes that wall time never truncated observable search relative to the node cap. No rerun is required for the already-conservative key-design decision; reuse of these rates for a new quantitative claim would require a parity/termination check.
+
 ## Interpretation
 
 1.7% of merge-candidate groups and 2.2% of candidates sitting in size->1 groups span more than one distinct used-portal-pair identity. This is not a rounding-error-scale rate — it recurs across the large majority of sampled levels and would, under the two-field treatment, silently collapse those candidates down to whichever one path happens to score best, discarding the others' distinct forced-transition sets (which portal terminals remain re-enterable) exactly as [`the preflight`](2026-09-09-portal-beam-state-identity-preflight-001.md) warned.
