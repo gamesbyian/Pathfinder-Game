@@ -76,6 +76,25 @@ It does not own:
 
 Those remain consumer decisions.
 
+## Second-pass correction: top-level authorities and existence
+
+The first implementation overfit "repository path" to a set of directory roots. That rejected legitimate top-level authority files such as `AGENTS.md`.
+
+The shared validator now distinguishes:
+
+- allowed directory roots; and
+- explicitly allowed top-level files.
+
+Structured report closeouts allow a small top-level authority set while preserving exact-path syntax.
+
+A second cross-audit gap was also closed: closeout construction can validate syntax without repository context, but repository integration now additionally requires every structured `sourceArtifacts` ref to exist. Thus the lifecycle is:
+
+1. constructor/parser: exact path shape;
+2. integration audit: current tracked target exists;
+3. consumer: interprets the semantic relation/applicability separately.
+
+This avoids both failure modes: rejecting legitimate root authorities and accepting well-formed dangling provenance.
+
 ## Current-data check
 
 The branch's current question registry contains 84 path-valued `answeredBy` / `constrainedBy` references. A direct comparison against the current Git tree found **0 missing targets**.
