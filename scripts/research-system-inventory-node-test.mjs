@@ -105,6 +105,20 @@ assert.equal(inventory.diagnostics.structuredWorkstreamExecutionStateCount, inve
 assert.equal(inventory.diagnostics.structuredExperimentPromotionStateCount, inventory.relations
     .find(row => row.relation === 'experiments')?.rows ?? 0,
     'every default-off experiment row should carry explicit promotion state');
+assert.equal(inventory.diagnostics.deferredQuestionCount,
+    inventory.frontDoorInputs.deferredReopenQuestions.length);
+assert.equal(inventory.diagnostics.authoredAcquisitionRelationCount,
+    inventory.currentState.authoredAcquisitionRelations);
+assert.equal(inventory.currentState.deferredQuestions, inventory.diagnostics.deferredQuestionCount);
+assert.equal(inventory.currentState.authoredAcquisitionRelations >= inventory.currentState.deferredQuestions, true,
+    'every deferred question should be covered by an authored acquisition relation');
+assert.equal(inventory.diagnostics.promotionDecisionEvidenceRelationCount,
+    inventory.currentState.promotionsWithDecisionEvidence);
+assert.ok(inventory.currentState.promotions > 0);
+assert.ok(inventory.currentState.promotionsWithDecisionEvidence > 0,
+    'retained promoted mechanisms should expose decision-evidence relations where the record supports them');
+assert.equal(inventory.diagnostics.structuredSourceArtifactEvidenceCount,
+    inventory.currentState.evidenceReportsWithStructuredSourceArtifacts);
 assert.equal(inventory.diagnostics.closeoutParseErrorCount, inventory.documentation.closeoutParseErrorCount);
 assert.ok(inventory.documentation.roles.some(row => row.path === 'docs/solver-optimization-workstreams.md' && row.role === 'canonical-current'));
 assert.ok(inventory.documentation.roles.some(row =>
