@@ -26,7 +26,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     const errors = [];
     const warnings = [];
     const questionRegistry = loadResearchQuestionRegistry(root);
-    errors.push(...validateResearchQuestionRegistry(questionRegistry));
+    errors.push(...validateResearchQuestionRegistry(questionRegistry, { root }));
     const questionIds = new Set(questionRegistry.questions.map(question => question.id));
     const questionById = new Map(questionRegistry.questions.map(question => [question.id, question]));
 
