@@ -5,6 +5,7 @@ import { popcount } from './encoding.js';
 import { evaluateObligationClusters } from './joint-obligation-propagation.js';
 import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustCrossNeighborBudgetDeadlocked, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
+import { stateSignature } from './nogood-cache.js';
 import { isConnected } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -101,7 +102,33 @@ export function evaluatePrunedMove(
     if (!cfg || cfg.PRUNE_DISTANCE_BOUND) {
         reached(diagnostics, 'PRUNE_DISTANCE_BOUND');
         const goalDist = getDistanceFromArray(prep.goalDistArr, next, prep.gridW);
-        if (!Number.isFinite(goalDist) || goalDist > rSteps) return reject(diagnostics, 'PRUNE_DISTANCE_BOUND');
+        const scalarDistanceWouldReject = !Number.isFinite(goalDist) || goalDist > rSteps;
+
+        // Lane H1 research shadow. The two-layer relaxation preserves future twist-jump parity
+        // while remaining at least as permissive as real search. It is observational only here:
+        // even when the conditioned layer proves this candidate dead, production still follows the
+        // existing scalar-distance decision below.
+        const phaseResearch = prep._parityPhaseDistanceObserver;
+        const phaseMaps = prep.parityPhaseGoalDistArrs;
+        if (phaseResearch && phaseMaps) {
+            const requiredFutureTwistParity = (keyParity(next) ^ keyParity(level.goalKey) ^ (rSteps & 1)) as 0 | 1;
+            const phaseGoalDistance = getDistanceFromArray(phaseMaps[requiredFutureTwistParity], next, prep.gridW);
+            const phaseDistanceWouldReject = !Number.isFinite(phaseGoalDistance) || phaseGoalDistance > rSteps;
+            phaseResearch.observe({
+                pos: next,
+                stateFingerprint: stateSignature(state),
+                remainingSteps: rSteps,
+                requiredFutureTwistParity,
+                scalarGoalDistance: goalDist,
+                phaseGoalDistance,
+                scalarDistanceWouldReject,
+                phaseDistanceWouldReject,
+                incrementalPhaseReject: phaseDistanceWouldReject && !scalarDistanceWouldReject,
+                work: prep._workMeter.units,
+            });
+        }
+
+        if (scalarDistanceWouldReject) return reject(diagnostics, 'PRUNE_DISTANCE_BOUND');
     }
 
     // Portal-free parity is always checked on the first step; deep checks are limited to corridor-rich
