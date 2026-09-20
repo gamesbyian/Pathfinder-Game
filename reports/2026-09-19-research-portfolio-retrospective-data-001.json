@@ -1075,7 +1075,7 @@
     {
       "id": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
       "owner": "WS2",
-      "state": "mixed",
+      "state": "closed-tested-form",
       "question": "Can the separator/decomposition positive be upgraded into a compact dynamic interface contract that preserves the future-relevant history needed for safe composition?",
       "evidenceRefs": [
         "reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md",
@@ -1095,12 +1095,12 @@
       "answerability": {
         "disposition": "answerable-or-concluded",
         "evidenceDeficit": true,
-        "strongEvidenceGate": false,
+        "strongEvidenceGate": true,
         "measurementDeficit": false,
-        "computeDeficit": true,
+        "computeDeficit": false,
         "codeDeficit": false,
-        "conceptDeficit": false,
-        "reopenConditionPresent": false
+        "conceptDeficit": true,
+        "reopenConditionPresent": true
       },
       "proposalProvenance": {
         "triggers": [],
