@@ -3,8 +3,6 @@
 
 Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) owns method.
 
-Cold procedures may derive exact current-input facts; cross-parent recurrence is only required for reusable descriptor claims.
-
 ## Deferred descendants of active premises
 
 | Descendant | Reopen / advancement condition |
