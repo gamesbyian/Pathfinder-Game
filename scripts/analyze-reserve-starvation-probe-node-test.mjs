@@ -130,7 +130,7 @@ try {
         row('C', 'exhaustedNegative', 55_000_000, { exhausted: true }),
     ], null));
     assert.equal(unknownProtocol.decisionReady, false);
-    assert.ok(unknownProtocol.resolution.blockers.some(row => row.axis === 'fidelity'));
+    assert.ok(unknownProtocol.resolution.blockers.some(row => row.axis === 'eligibility'));
 
     const missingAction = analyze(writeDoc('missing-action.json', [
         { ...row('A', 'solved', 70_000_000), attempts: [] },
@@ -161,7 +161,7 @@ try {
     }));
     const unknownSolver = analyze(unknownSolverFile);
     assert.equal(unknownSolver.decisionReady, false);
-    assert.ok(unknownSolver.resolution.blockers.some(row => row.axis === 'fidelity'));
+    assert.ok(unknownSolver.resolution.blockers.some(row => row.axis === 'eligibility'));
 
     const zeroParticipation = analyze(writeDoc('zero-participation.json', [
         row('A', 'exhaustedNegative', 0, { exhausted: true }),
