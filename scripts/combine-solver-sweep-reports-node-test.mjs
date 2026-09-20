@@ -366,6 +366,16 @@ async function main() {
         );
         console.log('  ✓ observed solver execution identity detects treatment drift omitted by legacy workflow mirrors');
 
+        const observedConfigMissing = path.join(tempDir, 'observed-config-missing.json');
+        await writeFile(observedConfigMissing, JSON.stringify(batchReport({
+            levels: [{ level: 24, id: 'R00224', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${observedConfig1},${observedConfigMissing}`, `--out=${path.join(tempDir, 'observed-config-partial-out.json')}`]),
+            /some source reports record observed solver execution identity and others omit it/u,
+        );
+        console.log('  ✓ combiner rejects silent downgrade from mixed modern/legacy execution identity');
+
         const portfolioSource = await readFile(path.join(ROOT, 'scripts/portfolio-solve-sweep.mjs'), 'utf8');
         assert.match(portfolioSource, /effectiveConfigDigest/u);
         assert.match(portfolioSource, /primeWinner: \{/u);
