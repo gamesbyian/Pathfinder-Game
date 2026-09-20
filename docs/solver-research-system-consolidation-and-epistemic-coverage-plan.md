@@ -384,6 +384,8 @@ For every identity establish:
 
 Composite identities used for scientific integrity must use structured serialization or an escaping-safe canonical codec. Informal delimiter parsing must not be the semantic boundary.
 
+Implementation-derived rule: persisted scientific identity lists are one identity per line unless a specific structured format owns them. Comma/whitespace list parsing is acceptable only on an explicit user-input/list-syntax surface, never as the implicit reader for a persisted population/cohort file whose identities may themselves contain delimiters.
+
 ### Required adversarial fixtures
 
 Test components containing commas, colons, separators, spaces, Unicode, repeated local IDs under different parents/scopes, and reordered components where order should or should not matter.
