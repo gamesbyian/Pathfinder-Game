@@ -8,6 +8,7 @@ import { classifyProbeProcess } from './stress/cpsat-explicit-prefix-reference-l
 import { formatInvestigationReportStatusBlock } from './investigation-report-metadata.mjs';
 import { validateSweepIntegrity } from './validate-solver-sweep-integrity.mjs';
 import { validateResearchQuestionRegistry } from './research-question-relations-lib.mjs';
+import { buildResearchEnrichmentLink } from './research-enrichment-link-lib.mjs';
 import {
     appendResearchConsumption,
     buildResearchBlock,
@@ -100,6 +101,22 @@ const selectedDevelopment = appendResearchConsumption(developmentBlock.researchB
 assert.equal(selectedDevelopment.evidenceRole, 'development');
 assert.equal(selectedDevelopment.consumptionEvents[0].evidenceRole, 'development');
 assert.ok(selectedDevelopment.consumptionEvents[0].conditioning.includes('selected-after-inspecting-outcomes'));
+
+// Cross-resource derived evidence keeps source/block/population provenance through a constructor.
+const enrichment = buildResearchEnrichmentLink({
+    sourceBlockArtifact: 'fixture-block.json',
+    sourceArtifact: 'fixture-exact.json',
+    researchEnrichmentKind: 'exact',
+    populationIdentity: developmentBlock.populationIdentity,
+    researchBlock: developmentBlock.researchBlock,
+    stateRef: 'state-1',
+    runRef: 'run-1',
+    createdAt: '2026-09-19T00:00:00.000Z',
+});
+assert.equal(enrichment.kind, 'pathfinder-research-enrichment-link');
+assert.equal(enrichment.researchBlock.blockId, developmentBlock.researchBlock.blockId);
+assert.equal(enrichment.populationIdentity, developmentBlock.populationIdentity);
+assert.equal(enrichment.sourceArtifact, 'fixture-exact.json');
 
 // Changing content under the same display ID changes research population identity.
 const blockBase = {
