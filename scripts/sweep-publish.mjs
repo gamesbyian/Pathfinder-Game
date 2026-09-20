@@ -70,10 +70,9 @@ const contract = contractFile && fs.existsSync(contractFile)
     ? JSON.parse(fs.readFileSync(contractFile, 'utf8'))
     : null;
 const protocolHash = contract?.experiment?.configurationHash ?? null;
-const solverRef = contract?.experiment?.resolvedSha
-    ?? contract?.solverRef
-    ?? process.env.GITHUB_SHA
-    ?? null;
+// Comparable-run failure evidence needs the actual solver execution identity. Do not upgrade
+// orchestration checkout metadata or legacy top-level fields into experiment identity.
+const solverRef = contract?.experiment?.resolvedSha ?? null;
 
 const failureOut = values.get('failure-response-out')
     || path.join(path.dirname(values.get('primary')), 'compact-failure-response.json');
