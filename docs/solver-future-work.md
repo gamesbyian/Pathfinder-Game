@@ -35,8 +35,7 @@ Eligible only after the active premise gate above is positive.
 
 - Repeated compatible compact-response rows -> identity/novelty/saturation/frontier audits with parent dependence + controls; never backfill pre-contract attempts.
 - Repeated compatible populations + live ambiguity -> phenotype reducers; keep reason vs basin recurrence separate.
-- Before buying richer search-loss/exact instrumentation, try zero-compute joins on the first eligible compatible compact-response population in this order: current residual/static descriptors + generation/source lineage; parent-family/variant lineage where present; success-process/hint provenance controls where protocol-compatible; exact/reference disagreement only where the same parent/state/query identity is already supported. These are development discriminators, not prevalence/causal evidence.
-- Do not run those joins on the one-row R00044 compact-response canary or selectively dispatched pre-contract attempts. A join is ready only when its base compact population has an honest denominator, known solver/protocol identity and the independent/dependence unit needed by the claim.
+- On the first eligible compact-response population, try cheap descriptor/source, family/variant and comparable hint-process joins before richer exact/search-loss instrumentation. Require an honest denominator, protocol identity and correct dependence unit; never use the one-row R00044 canary or pre-contract attempts for prevalence.
 - Recurring rich producer -> search-loss P8 Resource Contract decision.
 - Workstreams select first-loss -> P9 using compact response, capsules, known-support extinction, traces and exact labels.
 - Whole-solution-space extinction is not deferred; sampled hints cannot prove it.
