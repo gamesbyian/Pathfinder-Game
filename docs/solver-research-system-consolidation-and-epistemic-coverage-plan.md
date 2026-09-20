@@ -16,7 +16,7 @@
 > **Second-order audit:** [`2026-09-19-solver-research-system-prompt-overfit-second-order-audit-001.md`](../reports/2026-09-19-solver-research-system-prompt-overfit-second-order-audit-001.md) records the later prompt-overfit/contradiction-hunt pass that added conversion fidelity and framing/context independence.
 
 > **Implementation progress (2026-09-19):** active on branch `chatgpt/research-system-consolidation-implementation-2026-09-19`. Initial cut is following Part VII exactly: Bundles A and B first, with Phase 0 applied as a standing guardrail. Progress updates below are execution notes, not a second checklist or priority authority.
-> **Execution note (2026-09-19, initial slice):** Phase 0 is applied in `solver-research-operating-model.md`. Bundle A now has one derived read-only inventory spine (`research:system-inventory`) over existing relation authorities, current package entrypoints, plan lifecycle signals, and shared implementation dependencies. Bundle B now has an emitted-v3-result/declared-schema audit, a reconciled v3 schema for maintained publisher semantics, delimiter-safe structured population identity hashing with adversarial regression coverage, and the first synthetic recovery/recombination transaction fixture. Draft PR #1922 is the execution anchor; Bundles A and B remain in progress.
+> **Execution note (2026-09-19, initial slice):** Phase 0 is applied in `solver-research-operating-model.md`. Bundle A now has one derived read-only inventory spine (`research:system-inventory`) over existing relation authorities, current package entrypoints, shared implementation dependencies, current-reference/document lifecycle routing, documentation-burden metrics and the existing integration audit; it renders focused architecture/lifecycle/diagnostic views from that one source. Bundle B now has an emitted-v3-result/declared-schema audit with local schema conformance, a reconciled v3 schema for maintained publisher semantics, delimiter-safe structured population identity hashing with adversarial regression coverage, independent-unit propagation through the shared publisher, and a growing synthetic transaction/conformance fixture covering recovery/recombination, abstention/indeterminate outcomes, dependence units, content identity and confirmation consumption. Draft PR #1922 is the execution anchor; Bundles A and B remain in progress.
 
 
 ## 1. Why this plan exists now
@@ -1734,6 +1734,8 @@ Do together:
 Implementation principle:
 
 > build one machine-derived inventory/composition layer, then render the architecture map, authority/lifecycle findings, entropy warnings and front-door inputs from it.
+
+Compose existing checks instead of cloning them: use the current research-integration audit as the Phase 9.4 consistency input, and use one shared parser for the documentation index's explicit `Current references` authority boundary so historical/navigation links do not become current authorities merely by being linked.
 
 Do not write four scanners that independently rediscover files, authorities and ownership.
 
