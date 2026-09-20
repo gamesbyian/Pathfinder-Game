@@ -744,25 +744,26 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [ "${{ needs.solve-phase2.result }}" != success ]; then
-            if [ "${{ needs.solve-phase2.result }}" = cancelled ]; then
-              outcome=infrastructure-error
-              reason='The phase-2 solve matrix was cancelled before normal completion.'
+          if [ ! -s reports/stress/residual-confirmation-outcome.json ]; then
+            if [ "${{ needs.solve-phase2.result }}" != success ]; then
+              if [ "${{ needs.solve-phase2.result }}" = cancelled ]; then
+                outcome=infrastructure-error
+                reason='The phase-2 solve matrix was cancelled before normal completion.'
+              else
+                outcome=harness-error
+                reason='At least one phase-2 solve shard reported an unexpected execution failure.'
+              fi
             else
-              outcome=harness-error
-              reason='At least one phase-2 solve shard reported an unexpected execution failure.'
-            fi
-            node scripts/research-workflow-outcome.mjs --out=reports/stress/residual-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
-          elif [ ! -s reports/stress/residual-confirmation-outcome.json ]; then
-            if [ "${{ steps.download_control.outcome }}" != success ] || [ "${{ steps.download_treatment.outcome }}" != success ]; then
-              outcome=infrastructure-error
-              reason='A required phase-2 shard artifact could not be downloaded.'
-            elif [ "${{ steps.coverage.outcome }}" = failure ]; then
-              outcome=invariant-violation
-              reason='Combined phase-2 control/treatment coverage was incomplete.'
-            else
-              outcome=harness-error
-              reason='The residual-confirmation harness failed before it could declare a scientific verdict.'
+              if [ "${{ steps.download_control.outcome }}" != success ] || [ "${{ steps.download_treatment.outcome }}" != success ]; then
+                outcome=infrastructure-error
+                reason='A required phase-2 shard artifact could not be downloaded.'
+              elif [ "${{ steps.coverage.outcome }}" = failure ]; then
+                outcome=invariant-violation
+                reason='Combined phase-2 control/treatment coverage was incomplete.'
+              else
+                outcome=harness-error
+                reason='The residual-confirmation harness failed before it could declare a scientific verdict.'
+              fi
             fi
             node scripts/research-workflow-outcome.mjs --out=reports/stress/residual-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
           fi
