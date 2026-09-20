@@ -40,6 +40,19 @@ assert.ok(missingQueueQuestion.errors.some(error =>
     /workstream 2 references unknown research question WS2-NOT-A-REAL-QUESTION/u.test(error)),
 'stable queue question references must resolve through the question authority');
 
+const evidenceWithMissingSource = {
+    ...prebuiltModel,
+    relations: {
+        ...prebuiltModel.relations,
+        evidence: prebuiltModel.relations.evidence.map((row, index) =>
+            index === 0 ? { ...row, sourceArtifacts: [...(row.sourceArtifacts ?? []), 'reports/__missing-source-artifact__.md'] } : row),
+    },
+};
+const missingSourceArtifact = auditResearchIntegration(process.cwd(), { model: evidenceWithMissingSource });
+assert.ok(missingSourceArtifact.errors.some(error =>
+    /references missing sourceArtifact reports\/__missing-source-artifact__\.md/u.test(error)),
+'structured report sourceArtifact refs must resolve to tracked repository files at integration time');
+
 const withConsumptionEvent = event => ({
     ...prebuiltModel,
     relations: {
