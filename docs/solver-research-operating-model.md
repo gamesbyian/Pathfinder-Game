@@ -67,6 +67,14 @@ Before implementing a new invariant/representation/relation premise: state the c
 
 Use [the small exact projections program](solver-small-exact-projections-program.md) for compact exact consequences.
 
+## Question-inversion checkpoint
+
+Before promoting a new research question, and again at closeout when choosing descendants, write the nearest **useful inverse** of the question. This is not a requirement to test the inverse and does not create a second queue. It is a directional-bias check: ask whether the same evidence supports removal rather than addition, overexposure rather than starvation, LIVE/slack/fragility rather than DEAD proof, board-local derivation rather than universal compression, success/early determination rather than failure explanation, or capability obsolescence rather than invention.
+
+An inverse earns question authority only through the ordinary gates: a materially distinct ambiguity, concrete evidence source, decision-changing discriminator, explicit population/independent unit, and smallest next step. If it is already owned by an active or deferred question, join it there rather than cloning it.
+
+Use the [question inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md) as the worked example. In particular, treat clean compression failures as possible evidence of non-compressibility/per-instance reasoning, and treat successful runs as potential evidence about avoidable downstream work without leaking eventual answers into cold policy.
+
 ## Stop rules
 
 These are gates, not aspirations.
