@@ -262,6 +262,7 @@ jobs:
             --out-dir="reports/stress/technique-census/${{ github.run_id }}" \
             --plan=plan/technique-census-plan.json \
             --solver-version="${{ github.sha }}" \
+            --expected-shards=120 \
             --save-hints
 
       - name: Upload the combined result
