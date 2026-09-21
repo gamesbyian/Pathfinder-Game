@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolverWorkerClient } from './solver-worker-client.js';
+import { buildWorkerSolveOpts, createSolverWorkerClient } from './solver-worker-client.js';
 
 class FakeWorker {
     onmessage: ((event: any) => void) | null = null;
@@ -11,6 +11,27 @@ class FakeWorker {
     terminate() {}
     emit(data: any) { this.onmessage?.({ data }); }
 }
+
+test('worker SolveOpts serializer preserves data and rejects callback-shaped options explicitly', () => {
+    assert.deepEqual(buildWorkerSolveOpts({
+        timeBudgetMs: 1000,
+        nodeBudget: 123,
+        schedulerMode: 'production',
+        ablation: { STRATEGY_PRIME: false } as any,
+    }), {
+        nodeBudget: 123,
+        schedulerMode: 'production',
+        ablation: { STRATEGY_PRIME: false },
+    });
+
+    assert.throws(() => buildWorkerSolveOpts({
+        attemptSearchForTesting: (() => null) as any,
+    }), /attemptSearchForTesting/);
+
+    assert.throws(() => buildWorkerSolveOpts({
+        failureProgressObserver: { observe() {} },
+    }), /failureProgressObserver\.observe/);
+});
 
 test('solve validates raw input and transports one normalized level contract', () => {
     const worker = new FakeWorker();
