@@ -31,7 +31,7 @@ Historical winners remain offline labels, never runtime routing inputs.
    - one-way dominance;
    - exact quotient/equivalence.
 5. **Stage-0 attack.** Require mechanic scope, novelty witness against current reasoning, redundancy witness and smallest counterexamples before observer code.
-6. **Consumer oracle.** Before implementing behavior, replay existing decisions/candidate sets where possible and ask:
+6. **Consumer upper-bound check.** Before implementing behavior, replay existing decisions/candidate sets where possible and ask:
    > if this fact had been free here, could it have changed the actual decision?
 7. **Smallest consumer.** Only then consider prune, order, retain, repair, route, allocate or handoff.
 8. **Transfer/economics.** Production descendants still require level-blind matched-work evidence proportional to selection pressure.
@@ -62,7 +62,7 @@ Start from a proved exact projection and ask which technique/decision contrasts 
 
 Parity response-signature analysis is the worked example.
 
-Both routes meet at the same Stage-0 and consumer-oracle gates.
+Both routes meet at the same Stage-0 and consumer upper-bound gates.
 
 ## Product projections
 
@@ -96,7 +96,7 @@ Candidate partitions include checkerboard color, cut side/region, reachable phas
 
 Prefer existing evidence in this order:
 1. prespecified technique-census pair discordance;
-2. capability-memory complementary signatures, used only to nominate explanatory contrasts;
+2. capability-evidence complementary signatures, used only to nominate explanatory contrasts;
 3. first-loss/search-loss decision observations;
 4. within-level accepted-path technique contrasts;
 5. new production-inert telemetry only after existing evidence cannot answer the discriminator.
@@ -135,7 +135,7 @@ npm run research:response-guided-orientation -- --cohorts=tmp/response-guided-co
 
 Its signed Gate→Goal side balances/moments obey a tested reflection law and target the large CW/CCW discordance that count features fail to explain. Both outputs remain outcome-selected development evidence and can only nominate Stage-0 premises.
 
-The width-inversion nomination has a bounded consumer-oracle tool, but no default population:
+The width-inversion nomination has a bounded consumer upper-bound tool, but no default population:
 
 ```bash
 npm run research:paired-beam-width-frontier -- \
