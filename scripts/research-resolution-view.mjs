@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
 
-import { summarizeResearchResolutionDocuments } from './research-resolution-view-lib.mjs';
+import {
+  summarizeResearchResolutionComposition,
+  summarizeResearchResolutionDocuments,
+} from './research-resolution-view-lib.mjs';
 
 const argv = process.argv.slice(2);
 const value = name => argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -20,4 +23,5 @@ process.stdout.write(JSON.stringify({
   schemaVersion: 1,
   kind: 'pathfinder-research-resolution-view',
   entries: summarizeResearchResolutionDocuments(entries),
+  compositionDiagnostics: summarizeResearchResolutionComposition(entries),
 }, null, 2) + '\n');
