@@ -1,6 +1,9 @@
 # Response-guided execution protocol
 
-> **Status:** executable development protocol; no production behavior authorized.
+> **Status:** active
+> **Last evidence:** 2026-09-21 — execution contract frozen; parity/orientation cohorts, paired-width consumer oracle, and BC1 Stage-B screen are specified but not yet dispositioned here.
+> **Decision:** use one frozen development contrast population for parity/orientation, explicit frozen inversion IDs for paired-width, and parent-level recurrence for BC1; none of these development analyses authorize production routing or pruning.
+> **Remaining gate:** execute the frozen development screens, record their dated dispositions, and advance only the smallest consumer earned by those results.
 > **Question family:** response-guided capability invention + `WS2-CUT-BALANCE-PROJECTION`.
 > **Evidence role:** development.
 > **Selection rule:** freeze cohorts before reading parity/orientation outputs; preserve parent identity for BC1 incidence.
