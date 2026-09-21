@@ -64,11 +64,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // deadline that can truncate a solve, never as an input to an allocation or escalation
     // decision, so a solve is a function of (level, workBudget). See work-meter.ts.
     const explicitBaseWorkBudget = Number(opts.baseWorkBudget) > 0 ? Number(opts.baseWorkBudget) : null;
-    const legacyWorkBudget = Number(opts.workBudget) > 0 ? Number(opts.workBudget) : null;
-    if (explicitBaseWorkBudget !== null && legacyWorkBudget !== null && explicitBaseWorkBudget !== legacyWorkBudget) {
-        throw new Error(`baseWorkBudget (${explicitBaseWorkBudget}) and legacy workBudget (${legacyWorkBudget}) disagree`);
-    }
-    const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
+    const workBudget = explicitBaseWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
     const schedulerMode = opts.schedulerMode ?? 'production';
     if (!['production', 'legacy-latency-portfolio-experiment', 'static-portfolio'].includes(schedulerMode)) {
