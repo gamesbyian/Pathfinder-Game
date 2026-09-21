@@ -1471,10 +1471,12 @@
       ],
       "joinKeys": [
         "subject.levelId",
+        "researchQuestion",
         "subject.parentId",
         "firstLossClass",
         "workClass",
-        "evidenceRefs"
+        "evidenceRefs",
+        "resolutionRef"
       ],
       "evidenceRoles": [
         "routing",
