@@ -11,6 +11,7 @@ export const CANONICAL_SCHEDULER_MODES = Object.freeze([
     'static-portfolio',
 ]);
 
+/** @type {Readonly<Record<string, typeof CANONICAL_SCHEDULER_MODES[number]>>} */
 const HISTORICAL_SCHEDULER_MODE_ALIASES = Object.freeze({
     legacy: 'production',
     'portfolio-experiment': 'legacy-latency-portfolio-experiment',
@@ -22,10 +23,11 @@ const HISTORICAL_SCHEDULER_MODE_ALIASES = Object.freeze({
  * @returns {'production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio'}
  */
 export function normalizeSchedulerMode(rawSchedulerMode) {
-    if (!CANONICAL_SCHEDULER_MODES.includes(rawSchedulerMode)) {
+    const canonical = CANONICAL_SCHEDULER_MODES.find(mode => mode === rawSchedulerMode);
+    if (!canonical) {
         throw new Error(`--scheduler-mode must be one of: ${CANONICAL_SCHEDULER_MODES.join(', ')}; got ${JSON.stringify(rawSchedulerMode)}`);
     }
-    return rawSchedulerMode;
+    return canonical;
 }
 
 /**
