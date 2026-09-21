@@ -12,6 +12,35 @@ class FakeWorker {
     emit(data: any) { this.onmessage?.({ data }); }
 }
 
+test('solve validates raw input and transports one normalized level contract', () => {
+    const worker = new FakeWorker();
+    const client = createSolverWorkerClient(worker as any);
+    const raw = {
+        grid: { w: 2, h: 3 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 2, y: 3 },
+        reqLen: 3,
+        reqInt: 0,
+    };
+
+    void client.solve(raw, { timeBudgetMs: 1234 });
+    const request = worker.messages.find(m => m.type === 'SOLVE');
+    assert.ok(request);
+    assert.equal(request.budgetMs, 1234);
+    assert.equal(Object.hasOwn(request, 'levelRaw'), false);
+    assert.ok(Array.isArray(request.level.gateKeys));
+    assert.ok(request.level.portalMap instanceof Map);
+    assert.equal(request.level.requiredLength, 3);
+
+    assert.throws(() => client.solve({
+        grid: { w: 16, h: 16 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 16, y: 16 },
+        reqLen: 30,
+        reqInt: 0,
+    }), /Solver: invalid raw level:.*grid\.w must not exceed 15/);
+});
+
 test('false-goal worker client dual-reads legacy TRAP progress/result payloads into canonical shapes', async () => {
     const worker = new FakeWorker();
     const client = createSolverWorkerClient(worker as any);
