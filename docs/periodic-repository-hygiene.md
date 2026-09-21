@@ -116,6 +116,27 @@ For each materially changed subsystem inspect nearby authorities, routing, examp
 
 A passing link checker does not prove semantic freshness. Verify suspect prose against implementation and current producers/consumers. Do not rewrite frozen evidence merely because terminology changed; repair current interpretation/routing instead.
 
+### Semantic naming regression after cleanup
+
+Treat naming as a recurring semantic-maintenance problem, not a migration that stays solved forever. Since the last naming audit or major cleanup, inspect newly introduced durable vocabulary in code, filenames, commands, schemas, fields, current authorities, registries, and recurring research concepts.
+
+Look specifically for:
+
+- names that describe experiment origin, implementation accident, or a conversational nickname rather than present behavior/role;
+- metaphors that escaped from explanatory prose into durable interfaces or machine identities;
+- names that imply persistence, causality, equivalence, authority, exactness, ancestry, or composition the implementation does not actually provide;
+- one word reused for unrelated concepts without enough qualification;
+- a retired/legacy term reintroduced in a new domain in a way that suggests a false relationship to the older concept;
+- labels copied from a user/agent phrase before the underlying concept was semantically decomposed;
+- current tools whose noun-like names hide what operation they perform;
+- names whose docs repeatedly need disclaimers such as "this does not mean X." Repeated clarification is evidence that the name itself may be charging a comprehension tax.
+
+Use the post-cleanup merge point as the baseline after a large naming migration; otherwise use the previous hygiene/naming audit. Start from recent diffs/PRs and current surfaced identities rather than grep-driven mass renaming. Classify findings as **misleading durable name**, **ambiguous but qualified**, **prose shorthand only**, or **historical/frozen**. Rename only where semantic benefit exceeds compatibility/migration cost; preserve frozen evidence and normalize historical inputs at the owning boundary.
+
+Reusing a formerly retired word is not automatically wrong, but require the new qualified meaning to be precise and non-confusable. Metaphorical research shorthand such as "microscope," "nursery," or similar labels can be useful prose; do not let it become a schema/command/export/file identity merely because it is memorable.
+
+Cross-check [`naming-and-vocabulary.md`](naming-and-vocabulary.md). When the audit uncovers a reusable failure class, improve that permanent authority rather than adding another one-off blacklist here.
+
 ## 5. Tooling audit
 
 Account for the developer/research tool surface with `tooling-census`, package aliases, workflow references, and targeted search before broad browsing.

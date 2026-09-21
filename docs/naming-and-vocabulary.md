@@ -19,6 +19,12 @@ Persisted identities and human-readable names are separate concerns. For a persi
 
 Use full terms in exported types, public APIs, stage IDs, report fields, and current documentation. Short forms such as `mc`, `mp`, `int`, and `arch` are acceptable only in small local scopes where the expanded term is immediately visible.
 
+A completed rename does not grandfather future reuse of ambiguous vocabulary. Before a new durable name reaches a filename, command, exported identifier, schema/report field, registry key, or current authority, ask whether a reader who did not witness the originating conversation could infer the thing's present role from the name. Treat memorable metaphors, experiment nicknames, and user/agent phrasing as provisional until the underlying semantics are explicit.
+
+Prefer literal role/operation names at durable boundaries. Metaphorical labels may remain explanatory prose or frozen experiment history when they improve communication, but should not silently become architecture. If a retired term is intentionally reused for a genuinely different concept, qualify it enough that the new name does not imply compatibility, ancestry, shared storage, shared semantics, or ownership by the old concept.
+
+Repeated disclaimers are a naming signal. If current documentation must repeatedly say that a named thing is not runtime state, not an oracle, not a corpus, not causal, not exact, or not related to another similarly named surface, consider whether the durable name should say what it actually is.
+
 ## Solver vocabulary
 
 A solver action is described along independent dimensions:
