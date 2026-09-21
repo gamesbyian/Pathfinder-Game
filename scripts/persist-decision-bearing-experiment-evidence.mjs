@@ -331,7 +331,7 @@ function selfTest() {
     assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, compactRecord.stored))), compact);
     assert.equal(fs.existsSync(path.join(output, 'experiment__run-123__attempt-2')), false);
 
-    const exactBoundArtifact = path.join(staging, 'exact-bound-artifact');
+    const exactBoundArtifact = path.join(temp, 'exact-bound-artifact');
     fs.mkdirSync(exactBoundArtifact, { recursive: true });
     const exactResult = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true }] }));
     fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), exactResult);
@@ -357,7 +357,7 @@ function selfTest() {
       'durable retention must re-prove an exact verdict-byte binding instead of trusting the manifest boolean',
     );
 
-    const populationMismatchArtifact = path.join(staging, 'population-mismatch-artifact');
+    const populationMismatchArtifact = path.join(temp, 'population-mismatch-artifact');
     fs.mkdirSync(populationMismatchArtifact, { recursive: true });
     const populationMismatchResult = Buffer.from(JSON.stringify({ levels: [{ id: 'B', ok: true }] }));
     fs.writeFileSync(path.join(populationMismatchArtifact, 'result.json'), populationMismatchResult);
