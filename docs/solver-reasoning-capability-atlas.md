@@ -3,13 +3,13 @@
 > **Status:** current research map; descriptive, not a production queue.
 > **Purpose:** map the solver's semantic/reasoning capabilities against the computational demands Pathfinder can impose, so capability-acquisition work starts from missing operations rather than named algorithms.
 > **Priority owner:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). Deferred descendants: [`solver-future-work.md`](solver-future-work.md).
-> **Evidence companions:** [`solver-capability-memory.md`](solver-capability-memory.md), [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md), [`mechanic-state-contracts.md`](mechanic-state-contracts.md), [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md).
+> **Evidence companions:** [`solver-capability-evidence.md`](solver-capability-evidence.md), [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md), [`mechanic-state-contracts.md`](mechanic-state-contracts.md), [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md).
 
 ## Why this exists
 
 The repository already has several maps of solver capability, but each answers a different question:
 
-- capability memory records demonstrated/complementary outcome capability;
+- capability evidence records demonstrated/complementary outcome capability;
 - the operational taxonomy distinguishes genuinely different search behavior from renamed weight/config variants;
 - solver architecture documents implementation and active search machinery;
 - mechanic-state contracts document history-sensitive game semantics;
@@ -69,7 +69,7 @@ The solver does possess memory, but its useful knowledge mostly stays close to t
 - repair keeps elites, plateau information and a per-call failed-state experience cache;
 - beam resumability can preserve an execution frontier, but ordinary production scheduling still discards live frontier state at tranche end;
 - production attempts/stages do not share a general proof/conflict/interface blackboard;
-- offline capability memory survives across experiments, but is evidence for researchers, not solve-local reasoning.
+- offline capability evidence survives across experiments, but is evidence for researchers, not solve-local reasoning.
 
 Therefore the live memory gap is narrower than "no learning from failure": **the solver has little sound or reusable abstraction of failure that generalizes across syntactically different branches or across search processes inside one invocation.**
 
@@ -194,7 +194,7 @@ The atlas deliberately demotes several tempting categories.
 - **Naive exact transposition or full MITM identity:** sound exact identity has shown low duplicate compression/high state growth; reopen only from a cheaper, structurally justified equivalence.
 - **Generic "solver memory":** repair already has elites, stagnation diagnostics and a per-call experience cache; new work must specify the missing generalization/persistence/communication property.
 - **Generic "topology":** connectivity and several mechanic topology consequences already exist. New work must name a completion-relevant relation beyond them.
-- **A giant production fallback portfolio:** capability memory is evidence, not permission to append every historical winner.
+- **A giant production fallback portfolio:** capability evidence is evidence, not permission to append every historical winner.
 
 ## Overlay with current evidence
 
