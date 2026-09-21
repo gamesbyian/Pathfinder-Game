@@ -316,6 +316,9 @@ export interface PrepLevel {
             createdWork: number;
         }>;
         nextId: number;
+        /** Research-only exact proof-template dedupe. Lazily initialized so direct tests that
+         * construct the shadow by hand stay source-compatible. */
+        signatureToCertificateId?: Map<string, number>;
     } | null;
     /** Research-only Lane H2 checkerboard-capacity shadow observer. Reads the connectivity fill's
      *  existing reached set after goal/objective reachability succeeds; never changes pruning. */
@@ -521,7 +524,7 @@ export interface ConnectivityRejectionObserver {
  * the ordinary scheduled flood fill; `confirmedGoalUnreachable` is populated only on a shadow hit
  * and is checked against the real flood fill that still runs immediately afterward. */
 export interface ConnectivityCertificateShadowRecord {
-    kind: 'certificate' | 'certificate-dropped' | 'probe';
+    kind: 'certificate' | 'certificate-duplicate' | 'certificate-dropped' | 'probe';
     work: number;
     certificateId?: number;
     /** Normalized proof-object identity: reached component rows + sorted complete cardinal boundary.
@@ -530,6 +533,10 @@ export interface ConnectivityCertificateShadowRecord {
     boundarySize?: number;
     certificatesScanned?: number;
     boundaryCellChecks?: number;
+    /** Number of scanned certificates whose reached component contained the current position.
+     * A cheap position index could reduce lookup toward this denominator. */
+    positionEligibleCertificates?: number;
+    duplicateOfCertificateId?: number;
     hitCertificateId?: number;
     hitSourceWork?: number;
     crossExactState?: boolean;
