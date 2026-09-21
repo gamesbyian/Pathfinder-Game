@@ -276,17 +276,29 @@ try {
     solverRef: 'b'.repeat(40), configurationHash: primaryConfigurationHash,
     levels: [{ id: 'A', ok: true, status: 'success' }],
   }));
+  const solverRefOutcome = path.join(temp, 'solver-ref-outcome.json');
+  fs.writeFileSync(solverRefOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'solverRef-bound gate passed',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [contentHash(solverRefPrimary)],
+    },
+  }));
   const solverRefOut = path.join(temp, 'solver-ref-out');
   execFileSync('node', [
     'scripts/publish-solver-sweep-result.mjs',
     `--primary=${solverRefPrimary}`,
     `--integrity-file=${integrity}`,
-    `--outcome-file=${outcome}`,
+    `--outcome-file=${solverRefOutcome}`,
     `--contract-file=${contractFile}`,
     `--out=${solverRefOut}`,
   ], { cwd: root });
   assert.equal(JSON.parse(fs.readFileSync(path.join(solverRefOut, 'manifest.json'))).decisionBearing, true,
-    'an exact/reference-style solverRef is valid independent execution revision evidence');
+    'an exact/reference-style solverRef is valid independent execution revision evidence when the verdict is bound to those exact result bytes');
 
   const noContractOut = path.join(temp, 'no-contract');
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--out=${noContractOut}`], { cwd: root });
