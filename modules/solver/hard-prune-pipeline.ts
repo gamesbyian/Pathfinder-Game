@@ -36,14 +36,6 @@ export interface PruneEvaluationOptions {
         | 'repair-completion-dfs' | 'repair-bounded-dfs' | 'repair-relink';
     researchSchedulePhase?: number | null;
     researchRemainingSteps?: number;
-    /** DFS-only production-inert callback used by the computational-work-elimination microscope.
-     * Invoked only when an unscheduled retained cut proof actually applies. */
-    onUnscheduledConnectivityCertificateHit?: (hit: {
-        certificateId: number;
-        sourceWork: number;
-        crossExactState: boolean;
-        boundaryCellChecks: number;
-    }) => void;
 }
 
 function reached(diagnostics: PruneDiagnostics | undefined, id: PruneId): void {
@@ -267,14 +259,6 @@ export function evaluatePrunedMove(
                     }
                     : {}),
             });
-            if (probe.hitCertificateId !== undefined && probe.hitSourceWork !== undefined) {
-                options.onUnscheduledConnectivityCertificateHit?.({
-                    certificateId: probe.hitCertificateId,
-                    sourceWork: probe.hitSourceWork,
-                    crossExactState: probe.crossExactState === true,
-                    boundaryCellChecks: probe.boundaryCellChecks,
-                });
-            }
         }
     }
 
