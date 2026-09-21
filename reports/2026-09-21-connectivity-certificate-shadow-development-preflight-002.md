@@ -1,9 +1,9 @@
 # Connectivity cut-certificate shadow development preflight 002
 
-> **Status:** active
-> **Last evidence:** 2026-09-21 — run 001 on the same frozen 24-parent block emitted 0 certificates because the producer was narrower than the proved theorem.
-> **Decision:** rerun the unchanged population/resource envelope after removing only the accidental no-pending-obligation/reserved-wall source restriction.
-> **Remaining gate:** zero false positives plus certificate production and cross-exact-state recurrence on multiple independent parents; otherwise close or diagnose the exact remaining observability/economics blocker.
+> **Status:** concluded-positive; executed
+> **Last evidence:** 2026-09-21 — corrected rerun produced 650 confirmed scheduled-call hits, 612 across different exact states, with zero false positives. [Result 002](2026-09-21-connectivity-cut-certificate-shadow-development-result-002.md)
+> **Decision:** theorem-backed implication recurrence is real; the naive scheduled-call consumer is economically closed, and the chain advanced through selector/unscheduled-applicability studies to final dominated-work closure.
+> **Remaining gate:** none for this preflight; later results 003-006 own the completed descendants.
 
 ## Why this is a legitimate rerun
 
