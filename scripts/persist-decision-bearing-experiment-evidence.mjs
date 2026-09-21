@@ -314,7 +314,7 @@ function selfTest() {
       sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
       researchOutcome: { outcome: 'completed-positive' },
       entries: [
-        { role: '../primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(primary) },
+        { role: 'primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(primary) },
         { role: 'compact-failure-response', source: 'fixture-compact', published: 'failure-response/compact.json', missing: false, sha256: sha256(compact) },
       ],
     };
