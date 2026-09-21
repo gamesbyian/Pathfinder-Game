@@ -125,6 +125,17 @@ npm run research:response-guided-orientation -- --out=tmp/response-guided-orient
 
 Its signed Gate→Goal side balances/moments obey a tested reflection law and target the large CW/CCW discordance that count features fail to explain. Both outputs remain outcome-selected development evidence and can only nominate Stage-0 premises.
 
+The width-inversion nomination has a bounded consumer-oracle tool, but no default population:
+
+```bash
+npm run research:paired-beam-width-frontier -- \
+  --levels=<frozen outcome-selected contrast IDs> \
+  --profile=objectiveFirst --widths=2000,5000 \
+  --depth-fraction=0.2 --out=tmp/paired-width-frontier.json
+```
+
+It compares exact prefix support per gate at one phase checkpoint and persists only bounded examples. Frontier membership is not feasibility or production evidence.
+
 The first nominations are recorded in [the 2026-09-21 report](../reports/2026-09-21-response-guided-premise-nominations-001.md).
 
 ## Rebirth rule
