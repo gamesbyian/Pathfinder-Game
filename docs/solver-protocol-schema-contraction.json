@@ -417,6 +417,52 @@
       "status": "complete",
       "progress": "Removed inbound TRAP alias and client dual-read of TRAP_PROGRESS/TRAP_RESULT/status/field aliases. Current client and worker now speak only FALSE_GOAL_TRIGGER_SEARCH_PROGRESS / FALSE_GOAL_TRIGGER_SEARCH_RESULT with canonical fields.",
       "retirementGate": "closed: same-release client/worker protocol is canonical-only; historical docs remain unchanged"
+    },
+    {
+      "id": "PSC-021",
+      "concept": "scheduler mode and legacy-latency portfolio current input vocabulary",
+      "owners": [
+        "modules/solver/scheduler-mode-normalization.mjs",
+        "modules/solver/orchestration-contracts.ts",
+        "modules/solver/orchestration.ts",
+        "modules/solver/orchestration-legacy-portfolio.ts",
+        "scripts/portfolio-solve-sweep.mjs"
+      ],
+      "forms": [
+        "canonical scheduler modes + legacyLatencyPortfolioExperiment",
+        "legacy / portfolio-experiment / portfolioExperiment"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "remove-current-alias",
+      "status": "complete",
+      "progress": "Fresh CLI/API input accepts canonical scheduler modes only. solveLevel rejects retired spellings. Historical scheduler spellings remain available only through normalizeHistoricalSchedulerMode(). portfolioExperiment SolveOpts alias removed; current producers use legacyLatencyPortfolioExperiment.",
+      "retirementGate": "closed: current scheduler/config language is canonical-only; historical alias decoding is explicitly named and isolated"
+    },
+    {
+      "id": "PSC-022",
+      "concept": "phase-6 renamed SolveOpts override fields and CLI flags",
+      "owners": [
+        "modules/solver/orchestration-contracts.ts",
+        "modules/solver/orchestration.ts",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/solver-parallel/race.mjs",
+        "scripts/solver-parallel/race-opts.mjs"
+      ],
+      "forms": [
+        "goalAttractionDisabledRetry* / coarseStateNearTieRetentionRetry* / mainSearchLateReserve* / earlyRepairSearch* / repairShrinkRecovery* canonical names",
+        "attractionDiversity* / dedupNearTieRetry* / mainLoopLateReserve* / repairProbe* retired names"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "remove-current-alias",
+      "status": "complete",
+      "progress": "Removed remaining deprecated SolveOpts fields and runtime ?? fallbacks; raced engine/allowlist now canonical-only; portfolio-solve-sweep retired phase-6 CLI aliases with explicit replacement errors. With zero live dual-read override pairs remaining, check-solveopts-transport-parity.mjs and its package command were retired.",
+      "retirementGate": "closed: no current SolveOpts override or portfolio CLI path accepts the retired phase-6 vocabulary"
     }
   ],
   "lastUpdated": "2026-09-20",
