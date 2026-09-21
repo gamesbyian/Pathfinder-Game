@@ -207,4 +207,5 @@ async function main() {
     console.log(`Wrote ${outPath}: ${result.pairs.length} prespecified pair contrasts`);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
+if (process.argv[1] && path.basename(process.argv[1]).startsWith('analyze-response-guided-orientation-contrast')
+    && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
