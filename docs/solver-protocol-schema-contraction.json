@@ -43,7 +43,13 @@
       "id": "PSC-002",
       "concept": "level corpus document container",
       "owners": [
-        "scripts/level-data-io.mjs"
+        "scripts/level-data-io.mjs",
+        "scripts/level-data-io-unit-tests.mjs",
+        "scripts/hint-complete-enumeration-sharded.mjs",
+        "scripts/hint-corpus-expand.mjs",
+        "scripts/hint-diversification.mjs",
+        "scripts/hint-workbench.mjs",
+        "scripts/portfolio-solve-sweep.mjs"
       ],
       "forms": [
         "bare level array",
@@ -54,8 +60,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "explicit canonical corpus document replaces LEVEL_WRAPPERS hidden serialization state"
+      "status": "in-progress",
+      "retirementGate": "Migrate/prove all remaining readLevelsWithHints/writeLevelsWithHints callers, then remove LEVEL_WRAPPERS and the array facade. Preserve both on-disk storage shapes unless a separate corpus-format migration is justified.",
+      "progress": "Added explicit readLevelCorpusDocumentWithHints()/writeLevelCorpusDocumentWithHints() boundary: every read becomes {levels, metadata, storageShape}, so wrapped-corpus metadata and array-vs-object storage are ordinary data rather than hidden array-identity state. Round-trip tests prove copied/replaced levels arrays preserve metadata. Major batch hint writers plus portfolio-solve-sweep now carry the explicit corpus document. Legacy readLevelsWithHints()/writeLevelsWithHints() remain as a temporary WeakMap-backed compatibility facade until untouched callers are exhaustively migrated."
     },
     {
       "id": "PSC-003",
@@ -173,25 +180,22 @@
         "scripts/research-consumption-link.mjs",
         "scripts/research-enrichment-link.mjs",
         "scripts/research-artifact-envelope-lib.mjs",
-        "scripts/level-data-io.mjs",
-        "scripts/level-data-io-unit-tests.mjs",
-        "scripts/hint-complete-enumeration-sharded.mjs",
-        "scripts/hint-corpus-expand.mjs",
-        "scripts/hint-diversification.mjs",
-        "scripts/hint-workbench.mjs"
+        "scripts/capture-search-loss-evidence.mjs",
+        "scripts/annotate-search-loss-exact.mjs",
+        "scripts/search-loss-real-canary.mjs"
       ],
       "forms": [
         "document.researchBlock",
         "document.population.researchBlock"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
-      "retirementGate": "Migrate/prove all remaining readLevelsWithHints/writeLevelsWithHints callers, then remove LEVEL_WRAPPERS and the array facade. Preserve both on-disk storage shapes unless a separate corpus-format migration is justified.",
-      "progress": "Added explicit readLevelCorpusDocumentWithHints()/writeLevelCorpusDocumentWithHints() boundary: every read becomes {levels, metadata, storageShape}, so wrapped-corpus metadata and array-vs-object storage are ordinary data rather than hidden array-identity state. Round-trip tests prove copied/replaced levels arrays preserve metadata. Major batch hint writers (complete enumeration, corpus expansion, diversification, workbench) now carry the explicit corpus document. Legacy readLevelsWithHints()/writeLevelsWithHints() remain as a temporary WeakMap-backed compatibility facade until untouched callers are exhaustively migrated."
+      "retirementGate": "Complete producer census, then require top-level researchBlock for every current writer while retaining nested historical normalization only in research-artifact-envelope-lib.mjs.",
+      "progress": "Shared envelope decoder owns current top-level researchBlock plus the historical nested population.researchBlock form and rejects conflicting duplicates. Current consumption/enrichment writers and search-loss capture/annotation/canary producers now guard canonical shared-field locations before serialization. Historical nested artifacts remain readable at ingress."
     },
     {
       "id": "PSC-009",
@@ -202,21 +206,22 @@
         "scripts/research-enrichment-link.mjs",
         "scripts/research-artifact-envelope-lib.mjs",
         "scripts/capture-search-loss-evidence.mjs",
-        "scripts/search-loss-real-canary.mjs"
+        "scripts/search-loss-real-canary.mjs",
+        "scripts/annotate-search-loss-exact.mjs"
       ],
       "forms": [
         "document.populationIdentity",
         "document.population.corpusIdentity",
         "document.population.populationIdentity"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
-      "retirementGate": "one canonical current population-identity location; historical alternatives normalize at ingress",
-      "progress": "Shared decoder owns three historical/current identity locations and rejects conflicts. Search-loss current producers now write top-level populationIdentity; historical nested capture identity remains fixture-backed readable. Consumption/enrichment link producers assert canonical layout. Broader current-producer census remains."
+      "retirementGate": "Complete current-producer census, then treat top-level populationIdentity as the only current write location and retain historical alternatives only inside the shared ingress decoder.",
+      "progress": "Shared decoder owns three historical/current identity locations and rejects conflicts. Search-loss capture, annotation, and real-canary producers now write and guard top-level populationIdentity; consumption/enrichment producers likewise assert canonical layout. Historical nested identity remains readable only through the shared envelope adapter."
     },
     {
       "id": "PSC-010",
