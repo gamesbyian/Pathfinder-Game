@@ -59,6 +59,39 @@ The experiment must include setup cost and realistic experiment counts.
 
 No public/global cache is needed.
 
+
+## 1A. Current ablation multiplicity and measured compile ceiling
+
+Current `buildExperimentList('full')` expands to **153 experiments**:
+
+- baseline: 1;
+- single-feature experiments: 97;
+- attempt-order experiments: 8;
+- scoring-profile off/solo experiments: 24 (12 profiles x 2);
+- ordering-bias experiments: 9 (8 individual + all-off);
+- named pair experiments: 11;
+- non-profile/non-ordering group ablations: 3.
+
+The current-head fixed-cost measurement (`reports/2026-09-20-solver-batch-fixed-cost-measurement-001.md`) measured one full 160-level published pass at about **111.8 ms** of `prepLevel` work.
+
+If all 153 full-ablation experiments target all 160 published levels, the existing nesting therefore contains approximately:
+
+`153 * 111.8 ms ~= 17.1 seconds`
+
+of preparation work before cache/context overhead.
+
+On the measured 200-row Corpus-2 sample, one pass cost about **371.7 ms** of prep, implying approximately:
+
+`153 * 371.7 ms ~= 56.9 seconds`
+
+across an equivalent full-ablation experiment matrix on those 200 rows.
+
+These are upper ceilings for perfect compile-once reuse, not promised savings.
+
+Normalization is not worth coupling to the refactor for speed: its measured cost is only about 1.4 ms per full published pass and 2.85 ms per sampled 200-row Corpus-2 pass.
+
+The outstanding question is percentage-of-total batch wall time. Search-relative measurement is required before implementation.
+
 ## 2. Repeated exact solves inside required-length points
 
 `scripts/req-length-sweep.mjs` prepares each `reqLen` point once, then runs:
