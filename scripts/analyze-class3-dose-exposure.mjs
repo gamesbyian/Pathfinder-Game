@@ -23,6 +23,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import { validateResearchUnitTopology } from './research-unit-topology-lib.mjs';
+import { groupResearchObservationsByUnit } from './research-observation-integrity-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const index = arg.indexOf('=');
@@ -148,13 +149,10 @@ function classifyAttempts(attempts) {
     return 'exact-participated-indeterminate';
 }
 
-const rowsByParent = new Map();
-for (const row of expectedRows) {
-    const parentId = String(row.parentId ?? row.identity);
-    const list = rowsByParent.get(parentId) ?? [];
-    list.push(row);
-    rowsByParent.set(parentId, list);
-}
+const rowsByParent = groupResearchObservationsByUnit(
+    expectedRows,
+    row => row.parentId ?? row.identity ?? null,
+).groups;
 
 const rescuerRows = [];
 const parentRows = [];
