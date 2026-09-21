@@ -432,6 +432,7 @@ function _probeConnectivityGoalCutCertificates(
 ): {
     certificatesScanned: number;
     boundaryCellChecks: number;
+    positionEligibleCertificates: number;
     hitCertificateId?: number;
     hitSourceWork?: number;
     crossExactState?: boolean;
@@ -441,12 +442,14 @@ function _probeConnectivityGoalCutCertificates(
 
     let certificatesScanned = 0;
     let boundaryCellChecks = 0;
+    let positionEligibleCertificates = 0;
     for (let i = shadow.certificates.length - 1; i >= 0; i--) {
         const cert = shadow.certificates[i];
         certificatesScanned++;
         const x = pos & 0xFFFF;
         const y = (pos >>> 16) & 0xFFFF;
         if (y >= cert.reachedRows.length || (cert.reachedRows[y] & (1 << x)) === 0) continue;
+        positionEligibleCertificates++;
 
         let boundaryStillClosed = true;
         for (const cell of cert.boundaryCells) {
@@ -464,12 +467,13 @@ function _probeConnectivityGoalCutCertificates(
         return {
             certificatesScanned,
             boundaryCellChecks,
+            positionEligibleCertificates,
             hitCertificateId: cert.id,
             hitSourceWork: cert.createdWork,
             crossExactState: currentFingerprint !== cert.sourceStateFingerprint,
         };
     }
-    return { certificatesScanned, boundaryCellChecks };
+    return { certificatesScanned, boundaryCellChecks, positionEligibleCertificates };
 }
 
 function _retainConnectivityGoalCutCertificate(
@@ -491,6 +495,18 @@ function _retainConnectivityGoalCutCertificate(
 
     const signature = cert.reachedRows.map(word => (word >>> 0).toString(16)).join(',')
         + '|' + cert.boundaryCells.join(',');
+    const signatureIndex = shadow.signatureToCertificateId ?? (shadow.signatureToCertificateId = new Map());
+    const existingId = signatureIndex.get(signature);
+    if (existingId !== undefined) {
+        shadow.observer.observe({
+            kind: 'certificate-duplicate',
+            work: prep._workMeter.units,
+            certificateSignature: signature,
+            duplicateOfCertificateId: existingId,
+            boundarySize: cert.boundaryCells.length,
+        });
+        return;
+    }
     const configuredCap = Number(shadow.observer.maxCertificates);
     const cap = Number.isInteger(configuredCap) && configuredCap >= 0 ? Math.min(configuredCap, 1024) : 64;
     if (shadow.certificates.length >= cap) {
@@ -515,6 +531,7 @@ function _retainConnectivityGoalCutCertificate(
         sourceStateFingerprint: stateSignature(state),
         createdWork: prep._workMeter.units,
     });
+    signatureIndex.set(signature, id);
     shadow.observer.observe({
         kind: 'certificate',
         work: prep._workMeter.units,
@@ -689,6 +706,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
             work: prep._workMeter.units,
             certificatesScanned: certificateProbe.certificatesScanned,
             boundaryCellChecks: certificateProbe.boundaryCellChecks,
+            positionEligibleCertificates: certificateProbe.positionEligibleCertificates,
             ...(certificateProbe.hitCertificateId !== undefined
                 ? {
                     hitCertificateId: certificateProbe.hitCertificateId,
