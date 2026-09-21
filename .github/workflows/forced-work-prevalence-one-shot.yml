@@ -31,7 +31,7 @@ jobs:
             --corpus=data/stress/stress-levels-random.json \
             --levels-file=data/stress/forced-work-prevalence-sample-2026-09-21.json \
             --profile=objectiveFirst \
-            --width=500 \
+            --width=5000 \
             --work-budget=5000000 \
             --budget-ms=600000 \
             --out=reports/stress/forced-work-prevalence-census-2026-09-21.json
