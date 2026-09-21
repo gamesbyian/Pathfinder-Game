@@ -91,6 +91,7 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 | 2I | Capability invention demand | `active` | **ACQUISITION** | Run 3-row beam freshness gate; expand first-loss sampling outside capability-selected Class 3 | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
+| 2R | Parity response signature | `supporting` | **OFFLINE FIRST** | Census discordance; independent transfer before routing | `WS2-PARITY-RESPONSE-SIGNATURE` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
