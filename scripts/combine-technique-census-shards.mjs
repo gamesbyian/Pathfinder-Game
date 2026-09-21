@@ -92,7 +92,7 @@ if (COMBINED_FILE) {
     for (const d of dirs.sort()) {
         const shardPath = path.join(STAGING_DIR, d);
         const files = readdirSync(shardPath).filter(f => /^shard-\d+\.json$/.test(f)).sort();
-        if (files.length === 0) { missing.push(d); continue; }
+        if (files.length === 0) { if (EXPECTED_SHARDS == null) missing.push(d); continue; }
         if (files.length !== 1) {
             throw new Error(`combine: artifact ${d} contains ${files.length} shard result files; expected exactly one`);
         }
