@@ -65,6 +65,26 @@ const fullyValid = combinePopulationIntegrity([
 assert.equal(fullyValid.coverageComplete, true);
 assert.equal(fullyValid.decisionValidComplete, true);
 
+const legacyClean = {
+  ...base,
+  complete: true,
+  coverageComplete: true,
+  expectedCount: 2,
+  observedCount: 2,
+  outcomes: { solved: 2 },
+};
+delete legacyClean.decisionValidComplete;
+const mixedModernLegacy = combinePopulationIntegrity([
+  { label: 'modern', integrity: { ...legacyClean, decisionValidComplete: true } },
+  { label: 'legacy', integrity: legacyClean },
+]);
+assert.equal(
+  mixedModernLegacy.decisionValidComplete,
+  false,
+  'a clean legacy component must remain readable but cannot be upgraded into fresh decision authority by combination',
+);
+assert.equal(mixedModernLegacy.coverageComplete, true);
+
 assert.throws(() => combinePopulationIntegrity([{ label: 'x', integrity: base }, { label: 'x', integrity: base }]), /unique/);
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'combine-population-integrity-cli-'));
