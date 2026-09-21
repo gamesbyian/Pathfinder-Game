@@ -168,6 +168,38 @@ test('connectivity goal-cut shadow invalidates a prior dynamic boundary when it 
         'a reopened dynamic boundary must invalidate the old certificate');
 });
 
+test('connectivity goal-cut shadow remains valid with pending obligations', () => {
+    const level = makeLevel({
+        grid: { w: 5, h: 3 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 5, y: 3 },
+        blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }],
+        mustPass: [{ x: 2, y: 3 }],
+        mustCross: [{ x: 2, y: 2 }],
+        reqLen: 8,
+        reqInt: 1,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+    const source = stateAt(level, prep, [K(1, 1)]);
+    assert.notEqual(source.mustMask, 0, 'fixture must have a pending must-pass');
+    assert.notEqual(source.mustCrossMask, 0, 'fixture must have a pending must-cross');
+    assert.equal(isConnected(K(1, 1), source, level, prep), false);
+    assert.ok(records.some(r => r.kind === 'certificate'),
+        'goal-unreachable cut proof should not be suppressed merely because obligations are pending');
+
+    const later = stateAt(level, prep, [K(1, 1), K(2, 1)]);
+    assert.equal(isConnected(K(2, 1), later, level, prep), false);
+    const hit = records.find(r => r.kind === 'probe' && r.hitCertificateId !== undefined);
+    assert.ok(hit, 'pending obligations do not weaken the closed-component goal implication');
+    assert.equal(hit.confirmedGoalUnreachable, true);
+});
+
 test('connectivity goal-cut shadow deliberately produces no certificate on portal levels', () => {
     const level = makeLevel({
         grid: { w: 5, h: 3 },
