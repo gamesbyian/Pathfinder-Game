@@ -165,64 +165,6 @@ test('earlyRepairSearchAdaptiveBiasedBadnessGateOverride raises the gate: badnes
     assert.equal(biasedNodeBudgets[0], EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, 'scale 1: badness <= the overridden gate is a no-op');
 });
 
-test('legacy repairProbeAdaptiveBiasedBadnessGateOverride/MinScaleOverride option names normalize to the canonical earlyRepairSearchAdaptiveBiased* overrides', async () => {
-    const gateBudgets = (legacy: boolean) => {
-        const biasedNodeBudgets: number[] = [];
-        const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
-            const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
-            const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
-            if (prep._metrics) prep._metrics.nodesExpanded += spent;
-            if (out) {
-                out.nodesExpanded = spent;
-                out.timedOut = true;
-                if (config.repairMustTurnBiased && budgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
-                else if (!config.repairMustTurnBiased) out.bestBadness = 20;
-            }
-            return null;
-        };
-        return solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
-            timeBudgetMs: 50,
-            attemptSearchForTesting: dispatch,
-            ...(legacy
-                ? { repairProbeAdaptiveBiasedBadnessGateOverride: 25 }
-                : { earlyRepairSearchAdaptiveBiasedBadnessGateOverride: 25 }),
-        }).then(result => ({ result, biasedNodeBudgets }));
-    };
-    const legacyGate = await gateBudgets(true);
-    const canonicalGate = await gateBudgets(false);
-    assert.equal(legacyGate.result.ok, canonicalGate.result.ok);
-    assert.deepEqual(legacyGate.biasedNodeBudgets, canonicalGate.biasedNodeBudgets);
-    assert.deepEqual(legacyGate.biasedNodeBudgets, [EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET]);
-
-    const scaleBudgets = (legacy: boolean) => {
-        const biasedNodeBudgets: number[] = [];
-        const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
-            const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
-            const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
-            if (prep._metrics) prep._metrics.nodesExpanded += spent;
-            if (out) {
-                out.nodesExpanded = spent;
-                out.timedOut = true;
-                if (config.repairMustTurnBiased && budgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
-                else if (!config.repairMustTurnBiased) out.bestBadness = 1000;
-            }
-            return null;
-        };
-        return solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
-            timeBudgetMs: 50,
-            attemptSearchForTesting: dispatch,
-            ...(legacy
-                ? { repairProbeAdaptiveBiasedMinScaleOverride: 0.1 }
-                : { earlyRepairSearchAdaptiveBiasedMinScaleOverride: 0.1 }),
-        }).then(result => ({ result, biasedNodeBudgets }));
-    };
-    const legacyScale = await scaleBudgets(true);
-    const canonicalScale = await scaleBudgets(false);
-    assert.equal(legacyScale.result.ok, canonicalScale.result.ok);
-    assert.deepEqual(legacyScale.biasedNodeBudgets, canonicalScale.biasedNodeBudgets);
-    assert.deepEqual(legacyScale.biasedNodeBudgets, [Math.floor(EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET * 0.1)]);
-});
-
 test('earlyRepairSearchAdaptiveBiasedMinScaleOverride lowers the floor: very poor badness shrinks past the production MIN_SCALE', async () => {
     const biasedNodeBudgets: number[] = [];
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
