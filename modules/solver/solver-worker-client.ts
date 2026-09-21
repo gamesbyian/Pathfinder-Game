@@ -30,11 +30,50 @@
 // neither can cross structured-clone as-is; every other option is forwarded verbatim. Function-
 // valued options besides yieldFn (e.g. attemptSearchForTesting — explicitly test-only/internal per
 // its own doc comment in orchestration.ts, never meant to cross a real worker boundary) are
-// stripped before postMessage rather than left to throw a DataCloneError.
+// rejected before postMessage rather than silently stripped or left to throw a DataCloneError.
 
 import type { SolveOpts } from './orchestration.js';
 import { validateRawLevel } from '../domain/level-schema.js';
 import { normalizeRawLevel } from './normalization.js';
+
+function firstFunctionPath(value: unknown, path: string, seen = new Set<unknown>()): string | null {
+    if (typeof value === 'function') return path;
+    if (!value || typeof value !== 'object') return null;
+    if (seen.has(value)) return null;
+    seen.add(value);
+    if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+            const nested = firstFunctionPath(value[i], `${path}[${i}]`, seen);
+            if (nested) return nested;
+        }
+        return null;
+    }
+    for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+        const nested = firstFunctionPath(nestedValue, `${path}.${key}`, seen);
+        if (nested) return nested;
+    }
+    return null;
+}
+
+/**
+ * Build the serializable portion of a worker solve request.
+ * timeBudgetMs has its dedicated budgetMs transport and yieldFn has its cancellation bridge.
+ * Any other function anywhere in SolveOpts is direct/on-thread-only and is rejected explicitly.
+ */
+export function buildWorkerSolveOpts(opts: SolveOpts = {}): Record<string, unknown> {
+    const solveOpts: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(opts)) {
+        if (key === 'timeBudgetMs' || key === 'yieldFn') continue;
+        const functionPath = firstFunctionPath(value, key);
+        if (functionPath) {
+            throw new Error(
+                `Solver worker cannot transport function-valued SolveOpts at ${functionPath}; use direct solveLevel() for observer/test callback options`,
+            );
+        }
+        solveOpts[key] = value;
+    }
+    return solveOpts;
+}
 
 interface FalseGoalTriggerWorkerOpts {
     timeLimitMs?: number;
@@ -86,20 +125,10 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
             const level = normalizeRawLevel(levelRaw);
             const id = _nextId++;
             const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
-            // Forward everything EXCEPT timeBudgetMs/yieldFn (specially handled below) and any
-            // other function-valued option — structured clone throws a DataCloneError on a
-            // function rather than silently dropping it, and a function-shaped option (like the
-            // test-only attemptSearchForTesting) wouldn't mean anything across a real worker
-            // boundary anyway. Everything else (ablation, nodeBudget, baseWorkBudget/workBudget,
-            // disableExtraBudgetPasses, lifecycleTelemetry, every *BudgetFractionOverride field,
-            // primeAttempt, legacyLatencyPortfolioExperiment, schedulerMode, ...) is plain data and forwarded
-            // as-is — see this file's own header comment for why this exists.
-            const solveOpts: Record<string, unknown> = {};
-            for (const [key, value] of Object.entries(opts)) {
-                if (key === 'timeBudgetMs' || key === 'yieldFn') continue;
-                if (typeof value === 'function') continue;
-                solveOpts[key] = value;
-            }
+            // Build the canonical serializable option payload. Direct/on-thread-only callback
+            // options fail loudly rather than being silently stripped or left for postMessage to
+            // discover as a DataCloneError.
+            const solveOpts = buildWorkerSolveOpts(opts);
 
             return new Promise((resolve, reject) => {
                 let pollTimer: any = null;
