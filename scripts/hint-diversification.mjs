@@ -48,7 +48,7 @@ const { createSolver } = await import('../modules/solver.js');
 const { createHintAblationGenerator } = await import('../modules/solver/hint-ablation-generator.ts');
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
 const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
+const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.ts');
 
 const Solver = createSolver();
@@ -142,7 +142,6 @@ async function main() {
         const elapsedMs = Date.now() - t0;
 
         if (outcome.novel.length > 0) {
-            raw.hints = [...(raw.hints || []), ...outcome.novel];
             totalNovel += outcome.novel.length;
             // Attach real provenance (phase/scoring-profile/ordering-bias from the ablation generator's own
             // discovery tracking) rather than leaving these paths with an empty provenance list —
@@ -167,7 +166,7 @@ async function main() {
                     levelRevision,
                 })]);
             });
-            raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
         }
 
         const hintProvenance = (raw.hints || []).map((hintPath, hintIndex) => {
