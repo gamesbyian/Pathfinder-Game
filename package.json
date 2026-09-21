@@ -354,7 +354,6 @@
     "test:build-variant-family-dataset-manifest": "node scripts/build-variant-family-dataset-manifest-node-test.mjs",
     "test:combine-technique-census-shards": "node scripts/combine-technique-census-shards-node-test.mjs",
     "test:attempt-config-key": "node scripts/attempt-config-key-node-test.mjs",
-    "check:solveopts-transport-parity": "node scripts/check-solveopts-transport-parity.mjs",
     "test:solver-capability-memory": "node scripts/solver-capability-memory-lib-node-test.mjs",
     "research:response-guided-parity": "node scripts/run-bundled.mjs scripts/analyze-response-guided-parity-contrast.mjs",
     "test:response-guided-parity-contrast": "node scripts/run-bundled.mjs scripts/analyze-response-guided-parity-contrast-node-test.mjs",
