@@ -8,6 +8,12 @@ assert.doesNotMatch(blockLineage, /from ['"]\.\/solver-experiment-contract\.mjs[
 assert.match(blockLineage, /research-semantic-identity-lib\.mjs/u);
 assert.match(blockLineage, /research-evaluation-evidence-role-lib\.mjs/u);
 
+const capabilityMemory = source('scripts/solver-capability-memory-lib.mjs');
+assert.match(capabilityMemory, /research-population-identity-lib\.mjs/u,
+  'capability memory must use the shared population identity-set relation owner');
+assert.doesNotMatch(capabilityMemory, /function setIntersection|function setUnion/u,
+  'capability memory must not redeclare shared identity-set algebra');
+
 const failureResponse = source('scripts/solver-failure-response-lib.mjs');
 assert.doesNotMatch(failureResponse, /from ['"]\.\/solver-experiment-contract\.mjs['"]/u);
 assert.match(failureResponse, /research-observation-integrity-lib\.mjs/u);
