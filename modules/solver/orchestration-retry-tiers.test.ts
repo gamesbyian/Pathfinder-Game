@@ -155,7 +155,7 @@ function isolateDedupNearTieRetryOpts(overrides = {}) {
 
 test('coarse-state-near-tie-retention-disabled-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const run = (timeBudgetMs: number) => solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(),
-        isolateDedupNearTieRetryOpts({ timeBudgetMs, workBudget: 200_000 }));
+        isolateDedupNearTieRetryOpts({ timeBudgetMs, baseWorkBudget: 200_000 }));
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
@@ -307,7 +307,7 @@ function isolateAdmissibleOrderNonDefaultRetryOpts(overrides: Record<string, unk
 
 test('admissible-order-alternate-tiebreak-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
-    const run = (timeBudgetMs: number) => solveLevel(level, isolateAdmissibleOrderNonDefaultRetryOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateAdmissibleOrderNonDefaultRetryOpts({ timeBudgetMs, baseWorkBudget: 200_000 }));
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
@@ -486,7 +486,7 @@ function isolateConnectivityRetryWorkDoseOpts(overrides: Record<string, unknown>
 test('connectivity-axis-prune-disabled-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const run = (timeBudgetMs: number) => solveLevel(
         makeGoalAttractionDisabledRetryGatedInfeasibleLevel(),
-        isolateConnectivityRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }),
+        isolateConnectivityRetryWorkDoseOpts({ timeBudgetMs, baseWorkBudget: 200_000 }),
     );
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
