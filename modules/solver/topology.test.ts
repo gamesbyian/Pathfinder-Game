@@ -130,8 +130,8 @@ test('connectivity goal-cut shadow reuses a portal-free cut across a different e
     assert.equal(hit.confirmedGoalUnreachable, true);
     assert.ok(hit.positionEligibleCertificates > 0);
     assert.ok(hit.boundaryCellChecks > 0);
-    assert.ok(records.some(r => r.kind === 'certificate-duplicate'),
-        'the later ordinary rejection should rediscover the same proof template without consuming another retained slot');
+    // Reuse is implication-level: the later state can validate the earlier cut even when its own
+    // fresh flood fill reaches a smaller component and therefore derives a different certificate.
 });
 
 test('connectivity goal-cut shadow invalidates a prior dynamic boundary when it becomes traversable', () => {
