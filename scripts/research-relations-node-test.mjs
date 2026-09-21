@@ -15,6 +15,7 @@ import {
 } from './research-relations-lib.mjs';
 import {
     assertCanonicalResearchArtifactEnvelope,
+    assertCanonicalResearchArtifactLocations,
     extractResearchArtifactEnvelope,
 } from './research-artifact-envelope-lib.mjs';
 
@@ -61,6 +62,10 @@ assert.equal(assertCanonicalResearchArtifactEnvelope({
     populationIdentity: envelopePopulationIdentity,
     researchBlock: envelopeBlock,
 }).canonicalCurrent, true);
+assert.equal(assertCanonicalResearchArtifactLocations({
+    populationIdentity: envelopePopulationIdentity,
+}).populationIdentity, envelopePopulationIdentity);
+assert.equal(assertCanonicalResearchArtifactLocations({}).populationIdentity, null);
 
 const nestedEnvelope = extractResearchArtifactEnvelope({
     population: {
@@ -73,7 +78,10 @@ assert.equal(nestedEnvelope.researchBlock, envelopeBlock);
 assert.equal(nestedEnvelope.canonicalCurrent, false);
 assert.throws(() => assertCanonicalResearchArtifactEnvelope({
     population: { populationIdentity: envelopePopulationIdentity, researchBlock: envelopeBlock },
-}), /top-level researchBlock and populationIdentity/);
+}), /shared fields must use top-level researchBlock and populationIdentity/);
+assert.throws(() => assertCanonicalResearchArtifactLocations({
+    population: { populationIdentity: envelopePopulationIdentity },
+}), /shared fields must use top-level researchBlock and populationIdentity/);
 
 assert.throws(() => extractResearchArtifactEnvelope({
     populationIdentity: envelopePopulationIdentity,
