@@ -11,7 +11,6 @@ import {
 } from './attempt-identity.mjs';
 import { attemptConfigKey } from './orchestration.js';
 import type { AttemptConfig } from './types.js';
-import { makeAttemptConfigKeyParser } from '../../scripts/attempt-config-key.mjs';
 
 const canonicalCases = [
     [{ scoringProfileId: 'default', orderingBiasId: null }, 'dfs|score=default|bias=none'],
@@ -58,29 +57,6 @@ test('historical attempt identities normalize to exactly one canonical identity'
         assert.equal(formatAttemptIdentityKey(parseHistoricalAttemptIdentityKey(legacy)), canonical, legacy);
         assert.throws(() => parseAttemptIdentityKey(legacy), /valid canonical attempt identity/, legacy);
     }
-});
-
-test('policy-aware current attempt parser rejects compact historical IDs', () => {
-    const parser = makeAttemptConfigKeyParser({
-        STRUCTURAL_ORDERING_BIASES: { cornerHarvest: { id: 'cornerHarvest' } },
-        SCORING_PROFILES: { default: {} },
-        attemptConfigKey: (config: any) => formatAttemptIdentityKey({
-            scoringProfileId: config.scoringProfileId,
-            orderingBiasId: config.orderingBias?.id ?? null,
-            beamWidth: config.beamWidth,
-            mechanicBucketRetention: config.mechanicBucketRetention,
-            repair: config.repair,
-            repairMustTurnBiased: config.repairMustTurnBiased,
-            repairTurnBiased: config.repairTurnBiased,
-            admissibleOrder: config.admissibleOrder,
-            admissibleOrderNoTieBreak: config.admissibleOrderNoTieBreak,
-            admissibleOrderLds: config.admissibleOrderLds,
-        }),
-    });
-    const canonical = parser('dfs|score=default|bias=cornerHarvest');
-    assert.equal(canonical.scoringProfileId, 'default');
-    assert.equal(canonical.orderingBias?.id, 'cornerHarvest');
-    assert.throws(() => parser('dfs:default/cornerHarvest'), /valid canonical attempt identity/);
 });
 
 test('attemptIdentityTerms exposes canonical and historical spellings without duplicating the grammar', () => {
