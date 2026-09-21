@@ -370,7 +370,8 @@
     "solver:audit-batch-cost": "node scripts/run-bundled.mjs scripts/solver-batch-cost-probe.mjs",
     "solver:audit-initial-presolve": "node scripts/run-bundled.mjs scripts/initial-presolve-opportunity-census.mjs",
     "solver:audit-equivalence": "node scripts/run-bundled.mjs scripts/solver-equivalence-opportunity-census.mjs",
-    "solver:audit-family-constructive-reuse": "node scripts/family-constructive-reuse-census.mjs"
+    "solver:audit-family-constructive-reuse": "node scripts/family-constructive-reuse-census.mjs",
+    "solver:audit-family-compile-reuse": "node scripts/family-compile-reuse-census.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
