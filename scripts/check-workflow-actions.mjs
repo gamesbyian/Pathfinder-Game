@@ -134,7 +134,14 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
     }
   }
 
-  for (const inputName of extractDispatchInputNames(source.split('\n'))) {
+  const dispatchInputNames = extractDispatchInputNames(source.split('\n'));
+  // GitHub rejects workflow_dispatch definitions with more than 25 top-level inputs. Keep this
+  // locally knowable platform limit out of the "push and discover it in Actions" feedback loop.
+  if (dispatchInputNames.length > 25) {
+    failures.push(`${name}: workflow_dispatch declares ${dispatchInputNames.length} inputs; GitHub permits at most 25`);
+  }
+
+  for (const inputName of dispatchInputNames) {
     const consumed = new RegExp(`\\binputs\\.${inputName}\\b|github\\.event\\.inputs\\.${inputName}\\b`).test(source);
     if (!consumed) failures.push(`${name}: workflow_dispatch input "${inputName}" is declared but never referenced as inputs.${inputName} anywhere in this file`);
   }
@@ -173,4 +180,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`  - ${failure}`);
   process.exit(1);
 }
-console.log('Workflow actions, literal path filters, and local workflow entrypoints are valid.');
+console.log('Workflow actions, dispatch inputs, literal path filters, and local workflow entrypoints are valid.');
