@@ -1009,6 +1009,31 @@
         "Other projection families remain candidates, not live experiments, until separately earned."
       ],
       "reopensOn": null
+    },
+    {
+      "id": "WS2-FORCED-WORK-CAPTURE-ECONOMICS",
+      "question": "Of the large current beam parent-expansion work reservoir at one-successor states, what fraction is actually removable by a semantics-preserving forced-step consumer after paying recognition, transition, solution-check, retention, and accounting costs?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "forced-work capture fraction",
+        "forced-step economics",
+        "one-successor contraction economics",
+        "forced-chain capture"
+      ],
+      "constrainedBy": [
+        "reports/2026-09-21-forced-work-prevalence-preflight-001.md"
+      ],
+      "result": "The preregistered 64-parent C2-residual census is headroom-positive: 39.55% of expanded parents had exactly one post-hard-prune successor and they carried 25.33% of measured canonical parent-expansion work. All 64 independent parents exceeded the 5% headroom band. Chains are usually short, so the earned successor is capture/economics of semantics-preserving forced steps, not a generic long-chain compressor.",
+      "constrains": [
+        "Do not equate the 25.33% oracle ceiling with realizable savings; some parent/child transition and correctness work remains mandatory.",
+        "Do not optimize only long chains; the measured opportunity is dominated by frequent one-successor steps and short runs.",
+        "No production contraction is earned until a production-inert consumer measures capture fraction, overhead, semantic parity, solve/capability preservation, and overlap with existing pruning."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "acquisitionNeed": "telemetry-or-economics"
     }
   ]
 }
