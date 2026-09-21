@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: forced-work-prevalence-pr-1952
+  cancel-in-progress: true
+
 jobs:
   census:
     runs-on: ubuntu-latest
