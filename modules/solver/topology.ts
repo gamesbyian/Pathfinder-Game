@@ -476,6 +476,79 @@ function _probeConnectivityGoalCutCertificates(
     return { certificatesScanned, boundaryCellChecks, positionEligibleCertificates };
 }
 
+function _probeConnectivityGoalCutCertificatesIndexed(
+    pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+    maxVisit: number, mcOpenMask: number, axisExhausted: boolean,
+): {
+    certificatesScanned: number;
+    boundaryCellChecks: number;
+    positionEligibleCertificates: number;
+    hitCertificateId?: number;
+    hitSourceWork?: number;
+    crossExactState?: boolean;
+} | null {
+    const shadow = prep._connectivityCertificateShadow;
+    if (!shadow || level.portalMap.size !== 0 || shadow.certificates.length === 0) return null;
+    const candidateIds = shadow.certificateIdsByCell?.get(pos) ?? [];
+    let boundaryCellChecks = 0;
+
+    for (let i = candidateIds.length - 1; i >= 0; i--) {
+        const cert = shadow.certificates[candidateIds[i] - 1];
+        if (!cert) continue;
+        let boundaryStillClosed = true;
+        for (const cell of cert.boundaryCells) {
+            boundaryCellChecks++;
+            if (_classifyBoundaryBlocker(
+                cell, maxVisit, pos, state, prep, mcOpenMask, level.mustCrossKeys, axisExhausted,
+            ) === null) {
+                boundaryStillClosed = false;
+                break;
+            }
+        }
+        if (!boundaryStillClosed) continue;
+
+        const currentFingerprint = stateSignature(state);
+        return {
+            certificatesScanned: candidateIds.length,
+            boundaryCellChecks,
+            positionEligibleCertificates: candidateIds.length,
+            hitCertificateId: cert.id,
+            hitSourceWork: cert.createdWork,
+            crossExactState: currentFingerprint !== cert.sourceStateFingerprint,
+        };
+    }
+    return {
+        certificatesScanned: candidateIds.length,
+        boundaryCellChecks,
+        positionEligibleCertificates: candidateIds.length,
+    };
+}
+
+/** Research-only cut implication probe for candidates where the caller deliberately skipped the
+ * ordinary connectivity flood fill. This duplicates isConnected's tiny policy-context calculation
+ * rather than moving a helper call onto production's million-call hot path. The actual blocker
+ * classification and certificate validation are shared with the scheduled shadow above. */
+export function probeUnscheduledConnectivityGoalCutCertificate(
+    pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+): ReturnType<typeof _probeConnectivityGoalCutCertificatesIndexed> {
+    const shadow = prep._connectivityCertificateShadow;
+    if (!shadow || level.portalMap.size !== 0 || shadow.certificates.length === 0) return null;
+
+    const intNeeded = level.requiredIntersections - state.ints;
+    let maxVisit = intNeeded > 0 ? 2 : 0;
+    let mcOpenMask = 0;
+    const cfg = prep._cfg;
+    if ((!cfg || cfg.PRUNE_MC_RESERVED_WALL) && maxVisit > 0 && state.mustCrossMask !== 0
+        && intNeeded - popcount(state.mustCrossMask) === 0) {
+        maxVisit = 0;
+        mcOpenMask = state.mustCrossMask;
+    }
+    const axisExhausted = (!cfg || cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
+    return _probeConnectivityGoalCutCertificatesIndexed(
+        pos, state, level, prep, maxVisit, mcOpenMask, axisExhausted,
+    );
+}
+
 function _retainConnectivityGoalCutCertificate(
     state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     maxVisit: number, pos: number, mcOpenMask: number, axisExhausted: boolean,
@@ -532,6 +605,17 @@ function _retainConnectivityGoalCutCertificate(
         createdWork: prep._workMeter.units,
     });
     signatureIndex.set(signature, id);
+    const cellIndex = shadow.certificateIdsByCell ?? (shadow.certificateIdsByCell = new Map());
+    for (let y = 0; y < cert.reachedRows.length; y++) {
+        const row = cert.reachedRows[y] >>> 0;
+        for (let x = 0; x < level.grid.w; x++) {
+            if ((row & (1 << x)) === 0) continue;
+            const key = (y << 16) | x;
+            const ids = cellIndex.get(key);
+            if (ids) ids.push(id);
+            else cellIndex.set(key, [id]);
+        }
+    }
     shadow.observer.observe({
         kind: 'certificate',
         work: prep._workMeter.units,
