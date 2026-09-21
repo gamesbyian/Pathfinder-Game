@@ -82,6 +82,29 @@ function exactOutcomeBindingIssues(manifest, artifactRoot) {
     : ['researchOutcome.binding.resultContentHashes no longer match the artifact result bytes'];
 }
 
+function simplePopulationBindingIssues(manifest, artifactRoot) {
+  const integrity = manifest?.populationIntegrity ?? manifest?.coverage?.populationIntegrity ?? null;
+  if (!Array.isArray(integrity?.expectedIds) || integrity?.components || integrity?.arms) return [];
+  const primaryEntry = (manifest?.entries ?? []).find(entry => entry?.role === 'primary' && !entry?.missing && entry?.published);
+  if (!primaryEntry) return ['simple population integrity has no retained primary entry to revalidate'];
+  const primaryPath = path.resolve(artifactRoot, primaryEntry.published);
+  if (!isInside(artifactRoot, primaryPath) || !fs.existsSync(primaryPath) || fs.statSync(primaryPath).isDirectory()) {
+    return [];
+  }
+  let parsed;
+  try { parsed = JSON.parse(fs.readFileSync(primaryPath, 'utf8')); } catch { return []; }
+  if (!Array.isArray(parsed?.levels)) return [];
+  const actual = parsed.levels.map(row => row?.id ?? row?.levelId ?? row?.level ?? null);
+  if (actual.some(value => value == null)) return ['simple primary result contains a row without identity'];
+  const actualStrings = actual.map(String);
+  if (new Set(actualStrings).size !== actualStrings.length) return ['simple primary result contains duplicate row identities'];
+  const expected = integrity.expectedIds.map(String);
+  if (new Set(expected).size !== expected.length) return ['populationIntegrity.expectedIds contains duplicate identities'];
+  return JSON.stringify([...actualStrings].sort()) === JSON.stringify([...expected].sort())
+    ? []
+    : ['simple primary result rows no longer match populationIntegrity.expectedIds'];
+}
+
 function findDecisionBearingManifests(root) {
   return walk(root)
     .filter(file => path.basename(file) === 'manifest.json')
@@ -142,9 +165,11 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
     }
     const artifactRoot = path.dirname(manifestFile);
     const byteBindingIssues = exactOutcomeBindingIssues(manifest, artifactRoot);
-    if (byteBindingIssues.length > 0) {
+    const populationBindingIssues = simplePopulationBindingIssues(manifest, artifactRoot);
+    const retainedBindingIssues = [...byteBindingIssues, ...populationBindingIssues];
+    if (retainedBindingIssues.length > 0) {
       throw new Error(
-        `refusing to persist decision-bearing artifact whose exact verdict binding is stale: ${path.relative(staging, manifestFile)}: ${byteBindingIssues.join(', ')}`,
+        `refusing to persist decision-bearing artifact whose retained scientific binding is stale: ${path.relative(staging, manifestFile)}: ${retainedBindingIssues.join(', ')}`,
       );
     }
     const experimentId = safeSegment(manifest?.experiment?.experimentId, 'experiment');
@@ -241,6 +266,9 @@ function selfTest() {
       populationIntegrity: {
         complete: true, coverageComplete: true, decisionValidComplete: true,
         inferredExpectedPopulation: false, populationIdentityHash: `sha256:${'c'.repeat(64)}`,
+        expectedIds: ['A'],
+        expectedCount: 1,
+        observedCount: 1,
         outcomes: { deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 },
       },
       population: {
@@ -305,7 +333,7 @@ function selfTest() {
 
     const exactBoundArtifact = path.join(staging, 'exact-bound-artifact');
     fs.mkdirSync(exactBoundArtifact, { recursive: true });
-    const exactResult = Buffer.from(JSON.stringify({ levels: [{ id: 'B', ok: true }] }));
+    const exactResult = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true }] }));
     fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), exactResult);
     const exactManifest = {
       ...manifest,
@@ -322,11 +350,32 @@ function selfTest() {
     fs.writeFileSync(path.join(exactBoundArtifact, 'manifest.json'), `${JSON.stringify(exactManifest, null, 2)}\n`);
     const exactRetained = persistDecisionBearingExperimentEvidence({ stagingDir: exactBoundArtifact, outRoot: path.join(temp, 'exact-retained'), compressAboveBytes: 8 });
     assert.equal(exactRetained.length, 1, 'exact-bound artifact persists while its classified bytes match');
-    fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), JSON.stringify({ levels: [{ id: 'B', ok: false }] }));
+    fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: false }] }));
     assert.throws(
       () => persistDecisionBearingExperimentEvidence({ stagingDir: exactBoundArtifact, outRoot: path.join(temp, 'exact-retained-2'), compressAboveBytes: 8 }),
       /exact verdict binding is stale.*resultContentHashes no longer match/u,
       'durable retention must re-prove an exact verdict-byte binding instead of trusting the manifest boolean',
+    );
+
+    const populationMismatchArtifact = path.join(staging, 'population-mismatch-artifact');
+    fs.mkdirSync(populationMismatchArtifact, { recursive: true });
+    const populationMismatchResult = Buffer.from(JSON.stringify({ levels: [{ id: 'B', ok: true }] }));
+    fs.writeFileSync(path.join(populationMismatchArtifact, 'result.json'), populationMismatchResult);
+    fs.writeFileSync(path.join(populationMismatchArtifact, 'manifest.json'), JSON.stringify({
+      ...manifest,
+      runId: '125',
+      experiment: { ...manifest.experiment, experimentId: 'fixture/population-mismatch', workflowRunId: '125', workflowRunAttempt: '1' },
+      researchOutcome: {
+        outcome: 'completed-positive',
+        reason: 'bytes are exact but population is stale',
+        binding: { resultContentHashes: [sha256(populationMismatchResult)] },
+      },
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false }],
+    }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: populationMismatchArtifact, outRoot: path.join(temp, 'population-mismatch-retained') }),
+      /retained scientific binding is stale.*rows no longer match populationIntegrity\.expectedIds/u,
+      'exact content binding must not substitute for revalidating the retained simple population join',
     );
 
     const bundleBeforeReharvest = fs.readFileSync(path.join(destination, 'bundle.json'));
