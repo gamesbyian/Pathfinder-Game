@@ -49,6 +49,21 @@
       "maxBytes": 80000
     },
     {
+      "id": "research-question-intake",
+      "description": "Pre-ID orientation for a new solver-research or research-system question before stable question ownership is known.",
+      "required": [
+        "AGENTS.md",
+        "docs/research-question-intake.md"
+      ],
+      "optional": [
+        "docs/solver-optimization-workstreams.md",
+        "docs/solver-research-operating-model.md",
+        "docs/solver-research-inference-audit-framework.md"
+      ],
+      "warnBytes": 26000,
+      "maxBytes": 36000
+    },
+    {
       "id": "solver-research",
       "description": "Default current-head solver research orientation before a specialist doc/report is opened.",
       "required": [
