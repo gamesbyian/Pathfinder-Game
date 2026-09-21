@@ -129,3 +129,13 @@ Stop on redundancy, vanishing support, near-full residual identity, excessive co
 ## Current next action
 
 `WS2-CUT-BALANCE-PROJECTION` has cleared Stage-0 soundness/novelty and its preregistered Stage-B incidence screen (22/24 eligible parents; 105/263 connectivity-passing states). Build only the smallest **production-inert** BC1 consumer next: valid/reference safety differential, prospective later-disposition overlap, and construction-cost versus saved-work accounting. Do not add BC1 to the hot path or generalize to k-cut/flow from incidence alone.
+
+The [computational-work-elimination audit](solver-computational-work-elimination-audit-plan.md) sharpens the economics gate. The next BC1 evidence must distinguish **incidence** from **removable work** and retain enough prospective information to answer all of:
+
+- work point and construction cost when BC1 first proves the state impossible;
+- whether ordinary production would later reject/cull the same state or descendants anyway, and by which existing reason;
+- work performed after the BC1 proof that an actual safe consumer could legally eliminate;
+- whether that dominated work is incremental after overlap with existing connectivity / hard-prune machinery;
+- valid/reference differential under the same proof contract.
+
+Do not infer saved work retrospectively from the frozen frontier-prefix incidence artifact: it does not retain an honest completion-order/later-disposition trace. Prefer a production-inert live shadow at the existing BC1 owner seam, or an isolated continuation experiment whose inference scope is stated narrowly enough not to masquerade as shared-beam economics. Any behavioral consumer remains a later matched-work experiment.
