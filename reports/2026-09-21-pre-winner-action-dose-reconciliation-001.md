@@ -5,7 +5,7 @@
 > **Decision:** the current pre-winner reservoir survives conservative exclusions, but does not reopen the old static-portfolio scheduler, frozen percentile caps, or resumable-tranche salvage; route only the surviving new-signal question to WS1.
 > **Remaining gate:** test a new runtime-legal allocation signal through `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`; do not rerun the closed historical treatment forms unchanged.
 > **Evidence role:** forensic
-> **Trigger:** [pre-winner action work opportunity result 001](2026-09-21-pre-winner-action-work-opportunity-result-001.md).
+> **Trigger:** [pre-winner work oracle census 001](2026-09-21-prewinner-work-oracle-census-001.md).
 
 ## 1. Why reconcile before inventing another scheduler
 
