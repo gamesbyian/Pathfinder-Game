@@ -424,9 +424,9 @@ Decision: nominate at most the best-supported reuse/elimination treatments.
 
 ### Phase 4 - search-less opportunity census
 
-- [ ] map existing parity/separator/residual/algebraic assets to presolve;
+- [x] map existing parity/separator/residual/algebraic assets to presolve; bounded candidates P1 all-gates parity, P3 initial-state BC1, and conditional P2 checkerboard capacity are recorded in `../reports/2026-09-20-solver-presolve-opportunity-audit-001.md`;
 - [ ] measure static propagation/decomposition opportunities on real levels;
-- [ ] identify compact proof-producing candidates;
+- [x] identify compact proof-producing candidates; broad separator decomposition remains closed/representation-explosive, while local exact/safe consumers remain distinct;
 - [ ] estimate work removable before implementation.
 
 Decision: promote concrete presolve/decomposition experiments through canonical queue.
@@ -491,6 +491,15 @@ Every lane/candidate should eventually record:
 7. update this plan and the PR after each material finding.
 
 ## 10. Progress log
+
+### 2026-09-20 - presolve reconciliation
+
+- Added [`../reports/2026-09-20-solver-presolve-opportunity-audit-001.md`](../reports/2026-09-20-solver-presolve-opportunity-audit-001.md).
+- Presolve is narrowed to cheap exact/safe consumers, not a generic decomposition subsystem.
+- First opportunity census order: exact all-gates parity -> initial-state BC1 -> checkerboard capacity only if the existing reached-set substrate keeps it cheap.
+- The broad compact separator-interface architecture remains constrained by the C2 representation-explosive negative; this audit does not reopen it.
+- A general propagation-to-fixed-point engine is not earned until multiple cheap propagators demonstrably compose.
+
 
 ### 2026-09-20 - same-process reuse customer census
 
