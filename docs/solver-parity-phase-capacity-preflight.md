@@ -58,33 +58,13 @@ This is a relaxation. It may ignore dynamic visited/edge walls, consumed portal 
 
 ### First falsifier
 
-Instrument or probe **without changing decisions**.
-
-Required output, by opportunity population:
-- evaluated states/candidates;
-- incremental phase-distance deaths not already rejected by current scalar distance/parity before the same decision;
-- depth / remaining-length distribution;
-- portal pair count and twist-pair count;
-- whether the death occurred at a candidate-ranking seam, hard-prune seam, or only after another existing reject would already fire;
-- work/overhead of obtaining the label.
-
-Prefer one shared helper/map producer if it can serve multiple observational consumers. Do not separately implement a scorer-only and prune-only derivation.
+Shadow without changing decisions. Record evaluated candidates, incremental deaths beyond scalar distance/parity, depth/remaining length, portal/twist counts, decision seam, overlap with existing rejects and observer overhead. Reuse one shared phase-distance producer.
 
 ### Stop / advance
 
 **Stop the phase-distance premise** if incremental decision-bearing incidence is negligible at the cheapest representative pilot or construction/runtime overhead is plainly disproportionate.
 
-**Advance the phase-distance premise** only if there is non-trivial incremental opportunity. Then:
-1. build minimal synthetic witnesses;
-2. replay stored valid solution prefixes / known referee-valid paths and require zero false rejects;
-3. run differential/reference checking as appropriate;
-4. only then nominate the smallest consumer.
-
-Consumer preference:
-1. admissible-order ranking if the fact changes ordering often but hard-prune economics are weak;
-2. hard prune if sound incremental deadness is frequent enough to repay cost;
-3. portal guidance only after the exact phase representation exists and matched-work evidence is needed;
-4. routing/attempt selection only after current-input phase features predict differentiated response.
+**Advance** only on non-trivial opportunity, then require synthetic witnesses, stored/referee-valid prefix replay with zero false rejects, differential/reference checking, and the smallest consumer. Prefer ordering before hard prune when the fact changes rank more often than it proves death; routing waits for differentiated-response evidence.
 
 The 2026-08-08 existence-only portal envelope remains closed. `WS2-PARITY-PHASE-DISTANCE` is a materially different conditioned-distance predicate, not a rerun of “some twist remains / all twists consumed.”
 
@@ -114,25 +94,13 @@ Twist-bearing levels require an explicit phase-layer extension before using a fi
 
 ### First falsifier
 
-Add a research-only shadow count to the existing connectivity reached-set consumer, avoiding a second flood fill.
-
-Report:
-- connectivity evaluations;
-- current total-volume rejects;
-- incremental color-capacity rejects where total volume passes;
-- remaining steps, `intNeeded`, reached fresh counts by color;
-- search depth / routing regime / coverage ratio;
-- incremental work overhead.
+Reuse the existing connectivity reached set; do not run a second flood fill. Record evaluations, scalar-volume rejects, incremental color-capacity rejects, remaining steps/intersections, fresh cells by color, depth/regime/coverage and overhead.
 
 ### Stop / advance
 
 **Stop the checkerboard-capacity premise** if incremental rejects are negligible or concentrated only where another same-cost reject fires immediately.
 
-**Advance the checkerboard-capacity premise** on non-trivial incremental opportunity, then require:
-1. synthetic witnesses where total volume passes but one color is provably short;
-2. stored-solution/referee-valid prefix replay with zero false rejects;
-3. differential checking of the reached-set color counts;
-4. matched-work production A/B before default-on promotion.
+**Advance** on non-trivial incremental opportunity, then require synthetic witnesses, stored/referee-valid prefix replay with zero false rejects, differential checking of color counts, and matched-work A/B before promotion.
 
 ## 4. Premise `WS2-PARITY-RESPONSE-SIGNATURE`: parity as a capability-response axis
 
@@ -187,19 +155,7 @@ Do not create experiments from these without a new constraint:
 
 ## 7. Evidence and promotion discipline
 
-Any hard consumer follows [solver correctness hardening](solver-correctness-hardening.md):
-- approximation direction stated explicitly;
-- smallest counterexamples;
-- stored valid-path replay;
-- referee/reference differential where available;
-- no production promotion from observer incidence alone.
-
-Any soft consumer follows the ordinary matched-work research rules:
-- same work envelope;
-- participation measured;
-- gains/losses enumerated;
-- current-input-only features;
-- no per-level historical outcome leakage.
+Hard consumers follow [solver correctness hardening](solver-correctness-hardening.md): explicit approximation direction, counterexamples, valid-path replay and referee/reference differential. Soft consumers require matched work, measured participation, gains/losses and current-input-only features. Observer incidence or historical identity never licenses production.
 
 ## 8. Queue boundary
 
