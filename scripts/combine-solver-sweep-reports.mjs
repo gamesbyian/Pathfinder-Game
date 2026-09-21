@@ -24,12 +24,10 @@
  *   # or, to pick up every batch-*.json in a directory at once:
  *   node scripts/combine-solver-sweep-reports.mjs --in-dir=logs/solver-corpus2-batches --out=reports/stress/solver-corpus2-latest.json
  *
- * An input may also be an already-flattened report this same tool previously produced (no
- * `summary` wrapper -- budgetMs/corpus/etc. sit at the top level, alongside `levels`), as when
- * reconciling several sibling dispatches of the same population (e.g. an original dispatch plus
- * gap-fill dispatches for ids that individually timed out) that were each combined separately.
- * Such inputs are re-wrapped under a synthesized `summary` before the usual validation/merge, so
- * combining is idempotent and works uniformly on raw shard batches, flattened reports, or a mix.
+ * An input may also be an already-flattened report this same tool previously produced, as when
+ * reconciling sibling dispatches of the same population. Both shapes cross one explicit ingress
+ * adapter (solver-sweep-report-input.mjs) and become the same internal {summary, levels} contract
+ * before any scientific validation/merge logic runs. The adapter does not mutate source documents.
  */
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -37,6 +35,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { buildPopulationIntegrity, hashConfiguration, hashPopulation, isImmutableCommitSha, parseIdentityLines } from './solver-experiment-contract.mjs';
 import { encodeResearchScopedIdentity } from './research-population-identity-lib.mjs';
+import { normalizeSolverSweepReportInput } from './solver-sweep-report-input.mjs';
 
 const EXECUTION_CONFIG_FIELDS = [
     'levelBlind',
@@ -186,28 +185,7 @@ function main() {
     const reports = inputPaths.map(p => {
         const abs = path.resolve(ROOT, p);
         const parsed = JSON.parse(readFileSync(abs, 'utf8'));
-        if (!parsed?.summary && Array.isArray(parsed?.levels) && typeof parsed?.budgetMs === 'number') {
-            // Already-flattened output of a prior run of this same tool: re-wrap under a
-            // synthesized summary so the shared validation/merge below sees a uniform shape.
-            parsed.summary = {
-                budgetMs: parsed.budgetMs,
-                corpus: parsed.corpus,
-                nodeBudget: parsed.nodeBudget,
-                workBudget: parsed.workBudget,
-                schedulerMode: parsed.schedulerMode,
-                repairBudgetFraction: parsed.repairBudgetFraction,
-                commit: parsed.commitSha,
-                ...(parsed.executionConfig || {}),
-                ...(parsed.effectiveConfig ? {
-                    effectiveConfig: parsed.effectiveConfig,
-                    effectiveConfigDigest: parsed.effectiveConfigDigest,
-                } : {}),
-            };
-        }
-        if (!parsed?.summary || !Array.isArray(parsed?.levels)) {
-            throw new Error(`${p}: does not look like a portfolio-solve-sweep report ({summary, levels} expected)`);
-        }
-        return { path: p, ...parsed };
+        return { path: p, ...normalizeSolverSweepReportInput(parsed, p) };
     });
 
     // An immutable revision is fresh scientific identity, not an optional decoration. If only
