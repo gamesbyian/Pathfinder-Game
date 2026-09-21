@@ -112,6 +112,13 @@
           },
           "additionalProperties": false
         },
+        "resolution": {
+          "type": ["object", "null"]
+        },
+        "resolutionRef": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
         "recurrenceScope": {
           "enum": [
             "single-observation",
