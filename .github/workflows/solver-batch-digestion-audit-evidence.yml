@@ -3,6 +3,7 @@ name: Solver batch digestion audit evidence
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - '.github/workflows/solver-batch-digestion-audit-evidence.yml'
       - 'scripts/solver-batch-cost-probe.mjs'
