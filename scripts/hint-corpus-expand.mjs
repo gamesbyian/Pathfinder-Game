@@ -72,7 +72,7 @@ installBrowserStubs();
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
 const { enumerateFromGate, anchoredFromSeed } = await import('../modules/solver/hint-enumeration.js');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -253,7 +253,8 @@ const cfg = isMainThread
     }
     : workerData;
 
-const rawLevels = readLevelsWithHints(resolveFromRoot(cfg.levelsJsonPath));
+const corpusDocument = readLevelCorpusDocumentWithHints(resolveFromRoot(cfg.levelsJsonPath));
+const rawLevels = corpusDocument.levels;
 
 // ─── worker mode: expand whichever level index the main thread hands us next ───────────────────
 if (!isMainThread) {
@@ -384,7 +385,7 @@ async function main() {
     console.log(`\nTotal accepted: ${totalAccepted} across ${levelNumbers.length - skippedTag - skippedCap} eligible level(s). `
         + `Skipped: ${skippedTag} garbage, ${skippedCap} at-cap. Report -> ${output}`);
     if (writeLevels && totalAccepted > 0) {
-        writeLevelsWithHints(resolveFromRoot(cfg.levelsJsonPath), rawLevels);
+        writeLevelCorpusDocumentWithHints(resolveFromRoot(cfg.levelsJsonPath), corpusDocument);
         console.log(`Wrote ${totalAccepted} new hint(s) to ${cfg.levelsJsonPath}. Now run: npm run levels:generate-heatmaps && npm run check:level-data-validity && npm run test:hint-path-validation`);
     }
 }
