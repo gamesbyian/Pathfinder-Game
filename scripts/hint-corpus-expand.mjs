@@ -72,7 +72,7 @@ installBrowserStubs();
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
 const { enumerateFromGate, anchoredFromSeed } = await import('../modules/solver/hint-enumeration.js');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
+const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -308,7 +308,6 @@ async function main() {
         totalAccepted += result.acceptedCount;
         if (writeLevels && result.acceptedCount) {
             const raw = rawLevels[levelNumber - 1];
-            raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
             // Attach real provenance (which generator/technique found it) instead of leaving these
             // paths with an empty provenance list — this script previously only wrote `.hints`.
             const newRecords = result.acceptedPaths.map((p, i) => {
@@ -321,7 +320,7 @@ async function main() {
                     levelRevision: levelRevisionByNumber.get(levelNumber) ?? null,
                 })]);
             });
-            raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
         }
         results[resultIndex] = result;
         console.log(`L${levelNumber}: +${result.acceptedCount} (${result.hintCountBefore}->${result.hintCountAfter}) `
