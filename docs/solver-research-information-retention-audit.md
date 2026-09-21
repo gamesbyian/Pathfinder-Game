@@ -1023,7 +1023,7 @@ This means post-solve joins against:
 - historical outcomes;
 - exact/reference labels;
 - family/variant relationships;
-- capability memory;
+- capability evidence;
 - provenance;
 - known solutions;
 - generator metadata;
