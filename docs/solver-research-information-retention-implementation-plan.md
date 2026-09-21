@@ -111,7 +111,26 @@ Before changing readers:
 3. never manufacture a stage for historical config-only evidence;
 4. novelty/longitudinal comparison should avoid falsely treating old config-only rows as equal to new action-qualified rows.
 
-If compatibility can be achieved without schema bump, prefer a shared ingress normalizer. If not, document why schema v2 is actually necessary before changing it.
+Compatibility **can** be achieved without a schema bump.
+
+Current tracked compact-response evidence on main is very small (three retained instances at audit time) and all inspected historical rows show the same recognizable legacy projection:
+
+- row `actionKey` contains a valid configuration identity;
+- row `configurationKey` is null;
+- richer targeted evidence may still contain correct attempt-level canonical action identities.
+
+Canonical config and action grammars are mechanically distinguishable with the existing `parseHistoricalAttemptIdentityKey()` / `normalizeAttemptActionKey()` owners.
+
+Therefore prefer:
+
+1. fix producer projection prospectively;
+2. add one shared **read-time identity view/normalizer** for historical compact rows;
+3. do not rewrite frozen historical evidence;
+4. do not bump the persisted schema merely to repair this projection.
+
+The historical adapter should only reinterpret row `actionKey` as legacy configuration identity when it parses as a config identity and does **not** parse as a canonical/historical action identity. It must never synthesize a stage/action that historical evidence did not preserve.
+
+All maintained compact consumers that compare/group/filter row-level config/action identity should consume that shared view rather than each inventing compatibility logic.
 
 ### Tests
 
@@ -127,6 +146,8 @@ At minimum:
 - legacy config-string-in-actionKey decoding;
 - malformed action identity remains unknown/fails where appropriate;
 - novelty phenotype distinguishes same config under different stages/actions on new evidence;
+- historical config-in-`actionKey` rows normalize to configuration-only identity without acquiring a fake stage/action;
+- identity-audit/query/purpose-query/hint-failure consumers see the same normalized historical semantics;
 - hint/failure-process join preserves action identity without affecting its parent/protocol join key.
 
 ### Exit gate
@@ -195,6 +216,17 @@ Persist compact response prospectively only if:
 
 Otherwise keep the current artifact-bound full primary and document the expiration boundary.
 
+## 4A. Pre-implementation reconciliation findings
+
+The final current-main reconciliation before implementation changed the plan in four ways:
+
+1. **Historical compatibility is cheaper than expected.** Only three tracked compact-response instances were found on main at audit time, all exhibiting the same config-in-action projection. Existing parsers can distinguish the grammars, so schema v2 and historical-file rewriting are unnecessary.
+2. **Current tests encode the defect.** `solver-failure-response-lib-node-test.mjs` currently expects a technique-census `techniqueKeys` value to become row `actionKey`. Package A must deliberately change the test contract rather than treating existing assertions as authority.
+3. **Late promotion has primitives but no supported rail.** `harvest-solver-evidence.yml` can manually re-harvest a prior run, and `publish-solver-sweep-result.mjs` can bind an explicit later research outcome to exact result bytes. However the durable persister only accepts artifacts already published as decision-bearing. There is no named helper/workflow that safely republishes an earlier exploratory artifact with a later exactly-bound outcome.
+4. **Do not build that helper preemptively.** The existing closeout/reconstructability rule is sufficient for now. If post-hoc promotion recurs, a small republish-and-persist helper can then be earned; until then, closeout should use existing purpose-specific tracked datasets or a normal decision-bearing publication when available.
+
+These refinements reduce rather than expand the implementation.
+
 ## 5. Work package C — generic closeout reconstructability check
 
 ### Existing authority
@@ -214,6 +246,19 @@ Add one item to the generic closeout checklist in `investigation-report-conventi
 > If primary/source evidence material to later audit is artifact-bound or branch-bound, verify that it remains reconstructable for the expected reuse horizon. Preserve the smallest existing-compatible bundle when needed, or explicitly state the expiration boundary and what row-level re-analysis will no longer be possible. See the Solver Research Resource Contract reconstructability rule.
 
 The exact wording should remain generic enough for non-solver research where appropriate, or be solver-qualified if the document's broader scope makes that safer.
+
+### Trigger scope
+
+Keep the generic rule narrow. A report mentioning an artifact does **not** create an archival obligation.
+
+Apply the reconstructability check when source evidence is materially required to support or later audit a durable:
+
+- decision/promotion/closure;
+- capability or future-work premise;
+- exact/reference resource intended for reuse;
+- mechanism claim whose row-level distinctions matter.
+
+Pure exploratory context, illustrative examples, and non-material source mentions remain normal artifact-lifetime evidence unless separately promoted.
 
 ### Structured closeout capsule
 
