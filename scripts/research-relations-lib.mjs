@@ -15,6 +15,7 @@ import { researchSemanticHash as stableHash } from './research-semantic-identity
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
 import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 import { durableBundleManifestStoredPath } from './durable-evidence-bundle-lib.mjs';
+import { validateCapabilityInventionDemand } from './capability-invention-demand.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     questions: { identity: 'id', source: 'docs/solver-research-question-relations.json' },
@@ -33,6 +34,7 @@ export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     durableEvidence: { identity: 'bundlePath', source: 'reports/stress/experiment-evidence/**/bundle.json' },
     researchBlocks: { identity: 'blockId', source: 'explicit/discovered research manifests/captures' },
     researchParents: { identity: 'blockId + parentId', source: 'derived from research blocks' },
+    capabilityDemands: { identity: 'id', source: 'data/stress/capability-invention-demand.json' },
 });
 
 function readJson(root, relative, { optional = false } = {}) {
@@ -292,6 +294,11 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
     const audits = readJson(root, 'docs/solver-research-resource-contract-audits.json');
     const auditedById = new Map((audits.auditedResources ?? []).map(row => [row.assetId, row]));
     const measurement = readJson(root, 'docs/solver-premise-map-measurement-opportunities.json');
+    const capabilityDemand = readJson(root, 'data/stress/capability-invention-demand.json');
+    const capabilityDemandErrors = validateCapabilityInventionDemand(capabilityDemand);
+    if (capabilityDemandErrors.length) {
+        throw new Error(`Invalid capability-invention demand register:\n- ${capabilityDemandErrors.join('\n- ')}`);
+    }
     const evidenceIntegrity = readJson(root, 'reports/stress/solver-evidence-integrity-index.json', { optional: true });
     const integrityRecords = evidenceIntegrity?.records ?? [];
     const status = buildResearchStatusIndex(root);
@@ -334,6 +341,12 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
         premises: premiseMap.premises.map(row => withSource(row, 'premises', row._premiseSource)),
         premiseEdges: premiseMap.edges.map(row => withSource(row, 'premiseEdges', row.sourceFile)),
         durableEvidence,
+        capabilityDemands: (capabilityDemand.rows ?? []).map(row => withSource({
+            ...row,
+            questionId: capabilityDemand.researchQuestion,
+            productionBoundary: capabilityDemand.productionBoundary ?? null,
+            registerUpdatedAt: capabilityDemand.updatedAt ?? null,
+        }, 'capabilityDemands', RESEARCH_RELATION_CONTRACTS.capabilityDemands.source)),
     };
 
     return {
