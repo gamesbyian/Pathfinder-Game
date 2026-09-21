@@ -1,10 +1,9 @@
 # Computational work elimination audit: wait-less disposition 001
 
-> **Status:** ROUTED TO EXISTING DECISION-LATENCY AUTHORITY; no new framework earned.
-> **Date:** 2026-09-21.
-> **Parent:** [solver computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).
-> **Existing authority:** [solver research batch decision-latency audit](2026-09-20-solver-research-batch-decision-latency-audit-001.md).
-> **Operating rule:** [solver research operating model](../docs/solver-research-operating-model.md), rule 28.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — repository audit confirmed completion-order onResult/stopAfter already exists and the operating model now owns prospectively frozen irreversible decision locks.
+> **Decision:** treat wait-less as an opportunistic runner rule, not a new sequential-statistics or scheduler program; complete-population classifiers remain complete-population-only.
+> **Remaining gate:** additional infrastructure is earned only after at least two distinct expensive consumers need shared lock bookkeeping beyond the existing stopAfter callback and small terminal certificate.
 
 ## Question
 
