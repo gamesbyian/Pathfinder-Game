@@ -73,6 +73,17 @@ Use these classes: **live authority**, **current reference**, **machine registry
 
 A mutable fact gets one owner. Current authorities say what is true now; replace stale state rather than appending corrections beneath it. Put chronology, measurements, failed attempts, and dated reasoning in reports/snapshots and link to them.
 
+Also look for **machine authority hiding in prose**: software inferring stable state, identity, lifecycle, ownership, or contract semantics from human wording. When a concept has an earned closed vocabulary or stable machine semantics, prefer an explicit structured owner and let prose explain it. Do not force genuinely open-ended scientific/planning predicates into schemas merely for uniformity.
+
+When the repo “already knows X, but the knowledge is scattered across” several places, classify the case before deduplicating:
+- repeated semantic invariant → shared primitive;
+- one current fact with multiple writers → canonical authority;
+- read-only synthesis → derived view;
+- legitimately different concepts → adapter or explicit separation;
+- dated evidence plus one current authority → healthy distribution.
+
+Deduplication is not the goal by itself. Avoid both duplicated live semantics and over-generalized universal abstractions.
+
 Keep provider-specific agent files thin. Reusable working rules belong in `AGENTS.md`; adapters should contain routing plus genuinely provider-specific constraints, not fork shared guidance.
 
 Run context budgets after edits and after integrating current `main`. Treat the hard ceiling as a guardrail, not a target. High-churn or concurrently edited authorities need **merge-composable headroom**: enough margin that two reasonable branches do not combine into an immediate failure. Tighten ceilings after real compaction; do not raise them to accommodate unexplained growth.
@@ -94,6 +105,8 @@ For each ask:
 - Have multiple planning surfaces converged enough to consolidate?
 
 A live non-core planning item should usually contain only the question/debt, why it remains open when non-obvious, cheapest meaningful next gate or reopen condition, stop criteria, current disposition/evidence link, and any durable safety boundary.
+
+Before compacting, retiring, or archiving a planning surface, explicitly extract any still-live reopen condition, stop condition, provenance constraint, safety boundary, deferred nomination, or handoff dependency into its real current owner. Compression should remove chronology and duplication, not future decision logic.
 
 Use size/context ceilings for recurring junk drawers. Preserve exact pre-consolidation text in a dated snapshot only when it has genuine design/research value not already captured elsewhere.
 
@@ -125,11 +138,26 @@ Treat historical names (`phase`, date, `legacy`, `one-off`, `closeout`, temporar
 
 Audit not only whether artifacts have consumers, but whether important consumers can **reach the evidence reliably**. If an agent needs evidence to diagnose, verify, or continue work, prefer a bounded proof-bearing projection in ordinary logs/job summaries with the full artifact retained for drill-down. Put this in shared publishing infrastructure when many workflows need it. Keep emitted summaries bounded so accessibility does not create a new size problem.
 
+For expensive/sharded workflows, inspect whether collection, combination, validation, interpretation, and persistence are unnecessarily welded together. Where practical, preserve enough intermediate output and provenance that a downstream parser/combiner/publisher bug can be repaired and recombined without repaying expensive upstream compute.
+
+Repeated workflow fragments plus near-limit workflow files are an extraction signal. Prefer a shared helper/action/script when several workflows repeat the same publish/combine/summarize/stage logic; do not squeeze syntax or raise a grandfather ceiling merely to fit the next copy.
+
 When a research line closes, reverse-sweep candidate-specific workflows/tests against current dispositions. Default-OFF code retained for reproducibility does not automatically justify a lifetime dedicated workflow. Durable evidence keyed by run/attempt/experiment identity should be append-only or idempotent: rerun/reharvest must not silently overwrite different bytes under the same identity.
 
-## 7. CI runtime and structural bloat
+## 7. CI runtime, failure lessons, and structural bloat
 
 Inspect recent CI over a meaningful window. Separate hosted-runner/network variance from repository-caused regression.
+
+Do a bounded retrospective over failed CI/workflow runs, emphasizing repeated deterministic failures, post-merge/main-only failures, workflow-platform contract failures, silent/incomplete data handling, and agent-caused procedural misses. Cluster by underlying cause rather than counting every red run. For each prominent class ask whether it reveals:
+- stale or missing agent guidance;
+- a deterministic check that should run earlier or locally;
+- an unenforced GitHub Actions/platform limit or semantic;
+- an edge layout/ordering case absent from tests;
+- cross-authority/lifecycle drift;
+- a brittle proxy assertion based on count, timing, alias, exact prose, or incidental representation;
+- a recurring edit surface that needs decomposition or a shared helper.
+
+Promote the lesson into the smallest appropriate owner: executable guard when cheap, `ci-preflight.md` / `change-recipes.md` when procedural, shared workflow/tooling infrastructure when structural, or provider-neutral `AGENTS.md` guidance only when it broadly belongs there. Do not turn this plan into an accumulating incident log.
 
 Examine end-to-end and per-job duration, queue time, setup/install/cache cost, test/check/proof runtime, job count, repeated work, sparse-checkout/materialization volume, dependency growth, new validations, cancellation/concurrency, and slow tail tasks inside parallel populations.
 
@@ -154,6 +182,10 @@ When a migration/research campaign/temporary bridge closes:
 7. validate the actual final head.
 
 Treat exemptions as debt with a lifecycle. Grandfather lists, allowlists, compatibility exceptions, lint suppressions, temporary path exemptions, and similar ratchets should, where practical, be **self-pruning**: allow pre-existing debt without permitting growth, and fail once the exception is no longer needed so stale permission cannot enable regrowth. Never raise an exception ceiling merely to accommodate new debt.
+
+Challenge the enforcement scope too. When a global ratchet makes unrelated PRs pay for pre-existing repository debt, prefer a causally scoped PR rule (“this change may not worsen the debt”) plus a scheduled/full-repository audit where that preserves the invariant. Conversely, do not hide merge-result or cross-file failures behind incremental checking when the invariant is inherently global.
+
+Where an agent can cheaply avoid a deterministic violation, expose the boundary at the editing surface when practical. Prefer validators/CI that report multiple independent ordinary failures in one pass over serial one-red-at-a-time discovery, while still failing closed on setup or dependency failures.
 
 ## 9. Historical material and compatibility
 
@@ -208,7 +240,8 @@ Use this sequence unless evidence supports a smaller equivalent path:
 9. CI structural optimization and validator simplification;
 10. research-infrastructure/discovery repair;
 11. proportionate anti-regression guards;
-12. integrate latest `main`, rerun budgets/ratchets, and perform the final hostile audit.
+12. after the first productive cleanup lens, do a second-pass closure sweep for adjacent instances/classes that may have been skipped because the first fix paid off;
+13. integrate latest `main`, rerun budgets/ratchets, and perform the final hostile audit.
 
 Use multiple PR-sized slices when one diff becomes hard to review, merge, or recover. Keep slices pointed at the same hygiene goal. Avoid large compute merely for housekeeping; use the cheapest evidence that answers the question.
 
@@ -224,6 +257,8 @@ Useful heuristics:
 - Treat a near-limit, high-churn authority as debt even while technically green.
 - Prefer compact projections plus drill-down artifacts over duplicating full evidence everywhere.
 - When a ratchet misses a real instance, test the ratchet's detection model, not just the missed instance.
+- After one clean ownership/abstraction repair, ask what neighboring instances of the same defect class remain unexplored.
+- Test semantic membership and contractual behavior rather than incidental counts, timing, aliases, or current representation.
 
 ## 14. Final hostile audit
 
@@ -242,6 +277,8 @@ Before declaring completion ask:
 - Can an agent actually reach the evidence needed to verify important workflow results?
 - Did concurrent/mainline changes consume the headroom of edited authorities?
 - Did new hygiene machinery create disproportionate maintenance/context/CI cost?
+- Did recent CI/workflow failures expose a recurring agent mistake, platform assumption, or silent-data-loss path that remains possible and undocumented/unvalidated?
+- Did the first productive cleanup lens cause adjacent instances of the same defect class to be skipped?
 - Is archived material still routed as current reading?
 - Does the final branch satisfy current naming, architecture, research, evidence, context-budget, and file-size contracts?
 
