@@ -22,6 +22,9 @@ assert.equal(frozen.kind, 'pathfinder-response-guided-contrast-population');
 assert.equal(frozen.evidenceRole, 'development');
 assert.equal(frozen.premiseUse, 'offline-premise-nomination-only');
 assert.equal(frozen.source.path, 'fixture.json');
+assert.match(frozen.populationIdentity, /^sha256:[0-9a-f]{64}$/u);
+assert.equal(frozen.populationSelection.role, 'outcome-selected-development-contrast');
+assert.deepEqual(frozen.populationSelection.includedOutcomeBuckets, ['leftOnly', 'rightOnly', 'both']);
 assert.equal(frozen.pairs.length, 1);
 assert.deepEqual(frozen.pairs[0].counts, {
     leftOnly: 1,
