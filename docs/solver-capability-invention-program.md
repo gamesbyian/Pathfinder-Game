@@ -162,7 +162,7 @@ Register promoted questions in the ordinary question authority. Workstreams owns
 
 1. continue first-loss demand sampling from existing evidence;
 2. use preserved technique/decision contrasts for response-guided premise discovery;
-3. complete the cut/region-flow Stage-0 audit before code;
+3. run the earned BC1 production-inert safety/economics consumer; separately test bounded 2K/5K exclusive-prefix viability/dominance and a selected CW/CCW operational-trace seam;
 4. promote only recurring, decision-bearing semantic gaps with cheap falsifiers.
 
 The output sought is empirical:
