@@ -13,19 +13,22 @@ collector.observe({
 });
 collector.observe({
     stage: 'generated',
-    paths: [[1, 2]],
+    paths: [[1, 2], [1, 8]],
     details: { parentExpansions: [{ path: [1], workSpent: 10, generatedCandidates: 1 }] },
 });
+collector.observe({ stage: 'post-hard-prune', paths: [[1, 2]] });
 collector.observe({
     stage: 'generated',
-    paths: [[1, 2, 3]],
+    paths: [[1, 2, 3], [1, 2, 7]],
     details: { parentExpansions: [{ path: [1, 2], workSpent: 20, generatedCandidates: 1 }] },
 });
+collector.observe({ stage: 'post-hard-prune', paths: [[1, 2, 3]] });
 collector.observe({
     stage: 'generated',
-    paths: [[1, 2, 3, 4], [1, 2, 3, 5]],
+    paths: [[1, 2, 3, 4], [1, 2, 3, 5], [1, 2, 3, 6]],
     details: { parentExpansions: [{ path: [1, 2, 3], workSpent: 30, generatedCandidates: 2 }] },
 });
+collector.observe({ stage: 'post-hard-prune', paths: [[1, 2, 3, 4], [1, 2, 3, 5]] });
 collector.observe({
     stage: 'generated',
     paths: [],
