@@ -53,6 +53,24 @@ assert.ok(missingSourceArtifact.errors.some(error =>
     /references missing sourceArtifact reports\/__missing-source-artifact__\.md/u.test(error)),
 'structured report sourceArtifact refs must resolve to tracked repository files at integration time');
 
+const evidenceWithBadSuccessors = {
+    ...prebuiltModel,
+    relations: {
+        ...prebuiltModel.relations,
+        evidence: prebuiltModel.relations.evidence.map((row, index) =>
+            index === 0 ? {
+                ...row,
+                successorQuestions: ['WS2-NOT-A-REAL-QUESTION'],
+                successorArtifacts: ['reports/not-a-real-successor.md'],
+            } : row),
+    },
+};
+const badSuccessors = auditResearchIntegration(process.cwd(), { model: evidenceWithBadSuccessors });
+assert.ok(badSuccessors.errors.some(error =>
+    /references unknown successor question WS2-NOT-A-REAL-QUESTION/u.test(error)));
+assert.ok(badSuccessors.errors.some(error =>
+    /references missing successor artifact reports\/not-a-real-successor\.md/u.test(error)));
+
 const withConsumptionEvent = event => ({
     ...prebuiltModel,
     relations: {
