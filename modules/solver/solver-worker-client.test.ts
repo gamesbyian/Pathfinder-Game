@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { buildWorkerSolveOpts, createSolverWorkerClient, normalizeSolveWorkerResult } from './solver-worker-client.js';
+import { normalizeRawLevel } from './normalization.js';
 
 test('normalizeSolveWorkerResult removes transport envelope and restores direct timing field', () => {
     assert.deepEqual(normalizeSolveWorkerResult({
@@ -56,7 +57,7 @@ test('worker SolveOpts serializer preserves data and rejects callback-shaped opt
     }), /failureProgressObserver\.observe/);
 });
 
-test('solve validates raw input, transports one normalized contract, and returns direct SolveResult shape', async () => {
+test('solveLevel transports one normalized contract and returns direct SolveResult shape', async () => {
     const worker = new FakeWorker();
     const client = createSolverWorkerClient(worker as any);
     const raw = {
@@ -67,7 +68,8 @@ test('solve validates raw input, transports one normalized contract, and returns
         reqInt: 0,
     };
 
-    const solvePromise: any = client.solve(raw, { timeBudgetMs: 1234 });
+    const normalized = normalizeRawLevel(raw);
+    const solvePromise: any = client.solveLevel(normalized, { timeBudgetMs: 1234 });
     const request = worker.messages.find(m => m.type === 'SOLVE');
     assert.ok(request);
     assert.equal(request.budgetMs, 1234);
@@ -95,6 +97,39 @@ test('solve validates raw input, transports one normalized contract, and returns
     assert.equal(Object.hasOwn(result, 'elapsedMs'), false, 'historical transport timing name must not leak into public solve result');
     assert.equal(Object.hasOwn(result, 'type'), false, 'worker routing type must not leak into public solve result');
     assert.equal(Object.hasOwn(result, 'id'), false, 'worker routing id must not leak into public solve result');
+
+    assert.throws(() => client.solveLevel(raw as any), /requires a normalized level/);
+});
+
+test('solve is a raw-level convenience adapter over canonical solveLevel transport', async () => {
+    const worker = new FakeWorker();
+    const client = createSolverWorkerClient(worker as any);
+    const raw = {
+        grid: { w: 2, h: 3 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 2, y: 3 },
+        reqLen: 3,
+        reqInt: 0,
+    };
+    const promise: any = client.solve(raw, { timeBudgetMs: 321 });
+    const request = worker.messages.find(m => m.type === 'SOLVE');
+    assert.ok(request);
+    assert.equal(request.budgetMs, 321);
+    assert.ok(request.level.portalMap instanceof Map);
+    assert.equal(Object.hasOwn(request, 'levelRaw'), false);
+    worker.emit({
+        type: 'RESULT',
+        id: request.id,
+        ok: false,
+        status: 'exhausted',
+        solution: null,
+        solutions: [],
+        elapsedMs: 4,
+        nodesExpanded: 2,
+        attempts: [],
+    });
+    const result = await promise;
+    assert.equal(result.totalMs, 4);
 
     assert.throws(() => client.solve({
         grid: { w: 16, h: 16 },
