@@ -15,6 +15,7 @@ import { researchSemanticHash as stableHash } from './research-semantic-identity
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
 import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 import { durableBundleManifestStoredPath } from './durable-evidence-bundle-lib.mjs';
+import { readRepositoryText, repositoryPathKind } from './repository-file-view.mjs';
 import { validateCapabilityInventionDemand } from './capability-invention-demand.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
@@ -39,11 +40,16 @@ export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
 
 function readJson(root, relative, { optional = false } = {}) {
     const absolute = path.join(root, relative);
-    if (!existsSync(absolute)) {
-        if (optional) return null;
-        throw new Error(`missing research relation source: ${relative}`);
+    if (existsSync(absolute)) return JSON.parse(readFileSync(absolute, 'utf8'));
+    try {
+        if (repositoryPathKind(root, relative) === 'file') {
+            return JSON.parse(readRepositoryText(root, relative));
+        }
+    } catch {
+        // Non-repository fixture roots retain the ordinary missing-file behavior below.
     }
-    return JSON.parse(readFileSync(absolute, 'utf8'));
+    if (optional) return null;
+    throw new Error(`missing research relation source: ${relative}`);
 }
 
 const withSource = (row, relation, source) => ({
