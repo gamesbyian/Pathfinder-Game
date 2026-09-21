@@ -228,7 +228,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
 import { getRequiredPathCoverageRatio } from './routing-regime.js';
-import { validateCandidatePath } from '../domain/path-validator.js';
+import { validateCanonicalPath } from '../domain/path-validator.js';
 import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';
 
@@ -298,7 +298,7 @@ export function createEnumerationPoolClient(workerFactory: () => Worker, poolSiz
             for (const { path: candidate, nodes, elapsedMs } of found) {
                 if (capped) break;
                 if (sigs.has(pathSignature(candidate))) continue;
-                const v = validateCandidatePath(level, candidate);
+                const v = validateCanonicalPath(level, candidate);
                 if (!v.ok) continue;
                 const sig = pathSignature(v.path);
                 if (sigs.has(sig)) continue;
