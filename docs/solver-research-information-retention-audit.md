@@ -90,6 +90,23 @@ A workflow can therefore truthfully be "automatically harvested" while its succe
 
 The retention audit must record **evidence-layer coverage**, not infer it from workflow-level transport labels.
 
+
+### Retention destination vocabulary
+
+For the remaining audit, classify each retained object by destination:
+
+- `canonical-main`: bytes are committed to canonical main;
+- `merged-history`: branch-local bytes are known to have entered retained repository history;
+- `branch-bound`: committed only to a live research/feature branch;
+- `durable-experiment-bundle`: immutable v3 evidence copied under the canonical experiment-evidence store;
+- `artifact-bound`: survives only under Actions retention;
+- `operational-overwrite`: current state intentionally replaces prior state;
+- `recomputable`: no durable copy required because stable durable inputs + deterministic derivation suffice;
+- `unknown`: survival/reconstruction has not been established.
+
+This vocabulary describes byte/reconstruction survival, not evidence quality.
+
+
 ### Semantic phase transitions
 
 Add another question at each boundary:
@@ -718,6 +735,86 @@ The full combined report and standard `solver-sweep-result` remain in Actions fo
 This is especially relevant because deterministic mode is explicitly described as A/B/research mode.
 
 **Disposition:** high-priority documentation/retention candidate, but implementation should not simply commit the `latest` pointers. The safe design question is whether a bounded immutable per-run primary/attempt attachment belongs under `capability-runs/<run_id>/`, possibly compressed or projected through an existing durable evidence format.
+
+
+
+### IR-025 — targeted-sweep acquisition can become decision-relevant without becoming a durable decision-bearing bundle
+
+**Class:** semantic phase-transition / R1.
+
+`solver-level-blind-targeted-sweep.yml` has strong scientific integrity plumbing:
+
+- exact intended ID population;
+- complete-coverage validation;
+- optional required-stage participation gates;
+- native v3 experiment contract;
+- protocol identity;
+- standard compact failure response;
+- standard `solver-sweep-result`.
+
+Its own comments explicitly distinguish incomplete artifact presence from evidence that may "count as decision-bearing."
+
+However the workflow never supplies `publish-solver-sweep-result.mjs` with a declared `researchOutcome`. Since `decisionBearingExperimentResultIssues()` requires `completed-positive` or `completed-negative`, the standard manifest cannot become `decisionBearing=true`.
+
+That is reasonable for a generic acquisition rail: the workflow cannot know which downstream research question or threshold a caller intends.
+
+The retention problem appears **later** when an exploratory targeted run becomes material to an actual decision after inspection:
+
+- the shared durable experiment harvester ignores its non-decision-bearing primary rows;
+- `persist_failure_response=true` can commit the compact response + manifest, but is chosen at dispatch time and does not retain the full primary rows;
+- a dated report can preserve the interpretation while the exact source rows remain on a 90-day artifact clock.
+
+This is a semantic transition the current infrastructure does not automatically model:
+
+`generic acquisition -> inspected evidence -> decision-relevant source`.
+
+**Disposition:** do not make every targeted sweep declare a fake verdict. Investigate a narrow prospective closeout convention for runs that actually influence a durable research decision: either preserve/link the exact source bundle at closeout or explicitly record its reconstructability horizon.
+
+### IR-026 — branch-local evidence commits are durable only if the branch history is retained/merged
+
+**Class:** R1 lifecycle/destination risk.
+
+The operating model correctly prefers branch/PR evidence for research. Several workflows also commit rich outputs back to the **dispatched ref**, for example:
+
+- `solver-stress-refresh.yml` pushes its persisted capability/report state to `${github.ref_name}`;
+- `technique-census.yml` commits the combined census directory and hints to `${github.ref_name}`.
+
+This is useful because research runs can exercise feature-branch code without polluting canonical main.
+
+But branch-local git history has a different survival contract from canonical main:
+
+- if the generated evidence commit is included in a subsequently merged PR, it becomes canonical history;
+- if the branch is deleted or abandoned without that evidence commit merging, the rich branch-local report may become practically unavailable after Actions expiry;
+- the main harvester still rescues supported Hint/provenance and decision-bearing bundles, but not necessarily the complete branch-local exploratory matrix.
+
+The workflow README already states the important principle for solved paths: execution ref and durable evidence destination are separate concerns. This audit extends that principle to non-solution research evidence.
+
+**Disposition:** classify retention destinations as `canonical-main`, `merged-history`, `branch-bound`, `artifact-bound`, or `recomputable` rather than using "committed" as a synonym for durable.
+
+### IR-027 — compact failure response retains per-attempt badness that the common query reducer does not expose by action/stage
+
+**Class:** R6 queryability downgrade.
+
+`compactFailureAttempt()` retains both `bestBadness` and `finalBadness` when an attempt produced them.
+
+`failure-response-query.mjs` groups attempts by action and stage, but those group summaries currently aggregate only:
+
+- attempt count;
+- outcome composition;
+- work;
+- nodes.
+
+Its badness summary is built from **row-level** `row.bestBadness` / `row.finalBadness`, not the retained attempt-level values.
+
+Therefore the compact document may already contain the information needed for questions such as:
+
+> under this exact action/stage, what progress distribution did failed attempts show at comparable dose?
+
+but the maintained query surface does not expose it without ad-hoc parsing.
+
+Combined with IR-021's cross-family badness semantics, blindly adding one global badness aggregate would be the wrong fix. A safe future query extension would need action/family stratification and explicit measurement semantics.
+
+**Disposition:** investigation/query ergonomics candidate, not a storage gap.
 
 
 ## 6. Positive findings / boundaries already working well
