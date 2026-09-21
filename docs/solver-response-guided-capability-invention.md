@@ -109,13 +109,23 @@ The existing relative-advantage analyzer now preserves left-only/right-only/both
 
 `modules/solver/parity-structure.ts` owns portal twist classification and per-gate required twist parity; production prep consumes the same owner.
 
-Run the first no-search response analysis with:
+Freeze the current tracked development cohorts first:
+
+```bash
+npm run research:freeze-response-guided-contrasts -- \
+  --base=reports/stress/technique-niches/2026-09-03/level-capability.json \
+  --out=tmp/response-guided-contrast-population.json
+```
+
+The freezer records the exact A-only/B-only/both identities plus the source file SHA-256. The historical September 1 analysis remains provenance for the original nominations; new executable development work uses the tracked September 3 capability map unless an older artifact is supplied explicitly.
+
+Then run the first no-search response analysis:
 
 ```bash
 npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
 ```
 
-It normalizes raw levels through the solver boundary and compares portal-pair phase structure and gate parity demand across frozen technique-discordance cohorts.
+It normalizes raw levels through the solver boundary and compares portal-pair phase structure and gate parity demand across the prespecified technique-discordance cohorts.
 
 The second no-search probe is transformation-aware geometry:
 
