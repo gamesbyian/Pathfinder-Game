@@ -532,6 +532,24 @@ Some labelled branch sets are explicitly committed by individual investigations,
 
 **Interpretation:** this is not evidence that the experiment archive should accept non-verdict objects. The likely question is whether recurring exact/reference labels deserve their own minimal resource-instance durability convention.
 
+
+### IR-018 refinement — purpose-specific exact/reference persistence already has a working precedent
+
+The exact/reference search found an important existing practice:
+
+- `reports/stress/cpsat-explicit-prefix-oracle-repair-retreat-2026-08-12.json` is a committed case-level CP-SAT explicit-prefix label set with live/dead/abstain outcomes, model status, source-case identity, time limit, and referee validation where a witness was emitted;
+- `reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` and its dated report preserve the upstream contrastive branch-atlas material;
+- the dated pilot explicitly distinguishes oracle abstention from a dead label and routes unknown cases toward later CP-SAT labelling.
+
+So the repository already has the right **scientific form** for important exact/reference evidence:
+
+`generic acquisition tool -> purpose-specific labelled dataset/report -> durable research input`.
+
+The generic GHA workflow does not need to become a universal archive. What is missing is simply a prospective rule that when an exact/reference acquisition becomes a reusable research input, the relevant case rows and abstention/correctness semantics should graduate into a purpose-specific tracked dataset or other Resource-Contract-compatible durable instance.
+
+This lowers IR-018 from “possible new durability rail” to **documentation/procedure hardening unless repeated generic consumers later justify more**.
+
+
 ### IR-019 — previously adjudicated non-retention must not be reopened as an accidental-loss bug
 
 **Class:** audit correction.
@@ -1228,3 +1246,48 @@ The likely target architecture is not “save everything.” It is:
 > capture broadly enough to expose useful process distinctions; retain bounded, semantically stable projections; preserve truncation and missingness; enrich offline; escalate selected anomalies/questions into richer replay.
 
 This remains a hypothesis to test against the retention matrix and producer/consumer audit.
+
+
+## 12. Investigation closeout status
+
+### Completed audit surfaces
+
+The documentation-first investigation has now covered:
+
+- level-blind worker -> parent result;
+- attempt/result -> sweep row;
+- shard -> combine;
+- combine -> standard publication;
+- publication -> harvester/durable experiment evidence;
+- failed/cancelled salvage;
+- deterministic versus ordinary stress-refresh persistence;
+- targeted acquisition and late scientific promotion;
+- gap-fill -> reconciliation;
+- technique census compact/full policy;
+- method-probe operational traces;
+- search-loss compact/rich disposition;
+- exact/reference acquisition;
+- one-shot workflow retirement;
+- branch-local persistence;
+- generated resource interfaces;
+- hint discovery-process derivation;
+- representative analyzer/reducer behavior;
+- transient solver knowledge;
+- cache/reuse overlap with the merged batch-digestion authority.
+
+### Remaining investigation before implementation planning
+
+Only a small amount remains:
+
+1. verify the intended canonical semantics of row-level `actionKey` across the main compact-response producer shapes before changing IR-002/IR-023;
+2. decide the minimum reconstructable payload actually needed for deterministic refreshes before proposing IR-024 storage;
+3. translate the late-promotion findings (IR-020/025/028) into one procedural closeout rule rather than three bespoke mechanisms;
+4. decide whether survival destination belongs in the asset catalogue, the workflow/evidence disposition, or only the Resource Contract / operating-model prose;
+5. reconcile this branch with current main before final closeout, since PR #1940 merged during the investigation.
+
+### Estimated completion
+
+The investigation/documentation phase is approximately **85% complete**.
+
+The remaining 15% is synthesis and exact contract verification, not another broad repository survey. The audit has already ruled out the largest tempting overreactions: universal diagnostic telemetry, universal raw retention, a new warehouse, and reopening already-adjudicated rich search-loss capture.
+
