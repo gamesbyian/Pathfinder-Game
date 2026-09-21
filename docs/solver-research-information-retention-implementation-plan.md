@@ -1,8 +1,9 @@
 <!-- agent-context-budget: warn=7000 max=10000 -->
 # Solver research information-retention implementation plan
 
-> **Status:** planned; no implementation started.
+> **Status:** implementation complete; deterministic-retention measurement concluded negative for full compact persistence.
 > **Source audit:** [`solver-research-information-retention-audit.md`](solver-research-information-retention-audit.md)
+> **Measured retention disposition:** [`../reports/2026-09-21-deterministic-refresh-compact-retention-measurement-001.md`](../reports/2026-09-21-deterministic-refresh-compact-retention-measurement-001.md)
 > **Closeout report:** [`../reports/2026-09-20-solver-research-information-retention-audit-001.md`](../reports/2026-09-20-solver-research-information-retention-audit-001.md)
 > **Priority boundary:** this plan changes research evidence projection/retention only. Solver capability experiments remain owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Non-regression boundary:** production level-blindness, solver decisions, search order, budgets, and default telemetry collection must remain unchanged unless separately authorized by their owning programs.
@@ -160,6 +161,8 @@ At minimum:
 
 ## 4. Work package B — deterministic-refresh retention measurement
 
+**Disposition: COMPLETE / full compact persistence closed negative; bounded winner-action snapshot improvement adopted.**
+
 ### Problem
 
 `solver-stress-refresh.yml` deterministic mode commits bounded per-run projections but not full combined primary rows.
@@ -203,9 +206,32 @@ On representative full deterministic C1+C2 refresh artifacts:
 6. Can manifest/protocol identity be referenced rather than duplicated?
 7. How many deterministic refreshes per month/year would be retained, and what is the annual Git cost?
 
-### Decision gate
+### Measured result
 
-Persist compact response prospectively only if:
+The gate was executed against the actual current tracked C1+C2 full reports using `scripts/measure-deterministic-retention-payload.mjs`.
+
+Measured C1+C2 totals:
+
+- 1,802 rows;
+- 56,906 attempts;
+- full primary: 62,447,546 bytes / 4,366,229 gzip bytes;
+- compact pretty JSON: 32,719,585 bytes;
+- compact minified JSON: 22,291,303 bytes;
+- compact gzip: 1,739,700 bytes;
+- compact pretty / full: 52.4%;
+- compact gzip / full gzip: 39.8%.
+
+Full compact-per-run persistence is therefore **not adopted**. The ordinary tracked JSON is too large for the marginal value relative to existing immutable per-level snapshots, lifecycle maps, equal-work reach, and health-timeline aggregates, and no recurring deterministic-refresh consumer currently requires all historical attempt sequences.
+
+The smaller implementation adopted by this program is to preserve `winningActionKey` beside `winningConfig` in each immutable per-level capability snapshot.
+
+The full measurement and reopen condition are documented in `reports/2026-09-21-deterministic-refresh-compact-retention-measurement-001.md`.
+
+### Reopen gate
+
+Reconsider a purpose-built historical attempt projection only if a recurring consumer demonstrates a need for exact failed action/config sequence plus per-attempt dose/censoring after normal Actions retention. Do not default back to the 32.7 MB compact document without a new measurement.
+
+The original prospective gate was:
 
 - it is materially smaller than full primary;
 - at least two recurring longitudinal/research consumers benefit;
@@ -377,11 +403,11 @@ Each has either an existing owner, explicit negative disposition, or insufficien
 3. **Package D/E: discoverability and guidance**  
    Documentation-only cleanup; fold into C if edits remain small and coherent.
 
-4. **Package B measurement only**  
-   Measure compact deterministic retention after A. Do not wire persistence in the same step unless the measured gate is clearly met.
+4. **Package B measurement only — complete**  
+   The measured gate did not earn full compact persistence.
 
-5. **Package B persistence, only if earned**  
-   Separate commit/PR slice if it changes workflow outputs or repository growth.
+5. **Bounded Package B outcome — complete**  
+   Preserve `winningActionKey` in the existing per-level capability snapshot. No new compact-per-run store was added.
 
 ## 10. Commit / PR discipline
 
@@ -396,12 +422,12 @@ Update the PR description after each package. Do not combine a schema/identity c
 
 ## 11. Completion definition
 
-This implementation program is complete when:
+This implementation program is complete. Completion criteria were satisfied as follows:
 
 - compact response preserves configuration/action identity correctly for current producers and remains honest for historical evidence;
 - ordinary investigation closeout visibly inherits the existing reconstructability rule;
 - harvester/resource wording no longer implies broader durability than it provides;
 - exact/reference and one-shot retention expectations are explicit;
-- deterministic compact retention has a measured disposition: promoted or closed/deferred;
+- deterministic compact retention has a measured disposition: **closed negative for full compact-per-run persistence**, with the smaller winner-action snapshot fix adopted;
 - no broad observer/store has been added without a demonstrated consumer.
 
