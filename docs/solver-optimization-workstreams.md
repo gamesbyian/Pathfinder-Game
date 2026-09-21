@@ -5,11 +5,11 @@
 > **Reconciled:** 2026-09-21.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
-Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability memory: [`capability memory`](solver-capability-memory.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Capability acquisition: [`invention program`](solver-capability-invention-program.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
+Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability evidence: [`capability evidence`](solver-capability-evidence.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Capability acquisition: [`invention program`](solver-capability-invention-program.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
 
 ## Data-audit guardrail
 
-C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts but not consume historical identity/outcome/hints/capability-memory membership. Negatives close only tested claims.
+C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts but not consume historical identity/outcome/hints/capability-evidence membership. Negatives close only tested claims.
 
 ## Portfolio posture
 
@@ -107,7 +107,7 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 ## Standing research rules
 
 - Compare techniques with `workSpent`; nodes are within-technique diagnostics. New actions/configs compete inside total work.
-- IDs, historical outcomes, hints, family labels, stored exact answers and capability-memory membership are forbidden cold routing inputs. Current-input exact derivation is legal only if sound and economical.
+- IDs, historical outcomes, hints, family labels, stored exact answers and capability-evidence membership are forbidden cold routing inputs. Current-input exact derivation is legal only if sound and economical.
 - Separate semantic premise from tested form before transporting a negative. Offline/exact evidence may nominate/falsify a production premise; it cannot license runtime behavior.
 - Match protocol identity, not nominal stage reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes may generate premises, never production exceptions.
 - Prefer the cheapest information-value test. Hold out independent units and scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not impossibility certificates or state equivalence.
