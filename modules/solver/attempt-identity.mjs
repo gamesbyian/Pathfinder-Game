@@ -1,4 +1,4 @@
-import { normalizeSolverStageId, solverStageIdentityTerms } from './stage-id-normalization.mjs';
+import { normalizeHistoricalSolverStageId, solverStageIdentityTerms } from './stage-id-normalization.mjs';
 
 /**
  * Canonical solver attempt-identity parser/formatters shared by live AttemptConfig and persisted
@@ -221,7 +221,7 @@ export function normalizeAttemptActionKey(key) {
         throw new Error('Attempt action identity must be a non-empty string.');
     const separator = key.indexOf('|');
     if (separator <= 0) throw new Error('Attempt action identity must contain a stage and config identity.');
-    const stageId = normalizeSolverStageId(key.slice(0, separator));
+    const stageId = normalizeHistoricalSolverStageId(key.slice(0, separator));
     let configKey = key.slice(separator + 1);
     let seedSalt;
     const seedMatch = /\|seedSalt=(-?\d+)$/.exec(configKey);
