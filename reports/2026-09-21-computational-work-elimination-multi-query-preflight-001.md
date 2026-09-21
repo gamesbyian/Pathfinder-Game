@@ -1,9 +1,9 @@
 # Computational work elimination: multi-query divergence preflight 001
 
-> **Status:** RETAINED-EVIDENCE PREFLIGHT; no new compute and no production behavior change.
-> **Date:** 2026-09-21.
-> **Parent:** [computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).
-> **Question:** how much expensive reasoning is shared by real Pathfinder query bundles before those queries materially diverge?
+> **Status:** active
+> **Last evidence:** 2026-09-21 — the existing paired 2K/5K beam comparison was extended opt-in to compare exact portal-free connectivity-cut proof identities while searches remain isolated.
+> **Decision:** no shared-search architecture is earned; first measure whether exact proof overlap materially exceeds exact path-prefix overlap on a frozen real width-divergent development cohort.
+> **Remaining gate:** run the frozen eight-parent paired-width proof-overlap cohort and require repeated expensive exact proof overlap across multiple parents before designing any shared-computation consumer.
 
 ## 1. Why this preflight is needed
 
