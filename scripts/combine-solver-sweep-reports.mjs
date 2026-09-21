@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 /**
- * Combines N compatible portfolio-solve-sweep.mjs shard reports into ONE
- * scripts/stress/benchmark.mjs-shaped report. Corpus-2 GH Actions batches are one maintained producer,
- * but the combiner is corpus-generic and can also combine Corpus 1, custom, or explicitly mixed inputs,
- * so scripts/stress/rank-levels.mjs, scripts/stress/classify-stability.mjs, and
- * scripts/stress/curate-dev-benchmark.mjs can consume it unmodified.
+ * Combines N compatible portfolio-solve-sweep.mjs shard reports into one canonical
+ * {summary, levels} sweep envelope. Corpus-2 GH Actions batches are one maintained producer,
+ * but the combiner is corpus-generic and can also combine Corpus 1, custom, or explicitly mixed inputs.
  *
  * Why this is needed at all: portfolio-solve-sweep.mjs's own per-level row already carries every
  * field those three tools read (ok/id/status/elapsedMs/nodesExpanded/attemptCount/attempts/
@@ -24,9 +22,9 @@
  *   # or, to pick up every batch-*.json in a directory at once:
  *   node scripts/combine-solver-sweep-reports.mjs --in-dir=logs/solver-corpus2-batches --out=reports/stress/solver-corpus2-latest.json
  *
- * An input may also be an already-flattened report this same tool previously produced, as when
- * reconciling sibling dispatches of the same population. Both shapes cross one explicit ingress
- * adapter (solver-sweep-report-input.mjs) and become the same internal {summary, levels} contract
+ * An input may also be a historical flattened report, as when reconciling older sibling dispatches.
+ * Both shapes cross one explicit ingress adapter (solver-sweep-report-input.mjs) and become the same
+ * internal {summary, levels} contract
  * before any scientific validation/merge logic runs. The adapter does not mutate source documents.
  */
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
@@ -301,16 +299,18 @@ function main() {
     const repairFractions = distinct('repairBudgetFraction');
     const adaptive = reports.map(r => r.summary.adaptiveBudget).filter(Boolean);
 
-    const combined = {
-        timestamp: new Date().toISOString(),
-        commitSha: reports.map(r => r.summary.commit).find(Boolean) ?? 'unknown',
+    // Current sweep artifacts use one envelope: { summary, levels, ...scientific attachments }.
+    // Historical benchmark-flat reports remain readable only through normalizeSolverSweepReportInput().
+    const summary = {
+        generatedAt: new Date().toISOString(),
+        commit: reports.map(r => r.summary.commit).find(Boolean) ?? 'unknown',
         corpus: allowMixedCorpora ? [...new Set(reports.map(r => r.summary.corpus))] : first.corpus,
         budgetMs: first.budgetMs,
         nodeBudget: nodeBudgets.length === 1 ? nodeBudgets[0] : (nodeBudgets.length === 0 ? null : nodeBudgets),
         workBudget: workBudgets.length === 1 ? workBudgets[0] : (workBudgets.length === 0 ? null : workBudgets),
         ...(repairFractions.length ? { repairBudgetFraction: repairFractions.length === 1 ? repairFractions[0] : repairFractions } : {}),
         ...(adaptive.length ? { adaptiveBudget: adaptive[0], adaptiveBudgetShards: adaptive.length } : {}),
-        ...(Object.keys(executionConfig).length ? { executionConfig } : {}),
+        ...executionConfig,
         ...(effectiveConfig ? {
             effectiveConfig: effectiveConfig.value,
             effectiveConfigDigest: effectiveConfig.digest,
@@ -326,6 +326,16 @@ function main() {
         expectedCount: integrity.expectedCount,
         completed: integrity.observedCount,
         total: integrity.expectedCount,
+        levelBlind: producerMetadata.levelBlind ?? executionConfig.levelBlind ?? null,
+        historyAware: producerMetadata.historyAware ?? null,
+        schedulerMode: producerMetadata.schedulerMode ?? first.schedulerMode ?? null,
+        configurationHash: effectiveConfig
+            ? hashConfiguration(effectiveConfig.value)
+            : hashConfiguration({ budgetMs: first.budgetMs, nodeBudget: nodeBudgets, workBudget: workBudgets, repairFractions, executionConfig }),
+        totalMs,
+    };
+    const combined = {
+        summary,
         populationIntegrity: integrity,
         population: {
             kind: intendedPopulationKnown ? 'intended-level-ids' : 'observed-level-ids',
@@ -333,15 +343,6 @@ function main() {
             ...(allowMixedCorpora ? { identityCodec: 'json-tuple-v1' } : {}),
             identityHash: populationDescriptor.identityHash,
         },
-        execution: {
-            levelBlind: producerMetadata.levelBlind ?? executionConfig.levelBlind ?? null,
-            historyAware: producerMetadata.historyAware ?? null,
-            schedulerMode: producerMetadata.schedulerMode ?? first.schedulerMode ?? null,
-        },
-        configurationHash: effectiveConfig
-            ? hashConfiguration(effectiveConfig.value)
-            : hashConfiguration({ budgetMs: first.budgetMs, nodeBudget: nodeBudgets, workBudget: workBudgets, repairFractions, executionConfig }),
-        totalMs,
         levels,
     };
 
