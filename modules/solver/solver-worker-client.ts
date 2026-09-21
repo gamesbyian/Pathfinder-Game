@@ -11,10 +11,8 @@
 //   // Pass a constructed Worker so Vite statically bundles the worker module:
 //   const client = createSolverWorkerClient(new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }));
 //   const result = await client.solve(rawLevel, { timeBudgetMs: 30000, yieldFn });
-//   // result: the full SolveResult shape (orchestration.ts) plus `type`/`id` — ok, status,
-//   // solution, solutions, elapsedMs, nodesExpanded, attempts, deadlineTruncated,
-//   // nodeBudgetReached, workSpent, workBudget, solvedByPrime, stageLifecycle,
-//   // schedulerMode, legacyLatencyPortfolioExperiment. See worker-result-serialization.mjs's buildSolveWorkerResult.
+//   // result: the same public SolveResult shape as direct solveLevel(). Worker-only `type`/`id`
+//   // exist on the postMessage transport envelope but are stripped by this client before resolve.
 //   (A URL argument is also accepted and constructed here — used by tests.)
 //
 // Input-format note: this public solve() accepts RAW wire format (1-indexed coords) for convenience.
@@ -153,7 +151,14 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
                     }, 50);
                 }
 
-                _pending.set(id, { resolve, reject, pollTimer });
+                _pending.set(id, {
+                    resolve: (msg: any) => {
+                        const { type: _transportType, id: _transportId, ...result } = msg;
+                        resolve(result);
+                    },
+                    reject,
+                    pollTimer,
+                });
                 worker.postMessage({ type: 'SOLVE', id, level, budgetMs, solveOpts });
             });
         },
