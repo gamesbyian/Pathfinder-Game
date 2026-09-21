@@ -42,7 +42,7 @@ import { createHash } from 'node:crypto';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from '../modules/solver/legacy-latency-portfolio-experiment.js';
 import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
-import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelPositions } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
@@ -698,15 +698,12 @@ function logProgress(row) {
     console.log(`  [${processedForConsole}/${toActuallyRun.length}] L${row.level}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${row.phaseLabel ? ` ${row.phaseLabel}` : ''}${row.solvedByPrime ? ' [primed]' : ''}${row.solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${row.hintAppended ? ' [hint saved]' : ''}`);
 }
 
-// Persist hints to disk after EVERY level, not just once at the very end -- a long-running sweep
-// (hours, e.g. under a CI job with a hard wall-clock cutoff) that gets killed mid-run must not
-// lose every solve found before the kill. writeLevelCorpusDocumentWithHints only rewrites a level's hint file
-// when its content actually changed (see level-data-io.mjs), so calling it after a level that
-// found nothing new is a cheap no-op, not a redundant full-corpus rewrite -- safe to call
-// unconditionally rather than only when this specific row appended a hint.
+// Persist hint-capture's explicit write set after EVERY level, not just once at the very end.
+// flush() clears that set after a successful write, so a later shard/process update to an earlier
+// level cannot be overwritten by this process's stale full-corpus snapshot.
 function persistHintsIfEnabled() {
     if (!saveHints) return;
-    totalHintFilesChanged += writeLevelCorpusDocumentWithHints(corpusPath, corpusDocument).hintFilesChanged;
+    totalHintFilesChanged += hintCapture.flush(corpusPath, corpusDocument).hintFilesChanged;
 }
 
 // Writes the --out/--summary-out report from CURRENT levelRows/counters, not just once at the
