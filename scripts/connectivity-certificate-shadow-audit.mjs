@@ -74,6 +74,7 @@ for (const { entry, pos } of sample) {
     const stats = makeLevelStats(levelId, pos);
     const observer = {
         maxCertificates: MAX_CERTIFICATES,
+        observeUnscheduled: true,
         observe(record) {
             if (record.kind === 'certificate' || record.kind === 'certificate-duplicate' || record.kind === 'certificate-dropped') {
                 if (record.certificateSignature) {
