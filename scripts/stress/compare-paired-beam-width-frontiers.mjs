@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Response-guided consumer oracle for non-monotonic beam-width inversions.
+ * Response-guided consumer comparison for non-monotonic beam-width inversions.
  *
  * Captures two isolated beam frontiers at the same scoring profile and phase checkpoint on an
  * explicit development population. It compares exact prefix identities only; it does not claim
  * feasibility, dominance, routing value, or production benefit.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/stress/paired-beam-width-frontier-oracle.mjs -- \
+ *   node scripts/run-bundled.mjs scripts/stress/compare-paired-beam-width-frontiers.mjs -- \
  *     --corpora=data/levels.json,data/stress/stress-levels.json,data/stress/stress-levels-random.json \
  *     --levels=P00001,S00001,R00001 \
  *     --profile=objectiveFirst --widths=2000,5000 --depth-fraction=0.2 \
@@ -235,9 +235,9 @@ async function main() {
         .filter(row => row.comparison);
     const report = {
         schemaVersion: 1,
-        kind: 'pathfinder-paired-beam-width-frontier-oracle',
+        kind: 'pathfinder-paired-beam-width-frontier-comparison',
         evidenceRole: 'development',
-        premiseUse: 'consumer-oracle-only',
+        premiseUse: 'consumer-comparison-only',
         protocol: {
             corpora: corpusFiles,
             levelIds,
@@ -272,5 +272,5 @@ async function main() {
     console.log(JSON.stringify({ out: outFile, ...report.summary }, null, 2));
 }
 
-if (process.argv[1] && ['paired-beam-width-frontier-oracle.mjs', 'paired-beam-width-frontier-oracle.bundle.mjs'].includes(path.basename(process.argv[1]))
+if (process.argv[1] && ['compare-paired-beam-width-frontiers.mjs', 'compare-paired-beam-width-frontiers.bundle.mjs'].includes(path.basename(process.argv[1]))
     && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();

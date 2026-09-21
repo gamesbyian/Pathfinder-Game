@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
     compareBeamFrontiers,
     compareFrontierIdentitySets,
-} from './paired-beam-width-frontier-oracle.mjs';
+} from './compare-paired-beam-width-frontiers.mjs';
 
 const sets = compareFrontierIdentitySets(
     ['A', 'B', 'C'],
@@ -46,4 +46,4 @@ assert.deepEqual(frontier.rightOnlyRows[0].prefix, [1, 2, 6]);
 assert.deepEqual(frontier.sharedRows[0].left.prefix, [1, 3, 5]);
 assert.deepEqual(frontier.sharedRows[0].right.prefix, [1, 3, 5]);
 
-console.log('paired beam-width frontier oracle tests passed');
+console.log('paired beam-width frontier comparison tests passed');

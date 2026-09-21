@@ -2,7 +2,7 @@
 
 The production solver and headline capability benchmarks must be **level-blind**: an unseen editor level has no solver history, so exact-level history cannot be part of capability.
 
-Level-blindness is necessary for a fair cold solve. It is **not sufficient evidence of generalization**. A generic rule can be perfectly level-blind at runtime and still be overfit to the corpus that was repeatedly used to invent, tune, and select it. Population roles and proportional confirmation/transfer gates are owned by [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Offline preservation of complementary historical policy capability is governed by [`solver-capability-memory.md`](solver-capability-memory.md); it does not change this runtime boundary.
+Level-blindness is necessary for a fair cold solve. It is **not sufficient evidence of generalization**. A generic rule can be perfectly level-blind at runtime and still be overfit to the corpus that was repeatedly used to invent, tune, and select it. Population roles and proportional confirmation/transfer gates are owned by [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Offline preservation of complementary historical policy capability is governed by [`solver-capability-evidence.md`](solver-capability-evidence.md); it does not change this runtime boundary.
 
 ## Runtime invariant
 
@@ -40,7 +40,7 @@ A capability solve must not use:
 
 - prior winning search action/scoring profile/ordering bias/gate/seed/attempt;
 - saved solutions or hints as guidance;
-- historical solved status, timing, nodes, badness, family outcome, capability-memory membership, or old gain/loss membership for allocation/routing;
+- historical solved status, timing, nodes, badness, family outcome, capability-evidence membership, or old gain/loss membership for allocation/routing;
 - exact-level attempt caches, checkpoints, continuations, or learned state surviving from a previous solve invocation;
 - `primeAttempt`, `--prime-winner`, or equivalent winner replay;
 - corpus position or permanent level ID as policy/seed input;
@@ -69,7 +69,7 @@ Keep valid solutions, hints, attempt records, lineage traces, CP-SAT labels, var
 
 Offline data may discover that some latent property predicts a useful action. The production path must then use a generic legal descriptor of that property, not the historical label itself. Validate that descriptor away from the levels/families that nominated it.
 
-Capability memory follows exactly this rule. A historical policy that solved a level current production misses may nominate a contrast, mechanism, or descriptor for research. The runtime solver may not recognize that level and replay the historical policy. See [`solver-capability-memory.md`](solver-capability-memory.md).
+Capability evidence follows exactly this rule. A historical policy that solved a level current production misses may nominate a contrast, mechanism, or descriptor for research. The runtime solver may not recognize that level and replay the historical policy. See [`solver-capability-evidence.md`](solver-capability-evidence.md).
 
 ## Generalization roles
 
@@ -82,7 +82,7 @@ There are three distinct questions:
 Use the roles in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md):
 
 - **Development/tuning:** freely inspected levels used to invent, tune, select, or diagnose. Corpus 2,
-  much of the technique census, recurring regression cohorts, capability-memory joins, and heavily mined variant families
+  much of the technique census, recurring regression cohorts, capability-evidence joins, and heavily mined variant families
   belong here for many current decisions.
 - **Confirmation:** an untouched sample/block evaluated after the candidate and primary decision rule
   are fixed. Another seed from `generate-random.mjs` can be valid confirmation even though it
@@ -123,7 +123,7 @@ efficiency default, not a new infrastructure requirement.
 Use language that matches the evidence:
 
 - “+N on the current Corpus-2 sample” is a valid corpus result even if that corpus inspired the treatment.
-- “historically demonstrated N gains; M still intersect the current residual” is a capability-memory nomination statement, not a current solve claim.
+- “historically demonstrated N gains; M still intersect the current residual” is a capability-evidence nomination statement, not a current solve claim.
 - “improves level-blind capability on Corpus 2” requires a level-blind run but not necessarily an untouched holdout.
 - “selected treatment confirmed on an untouched block” requires that the block did not choose the treatment/threshold.
 - “transfers to topology-composition levels” requires an untouched sample from that different generator family and is limited to its represented mechanics.
@@ -148,13 +148,13 @@ Do not use level-blindness as a rhetorical substitute for a train/test distincti
 
 Experiment-manifest tests statically guard the mechanics allowlist, worker identity boundary, no-priming path, and pinned SHA.
 
-The workflow's persisted per-level outputs may be used afterward for health churn and offline capability-memory analysis. That post-run use does not feed back into the invocation that produced them and therefore does not weaken the runtime boundary.
+The workflow's persisted per-level outputs may be used afterward for health churn and offline capability-evidence analysis. That post-run use does not feed back into the invocation that produced them and therefore does not weaken the runtime boundary.
 
 This workflow does **not** by itself certify that the tested population was untouched during treatment design or distributionally independent from development data. Record evidence role and selection separately under [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`investigation-report-conventions.md`](investigation-report-conventions.md), and [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 ## Benchmark terminology
 
-The headline metric is **level-blind solver capability** on the named population. Historical exact-level re-verification counts and capability-memory nomination counts may be reported but are not capability baselines.
+The headline metric is **level-blind solver capability** on the named population. Historical exact-level re-verification counts and capability-evidence nomination counts may be reported but are not capability baselines.
 
 The historical Corpus-2 **725/1700** figure used winner priming and is re-verification evidence only. The 2026-08-11 unprimed neighbor-budget A/B is decision-bearing Corpus-2 capability evidence: **611/1700 control -> 665/1700 treatment** at matched 36M-node / 48.24M-work budgets with a non-binding deadline. It should not be retroactively described as an untouched generalization test.
 

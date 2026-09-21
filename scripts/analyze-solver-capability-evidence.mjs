@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { buildCapabilityMemory } from './solver-capability-memory-lib.mjs';
+import { buildCapabilityEvidence } from './solver-capability-evidence-lib.mjs';
 
 function parseArgs(argv) {
   return new Map(argv.filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
@@ -21,7 +21,7 @@ function resolveFromManifest(manifestFile, value) {
   return path.isAbsolute(value) ? value : path.resolve(path.dirname(manifestFile), value);
 }
 
-export function buildFromManifest(manifest, manifestFile = path.resolve('capability-memory-manifest.json')) {
+export function buildFromManifest(manifest, manifestFile = path.resolve('capability-evidence-manifest.json')) {
   if (manifest?.schemaVersion !== 1) throw new Error(`Unsupported manifest schemaVersion: ${manifest?.schemaVersion}`);
   if (!manifest?.baseline?.path) throw new Error('Manifest baseline.path is required');
   if (!Array.isArray(manifest?.candidates) || manifest.candidates.length === 0) throw new Error('Manifest candidates[] must be non-empty');
@@ -42,7 +42,7 @@ export function buildFromManifest(manifest, manifestFile = path.resolve('capabil
     throw new Error(`Candidate ${candidate.id} needs path or signature`);
   });
 
-  return buildCapabilityMemory({
+  return buildCapabilityEvidence({
     baselineId: manifest.baseline.id ?? path.basename(baselinePath),
     baselineRows: baseline,
     candidates,
@@ -51,7 +51,7 @@ export function buildFromManifest(manifest, manifestFile = path.resolve('capabil
 
 function renderSummary(result) {
   const lines = [];
-  lines.push('# Solver capability-memory summary');
+  lines.push('# Solver capability evidence summary');
   lines.push('');
   lines.push(`Baseline: ${result.baseline.id}; population ${result.baseline.population}; conclusive ${result.baseline.conclusive}; solved ${result.baseline.solved}; residual ${result.baseline.residual}; unknown ${result.baseline.unknown}.`);
   lines.push('');
@@ -75,7 +75,7 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const manifestArg = args.get('manifest');
   if (!manifestArg) {
-    console.error('Usage: node scripts/solver-capability-memory.mjs --manifest=<manifest.json> [--out=<result.json>] [--summary-out=<summary.md>]');
+    console.error('Usage: node scripts/analyze-solver-capability-evidence.mjs --manifest=<manifest.json> [--out=<result.json>] [--summary-out=<summary.md>]');
     process.exit(2);
   }
   const manifestFile = path.resolve(manifestArg);
@@ -96,5 +96,5 @@ function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  try { main(); } catch (error) { console.error(`solver-capability-memory: ${error.message}`); process.exit(2); }
+  try { main(); } catch (error) { console.error(`analyze-solver-capability-evidence: ${error.message}`); process.exit(2); }
 }

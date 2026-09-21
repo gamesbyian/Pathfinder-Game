@@ -45,7 +45,7 @@ Broad asset/feature mining creates selection pressure; discovered relationships 
 | Solution profiles | level × provenance source × sample support | What do known sampled solutions look like? |
 | Technique census/capability map | level × technique/config | What isolated capability exists at measured dose? |
 | Production benchmarks | run × level | What does the real solver solve/spend? |
-| Capability memory | baseline × candidate × level | Which historical capabilities were demonstrated/displaced and still overlap a named residual? |
+| Capability evidence | baseline × candidate × level | Which historical capabilities were demonstrated/displaced and still overlap a named residual? |
 | Lifecycle telemetry | level × stage/action/attempt | What did production reach, starve, exhaust, skip, or solve with? |
 | Known-prefix survival | level × beam boundary | Where did labelled viable support disappear? |
 | Operational traces | encountered decision | How did searches diverge? |
@@ -84,7 +84,7 @@ Only structural fingerprints identify puzzle structure; fingerprint/profile iden
 
 ### Offline evidence is not runtime policy
 
-Hints, known solutions, exact labels, census winners, historical costs, family outcomes, traces, profiles, capability-memory signatures, search-loss capsules, and historical gain/loss IDs are offline evidence. They may not become exact-level lookup/hidden steering in the cold solver. Historical capability intersecting today's residual is a **nomination**, not current proof. See [`solver-level-blindness.md`](solver-level-blindness.md) and [`solver-capability-memory.md`](solver-capability-memory.md).
+Hints, known solutions, exact labels, census winners, historical costs, family outcomes, traces, profiles, capability-evidence signatures, search-loss capsules, and historical gain/loss IDs are offline evidence. They may not become exact-level lookup/hidden steering in the cold solver. Historical capability intersecting today's residual is a **nomination**, not current proof. See [`solver-level-blindness.md`](solver-level-blindness.md) and [`solver-capability-evidence.md`](solver-capability-evidence.md).
 
 ### Generation provenance is not selection provenance
 
@@ -116,6 +116,6 @@ When a durable evidence family changes, update [`solver-research-data-assets.jso
 
 When a focused resource audit changes scientific semantics, also update its audit-grade declaration under [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) and satisfy the closeout gate in [`solver-research-resource-contract.md`](solver-research-resource-contract.md). Do not mark unaudited resources “audited” by filling unknown fields with guesses.
 
-Capability memory is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the question.
+Capability evidence is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the question.
 
 Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry or resource contract.

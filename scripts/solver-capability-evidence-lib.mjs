@@ -141,7 +141,7 @@ function normalizeSignature(candidate, baselineSolvedSet, baselineResidualSet) {
   };
 }
 
-export function buildCapabilityMemory({ baselineId = 'baseline', baselineRows, candidates }) {
+export function buildCapabilityEvidence({ baselineId = 'baseline', baselineRows, candidates }) {
   const baseRows = reportRows(baselineRows);
   const basePopulationIds = populationIds(baseRows);
   const conclusiveBaseRows = baseRows.filter(isConclusiveRow);
@@ -152,7 +152,7 @@ export function buildCapabilityMemory({ baselineId = 'baseline', baselineRows, c
   const baseResidualSet = new Set(baseResidualIds);
 
   const normalizedCandidates = candidates.map(candidate => {
-    if (!candidate?.id) throw new Error('Every capability-memory candidate needs an id');
+    if (!candidate?.id) throw new Error('Every capability-evidence candidate needs an id');
     const metadata = {
       id: candidate.id,
       disposition: candidate.disposition ?? null,

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { buildCapabilityMemory } from './solver-capability-memory-lib.mjs';
+import { buildCapabilityEvidence } from './solver-capability-evidence-lib.mjs';
 
 const baselineRows = [
   { id: 'A', ok: true, workSpent: 10 },
@@ -14,7 +14,7 @@ const candidateRows = [
   { id: 'C', ok: false, workSpent: 31 },
 ];
 
-const result = buildCapabilityMemory({
+const result = buildCapabilityEvidence({
   baselineId: 'fixture',
   baselineRows,
   candidates: [
@@ -43,4 +43,4 @@ assert.deepEqual(historical.uniqueCurrentResidualNominationIds, ['C']);
 assert.deepEqual(result.union.nominatedIds, ['B', 'C']);
 assert.deepEqual(result.union.unnominatedIds, []);
 
-console.log('solver capability memory shared-set regression tests passed');
+console.log('solver capability evidence shared-set regression tests passed');
