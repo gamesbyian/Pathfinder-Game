@@ -40,7 +40,7 @@ Boundary: callers still prove corpus/identity-basis compatibility. The helper de
 
 The call-site/docs audit found one canonical recording path: `research:record-consumption` writes sidecars, including matched-cohort parent scopes derived from selection artifacts, while source blocks remain immutable. No competing fresh/spent registry or alternate block mutation path is currently authoritative.
 
-The relation model now exposes a pure consumption summary (question/role/scope counts, opened outcomes, decision refs, time span). That is enough for audit/orientation. Do not add a spent/unspent state machine or order evidence roles unless a second real consumer needs semantics the summary cannot express.
+The relation model exposes a pure consumption summary. `summarizeResearchBlockUsageOverlap()` now also compares a proposed parent set with immutable block lineage and reports known-consumed overlap, parent-scope apparent untouched overlap, and unresolved family scopes. It is diagnostic only; `researchBlockEligibility()` remains authoritative. Do not add a spent/unspent state machine.
 
 ## D. Observability envelopes — **COMPOSITION CENSUS NEGATIVE; KEEP SINGLE-ENVELOPE OWNER**
 
@@ -89,6 +89,18 @@ Rule: relation kinds are directed/non-transitive unless their owner explicitly d
 
 Development, confirmation and transfer are purposes, not levels. Transfer is not “better confirmation.” Reject a total-order/lattice treatment.
 
+## Deferred-abstraction tripwires
+
+A deferred abstraction should have an observable reopen condition rather than depending on somebody remembering it.
+
+Cheap future integration-audit signals worth adding when their source surfaces become queryable:
+- first persisted claim→claim identity edge -> reconsider transitive reevaluation closure;
+- two independent envelopes for the same question + interpretation contract -> reconsider typed envelope composition;
+- repeated nested observation→cluster mappings across studies -> reconsider partition refinement/coarsening;
+- stable repeated categorical values on an independence axis -> reconsider an axis-local order/Pareto relation.
+
+These are **tripwires, not implementations**. A signal means “audit the abstraction again,” never “auto-promote a framework.”
+
 ## Cross-line methodology
 
 For each proposed operator: name the carrier domain/owner; state only laws that are meaningful; attack over-strong laws with counterexamples; find duplicated current logic; prefer pure derived helpers over persisted authority; test algebraic laws; and document compatibility boundaries.
@@ -97,7 +109,7 @@ The standard is prevention of real research errors, not mathematical elegance.
 
 ## Priority after first audit
 
-- **Done:** applicability meet; population set relation; capability-memory set migration; block-consumption summary; independent-unit grouping shared by two analyses; relation-law audit.
+- **Done:** applicability meet; population set relation; capability-memory set migration; block-consumption summary + scoped overlap diagnostic; independent-unit grouping shared by two analyses; relation-law audit.
 - **Next:** claim-chain persistence only when real claim→claim identity edges appear. Full partition refinement/coarsening and envelope composition remain deferred until real consumers appear.
 - **Then:** claim-chain persistence, independence-axis categories, unit-partition recurrence.
 - **Guarded:** typed relation laws.
