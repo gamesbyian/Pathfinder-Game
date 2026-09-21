@@ -11,7 +11,13 @@
  *     --corpora=data/levels.json,data/stress/stress-levels.json,data/stress/stress-levels-random.json \
  *     --levels=P00001,S00001,R00001 \
  *     --profile=objectiveFirst --widths=2000,5000 --depth-fraction=0.2 \
+ *     --reason-overlap=connectivity-cut \
  *     --out=tmp/paired-width-frontier.json
+ *
+ * --reason-overlap=connectivity-cut is opt-in. It compares exact identities of portal-free
+ * connectivity cut implication certificates produced independently by the two beams. This measures
+ * shared proof derivation even when exact path-prefix overlap is low. The certificate observer never
+ * prunes; ordinary connectivity remains authoritative.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -82,11 +88,26 @@ export function compareBeamFrontiers(leftFrontier, rightFrontier) {
     };
 }
 
-async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, budgetMs }) {
+async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, budgetMs, collectConnectivityCutProofs }) {
     const { prepLevel, beamSearchFromGate } = SOLVER_TESTING_API;
     const prep = prepLevel(level);
     prep._cfg = null;
     prep._metrics = { nodesExpanded: 0 };
+    const connectivityCutProofs = new Set();
+    if (collectConnectivityCutProofs) {
+        prep._connectivityCertificateShadow = {
+            observer: {
+                maxCertificates: 128,
+                observe(record) {
+                    if (record.kind === 'certificate' && record.certificateSignature) {
+                        connectivityCutProofs.add(record.certificateSignature);
+                    }
+                },
+            },
+            certificates: [],
+            nextId: 1,
+        };
+    }
     const out = {};
     const result = await beamSearchFromGate(
         gate,
@@ -110,6 +131,7 @@ async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, 
             frontier: [],
             nodesExpanded: prep._metrics.nodesExpanded,
             workSpent: prep._workMeter.units,
+            connectivityCutProofs: [...connectivityCutProofs].sort(),
         };
     }
     if (!out.pausedContinuation) {
@@ -118,6 +140,7 @@ async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, 
             frontier: [],
             nodesExpanded: prep._metrics.nodesExpanded,
             workSpent: prep._workMeter.units,
+            connectivityCutProofs: [...connectivityCutProofs].sort(),
         };
     }
     return {
@@ -137,6 +160,8 @@ async function main() {
     const depthFraction = Number(arg('depth-fraction', 0.2));
     const budgetMs = Number(arg('budget-ms', 600_000));
     const maxExamples = Number(arg('max-examples', 12));
+    const reasonOverlap = String(arg('reason-overlap', 'none'));
+    const collectConnectivityCutProofs = reasonOverlap === 'connectivity-cut';
     const outFile = arg('out', null);
 
     if (!outFile) throw new Error('--out is required');
@@ -148,6 +173,9 @@ async function main() {
     if (!(depthFraction > 0 && depthFraction < 1)) throw new Error('--depth-fraction must be in (0,1)');
     if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
     if (!Number.isInteger(maxExamples) || maxExamples < 0) throw new Error('--max-examples must be a non-negative integer');
+    if (!['none', 'connectivity-cut'].includes(reasonOverlap)) {
+        throw new Error('--reason-overlap must be one of: none, connectivity-cut');
+    }
 
     installBrowserStubs();
     const Solver = createSolver();
@@ -181,7 +209,7 @@ async function main() {
             const captures = [];
             for (const width of widths) {
                 captures.push(await captureFrontier({
-                    level, gate, profile, width, pauseAfterPhases, budgetMs,
+                    level, gate, profile, width, pauseAfterPhases, budgetMs, collectConnectivityCutProofs,
                 }));
             }
 
@@ -201,6 +229,12 @@ async function main() {
                 rightOnlyExamples: fullComparison.rightOnlyRows.slice(0, maxExamples),
                 sharedExamples: fullComparison.sharedRows.slice(0, maxExamples),
             } : null;
+            const proofComparison = collectConnectivityCutProofs
+                ? compareFrontierIdentitySets(
+                    captures[0].connectivityCutProofs ?? [],
+                    captures[1].connectivityCutProofs ?? [],
+                )
+                : null;
 
             gates.push({
                 gateIndex,
@@ -220,6 +254,20 @@ async function main() {
                     workSpent: captures[1].workSpent,
                 },
                 comparison,
+                proofOverlap: proofComparison ? {
+                    kind: 'connectivity-cut-certificate',
+                    left: proofComparison.left,
+                    right: proofComparison.right,
+                    shared: proofComparison.shared,
+                    leftOnly: proofComparison.leftOnly,
+                    rightOnly: proofComparison.rightOnly,
+                    jaccard: proofComparison.jaccard,
+                    leftContainedInRight: proofComparison.leftContainedInRight,
+                    rightContainedInLeft: proofComparison.rightContainedInLeft,
+                    sharedExamples: proofComparison.sharedIds.slice(0, maxExamples),
+                    leftOnlyExamples: proofComparison.leftOnlyIds.slice(0, maxExamples),
+                    rightOnlyExamples: proofComparison.rightOnlyIds.slice(0, maxExamples),
+                } : null,
             });
         }
 
@@ -246,6 +294,7 @@ async function main() {
             depthFraction,
             budgetMs,
             maxExamples,
+            reasonOverlap,
             execution: 'two isolated beam searches per gate, same profile/checkpoint; no production policy change',
         },
         interpretation: {
@@ -261,6 +310,17 @@ async function main() {
             rightContainedInLeft: comparable.filter(row => row.comparison.rightContainedInLeft).length,
             meanJaccard: comparable.length
                 ? comparable.reduce((sum, row) => sum + (row.comparison.jaccard ?? 0), 0) / comparable.length
+                : null,
+            connectivityCutProofComparableGates: collectConnectivityCutProofs
+                ? comparable.filter(row => row.proofOverlap && (row.proofOverlap.left + row.proofOverlap.right) > 0).length
+                : 0,
+            meanConnectivityCutProofJaccard: collectConnectivityCutProofs
+                ? (() => {
+                    const rows = comparable.filter(row => row.proofOverlap?.jaccard != null);
+                    return rows.length
+                        ? rows.reduce((sum, row) => sum + row.proofOverlap.jaccard, 0) / rows.length
+                        : null;
+                })()
                 : null,
         },
         parents: results,
