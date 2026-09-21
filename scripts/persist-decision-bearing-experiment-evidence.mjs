@@ -58,6 +58,30 @@ function directoryBytesEqual(leftRoot, rightRoot) {
     fs.readFileSync(path.join(leftRoot, relative)).equals(fs.readFileSync(path.join(rightRoot, relative))));
 }
 
+function levelBearingJsonFiles(root) {
+  return walk(root).filter(file => {
+    if (!file.endsWith('.json') || path.basename(file) === 'manifest.json') return false;
+    try {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      return Array.isArray(parsed?.levels) || Array.isArray(parsed?.results);
+    } catch {
+      return false;
+    }
+  });
+}
+
+function exactOutcomeBindingIssues(manifest, artifactRoot) {
+  const binding = manifest?.researchOutcome?.binding;
+  if (!Array.isArray(binding?.resultContentHashes)) return [];
+  const observed = levelBearingJsonFiles(artifactRoot)
+    .map(file => sha256(fs.readFileSync(file)))
+    .sort();
+  const expected = [...binding.resultContentHashes].map(String).sort();
+  return JSON.stringify(observed) === JSON.stringify(expected)
+    ? []
+    : ['researchOutcome.binding.resultContentHashes no longer match the artifact result bytes'];
+}
+
 function findDecisionBearingManifests(root) {
   return walk(root)
     .filter(file => path.basename(file) === 'manifest.json')
@@ -117,6 +141,12 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
       );
     }
     const artifactRoot = path.dirname(manifestFile);
+    const byteBindingIssues = exactOutcomeBindingIssues(manifest, artifactRoot);
+    if (byteBindingIssues.length > 0) {
+      throw new Error(
+        `refusing to persist decision-bearing artifact whose exact verdict binding is stale: ${path.relative(staging, manifestFile)}: ${byteBindingIssues.join(', ')}`,
+      );
+    }
     const experimentId = safeSegment(manifest?.experiment?.experimentId, 'experiment');
     const runId = safeSegment(manifest?.experiment?.workflowRunId ?? manifest?.runId, 'unknown-run');
     const runAttempt = safeSegment(manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt, '1');
@@ -272,6 +302,32 @@ function selfTest() {
     assert.ok(compactRecord, 'published compact response follows the ordinary durable evidence rail');
     assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, compactRecord.stored))), compact);
     assert.equal(fs.existsSync(path.join(output, 'experiment__run-123__attempt-2')), false);
+
+    const exactBoundArtifact = path.join(staging, 'exact-bound-artifact');
+    fs.mkdirSync(exactBoundArtifact, { recursive: true });
+    const exactResult = Buffer.from(JSON.stringify({ levels: [{ id: 'B', ok: true }] }));
+    fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), exactResult);
+    const exactManifest = {
+      ...manifest,
+      runId: '124',
+      runAttempt: '1',
+      experiment: { ...manifest.experiment, experimentId: 'fixture/exact-bound', workflowRunId: '124', workflowRunAttempt: '1' },
+      researchOutcome: {
+        outcome: 'completed-positive',
+        reason: 'exact result fixture',
+        binding: { resultContentHashes: [sha256(exactResult)] },
+      },
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false }],
+    };
+    fs.writeFileSync(path.join(exactBoundArtifact, 'manifest.json'), `${JSON.stringify(exactManifest, null, 2)}\n`);
+    const exactRetained = persistDecisionBearingExperimentEvidence({ stagingDir: exactBoundArtifact, outRoot: path.join(temp, 'exact-retained'), compressAboveBytes: 8 });
+    assert.equal(exactRetained.length, 1, 'exact-bound artifact persists while its classified bytes match');
+    fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), JSON.stringify({ levels: [{ id: 'B', ok: false }] }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: exactBoundArtifact, outRoot: path.join(temp, 'exact-retained-2'), compressAboveBytes: 8 }),
+      /exact verdict binding is stale.*resultContentHashes no longer match/u,
+      'durable retention must re-prove an exact verdict-byte binding instead of trusting the manifest boolean',
+    );
 
     const bundleBeforeReharvest = fs.readFileSync(path.join(destination, 'bundle.json'));
     const reharvested = persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 });
