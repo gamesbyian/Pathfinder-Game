@@ -16,7 +16,7 @@ import process from 'node:process';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { readLevelsWithHints } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
 // scripts/hint-diversification.mjs resolves --levels-json as `path.join(ROOT, levelsJsonPath)`
 // unconditionally (unlike hint-workbench.mjs, which checks path.isAbsolute first) — so the
@@ -60,7 +60,7 @@ async function main() {
         const fixtureDir = path.join(tempDir, 'fixture');
         const fixtureLevelsPathRelative = await writeFixtureLevel(fixtureDir);
         const fixtureLevelsPathAbs = path.join(ROOT, fixtureLevelsPathRelative);
-        const beforeHints = readLevelsWithHints(fixtureLevelsPathAbs)[0].hints.length;
+        const beforeHints = readLevelCorpusDocumentWithHints(fixtureLevelsPathAbs).levels[0].hints.length;
 
         const outputPath = path.join(tempDir, 'report.json');
         const result = await runDiversification([
@@ -90,7 +90,7 @@ async function main() {
         assert.deepEqual(levelReport.errors, []);
 
         // Novel hints (if any were found within budget) were actually appended to the fixture.
-        const afterHints = readLevelsWithHints(fixtureLevelsPathAbs)[0].hints.length;
+        const afterHints = readLevelCorpusDocumentWithHints(fixtureLevelsPathAbs).levels[0].hints.length;
         assert.equal(afterHints, levelReport.hintsAfter);
         assert.ok(afterHints >= beforeHints);
         if (levelReport.novelFound > 0) assert.ok(afterHints > beforeHints, 'novel hints were persisted to the fixture');
