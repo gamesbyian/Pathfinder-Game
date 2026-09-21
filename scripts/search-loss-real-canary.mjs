@@ -167,7 +167,7 @@ for (let index = 0; index < selected.length; index++) {
 
     const solveOpts = {
       timeBudgetMs,
-      workBudget,
+      baseWorkBudget: workBudget,
       strictTotalWorkBudget: true,
       attemptBudgetTelemetry: true,
     };
