@@ -9,6 +9,7 @@ import {
     analyzeRelativeAdvantage,
     DEFAULT_PAIRS,
 } from './analyze-technique-relative-advantage.mjs';
+import { rowsFromFrozenResponseGuidedContrasts } from './freeze-response-guided-contrasts.mjs';
 
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 const variance = (values, m) => values.length
@@ -60,12 +61,13 @@ function parityFeatures(raw, Solver) {
 }
 
 export function analyzeResponseGuidedParityContrasts({
-    base,
+    base = null,
+    frozenContrasts = null,
     levels,
     pairs = DEFAULT_PAIRS,
 } = {}) {
-    if (!Array.isArray(base?.levels) || !base.levels.length) {
-        throw new Error('Expected non-empty base.levels');
+    if (!frozenContrasts && (!Array.isArray(base?.levels) || !base.levels.length)) {
+        throw new Error('Expected non-empty base.levels or frozenContrasts');
     }
     if (!Array.isArray(levels) || !levels.length) {
         throw new Error('Expected non-empty raw levels');
@@ -79,7 +81,9 @@ export function analyzeResponseGuidedParityContrasts({
         rawById.set(id, level);
     }
 
-    const relative = analyzeRelativeAdvantage(base, pairs);
+    const relativePairs = frozenContrasts
+        ? rowsFromFrozenResponseGuidedContrasts(frozenContrasts, pairs)
+        : analyzeRelativeAdvantage(base, pairs).pairs;
     const Solver = createSolver();
     const cache = new Map();
     const featuresFor = id => {
@@ -105,7 +109,7 @@ export function analyzeResponseGuidedParityContrasts({
         'allEvenGateDemand',
     ];
 
-    const pairResults = relative.pairs.map(pair => {
+    const pairResults = relativePairs.map(pair => {
         const left = pair.contrastPopulation.leftOnlyIds.map(featuresFor);
         const right = pair.contrastPopulation.rightOnlyIds.map(featuresFor);
         const parityEffects = numericFeatures
@@ -152,16 +156,18 @@ const unwrap = document => Array.isArray(document) ? document : document.levels;
 async function main() {
     const args = new Map(process.argv.slice(2).map(arg => arg.split('=', 2)));
     const basePath = args.get('--base') ?? 'reports/stress/technique-niches/2026-09-03/level-capability.json';
+    const cohortsPath = args.get('--cohorts') ?? null;
     const randomPath = args.get('--random') ?? 'data/stress/stress-levels-random.json';
     const stressPath = args.get('--stress') ?? 'data/stress/stress-levels.json';
     const publishedPath = args.get('--published') ?? 'data/levels.json';
     const outPath = args.get('--out') ?? 'tmp/response-guided-parity-contrast.json';
 
-    const base = JSON.parse(readFileSync(basePath, 'utf8'));
+    const frozenContrasts = cohortsPath ? JSON.parse(readFileSync(cohortsPath, 'utf8')) : null;
+    const base = frozenContrasts ? null : JSON.parse(readFileSync(basePath, 'utf8'));
     const levels = [randomPath, stressPath, publishedPath]
         .flatMap(file => unwrap(JSON.parse(readFileSync(file, 'utf8'))) ?? []);
 
-    const result = analyzeResponseGuidedParityContrasts({ base, levels });
+    const result = analyzeResponseGuidedParityContrasts({ base, frozenContrasts, levels });
     writeFileSync(outPath, `${JSON.stringify(result, null, 2)}\n`);
     console.log(`Wrote ${outPath}: ${result.pairs.length} prespecified pair contrasts`);
 }
