@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=5000 max=7000 -->
 # Solver parity response-signature preflight
 
-> **Status:** ACTIVE CHEAP OFFLINE ANALYSIS; shared static parity/portal feature owner and response-guided contrast analyzer implemented; no production decisions changed.
+> **Status:** NARROWED; first frozen static portal/parity contrast is closed as non-incremental beyond raw portal count; shared semantic owner remains, production unchanged.
 > **Owner:** `WS2-PARITY-RESPONSE-SIGNATURE`, queued under Lane H in [solver optimization workstreams](solver-optimization-workstreams.md).
 > **Parent invariant:** [parity phase/capacity preflight](solver-parity-phase-capacity-preflight.md).
 
@@ -50,6 +50,12 @@ Compare parity features against the census's existing reqLen, reqInt, area, obje
 Stop if support is thin, effects are unstable across independent units, or parity adds no useful information beyond existing descriptors.
 
 Advance only on a concrete discriminator with enough support to survive an independent population. Association is nomination evidence, not routing evidence.
+
+### Frozen Discriminator-A disposition
+
+On the prespecified 5K plain-vs-mechanic-buckets response contrasts, raw portal count remains stronger than twist/same-parity counts, twist fraction, or gate-demand parity in both scoring families. This closes the tested **static portal decomposition** as an incremental response explanation; see [the dated response-guided result](../reports/2026-09-21-response-guided-premise-nominations-001.md).
+
+Do not iterate nearby static parity count features. Reopen this lane only when saved-success/provenance evidence or a prospective decision seam nominates a materially different parity mechanism, such as phase-option preservation rather than another decomposition of portal prevalence.
 
 ## Discriminator B: saved hints and provenance
 
