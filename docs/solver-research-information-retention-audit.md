@@ -322,6 +322,17 @@ This matrix is intentionally about **research reconstruction**, not merely wheth
 | `solver-combine-sweep-runs.yml` | n/a input reconciliation | 90d | combined standard result; durable only when downstream decision-bearing harvester or later report captures it | utility itself should not be assumed archival |
 | `solver-production-replay-baseline.yml` | to complete | to complete | history-aware benchmark family included in hint/evidence harvesting | pending detailed inspection |
 
+
+### Deterministic-refresh correction to the workflow matrix
+
+The earlier matrix entry describing `solver-stress-refresh.yml` as having "strong durability" needs a mode distinction:
+
+- **normal refresh:** full combined reports are committed and later recoverable through Git history;
+- **deterministic refresh:** durable capability-run projections are committed, but full primary rows remain artifact-bound.
+
+This is a useful warning against assigning durability at workflow granularity when dispatch mode changes the persistence contract.
+
+
 ### Durability observations
 
 1. **The repo does not have a blanket evidence-retention problem.** Canonical refresh, technique census, diagnostics, family collection, and full high-budget runs already preserve substantial combined evidence.
@@ -664,6 +675,49 @@ Full compact attempts may still retain their own correct `attempt.actionKey`, so
 **Research consequence:** two observations that differ in winning stage/action/seed context can appear more similar at the row phenotype layer than the source evidence warrants.
 
 **Disposition:** remains a narrow, high-confidence projection bug candidate. Investigation should confirm intended row-level semantics across all producers before implementation, but this no longer looks like mere presentation polish.
+
+
+
+### IR-024 — deterministic stress refresh preserves a durable per-run projection but not the full primary rows
+
+**Class:** R1/R2/R5, mode-specific.
+
+`solver-stress-refresh.yml` has two persistence behaviors.
+
+For an ordinary non-deterministic refresh, the persistence step stages broad `reports/stress/` state, including the full current combined `solver-corpus1-latest.json` and `solver-corpus2-latest.json` reports. Git history therefore retains the primary rows even when those latest pointers are replaced later.
+
+For `deterministic=true`, the workflow intentionally avoids committing those continuity/baseline report pointers. It still commits:
+
+- `reports/stress/capability-runs/<run_id>/summary.json`;
+- `per-level-corpus1.json`;
+- `per-level-corpus2.json`;
+- lifecycle failure maps when enabled;
+- solver-health timeline updates.
+
+The per-run projection deliberately retains only a subset of each level row:
+
+- id/level/outcome/status;
+- nodes/work/elapsed;
+- deadline state;
+- `winningConfig`;
+- attempt count / failed strategies;
+- solution.
+
+It does **not** retain:
+
+- full `attempts` / compact attempt sequence;
+- `winningActionKey`;
+- full `stageLifecycle`;
+- `failureInformation` compact diagnostics;
+- other newly added row-level explanatory fields unless explicitly projected.
+
+The full combined report and standard `solver-sweep-result` remain in Actions for 90 days, but the committed per-run resource is a lossy projection.
+
+**Research consequence:** deterministic refreshes can remain durably visible as “what solved and how much it cost” while losing “which exact stage/action sequence and failure process produced that result” after artifact expiry.
+
+This is especially relevant because deterministic mode is explicitly described as A/B/research mode.
+
+**Disposition:** high-priority documentation/retention candidate, but implementation should not simply commit the `latest` pointers. The safe design question is whether a bounded immutable per-run primary/attempt attachment belongs under `capability-runs/<run_id>/`, possibly compressed or projected through an existing durable evidence format.
 
 
 ## 6. Positive findings / boundaries already working well
