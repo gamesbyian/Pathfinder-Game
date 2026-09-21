@@ -222,6 +222,8 @@
     "solver:compare-symmetry-repair-seed": "node scripts/run-bundled.mjs scripts/stress/compare-symmetry-repair-seed.mjs",
     "test:winning-attempt-family": "node scripts/winning-attempt-family-lib-node-test.mjs",
     "solver:winning-attempts": "node scripts/analyze-solver-winning-attempts.mjs",
+    "research:prewinner-work-oracle": "node scripts/analyze-prewinner-work-oracle.mjs",
+    "test:prewinner-work-oracle": "node scripts/analyze-prewinner-work-oracle-node-test.mjs",
     "solver:legacy-latency-portfolio-report": "node scripts/run-bundled.mjs scripts/legacy-latency-portfolio-report.mjs",
     "solver:analyze-ew1-static-portfolio": "node scripts/analyze-ew1-static-portfolio.mjs",
     "solver:build-static-portfolio-plan": "node scripts/run-bundled.mjs scripts/build-static-portfolio-plan.mjs",
