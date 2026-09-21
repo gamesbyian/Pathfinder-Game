@@ -58,6 +58,13 @@
       "retirementTrigger": "retire when the owning operational surface is removed"
     },
     {
+      "workflow": "forced-work-prevalence-one-shot.yml",
+      "role": "operational",
+      "status": "retiring",
+      "currentConsumer": "PR #1952 preregistered forced-work prevalence census",
+      "retirementTrigger": "delete immediately after the decision-bearing census result is captured in the retained report"
+    },
+    {
       "workflow": "harvest-solver-evidence.yml",
       "role": "operational",
       "status": "maintained",
