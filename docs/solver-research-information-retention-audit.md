@@ -305,6 +305,71 @@ This matrix is intentionally about **research reconstruction**, not merely wheth
 - inspect one-shot/deleted-workflow policy for whether deleting the wrapper can strand artifact-only primary evidence after Actions expiry.
 
 
+
+
+### IR-011 — rich search-loss evidence requires explicit publication wiring
+
+**Class:** R1/R2 producer-publication seam.
+
+`publish-solver-sweep-result.mjs` is capable of carrying a rich search-loss capture and marking `failureEvidence.richCapturePresent=true`, but only when the producer explicitly supplies that capture through `--include=<path>`.
+
+The publisher does not discover rich captures from the primary result, neighboring files, or a generic producer contract. It merely inspects already-requested include entries for `kind === pathfinder-search-loss-capture`.
+
+Therefore a solver/research producer can successfully generate a rich capture and still publish a standard artifact that omits it if the workflow forgets or intentionally declines the include.
+
+Current workflow inspection found the dedicated `search-loss-real-canary.yml` as the maintained Actions producer of rich search-loss captures; it uploads the canary/capture/preflight bundle directly and does not currently publish a standard solver sweep result.
+
+**Interpretation:** the infrastructure already has a forward-compatible publication slot, but rich capture remains specialist/opt-in and has no recurring ordinary producer yet. This is consistent with the search-loss plan's current contract-only status; it should not be "fixed" by automatic discovery before the recurring producer question is settled.
+
+### IR-012 — method probe can generate high-value operational evidence whose durable horizon is only the combined artifact
+
+**Class:** R1/R2/R7, depending invocation.
+
+`method-probe.mjs` supports optional research instrumentation richer than its ordinary outcome rows:
+
+- bounded beam operational trace signatures via `--beam-trace-limit`;
+- bounded decision observations via `--beam-decision-limit`;
+- ordering-policy comparison data, including first top-choice divergence and score decomposition;
+- exact observed/retained/truncated counts for bounded ordering and beam collectors.
+
+These fields are serialized into the per-level row and survive `combine-method-probe-shards.mjs`, because the combiner concatenates the full worker rows into `combined.json`.
+
+However `method-probe-sweep.yml` is artifact-only: raw shards currently retain for 14 days, the workflow-specific combined artifact for 30 days, and the standardized primary result for 90 days. The compact failure-response projection does not preserve these specialist operational fields.
+
+Thus a method-probe run used for a mechanism investigation can contain uniquely valuable trace/divergence evidence that disappears after artifact retention unless a dated report/resource explicitly retains it.
+
+**Interpretation:** this does not justify making every method probe durable. It does justify treating a method probe that enables rich research observers as scientifically different from a cheap capability probe and checking its intended evidence horizon during preflight/closeout.
+
+### IR-013 — resource catalogue semantics do not currently expose evidence survival horizon
+
+**Class:** documentation/discoverability gap supporting R1 classification.
+
+`solver-research-data-assets.json` correctly distinguishes resource semantics such as:
+
+- `operational-traces` as a generated interface;
+- `compact-failure-response` as a generated interface;
+- `search-loss-evidence` as contract-only;
+- tracked/current assets such as the technique census.
+
+The catalogue describes grain, locations, authorities, joins, evidence roles, affordances, and caveats. For generated interfaces, though, the location often describes where outputs *may be produced*, not whether any particular observation is durably retained.
+
+Examples:
+
+- `operational-traces`: "method-probe, paired deterministic trace, and beam-trace outputs selected by investigations";
+- `search-loss-evidence`: `reports/stress/search-loss-evidence/**/*.json`, despite the resource still being contract-only;
+- `compact-failure-response`: a broad generated `**/failure-response*.json` pattern.
+
+The Resource Contract's **audited-resource** tier already requires reconstructability and irreversible-information-loss semantics. Catalogue-grade generated interfaces do not expose an equivalent survival-horizon field.
+
+**Research consequence:** a fresh agent can discover that an evidence type exists and how it may be interpreted, yet still not know whether the relevant bytes are tracked, decision-bundle-retained, Actions-retention-bound, reproducible on demand, or already expired.
+
+**Investigation gate:** before proposing registry-schema changes, determine whether this is better handled by:
+- existing audited-resource declarations;
+- a documentation convention for generated interfaces;
+- workflow/source provenance records;
+- or a small catalogue field such as durability/reconstructability class.
+
+
 ## 6. Positive findings / boundaries already working well
 
 The audit must record good boundaries as well as defects.
