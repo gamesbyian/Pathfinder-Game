@@ -45,6 +45,7 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
             enabled: false,
             async prepare() {},
             record: () => false,
+            recordHistorical: () => false,
             flush: () => ({ levelsTouched: 0, hintFilesChanged: 0, newPaths: 0, rediscoveries: 0 }),
         };
     }
@@ -97,8 +98,8 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
     };
 
     function recordWithProvenance(level, result, provenanceBuilder) {
-            if (!level || !result?.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
-            const provenance = provenanceBuilder(result, {
+        if (!level || !result?.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
+        const provenance = provenanceBuilder(result, {
                 solverVersion,
                 budgetMs,
                 usedExistingHints: false,
@@ -106,25 +107,25 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
                 levelRevision: levelRevisions.get(level) ?? null,
                 isolatedTechnique,
             });
-            const before = level.hintRecords ?? [];
-            const beforeCount = before.length;
-            const signature = result.solution.join(',');
-            const existing = before.find(h => h.path.join(',') === signature);
-            const beforeEntries = existing?.provenance.length ?? 0;
+        const before = level.hintRecords ?? [];
+        const beforeCount = before.length;
+        const signature = result.solution.join(',');
+        const existing = before.find(h => h.path.join(',') === signature);
+        const beforeEntries = existing?.provenance.length ?? 0;
 
             // Refuse to append an entry that duplicates one already stored. Without this, re-running
             // the capture at the SAME commit (a re-triggered workflow, a retried job, a local repeat)
             // appends an identical entry every time — the exact shape that had to be cleaned up
             // retroactively by dedupe-hint-provenance.mjs. Prevented at the source instead.
-            if (existing?.provenance?.some(e => provenanceEventIdentity(e) === provenanceEventIdentity(provenance))) {
+        if (existing?.provenance?.some(e => provenanceEventIdentity(e) === provenanceEventIdentity(provenance))) {
                 return false;
             }
 
-            setLevelHintRecords(level, mergeHints(before, [toHint(result.solution, [provenance])]));
+        setLevelHintRecords(level, mergeHints(before, [toHint(result.solution, [provenance])]));
 
-            const afterEntries = level.hintRecords.find(h => h.path.join(',') === signature)?.provenance.length ?? 0;
-            if (level.hintRecords.length !== beforeCount) { newPaths++; touched.add(level); return true; }
-            if (afterEntries > beforeEntries) { rediscoveries++; touched.add(level); return true; }
-            return false;
+        const afterEntries = level.hintRecords.find(h => h.path.join(',') === signature)?.provenance.length ?? 0;
+        if (level.hintRecords.length !== beforeCount) { newPaths++; touched.add(level); return true; }
+        if (afterEntries > beforeEntries) { rediscoveries++; touched.add(level); return true; }
+        return false;
     }
 }
