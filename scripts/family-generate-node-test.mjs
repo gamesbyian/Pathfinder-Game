@@ -22,7 +22,7 @@ import { buildBundle } from './run-bundled.mjs';
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FAMILY_GENERATE_BUNDLE = buildBundle('scripts/family-generate.mjs');
-const { writeLevelsWithHints } = await import('./level-data-io.mjs');
+const { writeLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 const { validateRawLevel } = await import('../modules/domain/level-schema.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
 const { parseRawLevel } = await import('../modules/domain/level-codec.js');
@@ -97,7 +97,7 @@ async function writeFixtureCorpus(dirAbs, level) {
     const levelsPathAbs = path.join(dirAbs, 'levels.json');
     // level.id is required: family-generate.mjs resolves --parent by id-or-position, and re-using
     // the parent's own real id keeps sibling ids (F<suffix>-NN) traceable in assertions below.
-    writeLevelsWithHints(levelsPathAbs, [level]);
+    writeLevelCorpusDocumentWithHints(levelsPathAbs, { levels: [level], metadata: {}, storageShape: 'array' });
     return levelsPathAbs;
 }
 
