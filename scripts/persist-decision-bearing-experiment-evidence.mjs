@@ -70,6 +70,22 @@ function levelBearingJsonFiles(root) {
   });
 }
 
+function entryByteBindingIssues(manifest, artifactRoot) {
+  const issues = [];
+  for (const entry of manifest?.entries ?? []) {
+    if (entry?.missing || !entry?.published || entry?.sha256 == null) continue;
+    const target = path.resolve(artifactRoot, entry.published);
+    if (!isInside(artifactRoot, target) || !fs.existsSync(target) || fs.statSync(target).isDirectory()) {
+      issues.push(`entry ${entry.published} cannot satisfy declared sha256 binding`);
+      continue;
+    }
+    if (sha256(fs.readFileSync(target)) !== entry.sha256) {
+      issues.push(`entry ${entry.published} bytes no longer match manifest sha256`);
+    }
+  }
+  return issues;
+}
+
 function exactOutcomeBindingIssues(manifest, artifactRoot) {
   const binding = manifest?.researchOutcome?.binding;
   if (!Array.isArray(binding?.resultContentHashes)) return [];
@@ -164,9 +180,10 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
       );
     }
     const artifactRoot = path.dirname(manifestFile);
+    const entryBindingIssues = entryByteBindingIssues(manifest, artifactRoot);
     const byteBindingIssues = exactOutcomeBindingIssues(manifest, artifactRoot);
     const populationBindingIssues = simplePopulationBindingIssues(manifest, artifactRoot);
-    const retainedBindingIssues = [...byteBindingIssues, ...populationBindingIssues];
+    const retainedBindingIssues = [...entryBindingIssues, ...byteBindingIssues, ...populationBindingIssues];
     if (retainedBindingIssues.length > 0) {
       throw new Error(
         `refusing to persist decision-bearing artifact whose retained scientific binding is stale: ${path.relative(staging, manifestFile)}: ${retainedBindingIssues.join(', ')}`,
@@ -297,8 +314,8 @@ function selfTest() {
       sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
       researchOutcome: { outcome: 'completed-positive' },
       entries: [
-        { role: '../primary', source: 'fixture', published: 'result.json', missing: false },
-        { role: 'compact-failure-response', source: 'fixture-compact', published: 'failure-response/compact.json', missing: false },
+        { role: '../primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(primary) },
+        { role: 'compact-failure-response', source: 'fixture-compact', published: 'failure-response/compact.json', missing: false, sha256: sha256(compact) },
       ],
     };
     fs.writeFileSync(path.join(artifact, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -345,7 +362,7 @@ function selfTest() {
         reason: 'exact result fixture',
         binding: { resultContentHashes: [sha256(exactResult)] },
       },
-      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false }],
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(exactResult) }],
     };
     fs.writeFileSync(path.join(exactBoundArtifact, 'manifest.json'), `${JSON.stringify(exactManifest, null, 2)}\n`);
     const exactRetained = persistDecisionBearingExperimentEvidence({ stagingDir: exactBoundArtifact, outRoot: path.join(temp, 'exact-retained'), compressAboveBytes: 8 });
@@ -370,12 +387,30 @@ function selfTest() {
         reason: 'bytes are exact but population is stale',
         binding: { resultContentHashes: [sha256(populationMismatchResult)] },
       },
-      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false }],
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(populationMismatchResult) }],
     }));
     assert.throws(
       () => persistDecisionBearingExperimentEvidence({ stagingDir: populationMismatchArtifact, outRoot: path.join(temp, 'population-mismatch-retained') }),
       /retained scientific binding is stale.*rows no longer match populationIntegrity\.expectedIds/u,
       'exact content binding must not substitute for revalidating the retained simple population join',
+    );
+
+    const staleEntryArtifact = path.join(temp, 'stale-entry-artifact');
+    fs.mkdirSync(staleEntryArtifact, { recursive: true });
+    const staleEntryOriginal = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true }] }));
+    fs.writeFileSync(path.join(staleEntryArtifact, 'result.json'), staleEntryOriginal);
+    fs.writeFileSync(path.join(staleEntryArtifact, 'manifest.json'), JSON.stringify({
+      ...manifest,
+      runId: '126',
+      experiment: { ...manifest.experiment, experimentId: 'fixture/stale-entry', workflowRunId: '126', workflowRunAttempt: '1' },
+      researchOutcome: { outcome: 'completed-positive', reason: 'embedded verdict fixture' },
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(staleEntryOriginal) }],
+    }));
+    fs.writeFileSync(path.join(staleEntryArtifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: false }] }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: staleEntryArtifact, outRoot: path.join(temp, 'stale-entry-retained') }),
+      /entry result\.json bytes no longer match manifest sha256/u,
+      'durable retention must re-prove publisher entry bytes even when an embedded verdict has no self-referential content binding',
     );
 
     const bundleBeforeReharvest = fs.readFileSync(path.join(destination, 'bundle.json'));
