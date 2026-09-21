@@ -411,6 +411,8 @@ const contract = {
     workflowRunId: process.env.GITHUB_RUN_ID ?? null,
     workflowRunAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
     sourceRuns: declaredContract?.experiment?.sourceRuns ?? [],
+    sourceProtocolHash: declaredContract?.experiment?.sourceProtocolHash ?? null,
+    sourceSetHash: declaredContract?.experiment?.sourceSetHash ?? null,
     reconciliationRun: declaredContract?.experiment?.reconciliationRun ?? null,
     configurationHash: declaredContract?.experiment?.configurationHash ?? primaryDocument?.configurationHash ?? null,
   },
