@@ -5,7 +5,7 @@
 > **Date:** 2026-09-21.
 > **Priority authority:** `solver-optimization-workstreams.md`.
 > **Method authority:** `solver-research-operating-model.md`.
-> **Closest active work:** PR #1952, forced-work prevalence. This preflight must not duplicate or disturb that branch.
+> **Closest active work:** `WS2-FORCED-WORK-CAPTURE-ECONOMICS` on PR #1952. Its 25.33% literal one-successor work ceiling now outranks this more expensive semantic census.
 > **Question class:** per-instance relational feasibility / bounded information acquisition.
 > **Production effect:** none.
 
@@ -299,9 +299,9 @@ Complementary.
 
 Do not merge the hypotheses or thresholds.
 
-If #1952 is strongly positive, literal forced-chain work may outrank this experiment.
+#1952 is now strongly positive: one-successor parents carry 25.33% of measured parent-expansion work on its frozen 64-parent sample. Therefore literal forced-work capture/economics outranks this experiment.
 
-If #1952 is negative, semantic forcedness may still be large because current pruning can fail to expose mathematical forcedness.
+Reopen this semantic census after that successor is disposed, or earlier only if its capture study shows the literal reservoir is mostly unavoidable while hidden semantic branching remains decision-relevant.
 
 ### PR #1954 pre-winner action selection
 
