@@ -352,9 +352,9 @@ const capture = validateSearchLossCapture({
     configurationHash: stableHash({ kind: 'search-loss-real-canary-configuration', corpusFile, controlCorpusFile, seed, workBudget, timeBudgetMs }),
     levelBlind: true,
   },
+  populationIdentity: stableHash({ kind: 'search-loss-real-canary-population', parentIds: selectedParentIds }),
   population: {
     source: `${corpusFile}+${controlCorpusFile}#deterministic-canary-sample`,
-    populationIdentity: stableHash({ kind: 'search-loss-real-canary-population', parentIds: selectedParentIds }),
     parentCount: selectedParentIds.length,
     observedCapsuleParentCount: decisionParents.length,
     parentOutcomes: Object.fromEntries(selectedParentIds.map(id => [id, richParentOutcomes[id] ?? null])),
