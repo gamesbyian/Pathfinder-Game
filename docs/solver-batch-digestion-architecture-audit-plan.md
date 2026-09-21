@@ -498,7 +498,7 @@ Every lane/candidate should eventually record:
 - The only overlapping path was `package.json`; reconciliation retained every #1938 script entry and this audit's `solver:audit-batch-cost` entry.
 - Compare verification after the merge showed #1938 head `beca9c0` is fully contained (0 commits behind the integrated head).
 - PR #1938 was then closed as superseded by this integration staging PR. PR #1936 was also closed because it was an empty-tree validation PR for an older integrated tree and carried no file content to preserve.
-- PR #1937 remains intentionally unreconciled while active work continues there. This branch is the staging target for its eventual reconciliation before anything is merged to `main`.
+- PR #1937 was reconciled after its work completed. Merge commit `ca14a79508cb5e9855a8edfb9573e90e6ec02e86` preserves both histories. Seven overlapping paths were resolved explicitly: #1937 remains authoritative for retired protocol/schema aliases, while newer research helpers/tests from #1938/#1939 were retained on those canonical forms. Compare verification showed both pre-merge heads are fully contained (0 behind).
 
 ### 2026-09-20 - Phase 1/2 instrumentation and boundary design
 
