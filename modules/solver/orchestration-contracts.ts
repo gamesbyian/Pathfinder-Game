@@ -276,7 +276,7 @@ export interface SolveOpts {
     attemptBudgetTelemetry?: boolean;
     /** Opt-in per-technique lifecycle/progress summary for experiment artifacts. */
     lifecycleTelemetry?: boolean;
-    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'legacy' | 'portfolio-experiment' | 'static-portfolio';
+    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio';
     /** Only read when schedulerMode === 'static-portfolio'. An ordered technique list sharing one
      *  cumulative work budget, each technique's own share additionally boundable by a flat or
      *  per-key cap — see runStaticPortfolio's own header comment and `2026-09-03-fixed-cap-
