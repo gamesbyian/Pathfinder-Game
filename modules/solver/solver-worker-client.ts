@@ -138,8 +138,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
         _pending.clear();
     };
 
-    return {
-        solveLevel(level: any, opts: SolveOpts = {}) {
+    const solveLevel = (level: any, opts: SolveOpts = {}) => {
             assertNormalizedSolveLevel(level);
             const id = _nextId++;
             const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
@@ -181,14 +180,17 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
         },
 
 
+    return {
+        solveLevel,
+
         solve(levelRaw: any, opts: SolveOpts = {}) {
             const validation = validateRawLevel(levelRaw);
             const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
             if (solverBoundaryErrors.length > 0) {
                 throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
             }
-            return this.solveLevel(normalizeRawLevel(levelRaw), opts);
-        }
+            return solveLevel(normalizeRawLevel(levelRaw), opts);
+        },
 
         // False-goal triggerability search on a normalized level. opts:
         //   timeLimitMs  — search budget in ms
