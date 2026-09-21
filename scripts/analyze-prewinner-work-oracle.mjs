@@ -8,6 +8,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const argv = process.argv.slice(2);
 const arg = name => argv.find(v => v.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null;
@@ -96,7 +97,7 @@ export function analyzePrewinnerWorkDocuments(documents) {
     };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
     const documents = inputs.map(source => ({ source, document: JSON.parse(readFileSync(source, 'utf8')) }));
     const result = analyzePrewinnerWorkDocuments(documents);
     mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
