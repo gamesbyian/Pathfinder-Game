@@ -85,7 +85,7 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 **Current WS2 gate:** HARVEST adds the repair node-cap seam and designs its matched-work A/B; reserve repricing is separately nominated. ACQUISITION runs the 3-row beam freshness gate, broadens first-loss sampling beyond capability-selected Class 3, and now has two earned response-guided follow-ups: bounded 2K/5K exclusive-prefix viability/dominance tracing and a selected CW/CCW operational-trace discriminator. BC1 separately advances to a production-inert safety/economics consumer. [`invention`](solver-capability-invention-program.md)
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** SUPPORTING / LEGAL-SIGNAL CAPTURE ACTIVE. Pre-winner work: C2 94.74%, C1 87.58%. Next: inert action-boundary capture; H3 remains separate. [`oracle`](../reports/2026-09-21-prewinner-work-oracle-census-001.md) · [`preflight`](../reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md)
+**State:** SUPPORTING / LEGAL-SIGNAL CAPTURE ACTIVE. Pre-winner work: C2 94.74%, C1 87.58%. Next: inert action-boundary capture. [`oracle`](../reports/2026-09-21-prewinner-work-oracle-census-001.md) · [`preflight`](../reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md)
 
 ## Workstream state
 
@@ -98,7 +98,7 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
 | 2R | Parity response signature | `supporting` | **NARROWED** | Static portal decomposition closed; reopen only on a different parity mechanism from success/prospective seam evidence | `WS2-PARITY-RESPONSE-SIGNATURE` |
 | 2X | Small exact projections | `supporting` | **BC1 CONSUMER EARNED** | Beam-hosted later-disposition shadow after ordinary hard-prune survival; record proof cost, work-at-proof, later reject/cull/descendant work, and valid/reference safety. No hot-path prune yet. [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md) | `WS2-CUT-BALANCE-PROJECTION` |
-| 1 | Automatic action selection | `supporting` | **LEGAL-SIGNAL CAPTURE ACTIVE** | Freeze action-boundary data; test simple legal signals vs current/static order with rare-winner protection | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
+| 1 | Automatic action selection | `supporting` | **LEGAL-SIGNAL CAPTURE ACTIVE** | Freeze action-boundary data; test simple legal signals with rare-winner protection | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
 | 1A | Remaining-length allocation | `supporting` | **EXPERIMENT DESIGN EARNED** | Precommit bounded matched-work near-miss completion ordering by ascending remaining length; no production change or dispatch implied | `WS1-REMAINING-LENGTH-ALLOCATION` |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
