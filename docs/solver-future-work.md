@@ -61,13 +61,12 @@ Dormant until an active lane changes the premise.
 | Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use a bounded work ladder, not standing sweeps |
 | Mechanism interaction | Reopen when one mechanism plausibly creates another's opportunities; test control/A/B/A+B at matched work, not broad flag matrices |
 
-## Inverse-question reopen hooks
+## Inverse-question reopen hook
 
-These are deferred research lenses, not active queue entries. They exist because the [question inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md) found two recurring blind spots not fully owned by current questions.
+The [question inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md) found one remaining deferred blind spot not yet owned by a live question. Success-side action-selection work has since advanced into the active WS1 legal-signal capture question on PR #1954 and must not be duplicated here.
 
 | Question | Reopen condition |
 |---|---|
-| Success-side avoidable work / early determination | Retained successful-run evidence or a production-inert observer can define a leakage-safe offline oracle for the earliest current-input decision point after which later exploration is unnecessary or nearly deterministic, with measurable downstream `workSpent`. Start with an oracle ceiling; no cold policy may consume eventual solution identity/path. One-successor forced-work prevalence remains separately owned by its current investigation. |
 | Capability obsolescence / dominated production stages | A material production-boundary change or portfolio churn makes current unique-contribution evidence stale enough to justify remeasurement. Compare stage/technique participation, unique marginal solves, displacement and removable work under current code; low participation alone is not removal evidence, and deletion needs capability-protecting confirmation. |
 
 ## Closed forms that stay closed
