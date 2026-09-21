@@ -126,7 +126,7 @@ const failureResponseComplete = Boolean(failureResponseDocument
   && failureResponseDocument.missingSourceFiles.length === 0
   && failureResponseDocument.invalidSourceFiles.length === 0);
 
-function collectJsonFiles(root, limit = 24) {
+function collectJsonFiles(root, limit = Infinity) {
   const found = [];
   function visit(current) {
     if (found.length >= limit || !fs.existsSync(current)) return;
@@ -163,9 +163,9 @@ function buildStageStats(levels) {
   return [...byStage.values()].sort((a, b) => b.attempts - a.attempts || a.stageId.localeCompare(b.stageId));
 }
 
-function levelStats(file) {
+function levelStats(file, { maxBytes = 128 * 1024 * 1024 } = {}) {
   try {
-    if (fs.statSync(file).size > 128 * 1024 * 1024) return null;
+    if (Number.isFinite(maxBytes) && fs.statSync(file).size > maxBytes) return null;
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
     const levels = Array.isArray(parsed?.levels) ? parsed.levels : null;
     if (!levels) return null;
@@ -305,7 +305,11 @@ function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStat
 }
 
 
-const stats = collectJsonFiles(outDir).map(levelStats).filter(Boolean);
+// Human-facing summaries stay deliberately bounded, but scientific binding must inspect every
+// level-bearing JSON file in the published bundle. A display/performance sampling limit must never
+// decide which result bytes or populations a verdict is entitled to classify.
+const stats = collectJsonFiles(outDir, 24).map(file => levelStats(file)).filter(Boolean);
+const bindingStats = collectJsonFiles(outDir).map(file => levelStats(file, { maxBytes: Infinity })).filter(Boolean);
 function statsForSource(re) {
   const e = entries.find(x => !x.missing && re.test(x.source));
   if (!e) return null;
@@ -470,9 +474,9 @@ if (declaredContract?.experiment?.resolvedSha) {
     sourceIdentityIssue = ['experiment.resolvedSha disagrees with primary result commit'];
   }
 }
-const populationBindingIssues = populationIntegrityBindingIssues(primaryDocument, populationIntegrity, stats);
+const populationBindingIssues = populationIntegrityBindingIssues(primaryDocument, populationIntegrity, bindingStats);
 const outcomeBindingIssues = [
-  ...researchOutcomeBindingIssues(researchOutcome, populationIdentity, stats, primaryDocument),
+  ...researchOutcomeBindingIssues(researchOutcome, populationIdentity, bindingStats, primaryDocument),
   ...researchOutcomePrimaryConsistencyIssues(researchOutcome, primaryDocument),
 ];
 const contractIssues = declaredContract
