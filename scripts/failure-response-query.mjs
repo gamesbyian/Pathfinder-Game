@@ -17,7 +17,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 
-import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { failureResponseIdentityView, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--') && a.includes('=')).map(a => {
     const i = a.indexOf('=');
@@ -38,7 +38,7 @@ const documents = inputFiles.map(file => {
     return { file, document };
 });
 let rows = documents.flatMap(({ file, document }) => document.records.map(record => ({
-    ...record,
+    ...failureResponseIdentityView(record),
     protocolHash: record.protocolHash ?? document.protocolHash ?? null,
     solverRef: record.solverRef ?? document.solverRef ?? null,
     __sourceFile: file,
