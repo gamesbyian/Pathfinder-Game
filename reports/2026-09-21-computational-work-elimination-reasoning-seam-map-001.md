@@ -1,9 +1,9 @@
 # Computational work elimination audit: current reasoning seam map 001
 
-> **Status:** initial architecture/source map; no production behavior change.
-> **Date:** 2026-09-21.
-> **Parent plan:** [solver computational work elimination audit plan](../docs/solver-computational-work-elimination-audit-plan.md).
-> **Purpose:** identify existing exact/safe reasoning producers, consumers, discard boundaries, signatures, and recurrence opportunities before adding instrumentation.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — current producer/consumer/source audit mapped exact lower-bound memoization, connectivity, joint obligations, failure evidence, repair experience and dynamic exact-projection seams.
+> **Decision:** use existing typed seams rather than inventing a general reason taxonomy; opportunity sizing should target expensive exact conclusions with a cheaper sound identity/implication and a real later consumer.
+> **Remaining gate:** none for this completed map; successor empirical work is owned by the connectivity shadow, paired proof-overlap probe and BC1 economics program.
 
 ## 1. Executive finding
 
