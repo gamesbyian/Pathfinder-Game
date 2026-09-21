@@ -37,7 +37,7 @@ function isolateGoalAttractionGuidanceDistanceRetryWorkDoseOpts(overrides: Recor
 test('guidance-goal-distance-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const run = (timeBudgetMs: number) => solveLevel(
         makeGoalAttractionDisabledRetryGatedInfeasibleLevel(),
-        isolateGoalAttractionGuidanceDistanceRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }),
+        isolateGoalAttractionGuidanceDistanceRetryWorkDoseOpts({ timeBudgetMs, baseWorkBudget: 200_000 }),
     );
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
@@ -186,7 +186,7 @@ function isolateRepairElitePrefixDfsRetryWorkDoseOpts(overrides: Record<string, 
 
 test('repair-elite-prefix-dfs-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const level = makeRepairGatedInfeasibleLevel();
-    const run = (timeBudgetMs: number) => solveLevel(level, isolateRepairElitePrefixDfsRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateRepairElitePrefixDfsRetryWorkDoseOpts({ timeBudgetMs, baseWorkBudget: 200_000 }));
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
@@ -253,7 +253,7 @@ function isolateLateRepairSearchWorkDoseOpts(overrides: Record<string, unknown> 
 
 test('late-repair-search work dose no longer resizes with a non-binding deadline change', async () => {
     const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
-    const run = (timeBudgetMs: number) => solveLevel(level, isolateLateRepairSearchWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateLateRepairSearchWorkDoseOpts({ timeBudgetMs, baseWorkBudget: 200_000 }));
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
@@ -301,7 +301,7 @@ function isolateLateRepairMultiSeedRetryWorkDoseOpts(overrides: Record<string, u
 
 test('late-repair-multiseed-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
-    const run = (timeBudgetMs: number) => solveLevel(level, isolateLateRepairMultiSeedRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateLateRepairMultiSeedRetryWorkDoseOpts({ timeBudgetMs, baseWorkBudget: 200_000 }));
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
