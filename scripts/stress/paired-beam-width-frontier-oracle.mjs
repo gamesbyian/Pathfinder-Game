@@ -133,6 +133,7 @@ async function main() {
     const widths = String(arg('widths', '2000,5000')).split(',').map(Number);
     const depthFraction = Number(arg('depth-fraction', 0.2));
     const budgetMs = Number(arg('budget-ms', 600_000));
+    const maxExamples = Number(arg('max-examples', 12));
     const outFile = arg('out', null);
 
     if (!outFile) throw new Error('--out is required');
@@ -143,6 +144,7 @@ async function main() {
     }
     if (!(depthFraction > 0 && depthFraction < 1)) throw new Error('--depth-fraction must be in (0,1)');
     if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
+    if (!Number.isInteger(maxExamples) || maxExamples < 0) throw new Error('--max-examples must be a non-negative integer');
 
     installBrowserStubs();
     const Solver = createSolver();
@@ -171,9 +173,22 @@ async function main() {
                 }));
             }
 
-            const comparison = captures.every(row => row.status === 'paused')
+            const fullComparison = captures.every(row => row.status === 'paused')
                 ? compareBeamFrontiers(captures[0].frontier, captures[1].frontier)
                 : null;
+            const comparison = fullComparison ? {
+                left: fullComparison.left,
+                right: fullComparison.right,
+                shared: fullComparison.shared,
+                leftOnly: fullComparison.leftOnly,
+                rightOnly: fullComparison.rightOnly,
+                jaccard: fullComparison.jaccard,
+                leftContainedInRight: fullComparison.leftContainedInRight,
+                rightContainedInLeft: fullComparison.rightContainedInLeft,
+                leftOnlyExamples: fullComparison.leftOnlyRows.slice(0, maxExamples),
+                rightOnlyExamples: fullComparison.rightOnlyRows.slice(0, maxExamples),
+                sharedExamples: fullComparison.sharedRows.slice(0, maxExamples),
+            } : null;
 
             gates.push({
                 gateIndex,
@@ -218,6 +233,7 @@ async function main() {
             widths,
             depthFraction,
             budgetMs,
+            maxExamples,
             execution: 'two isolated beam searches per gate, same profile/checkpoint; no production policy change',
         },
         interpretation: {
