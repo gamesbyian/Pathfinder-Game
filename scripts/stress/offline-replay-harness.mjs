@@ -51,7 +51,7 @@ import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
@@ -90,7 +90,7 @@ const pruneGapFiles = readdirSync(path.resolve(root, PRUNE_GAP_DIR)).filter(f =>
 if (pruneGapFiles.length === 0) { console.error(`No prune-gap-*.json files found under ${PRUNE_GAP_DIR}.`); process.exit(1); }
 
 const packXY = ([x, y]) => (((y - 1) << 16) | (x - 1)) >>> 0;
-const corpusLevels = readLevelsWithHints(CORPUS);
+const corpusLevels = readLevelCorpusDocumentWithHints(CORPUS).levels;
 
 function freshTally() {
     return { deadCaught: 0, deadMissed: 0, aliveFalseReject: 0, aliveOk: 0, abstained: 0, uniqueCatch: 0, overlapWithGauntlet: 0, total: 0 };

@@ -9,7 +9,7 @@
 import path from 'node:path';
 import process from 'node:process';
 
-import { readLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { prChangedFiles } from './repository-file-view.mjs';
 
 const { parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
@@ -50,7 +50,7 @@ const failures = [];
 for (const { label, file } of corpora) {
   let levels;
   try {
-    levels = readLevelsWithHints(file);
+    levels = readLevelCorpusDocumentWithHints(file).levels;
   } catch (error) {
     failures.push(`${label}: failed to read levels/hints: ${error.message}`);
     continue;

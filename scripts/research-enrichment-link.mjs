@@ -4,6 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { buildResearchEnrichmentLink, RESEARCH_ENRICHMENT_KINDS } from './research-enrichment-link-lib.mjs';
+import { assertCanonicalResearchArtifactEnvelope, extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -28,8 +29,9 @@ if (!existsSync(path.resolve(ROOT, blockArtifact))) throw new Error(`missing blo
 if (!existsSync(path.resolve(ROOT, artifact))) throw new Error(`missing enrichment artifact: ${artifact}`);
 
 const blockDoc = JSON.parse(readFileSync(path.resolve(ROOT, blockArtifact), 'utf8'));
-const researchBlock = blockDoc?.researchBlock ?? blockDoc?.population?.researchBlock ?? null;
-const populationIdentity = blockDoc?.populationIdentity ?? blockDoc?.population?.corpusIdentity ?? null;
+const envelope = extractResearchArtifactEnvelope(blockDoc);
+const researchBlock = envelope.researchBlock;
+const populationIdentity = envelope.populationIdentity;
 const link = buildResearchEnrichmentLink({
     sourceBlockArtifact: blockArtifact,
     sourceArtifact: artifact,
@@ -42,6 +44,7 @@ const link = buildResearchEnrichmentLink({
 
 const absoluteOut = path.resolve(ROOT, out);
 mkdirSync(path.dirname(absoluteOut), { recursive: true });
+assertCanonicalResearchArtifactEnvelope(link);
 writeFileSync(absoluteOut, `${JSON.stringify(link, null, 2)}\n`);
 console.log(JSON.stringify({
     out,

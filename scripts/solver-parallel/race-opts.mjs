@@ -9,7 +9,7 @@
 // single-worker path, scripts/portfolio-solve-sweep-worker.mjs's forked-worker path, and
 // scripts/stress/benchmark.mjs's --engine=raced path) built this subset by hand, inline, as a
 // fresh object literal. That let two classes of bug ship silently:
-//   - a SolveOpts field race.mjs never reads at all (e.g. workBudget, nodeBudget,
+//   - a SolveOpts field race.mjs never reads at all (e.g. baseWorkBudget, nodeBudget,
 //     mainSearchLateReserveFractionOverride, admissibleOrder*) gets threaded into the literal by
 //     a caller who assumes it's honored (scripts/stress/benchmark.mjs actually did this for
 //     --work-budget), and race.mjs silently ignores it -- no warning, no error -- while any
@@ -26,12 +26,10 @@
 // run) or blocks the run with a clear message; it can never again just silently vanish.
 export const RACE_LEVEL_OPTS_FIELDS = Object.freeze([
     'timeBudgetMs',
+    'overallBudgetMs',
     'ablation',
     'repairAdditiveBudgetMultiplierOverride',
     'goalAttractionDisabledRetryBudgetFractionOverride',
-    // Legacy alias for the field above; race.mjs's runOneLevel dual-reads both (`??`), matching
-    // the dual-read convention scripts/check-solveopts-transport-parity.mjs enforces elsewhere.
-    'attractionDiversityBudgetFractionOverride',
 ]);
 
 // Fields that are meaningful on the caller's SolveOpts but deliberately NOT forwarded to race.mjs
@@ -42,6 +40,27 @@ export const RACE_LEVEL_OPTS_FIELDS = Object.freeze([
 // caller can still pass schedulerMode through the same shared solveOpts object used for the
 // sequential branch without tripping the unsupported-field failure below.
 const IGNORED_CONSTANT_FIELDS = Object.freeze(['schedulerMode']);
+
+/**
+ * Assert that an object already is the raced backend's narrow per-level request shape.
+ * Unlike toRaceLevelOpts(), this does not project or ignore anything.
+ *
+ * @param {object} levelOpts
+ * @returns {object}
+ */
+export function assertRaceLevelOpts(levelOpts = {}) {
+    const rejected = Object.entries(levelOpts)
+        .filter(([, value]) => value !== undefined)
+        .map(([key]) => key)
+        .filter(key => !RACE_LEVEL_OPTS_FIELDS.includes(key))
+        .sort();
+    if (rejected.length > 0) {
+        throw new Error(
+            `race solve request contains unsupported field(s): ${rejected.join(', ')}; supported fields are ${RACE_LEVEL_OPTS_FIELDS.join(', ')}`,
+        );
+    }
+    return levelOpts;
+}
 
 /**
  * Project a full SolveOpts-shaped object down to exactly the fields race.mjs's createRacePool
@@ -72,7 +91,7 @@ export function toRaceLevelOpts(solveOpts = {}) {
         throw new Error(
             `toRaceLevelOpts: SolveOpts field(s) not supported by the raced engine were requested and would be silently dropped: ${rejected.sort().join(', ')}. `
             + 'scripts/solver-parallel/race.mjs reimplements only main-search + repair-fallback + goal-attraction-disabled-retry '
-            + '(see its RACE_SUPPORTED_STAGE_IDS) and has no nodeBudget/workBudget, static-portfolio, admissible-order, or '
+            + '(see its RACE_SUPPORTED_STAGE_IDS) and has no nodeBudget/baseWorkBudget, static-portfolio, admissible-order, or '
             + 'main-search-late-reserve concept. Either omit these option(s) for this run, or do not race it '
             + '(drop --race-pool-size / use --engine=sequential).',
         );

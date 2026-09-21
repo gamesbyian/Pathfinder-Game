@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
-import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, setLevelHintRecords } from './level-data-io.mjs';
 import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 // Run under tsx (see package.json) so this plain-.mjs script can import the TS domain
 // module directly — the same canonical, mechanics-aware fingerprint the app uses for
@@ -14,7 +14,7 @@ import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 // but did NOT under the old local stableStringify comparison, so a republished landmark
 // level would have been treated as new instead of merged.
 import { getLevelFingerprintSource } from '../modules/domain/level-fingerprint.js';
-import { upgradeLegacyHints, hintPaths } from '../modules/domain/hint-types.js';
+import { upgradeLegacyHints } from '../modules/domain/hint-types.js';
 import { makeProvenanceEntry, makeLevelProvenance } from '../modules/domain/level-provenance-types.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
@@ -22,8 +22,8 @@ const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
 const heatmapsJsonPath = path.join(repoRoot, 'data', 'level-heatmaps.json');
 const firebaseConfigPath = path.join(repoRoot, 'firebase-config.js');
 
-function loadRawLevels() {
-  return readLevelsWithHints(levelsJsonPath);
+function loadRawCorpusDocument() {
+  return readLevelCorpusDocumentWithHints(levelsJsonPath);
 }
 
 function loadFirebaseConfig() {
@@ -62,17 +62,21 @@ function decodeFirestoreFields(fields) {
 // This script carries BOTH fields of the dual-field pattern: `.hints` (bare paths, what fingerprint/
 // dedup logic reads) and `.hintRecords` (canonical Hint[] WITH provenance). It used to keep only
 // bare paths, which silently discarded every player-contributed hint's provenance on import (all of
-// P00157+ landed with empty provenance); writeLevelsWithHints's reconcileHints then persists the
+// P00157+ landed with empty provenance); the corpus writer then persists the
 // records, so the provenance a player captured survives the round-trip. An existing on-disk level
-// already has its real .hintRecords hydrated by readLevelsWithHints — keep those; only an incoming
+// already has its real .hintRecords hydrated by the corpus reader — keep those; only an incoming
 // Firestore level (no .hintRecords) derives them from its canonical hints.
 function decodeHints(level) {
-  if (!Array.isArray(level?.hints)) return level;
-  const raw = level.hints.map(hint => typeof hint === 'string' ? JSON.parse(hint) : hint);
+  if (!Array.isArray(level?.hints) && !Array.isArray(level?.hintRecords)) return level;
+  const raw = Array.isArray(level?.hints)
+    ? level.hints.map(hint => typeof hint === 'string' ? JSON.parse(hint) : hint)
+    : [];
   const records = Array.isArray(level.hintRecords) && level.hintRecords.length
     ? level.hintRecords
     : upgradeLegacyHints(raw);
-  return { ...level, hints: hintPaths(records), hintRecords: records };
+  const normalized = { ...level };
+  setLevelHintRecords(normalized, records);
+  return normalized;
 }
 
 export function normalizeLevel(level) {
@@ -80,7 +84,7 @@ export function normalizeLevel(level) {
   clone.designerName = typeof clone.designerName === 'string' ? clone.designerName : '';
   clone.description = typeof clone.description === 'string' ? clone.description : '';
   clone.difficulty = clone.difficulty === undefined || clone.difficulty === '' ? null : clone.difficulty;
-  if (!Array.isArray(clone.hints)) clone.hints = [];
+  if (!Array.isArray(clone.hintRecords)) setLevelHintRecords(clone, []);
   return clone;
 }
 
@@ -92,8 +96,10 @@ export function levelFingerprint(level) {
   return getLevelFingerprintSource(level);
 }
 
-function writeLevels(levels) {
-  writeLevelsWithHints(levelsJsonPath, levels.map(normalizeLevel));
+function writeLevels(document, levels, changedLevelIds) {
+  const normalizedLevels = levels.map(normalizeLevel);
+  const changedHintLevels = normalizedLevels.filter(level => changedLevelIds.has(level.id));
+  writeLevelCorpusDocumentWithHints(levelsJsonPath, { ...document, levels: normalizedLevels }, { changedHintLevels });
 }
 
 // Uncapped: the 1000-hint cap was a UI-latency guard for player-initiated searches, not a data
@@ -143,27 +149,27 @@ export function makeLevelIdMinter(existingLevels) {
 }
 
 /** Append hints from `incoming` that aren't already on `target` (dedupe by path signature), up to the
- *  per-level cap. Mutates BOTH `target.hints` (bare paths) and `target.hintRecords` (canonical Hint[]
- *  with provenance) in place; returns how many were added. Never reorders. Iterates the canonical
- *  records so a new hint's provenance is carried in — falling back to deriving empty-provenance
- *  records from bare `incoming.hints` when no records are present. */
+ * per-level cap. Canonical Hint records are the mutation authority; the legacy bare-path projection
+ * is derived once through setLevelHintRecords(). Returns how many were added and never reorders. */
 export function mergeNewHints(target, incoming) {
-  if (!Array.isArray(target.hints)) target.hints = [];
-  if (!Array.isArray(target.hintRecords)) target.hintRecords = [];
-  const seen = new Set(target.hints.map(hintSignature));
+  const targetRecords = Array.isArray(target.hintRecords) && target.hintRecords.length
+    ? target.hintRecords
+    : upgradeLegacyHints(Array.isArray(target.hints) ? target.hints : []);
   const incomingRecords = Array.isArray(incoming.hintRecords) && incoming.hintRecords.length
     ? incoming.hintRecords
     : upgradeLegacyHints(Array.isArray(incoming.hints) ? incoming.hints : []);
+  const seen = new Set(targetRecords.map(rec => hintSignature(rec.path)));
+  const nextRecords = [...targetRecords];
   let added = 0;
   for (const rec of incomingRecords) {
-    if (target.hints.length >= MAX_HINTS_PER_LEVEL) break;
+    if (nextRecords.length >= MAX_HINTS_PER_LEVEL) break;
     const sig = hintSignature(rec.path);
     if (seen.has(sig)) continue;
     seen.add(sig);
-    target.hints.push(rec.path);
-    target.hintRecords.push(rec);
+    nextRecords.push(rec);
     added++;
   }
+  if (added > 0 || !Array.isArray(target.hintRecords)) setLevelHintRecords(target, nextRecords);
   return added;
 }
 
@@ -184,7 +190,8 @@ async function fetchPublishedLevels() {
 }
 
 export async function main() {
-  const levels = loadRawLevels().map(normalizeLevel);
+  const corpusDocument = loadRawCorpusDocument();
+  const levels = corpusDocument.levels.map(normalizeLevel);
   // Fingerprint → existing level object (structural fingerprint ignores hints/metadata), so a
   // published level that already exists is matched and its NEW hints merged in, rather than
   // re-appended as a duplicate level. Existing levels keep their position (no reordering).
@@ -192,12 +199,13 @@ export async function main() {
   const mintId = makeLevelIdMinter(levels);
 
   let newLevels = 0, hintsAdded = 0, levelsUpdated = 0;
+  const changedLevelIds = new Set();
   for (const level of await fetchPublishedLevels()) {
     const fp = levelFingerprint(level);
     const match = byFingerprint.get(fp);
     if (match) {
       const added = mergeNewHints(match, level);
-      if (added > 0) { hintsAdded += added; levelsUpdated++; }
+      if (added > 0) { hintsAdded += added; levelsUpdated++; changedLevelIds.add(match.id); }
     } else {
       // `id` first, matching the established field order (see backfill-level-ids.mjs) --
       // the Firestore staging doc itself never carries one (see makeLevelIdMinter's doc
@@ -205,14 +213,15 @@ export async function main() {
       const withId = ensureProvenance(typeof level.id === 'string' && level.id ? level : { id: mintId(), ...level });
       byFingerprint.set(fp, withId);
       levels.push(withId);
+      changedLevelIds.add(withId.id);
       newLevels++;
     }
   }
-  writeLevels(levels);
+  writeLevels(corpusDocument, levels, changedLevelIds);
   console.log(`Imported ${newLevels} new published level(s); appended ${hintsAdded} new hint(s) to ${levelsUpdated} existing level(s).`);
 
   if (newLevels > 0 || hintsAdded > 0) {
-    const written = loadRawLevels();
+    const written = loadRawCorpusDocument().levels;
     const output = writeHeatmapsFile(written, heatmapsJsonPath);
     console.log(`Updated heat maps for ${output.levels.length} levels in data/level-heatmaps.json.`);
   }

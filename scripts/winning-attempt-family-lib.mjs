@@ -1,7 +1,8 @@
+import { normalizeHistoricalPersistedAttempt } from '../modules/solver/historical-attempt-normalization.mjs';
 import { canonicalAttemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 
 export function winnerConfig(attempt) {
-    return canonicalAttemptConfigKey(attempt);
+    return canonicalAttemptConfigKey(normalizeHistoricalPersistedAttempt(attempt));
 }
 const pct = (values, percentile) => values.length ? values[Math.max(0, Math.ceil(values.length * percentile) - 1)] : null;
 const metric = value => value === null || value === undefined || value === '' ? null : Number.isFinite(Number(value)) ? Number(value) : null;

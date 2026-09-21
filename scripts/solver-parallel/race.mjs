@@ -51,7 +51,7 @@
 // Determinism Report referenced in docs/solver-architecture.md) — not just WHEN a level solves,
 // but sometimes WHICH mechanism gets credit. A level whose phase-1 win is itself timing-sensitive
 // (some runs solve via ordinary main-search scheduling, others need phase 2's flag-disabled rerun)
-// can report a different winningStrategy/attractionDiversity flag across repeated raced runs of
+// can report a different winningStrategy/goalAttractionDisabledRetry flag across repeated raced runs of
 // the exact identical level — confirmed directly during this session's own verification (the same
 // real corpus-2 level solved via a plain main-search attempt in one run and via this phase in
 // another). Not a correctness concern (every returned path is still independently referee-valid),
@@ -76,6 +76,7 @@ import { mkdirSync } from 'node:fs';
 import { buildSync } from 'esbuild';
 import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 import { withSolverStage } from '../../modules/solver/stage-policy.js';
+import { assertRaceLevelOpts } from './race-opts.mjs';
 
 // The policy-level stage IDs (stage-policy.ts's SOLVER_STAGE_IDS) this raced engine actually
 // implements: main-search + repair-fallback racing concurrently (phase 1), then goal-attraction-disabled-retry
@@ -499,7 +500,7 @@ export function createRacePool(opts = {}) {
         // slots (no new spawn cost). A single queue (no repair sub-queue — attempts.ts's diversity
         // config carries no `.repair` flag), so this reuses the simpler single-queue shape of
         // phase 1's own no-repair case rather than needing a second dual-queue implementation.
-        const diversityFractionOverride = Number(levelOpts.goalAttractionDisabledRetryBudgetFractionOverride ?? levelOpts.attractionDiversityBudgetFractionOverride);
+        const diversityFractionOverride = Number(levelOpts.goalAttractionDisabledRetryBudgetFractionOverride);
         const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
             ? diversityFractionOverride
             : GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION;
@@ -650,6 +651,7 @@ export function createRacePool(opts = {}) {
     }
 
     function solveLevel(rawLevel, levelOpts = {}) {
+        assertRaceLevelOpts(levelOpts);
         const run = queue.then(() => runOneLevel(rawLevel, levelOpts));
         // Keep the chain alive even if this level's race rejects (it shouldn't — runOneLevel only
         // resolves — but a broken worker's bundle/import error would otherwise wedge every
@@ -691,13 +693,14 @@ export function createRacePool(opts = {}) {
  * @param {number} [opts.goalAttractionDisabledRetryBudgetFractionOverride] - overrides
  *   GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION for this call only, independent of the repair override
  *   above; 0 disables the phase entirely. See orchestration.ts's SolveOpts field of the same name.
- *   `attractionDiversityBudgetFractionOverride` is still accepted as a legacy alias.
  * @returns {Promise<{ok: boolean, status: string, solution: number[]|null, solutions: number[][], attempts: object[], totalMs: number, nodesExpanded: number}>}
  */
 export async function solveLevelRaced(rawLevel, opts = {}) {
-    const pool = createRacePool(opts);
+    const { poolSize, ...levelOpts } = opts;
+    assertRaceLevelOpts(levelOpts);
+    const pool = createRacePool({ poolSize });
     try {
-        return await pool.solveLevel(rawLevel, opts);
+        return await pool.solveLevel(rawLevel, levelOpts);
     } finally {
         await pool.shutdown();
     }

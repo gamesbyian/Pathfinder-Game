@@ -1,4 +1,5 @@
 import { assertResearchBlock } from './solver-research-block-lineage.mjs';
+import { assertCanonicalResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 export const RESEARCH_ENRICHMENT_KINDS = Object.freeze([
     'observation',
@@ -36,7 +37,7 @@ export function buildResearchEnrichmentLink({
         throw new Error('createdAt must be an ISO timestamp');
     }
     assertResearchBlock(researchBlock, { populationIdentity });
-    return {
+    const link = {
         schemaVersion: 1,
         kind: 'pathfinder-research-enrichment-link',
         researchEnrichmentKind,
@@ -48,4 +49,6 @@ export function buildResearchEnrichmentLink({
         populationIdentity,
         researchBlock,
     };
+    assertCanonicalResearchArtifactEnvelope(link);
+    return link;
 }

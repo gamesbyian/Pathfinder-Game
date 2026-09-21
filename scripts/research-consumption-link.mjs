@@ -7,6 +7,7 @@ import {
     assertResearchBlock,
 } from './solver-research-block-lineage.mjs';
 import { loadResearchQuestionRegistry } from './research-question-relations-lib.mjs';
+import { assertCanonicalResearchArtifactEnvelope, extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -34,8 +35,9 @@ if (!registry.questions.some(question => question.id === questionId)) {
 }
 
 const document = JSON.parse(readFileSync(blockArtifact, 'utf8'));
-const populationIdentity = document?.populationIdentity ?? document?.population?.corpusIdentity ?? null;
-let researchBlock = document?.researchBlock ?? document?.population?.researchBlock ?? null;
+const envelope = extractResearchArtifactEnvelope(document);
+const populationIdentity = envelope.populationIdentity;
+let researchBlock = envelope.researchBlock;
 assertResearchBlock(researchBlock, { populationIdentity });
 
 const rawScopes = values('scope');
@@ -118,6 +120,7 @@ const sidecar = {
         selectionArtifact,
     },
 };
+assertCanonicalResearchArtifactEnvelope(sidecar);
 mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
 writeFileSync(path.resolve(out), JSON.stringify(sidecar, null, 2) + '\n');
 console.log(JSON.stringify({

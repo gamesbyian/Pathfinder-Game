@@ -7,7 +7,7 @@ import { knownHintCount, hintButtonLabel, mergeUniqueHints } from '../solver/div
 import { defaultReportError } from '../error-reporting.js';
 import { OVERLAY_NONE, SOLVER_RUNNING } from '../app-constants.js';
 import { buildWireLevelData, cloneLevelWithReq } from '../domain/level-codec.js';
-import { mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
+import { mergeHints, reconcileHints, setLevelHintRecords, toHint } from '../domain/hint-types.js';
 import { provenanceFromSolveResult } from '../solver/hint-provenance.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { SOLVER_VERSION } from '../build-info.js';
@@ -93,9 +93,9 @@ export function createReviewController({ state, ui, engine, editor, persistence,
 
     // --- Helpers ---
 
-    const updateReviewHintBtn = () => {
+    const updateReviewHintBtn = (paths: number[][] | null = null) => {
         const wl = state.engineState.editor.workingLevel;
-        const count = knownHintCount(wl?.hints, state.engineState.foundHintsSinceLoad);
+        const count = knownHintCount(paths ?? wl?.hints, state.engineState.foundHintsSinceLoad);
         ui.setButtonLabel('reviewHintBtn', hintButtonLabel(count));
     };
 
@@ -198,8 +198,7 @@ export function createReviewController({ state, ui, engine, editor, persistence,
             ui.showMessage('Re-validating hints…', 'warning');
             hints = revalidateHints(hints, wl, requiredLength, requiredIntersections);
         }
-        wl.hints = hints;
-        updateReviewHintBtn();
+        updateReviewHintBtn(hints);
 
         // If no valid hints remain, run solver.
         let solverFallbackHint: any = null;
@@ -210,8 +209,7 @@ export function createReviewController({ state, ui, engine, editor, persistence,
             if (fallback === 'use-solution' && solved) {
                 hints = [solved.path];
                 solverFallbackHint = solved.hint;
-                wl.hints = hints;
-                updateReviewHintBtn();
+                updateReviewHintBtn(hints);
             } else if (fallback === 'reject-recommended') {
                 // A hint-addition submission with nothing left to contribute has no
                 // fallback publish path — the reviewer should reject it instead.
@@ -236,6 +234,8 @@ export function createReviewController({ state, ui, engine, editor, persistence,
             solverFallbackHint ? [solverFallbackHint] : [],
         );
         const hintsToPersist = reconcileHints(hints, knownHintRecords);
+        setLevelHintRecords(wl, hintsToPersist);
+        updateReviewHintBtn();
 
         try {
             ui.showMessage(isHintAddition ? 'Adding hints…' : 'Approving…', 'info');

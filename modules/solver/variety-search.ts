@@ -11,7 +11,7 @@
 //
 // It SAVES every valid, exact-deduped solution it finds (the tier number governs when to stop searching,
 // not what to keep); the curated subset is only a preview of the variety achieved.
-import { validateCandidatePath } from '../domain/path-validator.js';
+import { validateCanonicalPath } from '../domain/path-validator.js';
 import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';
 import { enumerateFromGate, anchoredFromSeed } from './hint-enumeration.js';
@@ -188,7 +188,7 @@ export function createVarietySearch(
                 rediscovered.push({ path: candidate, nodesExpanded, elapsedMs, ...meta() });
                 return;
             }
-            const v = validateCandidatePath(level, candidate); // PLAY referee — geese/false-goal safe
+            const v = validateCanonicalPath(level, candidate); // PLAY referee — geese/false-goal safe
             if (!v.ok) return;
             const sig = pathSignature(v.path);
             if (sigs.has(sig)) {

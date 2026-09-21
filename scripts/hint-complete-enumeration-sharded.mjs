@@ -64,7 +64,7 @@ const { enumerateFromGate, rootChildrenForGate, planGateShards } = await import(
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
 const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
 const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.ts');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const resolveFromRoot = p => (path.isAbsolute(p) ? p : path.join(ROOT, p));
@@ -161,7 +161,8 @@ if (!isMainThread) {
 async function main() {
     const argMap = parseArgs(process.argv.slice(2));
     const levelsJsonPath = argMap.get('--levels-json') || 'data/levels.json';
-    const rawLevels = readLevelsWithHints(resolveFromRoot(levelsJsonPath));
+    const corpusDocument = readLevelCorpusDocumentWithHints(resolveFromRoot(levelsJsonPath));
+    const rawLevels = corpusDocument.levels;
     const levelNumbers = [...parseLevelSelector(rawLevels, argMap.get('--levels'))].sort((a, b) => a - b);
     const shardsPerGate = Math.max(1, Number(argMap.get('--shards-per-gate') || 4));
     const nodeBudget = Number(argMap.get('--node-budget') || 0); // 0 = unbounded (true "complete")
@@ -288,6 +289,7 @@ async function main() {
 
     // ─── merge: deterministic regardless of completion order — sort before dedupe/report ───────
     const levelReports = [];
+    const changedHintLevels = new Set();
     let totalNovel = 0;
     for (const levelNumber of levelNumbers) {
         const raw = rawLevels[levelNumber - 1];
@@ -319,7 +321,6 @@ async function main() {
         totalNovel += novel.length;
 
         if (writeLevels && novel.length > 0) {
-            raw.hints = [...(raw.hints || []), ...novel];
             // Attach real provenance (deterministic exhaustive/sharded enumeration, which gate it
             // was found under) instead of leaving these paths with an empty provenance list — this
             // script previously only wrote `.hints`.
@@ -336,7 +337,8 @@ async function main() {
                 profile,
                 levelRevision,
             })]));
-            raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
+            changedHintLevels.add(raw);
         }
 
         levelReports.push({
@@ -353,7 +355,7 @@ async function main() {
             + `${allJobsHaveResults && allExhausted ? 'EXHAUSTIVE' : 'incomplete'}`);
     }
 
-    if (writeLevels && totalNovel > 0) writeLevelsWithHints(resolveFromRoot(levelsJsonPath), rawLevels);
+    if (writeLevels && totalNovel > 0) writeLevelCorpusDocumentWithHints(resolveFromRoot(levelsJsonPath), corpusDocument, { changedHintLevels });
 
     const report = {
         schemaVersion: 1,

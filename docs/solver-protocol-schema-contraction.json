@@ -19,43 +19,59 @@
       "concept": "hint mutable representation",
       "owners": [
         "scripts/level-data-io.mjs",
-        "modules/domain/hint-runtime.mjs"
+        "modules/domain/hint-runtime.mjs",
+        "scripts/hint-complete-enumeration-sharded.mjs",
+        "scripts/hint-corpus-expand.mjs",
+        "scripts/hint-diversification.mjs",
+        "scripts/hint-workbench.mjs",
+        "scripts/import-published-levels.mjs"
       ],
       "forms": [
         "level.hints bare paths",
         "level.hintRecords provenance-rich Hint records"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "single-mutable-authority",
-      "status": "open",
-      "retirementGate": "current writers mutate canonical Hint records only; bare paths are projections; sharded write safety retained"
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: setLevelHintRecords() is the sole current hint mutation boundary; .hints is derived only. Hint persistence now takes an explicit changedHintLevels write set, so concurrent shard safety no longer depends on read-time object/array reference identity.",
+      "progress": "Closed after the exercised-writer census and B3 implementation. Shared hint capture, family replay/generation, complete enumeration, corpus expansion, diversification, workbench, published import, and portfolio sweep all mutate canonical hintRecords only. writeLevelCorpusDocumentWithHints() persists only caller-declared changedHintLevels; UNTOUCHED_HINTS_STATE is removed. The concurrency regression fixture proves two stale full-corpus snapshots can write disjoint levels without clobbering each other."
     },
     {
       "id": "PSC-002",
       "concept": "level corpus document container",
       "owners": [
-        "scripts/level-data-io.mjs"
+        "scripts/level-data-io.mjs",
+        "scripts/level-data-io-unit-tests.mjs",
+        "scripts/hint-complete-enumeration-sharded.mjs",
+        "scripts/hint-corpus-expand.mjs",
+        "scripts/hint-diversification.mjs",
+        "scripts/hint-workbench.mjs",
+        "scripts/portfolio-solve-sweep.mjs"
       ],
       "forms": [
         "bare level array",
         "object with levels array"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "explicit canonical corpus document replaces LEVEL_WRAPPERS hidden serialization state"
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: maintained scripts/tests carry explicit {levels, metadata, storageShape} corpus documents; removed array facades/hidden wrapper state have no current caller, and persistence has explicit write intent rather than hidden read-time identity.",
+      "progress": "Closed after CI-driven caller migration plus B3. Level-blind sweep, technique census combine, prefix survival, offline replay, evidence harvest, family generation/replay, hint discovery tools, portfolio sweep, shared hint capture, and affected tests use explicit corpus documents. LEVEL_WRAPPERS/readLevelsWithHints()/writeLevelsWithHints() are gone, and hint write ownership is explicit at persistence."
     },
     {
       "id": "PSC-003",
       "concept": "candidate path encoding",
       "owners": [
-        "modules/domain/path-validator.ts"
+        "modules/domain/path-validator.ts",
+        "modules/domain/path-validator.test.ts",
+        "modules/solver/variety-search.ts",
+        "modules/solver/solver-worker-client.ts"
       ],
       "forms": [
         "packed numeric cell keys",
@@ -67,8 +83,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "wire decoding is separate from canonical path validation; internal validation accepts one path representation"
+      "status": "complete",
+      "retirementGate": "Migrate remaining internal callers that already own packed-key paths; keep validateCandidatePath only on wire/import/public API surfaces that genuinely accept alternate coordinate encodings.",
+      "progress": "Closed: candidate decoding and rule validation are split. decodeCandidatePath()/validateCandidatePath() remain the explicit external/import/public adapter for alternate encodings; internal packed-key producers in variety-search and pooled worker enumeration call validateCanonicalPath() directly. The canonical referee rejects coordinate arrays/objects rather than reinterpreting them."
     },
     {
       "id": "PSC-004",
@@ -83,116 +100,142 @@
         "numeric id suffix",
         "structural fingerprint"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "investigate",
-      "status": "open",
-      "retirementGate": "persistent level id is the durable research address; position remains explicit presentation/debug addressing only"
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: maintained research/workflow selection uses explicit pos:/id/full-id syntax; durable outputs, shard plans, hashes, expected populations, and result rows use persistent level IDs. Position is execution/presentation coordinate only. Numeric hint sidecar fallback remains a documented legacy/no-id storage exception.",
+      "progress": "Closed after maintained workflow/entrypoint census. Solver workflows pass explicit pos: ranges when they need array slicing; targeted/high-budget flows freeze or recover populations through ID files. method-probe-shard-plan selects with the shared parser, requires string ids, and emits IDs for downstream shards. Portfolio/result rows retain stable ids, benchmark reconciliation is id-keyed, and level-blind sample identity hashes selected stable ids rather than positions."
     },
     {
       "id": "PSC-005",
       "concept": "full solver execution request",
       "owners": [
         "modules/solver/solver-worker-client.ts",
-        "modules/Solver.ts",
-        "worker solve adapter"
+        "modules/solver/solver-worker-client.test.ts",
+        "modules/solver/worker.js",
+        "modules/solver/worker-validation.test.ts",
+        "modules/solver/worker-result-serialization.mjs",
+        "modules/solver/orchestration-contracts.ts"
       ],
       "forms": [
-        "worker solve on raw level",
-        "direct solve on normalized level"
+        "direct solveLevel(NormalizedLevel, SolveOpts) -> SolveResult",
+        "worker-client solveLevel(NormalizedLevel, SolveOpts) -> SolveResult",
+        "raw solve(rawLevel, SolveOpts) convenience adapter"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": false,
       "persistedExternalRequirement": false,
       "treatment": "execution-contract-split",
-      "status": "open",
-      "retirementGate": "direct and worker full solve share one canonical request/result meaning"
+      "status": "complete",
+      "retirementGate": "closed: direct and worker full solve share one canonical request/result contract; raw input and postMessage quirks terminate at adapters",
+      "progress": "Worker SOLVE transport now carries NormalizedLevel, matching direct solveLevel. createSolverWorkerClient exposes canonical solveLevel(normalized, opts); raw solve(raw, opts) is only a validation/normalization convenience adapter. Worker SolveOpts serialization forwards serializable data, bridges yieldFn cancellation, and rejects any other function-valued callback/observer explicitly. Public worker solve results strip transport type/id, normalize elapsedMs back to totalMs, remove undefined transport placeholders, and are typed as the same SolveResult contract as direct orchestration."
     },
     {
       "id": "PSC-006",
       "concept": "raced solver capability surface",
       "owners": [
         "scripts/solver-parallel/race.mjs",
-        "scripts/solver-parallel/race-opts.mjs"
+        "scripts/solver-parallel/race-opts.mjs",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/portfolio-solve-sweep-worker.mjs",
+        "scripts/stress/benchmark.mjs",
+        "scripts/portfolio-solve-sweep-worker-node-test.mjs"
       ],
       "forms": [
         "full SolveOpts surface",
         "race-supported option projection"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": false,
       "persistedExternalRequirement": false,
       "treatment": "execution-contract-split",
-      "status": "open",
-      "retirementGate": "race backend either runs canonical orchestration or exposes a narrower typed request that cannot impersonate full solve"
+      "status": "complete",
+      "retirementGate": "closed: raced backend can no longer impersonate full solve or silently accept unsupported per-level options",
+      "progress": "Raced execution now exposes an explicit narrow per-level request contract. RACE_LEVEL_OPTS_FIELDS declares exactly timeBudgetMs, overallBudgetMs, ablation, repairAdditiveBudgetMultiplierOverride, and goalAttractionDisabledRetryBudgetFractionOverride. Full SolveOpts callers project through toRaceLevelOpts(); createRacePool().solveLevel() independently enforces assertRaceLevelOpts() so direct callers cannot bypass capability validation. solveLevelRaced() explicitly separates poolSize from per-level options."
     },
     {
       "id": "PSC-007",
       "concept": "solver sweep report envelope",
       "owners": [
         "scripts/combine-solver-sweep-reports.mjs",
-        "portfolio sweep producers"
+        "portfolio sweep producers",
+        "scripts/solver-sweep-report-input.mjs"
       ],
       "forms": [
         "{summary,levels} shard report",
         "flattened combined report"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "one current report envelope; current output is valid current input without synthesized schema mutation"
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: current shard and combined sweep producers emit the canonical {summary, levels} envelope; maintained consumers normalize through solver-sweep-report-input.mjs where historical flat artifacts are required. No maintained current reader requires fresh benchmark-flat output.",
+      "progress": "Closed after consumer and exercised-test census. combine-solver-sweep-reports now writes the same summary envelope as portfolio shards, with population attachments retained structurally. classify-stability and curate-dev-benchmark use the shared ingress, rank-levels consumes only levels, and recombination tests exercise canonical current output plus explicit historical-flat ingress without reintroducing a second current producer schema."
     },
     {
       "id": "PSC-008",
       "concept": "research block location",
       "owners": [
         "scripts/research-relations-lib.mjs",
-        "scripts/research-consumption-link.mjs"
+        "scripts/research-consumption-link.mjs",
+        "scripts/research-enrichment-link.mjs",
+        "scripts/research-artifact-envelope-lib.mjs",
+        "scripts/capture-search-loss-evidence.mjs",
+        "scripts/annotate-search-loss-exact.mjs",
+        "scripts/search-loss-real-canary.mjs"
       ],
       "forms": [
         "document.researchBlock",
         "document.population.researchBlock"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "one shared research envelope/extractor and one current producer location"
+      "status": "complete",
+      "retirementGate": "Every current writer that carries research-block lineage writes researchBlock only at top level; producers with no block lineage do not invent one. Historical nested population.researchBlock normalizes only in research-artifact-envelope-lib.mjs.",
+      "progress": "Closed after owner census. Consumption/enrichment sidecars require canonical top-level researchBlock; search-loss capture/annotation propagate it top-level when their source has block lineage; search-loss real-canary has no block lineage and correctly does not synthesize one. The shared envelope decoder is the sole owner of historical population.researchBlock decoding and conflicting duplicates fail closed."
     },
     {
       "id": "PSC-009",
       "concept": "research population identity location",
       "owners": [
         "scripts/research-relations-lib.mjs",
-        "scripts/research-consumption-link.mjs"
+        "scripts/research-consumption-link.mjs",
+        "scripts/research-enrichment-link.mjs",
+        "scripts/research-artifact-envelope-lib.mjs",
+        "scripts/capture-search-loss-evidence.mjs",
+        "scripts/search-loss-real-canary.mjs",
+        "scripts/annotate-search-loss-exact.mjs"
       ],
       "forms": [
         "document.populationIdentity",
         "document.population.corpusIdentity",
         "document.population.populationIdentity"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "one canonical current population-identity location; historical alternatives normalize at ingress"
+      "status": "complete",
+      "retirementGate": "Every current writer that carries population identity writes populationIdentity only at top level; historical population.corpusIdentity/population.populationIdentity alternatives normalize only in research-artifact-envelope-lib.mjs.",
+      "progress": "Closed after owner census. Consumption/enrichment, search-loss capture/annotation, and real-canary producers all write top-level populationIdentity and current-location assertions guard serialization. Historical nested identity locations remain readable only through the shared envelope decoder; conflicting duplicates fail closed."
     },
     {
       "id": "PSC-010",
       "concept": "premise admission identity",
       "owners": [
-        "scripts/research-relations-lib.mjs"
+        "scripts/research-relations-lib.mjs",
+        "scripts/research-relations-node-test.mjs"
       ],
       "forms": [
         "premiseId",
@@ -200,19 +243,21 @@
         "propositionId"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "relation construction receives canonical premiseId rows rather than resolving aliases inline"
+      "status": "complete",
+      "retirementGate": "closed: relation construction receives canonical premiseId rows; historical alias decoding is isolated at premise-admission ingress",
+      "progress": "normalizePremiseAdmissions() now owns both historical container shapes and row identity aliases. It requires one unambiguous identity, canonicalizes id/propositionId/premiseId to premiseId, strips retired identity fields, and rejects missing/conflicting aliases. buildResearchRelations() receives canonical premiseId rows and performs no inline alias resolution."
     },
     {
       "id": "PSC-011",
       "concept": "research status-like fields",
       "owners": [
-        "scripts/research-relations-lib.mjs",
-        "scripts/research-status-index-lib.mjs"
+        "scripts/research-status-index-lib.mjs",
+        "scripts/research-status-index-check.mjs",
+        "scripts/research-relations-lib.mjs"
       ],
       "forms": [
         "status",
@@ -220,50 +265,58 @@
         "reliability",
         "legacy prose normalization"
       ],
-      "currentWritesMultipleForms": true,
-      "currentInputsMultipleForms": true,
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "structured current state is explicit; prose/legacy state decoding is historical ingress only"
+      "status": "complete",
+      "retirementGate": "Audit remaining status/state/reliability consumers and ensure any prose/status-block normalization is evidence-history ingress only. Current control-plane workstream/experiment state is already explicit and structured.",
+      "progress": "Closed after consumer audit. Current workstream authority requires the structured Workstream state table and current experiment authority uses explicit promotion-state tokens; historical workstream-table recovery is opt-in only, and dated report prose/status-block parsing is evidence-history ingress. Structured closeout/prose disagreement fails closed. research-relations queryRelation() still projects a searchable status dimension across heterogeneous canonical relation types via status/state/reliability, but it does not normalize or authorize current control-plane state."
     },
     {
       "id": "PSC-012",
       "concept": "durable evidence manifest edge",
       "owners": [
+        "scripts/durable-evidence-bundle-lib.mjs",
+        "scripts/persist-decision-bearing-experiment-evidence.mjs",
         "scripts/research-relations-lib.mjs",
-        "durable bundle producer"
+        "scripts/research-relations-node-test.mjs"
       ],
       "forms": [
         "manifestStoredPath",
         "legacy files[].source=manifest.json"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "permanent-archive-reader",
-      "status": "open",
-      "retirementGate": "new bundles always author manifestStoredPath; legacy lookup isolated to versioned/archive reader"
+      "status": "complete",
+      "retirementGate": "closed: new bundles author manifestStoredPath under schema v2; legacy files[] lookup is isolated to the v1/archive decoder",
+      "progress": "Introduced durable evidence bundle schema v2. New retained bundles write schemaVersion:2 and mandatory manifestStoredPath, pinned by the producer self-test. research-relations delegates manifest-edge decoding to durable-evidence-bundle-lib.mjs. v2 readers reject missing manifestStoredPath even if files[] contains a manifest record; unversioned/v1 bundles alone may recover the historical files[].source='manifest.json' edge through historicalDurableBundleManifestStoredPath()."
     },
     {
       "id": "PSC-013",
       "concept": "Lane A cut identity",
       "owners": [
-        "scripts/stress/lane-a-c0-signature-collision-analysis.mjs"
+        "scripts/stress/lane-a-cut-identity-lib.mjs",
+        "scripts/stress/lane-a-c0-signature-collision-analysis.mjs",
+        "scripts/stress/lane-a-build-c0-collision-cases.mjs",
+        "scripts/stress/lane-a-c0-signature-collision-analysis-node-test.mjs"
       ],
       "forms": [
         "source.cutSignature",
         "cut signature parsed from caseId delimiter"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "permanent-archive-reader",
-      "status": "open",
-      "retirementGate": "new rows require structured source.cutSignature; delimiter parsing remains fixture-backed historical decode only"
+      "status": "complete",
+      "retirementGate": "closed: current rows require structured source.cutSignature; delimiter parsing is explicit historical decode only",
+      "progress": "Current Lane A C0 case production already writes structured source.cutSignature. Analysis now requires structured identity from the result/frozen case by default; the historical `${cutSignature}::${originalCaseId}` parser lives in lane-a-cut-identity-lib.mjs and is reachable only with --allow-historical-case-id. Tests pin both strict current behavior and archive decoding."
     },
     {
       "id": "PSC-014",
@@ -279,16 +332,20 @@
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
-      "treatment": "investigate",
-      "status": "open",
-      "retirementGate": "decide one-time canonical archival import versus explicit permanent mixed-era adapter"
+      "treatment": "permanent-archive-reader",
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: keep frozen wide-trove attempt evidence unchanged and use family-index-lib.mjs as the permanent mixed-era archive boundary. Canonical variant-family-dataset rows replace payload-equivalent historical duplicates; historical-only partial coverage and conflicting observations remain visible with diagnostics rather than being rewritten or silently discarded.",
+      "progress": "Closed by explicit architectural decision. Rewriting the wide-trove archive would violate the frozen-evidence rule and would erase useful partial/conflicting evidence semantics already modeled by reconcileFamilyAttemptAggregateEvidence(). Existing family-index-lib-check coverage proves historical-only discovery, canonical-preferred duplicate collapse, preservation of historical-only rows under partial canonical coverage, conflict preservation, and historical attempt-identity normalization. New producers remain on the variant-family-dataset convention; mixed-era handling is archive-reader-only."
     },
     {
       "id": "PSC-015",
       "concept": "hint provenance schema generations",
       "owners": [
         "modules/domain/hint-runtime.mjs",
-        "scripts/level-data-io.mjs"
+        "scripts/level-data-io.mjs",
+        "modules/solver/hint-provenance.ts",
+        "modules/solver/historical-attempt-normalization.mjs",
+        "scripts/hint-capture-lib.mjs"
       ],
       "forms": [
         "flat/transitional provenance",
@@ -300,64 +357,89 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "permanent-archive-reader",
-      "status": "open",
-      "retirementGate": "all old forms normalize only through upgrader; no downstream retired-field reads"
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: current provenance construction accepts canonical Attempt fields only; persisted generations normalize through explicitly historical entrypoints before canonical projection.",
+      "progress": "Closed after maintained-reader census. HistoricalAttemptLike and normalizeHistoricalPersistedAttempt() are confined to explicitly historical provenance APIs; current deriveSolveAttemptInfo()/provenanceFromSolveResult() read canonical fields only. hint capture separates record() from recordHistorical(), and persisted report harvesters use the historical path deliberately."
     },
     {
       "id": "PSC-016",
       "concept": "ablation feature input vocabulary",
       "owners": [
-        "modules/solver/ablation-config.ts"
+        "modules/solver/ablation-config.ts",
+        "modules/solver/orchestration-contracts.ts",
+        "modules/solver/orchestration.ts",
+        "scripts/level-blind-capability-sweep.mjs",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/solver-parallel/race.mjs",
+        "scripts/run-ablation.mjs",
+        "scripts/analyze-ablation.mjs"
       ],
       "forms": [
         "canonical feature keys",
         "LEGACY_FEATURE_ALIASES"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "remove-current-alias",
-      "status": "open",
-      "retirementGate": "fresh CLI/workflow/config input rejects retired feature names; historical artifacts use explicit decoder"
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: the persisted-artifact census found no maintained reader that semantically replays a saved non-baseline ablation config. analyze-ablation.mjs treats persisted run config as opaque evidence, while run-ablation.mjs may reuse only the baseline run and buildExperimentList() defines that baseline config as null. Historical feature/config normalization therefore remains an explicit archive API rather than being wired into a current producer.",
+      "progress": "Closed. Split canonicalAblationFeatureName() from normalizeHistoricalAblationFeatureName(), and normalizeAblationConfig() from normalizeHistoricalAblationConfig(). Current experiment constructors, level-blind CLI parsing, portfolio sweep flag validation, raced config materialization, and direct solveLevel ablation input accept canonical feature keys only. Artifact-reader census covered run-ablation/analyze-ablation: persisted non-baseline config is never replayed, and reusable baseline config is null. The ablation toolchain test now locks that boundary with a retired-key persisted fixture. Historical aliases remain readable only through explicitly historical APIs."
     },
     {
       "id": "PSC-017",
       "concept": "solver stage/attempt compatibility fields",
       "owners": [
         "modules/solver/orchestration-contracts.ts",
-        "attempt identity readers"
+        "modules/solver/stage-id-normalization.mjs",
+        "modules/solver/stage-policy.ts",
+        "modules/solver/attempt-identity.mjs",
+        "modules/solver/hint-provenance.ts",
+        "scripts/attempt-config-key.mjs",
+        "scripts/analyze-technique-campaign.mjs",
+        "scripts/hint-query-lib.mjs",
+        "scripts/portfolio-solve-sweep-lib.mjs",
+        "scripts/stress/lifecycle-failure-map.mjs",
+        "scripts/stress/early-repair-search-badness-report.mjs",
+        "modules/solver/historical-attempt-normalization.mjs"
       ],
       "forms": [
         "canonical stageId/attempt identity",
         "historical boolean flags/old attempt-id grammars"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "current solver logic consumes canonical stage/attempt identity only; historical records normalize before classification"
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: every maintained persisted Attempt/stage reader found in the census normalizes through named historical ingress; current writers/projection/classification require canonical fields/stageId.",
+      "progress": "Closed after migrating technique-campaign analysis, early-repair diagnostics, equal-work production joins, family winner analysis, portfolio historical fixtures, and hint provenance onto modules/solver/historical-attempt-normalization.mjs or explicitly historical tier classification. Current attemptRecord(), config/action projection, and classifyAttemptTier() are canonical-only."
     },
     {
       "id": "PSC-018",
       "concept": "population integrity authority",
       "owners": [
+        "scripts/research-observation-integrity-lib.mjs",
         "scripts/publish-solver-sweep-result.mjs",
-        "scripts/combine-population-integrity.mjs"
+        "scripts/combine-population-integrity.mjs",
+        "scripts/validate-solver-sweep-integrity.mjs",
+        "scripts/solver-experiment-contract.mjs"
       ],
       "forms": [
-        "explicit decisionValidComplete",
-        "legacy completeness inferred from outcome counters"
+        "explicit coverageComplete + decisionValidComplete",
+        "historical complete coverage mirror",
+        "legacy display identity arrays alongside canonical scoped identity arrays"
       ],
-      "currentWritesMultipleForms": true,
-      "currentInputsMultipleForms": true,
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "current producers write explicit decision-valid completeness; inference is historical-only"
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: combined-population integrity now writes only one identity dialect. Standard expectedIds/duplicateIds/unexpectedIds/missingIds carry collision-safe scoped json-tuple-v1 identities; the parallel canonical* arrays, colon-joined display arrays, and identityFields compatibility registry are retired. Historical complete remains ingress-only coverage recovery and never decision authority.",
+      "progress": "Closed. Population integrity normalizes once at research-observation ingress; historical complete may recover coverage only and never decision authority. Current buildResearchPopulationIntegrity(), validate-solver-sweep-integrity output, combinePopulationIntegrity(), and combine-solver-sweep-reports output do not emit complete. Combined populations now use canonical scoped JSON-tuple identities directly in the standard integrity fields, eliminating the final dual-write identity representation. Tests assert both absence of complete and absence of the retired parallel canonical/display identity fields."
     },
     {
       "id": "PSC-019",
@@ -374,9 +456,103 @@
       "currentInputsMultipleForms": false,
       "historicalRequirement": false,
       "persistedExternalRequirement": false,
-      "treatment": "investigate",
-      "status": "open",
-      "retirementGate": "choose and document one canonical sidecar/event model before additional producer variants appear"
+      "treatment": "retain-canonical",
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: the existing pathfinder-research-consumption-link sidecar is the canonical model. A sidecar snapshots the source researchBlock definition, appends scoped consumptionEvents, records sourceBlockArtifact/selection provenance, and leaves the source block artifact immutable. research-relations-lib verifies base-block equality across snapshots before stable-hash event union; no reference-only second producer format is introduced.",
+      "progress": "Closed by architectural decision rather than adding another representation. The current sidecar is self-contained and envelope-valid, while sourceBlockArtifact preserves origin. Duplicate block snapshots are treated as integrity assertions: buildResearchArtifactRelations compares blocks with consumptionEvents removed and rejects conflicting definitions, then merges event sets deterministically. A reference-only block/event format would add path-resolution dependency and a second producer schema without a demonstrated need."
+    },
+    {
+      "id": "PSC-020",
+      "concept": "false-goal worker protocol vocabulary",
+      "owners": [
+        "modules/solver/solver-worker-client.ts",
+        "modules/solver/worker.js"
+      ],
+      "forms": [
+        "FALSE_GOAL_TRIGGER_SEARCH* canonical protocol",
+        "TRAP / TRAP_PROGRESS / TRAP_RESULT legacy protocol"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
+      "historicalRequirement": false,
+      "persistedExternalRequirement": false,
+      "treatment": "remove-current-alias",
+      "status": "complete",
+      "progress": "Removed inbound TRAP alias and client dual-read of TRAP_PROGRESS/TRAP_RESULT/status/field aliases. Current client and worker now speak only FALSE_GOAL_TRIGGER_SEARCH_PROGRESS / FALSE_GOAL_TRIGGER_SEARCH_RESULT with canonical fields.",
+      "retirementGate": "closed: same-release client/worker protocol is canonical-only; historical docs remain unchanged"
+    },
+    {
+      "id": "PSC-021",
+      "concept": "scheduler mode and legacy-latency portfolio current input vocabulary",
+      "owners": [
+        "modules/solver/scheduler-mode-normalization.mjs",
+        "modules/solver/orchestration-contracts.ts",
+        "modules/solver/orchestration.ts",
+        "modules/solver/orchestration-legacy-portfolio.ts",
+        "scripts/portfolio-solve-sweep.mjs"
+      ],
+      "forms": [
+        "canonical scheduler modes + legacyLatencyPortfolioExperiment",
+        "legacy / portfolio-experiment / portfolioExperiment"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "remove-current-alias",
+      "status": "complete",
+      "progress": "Fresh CLI/API input accepts canonical scheduler modes only. solveLevel rejects retired spellings. Historical scheduler spellings remain available only through normalizeHistoricalSchedulerMode(). portfolioExperiment SolveOpts alias removed; current producers use legacyLatencyPortfolioExperiment.",
+      "retirementGate": "closed: current scheduler/config language is canonical-only; historical alias decoding is explicitly named and isolated"
+    },
+    {
+      "id": "PSC-022",
+      "concept": "phase-6 renamed SolveOpts override fields and CLI flags",
+      "owners": [
+        "modules/solver/orchestration-contracts.ts",
+        "modules/solver/orchestration.ts",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/solver-parallel/race.mjs",
+        "scripts/solver-parallel/race-opts.mjs"
+      ],
+      "forms": [
+        "goalAttractionDisabledRetry* / coarseStateNearTieRetentionRetry* / mainSearchLateReserve* / earlyRepairSearch* / repairShrinkRecovery* canonical names",
+        "attractionDiversity* / dedupNearTieRetry* / mainLoopLateReserve* / repairProbe* retired names"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "remove-current-alias",
+      "status": "complete",
+      "progress": "Closed after a final owner census removed the last leftover public SolveOpts declaration for attractionDiversityBudgetFractionOverride. Stage-budget planning, orchestration, portfolio/race/level-blind CLIs, and transport parity use canonical names only. Historical telemetry aliases remain intentionally isolated in historical Attempt normalization.",
+      "retirementGate": "Satisfied 2026-09-21: current SolveOpts and maintained CLI entrypoints use phase-6 canonical vocabulary only; retired aliases survive solely in explicitly historical Attempt/provenance decoders."
+    },
+    {
+      "id": "PSC-023",
+      "concept": "solve input work-budget vocabulary",
+      "owners": [
+        "modules/solver/orchestration-contracts.ts",
+        "modules/solver/orchestration.ts",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/stress/benchmark.mjs",
+        "scripts/level-blind-capability-sweep.mjs",
+        "scripts/solver-parallel/race-opts.mjs"
+      ],
+      "forms": [
+        "SolveOpts.baseWorkBudget canonical input",
+        "SolveOpts.workBudget deprecated input alias",
+        "--work-budget CLI and SolveResult/report workBudget domain fields"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "migrate-current-state",
+      "status": "complete",
+      "progress": "Closed after CI found and migrated solver-bench and search-loss-real-canary. Portfolio, benchmark, level-blind, direct bench, and canary callers now map CLI work-budget values to SolveOpts.baseWorkBudget. The remaining workBudget fields are output/static-portfolio/descriptive concepts rather than a SolveOpts alias.",
+      "retirementGate": "Satisfied 2026-09-21: SolveOpts exposes baseWorkBudget only and maintained solver callers pass it. Runtime explicitly rejects an own-property retired workBudget input; CLI/report/SolveResult workBudget remains descriptive domain data."
     }
-  ]
+  ],
+  "lastUpdated": "2026-09-21",
+  "activePullRequest": 1937
 }

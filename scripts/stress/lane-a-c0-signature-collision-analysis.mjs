@@ -7,14 +7,15 @@
  *
  * Current schema-v2 rows preserve the input case's structured `source.cutSignature`, which is
  * the semantic identity used by this analysis. Historical rows produced before that transport fix
- * remain readable because their dispatched id was built as `${cutSignature}::${originalCaseId}`
- * (PR #1902); only that frozen compatibility path recovers the signature from the first `::`.
+ * remain readable only when explicitly requested with --allow-historical-case-id; that archive
+ * decoder owns the old `${cutSignature}::${originalCaseId}` convention outside current analysis.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { summarizeSignatureCollisions } from '../signature-collision-analysis-lib.mjs';
 import { deriveLaneAC0Cases } from './lane-a-c0-population-lib.mjs';
+import { laneACutSignature } from './lane-a-cut-identity-lib.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
@@ -22,9 +23,10 @@ const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); retur
 
 const IN = arg('in', null);
 const CASES = arg('cases', null);
+const ALLOW_HISTORICAL_CASE_ID = argv.includes('--allow-historical-case-id');
 const POPULATION = arg('population', 'reports/stress/lane-a-frozen-prefix-population-2026-09-18.json');
 const GEOMETRY = arg('geometry', 'reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json');
-if (!IN) throw new Error('Usage: lane-a-c0-signature-collision-analysis.mjs --in=<combined.json> [--cases=<cases.json>] [--geometry=<geometry.json>]');
+if (!IN) throw new Error('Usage: lane-a-c0-signature-collision-analysis.mjs --in=<combined.json> [--cases=<cases.json>] [--geometry=<geometry.json>] [--allow-historical-case-id]');
 
 const document = JSON.parse(readFileSync(path.resolve(ROOT, IN), 'utf8'));
 const geometryDocument = JSON.parse(readFileSync(path.resolve(ROOT, GEOMETRY), 'utf8'));
@@ -46,14 +48,9 @@ const frozenCaseFor = row => {
     return frozenCase;
 };
 
-const cutSignature = row => {
-    const frozenCase = frozenCaseFor(row);
-    const structured = row?.source?.cutSignature ?? frozenCase?.source?.cutSignature;
-    if (typeof structured === 'string' && structured) return structured;
-    const marker = String(row.caseId ?? '').indexOf('::');
-    if (marker === -1) throw new Error(`row has no structured source.cutSignature or legacy case-id disambiguator: ${row.caseId}`);
-    return row.caseId.slice(0, marker);
-};
+const cutSignature = row => laneACutSignature(row, frozenCaseFor(row), {
+    allowHistoricalCaseId: ALLOW_HISTORICAL_CASE_ID,
+});
 
 const endpointSide = row => {
     const frozenCase = frozenCaseFor(row);

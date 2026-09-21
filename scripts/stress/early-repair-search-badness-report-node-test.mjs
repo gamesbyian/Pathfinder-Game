@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 /**
  * Regression coverage for early-repair-search-badness-report.mjs's stage-id matching: it used to
- * compare `a.stageId === 'early-repair-search'` directly (with a null-stageId legacy-boolean
- * fallback), so a historical row carrying the literal legacy stageId string `'repair-probe'`
+ * compare `a.stageId === 'early-repair-search'` directly (with a bespoke null-stage legacy fallback), so a historical row carrying the literal legacy stageId string `'repair-probe'`
  * (not null, but the OLD string) matched neither branch and was silently dropped instead of being
- * recognized as the canonical early-repair-search stage. Fixed by routing every non-null stageId
- * through normalizeSolverStageId().
+ * recognized as the canonical early-repair-search stage. The reader now routes the whole persisted Attempt
+ * through the shared historical Attempt normalizer.
  */
 import assert from 'node:assert/strict';
 import { isEarlyRepairSearchAttempt, levelBadnessInfo } from './early-repair-search-badness-report.mjs';

@@ -72,7 +72,7 @@ installBrowserStubs();
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
 const { enumerateFromGate, anchoredFromSeed } = await import('../modules/solver/hint-enumeration.js');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -253,7 +253,8 @@ const cfg = isMainThread
     }
     : workerData;
 
-const rawLevels = readLevelsWithHints(resolveFromRoot(cfg.levelsJsonPath));
+const corpusDocument = readLevelCorpusDocumentWithHints(resolveFromRoot(cfg.levelsJsonPath));
+const rawLevels = corpusDocument.levels;
 
 // ─── worker mode: expand whichever level index the main thread hands us next ───────────────────
 if (!isMainThread) {
@@ -280,6 +281,7 @@ async function main() {
     // completions (which arrive out of order) still land in `levelNumbers` order in the report.
     const results = new Array(levelNumbers.length).fill(null);
     let totalAccepted = 0, skippedTag = 0, skippedCap = 0;
+    const changedHintLevels = new Set();
     const jobs = [];
     levelNumbers.forEach((levelNumber, resultIndex) => {
         const raw = rawLevels[levelNumber - 1];
@@ -308,7 +310,6 @@ async function main() {
         totalAccepted += result.acceptedCount;
         if (writeLevels && result.acceptedCount) {
             const raw = rawLevels[levelNumber - 1];
-            raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
             // Attach real provenance (which generator/technique found it) instead of leaving these
             // paths with an empty provenance list — this script previously only wrote `.hints`.
             const newRecords = result.acceptedPaths.map((p, i) => {
@@ -321,7 +322,8 @@ async function main() {
                     levelRevision: levelRevisionByNumber.get(levelNumber) ?? null,
                 })]);
             });
-            raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
+            changedHintLevels.add(raw);
         }
         results[resultIndex] = result;
         console.log(`L${levelNumber}: +${result.acceptedCount} (${result.hintCountBefore}->${result.hintCountAfter}) `
@@ -385,7 +387,7 @@ async function main() {
     console.log(`\nTotal accepted: ${totalAccepted} across ${levelNumbers.length - skippedTag - skippedCap} eligible level(s). `
         + `Skipped: ${skippedTag} garbage, ${skippedCap} at-cap. Report -> ${output}`);
     if (writeLevels && totalAccepted > 0) {
-        writeLevelsWithHints(resolveFromRoot(cfg.levelsJsonPath), rawLevels);
+        writeLevelCorpusDocumentWithHints(resolveFromRoot(cfg.levelsJsonPath), corpusDocument, { changedHintLevels });
         console.log(`Wrote ${totalAccepted} new hint(s) to ${cfg.levelsJsonPath}. Now run: npm run levels:generate-heatmaps && npm run check:level-data-validity && npm run test:hint-path-validation`);
     }
 }

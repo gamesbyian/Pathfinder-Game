@@ -22,7 +22,7 @@ import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 
 import { normalizeAttemptActionKey, normalizeAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
-import { normalizeSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
+import { normalizeHistoricalPersistedAttempt } from '../../modules/solver/historical-attempt-normalization.mjs';
 import { attemptActionKey, canonicalAttemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 
 function canonicalCorpusName(value) {
@@ -50,9 +50,7 @@ function canonicalActionOf(attempt) {
 }
 
 function canonicalStageOf(attempt, actionKey) {
-    if (attempt?.stageId) {
-        try { return normalizeSolverStageId(attempt.stageId); } catch { return String(attempt.stageId); }
-    }
+    if (attempt?.stageId) return String(attempt.stageId);
     const separator = actionKey?.indexOf('|') ?? -1;
     return separator > 0 ? actionKey.slice(0, separator) : null;
 }
@@ -60,7 +58,7 @@ function canonicalStageOf(attempt, actionKey) {
 function canonicalConfigOf(attempt) {
     try { return canonicalAttemptConfigKey(attempt); }
     catch {
-        const raw = attempt?.configKey ?? attempt?.config;
+        const raw = attempt?.configKey;
         if (raw == null) return null;
         try { return normalizeAttemptIdentityKey(String(raw)); } catch { return String(raw); }
     }
@@ -144,7 +142,8 @@ function summarizeProduction(documents, equalWorkTechniques) {
                 attempts: [],
             };
             levelRows.set(levelKey, levelDetail);
-            for (const attempt of Array.isArray(row?.attempts) ? row.attempts : []) {
+            for (const persistedAttempt of Array.isArray(row?.attempts) ? row.attempts : []) {
+                const attempt = normalizeHistoricalPersistedAttempt(persistedAttempt);
                 const config = canonicalConfigOf(attempt);
                 if (!config) {
                     unmatchedAttemptIdentity++;

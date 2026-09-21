@@ -8,8 +8,8 @@
  *   the canonical `provenanceFromSolveResult` (never hand-rolled), stamp `levelRevision` from
  *   `getLevelFingerprint` — NOT `getLevelFingerprintSource`, see CLAUDE.md's provenance section —
  *   merge via `mergeHints` so a rediscovered path appends an entry instead of duplicating or being
- *   dropped, keep the dual `hints`/`hintRecords` fields in step, and write through
- *   `writeLevelsWithHints`. Every one of those has a documented past bug behind it.
+ *   dropped, update canonical `hintRecords` through `setLevelHintRecords`, and write through the
+ *   explicit corpus-document API. Every one of those has a documented past bug behind it.
  *
  *   This repo has already been bitten twice this month by a second hand-maintained copy of a
  *   solver-adjacent projection drifting from the first (scripts/stress/benchmark.mjs's attempt
@@ -25,7 +25,7 @@
  *   const capture = await createHintCapture({ solverVersion, budgetMs });
  *   await capture.prepare(levels);                  // precompute level revisions
  *   capture.record(level, result);                  // per solved level
- *   const summary = capture.flush(levelsJsonPath, levels);
+ *   const summary = capture.flush(levelsJsonPath, levelDocument);
  */
 
 import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
@@ -45,14 +45,15 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
             enabled: false,
             async prepare() {},
             record: () => false,
+            recordHistorical: () => false,
             flush: () => ({ levelsTouched: 0, hintFilesChanged: 0, newPaths: 0, rediscoveries: 0 }),
         };
     }
 
-    const { provenanceFromSolveResult } = await import('../modules/solver/hint-provenance.js');
-    const { toHint, mergeHints, hintPaths } = await import('../modules/domain/hint-types.js');
+    const { provenanceFromSolveResult, provenanceFromHistoricalSolveResult } = await import('../modules/solver/hint-provenance.js');
+    const { toHint, mergeHints, setLevelHintRecords } = await import('../modules/domain/hint-types.js');
     const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.js');
-    const { writeLevelsWithHints } = await import('./level-data-io.mjs');
+    const { writeLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
     /** level object -> its shape fingerprint, so a stored hint can't silently keep pointing at a
      *  since-edited level. Precomputed because getLevelFingerprint is async while `record` is
@@ -78,8 +79,29 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
          * measurement at this commit).
          */
         record(level, result) {
-            if (!level || !result?.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
-            const provenance = provenanceFromSolveResult(result, {
+            return recordWithProvenance(level, result, provenanceFromSolveResult);
+        },
+
+        /** Historical persisted result ingress. Current producers must call record(). */
+        recordHistorical(level, result) {
+            return recordWithProvenance(level, result, provenanceFromHistoricalSolveResult);
+        },
+
+        flush(levelsJsonPath, document) {
+            if (touched.size === 0) return { levelsTouched: 0, hintFilesChanged: 0, newPaths, rediscoveries };
+            if (!document || typeof document !== 'object' || Array.isArray(document) || !Array.isArray(document.levels)) {
+                throw new Error('hint capture flush requires an explicit corpus document');
+            }
+            const levelsTouched = touched.size;
+            const { hintFilesChanged } = writeLevelCorpusDocumentWithHints(levelsJsonPath, document, { changedHintLevels: touched });
+            touched.clear();
+            return { levelsTouched, hintFilesChanged, newPaths, rediscoveries };
+        },
+    };
+
+    function recordWithProvenance(level, result, provenanceBuilder) {
+        if (!level || !result?.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
+        const provenance = provenanceBuilder(result, {
                 solverVersion,
                 budgetMs,
                 usedExistingHints: false,
@@ -87,33 +109,25 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
                 levelRevision: levelRevisions.get(level) ?? null,
                 isolatedTechnique,
             });
-            const before = level.hintRecords ?? [];
-            const beforeCount = before.length;
-            const signature = result.solution.join(',');
-            const existing = before.find(h => h.path.join(',') === signature);
-            const beforeEntries = existing?.provenance.length ?? 0;
+        const before = level.hintRecords ?? [];
+        const beforeCount = before.length;
+        const signature = result.solution.join(',');
+        const existing = before.find(h => h.path.join(',') === signature);
+        const beforeEntries = existing?.provenance.length ?? 0;
 
             // Refuse to append an entry that duplicates one already stored. Without this, re-running
             // the capture at the SAME commit (a re-triggered workflow, a retried job, a local repeat)
             // appends an identical entry every time — the exact shape that had to be cleaned up
             // retroactively by dedupe-hint-provenance.mjs. Prevented at the source instead.
-            if (existing?.provenance?.some(e => provenanceEventIdentity(e) === provenanceEventIdentity(provenance))) {
+        if (existing?.provenance?.some(e => provenanceEventIdentity(e) === provenanceEventIdentity(provenance))) {
                 return false;
             }
 
-            level.hintRecords = mergeHints(before, [toHint(result.solution, [provenance])]);
-            level.hints = hintPaths(level.hintRecords);
+        setLevelHintRecords(level, mergeHints(before, [toHint(result.solution, [provenance])]));
 
-            const afterEntries = level.hintRecords.find(h => h.path.join(',') === signature)?.provenance.length ?? 0;
-            if (level.hintRecords.length !== beforeCount) { newPaths++; touched.add(level); return true; }
-            if (afterEntries > beforeEntries) { rediscoveries++; touched.add(level); return true; }
-            return false;
-        },
-
-        flush(levelsJsonPath, levels) {
-            if (touched.size === 0) return { levelsTouched: 0, hintFilesChanged: 0, newPaths, rediscoveries };
-            const { hintFilesChanged } = writeLevelsWithHints(levelsJsonPath, levels);
-            return { levelsTouched: touched.size, hintFilesChanged, newPaths, rediscoveries };
-        },
-    };
+        const afterEntries = level.hintRecords.find(h => h.path.join(',') === signature)?.provenance.length ?? 0;
+        if (level.hintRecords.length !== beforeCount) { newPaths++; touched.add(level); return true; }
+        if (afterEntries > beforeEntries) { rediscoveries++; touched.add(level); return true; }
+        return false;
+    }
 }

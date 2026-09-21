@@ -7,6 +7,7 @@ import {
     formatAttemptIdentityKey,
     normalizeAttemptIdentityKey,
     parseAttemptIdentityKey,
+    parseHistoricalAttemptIdentityKey,
 } from './attempt-identity.mjs';
 import { attemptConfigKey } from './orchestration.js';
 import type { AttemptConfig } from './types.js';
@@ -53,7 +54,8 @@ test('historical attempt identities normalize to exactly one canonical identity'
     ]);
     for (const [legacy, canonical] of fixtures) {
         assert.equal(normalizeAttemptIdentityKey(legacy), canonical, legacy);
-        assert.equal(formatAttemptIdentityKey(parseAttemptIdentityKey(legacy)), canonical, legacy);
+        assert.equal(formatAttemptIdentityKey(parseHistoricalAttemptIdentityKey(legacy)), canonical, legacy);
+        assert.throws(() => parseAttemptIdentityKey(legacy), /valid canonical attempt identity/, legacy);
     }
 });
 

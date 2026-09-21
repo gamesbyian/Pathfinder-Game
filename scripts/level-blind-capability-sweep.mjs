@@ -17,7 +17,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readLevelsWithHints } from './level-data-io.mjs';
+import { parseLevelPositions, readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { buildRow } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool } from './solver-worker-pool.mjs';
@@ -51,15 +51,11 @@ const researchQuestion = argMap.get('--research-question') ?? null;
 const preflight = argMap.get('--preflight') ?? null;
 const declaredStageOrder = argMap.get('--stage-order')?.split(',').map(value => value.trim()).filter(Boolean) ?? null;
 const runStartedAt = new Date().toISOString();
-// --main-search-late-reserve-* is canonical; --main-loop-late-reserve-* is accepted as a legacy
-// alias for one migration window (naming-cleanup-ledger.json), same dual-read shape as the
-// SolveOpts override fields these flags feed.
+// Current CLI vocabulary is canonical-only; retired phase-6 spellings belong only in historical artifact readers.
 const mainSearchLateReserveFraction = argMap.has('--main-search-late-reserve-fraction')
-    ? Number(argMap.get('--main-search-late-reserve-fraction'))
-    : argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
+    ? Number(argMap.get('--main-search-late-reserve-fraction')) : undefined;
 const mainSearchLateReserveConfigCount = argMap.has('--main-search-late-reserve-config-count')
-    ? Number(argMap.get('--main-search-late-reserve-config-count'))
-    : argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+    ? Number(argMap.get('--main-search-late-reserve-config-count')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction')
     ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 // 2026-09-04 (reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md): lets a
@@ -72,14 +68,12 @@ const admissibleOrderNonDefaultRetryBudgetFraction = argMap.has('--admissible-or
 // 2026-08-13 (docs/future-work.md item 4b): lets a matched sweep compare candidate
 // EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
 // (10, 0.35) without editing modules/solver/orchestration.ts. Same optional/omitted-means-
-// production-default shape as the main-search-late-reserve flags above. --early-repair-search-
-// adaptive-* is canonical; --repair-probe-adaptive-* is accepted as a legacy alias.
+// production-default shape as the main-search-late-reserve flags above. Only the canonical
+// --early-repair-search-adaptive-* spellings are accepted by current producers.
 const earlyRepairSearchAdaptiveBadnessGate = argMap.has('--early-repair-search-adaptive-badness-gate')
-    ? Number(argMap.get('--early-repair-search-adaptive-badness-gate'))
-    : argMap.has('--repair-probe-adaptive-badness-gate') ? Number(argMap.get('--repair-probe-adaptive-badness-gate')) : undefined;
+    ? Number(argMap.get('--early-repair-search-adaptive-badness-gate')) : undefined;
 const earlyRepairSearchAdaptiveMinScale = argMap.has('--early-repair-search-adaptive-min-scale')
-    ? Number(argMap.get('--early-repair-search-adaptive-min-scale'))
-    : argMap.has('--repair-probe-adaptive-min-scale') ? Number(argMap.get('--repair-probe-adaptive-min-scale')) : undefined;
+    ? Number(argMap.get('--early-repair-search-adaptive-min-scale')) : undefined;
 // 2026-08-22 (docs/solver-future-work.md's "repair-fallback gate widening" reconciliation): lets a
 // matched sweep compare a candidate STRATEGY_REPAIR_LATE_PROBE node cap against the shipped
 // REPAIR_LATE_PROBE_NODE_BUDGET default (2,000,000, stage-budget.ts) without editing that constant.
@@ -140,28 +134,17 @@ const ablation = enableFlags.length || disableFlags.length
     ? Object.fromEntries([...enableFlags.map(f => [f, true]), ...disableFlags.map(f => [f, false])])
     : null;
 
-function parseLevelSpec(spec, total) {
-    if (!spec) return Array.from({ length: total }, (_, i) => i + 1);
-    const normalized = spec.startsWith('pos:') ? spec.slice(4) : spec;
-    const selected = new Set();
-    for (const token of normalized.split(',').map(s => s.trim()).filter(Boolean)) {
-        const range = token.match(/^(\d+)-(\d+)$/u);
-        if (range) {
-            const a = Number(range[1]), b = Number(range[2]);
-            for (let n = Math.min(a, b); n <= Math.max(a, b); n++) selected.add(n);
-        } else if (/^\d+$/u.test(token)) selected.add(Number(token));
-        else throw new Error(`Cannot parse --levels token "${token}".`);
-    }
-    return [...selected].filter(n => n >= 1 && n <= total).sort((a, b) => a - b);
-}
-
 const parsedCorpus = JSON.parse(readFileSync(corpusPath, 'utf8'));
 const corpusBytes = readFileSync(corpusPath);
 const corpusSha256 = createHash('sha256').update(corpusBytes).digest('hex');
 const rawLevels = Array.isArray(parsedCorpus) ? parsedCorpus : parsedCorpus.levels;
 if (!Array.isArray(rawLevels)) throw new Error(`${corpusPath}: expected an array or {levels:[...]}`);
-const targets = parseLevelSpec(argMap.get('--levels'), rawLevels.length);
-const sampleSha256 = createHash('sha256').update(targets.join('\n')).digest('hex');
+const targets = parseLevelPositions(argMap.get('--levels'), { maxLevel: rawLevels.length });
+const targetIds = targets.map(position => rawLevels[position - 1]?.id);
+if (targetIds.some(id => typeof id !== 'string' || !id)) {
+    throw new Error('level-blind capability research requires persistent level ids; array position is selection/debug metadata only');
+}
+const sampleSha256 = createHash('sha256').update([...targetIds].sort().join('\n')).digest('hex');
 const commit = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
 
 // Explicit allowlist of puzzle mechanics. Deliberately excludes raw `id`, `hints`, designerName,
@@ -190,7 +173,7 @@ writeFileSync(solveCorpusPath, JSON.stringify(mechanicsOnlyCorpus));
 // matches the actually-resolved mode.
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode: 'production' };
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
-if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
+if (Number.isFinite(workBudget)) solveOpts.baseWorkBudget = workBudget;
 if (strictTotalWorkBudget) solveOpts.strictTotalWorkBudget = true;
 if (attemptBudgetTelemetry) solveOpts.attemptBudgetTelemetry = true;
 if (lifecycleTelemetry) solveOpts.lifecycleTelemetry = true;
@@ -206,7 +189,8 @@ if (ablation) solveOpts.ablation = ablation;
 
 // Output-side hint state is deliberately distinct from mechanicsOnlyCorpus. Never pass hintLevels
 // or corpusPath to the solver worker.
-const hintLevels = saveHints ? readLevelsWithHints(corpusPath) : null;
+const hintDocument = saveHints ? readLevelCorpusDocumentWithHints(corpusPath) : null;
+const hintLevels = hintDocument?.levels ?? null;
 const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints });
 if (saveHints) await hintCapture.prepare(targets.map(n => hintLevels[n - 1]));
 
@@ -243,7 +227,7 @@ function writeReport() {
     const solved = levels.filter(r => r.ok).length;
     const summary = {
         generatedAt: new Date().toISOString(), commit,
-        corpus: path.relative(root, corpusPath), corpusSha256, sampleSha256,
+        corpus: path.relative(root, corpusPath), corpusSha256, sampleSha256, expectedIds: targetIds,
         schedulerMode: 'production', levelBlind: true,
         solverInputFields: PUZZLE_FIELDS, historicalInputs: [], budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
@@ -316,7 +300,7 @@ try {
             if (saveHints) {
                 row.hintAppended = hintCapture.record(hintLevels[levelNumber - 1], result);
                 if (row.hintAppended) {
-                    const flush = hintCapture.flush(corpusPath, hintLevels);
+                    const flush = hintCapture.flush(corpusPath, hintDocument);
                     hintChanges += flush.hintFilesChanged;
                 }
             }

@@ -39,17 +39,17 @@ import {
     EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
     EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
 } from '../../modules/solver/orchestration.ts';
-import { normalizeSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
+import { normalizeHistoricalPersistedAttempt } from '../../modules/solver/historical-attempt-normalization.mjs';
 
 // A historical row may still carry the literal legacy stageId string 'repair-probe' (pre-rename)
 // rather than either the canonical 'early-repair-search' or a null stageId with a legacy boolean
 // flag -- route every stageId through the central normalizer so that case is recognized too,
 // instead of silently falling through neither branch and being dropped.
-export function isEarlyRepairSearchAttempt(a) {
-    if (a.stageId != null) {
-        try { return normalizeSolverStageId(a.stageId) === 'early-repair-search'; } catch { return false; }
-    }
-    return !!(a.earlyRepairSearch ?? a.repairProbe);
+export function isEarlyRepairSearchAttempt(persistedAttempt) {
+    let attempt;
+    try { attempt = normalizeHistoricalPersistedAttempt(persistedAttempt); } catch { return false; }
+    if (attempt.stageId != null) return attempt.stageId === 'early-repair-search';
+    return !!attempt.earlyRepairSearch;
 }
 
 function loadRows(file) {

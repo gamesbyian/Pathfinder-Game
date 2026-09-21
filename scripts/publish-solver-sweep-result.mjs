@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { readResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
-import { buildResearchPopulationIntegrity as buildPopulationIntegrity } from './research-observation-integrity-lib.mjs';
+import { buildResearchPopulationIntegrity as buildPopulationIntegrity, normalizeResearchPopulationIntegrity } from './research-observation-integrity-lib.mjs';
 import { hashResearchPopulation as hashPopulation } from './research-population-identity-lib.mjs';
 import {
   EXPERIMENT_RESULT_KIND,
@@ -377,6 +377,9 @@ if (!populationIntegrity && !entries[0].missing && entries[0].published?.endsWit
     populationIntegrity = { ...buildPopulationIntegrity(observedIds, parsed.levels), inferredExpectedPopulation: true };
   }
 }
+if (populationIntegrity) {
+  populationIntegrity = normalizeResearchPopulationIntegrity(populationIntegrity);
+}
 const populationIdentity = populationIntegrity?.populationIdentityHash ?? (populationIntegrity
   ? hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: [
       ...(populationIntegrity.expectedIds ?? []),
@@ -392,7 +395,7 @@ if (failureResponseDocument) {
   failureResponseDocument.summary = {
     ...failureResponseDocument.summary,
     selfDerivedPopulation: !populationIntegrity,
-    coverageComplete: populationIntegrity?.coverageComplete ?? populationIntegrity?.complete ?? null,
+    coverageComplete: populationIntegrity?.coverageComplete ?? null,
     decisionValidComplete: populationIntegrity?.decisionValidComplete ?? null,
     outcomes: populationIntegrity?.outcomes ?? failureResponseDocument.summary.outcomes,
   };
@@ -559,7 +562,7 @@ else lines.push('- Research outcome: not declared (this publisher never infers a
 if (Object.keys(dispatchInputs).length) lines.push('- Dispatch inputs: recorded in `manifest.json`');
 if (artifactCoverage) lines.push(`- Artifact coverage: ${artifactCoverage.observed}/${artifactCoverage.expected} shard artifacts ${artifactCoverage.complete ? 'present' : '**INCOMPLETE**'}${artifactCoverage.basis ? ` (${artifactCoverage.basis})` : ''}`);
 if (populationIntegrity) {
-  const coverageComplete = populationIntegrity.coverageComplete ?? populationIntegrity.complete ?? false;
+  const coverageComplete = populationIntegrity.coverageComplete;
   lines.push(`- Population coverage: ${populationIntegrity.observedCount}/${populationIntegrity.expectedCount} observed; ${populationIntegrity.missingIds?.length ?? populationIntegrity.outcomes?.missing ?? 0} missing-indeterminate; ${coverageComplete ? 'complete' : '**INCOMPLETE**'}`);
   lines.push(`- Decision-valid observations: ${integrityDecisionValid ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
 } else lines.push('- Population integrity: **unknown / non-decision-bearing** (no validated intended population supplied)');

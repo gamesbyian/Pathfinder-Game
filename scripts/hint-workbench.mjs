@@ -19,7 +19,7 @@ import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { hintFilePathFor, hintKeyForLevel, readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } from './level-data-io.mjs';
+import { hintFilePathFor, hintKeyForLevel, readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelSelector, setLevelHintRecords } from './level-data-io.mjs';
 import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
@@ -1161,7 +1161,8 @@ assertSafeReportOutput(opts.output, opts);
 if (opts.writePatch) assertSafeReportOutput(opts.writePatch, opts);
 
 const levelsPath = path.isAbsolute(opts.levelsJsonPath) ? opts.levelsJsonPath : path.join(ROOT, opts.levelsJsonPath);
-const rawLevels = readLevelsWithHints(levelsPath);
+const corpusDocument = readLevelCorpusDocumentWithHints(levelsPath);
+const rawLevels = corpusDocument.levels;
 const levelNumbers = [...parseLevelSelector(rawLevels, argMap.get('--levels'))].sort((a, b) => a - b);
 const startedAt = Date.now();
 const results = [];
@@ -1182,15 +1183,14 @@ for (const levelNumber of levelNumbers) {
     totalDuplicateProvenance += result.duplicateProvenanceCount;
     if (!opts.auditMode && (result.acceptedCount > 0 || result.duplicateProvenanceCount > 0)) {
         if (opts.writeLevels && !opts.writePatch) {
-            raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
-            raw.hintRecords = mergeHints(raw.hintRecords || [], [...result.acceptedHints, ...result.duplicateProvenanceHints]);
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], [...result.acceptedHints, ...result.duplicateProvenanceHints]));
             changedHintFiles.push(relativePath(hintFilePathFor(levelsPath, hintKeyForLevel(raw, levelNumber))));
             // Persist after EVERY level rather than only once at the very end: a long multi-level run
             // used to lose all its work on an interruption, and its progress was invisible until it
-            // finished. writeLevelsWithHints only rewrites files that actually changed, so this is
+            // finished. writeLevelCorpusDocumentWithHints only rewrites files that actually changed, so this is
             // cheap. (Within a single very large level, bound it with --wall-ms so the step returns
             // and persists; re-running accumulates more, deduped by path signature.)
-            writeResult = writeLevelsWithHints(levelsPath, rawLevels);
+            writeResult = writeLevelCorpusDocumentWithHints(levelsPath, corpusDocument, { changedHintLevels: [raw] });
         }
         if (opts.writePatch) {
             patchLevels.push({
@@ -1207,7 +1207,6 @@ for (const levelNumber of levelNumbers) {
         + `${result.duplicateProvenanceCount > 0 ? `, +${result.duplicateProvenanceCount} provenance merged into existing hints` : ''} ${result.elapsedMs}ms`);
 }
 
-if (opts.writeLevels && !opts.writePatch && !opts.auditMode && (totalAccepted > 0 || totalDuplicateProvenance > 0)) writeResult = writeLevelsWithHints(levelsPath, rawLevels);
 if (opts.writePatch && !opts.auditMode && (totalAccepted > 0 || totalDuplicateProvenance > 0)) {
     patchResult = {
         schemaVersion: 1,

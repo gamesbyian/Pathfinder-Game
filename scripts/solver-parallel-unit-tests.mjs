@@ -99,16 +99,15 @@ test('solveLevelRaced runs the attraction-diversity phase after phase 1 exhausts
   assert.ok(phase1Attempts.length > 0, 'expected at least one phase-1 attempt');
 }, 20000);
 
-test('attractionDiversityBudgetFractionOverride: 0 suppresses the raced diversity phase', async () => {
+test('raced solve rejects the retired attraction-diversity budget alias', async () => {
   const raw = parityPreservingInfeasibleLevel();
-  const result = await solveLevelRaced(raw, {
-    timeBudgetMs: 500, poolSize: 2, attractionDiversityBudgetFractionOverride: 0,
-  });
-  assert.equal(result.ok, false);
-  assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
+  await assert.rejects(
+    () => solveLevelRaced(raw, { timeBudgetMs: 500, poolSize: 2, attractionDiversityBudgetFractionOverride: 0 }),
+    /unsupported field\(s\): attractionDiversityBudgetFractionOverride/,
+  );
 }, 20000);
 
-test('goalAttractionDisabledRetryBudgetFractionOverride: 0 suppresses the raced diversity phase (canonical name, same as the legacy attractionDiversityBudgetFractionOverride above)', async () => {
+test('goalAttractionDisabledRetryBudgetFractionOverride: 0 suppresses the raced diversity phase', async () => {
   const raw = parityPreservingInfeasibleLevel();
   const result = await solveLevelRaced(raw, {
     timeBudgetMs: 500, poolSize: 2, goalAttractionDisabledRetryBudgetFractionOverride: 0,

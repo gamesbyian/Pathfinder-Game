@@ -3,9 +3,12 @@
  *  passes ctx.randomSeed: null, and the seed was never recorded on the attempt). */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { deriveSolveAttemptInfo, provenanceFromSolveResult, hintsFromVarietyResult } from './hint-provenance.js';
+import { deriveHistoricalSolveAttemptInfo, deriveSolveAttemptInfo, provenanceFromHistoricalSolveResult, provenanceFromSolveResult, hintsFromVarietyResult } from './hint-provenance.js';
 import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from './testing-fixtures.js';
 import { withSolverStage } from './stage-policy.js';
+
+const currentAttempt = <T extends Record<string, unknown>>(attempt: T, stageId: Parameters<typeof withSolverStage>[1] = 'main-search') =>
+  withSolverStage(attempt, stageId);
 
 const PERSISTENT_ATTEMPT_FIELDS = new Set([
   'scoringProfileId', 'orderingBiasId', 'beamWidth', 'mechanicBucketRetention', 'gateKey', 'elapsedMs', 'nodesExpanded',
@@ -64,10 +67,8 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
   }
   assert.equal(entry.search.workSpent, null, 'attempt workSpent is not whole-solve provenance workSpent');
   assert.equal(entry.solver.technique, 'repair');
-  // Every retry-tier flag is true on this fixture, so classifyAttemptTier's precedence chain
-  // (orchestration.ts) resolves to its most-specific category, 'late-repair-search' — proving the
-  // derived retryTier field (not a raw copied attempt field, hence not in either Set above) is
-  // actually wired through to provenance.
+  // Current classification is stageId-only. The fixture's canonical stageId is late-repair-search
+  // even though every legacy boolean is deliberately populated for projection coverage.
   assert.equal(entry.solver.forcing?.retryTier, 'late-repair-search');
 });
 import { repairPrimarySeed } from './repair-search.js';
@@ -92,8 +93,8 @@ test('hintsFromVarietyResult records the prefix-anchor seed on prefix-anchored f
 
 test('deriveSolveAttemptInfo carries the winning repair attempt randomSeed', () => {
   const attempts = [
-    { profile: 'objectiveFirst', beamWidth: 5000, ok: false, elapsedMs: 10 },
-    { profile: 'repair', repair: true, ok: true, elapsedMs: 42, randomSeed: 123456 },
+    currentAttempt({ scoringProfileId: 'objectiveFirst', orderingBiasId: null, beamWidth: 5000, ok: false, elapsedMs: 10 }),
+    currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, ok: true, elapsedMs: 42, randomSeed: 123456 }, 'repair-fallback'),
   ];
   const info = deriveSolveAttemptInfo(attempts);
   assert.equal(info.technique, 'repair');
@@ -101,7 +102,7 @@ test('deriveSolveAttemptInfo carries the winning repair attempt randomSeed', () 
 });
 
 test('deriveSolveAttemptInfo leaves randomSeed null for a deterministic dfs/beam winner', () => {
-  const info = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', ok: true, elapsedMs: 5 }]);
+  const info = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, ok: true, elapsedMs: 5 })]);
   assert.equal(info.technique, 'dfs');
   assert.equal(info.randomSeed, null);
 });
@@ -109,7 +110,7 @@ test('deriveSolveAttemptInfo leaves randomSeed null for a deterministic dfs/beam
 test('provenanceFromSolveResult prefers the winning attempt seed over ctx (repair solve is reproducible)', () => {
   const result = {
     status: 'success',
-    attempts: [{ profile: 'repair', repair: true, ok: true, elapsedMs: 42, randomSeed: 987654 }],
+    attempts: [currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, ok: true, elapsedMs: 42, randomSeed: 987654 }, 'repair-fallback')],
   };
   // ctx.randomSeed is null (exactly what portfolio-solve-sweep passes) — the winning attempt's own
   // seed must still land in the provenance rather than being lost to the null.
@@ -118,8 +119,18 @@ test('provenanceFromSolveResult prefers the winning attempt seed over ctx (repai
   assert.equal(entry.search.randomSeed, 987654);
 });
 
+test('historical persisted Attempt aliases normalize before provenance construction', () => {
+  const entry = provenanceFromHistoricalSolveResult({
+    status: 'success',
+    attempts: [{ profile: 'objectiveFirst', template: 'perimeterCW', beamWidth: 2000, diverseBeam: true, ok: true }],
+  });
+  assert.equal(entry.solver.scoringProfileId, 'objectiveFirst');
+  assert.equal(entry.solver.orderingBiasId, 'perimeterCW');
+  assert.equal(entry.solver.mechanicBucketRetention, true);
+});
+
 test('provenanceFromSolveResult leaves randomSeed null for a deterministic winner', () => {
-  const result = { status: 'success', attempts: [{ scoringProfileId: 'perimeterSweep', template: 'perimeterCW', ok: true }] };
+  const result = { status: 'success', attempts: [currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: 'perimeterCW', ok: true })] };
   const entry = provenanceFromSolveResult(result, { randomSeed: null });
   assert.equal(entry.solver.technique, 'dfs');
   assert.equal(entry.search.randomSeed, null);
@@ -131,21 +142,21 @@ test('provenanceFromSolveResult leaves randomSeed null for a deterministic winne
 // modules/solver/attempts.ts) actually won — found while investigating whether
 // repairMustTurnBiasedAttempt's risk-gated last-in-ladder placement is overly conservative.
 test('deriveSolveAttemptInfo distinguishes plain repair from must-turn-biased repair', () => {
-  const plain = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, ok: true }]);
+  const plain = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, ok: true }, 'repair-fallback')]);
   assert.equal(plain.repairMustTurnBiased, false, 'plain repair is false, not null — the winner WAS a repair attempt');
   assert.equal(plain.repairTurnBiased, false);
 
-  const biased = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, repairMustTurnBiased: true, ok: true }]);
+  const biased = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, repairMustTurnBiased: true, ok: true }, 'repair-fallback')]);
   assert.equal(biased.repairMustTurnBiased, true);
   assert.equal(biased.repairTurnBiased, false);
 
-  const turnBiased = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, repairTurnBiased: true, ok: true }]);
+  const turnBiased = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, repairTurnBiased: true, ok: true }, 'repair-fallback')]);
   assert.equal(turnBiased.repairMustTurnBiased, false);
   assert.equal(turnBiased.repairTurnBiased, true);
 });
 
 test('deriveSolveAttemptInfo leaves repairMustTurnBiased/repairTurnBiased null for a non-repair winner', () => {
-  const info = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, ok: true }]);
+  const info = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, beamWidth: 2000, ok: true })]);
   assert.equal(info.technique, 'beam');
   assert.equal(info.repairMustTurnBiased, null, 'dfs/beam have no such concept — null, not false');
   assert.equal(info.repairTurnBiased, null);
@@ -154,7 +165,7 @@ test('deriveSolveAttemptInfo leaves repairMustTurnBiased/repairTurnBiased null f
 test('provenanceFromSolveResult records the biased-repair distinction in forcing', () => {
   const result = {
     status: 'success',
-    attempts: [{ profile: 'repair', repair: true, repairMustTurnBiased: true, ok: true, elapsedMs: 4400 }],
+    attempts: [currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, repairMustTurnBiased: true, ok: true, elapsedMs: 4400 }, 'repair-fallback')],
   };
   const entry = provenanceFromSolveResult(result);
   assert.equal(entry.solver.technique, 'repair');
@@ -164,7 +175,7 @@ test('provenanceFromSolveResult records the biased-repair distinction in forcing
 });
 
 test('provenanceFromSolveResult leaves forcing null for a non-repair winner (no variant concept to record)', () => {
-  const result = { status: 'success', attempts: [{ profile: 'objectiveFirst', ok: true }] };
+  const result = { status: 'success', attempts: [currentAttempt({ scoringProfileId: 'objectiveFirst', orderingBiasId: null, ok: true })] };
   const entry = provenanceFromSolveResult(result);
   assert.equal(entry.solver.forcing, null);
 });
@@ -174,7 +185,7 @@ test('provenanceFromSolveResult leaves forcing null for a non-repair winner (no 
 // class of gap as the repair-bias fix above — "which internal solver config actually won" data that
 // only existed in raw solver Attempt objects, never in the permanent provenance record.
 test('deriveSolveAttemptInfo captures beamWidth/mechanicBucketRetention/gateKey for a beam winner', () => {
-  const info = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, mechanicBucketRetention: true, gateKey: 655370, ok: true }]);
+  const info = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, beamWidth: 2000, mechanicBucketRetention: true, gateKey: 655370, ok: true })]);
   assert.equal(info.technique, 'beam');
   assert.equal(info.beamWidth, 2000);
   assert.equal(info.mechanicBucketRetention, true);
@@ -182,7 +193,7 @@ test('deriveSolveAttemptInfo captures beamWidth/mechanicBucketRetention/gateKey 
 });
 
 test('deriveSolveAttemptInfo leaves mechanicBucketRetention null (not false) for a dfs winner — no beam concept at all', () => {
-  const info = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', ok: true, gateKey: 12 }]);
+  const info = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, ok: true, gateKey: 12 })]);
   assert.equal(info.technique, 'dfs');
   assert.equal(info.beamWidth, null);
   assert.equal(info.mechanicBucketRetention, null, 'dfs has no beam-diversity concept — null, not false');
@@ -190,7 +201,7 @@ test('deriveSolveAttemptInfo leaves mechanicBucketRetention null (not false) for
 });
 
 test('deriveSolveAttemptInfo labels an admissible-order-fallback winner distinctly, not folded into dfs', () => {
-  const info = deriveSolveAttemptInfo([{ profile: 'mustCrossFirst', admissibleOrder: true, ok: true, elapsedMs: 7 }]);
+  const info = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'mustCrossFirst', orderingBiasId: null, admissibleOrder: true, ok: true, elapsedMs: 7 }, 'admissible-order-fallback')]);
   assert.equal(info.technique, 'admissible-order-fallback', 'previously fell through to "dfs" -- an admissibleOrder winner has no beamWidth/repair flag, so the technique ternary needs its own check for this field or it silently mislabels');
   assert.equal(info.scoringProfileId, 'mustCrossFirst', 'scoringProfileId carries the tie-break profile for this technique');
   assert.equal(info.beamWidth, null);
@@ -198,33 +209,33 @@ test('deriveSolveAttemptInfo labels an admissible-order-fallback winner distinct
 });
 
 test('deriveSolveAttemptInfo records seedSalt as explicit 0 for a repair winner at the default salt (not null)', () => {
-  const atDefault = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, ok: true }]);
+  const atDefault = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, ok: true }, 'repair-fallback')]);
   assert.equal(atDefault.seedSalt, 0, 'repair at the default salt is explicit 0 -- distinct from "not a repair attempt"');
 
-  const atNonzero = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, seedSalt: 3, ok: true }]);
+  const atNonzero = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, seedSalt: 3, ok: true }, 'repair-fallback')]);
   assert.equal(atNonzero.seedSalt, 3);
 
-  const nonRepair = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', ok: true }]);
+  const nonRepair = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, ok: true })]);
   assert.equal(nonRepair.seedSalt, null, 'only a non-repair winner gets null');
 });
 
-test('deriveSolveAttemptInfo recognizes canonical and historical goal-attraction-disabled retry identity', () => {
-  const canonical = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, stageId: 'goal-attraction-disabled-retry', ok: true }]);
+test('current and historical goal-attraction retry identity use separate provenance ingress paths', () => {
+  const canonical = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, beamWidth: 2000, ok: true }, 'goal-attraction-disabled-retry')]);
   assert.equal(canonical.technique, 'beam');
   assert.equal(canonical.goalAttractionDisabledRetry, true);
 
-  const historical = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, goalAttractionDisabledRetry: true, ok: true }]);
+  const historical = deriveHistoricalSolveAttemptInfo([{ profile: 'repair', repair: true, goalAttractionDisabledRetry: true, ok: true }]);
   assert.equal(historical.technique, 'repair');
   assert.equal(historical.goalAttractionDisabledRetry, true);
 
-  const normal = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', ok: true }]);
+  const normal = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, ok: true })]);
   assert.equal(normal.goalAttractionDisabledRetry, false);
 });
 
 test('provenanceFromSolveResult records beamWidth/mechanicBucketRetention/gateKey/seedSalt on the entry', () => {
   const result = {
     status: 'success',
-    attempts: [{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, mechanicBucketRetention: true, gateKey: 589833, ok: true }],
+    attempts: [currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, beamWidth: 2000, mechanicBucketRetention: true, gateKey: 589833, ok: true })],
   };
   const entry = provenanceFromSolveResult(result);
   assert.equal(entry.solver.beamWidth, 2000);
@@ -244,42 +255,38 @@ test('provenanceFromSolveResult maps the current single-written goal-attraction 
 // (docs/solver-optimization-workstreams.md): before retryTier, a find from any of these
 // force-enabled last-resort passes carried the exact same provenance shape as an ordinary
 // main-ladder/repair-fallback win, with no way to tell them apart from the stored hint alone.
-test('deriveSolveAttemptInfo records which force-enabled retry tier won, distinct from an ordinary win', () => {
-  const canonicalRetry = deriveSolveAttemptInfo([{ scoringProfileId: 'objectiveFirst', beamWidth: 5000, coarseStateNearTieRetentionRetry: true, ok: true }]);
+test('current retry tiers are stage-derived while historical booleans normalize only at historical ingress', () => {
+  const canonicalRetry = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'objectiveFirst', orderingBiasId: null, beamWidth: 5000, ok: true }, 'coarse-state-near-tie-retention-disabled-retry')]);
   assert.equal(canonicalRetry.retryTier, 'coarse-state-near-tie-retention-disabled-retry');
 
-  const legacyRetry = deriveSolveAttemptInfo([{ profile: 'objectiveFirst', beamWidth: 5000, dedupNearTieRetry: true, ok: true }]);
-  assert.equal(legacyRetry.retryTier, 'coarse-state-near-tie-retention-disabled-retry', 'historical attempt field remains readable');
+  const legacyRetry = deriveHistoricalSolveAttemptInfo([{ profile: 'objectiveFirst', beamWidth: 5000, dedupNearTieRetry: true, ok: true }]);
+  assert.equal(legacyRetry.retryTier, 'coarse-state-near-tie-retention-disabled-retry', 'historical attempt field remains readable only through historical ingress');
 
-  const admissibleRetry = deriveSolveAttemptInfo([{ profile: 'none', admissibleOrder: true, admissibleOrderNonDefaultRetry: true, ok: true }]);
+  const admissibleRetry = deriveHistoricalSolveAttemptInfo([{ profile: 'none', admissibleOrder: true, admissibleOrderNonDefaultRetry: true, ok: true }]);
   assert.equal(admissibleRetry.retryTier, 'admissible-order-alternate-tiebreak-retry');
 
-  // An ORDINARY admissible-order-fallback win (no retry flag) is not a retry tier at all.
-  const ordinaryAdmissible = deriveSolveAttemptInfo([{ profile: 'default', admissibleOrder: true, ok: true }]);
+  const ordinaryAdmissible = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'default', orderingBiasId: null, admissibleOrder: true, ok: true }, 'admissible-order-fallback')]);
   assert.equal(ordinaryAdmissible.retryTier, null);
 
-  // Attraction-diversity already has its own dedicated forcing field (disabledFeatures) and is
-  // deliberately NOT double-recorded as a retryTier.
-  const goalAttractionDisabledRetry = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, goalAttractionDisabledRetry: true, ok: true }]);
+  const goalAttractionDisabledRetry = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, beamWidth: 2000, ok: true }, 'goal-attraction-disabled-retry')]);
   assert.equal(goalAttractionDisabledRetry.retryTier, null);
 
-  // An ordinary main-ladder/repair-fallback win has no retry tier either.
-  const ordinaryRepair = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, ok: true }]);
+  const ordinaryRepair = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, ok: true }, 'repair-fallback')]);
   assert.equal(ordinaryRepair.retryTier, null);
-  const ordinaryMain = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', ok: true }]);
+  const ordinaryMain = deriveSolveAttemptInfo([currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, ok: true })]);
   assert.equal(ordinaryMain.retryTier, null);
 });
 
 test('provenanceFromSolveResult records retryTier in forcing, and leaves forcing null when there is none', () => {
   const retryResult = {
     status: 'success',
-    attempts: [{ scoringProfileId: 'perimeterSweep', beamWidth: 5000, connectivityAxisExhaustedRetry: true, ok: true }],
+    attempts: [currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, beamWidth: 5000, ok: true }, 'connectivity-axis-prune-disabled-retry')],
   };
   const retryEntry = provenanceFromSolveResult(retryResult);
   assert.ok(retryEntry.solver.forcing, 'a retry-tier winner must carry forcing metadata');
   assert.equal(retryEntry.solver.forcing.retryTier, 'connectivity-axis-prune-disabled-retry');
 
-  const ordinaryResult = { status: 'success', attempts: [{ scoringProfileId: 'perimeterSweep', beamWidth: 5000, ok: true }] };
+  const ordinaryResult = { status: 'success', attempts: [currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, beamWidth: 5000, ok: true })] };
   const ordinaryEntry = provenanceFromSolveResult(ordinaryResult);
   assert.equal(ordinaryEntry.solver.forcing, null, 'an ordinary main-ladder winner has no forcing at all');
 });
@@ -289,7 +296,7 @@ test('provenanceFromSolveResult records retryTier in forcing, and leaves forcing
 // or a persisted find is later misread as ordinary production-solver capability evidence — the
 // contamination that finding traced (e.g. R02900).
 test('provenanceFromSolveResult marks isolatedTechnique from ctx, defaulting to false', () => {
-  const result = { status: 'success', attempts: [{ profile: 'repair', repair: true, ok: true }] };
+  const result = { status: 'success', attempts: [currentAttempt({ scoringProfileId: 'repair', orderingBiasId: null, repair: true, ok: true }, 'repair-fallback')] };
   const isolated = provenanceFromSolveResult(result, { isolatedTechnique: true });
   assert.equal(isolated.context.isolatedTechnique, true);
 

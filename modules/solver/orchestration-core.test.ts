@@ -2,13 +2,30 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getFalseGoalTriggerSearchBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, normalizeAblationConfig } from './orchestration.js';
+import { classifyAttemptTier, classifyHistoricalAttemptTier, getFalseGoalTriggerSearchBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, normalizeAblationConfig, normalizeHistoricalAblationConfig } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
 import { prepLevel } from './prep.js';
 import { buildExperimentList, defaultConfig, FEATURES, OPT_IN_FEATURES } from './ablation-config.js';
 import { makeLineLevel, makeRepairGatedInfeasibleLevel, exhaustingDispatch } from './orchestration-test-support.js';
+
+test('current attempt tier classification requires stageId; historical fallback is explicit', () => {
+    assert.equal(classifyAttemptTier({ stageId: 'main-search' }), 'main-ladder');
+    assert.equal(classifyAttemptTier({ stageId: 'repair-shrink-recovery' }), 'early-repair-search');
+    assert.throws(
+        () => classifyAttemptTier({ repairLateProbe: true } as any),
+        /requires canonical stageId/,
+    );
+    assert.equal(
+        classifyHistoricalAttemptTier({ repairLateProbe: true }),
+        'late-repair-search',
+    );
+    assert.equal(
+        classifyHistoricalAttemptTier({ dedupNearTieRetry: true }),
+        'coarse-state-near-tie-retention-disabled-retry',
+    );
+});
 
 test('solveLevel solves a simple prepared level', async () => {
     const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
@@ -300,26 +317,15 @@ test('getFalseGoalTriggerSearchBudgetMs scales the search-dependent cost with ga
 });
 
 
-test('historical scheduler modes remain readable but normalize to canonical behavior', async () => {
-    const production = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'legacy' });
-    assert.equal(production.ok, true);
-    assert.equal(production.schedulerMode, undefined, 'historical legacy mode reads as canonical production scheduling');
-
-    const historicalPortfolio = await solveLevel(makeLineLevel(), {
-        timeBudgetMs: 1000,
-        schedulerMode: 'portfolio-experiment',
-        portfolioExperiment: {
-            pass1Ms: 500,
-            pass2Ms: 1000,
-            pass3Ms: 2000,
-            pass2Configs: new Set(),
-            pass3Configs: new Set(),
-            conditionalPasses: [],
-        },
-    });
-    assert.equal(historicalPortfolio.ok, true);
-    assert.equal(historicalPortfolio.schedulerMode, 'legacy-latency-portfolio-experiment');
-    assert.equal(historicalPortfolio.attempts.find(attempt => attempt.ok)?.schedulerPhase, 'legacy-latency-portfolio');
+test('solveLevel rejects retired scheduler spellings instead of translating fresh input', async () => {
+    await assert.rejects(
+        () => solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'legacy' as any }),
+        /unsupported schedulerMode "legacy"/,
+    );
+    await assert.rejects(
+        () => solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'portfolio-experiment' as any }),
+        /unsupported schedulerMode "portfolio-experiment"/,
+    );
 });
 
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
@@ -408,8 +414,8 @@ test('normalizeAblationConfig defaults every OTHER opt-in-only flag to false, no
     assert.equal(cfg.STRATEGY_REPAIR_NOGOOD_CACHE, true, 'a standard default-on flag is unaffected');
 });
 
-test('normalizeAblationConfig dual-reads the legacy routing flag and single-writes the canonical name', () => {
-    const cfg = normalizeAblationConfig({ STRATEGY_ARCHETYPE_ROUTING: false })!;
+test('historical ablation normalization reads the legacy routing flag and single-writes the canonical name', () => {
+    const cfg = normalizeHistoricalAblationConfig({ STRATEGY_ARCHETYPE_ROUTING: false })!;
     assert.equal(cfg.STRATEGY_ROUTING_REGIME_SELECTION, false);
     assert.equal(Object.hasOwn(cfg, 'STRATEGY_ROUTING_REGIME_SELECTION'), true);
     assert.equal(Object.hasOwn(cfg, 'STRATEGY_ARCHETYPE_ROUTING'), false);
@@ -419,9 +425,9 @@ test('normalizeAblationConfig dual-reads the legacy routing flag and single-writ
     );
 });
 
-test('normalizeAblationConfig rejects conflicting legacy/canonical routing flag values', () => {
+test('historical ablation normalization rejects conflicting legacy/canonical routing flag values', () => {
     assert.throws(
-        () => normalizeAblationConfig({
+        () => normalizeHistoricalAblationConfig({
             STRATEGY_ARCHETYPE_ROUTING: false,
             STRATEGY_ROUTING_REGIME_SELECTION: true,
         }),
@@ -430,20 +436,31 @@ test('normalizeAblationConfig rejects conflicting legacy/canonical routing flag 
 });
 
 
-test('normalizeAblationConfig dual-reads the legacy near-tie retry flag and single-writes the canonical name', () => {
-    const cfg = normalizeAblationConfig({ STRATEGY_DEDUP_NEAR_TIE_RETRY: false })!;
+test('historical ablation normalization reads the legacy near-tie retry flag and single-writes the canonical name', () => {
+    const cfg = normalizeHistoricalAblationConfig({ STRATEGY_DEDUP_NEAR_TIE_RETRY: false })!;
     assert.equal(cfg.STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY, false);
     assert.equal(Object.hasOwn(cfg, 'STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY'), true);
     assert.equal(Object.hasOwn(cfg, 'STRATEGY_DEDUP_NEAR_TIE_RETRY'), false);
 });
 
-test('normalizeAblationConfig rejects conflicting legacy/canonical near-tie retry values', () => {
+test('historical ablation normalization rejects conflicting legacy/canonical near-tie retry values', () => {
     assert.throws(
-        () => normalizeAblationConfig({
+        () => normalizeHistoricalAblationConfig({
             STRATEGY_DEDUP_NEAR_TIE_RETRY: false,
             STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true,
         }),
         /Conflicting ablation values for canonical feature STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY/,
+    );
+});
+
+test('current ablation normalization rejects retired feature names', () => {
+    assert.throws(
+        () => normalizeAblationConfig({ STRATEGY_ARCHETYPE_ROUTING: false } as any),
+        /Unknown canonical feature: STRATEGY_ARCHETYPE_ROUTING/,
+    );
+    assert.throws(
+        () => normalizeAblationConfig({ STRATEGY_DEDUP_NEAR_TIE_RETRY: false } as any),
+        /Unknown canonical feature: STRATEGY_DEDUP_NEAR_TIE_RETRY/,
     );
 });
 

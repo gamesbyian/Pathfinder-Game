@@ -54,7 +54,7 @@ test('runtime solve is invariant to saved hints and non-mechanical exact-level m
     // requires the actual solve to be independent of that retained historical field.
     assert.notDeepEqual(clean.hints, loaded.hints);
 
-    const opts = { timeBudgetMs: 10_000, nodeBudget: 500_000, workBudget: 1_000_000 };
+    const opts = { timeBudgetMs: 10_000, nodeBudget: 500_000, baseWorkBudget: 1_000_000 };
     const a = await solver.solveLevel(clean, opts);
     const b = await solver.solveLevel(loaded, opts);
 

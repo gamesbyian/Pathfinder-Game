@@ -49,13 +49,13 @@ assert.equal(integrity.outcomes.deadlineTruncated, 1);
 assert.equal(integrity.outcomes.harnessError, 1);
 assert.equal(integrity.coverageComplete, false);
 assert.equal(integrity.decisionValidComplete, false);
-assert.equal(integrity.complete, false);
+assert.equal('complete' in integrity, false, 'current population integrity must not emit the retired complete mirror');
 
 const structurallyCompleteButIndeterminate = buildPopulationIntegrity(['a', 'b'], [
   { id: 'a', ok: true }, { id: 'b', status: 'deadline-truncated' },
 ]);
 assert.equal(structurallyCompleteButIndeterminate.coverageComplete, true);
-assert.equal(structurallyCompleteButIndeterminate.complete, true);
+assert.equal('complete' in structurallyCompleteButIndeterminate, false, 'coverage completeness must remain distinct from decision validity');
 assert.equal(structurallyCompleteButIndeterminate.decisionValidComplete, false);
 
 const decisionValid = buildPopulationIntegrity(['a', 'b', 'c'], [

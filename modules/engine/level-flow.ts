@@ -14,7 +14,6 @@ import {
     setEditorModified,
     setEditorPencilMode,
     setEditorWorkingHintRecords,
-    setEditorWorkingHints,
     setEditorWorkingLevel,
     setFoundHintsSinceLoad,
     setLevel,
@@ -26,7 +25,6 @@ import {
     setOrientation as setOrientationState,
 } from '../state-actions.js';
 import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
-import { hintPaths } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 import { EDITOR, IDLE, OVERLAY_NONE, PLAY, REVIEW } from '../app-constants.js';
 import { assertLevelShape, deepCloneLevel } from '../domain/level-codec.js';
@@ -124,7 +122,6 @@ export function createLevelFlowController({
             .then((hints: import('../domain/hint-types.js').Hint[]) => {
                 if (state.engineState.editor.workingLevel !== wl || hints.length === 0) return;
                 if (Array.isArray(wl.hints) && wl.hints.length > 0) return;
-                setEditorWorkingHints(state, hintPaths(hints).map((h) => h.slice()));
                 setEditorWorkingHintRecords(state, hints);
                 ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(wl.hints, state.engineState.foundHintsSinceLoad)));
             })

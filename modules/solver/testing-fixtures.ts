@@ -10,10 +10,8 @@ import type { Attempt } from './orchestration.js';
  * canonical attempt-identity contract rejects that hybrid rather than silently choosing one.
  */
 export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
-  // Matches the `repairLateProbe: true` legacy flag below — classifyAttemptTier (orchestration.ts)
-  // reads `stageId` first, so this fixture's canonical/legacy fields must agree on which stage this
-  // "maximal" attempt represents, even though every OTHER legacy boolean below is also populated
-  // (deliberately over-specified, for field-projection round-trip coverage, not stage consistency).
+  // Canonical stage identity. The legacy booleans below are deliberately over-populated only as
+  // projection/compatibility fields; current classifyAttemptTier() reads stageId exclusively.
   stageId: 'late-repair-search',
   gateKey: 589833,
   scoringProfileId: 'perimeterSweep',

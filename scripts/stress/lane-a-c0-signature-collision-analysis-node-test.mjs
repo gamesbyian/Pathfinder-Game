@@ -3,6 +3,32 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { historicalLaneACutSignatureFromCaseId, laneACutSignature } from './lane-a-cut-identity-lib.mjs';
+
+assert.equal(
+    laneACutSignature({}, { source: { cutSignature: 'R00001:1,2' } }),
+    'R00001:1,2',
+);
+assert.throws(
+    () => laneACutSignature({ caseId: 'R00001:1,2::frontier-1' }, {}),
+    /historical case-id decoding is disabled/,
+);
+assert.equal(
+    laneACutSignature(
+        { caseId: 'R00001:1,2::frontier-1' },
+        {},
+        { allowHistoricalCaseId: true },
+    ),
+    'R00001:1,2',
+);
+assert.equal(
+    historicalLaneACutSignatureFromCaseId('R00002:3,4::frontier-9'),
+    'R00002:3,4',
+);
+assert.throws(
+    () => historicalLaneACutSignatureFromCaseId('frontier-without-delimiter'),
+    /no cut-signature delimiter/,
+);
 
 const rows = [
     { caseId: 'R00001:1,2::R00001:frontier-1', levelId: 'R00001', referenceLabel: 'live' },

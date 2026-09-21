@@ -10,9 +10,16 @@ import {
     exactPathIntegrityRecords,
     indexBy,
     leftJoin,
+    normalizePremiseAdmissions,
     queryRelation,
     summarizeIndependentSupport,
 } from './research-relations-lib.mjs';
+import { DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION, durableBundleManifestStoredPath } from './durable-evidence-bundle-lib.mjs';
+import {
+    assertCanonicalResearchArtifactEnvelope,
+    assertCanonicalResearchArtifactLocations,
+    extractResearchArtifactEnvelope,
+} from './research-artifact-envelope-lib.mjs';
 
 const model = {
     relations: {
@@ -26,6 +33,108 @@ const model = {
 assert.deepEqual(queryRelation(model, 'demo', { query: 'topology separator' }).rows.map(row => row.id), ['A']);
 assert.deepEqual(queryRelation(model, 'demo', { status: 'closed' }).rows.map(row => row.id), ['B']);
 assert.throws(() => indexBy([{ id: 'x' }, { id: 'x' }], 'id'), /duplicate relation identity/);
+assert.equal(
+    durableBundleManifestStoredPath({
+        schemaVersion: DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION,
+        manifestStoredPath: 'manifest.json',
+        files: [],
+    }),
+    'manifest.json',
+);
+assert.throws(
+    () => durableBundleManifestStoredPath({
+        schemaVersion: DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION,
+        files: [{ source: 'manifest.json', stored: 'legacy-manifest.json' }],
+    }),
+    /current durable evidence bundle lacks manifestStoredPath/,
+    'v2 current bundles must not silently recover the v1 files[] convention',
+);
+assert.equal(
+    durableBundleManifestStoredPath({
+        schemaVersion: 1,
+        files: [{ source: 'manifest.json', stored: 'legacy-manifest.json' }],
+    }),
+    'legacy-manifest.json',
+    'v1 archive bundles retain fixture-backed historical manifest lookup',
+);
+assert.deepEqual(normalizePremiseAdmissions({
+    records: [
+        { id: 'P1', status: 'admitted' },
+        { propositionId: 'P2', status: 'deferred' },
+        { premiseId: 'P3', status: 'admitted' },
+    ],
+}), [
+    { status: 'admitted', premiseId: 'P1' },
+    { status: 'deferred', premiseId: 'P2' },
+    { status: 'admitted', premiseId: 'P3' },
+]);
+assert.throws(
+    () => normalizePremiseAdmissions([{ premiseId: 'P1', id: 'P2' }]),
+    /conflicting premise identity aliases/,
+);
+assert.throws(() => normalizePremiseAdmissions([{ status: 'admitted' }]), /lacks premiseId/);
+
+const envelopeBlock = {
+    blockId: 'ENVELOPE-TEST',
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    sourceRegime: 'fixture',
+    sourceRevision: `sha256:${'1'.repeat(64)}`,
+    evidenceRole: 'development',
+    independentUnit: 'parent-level',
+    parentIds: ['R1'],
+    parentContentIdentities: ['v2:r1'],
+    sourceArtifactRefs: ['fixture.json'],
+    createdBy: { producer: 'fixture', manifestRef: 'fixture.json', runRef: null },
+    generationRef: null,
+    consumptionEvents: [],
+};
+const envelopePopulationIdentity = `sha256:${'2'.repeat(64)}`;
+const canonicalEnvelope = extractResearchArtifactEnvelope({
+    populationIdentity: envelopePopulationIdentity,
+    researchBlock: envelopeBlock,
+});
+assert.equal(canonicalEnvelope.populationIdentity, envelopePopulationIdentity);
+assert.equal(canonicalEnvelope.researchBlock, envelopeBlock);
+assert.equal(canonicalEnvelope.canonicalCurrent, true);
+assert.deepEqual(canonicalEnvelope.sources, {
+    researchBlock: ['researchBlock'],
+    populationIdentity: ['populationIdentity'],
+});
+assert.equal(assertCanonicalResearchArtifactEnvelope({
+    populationIdentity: envelopePopulationIdentity,
+    researchBlock: envelopeBlock,
+}).canonicalCurrent, true);
+assert.equal(assertCanonicalResearchArtifactLocations({
+    populationIdentity: envelopePopulationIdentity,
+}).populationIdentity, envelopePopulationIdentity);
+assert.equal(assertCanonicalResearchArtifactLocations({}).populationIdentity, null);
+
+const nestedEnvelope = extractResearchArtifactEnvelope({
+    population: {
+        populationIdentity: envelopePopulationIdentity,
+        researchBlock: envelopeBlock,
+    },
+});
+assert.equal(nestedEnvelope.populationIdentity, envelopePopulationIdentity);
+assert.equal(nestedEnvelope.researchBlock, envelopeBlock);
+assert.equal(nestedEnvelope.canonicalCurrent, false);
+assert.throws(() => assertCanonicalResearchArtifactEnvelope({
+    population: { populationIdentity: envelopePopulationIdentity, researchBlock: envelopeBlock },
+}), /shared fields must use top-level researchBlock and populationIdentity/);
+assert.throws(() => assertCanonicalResearchArtifactLocations({
+    population: { populationIdentity: envelopePopulationIdentity },
+}), /shared fields must use top-level researchBlock and populationIdentity/);
+
+assert.throws(() => extractResearchArtifactEnvelope({
+    populationIdentity: envelopePopulationIdentity,
+    population: { corpusIdentity: `sha256:${'9'.repeat(64)}` },
+    researchBlock: envelopeBlock,
+}), /conflicting population identity locations/);
+assert.throws(() => extractResearchArtifactEnvelope({
+    populationIdentity: envelopePopulationIdentity,
+    researchBlock: envelopeBlock,
+    population: { researchBlock: { ...envelopeBlock, blockId: 'OTHER-BLOCK' } },
+}), /conflicting researchBlock locations/);
 
 const joined = leftJoin(
     [{ id: 'x' }, { id: 'y' }],
@@ -168,7 +277,8 @@ try {
         schemaVersion: 1,
         kind: 'pathfinder-search-loss-capture',
         researchEnrichmentKind: 'observation',
-        population: { source: 'test-population.json', populationIdentity: searchLossPopulationIdentity, parentCount: 1 },
+        populationIdentity: searchLossPopulationIdentity,
+        population: { source: 'test-population.json', parentCount: 1 },
         researchBlock: searchLossBlock,
         capsules: [],
     }));

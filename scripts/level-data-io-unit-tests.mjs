@@ -5,11 +5,11 @@
  * (or any other level's) becoming misattributed.
  */
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { readLevelsWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, AmbiguousLevelSpecError } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, setLevelHintRecords, AmbiguousLevelSpecError } from './level-data-io.mjs';
 
 function makeLevel(overrides = {}) {
     return {
@@ -19,6 +19,11 @@ function makeLevel(overrides = {}) {
         designerName: '', description: '', difficulty: null,
         ...overrides,
     };
+}
+
+function withHintPaths(level, paths) {
+    setLevelHintRecords(level, paths.map(path => ({ path, provenance: [] })));
+    return level;
 }
 
 function withTempDir(fn) {
@@ -46,21 +51,63 @@ test('hintsDirFor derives a sibling hints-<suffix>/ for any stress-levels-<suffi
     assert.equal(hintsDirFor('data/levels.json'), path.normalize('data/hints'));
 });
 
+test('explicit corpus document I/O preserves bare-array storage without hidden wrapper state', () => {
+    withTempDir((dir) => {
+        const levelsJsonPath = path.join(dir, 'levels.json');
+        writeFileSync(levelsJsonPath, JSON.stringify([makeLevel({ id: 'P00001' })]));
+        const document = readLevelCorpusDocumentWithHints(levelsJsonPath);
+        assert.equal(document.storageShape, 'array');
+        assert.deepEqual(document.metadata, {});
+        assert.equal(document.levels[0].id, 'P00001');
+
+        document.levels[0].description = 'changed';
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, document);
+        const stored = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
+        assert.ok(Array.isArray(stored));
+        assert.equal(stored[0].description, 'changed');
+    });
+});
+
+test('explicit corpus document I/O preserves wrapped metadata by value, not array identity', () => {
+    withTempDir((dir) => {
+        const levelsJsonPath = path.join(dir, 'stress-levels.json');
+        writeFileSync(levelsJsonPath, JSON.stringify({
+            generatedAt: 'fixture-time',
+            masterSeed: 42,
+            levels: [makeLevel({ id: 'S00001' })],
+        }));
+        const document = readLevelCorpusDocumentWithHints(levelsJsonPath);
+        assert.equal(document.storageShape, 'object');
+        assert.deepEqual(document.metadata, { generatedAt: 'fixture-time', masterSeed: 42 });
+        assert.equal(document.levels[0].id, 'S00001');
+
+        const copiedDocument = {
+            ...document,
+            levels: document.levels.map(level => ({ ...level, description: 'copied-and-changed' })),
+        };
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, copiedDocument);
+        const stored = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
+        assert.equal(stored.generatedAt, 'fixture-time');
+        assert.equal(stored.masterSeed, 42);
+        assert.equal(stored.levels[0].description, 'copied-and-changed');
+    });
+});
+
 test('a level with an id keeps its hints after being reordered in the corpus array', () => {
     withTempDir((dir) => {
         const levelsJsonPath = path.join(dir, 'levels.json');
-        const a = { id: 'P00001', ...makeLevel(), hints: [[0, 1]] };
-        const b = { id: 'P00002', ...makeLevel(), hints: [[2, 3]] };
+        const a = withHintPaths({ id: 'P00001', ...makeLevel() }, [[0, 1]]);
+        const b = withHintPaths({ id: 'P00002', ...makeLevel() }, [[2, 3]]);
 
-        writeLevelsWithHints(levelsJsonPath, [a, b]);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [a, b], metadata: {}, storageShape: 'array' }, { changedHintLevels: [a, b] });
 
         // Reorder: b now comes first (position 1), a second (position 2) -- the exact scenario
         // the whole id-unification plan exists to make safe.
-        const reordered = readLevelsWithHints(levelsJsonPath);
+        const reordered = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const [readB, readA] = [reordered.find((l) => l.id === 'P00002'), reordered.find((l) => l.id === 'P00001')];
-        writeLevelsWithHints(levelsJsonPath, [readB, readA]);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [readB, readA], metadata: {}, storageShape: 'array' });
 
-        const final = readLevelsWithHints(levelsJsonPath);
+        const final = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const finalA = final.find((l) => l.id === 'P00001');
         const finalB = final.find((l) => l.id === 'P00002');
         assert.deepEqual(finalA.hints, [[0, 1]], 'level a keeps its own hints regardless of array position');
@@ -68,21 +115,32 @@ test('a level with an id keeps its hints after being reordered in the corpus arr
     });
 });
 
+test('setLevelHintRecords makes canonical records the mutation input and derives bare paths', () => {
+    const level = makeLevel({ hints: [[9, 9]] });
+    const records = [
+        { path: [1, 2, 3], provenance: [] },
+        { path: [4, 5, 6], provenance: [{ solver: { id: 'fixture' } }] },
+    ];
+    assert.equal(setLevelHintRecords(level, records), records);
+    assert.equal(level.hintRecords, records);
+    assert.deepEqual(level.hints, [[1, 2, 3], [4, 5, 6]]);
+});
+
 test('a level with no id (an editor draft) falls back to position-keyed storage', () => {
     withTempDir((dir) => {
         const levelsJsonPath = path.join(dir, 'levels.json');
-        const draft = { ...makeLevel(), hints: [[9, 9]] };
-        writeLevelsWithHints(levelsJsonPath, [draft]);
-        const reread = readLevelsWithHints(levelsJsonPath);
+        const draft = withHintPaths(makeLevel(), [[9, 9]]);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [draft], metadata: {}, storageShape: 'array' }, { changedHintLevels: [draft] });
+        const reread = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         assert.deepEqual(reread[0].hints, [[9, 9]]);
     });
 });
 
 test('two processes reading the same corpus and each writing back only their own chunk do not clobber each other', () => {
     // Regression test for a real data-loss bug: a caller (e.g. hint-workbench.mjs sharded across
-    // concurrent processes) calls readLevelsWithHints once, mutates only SOME levels' .hints/
-    // .hintRecords, then calls writeLevelsWithHints once with the FULL array. Before the fix,
-    // writeLevelsWithHints rewrote every level's hint file from its in-memory content regardless
+    // concurrent processes) calls the explicit corpus-document reader once, mutates only SOME levels' .hints/
+    // .hintRecords, then calls the explicit corpus-document writer once with the FULL level set. Before the fix,
+    // the old writer rewrote every level's hint file from its in-memory content regardless
     // of whether that level was actually touched -- so a second process's untouched, stale
     // start-of-run snapshot of a level the FIRST process already updated would silently revert it
     // when the second process's write ran later. Simulated here without real subprocesses: two
@@ -91,30 +149,34 @@ test('two processes reading the same corpus and each writing back only their own
     // would have reverted the first process's write under the old behavior.
     withTempDir((dir) => {
         const levelsJsonPath = path.join(dir, 'levels.json');
-        const a = { id: 'P00001', ...makeLevel(), hints: [[0, 1]] };
-        const b = { id: 'P00002', ...makeLevel(), hints: [[2, 3]] };
-        writeLevelsWithHints(levelsJsonPath, [a, b]);
+        const a = withHintPaths({ id: 'P00001', ...makeLevel() }, [[0, 1]]);
+        const b = withHintPaths({ id: 'P00002', ...makeLevel() }, [[2, 3]]);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [a, b], metadata: {}, storageShape: 'array' }, { changedHintLevels: [a, b] });
 
         // "Process 1" reads the corpus and updates only level a.
-        const process1Levels = readLevelsWithHints(levelsJsonPath);
+        const process1Levels = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const process1A = process1Levels.find((l) => l.id === 'P00001');
-        process1A.hints = [...process1A.hints, [4, 5]];
-        process1A.hintRecords = [...process1A.hintRecords, { path: [4, 5], provenance: [] }];
+        setLevelHintRecords(process1A, [
+            ...process1A.hintRecords,
+            { path: [4, 5], provenance: [] },
+        ]);
 
         // "Process 2" reads the corpus (before process 1 writes) and updates only level b.
-        const process2Levels = readLevelsWithHints(levelsJsonPath);
+        const process2Levels = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const process2B = process2Levels.find((l) => l.id === 'P00002');
-        process2B.hints = [...process2B.hints, [6, 7]];
-        process2B.hintRecords = [...process2B.hintRecords, { path: [6, 7], provenance: [] }];
+        setLevelHintRecords(process2B, [
+            ...process2B.hintRecords,
+            { path: [6, 7], provenance: [] },
+        ]);
 
         // Process 1 writes its full in-memory snapshot (a updated, b untouched/stale) first...
-        writeLevelsWithHints(levelsJsonPath, process1Levels);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: process1Levels, metadata: {}, storageShape: 'array' }, { changedHintLevels: [process1A] });
         // ...then process 2 writes its full in-memory snapshot (b updated, a untouched/stale).
         // Before the fix, this second write would revert level a's file back to its stale
         // 2-hint content, discarding process 1's real update.
-        writeLevelsWithHints(levelsJsonPath, process2Levels);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: process2Levels, metadata: {}, storageShape: 'array' }, { changedHintLevels: [process2B] });
 
-        const final = readLevelsWithHints(levelsJsonPath);
+        const final = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const finalA = final.find((l) => l.id === 'P00001');
         const finalB = final.find((l) => l.id === 'P00002');
         assert.deepEqual(finalA.hints, [[0, 1], [4, 5]], "process 1's update to level a must survive process 2's later write");

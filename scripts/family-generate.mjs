@@ -41,7 +41,7 @@ const {
 } = await import('./stress/witness.mjs');
 const { witnessFromLevelAndPath } = await import('./stress/witness-adapter.mjs');
 const { inheritedWitnessHint, transformedWitnessHint } = await import('./stress/witness-provenance.mjs');
-const { readLevelsWithHints, writeLevelsWithHints, hintsDirFor } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, hintsDirFor, setLevelHintRecords } = await import('./level-data-io.mjs');
 const { generatorImplementationProvenance } = await import('./generator-implementation-provenance.mjs');
 const { loadResearchQuestionRegistry } = await import('./research-question-relations-lib.mjs');
 const { assertResearchBlock } = await import('./solver-research-block-lineage.mjs');
@@ -139,7 +139,7 @@ const resolveFromRoot = p => (path.isAbsolute(p) ? p : path.join(root, p));
 
 // ─── load parent ────────────────────────────────────────────────────────────
 const parentCorpusPath = resolveFromRoot(PARENT_CORPUS);
-const parentLevels = readLevelsWithHints(parentCorpusPath);
+const parentLevels = readLevelCorpusDocumentWithHints(parentCorpusPath).levels;
 const parentIndex = parentLevels.findIndex((lv, i) => lv.id === PARENT_SELECTOR || String(i + 1) === PARENT_SELECTOR);
 if (parentIndex === -1) {
     console.error(`No level matching --parent=${PARENT_SELECTOR} in ${PARENT_CORPUS}`);
@@ -195,7 +195,7 @@ const SIBLING_ID_PREFIX = `F${parentId.replace(/^[A-Za-z]/, '')}-${MODE_ABBREV[M
 
 /** Ids are never reused, even across separate runs (matches the stress generators' own
  *  makeLevelIdMinter pattern): scans the OUTPUT hints directory — the durable, cumulative record,
- *  since writeLevelsWithHints only rewrites a hint file when its content changed, unlike the
+ *  since writeLevelCorpusDocumentWithHints only rewrites a hint file when its content changed, unlike the
  *  levels.json output itself which a naive re-run would otherwise clobber wholesale — for the
  *  highest existing <SIBLING_ID_PREFIX><NN> and starts one past it, so re-running the same
  *  mode+parent (a different seed, topping up --count, ...) ADDS variants instead of colliding
@@ -701,7 +701,10 @@ async function main() {
     // different seed, a higher --count) ADDS to that set rather than silently replacing it, and
     // so it can't re-propose a variant already accepted last time.
     const outAbsForLoad = resolveFromRoot(OUT_FILE);
-    const existingAccepted = existsSync(outAbsForLoad) ? readLevelsWithHints(outAbsForLoad) : [];
+    const outputDocument = existsSync(outAbsForLoad)
+        ? readLevelCorpusDocumentWithHints(outAbsForLoad)
+        : { levels: [], metadata: {}, storageShape: 'array' };
+    const existingAccepted = outputDocument.levels;
     if (existingAccepted.length > 0) console.log(`Found ${existingAccepted.length} existing sibling(s) at ${OUT_FILE} — this run will add to them, not replace them.`);
 
     const accepted = [...existingAccepted];
@@ -742,8 +745,7 @@ async function main() {
             },
         })]);
         const levelFp = await getLevelFingerprint(finalRaw);
-        finalRaw.hintRecords = [witnessTag === 'transformed' ? transformedWitnessHint(witnessObj.path, levelFp) : inheritedWitnessHint(witnessObj.path, levelFp)];
-        finalRaw.hints = [witnessObj.path];
+        setLevelHintRecords(finalRaw, [witnessTag === 'transformed' ? transformedWitnessHint(witnessObj.path, levelFp) : inheritedWitnessHint(witnessObj.path, levelFp)]);
 
         accepted.push(finalRaw);
         variantManifests.push({
@@ -920,7 +922,9 @@ async function main() {
     // ─── write outputs (append-safe — see the existingAccepted load above) ─────────────────────
     const outAbs = resolveFromRoot(OUT_FILE);
     mkdirSync(path.dirname(outAbs), { recursive: true });
-    const { levelsChanged, hintFilesChanged } = writeLevelsWithHints(outAbs, accepted);
+    outputDocument.levels = accepted;
+    const changedHintLevels = newlyAcceptedCount > 0 ? accepted.slice(-newlyAcceptedCount) : [];
+    const { levelsChanged, hintFilesChanged } = writeLevelCorpusDocumentWithHints(outAbs, outputDocument, { changedHintLevels });
     console.log(`Wrote ${accepted.length} level(s) total to ${OUT_FILE} (changed=${levelsChanged}), ${hintFilesChanged} hint file(s) written to ${path.join(path.dirname(OUT_FILE), 'hints')}/.`);
 
     const manifestAbs = resolveFromRoot(MANIFEST_FILE);

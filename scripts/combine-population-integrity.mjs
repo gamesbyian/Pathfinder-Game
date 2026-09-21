@@ -3,57 +3,49 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { encodeResearchScopedIdentity, hashResearchPopulation as hashPopulation } from './research-population-identity-lib.mjs';
+import { normalizeResearchPopulationIntegrity } from './research-observation-integrity-lib.mjs';
 
 export const encodeScopedPopulationIdentity = encodeResearchScopedIdentity;
 
 export function combinePopulationIntegrity(inputs, { kind = 'multi-population', identityBasis = 'population-label-and-subject-id' } = {}) {
   if (!Array.isArray(inputs) || inputs.length === 0) throw new Error('at least one labeled integrity input is required');
   const labels = new Set();
-  for (const input of inputs) {
+  const normalizedInputs = inputs.map(input => {
     if (!input?.label || labels.has(input.label)) throw new Error(`population labels must be non-empty and unique: ${input?.label ?? ''}`);
     labels.add(input.label);
-    if (!Array.isArray(input.integrity?.expectedIds)) throw new Error(`${input.label}: integrity record lacks expectedIds`);
+    const integrity = normalizeResearchPopulationIntegrity(input.integrity, { requireExpectedIds: true });
     if (!input.integrity?.outcomes || typeof input.integrity.outcomes !== 'object') throw new Error(`${input.label}: integrity record lacks outcomes`);
-  }
-  const expectedIds = inputs.flatMap(({ label, integrity }) => integrity.expectedIds.map(id => `${label}:${id}`));
-  const canonicalExpectedIds = inputs.flatMap(({ label, integrity }) =>
+    return { ...input, integrity };
+  });
+  const expectedIds = normalizedInputs.flatMap(({ label, integrity }) =>
     integrity.expectedIds.map(id => encodeScopedPopulationIdentity(String(label), String(id))));
-  const outcomeKeys = [...new Set(inputs.flatMap(({ integrity }) => Object.keys(integrity.outcomes)))].sort();
-  const coverageComplete = inputs.every(({ integrity }) => (integrity.coverageComplete ?? integrity.complete) === true);
+  const outcomeKeys = [...new Set(normalizedInputs.flatMap(({ integrity }) => Object.keys(integrity.outcomes)))].sort();
+  const coverageComplete = normalizedInputs.every(({ integrity }) => integrity.coverageComplete === true);
   // Fresh decision authority is explicit and non-inferable. A combined population must not
   // re-upgrade a legacy component merely because its older coverage/outcome shape looks clean.
-  const decisionValidComplete = inputs.every(({ integrity }) => integrity.decisionValidComplete === true);
+  const decisionValidComplete = normalizedInputs.every(({ integrity }) => integrity.decisionValidComplete === true);
   return {
-    complete: coverageComplete,
     coverageComplete,
     decisionValidComplete,
-    expectedCount: inputs.reduce((sum, { integrity }) => sum + integrity.expectedCount, 0),
-    observedCount: inputs.reduce((sum, { integrity }) => sum + integrity.observedCount, 0),
-    duplicateIds: inputs.flatMap(({ label, integrity }) => integrity.duplicateIds.map(id => `${label}:${id}`)),
-    unexpectedIds: inputs.flatMap(({ label, integrity }) => integrity.unexpectedIds.map(id => `${label}:${id}`)),
-    missingIds: inputs.flatMap(({ label, integrity }) => integrity.missingIds.map(id => `${label}:${id}`)),
-    canonicalDuplicateIds: inputs.flatMap(({ label, integrity }) =>
+    expectedCount: normalizedInputs.reduce((sum, { integrity }) => sum + integrity.expectedCount, 0),
+    observedCount: normalizedInputs.reduce((sum, { integrity }) => sum + integrity.observedCount, 0),
+    duplicateIds: normalizedInputs.flatMap(({ label, integrity }) =>
       integrity.duplicateIds.map(id => encodeScopedPopulationIdentity(String(label), String(id)))),
-    canonicalUnexpectedIds: inputs.flatMap(({ label, integrity }) =>
+    unexpectedIds: normalizedInputs.flatMap(({ label, integrity }) =>
       integrity.unexpectedIds.map(id => encodeScopedPopulationIdentity(String(label), String(id)))),
-    canonicalMissingIds: inputs.flatMap(({ label, integrity }) =>
+    missingIds: normalizedInputs.flatMap(({ label, integrity }) =>
       integrity.missingIds.map(id => encodeScopedPopulationIdentity(String(label), String(id)))),
     expectedIds,
-    canonicalExpectedIds,
     identityCodec: 'json-tuple-v1',
-    identityFields: {
-      canonical: 'canonicalExpectedIds/canonicalDuplicateIds/canonicalUnexpectedIds/canonicalMissingIds',
-      legacyDisplayOnly: 'expectedIds/duplicateIds/unexpectedIds/missingIds',
-    },
-    outcomes: Object.fromEntries(outcomeKeys.map(key => [key, inputs.reduce((sum, { integrity }) => sum + (integrity.outcomes[key] ?? 0), 0)])),
-    populationIdentityHash: hashPopulation({ kind, identityBasis, identityCodec: 'json-tuple-v1', identities: canonicalExpectedIds }).identityHash,
-    components: inputs.map(({ label, integrity }) => ({
+    outcomes: Object.fromEntries(outcomeKeys.map(key => [key, normalizedInputs.reduce((sum, { integrity }) => sum + (integrity.outcomes[key] ?? 0), 0)])),
+    populationIdentityHash: hashPopulation({ kind, identityBasis, identityCodec: 'json-tuple-v1', identities: expectedIds }).identityHash,
+    components: normalizedInputs.map(({ label, integrity }) => ({
       label,
       populationIdentityHash: integrity.populationIdentityHash ?? null,
       expectedCount: integrity.expectedCount,
       observedCount: integrity.observedCount,
-      coverageComplete: integrity.coverageComplete ?? integrity.complete ?? false,
-      decisionValidComplete: integrity.decisionValidComplete ?? null,
+      coverageComplete: integrity.coverageComplete,
+      decisionValidComplete: integrity.decisionValidComplete,
     })),
   };
 }

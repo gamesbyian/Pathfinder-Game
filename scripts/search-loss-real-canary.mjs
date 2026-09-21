@@ -12,6 +12,7 @@
  * command fail merely because an overhead threshold is missed.
  */
 import fs from 'node:fs';
+import { assertCanonicalResearchArtifactLocations } from './research-artifact-envelope-lib.mjs';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 
@@ -166,7 +167,7 @@ for (let index = 0; index < selected.length; index++) {
 
     const solveOpts = {
       timeBudgetMs,
-      workBudget,
+      baseWorkBudget: workBudget,
       strictTotalWorkBudget: true,
       attemptBudgetTelemetry: true,
     };
@@ -352,9 +353,9 @@ const capture = validateSearchLossCapture({
     configurationHash: stableHash({ kind: 'search-loss-real-canary-configuration', corpusFile, controlCorpusFile, seed, workBudget, timeBudgetMs }),
     levelBlind: true,
   },
+  populationIdentity: stableHash({ kind: 'search-loss-real-canary-population', parentIds: selectedParentIds }),
   population: {
     source: `${corpusFile}+${controlCorpusFile}#deterministic-canary-sample`,
-    populationIdentity: stableHash({ kind: 'search-loss-real-canary-population', parentIds: selectedParentIds }),
     parentCount: selectedParentIds.length,
     observedCapsuleParentCount: decisionParents.length,
     parentOutcomes: Object.fromEntries(selectedParentIds.map(id => [id, richParentOutcomes[id] ?? null])),
@@ -373,6 +374,7 @@ const capture = validateSearchLossCapture({
     context: { ...row.context, parentSolved: richParentOutcomes[String(row.parentId)] ?? null },
   })).sort((a, b) => a.capsuleId.localeCompare(b.capsuleId)),
 });
+assertCanonicalResearchArtifactLocations(capture);
 fs.mkdirSync(path.dirname(captureOut), { recursive: true });
 fs.writeFileSync(captureOut, JSON.stringify(capture, null, 2) + '\n');
 console.log(JSON.stringify(summary, null, 2));

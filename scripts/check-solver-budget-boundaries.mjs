@@ -64,12 +64,12 @@ assert.deepEqual(unapprovedLegacyLines, [],
 // different syntactic shape, allowing the same work-dose defect to survive until a behavioral test
 // found it. Arbitrary future variable names must not be able to bypass this boundary again.
 const approvedDirectMsToWorkSite =
-    'const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);';
+    'const workBudget = explicitBaseWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);';
 const directMsToWorkLines = orchestration.split('\n')
     .map(line => line.trim())
     .filter(line => !line.startsWith('//') && /\blegacyMsToWork\s*\(/u.test(line));
 assert.deepEqual(directMsToWorkLines, [approvedDirectMsToWorkSite],
-    'orchestration must have exactly one legacyMsToWork(...) call: solve-level compatibility normalization. Stage/retry work doses must scale the resolved workBudget instead.');
+    'orchestration must have exactly one legacyMsToWork(...) call: solve-level time-to-work fallback. Stage/retry work doses must scale the resolved workBudget instead.');
 
 assert.match(portfolio, /LEGACY WALL-CLOCK SCHEDULER EXPERIMENT/u,
     'the old ms portfolio must remain visibly quarantined until it is work-normalized or removed');

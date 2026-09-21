@@ -111,10 +111,8 @@ assert.throws(
   () => validateReconciliationSources([{ runId: '1', manifest: missingDeclaredAttempt }]),
   /no declared experiment workflow run attempt/u,
 );
-const duplicateRunManifest = clone(secondManifest);
-duplicateRunManifest.experiment.workflowRunId = '1';
 assert.throws(
-  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: duplicateRunManifest }]),
+  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: clone(manifest) }]),
   /source run IDs must be unique/u,
 );
 const mismatchedConfiguration = clone(secondManifest);
@@ -127,6 +125,7 @@ assert.throws(
   /resolved SHA .* differs .* recombine-only result cannot claim one preserved experiment identity/u,
 );
 const nestedReconciliation = clone(manifest);
+nestedReconciliation.experiment.workflowRunId = 'nested';
 nestedReconciliation.experiment.reconciliationRun = {
   kind: 'recombine-only',
   preservesExperimentIdentity: true,
@@ -134,7 +133,7 @@ nestedReconciliation.experiment.reconciliationRun = {
   sourceRuns: ['leaf-a', 'leaf-b'],
 };
 assert.throws(
-  () => validateReconciliationSources([{ runId: '1', manifest: nestedReconciliation }]),
+  () => validateReconciliationSources([{ runId: 'nested', manifest: nestedReconciliation }]),
   /already a reconciliation result.*leaf acquisition runs/u,
 );
 

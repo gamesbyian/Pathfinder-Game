@@ -34,7 +34,7 @@ test('disableExtraBudgetPasses suppresses late repair probe when no explicit ove
         repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,

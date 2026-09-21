@@ -17,7 +17,7 @@ import { buildBundle } from './run-bundled.mjs';
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const HINT_CORPUS_EXPAND_BUNDLE = buildBundle('scripts/hint-corpus-expand.mjs');
-const { readLevelsWithHints } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
 // scripts/hint-corpus-expand.mjs resolves --levels-json as `path.join(ROOT, cfg.levelsJsonPath)`
 // unconditionally, so the fixture must live under ROOT and be referenced by a ROOT-relative
@@ -52,7 +52,7 @@ async function main() {
         const fixtureDir = path.join(tempDir, 'fixture');
         const fixtureLevelsPathRelative = await writeFixtureLevel(fixtureDir);
         const fixtureLevelsPathAbs = path.join(ROOT, fixtureLevelsPathRelative);
-        const beforeHints = readLevelsWithHints(fixtureLevelsPathAbs)[0].hints.length;
+        const beforeHints = readLevelCorpusDocumentWithHints(fixtureLevelsPathAbs).levels[0].hints.length;
 
         // --dry-run must never mutate the fixture.
         const dryRunOutput = path.join(tempDir, 'dry-run-report.json');
@@ -85,7 +85,7 @@ async function main() {
             );
         }
 
-        const afterDryRunHints = readLevelsWithHints(fixtureLevelsPathAbs)[0].hints.length;
+        const afterDryRunHints = readLevelCorpusDocumentWithHints(fixtureLevelsPathAbs).levels[0].hints.length;
         assert.equal(afterDryRunHints, beforeHints, '--dry-run must not mutate the fixture');
 
         // --write-levels persists accepted candidates and is deterministic given the same seed.
@@ -103,7 +103,7 @@ async function main() {
         const writeLevelReport = writeReport.levels[0];
         assert.deepEqual(writeLevelReport.acceptedPaths, dryRunLevelReport.acceptedPaths, 'same seed produces the same accepted paths (design principle 6: deterministic runs)');
 
-        const afterWriteHints = readLevelsWithHints(fixtureLevelsPathAbs)[0].hints.length;
+        const afterWriteHints = readLevelCorpusDocumentWithHints(fixtureLevelsPathAbs).levels[0].hints.length;
         assert.equal(afterWriteHints, beforeHints + writeLevelReport.acceptedCount);
     } finally {
         await rm(tempDir, { recursive: true, force: true });

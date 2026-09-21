@@ -1,18 +1,16 @@
 /**
  * Shared I/O for split level/hint artifacts. Level JSON has no hints at rest; per-level files hold
- * canonical `{schemaVersion:3,hints:Hint[]}`. Reads upgrade legacy shapes and attach both `.hints`
- * (bare paths) and `.hintRecords` (canonical records); writes reconcile them and strip both from
- * level JSON. Hint files use persistent level ids verbatim when present, else 1-based position.
+ * canonical `{schemaVersion:3,hints:Hint[]}`. Reads upgrade legacy shapes and attach `.hintRecords`
+ * as canonical mutable state plus derived `.hints` bare paths. Writes strip both from level JSON and
+ * persist only levels named in an explicit hint write set. Hint files use persistent level ids
+ * verbatim when present, else 1-based position.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { stringifyCorpusJson } from './level-json-format.mjs';
-import { hintPaths, reconcileHints, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-runtime.mjs';
+import { setLevelHintRecords, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-runtime.mjs';
 
-const LEVEL_WRAPPERS = new WeakMap();
 const HINT_SCHEMA_VERSION = 3;
-// Original read-time array refs let writes skip levels this process never mutated.
-const UNTOUCHED_HINTS_STATE = new WeakMap();
 
 /** Sibling hint dir. `stress-levels-<suffix>.json` maps to `hints-<suffix>/`; others to `hints/`. */
 export function hintsDirFor(levelsJsonPath) {
@@ -59,12 +57,10 @@ export function readLevelHints(levelsJsonPath, levelNumber) {
     return parseHintFileContents(parsed, filePath);
 }
 
-/** Attach `.hints` and `.hintRecords` to every level. Artifact hints beat inline fixture hints. */
-export function readLevelsWithHints(levelsJsonPath) {
-    const parsed = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
-    const levels = Array.isArray(parsed) ? parsed : parsed?.levels;
-    if (!Array.isArray(levels)) throw new Error(`${levelsJsonPath} must contain a JSON array of levels or an object with a levels array`);
-    if (!Array.isArray(parsed)) LEVEL_WRAPPERS.set(levels, parsed);
+// Backward-compatible script import surface while the canonical owner lives in hint-runtime.mjs.
+export { setLevelHintRecords };
+
+function hydrateLevelHints(levelsJsonPath, levels) {
     const dir = hintsDirFor(levelsJsonPath);
     levels.forEach((level, i) => {
         if (!level || typeof level !== 'object') return;
@@ -76,11 +72,30 @@ export function readLevelsWithHints(levelsJsonPath) {
         } else {
             records = inlineRecords || [];
         }
-        level.hintRecords = records;
-        level.hints = hintPaths(records);
-        UNTOUCHED_HINTS_STATE.set(level, { hints: level.hints, hintRecords: level.hintRecords });
+        setLevelHintRecords(level, records);
     });
     return levels;
+}
+
+/**
+ * Explicit corpus-document reader. The in-memory contract is always one object:
+ *   { levels, metadata, storageShape }
+ *
+ * Bare-array corpora remain readable, but their storage shape is explicit rather than hidden in
+ * array identity. Wrapped corpora preserve every top-level field other than levels in metadata.
+ */
+export function readLevelCorpusDocumentWithHints(levelsJsonPath) {
+    const parsed = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
+    const storageShape = Array.isArray(parsed) ? 'array' : 'object';
+    const levels = storageShape === 'array' ? parsed : parsed?.levels;
+    if (!Array.isArray(levels)) {
+        throw new Error(`${levelsJsonPath} must contain a JSON array of levels or an object with a levels array`);
+    }
+    const metadata = storageShape === 'object'
+        ? Object.fromEntries(Object.entries(parsed).filter(([key]) => key !== 'levels'))
+        : {};
+    hydrateLevelHints(levelsJsonPath, levels);
+    return { levels, metadata, storageShape };
 }
 
 /** Serialize canonical hints one record per line. */
@@ -89,23 +104,38 @@ export function stringifyHints(records) {
 }
 
 /**
- * Persist level JSON without inline hints plus changed per-level hint files. Unchanged read-time
- * array refs are skipped: this is required for safe concurrent shard writers over disjoint levels,
- * not merely an optimization. New zero-hint files are not created; existing emptied files remain.
+ * Persist level JSON without inline hints plus ONLY the per-level hint files explicitly named by
+ * changedHintLevels. This write set is a correctness boundary for concurrent shard writers: a
+ * process may hold a stale full-corpus snapshot, but it cannot rewrite hint files for levels it did
+ * not declare as changed. Object identity here expresses caller-owned write intent; it is never
+ * inferred from read-time references. New zero-hint files are not created; existing emptied files
+ * remain.
  */
-export function writeLevelsWithHints(levelsJsonPath, levels) {
-    if (!Array.isArray(levels)) throw new Error('levels must be an array');
+export function writeLevelCorpusDocumentWithHints(levelsJsonPath, document, { changedHintLevels = [] } = {}) {
+    if (!document || typeof document !== 'object' || Array.isArray(document)) throw new Error('corpus document must be an object');
+    const { levels, metadata = {}, storageShape = 'object' } = document;
+    if (!Array.isArray(levels)) throw new Error('corpus document levels must be an array');
+    if (storageShape !== 'array' && storageShape !== 'object') throw new Error('corpus document storageShape must be "array" or "object"');
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) throw new Error('corpus document metadata must be an object');
+
     const dir = hintsDirFor(levelsJsonPath);
     mkdirSync(dir, { recursive: true });
 
+    const changedLevels = changedHintLevels instanceof Set ? changedHintLevels : new Set(changedHintLevels);
+    for (const level of changedLevels) {
+        if (!levels.includes(level)) throw new Error('changedHintLevels contains a level outside corpus document levels');
+    }
+
     let hintFilesChanged = 0;
     levels.forEach((level, i) => {
+        if (!changedLevels.has(level)) return;
         const filePath = hintFilePathFor(levelsJsonPath, hintKeyForLevel(level, i + 1));
         const fileExists = existsSync(filePath);
-        const untouched = UNTOUCHED_HINTS_STATE.get(level);
-        if (fileExists && untouched && untouched.hints === level?.hints && untouched.hintRecords === level?.hintRecords) return;
 
-        const records = reconcileHints(Array.isArray(level?.hints) ? level.hints : [], level?.hintRecords);
+        // Current mutation is single-authority: hintRecords is canonical persisted state and
+        // hints is only its derived in-memory view. Historical bare paths are upgraded during
+        // read/hydration, never reconciled back into a fresh write here.
+        const records = Array.isArray(level?.hintRecords) ? level.hintRecords : [];
         if (records.length === 0 && !fileExists) return;
         const next = stringifyHints(records);
         const prev = fileExists ? readFileSync(filePath, 'utf8') : null;
@@ -120,8 +150,7 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
         const { hints: _hints, hintRecords: _hintRecords, ...rest } = level;
         return rest;
     });
-    const wrapper = LEVEL_WRAPPERS.get(levels);
-    const output = wrapper ? { ...wrapper, levels: stripped } : stripped;
+    const output = storageShape === 'object' ? { ...metadata, levels: stripped } : stripped;
     const prevLevels = existsSync(levelsJsonPath) ? readFileSync(levelsJsonPath, 'utf8') : null;
     const nextLevels = stringifyCorpusJson(output);
     const levelsChanged = prevLevels !== nextLevels;

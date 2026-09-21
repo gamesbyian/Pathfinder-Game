@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { classifyAttemptTier } from './orchestration.js';
+import { classifyAttemptTier, classifyHistoricalAttemptTier } from './orchestration.js';
 import { SOLVER_STAGE_IDS } from './stage-policy.js';
 
 test('classifyAttemptTier reads stageId first when present — legacy booleans never override it', () => {
@@ -25,8 +25,9 @@ test('classifyAttemptTier maps every canonical stageId to its own label (or the 
     }
 });
 
-test('classifyAttemptTier falls back to the legacy boolean chain ONLY when stageId is absent (compatibility for historical/duck-typed records)', () => {
-    assert.equal(classifyAttemptTier({ repairLateProbe: true }), 'late-repair-search');
-    assert.equal(classifyAttemptTier({ repair: true }), 'repair-fallback');
-    assert.equal(classifyAttemptTier({}), 'main-ladder');
+test('historical attempt tier decoding is explicit; current classifier requires stageId', () => {
+    assert.throws(() => classifyAttemptTier({ repairLateProbe: true } as any), /stageId/);
+    assert.equal(classifyHistoricalAttemptTier({ repairLateProbe: true }), 'late-repair-search');
+    assert.equal(classifyHistoricalAttemptTier({ repair: true }), 'repair-fallback');
+    assert.equal(classifyHistoricalAttemptTier({}), 'main-ladder');
 });

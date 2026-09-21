@@ -750,6 +750,16 @@ export function getConfiguredAttemptConfigs(level: NormalizedLevel, cfg: Ablatio
         const canonicalOverrides: AblationConfig = {};
         for (const [rawKey, value] of Object.entries(cfg)) {
             if (value === undefined) continue;
+            if (rawKey === 'ATTEMPT_ORDER') {
+                if (typeof value !== 'string') throw new Error('ATTEMPT_ORDER must be a string');
+                canonicalOverrides.ATTEMPT_ORDER = value;
+                continue;
+            }
+            if (rawKey === '_randomSeed') {
+                if (typeof value !== 'number') throw new Error('_randomSeed must be a number');
+                canonicalOverrides._randomSeed = value;
+                continue;
+            }
             const key = canonicalAblationFeatureName(rawKey);
             if (Object.prototype.hasOwnProperty.call(canonicalOverrides, key)
                 && canonicalOverrides[key] !== value)
