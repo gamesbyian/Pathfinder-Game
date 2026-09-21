@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "kind": "pathfinder-forced-work-prevalence-result-summary",
   "date": "2026-09-21",
-  "sourceRunId": 35657944874,
-  "sourceArtifactId": 10666349433,
-  "sourceArtifactDigest": "sha256:9d31657134b8dd01eac5ab89c33fdcb00f4f10bc04c742689a41150de20f8061",
-  "headSha": "4020daa71077c29171ce8c83805b6f3bea6a0b27",
+  "sourceRunId": 35659746572,
+  "sourceArtifactId": 10666891944,
+  "sourceArtifactDigest": "sha256:a66fa018aa6496bca0c357ef5521996b45fad574fefbabc10c2dfafef6cf4eac",
+  "headSha": "ab0e21263f26460d3813856e48f2d2ab8cfbec44",
   "population": {
     "manifest": "data/stress/forced-work-prevalence-sample-2026-09-21.json",
     "independentParents": 64,
@@ -41,15 +41,15 @@
     "parentsAtOrAboveTwentyPercent": 47
   },
   "chains": {
-    "observedChainStarts": 5813731,
-    "maxObservedLength": 14,
-    "maxObservedChainWork": 131,
+    "observedChainStarts": 4932517,
+    "maxObservedLength": 19,
+    "maxObservedChainWork": 196,
     "terminationCounts": {
-      "branch": 2152773,
-      "no-surviving-child-id": 1569940,
-      "forced-child-not-retained": 1409561,
-      "dead-end": 681457
-    }
+      "branch": 2363307,
+      "forced-child-not-retained": 1700586,
+      "dead-end": 868624
+    },
+    "note": "Corrected post-hard-prune child identity. The initial run's generated-stage diagnostic path list included candidates later removed by hard pruning; prevalence/work totals were unaffected."
   },
   "disposition": "HEADROOM_POSITIVE",
   "interpretation": "The preregistered prevalence gate clears decisively. This is an oracle ceiling over measured parent-expansion work, not expected production savings. Next measure capture fraction and semantic safety before any forced-chain consumer."
