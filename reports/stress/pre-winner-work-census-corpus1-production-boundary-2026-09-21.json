@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-pre-winner-canonical-work-census",
+  "evidenceRole": "opportunity-sizing",
+  "source": {
+    "workflowRunId": 35066677597,
+    "artifactId": 10440286196,
+    "artifactName": "solver-sweep-result",
+    "artifactDigest": "sha256:4e4f3ab1d7d823e1d667af000c5e4a640c629cc32e405d2fb3e57e8d5e0a2428",
+    "sourceHeadSha": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "corpus": "data/stress/stress-levels.json"
+  },
+  "population": {
+    "rows": 102,
+    "solvedRows": 101,
+    "canonicalWorkRows": 101,
+    "unavailableSolvedRows": 0
+  },
+  "summary": {
+    "totalPreWinnerWork": 1166005352,
+    "totalDenominatorWork": 1331383151,
+    "aggregatePreWinnerWorkShare": 0.8757849692811682,
+    "rowsWithAnyPreWinnerWork": 49,
+    "rowsWithAnyPreWinnerWorkRate": 0.48514851485148514,
+    "medianRowPreWinnerShare": 0,
+    "p90RowPreWinnerShare": 0.9537707120742293,
+    "medianPreWinnerAttempts": 0,
+    "p90PreWinnerAttempts": 8,
+    "rowsWithRepeatedExactPreWinnerActionKey": 0
+  },
+  "concentration": {
+    "top5ShareOfPreWinnerWork": 0.5138907252631547,
+    "top10ShareOfPreWinnerWork": 0.6770312200076419,
+    "top20ShareOfPreWinnerWork": 0.8492658265259833
+  },
+  "byWinnerStage": [
+    {
+      "winnerStageId": "main-search",
+      "rows": 63,
+      "preWinnerWork": 512206514,
+      "denominatorWork": 617227702,
+      "aggregatePreWinnerWorkShare": 0.8298501709179605
+    },
+    {
+      "winnerStageId": "portal-coarse-state-merge-dead-last-retry",
+      "rows": 1,
+      "preWinnerWork": 238888042,
+      "denominatorWork": 240451538,
+      "aggregatePreWinnerWorkShare": 0.993497666877057
+    },
+    {
+      "winnerStageId": "goal-attraction-disabled-retry",
+      "rows": 2,
+      "preWinnerWork": 213778650,
+      "denominatorWork": 222860452,
+      "aggregatePreWinnerWorkShare": 0.959248929460127
+    },
+    {
+      "winnerStageId": "admissible-order-alternate-tiebreak-retry",
+      "rows": 1,
+      "preWinnerWork": 93460945,
+      "denominatorWork": 94286606,
+      "aggregatePreWinnerWorkShare": 0.9912430722132474
+    },
+    {
+      "winnerStageId": "early-repair-search",
+      "rows": 33,
+      "preWinnerWork": 55337981,
+      "denominatorWork": 99661209,
+      "aggregatePreWinnerWorkShare": 0.5552609842411204
+    },
+    {
+      "winnerStageId": "admissible-order-fallback",
+      "rows": 1,
+      "preWinnerWork": 52333220,
+      "denominatorWork": 56895644,
+      "aggregatePreWinnerWorkShare": 0.919810662482351
+    }
+  ],
+  "leadingFailedActions": [
+    {
+      "actionKey": "early-repair-search|repair|score=repair|guidance=standard|seedSalt=0",
+      "occurrences": 25,
+      "preWinnerWork": 140458070
+    },
+    {
+      "actionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+      "occurrences": 6,
+      "preWinnerWork": 131587085
+    },
+    {
+      "actionKey": "repair-fallback|repair|score=repair|guidance=standard|seedSalt=0",
+      "occurrences": 5,
+      "preWinnerWork": 120638993
+    },
+    {
+      "actionKey": "early-repair-search|repair|score=repair|guidance=standard|seedSalt=1",
+      "occurrences": 19,
+      "preWinnerWork": 116865661
+    },
+    {
+      "actionKey": "main-search|dfs|score=objectiveFirst|bias=none",
+      "occurrences": 16,
+      "preWinnerWork": 93911457
+    },
+    {
+      "actionKey": "main-search|dfs|score=intersectionHarvest|bias=none",
+      "occurrences": 12,
+      "preWinnerWork": 65203711
+    },
+    {
+      "actionKey": "main-search|dfs|score=perimeterSweep|bias=perimeterCW",
+      "occurrences": 10,
+      "preWinnerWork": 51623929
+    },
+    {
+      "actionKey": "main-search|dfs|score=perimeterSweep|bias=perimeterCCW",
+      "occurrences": 10,
+      "preWinnerWork": 37978787
+    },
+    {
+      "actionKey": "admissible-order-fallback|admissible-order|tieBreak=default|lds=off",
+      "occurrences": 2,
+      "preWinnerWork": 36628398
+    },
+    {
+      "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+      "occurrences": 16,
+      "preWinnerWork": 22057976
+    }
+  ],
+  "interpretation": {
+    "oracleCeilingBand": ">=10%",
+    "selectorAchievability": "unmeasured",
+    "conclusion": "Large canonical pre-winner work reservoir exists on this production-boundary Corpus 1 run. Next gate is a runtime-legal discriminator, not action skipping."
+  }
+}
