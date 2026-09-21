@@ -17,6 +17,28 @@ import {
 
 const sha256 = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 
+export function rowsFromFrozenResponseGuidedContrasts(frozen, pairs = DEFAULT_PAIRS) {
+    if (frozen?.kind !== 'pathfinder-response-guided-contrast-population' || !Array.isArray(frozen?.pairs)) {
+        throw new Error('invalid frozen response-guided contrast population');
+    }
+    return pairs.map(([leftAction, rightAction]) => {
+        const hit = frozen.pairs.find(row =>
+            row.leftAction === leftAction && row.rightAction === rightAction);
+        if (!hit) throw new Error(`frozen contrast missing pair: ${leftAction} vs ${rightAction}`);
+        return {
+            leftAction,
+            rightAction,
+            leftOnly: hit.counts.leftOnly,
+            rightOnly: hit.counts.rightOnly,
+            both: hit.counts.both,
+            neither: hit.counts.neither,
+            contrastPopulation: hit.population,
+            evidenceRole: 'outcome-selected-development',
+            premiseUse: 'offline-premise-nomination-only',
+        };
+    });
+}
+
 export function freezeResponseGuidedContrasts(base, {
     sourcePath = null,
     sourceSha256 = null,
