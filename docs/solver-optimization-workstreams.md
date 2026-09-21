@@ -5,17 +5,17 @@
 > **Reconciled:** 2026-09-21.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
-Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`capabilities`](solver-capability-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
+Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
 
 ## Data-audit guardrail
 
-C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts but not consume historical identity/outcome/hints/capability-evidence membership. Negatives close only tested claims.
+C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts, never historical identity/outcome/hints/capability membership. Negatives close only tested claims.
 
 ## Portfolio posture
 
 Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. [Rules/register](solver-capability-invention-program.md): `data/stress/capability-invention-demand.json`.
 
-Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs have a frozen freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
+Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs need freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
 
 ### 1. Workstream 2: residual capability + premise acquisition
