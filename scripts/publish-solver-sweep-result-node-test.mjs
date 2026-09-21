@@ -269,6 +269,42 @@ try {
   assert.ok(staleRevisionManifest.decisionContractIssues.includes(
     'researchOutcome.binding.resultResolvedShas disagree with published result files'));
 
+  const partialMetadataDir = path.join(temp, 'partial-metadata-primary');
+  fs.mkdirSync(partialMetadataDir, { recursive: true });
+  const metadataA = path.join(partialMetadataDir, 'a.json');
+  const metadataB = path.join(partialMetadataDir, 'b.json');
+  fs.writeFileSync(metadataA, JSON.stringify({
+    commitSha: 'b'.repeat(40), configurationHash: primaryConfigurationHash,
+    levels: [{ id: 'A', ok: true }],
+  }));
+  fs.writeFileSync(metadataB, JSON.stringify({
+    levels: [{ id: 'B', ok: false, status: 'exhausted' }],
+  }));
+  const partialMetadataOutcome = path.join(temp, 'partial-metadata-outcome.json');
+  fs.writeFileSync(partialMetadataOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'binding must cover every result metadata slot',
+    binding: {
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [contentHash(metadataA), contentHash(metadataB)],
+    },
+  }));
+  const partialMetadataOut = path.join(temp, 'partial-metadata-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${partialMetadataDir}`,
+    `--outcome-file=${partialMetadataOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${partialMetadataOut}`,
+  ], { cwd: root });
+  const partialMetadataManifest = JSON.parse(fs.readFileSync(path.join(partialMetadataOut, 'manifest.json')));
+  assert.ok(partialMetadataManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultConfigurationHashes disagree with published result files'));
+  assert.ok(partialMetadataManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultResolvedShas disagree with published result files'));
+
   const staleContentOutcome = path.join(temp, 'stale-content-outcome.json');
   fs.writeFileSync(staleContentOutcome, JSON.stringify({
     schemaVersion: 1,
