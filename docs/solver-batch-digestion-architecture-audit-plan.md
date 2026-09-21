@@ -492,6 +492,15 @@ Every lane/candidate should eventually record:
 
 ## 10. Progress log
 
+### 2026-09-20 - initial presolve census implementation
+
+- Added `scripts/initial-presolve-opportunity-census.mjs`, exposed as `npm run solver:audit-initial-presolve -- ...`.
+- The census is production-inert and evaluates two already-established exact initial-state consequences: zero ordinary-parity-feasible gates on no-twist levels, and BC1 bridge-excursion conflicts after ordinary connectivity passes.
+- BC1 reporting distinguishes any conflicted gate from the stronger whole-level opportunity where every connectivity-passing gate is conflicted.
+- The one-shot audit workflow now runs the census over published, Corpus 1, and Corpus 2 alongside the solve-relative fixed-cost measurement.
+- Checkerboard capacity remains deferred from this first census so the cheapest exact facts are screened before adding observer-specific plumbing.
+
+
 ### 2026-09-20 - research decision-latency audit
 
 - Added [`../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md`](../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md).
