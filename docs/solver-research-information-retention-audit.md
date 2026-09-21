@@ -803,6 +803,46 @@ This is especially relevant because deterministic mode is explicitly described a
 
 
 
+
+### IR-024 sizing / minimum-payload refinement
+
+A naive immutable copy of every deterministic refresh's full combined reports is not attractive.
+
+Current tracked report sizes on main are approximately:
+
+- Corpus 1 full primary: **1.3 MB**;
+- Corpus 2 full primary: **61.1 MB**.
+
+By contrast, historical committed `capability-runs/<run_id>/per-level-corpus2.json` projections are roughly **2–3 MB** per run, with the lifecycle map adding about **0.7 MB**.
+
+Therefore the first durability candidate should **not** be “commit the complete 61 MB primary every deterministic run.”
+
+A smaller existing product already contains much of the missing research value: the standard compact failure-response document. Once IR-002/IR-023's config/action identity semantics are corrected, it can preserve:
+
+- attempt sequence;
+- stage/action/config/gate identity where available;
+- outcomes;
+- node/work allocations and consumption;
+- best/final badness where produced;
+- censoring/timeout state;
+- stable mechanism flags;
+- solved-parent failed-attempt visibility;
+- run/protocol/solver identity through the manifest envelope.
+
+Combined with the already committed:
+
+- per-run level projection;
+- lifecycle failure map;
+- source-run provenance;
+- solver-health timeline;
+
+this may recover most high-value deterministic-run explanatory evidence at a small fraction of the full-primary size.
+
+It would still **not** be lossless relative to full `stageLifecycle`, `failureInformation`, or rich specialist observers. That is acceptable unless a concrete recurring consumer proves those fields need a longer horizon.
+
+**Prospective measurement gate:** before implementing IR-024, measure compact-response bytes on representative full C1+C2 deterministic refreshes and verify that the proposed bundle answers the known longitudinal/action/dose questions without requiring the 61 MB source primary.
+
+
 ### IR-025 — targeted-sweep acquisition can become decision-relevant without becoming a durable decision-bearing bundle
 
 **Class:** semantic phase-transition / R1.
@@ -1164,6 +1204,34 @@ No universal raw-artifact archive is implied.
 - adding a new database/warehouse;
 - treating Git branch commits as canonical merely because Git objects once existed;
 - adding a mandatory durability schema field before repeated consumer need is demonstrated.
+
+
+
+## 7C. Proposed closeout concept: evidence graduation check
+
+IR-020, IR-025, and IR-028 are the same underlying transition in three different workflows:
+
+- one-shot diagnostic -> durable conclusion;
+- generic targeted acquisition -> decision-relevant evidence;
+- reconciled acquisition -> scientific verdict.
+
+Rather than bespoke persistence switches for each workflow, the research method can use one closeout question:
+
+> **Did this acquisition materially influence a durable conclusion, promotion/closure decision, future-work premise, or recurring research resource?**
+
+If **no**, normal artifact retention is sufficient.
+
+If **yes**, classify the evidence needed to reconstruct that use:
+
+1. **Already durable/recomputable:** link it; no copy.
+2. **Eligible decision-bearing v3 bundle:** retain through the existing experiment-evidence rail.
+3. **Purpose-specific durable resource:** commit the smallest labelled/reference dataset with its provenance and missingness semantics.
+4. **Only the historical conclusion needs to survive:** explicitly record that row-level reconstruction expires and what cannot later be re-audited.
+5. **Branch-bound evidence:** ensure the evidence commit enters retained history or use one of the above destinations before branch retirement.
+
+This “graduation check” is a procedure, not a new storage system. It would make durability follow actual scientific use rather than forcing every exploratory acquisition to predict its eventual importance at dispatch time.
+
+**Implementation threshold:** update the operating/resource method only after final reconciliation confirms this rule does not duplicate an existing closeout capsule or evidence-retention instruction.
 
 
 ## 8. Investigation phases
