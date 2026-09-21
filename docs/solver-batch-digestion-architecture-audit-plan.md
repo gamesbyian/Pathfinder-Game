@@ -397,16 +397,16 @@ Deliverable: audit matrix with `known / measured / unmeasured / constrained`.
 
 - [ ] instrument or reuse observability for fixed overhead versus search;
 - [ ] measure cheap, mixed, hard-tail workloads;
-- [ ] inspect process/worker/workflow lifecycle costs;
+- [x] inspect process/worker/workflow lifecycle costs;
 - [ ] quantify repeated same-level and same-family solve frequency.
 
 Decision: which reuse/ingestion lanes have enough ceiling to merit prototypes?
 
 ### Phase 2 - compiled-level ownership audit
 
-- [ ] classify `PrepLevel` fields;
-- [ ] derive `CompiledLevel` / `SolveContext` conceptual boundary;
-- [ ] identify option-sensitive compile fields;
+- [x] classify `PrepLevel` fields;
+- [x] derive `CompiledLevel` / `SolveContext` conceptual boundary;
+- [x] identify option-sensitive compile fields;
 - [ ] estimate memory and cache residency;
 - [ ] prototype same-process reuse only if earned.
 
@@ -491,6 +491,16 @@ Every lane/candidate should eventually record:
 7. update this plan and the PR after each material finding.
 
 ## 10. Progress log
+
+### 2026-09-20 - Phase 0 evidence map completed
+
+- Durable evidence map: [`../reports/2026-09-20-solver-batch-digestion-phase0-audit.md`](../reports/2026-09-20-solver-batch-digestion-phase0-audit.md).
+- Major portfolio batch runners already reuse forked workers, parsed corpora, and nested race pools; generic process persistence is therefore narrowed rather than promoted.
+- The portfolio main process has a local prepared-level cache for pre-pipeline checks, while worker solves explicitly re-normalize/re-prepare. Compiled-problem reuse stops at the actual solve boundary.
+- `PrepLevel` has a strong immutable-compile versus mutable-execution lifetime split. Option-sensitive compile products and lazy lower-bound caches need explicit contracts before reuse.
+- Historical `prepLevel` cost was material mainly on many-short-solve workloads; current magnitude still requires Phase 1 measurement.
+- Conservative attempt-family result reuse already exists, providing an architectural precedent for "solve less" without implying mathematical equivalence reuse.
+- Phase 0 matrix IDs BD-A1 through BD-I2 are recorded in the report.
 
 ### 2026-09-20 - audit opened
 
