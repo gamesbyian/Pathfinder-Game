@@ -1234,6 +1234,30 @@ This “graduation check” is a procedure, not a new storage system. It would m
 **Implementation threshold:** update the operating/resource method only after final reconciliation confirms this rule does not duplicate an existing closeout capsule or evidence-retention instruction.
 
 
+
+### Graduation-check reconciliation — extend an existing rule, do not invent a new one
+
+The proposed evidence-graduation concept is substantially already present in `solver-research-resource-contract.md`:
+
+> for a decision-bearing closeout, identify the primary evidence needed to reconstruct the claim and whether it remains durable for the expected reuse horizon; preserve the minimal reconstructable bundle prospectively or explicitly record the expiration/reconstructability boundary.
+
+That contract also states that a durable summary is not a substitute for primary rows when later audit/attribution depends on row-level distinctions.
+
+The gap is propagation, not invention.
+
+`investigation-report-conventions.md` has a strong generic closeout checklist and a small structured closeout capsule with `sourceArtifacts`, but its ordinary closeout checklist does not currently tell an investigator to verify whether those source artifacts are themselves durable/reconstructable.
+
+Therefore the smallest prospective procedure change is likely:
+
+- add one reconstructability check to the generic investigation closeout checklist;
+- point to the existing Resource Contract rule rather than restating a second retention doctrine;
+- when `sourceArtifacts` are artifact-bound/branch-bound and material to later audit, preserve the smallest existing-compatible bundle or explicitly state the expiration boundary.
+
+This would cover one-shot diagnostics, targeted late promotion, and reconciliation closeout without new workflow-specific mechanisms.
+
+The structured closeout capsule itself probably does **not** need a new field immediately: its source-artifact references plus report prose can carry the relationship, and machine schema expansion should wait for a demonstrated consumer.
+
+
 ## 8. Investigation phases
 
 ### Phase A — solver/sweep boundary
