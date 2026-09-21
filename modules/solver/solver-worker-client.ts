@@ -139,44 +139,44 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
     };
 
     const solveLevel = (level: any, opts: SolveOpts = {}) => {
-            assertNormalizedSolveLevel(level);
-            const id = _nextId++;
-            const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
-            // Build the canonical serializable option payload. Direct/on-thread-only callback
-            // options fail loudly rather than being silently stripped or left for postMessage to
-            // discover as a DataCloneError.
-            const solveOpts = buildWorkerSolveOpts(opts);
+        assertNormalizedSolveLevel(level);
+        const id = _nextId++;
+        const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
+        // Build the canonical serializable option payload. Direct/on-thread-only callback
+        // options fail loudly rather than being silently stripped or left for postMessage to
+        // discover as a DataCloneError.
+        const solveOpts = buildWorkerSolveOpts(opts);
 
-            return new Promise((resolve, reject) => {
-                let pollTimer: any = null;
+        return new Promise((resolve, reject) => {
+            let pollTimer: any = null;
 
-                if (typeof opts.yieldFn === 'function') {
-                    // Poll the caller's yieldFn; if it throws (or its returned promise rejects —
-                    // SolveOpts.yieldFn is typed `() => Promise<void>`, so a real caller's yieldFn
-                    // may do either), send CANCEL to the worker. The async IIFE + await is required
-                    // for correctness, not just to satisfy the linter: the previous plain
-                    // `try { opts.yieldFn!(); } catch {}` never actually caught anything from a
-                    // genuinely async yieldFn, since an async function's internal throw becomes a
-                    // rejected promise, not a synchronous exception to the caller.
-                    pollTimer = setInterval(() => {
-                        void (async () => {
-                            try { await opts.yieldFn!(); }
-                            catch (_) {
-                                clearInterval(pollTimer);
-                                pollTimer = null;
-                                worker.postMessage({ type: 'CANCEL', id });
-                            }
-                        })();
-                    }, 50);
-                }
+            if (typeof opts.yieldFn === 'function') {
+                // Poll the caller's yieldFn; if it throws (or its returned promise rejects —
+                // SolveOpts.yieldFn is typed `() => Promise<void>`, so a real caller's yieldFn
+                // may do either), send CANCEL to the worker. The async IIFE + await is required
+                // for correctness, not just to satisfy the linter: the previous plain
+                // `try { opts.yieldFn!(); } catch {}` never actually caught anything from a
+                // genuinely async yieldFn, since an async function's internal throw becomes a
+                // rejected promise, not a synchronous exception to the caller.
+                pollTimer = setInterval(() => {
+                    void (async () => {
+                        try { await opts.yieldFn!(); }
+                        catch (_) {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                            worker.postMessage({ type: 'CANCEL', id });
+                        }
+                    })();
+                }, 50);
+            }
 
-                _pending.set(id, {
-                    resolve: (msg: any) => resolve(normalizeSolveWorkerResult(msg)),
-                    reject,
-                    pollTimer,
-                });
-                worker.postMessage({ type: 'SOLVE', id, level, budgetMs, solveOpts });
+            _pending.set(id, {
+                resolve: (msg: any) => resolve(normalizeSolveWorkerResult(msg)),
+                reject,
+                pollTimer,
             });
+            worker.postMessage({ type: 'SOLVE', id, level, budgetMs, solveOpts });
+        });
         },
 
 
