@@ -2,11 +2,6 @@ export function pathIdentity(path) {
     return JSON.stringify(path);
 }
 
-function isPrefix(parent, child) {
-    if (!Array.isArray(parent) || !Array.isArray(child) || child.length !== parent.length + 1) return false;
-    for (let i = 0; i < parent.length; i++) if (parent[i] !== child[i]) return false;
-    return true;
-}
 
 export function createForcedWorkCollector() {
     const expansions = new Map();
