@@ -26,7 +26,7 @@ Purpose-local meet: `admissible > context-bound > inadmissible`, with algebraic-
 
 ## B. Population identity sets — **IMPLEMENTED**
 
-Canonical same-domain relation: equal, proper subset/superset, overlap, disjoint, plus intersection/difference/union detail. Callers still prove identity-basis compatibility. Capability-memory reuses it for generic historical/pairwise overlap; policy-specific greedy coverage remains local.
+Canonical same-domain relation: equal, proper subset/superset, overlap, disjoint, plus intersection/difference/union detail. Callers still prove identity-basis compatibility. Capability-evidence reuses it for generic historical/pairwise overlap; policy-specific greedy coverage remains local.
 
 ## C. Research-block consumption — **AUDIT CLOSED**
 
