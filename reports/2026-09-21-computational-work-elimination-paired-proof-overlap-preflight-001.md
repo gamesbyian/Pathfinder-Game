@@ -1,6 +1,6 @@
 # Computational work elimination: paired beam proof-overlap execution preflight 001
 
-> **Status:** superseded / concluded-without-execution
+> **Status:** superseded
 > **Last evidence:** 2026-09-21 — original response-guided GHA artifact recovered the exact frozen 29-parent objective-first and 39-parent intersection-harvest 2K-only cohorts.
 > **Decision:** do not execute this connectivity-cut overlap study; later W1 dominated-work evidence made the result non-decision-bearing. See [paired proof-overlap disposition 002](2026-09-21-computational-work-elimination-paired-proof-overlap-disposition-002.md).
 > **Remaining gate:** reopen W2 only for a proof family that first clears soundness, recurrence and removable-work economics under its own canonical owner.
