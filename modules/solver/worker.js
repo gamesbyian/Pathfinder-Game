@@ -3,7 +3,7 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 // Loaded as a module worker: new Worker(url, { type: 'module' })
 //
 // Inbound message types:
-//   { type: 'SOLVE',     id, levelRaw, budgetMs, solveOpts? }  — solve a raw (1-indexed) level.
+//   { type: 'SOLVE',     id, level, budgetMs, solveOpts? }     — solve a normalized level.
 //                                                    solveOpts carries every other SolveOpts field
 //                                                    (see orchestration.ts) the caller wants
 //                                                    forwarded — ablation/nodeBudget/baseWorkBudget/workBudget/
@@ -57,8 +57,6 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 // The exported handleWorkerMessage() function contains all logic so it can be
 // unit-tested in Node.js without a real Worker environment.
 
-import { validateRawLevel } from '../domain/level-schema.js';
-import { normalizeRawLevel } from './normalization.js';
 import { solveLevel } from './orchestration.js';
 import { findTriggerableFalseGoalCells } from './false-goal-trigger-search.js';
 import { prepLevel } from './prep.js';
@@ -188,19 +186,12 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
     // timeBudgetMs/yieldFn are still handled via the dedicated budgetMs param and this worker's own
     // cancellation-checking yieldFn below, exactly as before — spread FIRST so neither can be
     // overridden by a stray same-named key in solveOpts.
-    const { levelRaw, budgetMs = 30000, solveOpts = {} } = data;
+    const { level, budgetMs = 30000, solveOpts = {} } = data;
 
     try {
-        // SOLVE is a raw-wire public boundary just like createSolver().prepareLevelForSolver().
-        // Enforce representation-safety invariants before translating into solver bitmasks/typed
-        // arrays. Published levels are square, but the solver itself deliberately supports
-        // rectangular synthetic fixtures, so the content-authoring square-grid rule is exempted.
-        const validation = validateRawLevel(levelRaw);
-        const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
-        if (solverBoundaryErrors.length > 0) {
-            throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
+        if (!level || !level.grid || !Array.isArray(level.gateKeys) || !(level.portalMap instanceof Map)) {
+            throw new Error('Solver: SOLVE worker request requires a normalized level');
         }
-        const level = normalizeRawLevel(levelRaw);
         const yieldFn = () => {
             if (cancelledIds.has(id)) throw new Error('Solver:cancelled');
         };
