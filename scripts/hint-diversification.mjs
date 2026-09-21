@@ -48,7 +48,7 @@ const { createSolver } = await import('../modules/solver.js');
 const { createHintAblationGenerator } = await import('../modules/solver/hint-ablation-generator.ts');
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
 const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.ts');
 
 const Solver = createSolver();
@@ -56,10 +56,10 @@ const Solver = createSolver();
 const root = new URL('..', import.meta.url).pathname;
 const levelsJsonAbs = path.join(root, levelsJsonPath);
 
-function loadRawLevels() {
-    const levels = readLevelsWithHints(levelsJsonAbs);
-    if (levels.length === 0) throw new Error(`${levelsJsonPath} is empty or not an array`);
-    return levels;
+function loadRawCorpusDocument() {
+    const document = readLevelCorpusDocumentWithHints(levelsJsonAbs);
+    if (document.levels.length === 0) throw new Error(`${levelsJsonPath} is empty or has no levels`);
+    return document;
 }
 
 const getCommitSha = () => {
@@ -114,7 +114,8 @@ async function processLevel(levelNumber, raw, deadlineAt) {
 }
 
 async function main() {
-    const rawLevels = loadRawLevels();
+    const corpusDocument = loadRawCorpusDocument();
+    const rawLevels = corpusDocument.levels;
     const levelNumbers = [...parseLevelSelector(rawLevels, levelFilterSpec)].sort((a, b) => a - b);
 
     console.log(`Hint diversification sweep: ${levelNumbers.length} level(s), attempt budget ${attemptBudgetMs}ms, wall-clock cap ${Math.round(maxWallMs / 60000)}min`);
@@ -184,7 +185,7 @@ async function main() {
         if (verbose && outcome.report.errors.length > 0) console.log(`    errors: ${outcome.report.errors.join('; ')}`);
 
         // Checkpoint after every level.
-        writeLevelsWithHints(levelsJsonAbs, rawLevels);
+        writeLevelCorpusDocumentWithHints(levelsJsonAbs, corpusDocument);
         await atomicWriteJson(outputFile, {
             timestamp: new Date().toISOString(),
             commitSha: getCommitSha(),
