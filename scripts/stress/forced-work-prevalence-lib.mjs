@@ -132,7 +132,7 @@ export function summarizeForcedWork(snapshot) {
             p50Length: percentile(0.5),
             p90Length: percentile(0.9),
             maxLength: maxChain?.length ?? null,
-            maxWorkSpent: chains.length ? Math.max(...chains.map(row => row.workSpent)) : null,
+            maxWorkSpent: chains.reduce((max, row) => Math.max(max, row.workSpent), null),
             terminations,
         },
     };
