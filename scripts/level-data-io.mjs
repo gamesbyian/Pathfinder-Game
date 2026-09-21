@@ -59,6 +59,22 @@ export function readLevelHints(levelsJsonPath, levelNumber) {
     return parseHintFileContents(parsed, filePath);
 }
 
+/**
+ * Transitional canonical hint mutation boundary.
+ *
+ * Current producers should mutate provenance-rich Hint records and let this helper derive the
+ * legacy bare-path projection. Direct sibling writes to both level.hints and level.hintRecords
+ * are being retired incrementally; read compatibility remains until all consumers use records or
+ * explicit path projections.
+ */
+export function setLevelHintRecords(level, records) {
+    if (!level || typeof level !== 'object') throw new Error('level must be an object');
+    if (!Array.isArray(records)) throw new Error('hint records must be an array');
+    level.hintRecords = records;
+    level.hints = hintPaths(records);
+    return records;
+}
+
 /** Attach `.hints` and `.hintRecords` to every level. Artifact hints beat inline fixture hints. */
 export function readLevelsWithHints(levelsJsonPath) {
     const parsed = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
