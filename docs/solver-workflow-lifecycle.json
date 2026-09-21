@@ -58,6 +58,13 @@
       "retirementTrigger": "retire when the owning operational surface is removed"
     },
     {
+      "workflow": "forced-work-prevalence-one-shot.yml",
+      "role": "operational",
+      "status": "retiring",
+      "currentConsumer": "PR #1952 corrected post-hard-prune forced-work chain-anatomy rerun",
+      "retirementTrigger": "delete immediately after corrected decision-bearing chain-anatomy result is captured"
+    },
+    {
       "workflow": "harvest-solver-evidence.yml",
       "role": "operational",
       "status": "maintained",
