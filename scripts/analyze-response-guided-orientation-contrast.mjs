@@ -4,11 +4,80 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createSolver } from '../modules/solver.js';
-import { describeStaticOrientationStructure } from '../modules/solver/orientation-structure.js';
+import { UNPACK } from '../modules/domain/cell-key.js';
 import {
     analyzeRelativeAdvantage,
     DEFAULT_PAIRS,
 } from './analyze-technique-relative-advantage.mjs';
+
+export function describeStaticOrientationStructure(level) {
+    const emptySummary = () => ({
+        observations: 0, left: 0, right: 0, onAxis: 0,
+        sideBalance: 0, signedMoment: 0, absoluteMoment: 0,
+    });
+    const summarize = pointKeys => {
+        const points = [...pointKeys];
+        if (!level.gateKeys.length || !points.length) return emptySummary();
+        let observations = 0, left = 0, right = 0, onAxis = 0, crossSum = 0, absCrossSum = 0;
+        const goal = UNPACK(level.goalKey);
+        const scale = Math.max(1, level.grid.w * level.grid.h);
+        for (const gateKey of level.gateKeys) {
+            const gate = UNPACK(gateKey);
+            const dx = goal.x - gate.x, dy = goal.y - gate.y;
+            for (const pointKey of points) {
+                const point = UNPACK(pointKey);
+                const cross = dx * (point.y - gate.y) - dy * (point.x - gate.x);
+                observations++;
+                crossSum += cross;
+                absCrossSum += Math.abs(cross);
+                if (cross > 0) left++;
+                else if (cross < 0) right++;
+                else onAxis++;
+            }
+        }
+        return {
+            observations, left, right, onAxis,
+            sideBalance: (left - right) / observations,
+            signedMoment: crossSum / (observations * scale),
+            absoluteMoment: absCrossSum / (observations * scale),
+        };
+    };
+
+    const goal = UNPACK(level.goalKey);
+    const gateVectors = level.gateKeys.map(key => {
+        const gate = UNPACK(key);
+        return { dx: goal.x - gate.x, dy: goal.y - gate.y };
+    });
+    const centerX2 = level.grid.w - 1, centerY2 = level.grid.h - 1;
+    let centerLeft = 0, centerRight = 0;
+    for (const gateKey of level.gateKeys) {
+        const gate = UNPACK(gateKey);
+        const cross = 2 * (goal.x - gate.x) * (centerY2 - 2 * gate.y)
+            - 2 * (goal.y - gate.y) * (centerX2 - 2 * gate.x);
+        if (cross > 0) centerLeft++;
+        else if (cross < 0) centerRight++;
+    }
+
+    const portals = [...level.portalMap.keys()].sort((a, b) => a - b);
+    const flippers = [...level.flippingFilterMap.keys()];
+    const constrained = new Set([
+        ...level.mustPassKeys, ...level.mustCrossKeys, ...portals, ...flippers,
+        ...(level.surroundKeys ?? []), ...(level.adjacentTurnKeys ?? []),
+    ]);
+
+    return {
+        gateCount: level.gateKeys.length,
+        gateGoalDxMean: gateVectors.length ? gateVectors.reduce((sum, row) => sum + row.dx, 0) / gateVectors.length : 0,
+        gateGoalDyMean: gateVectors.length ? gateVectors.reduce((sum, row) => sum + row.dy, 0) / gateVectors.length : 0,
+        gateGoalCenterSideBalance: level.gateKeys.length ? (centerLeft - centerRight) / level.gateKeys.length : 0,
+        blocks: summarize(level.blockSet),
+        mustPass: summarize(level.mustPassKeys),
+        mustCross: summarize(level.mustCrossKeys),
+        portalTerminals: summarize(portals),
+        flippers: summarize(flippers),
+        constrained: summarize(constrained),
+    };
+}
 
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 const variance = (values, m) => values.length
