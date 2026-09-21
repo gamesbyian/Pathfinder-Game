@@ -86,6 +86,52 @@ assert.equal(run.result.status, 2, run.result.stderr);
 assert.equal(run.outcome.outcome, 'harness-error');
 assert.match(run.outcome.reason, /outer shard artifact/u);
 
+const duplicateIdentityTemp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-duplicate-outer-'));
+try {
+  const staging = path.join(duplicateIdentityTemp, 'staging');
+  for (const dirName of ['method-probe-shard-001', 'method-probe-shard-1']) {
+    const shard = path.join(staging, dirName);
+    mkdirSync(shard, { recursive: true });
+    writeFileSync(path.join(shard, 'shard-001-w0.console.log'), 'worker started\n');
+    writeFileSync(path.join(shard, 'shard-001-w0.json'), JSON.stringify({
+      commit: 'a'.repeat(40), corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget: 1000, nodeBudget: 1000,
+      levels: [{ id: dirName, ok: false }],
+    }));
+  }
+  const duplicateIdentity = spawnSync(process.execPath, [
+    'scripts/combine-method-probe-shards.mjs',
+    `--staging-dir=${staging}`,
+    `--out-dir=${path.join(duplicateIdentityTemp, 'out')}`,
+    '--expected-shards=2',
+  ], { cwd: root, encoding: 'utf8' });
+  assert.notEqual(duplicateIdentity.status, 0);
+  assert.match(duplicateIdentity.stderr, /duplicate outer shard identity 1/u);
+} finally {
+  rmSync(duplicateIdentityTemp, { recursive: true, force: true });
+}
+
+const mismatchedWorkerTemp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-worker-identity-'));
+try {
+  const staging = path.join(mismatchedWorkerTemp, 'staging');
+  const shard = path.join(staging, 'method-probe-shard-001');
+  mkdirSync(shard, { recursive: true });
+  writeFileSync(path.join(shard, 'shard-002-w0.console.log'), 'worker started\n');
+  writeFileSync(path.join(shard, 'shard-002-w0.json'), JSON.stringify({
+    commit: 'a'.repeat(40), corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget: 1000, nodeBudget: 1000,
+    levels: [{ id: 'L1', ok: false }],
+  }));
+  const mismatchedWorker = spawnSync(process.execPath, [
+    'scripts/combine-method-probe-shards.mjs',
+    `--staging-dir=${staging}`,
+    `--out-dir=${path.join(mismatchedWorkerTemp, 'out')}`,
+    '--expected-shards=1',
+  ], { cwd: root, encoding: 'utf8' });
+  assert.notEqual(mismatchedWorker.status, 0);
+  assert.match(mismatchedWorker.stderr, /outer shard identity mismatch/u);
+} finally {
+  rmSync(mismatchedWorkerTemp, { recursive: true, force: true });
+}
+
 // A combined probe must describe one solver revision. The production matrix normally checks out one
 // SHA, but the combiner owns the scientific invariant rather than trusting orchestration.
 const mismatchTemp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-sha-mismatch-'));
