@@ -30,8 +30,8 @@ const base = {
     ],
 };
 
-const twistPortal = [{ x1: 1, y1: 2, x2: 2, y2: 2 }];
-const samePortal = [{ x1: 1, y1: 2, x2: 3, y2: 2 }];
+const twistPortal = [{ x1: 1, y1: 2, x2: 2, y2: 2, color: '#123456' }];
+const samePortal = [{ x1: 1, y1: 2, x2: 3, y2: 2, color: '#654321' }];
 const result = analyzeResponseGuidedParityContrasts({
     base,
     pairs: [['left', 'right']],
