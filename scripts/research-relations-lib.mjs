@@ -12,6 +12,7 @@ import {
 } from './solver-research-block-lineage.mjs';
 import { researchSemanticHash as stableHash } from './research-semantic-identity-lib.mjs';
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
+import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     questions: { identity: 'id', source: 'docs/solver-research-question-relations.json' },
@@ -58,17 +59,6 @@ export function exactPathIntegrityRecords(asset, records) {
         seen.add(record.evidenceId);
         return true;
     });
-}
-
-function artifactBlockPayload(document) {
-    const researchBlock = document?.researchBlock ?? document?.population?.researchBlock ?? null;
-    const populationIdentity = document?.populationIdentity
-        ?? document?.population?.corpusIdentity
-        // search-loss-evidence captures (docs/solver-search-loss-evidence-implementation-plan.md)
-        // carry their own run/population envelope and name this field populationIdentity, not corpusIdentity.
-        ?? document?.population?.populationIdentity
-        ?? null;
-    return { researchBlock, populationIdentity };
 }
 
 function artifactEnrichmentKind(document) {
@@ -126,7 +116,7 @@ export function discoverResearchArtifactPaths(root = process.cwd()) {
     for (const relative of candidates) {
         try {
             const document = JSON.parse(readFileSync(path.join(root, relative), 'utf8'));
-            const { researchBlock, populationIdentity } = artifactBlockPayload(document);
+            const { researchBlock, populationIdentity } = extractResearchArtifactEnvelope(document);
             if (researchBlock && populationIdentity && Array.isArray(researchBlock.parentIds)) {
                 discovered.push(relative);
             }
@@ -179,7 +169,7 @@ function buildResearchArtifactRelations(root, artifactPaths, eligibility = null)
         const absolute = path.isAbsolute(artifactPath) ? artifactPath : path.join(root, artifactPath);
         if (!existsSync(absolute)) throw new Error(`missing research artifact: ${artifactPath}`);
         const document = JSON.parse(readFileSync(absolute, 'utf8'));
-        const { researchBlock, populationIdentity } = artifactBlockPayload(document);
+        const { researchBlock, populationIdentity } = extractResearchArtifactEnvelope(document);
         if (!researchBlock) throw new Error(`research artifact has no researchBlock: ${artifactPath}`);
         assertResearchBlock(researchBlock, { populationIdentity });
 
