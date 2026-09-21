@@ -73,6 +73,24 @@ export function buildWorkerSolveOpts(opts: SolveOpts = {}): Record<string, unkno
     return solveOpts;
 }
 
+/** Convert the SOLVE postMessage envelope back into the direct SolveResult public shape. */
+export function normalizeSolveWorkerResult(message: Record<string, any>): Record<string, any> {
+    const {
+        type: _transportType,
+        id: _transportId,
+        elapsedMs,
+        ...transported
+    } = message;
+    const result: Record<string, any> = {
+        ...transported,
+        totalMs: transported.totalMs ?? elapsedMs,
+    };
+    for (const key of Object.keys(result)) {
+        if (result[key] === undefined) delete result[key];
+    }
+    return result;
+}
+
 interface FalseGoalTriggerWorkerOpts {
     timeLimitMs?: number;
     onProgress?: (p: any) => void;
@@ -152,10 +170,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
                 }
 
                 _pending.set(id, {
-                    resolve: (msg: any) => {
-                        const { type: _transportType, id: _transportId, ...result } = msg;
-                        resolve(result);
-                    },
+                    resolve: (msg: any) => resolve(normalizeSolveWorkerResult(msg)),
                     reject,
                     pollTimer,
                 });
