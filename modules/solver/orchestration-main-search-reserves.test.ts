@@ -241,7 +241,7 @@ test('opt-in main-search reserve preserves order and gives a late suffix nonzero
         .filter(config => !config.repair && !config.admissibleOrder);
     const result = await solveLevel(level, {
         timeBudgetMs: 1000,
-        workBudget: 1_000_000,
+        baseWorkBudget: 1_000_000,
         nodeBudget: 100,
         disableExtraBudgetPasses: true,
         ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
@@ -278,7 +278,7 @@ test('interleaved main-search reserve gives every late config/gate pair its own 
     };
     const mainConfigs = getConfiguredAttemptConfigs(level, null).filter(config => !config.repair && !config.admissibleOrder);
     const result = await solveLevel(level, {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 100,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 100,
         disableExtraBudgetPasses: true,
         ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.2,
@@ -329,7 +329,7 @@ test('main-search reserve protects late configs from WORK (not just node) starva
     const result = await solveLevel(level, {
         timeBudgetMs: 1000,
         nodeBudget: 1_000_000, // generous -- must not be what stops the loop
-        workBudget: 100_000,
+        baseWorkBudget: 100_000,
         disableExtraBudgetPasses: true,
         ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.5,
@@ -372,7 +372,7 @@ test('interleaved main-search reserve protects late config/gate pairs from WORK 
     const result = await solveLevel(level, {
         timeBudgetMs: 1000,
         nodeBudget: 1_000_000,
-        workBudget: 2_000_000,
+        baseWorkBudget: 2_000_000,
         disableExtraBudgetPasses: true,
         ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.5,
@@ -463,7 +463,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
     // read site introduced (see orchestration.ts's own comment on the read site).
     const level = makeRepairGatedInfeasibleLevel();
     const withoutFlag = await solveLevel(level, {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
@@ -486,7 +486,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
 test('repair-fallback reserve gives the fallback loop room without touching the probe/early-config ceiling', async () => {
     const level = makeRepairGatedInfeasibleLevel();
     const opts = {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         admissibleOrderBudgetFractionOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
