@@ -77,7 +77,7 @@ export function normalizeResearchPopulationIntegrity(integrity, { requireExpecte
   if (requireExpectedIds && !rawExpectedIds) throw new Error('population integrity lacks expectedIds');
   const expectedIds = rawExpectedIds
     ? canonicalizeResearchIdentities(rawExpectedIds).identities
-    : [];
+    : null;
 
   const normalizeIds = value => Array.isArray(value)
     ? canonicalizeResearchIdentities(value, { rejectDuplicates: false }).identities
@@ -90,7 +90,7 @@ export function normalizeResearchPopulationIntegrity(integrity, { requireExpecte
   return {
     ...integrity,
     expectedIds,
-    expectedCount: Number.isFinite(integrity.expectedCount) ? Number(integrity.expectedCount) : expectedIds.length,
+    expectedCount: Number.isFinite(integrity.expectedCount) ? Number(integrity.expectedCount) : (expectedIds ? expectedIds.length : null),
     observedCount: Number.isFinite(integrity.observedCount) ? Number(integrity.observedCount) : null,
     duplicateIds: normalizeIds(integrity.duplicateIds),
     unexpectedIds: normalizeIds(integrity.unexpectedIds),
