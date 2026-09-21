@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=9000 max=12000 -->
 # Solver batch digestion and computation architecture audit
 
-> **Status:** closeout. Core ingestion/reuse/presolve ceilings are measured; remaining live questions have been returned to existing solver-science/research authorities.
+> **Status:** concluded. Core ingestion/reuse/presolve ceilings are measured; surviving live questions are owned by existing solver-science/research authorities.
 > **Started:** 2026-09-20.
 > **Closeout branch:** `chatgpt/solver-batch-digestion-audit-closeout-2026-09-21`.
 > **Primary goal:** reduce wall-clock latency and compute cost of large solver/research batches without sacrificing the project's solve-acquisition goal.
@@ -417,8 +417,8 @@ Decision: retain conceptual split only, or implement reusable immutable compilat
 - [x] corpus exact-symmetry/equivalence duplicate census; complete 1,962-level census found 0 exact duplicate groups and 0 strict symmetry-equivalent groups;
 - [x] prior-solution transform/direct-validation hit rate for generated families; 1,265/1,265 variants carry constructive witnesses by generation contract, but blind solver experiments may not consume them;
 - [x] family shared-structure/incremental-compile opportunity sizing; 243/1,265 variants change at most one broad dependency class, insufficient to earn a generic incremental compiler;
-- [ ] multi-query overlap/divergence sizing;
-- [ ] historical-computation index hit-rate pilot.
+- [x] multi-query overlap/divergence sizing; **deferred without implementation** because reusable setup is a tiny solve-wall share and simultaneous-search machinery has no measured shared-search ceiling. Reopen only for a concrete query bundle whose duplicated *search* work is measured.
+- [x] historical-computation index hit-rate pilot; exact/symmetry natural-corpus hit rate is 0/1,962 while generated-family constructive reuse is already explicit in provenance, so no new historical solution index is earned.
 
 Decision: nominate at most the best-supported reuse/elimination treatments.
 
@@ -443,10 +443,10 @@ Decision: integrate sequential stopping into research operating model only with 
 ### Phase 6 - architecture synthesis
 
 - [x] rank opportunities by expected project-level value, uncertainty, implementation cost, and soundness risk; recovered execution evidence closes/narrows the major speed lanes and leaves search-reduction + opportunistic decision locks as the only meaningful survivors;
-- [ ] update architectural speed/current queue/future-work docs; architectural-speed update is part of this closeout branch, and no new solver queue item is expected for compile reuse;
+- [x] update architectural speed/current queue/future-work docs; speed ceilings are recorded, canonicalization future-work is narrowed, dynamic BC1 remains in the existing canonical queue, and compile reuse creates no new queue item;
 - [x] create implementation preflights for promoted candidates; none of the measured batch-digestion implementation candidates earned promotion, so no new preflight is required;
 - [x] explicitly close or defer low-ceiling lanes; see `../reports/2026-09-21-solver-batch-digestion-audit-recovered-evidence-closeout-001.md`;
-- [ ] leave no research question stranded only in this document; final cross-reference/authority pass remains.
+- [x] leave no research question stranded only in this document; dynamic BC1 is in the canonical queue, irreversible decision locks are in the research operating model, and canonicalization reopen conditions are in future-work.
 
 ## 7. Audit matrix schema
 
@@ -487,9 +487,18 @@ Every lane/candidate should eventually record:
 3. verify no compile-reuse/canonicalization/presolve candidate needs a new canonical solver-queue entry;
 4. keep dynamic BC1 and broader search-reduction work in their existing solver-science authorities;
 5. retain prospective irreversible decision-lock guidance in the research operating model only if a live expensive experiment needs it;
-6. complete the final cross-reference pass, then mark this audit concluded.
+6. audit concluded; reopen only through the recorded per-lane gates, not by treating this document as a standing backlog.
 
 ## 10. Progress log
+
+### 2026-09-21 - audit concluded
+
+- Updated `solver-architectural-speed-opportunities.md` with measured ingestion/compile/equivalence/presolve ceilings.
+- Kept dynamic BC1 under its existing `WS2-CUT-BALANCE-PROJECTION` canonical queue item; no duplicate batch-audit queue entry was created.
+- Added the narrow prospective irreversible-decision-lock rule to `solver-research-operating-model.md`.
+- Narrowed `solver-future-work.md` canonicalization to within-solve/current-input equivalence; cross-level exact/symmetry reuse is closed on the current 1,962-level corpus.
+- Simultaneous multi-query machinery and initial checkerboard-capacity presolve are explicitly deferred until a new live consumer/opportunity denominator earns measurement.
+- The audit is concluded and is not a standing implementation backlog.
 
 ### 2026-09-21 - recovered execution evidence and closeout
 
