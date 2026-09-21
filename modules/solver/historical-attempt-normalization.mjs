@@ -20,6 +20,7 @@ const FIELD_ALIASES = Object.freeze([
     ['dedupNearTieRetry', 'coarseStateNearTieRetentionRetry'],
 ]);
 
+/** @param {any} error */
 export function normalizeHistoricalPersistedAttemptError(error) {
     if (!error || typeof error !== 'object') return error;
     const normalized = { ...error };
@@ -41,6 +42,7 @@ export function normalizeHistoricalPersistedAttemptError(error) {
     return normalized;
 }
 
+/** @param {any} attempt */
 export function normalizeHistoricalPersistedAttempt(attempt) {
     if (!attempt || typeof attempt !== 'object') return attempt;
     const normalized = { ...attempt };
@@ -66,6 +68,7 @@ export function normalizeHistoricalPersistedAttempt(attempt) {
     return normalized;
 }
 
+/** @param {any} attempts */
 export function normalizeHistoricalPersistedAttempts(attempts) {
     return Array.isArray(attempts) ? attempts.map(normalizeHistoricalPersistedAttempt) : [];
 }
