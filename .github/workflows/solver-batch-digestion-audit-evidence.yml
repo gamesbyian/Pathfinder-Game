@@ -8,6 +8,7 @@ on:
       - 'scripts/solver-batch-cost-probe.mjs'
       - 'scripts/initial-presolve-opportunity-census.mjs'
       - 'scripts/solver-equivalence-opportunity-census.mjs'
+      - 'scripts/family-constructive-reuse-census.mjs'
       - 'modules/solver/**'
       - 'modules/domain/**'
       - 'package.json'
@@ -78,11 +79,16 @@ jobs:
           npm run solver:audit-equivalence -- \
             --out=tmp/solver-batch-digestion/equivalence.json
 
+      - name: Measure family constructive reuse opportunity
+        run: |
+          npm run solver:audit-family-constructive-reuse -- \
+            --out=tmp/solver-batch-digestion/family-constructive-reuse.json
+
       - name: Summarize evidence
         run: |
           node <<'NODE'
           const fs = require('fs');
-          for (const name of ['published', 'corpus1', 'corpus2', 'published-solve', 'corpus2-solve', 'presolve-published', 'presolve-corpus1', 'presolve-corpus2', 'equivalence']) {
+          for (const name of ['published', 'corpus1', 'corpus2', 'published-solve', 'corpus2-solve', 'presolve-published', 'presolve-corpus1', 'presolve-corpus2', 'equivalence', 'family-constructive-reuse']) {
             const doc = JSON.parse(fs.readFileSync(`tmp/solver-batch-digestion/${name}.json`, 'utf8'));
             console.log(JSON.stringify({ name, summary: doc.summary }, null, 2));
           }
