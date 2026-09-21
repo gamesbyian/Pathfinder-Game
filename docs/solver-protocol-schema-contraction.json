@@ -105,8 +105,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "investigate",
-      "status": "open",
-      "retirementGate": "persistent level id is the durable research address; position remains explicit presentation/debug addressing only"
+      "status": "in-progress",
+      "retirementGate": "Close after maintained research-entrypoint census confirms persistent level id is the durable research address everywhere; `pos:` remains an explicit selection/presentation coordinate only, while legacy no-id hint sidecars remain a documented archive/storage exception rather than research identity.",
+      "progress": "The central selector contract already rejects ambiguous bare numeric/range selectors and distinguishes `pos:` from id-based lookup. The level-blind capability sweep was a remaining exception: it had a bespoke parser accepting bare numerics and hashed selected array positions into sampleSha256. It now uses parseLevelPositions(), requires explicit `pos:` selection, requires persistent ids for research rows, hashes the stable selected ids, and records them as summary.expectedIds. Continue the research-CLI census before closeout; level-data-io numeric hint sidecar fallback is retained only for legacy/no-id corpus storage compatibility and must not be treated as durable research addressing."
     },
     {
       "id": "PSC-005",
