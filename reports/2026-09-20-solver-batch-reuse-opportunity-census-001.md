@@ -1,11 +1,9 @@
 # Solver batch digestion reuse opportunity census
 
-> **Status:** Phase 1 static census complete; timing evidence pending.
-> **Date:** 2026-09-20
-> **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Evidence role:** current-source opportunity sizing.
-> **Decision:** if current-head `prepLevel()` cost is non-trivial, the first compile-reuse prototype should target the ablation runner's exact same-level reuse rather than a generic global cache. Required-length sweeps are the first partial-invalidation candidate.
-
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — static census found run-ablation as the strongest exact same-level reuse customer and req-length sweep as a partial-invalidation case.
+> **Decision:** If compile reuse is economical, prototype first at the ablation runner rather than as a generic global cache.
+> **Remaining gate:** Confirm the preparation share relative to solve time before implementation.
 ## Question
 
 Where does maintained tooling deliberately solve the same level, or a minimally changed sibling, repeatedly inside one process?
