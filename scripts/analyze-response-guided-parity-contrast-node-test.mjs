@@ -52,6 +52,7 @@ const pair = result.pairs[0];
 assert.deepEqual(pair.contrastPopulation.leftOnlyIds, ['A', 'B']);
 assert.deepEqual(pair.contrastPopulation.rightOnlyIds, ['C']);
 assert.equal(pair.premiseUse, 'offline-premise-nomination-only');
+assert.equal(pair.portalPairCountBaseline.feature, 'portalPairs');
 const twistEffect = pair.parityEffects.find(effect => effect.feature === 'twistPortalPairs');
 const sameEffect = pair.parityEffects.find(effect => effect.feature === 'sameParityPortalPairs');
 assert.ok(twistEffect);
