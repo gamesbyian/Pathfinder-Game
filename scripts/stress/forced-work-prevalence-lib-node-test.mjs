@@ -46,7 +46,7 @@ assert.equal(summary.forcedExpansionWorkShare, 0.3);
 assert.equal(summary.chains.count, 1);
 assert.equal(summary.chains.maxLength, 2);
 assert.equal(summary.chains.terminations.branch, 1);
-assert.equal(summary.oracleCeiling.removableExpansionWorkUpperBound, 30);
+assert.equal(summary.grossForcedWorkReservoir.expansionWorkAtOneSuccessorParents, 30);
 
 const aggregate = summarizeForcedWorkAcrossRuns([
     { summary },
@@ -58,5 +58,27 @@ assert.equal(aggregate.forcedExpansionWork, 35);
 assert.equal(aggregate.expandedParents, 6);
 assert.equal(aggregate.oneSuccessorParents, 3);
 assert.equal(aggregate.oneSuccessorParentRate, 0.5);
+
+const phaseCollector = createForcedWorkCollector();
+phaseCollector.observe({ stage: 'incoming-frontier', paths: [[1]] });
+phaseCollector.observe({
+    stage: 'generated',
+    paths: [[1, 2]],
+    details: { parentExpansions: [{ path: [1], workSpent: 7, generatedCandidates: 1 }] },
+});
+phaseCollector.observe({ stage: 'post-hard-prune', paths: [[1, 2]] });
+phaseCollector.observe({ stage: 'incoming-frontier', paths: [[1, 2]] });
+phaseCollector.observe({
+    stage: 'generated',
+    paths: [[1, 2, 3], [1, 2, 4]],
+    details: { parentExpansions: [{ path: [1, 2], workSpent: 11, generatedCandidates: 2 }] },
+});
+phaseCollector.observe({ stage: 'post-hard-prune', paths: [[1, 2, 3], [1, 2, 4]] });
+const phaseSummary = summarizeForcedWork(phaseCollector.snapshot());
+assert.equal(phaseSummary.phaseEconomics.resolvedPhases, 2);
+assert.equal(phaseSummary.phaseEconomics.singletonOutcomePhases, 1);
+assert.equal(phaseSummary.phaseEconomics.singletonToSingletonPhases, 1);
+assert.equal(phaseSummary.phaseEconomics.allParentsForcedPhases, 1);
+assert.equal(phaseSummary.phaseEconomics.singletonOutcomeDiscoveryWork, 7);
 
 console.log('forced-work-prevalence-lib: ok');
