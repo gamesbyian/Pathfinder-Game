@@ -59,6 +59,9 @@ function makeLevelStats(levelId, levelPos) {
         unscheduledPositionEligibleCertificates: 0, unscheduledBoundaryCellChecks: 0,
         unscheduledHits: 0, unscheduledCrossExactStateHits: 0, unscheduledHitSourceAgeWork: [],
         unscheduledByCaller: new Map(),
+        dfsDominatedSubtrees: 0, dfsDominatedClosed: 0, dfsDominatedCensored: 0,
+        dfsDominatedWork: [], dfsDominatedNodes: [], dfsDominatedClosedWork: [], dfsDominatedClosedNodes: [],
+        dfsDominatedRootBoundaryChecks: 0, dfsDominatedOutcomes: new Map(),
     };
 }
 
@@ -91,6 +94,7 @@ for (const { entry, pos } of sample) {
     const observer = {
         maxCertificates: MAX_CERTIFICATES,
         observeUnscheduled: true,
+        measureDfsDominatedWork: true,
         observe(record) {
             if (record.kind === 'certificate' || record.kind === 'certificate-duplicate' || record.kind === 'certificate-dropped') {
                 if (record.certificateSignature) {
@@ -113,6 +117,23 @@ for (const { entry, pos } of sample) {
                 } else {
                     stats.certificatesDropped++;
                 }
+                return;
+            }
+            if (record.kind === 'dfs-dominated-subtree') {
+                stats.dfsDominatedSubtrees++;
+                if (record.dominatedCensored) stats.dfsDominatedCensored++;
+                else stats.dfsDominatedClosed++;
+                if (Number.isFinite(record.dominatedWork)) {
+                    stats.dfsDominatedWork.push(record.dominatedWork);
+                    if (!record.dominatedCensored) stats.dfsDominatedClosedWork.push(record.dominatedWork);
+                }
+                if (Number.isFinite(record.dominatedNodes)) {
+                    stats.dfsDominatedNodes.push(record.dominatedNodes);
+                    if (!record.dominatedCensored) stats.dfsDominatedClosedNodes.push(record.dominatedNodes);
+                }
+                stats.dfsDominatedRootBoundaryChecks += record.boundaryCellChecks ?? 0;
+                const outcome = record.dominatedOutcome ?? 'unknown';
+                stats.dfsDominatedOutcomes.set(outcome, (stats.dfsDominatedOutcomes.get(outcome) ?? 0) + 1);
                 return;
             }
             if (record.kind === 'unscheduled-probe') {
@@ -186,6 +207,10 @@ for (const { entry, pos } of sample) {
     const repeatedCertificateOccurrences = [...stats.certificateSignatureCounts.values()]
         .reduce((sum, count) => sum + Math.max(0, count - 1), 0);
     const topHitCounts = [...stats.hitCountsBySignature.values()].sort((a, b) => b - a).slice(0, 8);
+    const dfsDominatedWorkSum = stats.dfsDominatedWork.reduce((sum, value) => sum + value, 0);
+    const dfsDominatedClosedWorkSum = stats.dfsDominatedClosedWork.reduce((sum, value) => sum + value, 0);
+    const dfsDominatedNodesSum = stats.dfsDominatedNodes.reduce((sum, value) => sum + value, 0);
+    const dfsDominatedClosedNodesSum = stats.dfsDominatedClosedNodes.reduce((sum, value) => sum + value, 0);
     const unscheduledByCaller = Object.fromEntries([...stats.unscheduledByCaller].map(([caller, bucket]) => [caller, {
         probes: bucket.probes,
         certificateCandidates: bucket.certificateCandidates,
@@ -206,6 +231,21 @@ for (const { entry, pos } of sample) {
         hitBoundarySizes: undefined,
         unscheduledHitSourceAgeWork: undefined,
         unscheduledByCaller,
+        dfsDominatedWork: undefined,
+        dfsDominatedNodes: undefined,
+        dfsDominatedClosedWork: undefined,
+        dfsDominatedClosedNodes: undefined,
+        dfsDominatedOutcomes: Object.fromEntries(stats.dfsDominatedOutcomes),
+        dfsDominatedWorkSum,
+        dfsDominatedClosedWorkSum,
+        dfsDominatedNodesSum,
+        dfsDominatedClosedNodesSum,
+        dfsDominatedWorkP50: percentile(stats.dfsDominatedWork, 0.5),
+        dfsDominatedWorkP90: percentile(stats.dfsDominatedWork, 0.9),
+        dfsDominatedClosedWorkP50: percentile(stats.dfsDominatedClosedWork, 0.5),
+        dfsDominatedClosedWorkP90: percentile(stats.dfsDominatedClosedWork, 0.9),
+        dfsDominatedNodesP50: percentile(stats.dfsDominatedNodes, 0.5),
+        dfsDominatedClosedNodesP50: percentile(stats.dfsDominatedClosedNodes, 0.5),
         certificateOccurrences,
         uniqueCertificateSignatures: stats.certificateSignatureCounts.size,
         repeatedCertificateOccurrences,
@@ -259,6 +299,15 @@ const summary = {
     unscheduledBoundaryCellChecks: sum('unscheduledBoundaryCellChecks'),
     unscheduledHits: sum('unscheduledHits'),
     unscheduledCrossExactStateHits: sum('unscheduledCrossExactStateHits'),
+    dfsDominatedSubtrees: sum('dfsDominatedSubtrees'),
+    dfsDominatedClosed: sum('dfsDominatedClosed'),
+    dfsDominatedCensored: sum('dfsDominatedCensored'),
+    dfsDominatedWork: sum('dfsDominatedWorkSum'),
+    dfsDominatedClosedWork: sum('dfsDominatedClosedWorkSum'),
+    dfsDominatedNodes: sum('dfsDominatedNodesSum'),
+    dfsDominatedClosedNodes: sum('dfsDominatedClosedNodesSum'),
+    dfsDominatedRootBoundaryChecks: sum('dfsDominatedRootBoundaryChecks'),
+    levelsWithDfsDominatedWork: levels.filter(row => row.dfsDominatedSubtrees > 0).length,
     levelsWithUnscheduledHits: levels.filter(row => row.unscheduledHits > 0).length,
     levelsWithHits: levels.filter(row => row.shadowHits > 0).length,
     levelsWithCrossExactStateHits: levels.filter(row => row.crossExactStateHits > 0).length,
@@ -295,6 +344,16 @@ summary.unscheduledByCaller = Object.fromEntries([...callerAggregate].map(([call
     schedulePhaseCounts: Object.fromEntries([...bucket.schedulePhases].sort((a, b) => Number(a[0]) - Number(b[0]))),
 }]));
 
+summary.dfsDominatedWorkRate = summary.totalSolveWork
+    ? summary.dfsDominatedWork / summary.totalSolveWork
+    : null;
+summary.dfsDominatedClosedWorkRate = summary.totalSolveWork
+    ? summary.dfsDominatedClosedWork / summary.totalSolveWork
+    : null;
+summary.dfsDominatedWorkPerRootBoundaryCheck = summary.dfsDominatedRootBoundaryChecks
+    ? summary.dfsDominatedWork / summary.dfsDominatedRootBoundaryChecks
+    : null;
+
 mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true });
 writeFileSync(path.resolve(OUT_FILE), JSON.stringify({ summary, levels }, null, 2) + '\n');
 
@@ -320,6 +379,9 @@ const md = [
     '- Unscheduled hard-prune candidates probed: ' + summary.unscheduledProbeCalls + '; cut hits: ' + summary.unscheduledHits + ' across ' + summary.levelsWithUnscheduledHits + ' level(s).',
     '- Unscheduled indexed candidate checks: ' + summary.unscheduledCertificatesScanned + '; boundary-cell checks: ' + summary.unscheduledBoundaryCellChecks + '.',
     '- Unscheduled caller attribution: ' + JSON.stringify(summary.unscheduledByCaller) + '.',
+    '- DFS outermost proof-hit subtrees: ' + summary.dfsDominatedSubtrees + '; naturally closed: ' + summary.dfsDominatedClosed + '; censored: ' + summary.dfsDominatedCensored + '.',
+    '- Observed DFS dominated work: ' + summary.dfsDominatedWork + '; naturally closed dominated work: ' + summary.dfsDominatedClosedWork + '; dominated nodes: ' + summary.dfsDominatedNodes + '.',
+    '- DFS proof-root boundary checks: ' + summary.dfsDominatedRootBoundaryChecks + '; dominated-work fraction: ' + (summary.dfsDominatedWorkRate == null ? 'n/a' : (100 * summary.dfsDominatedWorkRate).toFixed(2) + '%') + '.',
     '',
     'The shadow never prunes. Every hit is checked against the ordinary flood fill on the same call. Canonical replacement economics must combine these counts with the solver work model and a separate observer-overhead comparison before any behavioral consumer is considered.',
     '',
