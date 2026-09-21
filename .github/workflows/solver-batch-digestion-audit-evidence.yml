@@ -1,0 +1,61 @@
+name: Solver batch digestion audit evidence
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/solver-batch-digestion-audit-evidence.yml'
+      - 'scripts/solver-batch-cost-probe.mjs'
+      - 'modules/solver/**'
+      - 'modules/domain/**'
+      - 'package.json'
+
+permissions:
+  contents: read
+
+jobs:
+  fixed-cost:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Measure published fixed cost
+        run: |
+          mkdir -p tmp/solver-batch-digestion
+          npm run solver:audit-batch-cost -- \
+            --corpus=published --count=160 --repeats=10 \
+            --out=tmp/solver-batch-digestion/published.json
+
+      - name: Measure Corpus 1 fixed cost
+        run: |
+          npm run solver:audit-batch-cost -- \
+            --corpus=corpus1 --count=200 --stride=5 --repeats=10 \
+            --out=tmp/solver-batch-digestion/corpus1.json
+
+      - name: Measure Corpus 2 fixed cost
+        run: |
+          npm run solver:audit-batch-cost -- \
+            --corpus=corpus2 --count=200 --stride=5 --repeats=10 \
+            --out=tmp/solver-batch-digestion/corpus2.json
+
+      - name: Summarize evidence
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          for (const name of ['published', 'corpus1', 'corpus2']) {
+            const doc = JSON.parse(fs.readFileSync(`tmp/solver-batch-digestion/${name}.json`, 'utf8'));
+            console.log(JSON.stringify({ name, summary: doc.summary }, null, 2));
+          }
+          NODE
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: solver-batch-digestion-fixed-cost
+          path: tmp/solver-batch-digestion/*.json
+          if-no-files-found: error
