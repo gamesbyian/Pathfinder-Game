@@ -80,7 +80,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 A/D1/F3 did not earn a shared runtime substrate; dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** HARVEST adds the repair node-cap seam + matched-work A/B; reserve repricing is separate. ACQUISITION runs beam freshness, expands first-loss sampling, then the earned exclusive-prefix and CW/CCW trace follow-ups. BC1 advances to its inert safety/economics consumer. Also run the bounded forced-work prevalence census before any chain contraction. [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-preflight-001.md)
+**Current WS2 gate:** HARVEST adds the repair node-cap seam + matched-work A/B; reserve repricing stays separate. ACQUISITION runs beam freshness, broader first-loss sampling, then earned prefix/orientation traces. BC1 advances to inert safety/economics. Run the bounded forced-work census before chain contraction. [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-preflight-001.md)
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. H3 remaining-length ordering independently transferred: 10/12 achievable rescues at 20% shared budget, nominating a bounded matched-work production consumer pilot. [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md)
