@@ -332,9 +332,10 @@
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
-      "treatment": "investigate",
-      "status": "open",
-      "retirementGate": "decide one-time canonical archival import versus explicit permanent mixed-era adapter"
+      "treatment": "permanent-archive-reader",
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: keep frozen wide-trove attempt evidence unchanged and use family-index-lib.mjs as the permanent mixed-era archive boundary. Canonical variant-family-dataset rows replace payload-equivalent historical duplicates; historical-only partial coverage and conflicting observations remain visible with diagnostics rather than being rewritten or silently discarded.",
+      "progress": "Closed by explicit architectural decision. Rewriting the wide-trove archive would violate the frozen-evidence rule and would erase useful partial/conflicting evidence semantics already modeled by reconcileFamilyAttemptAggregateEvidence(). Existing family-index-lib-check coverage proves historical-only discovery, canonical-preferred duplicate collapse, preservation of historical-only rows under partial canonical coverage, conflict preservation, and historical attempt-identity normalization. New producers remain on the variant-family-dataset convention; mixed-era handling is archive-reader-only."
     },
     {
       "id": "PSC-015",
