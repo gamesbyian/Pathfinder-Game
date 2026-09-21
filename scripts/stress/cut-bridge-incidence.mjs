@@ -142,5 +142,5 @@ async function main() {
     console.log(JSON.stringify({ out: outPath, ...report.summary }, null, 2));
 }
 
-if (process.argv[1] && path.basename(process.argv[1]).startsWith('cut-bridge-incidence')
+if (process.argv[1] && ['cut-bridge-incidence.mjs', 'cut-bridge-incidence.bundle.mjs'].includes(path.basename(process.argv[1]))
     && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
