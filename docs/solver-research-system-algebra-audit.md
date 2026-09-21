@@ -26,13 +26,13 @@ Do **not** build a generic algebra layer. Promote an operator only when:
 `admissible > context-bound > inadmissible`.
 Combining already-classified constituents for one use takes the weakest required value. Tests cover identity, weakening, absorbing inadmissibility, commutativity, idempotence and associativity.
 
-Boundary: never combine classifications from different purposes/regimes without reclassification. This is not a global evidence-quality score.
+Boundary: never combine classifications from different purposes/regimes without reclassification. This is not a global evidence-quality score. Current hint/failure classifiers mostly aggregate alternative observations, so they must **not** be migrated to this meet; the operator is for genuinely conjunctive evidence requirements.
 
 ## B. Population identity sets — **IMPLEMENTED**
 
 `research-population-identity-lib.mjs` now exposes canonical same-domain set comparison: equal, left proper subset/superset, overlap, disjoint, plus intersection/difference/union counts and identities.
 
-Boundary: callers still prove corpus/identity-basis compatibility. The helper deliberately does not infer semantic domain or auto-build cross-domain unions/hashes.
+Boundary: callers still prove corpus/identity-basis compatibility. The helper deliberately does not infer semantic domain or auto-build cross-domain unions/hashes. `solver-capability-memory-lib.mjs` currently carries private intersection/union/difference logic and is the first concrete migration candidate after the shared helper proves stable.
 
 ## C. Research-block consumption — **MATURE SEMANTICS; AUDIT NEXT**
 
@@ -52,13 +52,13 @@ Next: use the diagnostic to find real repeated manual composition. Only then def
 
 The no-score design is correct. Pareto dominance becomes meaningful only after individual axes have stable ordered vocabularies; today values are intentionally prose.
 
-Next: census recurring axis values. Normalize only axes with genuinely repeated categories; never synthesize an overall independence score.
+Producer inspection confirms the vector is commonly frozen and propagated intact, but axis values remain study-authored prose. Normalize only axes with genuinely repeated categories; never compare/order raw strings or synthesize an overall independence score.
 
 ## F. Claim derivation / invalidation — **PROMISING, NOT EARNED**
 
 Claim capsules already encode direct material dependencies and bounded reverse invalidation. A transitive reevaluation closure would be useful, but there is not yet one authoritative persisted multi-claim graph and relation kinds need explicit composition laws.
 
-Next: inventory persisted claim capsules and real claim-to-claim identity edges. If a multi-hop chain exists, add a derived read-only closure whose result means “reconsider,” never “rewrite.”
+Current WS2 claim production still derives from artifacts/contracts/protocols rather than upstream claim identities, so there is no real multi-hop claim chain yet. Revisit only when persisted claim-to-claim identity edges exist; closure would mean “reconsider,” never “rewrite.”
 
 ## G. Research-unit topology — **PARTITION MODEL BLOCKED ON MAPPINGS**
 
