@@ -1049,13 +1049,15 @@
       ],
       "constrainedBy": [
         "reports/2026-09-21-forced-work-prevalence-preflight-001.md",
-        "reports/2026-09-21-forced-work-prevalence-result-001.md"
+        "reports/2026-09-21-forced-work-prevalence-result-001.md",
+        "reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md"
       ],
-      "result": "The preregistered 64-parent C2-residual census is headroom-positive: 39.55% of expanded parents had exactly one post-hard-prune successor and they carried 25.33% of measured canonical parent-expansion work; all 64 independent parents exceeded the 5% headroom band. Corrected post-hard-prune chain reconstruction found 4,932,517 chain starts, maximum length 19 and maximum chain work 196, with most parent medians at length 1-2, so the reservoir is dominated by ubiquitous short forced segments rather than rare giant corridors.",
+      "result": "The preregistered 64-parent C2-residual census is prevalence-positive: 39.55% of expanded parents had exactly one post-hard-prune successor and they carried 25.33% of measured canonical parent-expansion work; all 64 independent parents exceeded the 5% band. A seam audit then tightened the economics interpretation: this charged expansion work has already been spent by the time post-prune one-survivor status is knowable, so 25.33% is a gross forced-work reservoir rather than a directly removable post-prune work ceiling. The next discriminator is phase-level global singleton/singleton-to-singleton prevalence plus actual replay, retention, frontier-bookkeeping and downstream-work consequences.",
       "constrains": [
-        "Do not equate the 25.33% oracle ceiling with realizable savings; mandatory transition, mechanics, solution-recognition and accounting work remains.",
-        "Do not assume a long-chain compressor is the consumer; corrected chain anatomy points first to ordinary one-successor transitions and short runs.",
-        "No production contraction is earned until a production-inert study measures removable-work capture fraction, overhead, semantic/observer parity, solve and capability preservation, and overlap with existing pruning."
+        "Do not call the 25.33% per-parent prevalence reservoir directly removable at the post-prune seam; candidate generation and hard-prune discovery work is already paid when forcedness becomes observable.",
+        "First measure stronger global deterministic-phase classes (singleton outcome and singleton->singleton) and post-recognition replay/retention/frontier consequences using existing observer stages.",
+        "Earlier recognition is a separate inference premise and needs its own soundness/economics gate; hidden semantic forcedness remains deferred.",
+        "No production contraction is earned until a production-inert study finds a material post-recognition numerator and demonstrates semantic/observer parity plus solve/capability preservation."
       ],
       "reopensOn": null,
       "premiseRefs": [],
