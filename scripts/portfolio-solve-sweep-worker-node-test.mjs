@@ -103,8 +103,8 @@ await test('both raced call sites use the shared toRaceLevelOpts transport bound
 
 await test('toRaceLevelOpts rejects a SolveOpts field the raced engine cannot honor instead of silently dropping it', async () => {
     const { toRaceLevelOpts } = await import('./solver-parallel/race-opts.mjs');
-    assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, workBudget: 1_000_000 }),
-        /workBudget/, 'workBudget is not in race.mjs\'s supported field set and must fail loudly, not be dropped');
+    assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, baseWorkBudget: 1_000_000 }),
+        /baseWorkBudget/, 'baseWorkBudget is not in race.mjs\'s supported field set and must fail loudly, not be dropped');
     assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, nodeBudget: 1_000_000 }),
         /nodeBudget/, 'nodeBudget is not in race.mjs\'s supported field set and must fail loudly, not be dropped');
     assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, schedulerMode: 'legacy-latency-portfolio-experiment' }),
