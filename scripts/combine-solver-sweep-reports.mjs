@@ -35,7 +35,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import process from 'node:process';
-import { buildPopulationIntegrity, hashConfiguration, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
+import { buildPopulationIntegrity, hashConfiguration, hashPopulation, isImmutableCommitSha, parseIdentityLines } from './solver-experiment-contract.mjs';
 import { encodeResearchScopedIdentity } from './research-population-identity-lib.mjs';
 
 const EXECUTION_CONFIG_FIELDS = [
@@ -209,6 +209,14 @@ function main() {
         }
         return { path: p, ...parsed };
     });
+
+    // An immutable revision is fresh scientific identity, not an optional decoration. If only
+    // some inputs carry one, the combine must not stamp their SHA onto legacy/unknown rows and
+    // thereby upgrade those rows into apparently same-revision evidence.
+    const immutableRevisionPresence = reports.map(report => isImmutableCommitSha(report.summary.commit));
+    if (immutableRevisionPresence.some(Boolean) && !immutableRevisionPresence.every(Boolean)) {
+        throw new Error('Mismatched commit provenance: some source reports carry an immutable execution revision and others omit or weaken it.');
+    }
 
     // budgetMs/corpus/schedulerMode must agree across all batches, or downstream badness/stability
     // ratios (which divide by a single budgetMs) would silently mix apples and oranges.
