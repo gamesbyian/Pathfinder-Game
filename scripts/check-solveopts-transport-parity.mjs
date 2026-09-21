@@ -2,12 +2,10 @@
 /**
  * Mechanical, narrow-scope check for the exact pattern that let bug #1 of the 2026-08-29
  * naming-cleanup regression pass (docs/naming-cleanup-plan.md's Section 3.6/9 residue guard):
- * scripts/portfolio-solve-sweep-worker.mjs forwarded only the legacy
- * `attractionDiversityBudgetFractionOverride` field into a nested race-pool `solveLevel()` options
- * object, silently dropping a caller's canonical-only `goalAttractionDisabledRetryBudgetFractionOverride`
- * -- race.mjs itself correctly dual-read both names, but that dual-read was dead code from the
- * worker's perspective since the worker never put the canonical field on the object it handed to
- * the pool.
+ * scripts/portfolio-solve-sweep-worker.mjs once forwarded only a retired SolveOpts spelling
+ * into a nested race-pool request while dropping its canonical replacement. Retired pairs are now
+ * removed from this list as each compatibility seam closes; the remaining entries are still-live
+ * historical dual-reads that require parity until they are contracted in turn.
  *
  * check-naming-consumer-residue.mjs cannot catch this class of bug: it only flags a REMOVED old
  * name with no compatibility layer (ledger persistence: "none"), and explicitly excludes
@@ -46,7 +44,6 @@ const SELF = path.join('scripts', 'check-solveopts-transport-parity.mjs');
 // splitting those reliably is itself the kind of mechanical fragility this check should not add;
 // this list is short and reviewed by hand whenever a new override-field rename lands.
 const OVERRIDE_FIELD_PAIRS = [
-    ['goalAttractionDisabledRetryBudgetFractionOverride', 'attractionDiversityBudgetFractionOverride'],
     ['goalAttractionDisabledRetryNodeReserveFractionOverride', 'attractionDiversityNodeReserveFractionOverride'],
     ['mainSearchLateReserveFractionOverride', 'mainLoopLateReserveFractionOverride'],
     ['mainSearchLateReserveConfigCountOverride', 'mainLoopLateReserveConfigCountOverride'],
