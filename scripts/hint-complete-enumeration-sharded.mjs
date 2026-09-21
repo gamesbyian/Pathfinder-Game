@@ -64,7 +64,7 @@ const { enumerateFromGate, rootChildrenForGate, planGateShards } = await import(
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
 const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
 const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.ts');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
+const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const resolveFromRoot = p => (path.isAbsolute(p) ? p : path.join(ROOT, p));
@@ -319,7 +319,6 @@ async function main() {
         totalNovel += novel.length;
 
         if (writeLevels && novel.length > 0) {
-            raw.hints = [...(raw.hints || []), ...novel];
             // Attach real provenance (deterministic exhaustive/sharded enumeration, which gate it
             // was found under) instead of leaving these paths with an empty provenance list — this
             // script previously only wrote `.hints`.
@@ -336,7 +335,7 @@ async function main() {
                 profile,
                 levelRevision,
             })]));
-            raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
         }
 
         levelReports.push({
