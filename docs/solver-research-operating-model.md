@@ -102,7 +102,7 @@ These are gates, not aspirations.
 
 ## Capability and evidence roles
 
-The product case is an unseen editor level. Cold solves may use mechanics, current state/telemetry, and generic code/config only. Forbidden steering includes saved hints/solutions, prior winners/configs/seeds, historical solve/cost/family outcomes, persistent exact-level special cases/caches surviving from prior invocations, IDs/corpus position, and practical identity recognition through fingerprints/nearest-neighbor replay. Solve-local caches, proofs, conflicts, canonical forms, decompositions, and plans derived only from legal current inputs are level-blind legal in principle; their soundness and economics remain separate gates. See [`solver-level-blindness.md`](solver-level-blindness.md).
+The product case is an unseen editor level. Cold solves may use mechanics, current state/telemetry and generic code/config only. Saved hints/solutions, prior winners/configs/seeds, historical outcomes, persistent exact-level memory, IDs/corpus position and practical identity recognition are forbidden steering. Solve-local facts derived only from legal current inputs are level-blind legal in principle; soundness and economics remain separate gates. See [`solver-level-blindness.md`](solver-level-blindness.md).
 
 Use three renewable roles, defined fully in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md):
 
