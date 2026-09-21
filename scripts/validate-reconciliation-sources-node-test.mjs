@@ -111,8 +111,10 @@ assert.throws(
   () => validateReconciliationSources([{ runId: '1', manifest: missingDeclaredAttempt }]),
   /no declared experiment workflow run attempt/u,
 );
+const duplicateRunManifest = clone(secondManifest);
+duplicateRunManifest.experiment.workflowRunId = '1';
 assert.throws(
-  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: secondManifest }]),
+  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: duplicateRunManifest }]),
   /source run IDs must be unique/u,
 );
 const mismatchedConfiguration = clone(secondManifest);
