@@ -63,7 +63,7 @@ function levelBearingJsonFiles(root) {
     if (!file.endsWith('.json') || path.basename(file) === 'manifest.json') return false;
     try {
       const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
-      return Array.isArray(parsed?.levels) || Array.isArray(parsed?.results);
+      return Array.isArray(parsed?.levels);
     } catch {
       return false;
     }
