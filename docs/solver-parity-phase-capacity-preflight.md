@@ -1,12 +1,12 @@
 <!-- agent-context-budget: warn=7000 max=9500 -->
-# Solver parity-phase and checkerboard-capacity preflight
+# Solver parity-phase, capacity, and response-signature preflight
 
-> **Status:** ACTIVE CHEAP PREMISE TESTS; the phase-distance and checkerboard-capacity premises shadow observers implemented, corpus evidence pending. Production decisions unchanged.
+> **Status:** ACTIVE CHEAP PREMISE TESTS; phase-distance and checkerboard-capacity observers are implemented, and a static response-signature analysis is queued. Production decisions unchanged.
 > **Owner:** `docs/solver-optimization-workstreams.md` Lane H.
 > **Origin:** [parity invariant audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
-> **Question:** can exact checkerboard/twist-phase structure prove enough additional dead search states, or explain enough decision-bearing ordering/repair failures, to justify a production consumer?
+> **Question:** can exact checkerboard/twist-phase structure prove additional dead states or explain differentiated solver response strongly enough to justify a production consumer?
 
-This preflight turns the parity audit into two bounded premise tests. It does **not** authorize a new prune, scorer, repair term, routing feature, or retry.
+This preflight turns the parity audit into three bounded premise tests. It does **not** authorize a new prune, scorer, repair term, routing feature, retry, or level classifier.
 
 ## 1. Canonical invariant
 
@@ -134,7 +134,32 @@ Report:
 3. differential checking of the reached-set color counts;
 4. matched-work production A/B before default-on promotion.
 
-## 4. Secondary observational seams
+## 4. Premise `WS2-PARITY-RESPONSE-SIGNATURE`: parity as a capability-response axis
+
+### Hypothesis
+
+A compact **current-input parity feature basis** explains some technique-census discordance or successful-path behavior beyond generic size/density/mechanic descriptors. Do not prespecify named level "types"; derive categories only if stable response regions emerge.
+
+Initial level features:
+- required twist parity for each gate, plus all-even / all-odd / mixed gate demand;
+- twist-pair and same-parity portal-pair counts;
+- best required-phase distance/slack and scalar-to-phase slack loss;
+- spread between best and worse gate phase slack;
+- no-twist initial checkerboard-capacity margin where defined.
+
+### Cheapest discriminator: existing evidence first
+
+1. **Technique census, primary.** Enrich the existing level descriptor join; first test whether parity features predict the **direction of pairwise technique discordance** among fully comparable cells, not merely absolute solve rate. Compare against existing reqLen/area/density/mechanic descriptors and preserve work/censoring semantics.
+2. **Hint/provenance, secondary.** On successful stored paths derive realized twist parity/count, first-twist timing, chosen gate and phase-correction timing. Prefer within-level comparisons across independently discovered paths/techniques. Hints are success-selected and cannot estimate failure prevalence.
+3. **Prospective search-state observation only if nominated.** Reuse the phase-distance/capacity observers to test whether a static response association corresponds to actual search behavior before proposing routing, scoring, retention or repair changes.
+
+### Stop / advance
+
+**Stop** if support is thin or parity adds no stable explanatory value beyond existing descriptors.
+
+**Advance** only if a legal current-input feature predicts differentiated response on a supported population, then require an independent shared-budget transfer before any WS1 selector/routing gate. Historical technique outcomes, hint identities and exact level IDs may nominate the relationship but can never be runtime inputs.
+
+## 5. Secondary observational seams
 
 These do not outrank the phase-distance and checkerboard-capacity premises and should reuse their representation rather than creating parallel parity machinery.
 
@@ -168,7 +193,7 @@ Likely low solve-value; treat as correctness/representation cleanup unless measu
 
 Sound ordinary parity rejection can reduce complete enumeration on no-twist levels without changing completeness. Keep this outside the production solve priority unless hint-enumeration cost makes it independently worthwhile.
 
-## 5. Derivations that are not premises
+## 6. Derivations that are not premises
 
 Do not create experiments from these without a new constraint:
 
@@ -179,7 +204,7 @@ Do not create experiments from these without a new constraint:
 - `portalJumps & 1` as twist phase;
 - “twist portal exists” as proof that both suffix phases remain reachable from the current state.
 
-## 6. Evidence and promotion discipline
+## 7. Evidence and promotion discipline
 
 Any hard consumer follows [solver correctness hardening](solver-correctness-hardening.md):
 - approximation direction stated explicitly;
@@ -195,14 +220,14 @@ Any soft consumer follows the ordinary matched-work research rules:
 - current-input-only features;
 - no per-level historical outcome leakage.
 
-## 7. Queue boundary
+## 8. Queue boundary
 
 Lane H is a cheap premise-acquisition lane and may run in parallel with the current Workstream-2 failure-response gate. It does not replace or reorder that gate.
 
-Only `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` are active premise tests. The remaining seams are downstream or secondary measurements. Contingent architectures/treatments belong in `solver-future-work.md`, not here or in the audit report as a second queue.
+`WS2-PARITY-PHASE-DISTANCE`, `WS2-CHECKERBOARD-CAPACITY`, and `WS2-PARITY-RESPONSE-SIGNATURE` are active premise tests. The remaining seams are downstream or secondary measurements. Contingent architectures/treatments belong in `solver-future-work.md`, not here or in the audit report as a second queue.
 
 
-## 8. Implemented observational seam
+## 9. Implemented observational seam
 
 The first falsifier machinery is now implemented on this branch.
 
