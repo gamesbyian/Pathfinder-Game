@@ -6,15 +6,29 @@ export function pathIdentity(path) {
 export function createForcedWorkCollector() {
     const expansions = new Map();
     const incoming = new Set();
+    const phases = [];
+    let currentPhase = null;
     let observedGeneratedRecords = 0;
 
     return {
         observe(record) {
             if (record.stage === 'incoming-frontier') {
-                for (const path of record.paths ?? []) incoming.add(pathIdentity(path));
+                const paths = record.paths ?? [];
+                for (const path of paths) incoming.add(pathIdentity(path));
+                currentPhase = {
+                    incomingCount: paths.length,
+                    expandedParents: 0,
+                    expansionWork: 0,
+                    zeroSuccessorParents: 0,
+                    oneSuccessorParents: 0,
+                    branchingParents: 0,
+                    postHardPruneCount: null,
+                };
+                phases.push(currentPhase);
                 return;
             }
             if (record.stage === 'post-hard-prune') {
+                if (currentPhase) currentPhase.postHardPruneCount = (record.paths ?? []).length;
                 const childrenByParent = new Map();
                 for (const child of record.paths ?? []) {
                     if (!Array.isArray(child) || child.length < 2) continue;
@@ -37,12 +51,21 @@ export function createForcedWorkCollector() {
             for (const row of rows) {
                 if (!Array.isArray(row.path)) continue;
                 const id = pathIdentity(row.path);
+                const workSpent = Number(row.workSpent) || 0;
+                const generatedCandidates = Number(row.generatedCandidates) || 0;
+                if (currentPhase) {
+                    currentPhase.expandedParents++;
+                    currentPhase.expansionWork += workSpent;
+                    if (generatedCandidates === 0) currentPhase.zeroSuccessorParents++;
+                    else if (generatedCandidates === 1) currentPhase.oneSuccessorParents++;
+                    else currentPhase.branchingParents++;
+                }
                 expansions.set(id, {
                     id,
                     path: row.path,
                     depth: row.path.length - 1,
-                    workSpent: Number(row.workSpent) || 0,
-                    generatedCandidates: Number(row.generatedCandidates) || 0,
+                    workSpent,
+                    generatedCandidates,
                     // Filled from the later post-hard-prune stage. The generated-stage path list
                     // intentionally includes hard-pruned diagnostic candidates, so deriving the
                     // unique survivor from it would corrupt chain anatomy while leaving prevalence
@@ -55,6 +78,7 @@ export function createForcedWorkCollector() {
             return {
                 observedGeneratedRecords,
                 incoming: [...incoming],
+                phases: phases.map(row => ({ ...row })),
                 expansions: [...expansions.values()],
             };
         },
@@ -64,6 +88,16 @@ export function createForcedWorkCollector() {
 export function summarizeForcedWork(snapshot) {
     const rows = Array.isArray(snapshot?.expansions) ? snapshot.expansions : [];
     const incoming = new Set(snapshot?.incoming ?? []);
+    const phases = Array.isArray(snapshot?.phases) ? snapshot.phases : [];
+    const resolvedPhases = phases.filter(row => Number.isInteger(row.postHardPruneCount));
+    const singletonOutcomePhases = resolvedPhases.filter(row => row.postHardPruneCount === 1);
+    const singletonToSingletonPhases = singletonOutcomePhases.filter(row => row.incomingCount === 1);
+    const allParentsForcedPhases = resolvedPhases.filter(row =>
+        row.expandedParents > 0
+        && row.oneSuccessorParents === row.expandedParents);
+    const singletonOutcomeDiscoveryWork = singletonOutcomePhases.reduce(
+        (sum, row) => sum + (Number(row.expansionWork) || 0), 0);
+
     const byId = new Map(rows.map(row => [row.id, row]));
     const predecessor = new Map();
 
@@ -131,10 +165,21 @@ export function summarizeForcedWork(snapshot) {
         forcedExpansionWorkShare: totalWork ? forcedWork / totalWork : null,
         deadEndExpansionWork: deadWork,
         branchingExpansionWork: branchWork,
-        oracleCeiling: {
-            interpretation: 'upper bound only: even a perfect free forced-future mechanism cannot remove more parent-expansion canonical work than was spent at one-successor parents',
-            removableExpansionWorkUpperBound: forcedWork,
-            removableExpansionWorkShareUpperBound: totalWork ? forcedWork / totalWork : null,
+        grossForcedWorkReservoir: {
+            interpretation: 'prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam',
+            expansionWorkAtOneSuccessorParents: forcedWork,
+            expansionWorkShareAtOneSuccessorParents: totalWork ? forcedWork / totalWork : null,
+        },
+        phaseEconomics: {
+            resolvedPhases: resolvedPhases.length,
+            singletonOutcomePhases: singletonOutcomePhases.length,
+            singletonOutcomePhaseRate: resolvedPhases.length ? singletonOutcomePhases.length / resolvedPhases.length : null,
+            singletonToSingletonPhases: singletonToSingletonPhases.length,
+            singletonToSingletonPhaseRate: resolvedPhases.length ? singletonToSingletonPhases.length / resolvedPhases.length : null,
+            allParentsForcedPhases: allParentsForcedPhases.length,
+            allParentsForcedPhaseRate: resolvedPhases.length ? allParentsForcedPhases.length / resolvedPhases.length : null,
+            singletonOutcomeDiscoveryWork,
+            interpretation: 'singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings',
         },
         chains: {
             count: chains.length,
@@ -154,6 +199,11 @@ export function summarizeForcedWorkAcrossRuns(runs) {
     const forcedExpansionWork = valid.reduce((sum, row) => sum + (row.summary.forcedExpansionWork ?? 0), 0);
     const expandedParents = valid.reduce((sum, row) => sum + (row.summary.expandedParents ?? 0), 0);
     const oneSuccessorParents = valid.reduce((sum, row) => sum + (row.summary.oneSuccessorParents ?? 0), 0);
+    const resolvedPhases = valid.reduce((sum, row) => sum + (row.summary.phaseEconomics?.resolvedPhases ?? 0), 0);
+    const singletonOutcomePhases = valid.reduce((sum, row) => sum + (row.summary.phaseEconomics?.singletonOutcomePhases ?? 0), 0);
+    const singletonToSingletonPhases = valid.reduce((sum, row) => sum + (row.summary.phaseEconomics?.singletonToSingletonPhases ?? 0), 0);
+    const allParentsForcedPhases = valid.reduce((sum, row) => sum + (row.summary.phaseEconomics?.allParentsForcedPhases ?? 0), 0);
+    const singletonOutcomeDiscoveryWork = valid.reduce((sum, row) => sum + (row.summary.phaseEconomics?.singletonOutcomeDiscoveryWork ?? 0), 0);
     return {
         runs: valid.length,
         expandedParents,
@@ -162,9 +212,19 @@ export function summarizeForcedWorkAcrossRuns(runs) {
         totalExpansionWork,
         forcedExpansionWork,
         forcedExpansionWorkShare: totalExpansionWork ? forcedExpansionWork / totalExpansionWork : null,
-        oracleCeiling: {
-            removableExpansionWorkUpperBound: forcedExpansionWork,
-            removableExpansionWorkShareUpperBound: totalExpansionWork ? forcedExpansionWork / totalExpansionWork : null,
+        grossForcedWorkReservoir: {
+            expansionWorkAtOneSuccessorParents: forcedExpansionWork,
+            expansionWorkShareAtOneSuccessorParents: totalExpansionWork ? forcedExpansionWork / totalExpansionWork : null,
+        },
+        phaseEconomics: {
+            resolvedPhases,
+            singletonOutcomePhases,
+            singletonOutcomePhaseRate: resolvedPhases ? singletonOutcomePhases / resolvedPhases : null,
+            singletonToSingletonPhases,
+            singletonToSingletonPhaseRate: resolvedPhases ? singletonToSingletonPhases / resolvedPhases : null,
+            allParentsForcedPhases,
+            allParentsForcedPhaseRate: resolvedPhases ? allParentsForcedPhases / resolvedPhases : null,
+            singletonOutcomeDiscoveryWork,
         },
     };
 }
