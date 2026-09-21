@@ -52,6 +52,10 @@ assert.equal(inventory.documentation.missingCurrentReferenceCount,
     inventory.documentation.missingCurrentReferencePaths.length);
 assert.ok(inventory.relations.some(row =>
     row.relation === 'durableEvidence' && row.authorityKind === 'derived/composed'));
+assert.ok(inventory.relations.some(row =>
+    row.relation === 'capabilityDemands'
+    && row.source === 'data/stress/capability-invention-demand.json'
+    && row.rows >= 26));
 assert.ok(inventory.workflows.some(row =>
     row.workflow === 'cpsat-explicit-prefix-reference.yml' &&
     row.role === 'evidence-producing' &&
