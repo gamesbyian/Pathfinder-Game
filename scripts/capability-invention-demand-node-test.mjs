@@ -34,6 +34,7 @@ const baseRow = {
 const valid = {
     schemaVersion: 1,
     purpose: 'test register',
+    researchQuestion: 'WS2-CAPABILITY-INVENTION-DEMAND',
     productionBoundary: 'abc',
     updatedAt: '2026-09-20',
     rows: [
@@ -46,6 +47,7 @@ const valid = {
             firstLossClass: 'F4',
             workClass: 'INVENTION',
             recurrenceScope: 'multiple-independent-parents',
+            resolutionRef: 'reports/example-resolution.json',
             demand: 'solver lacks a causal explanation primitive',
         },
     ],
@@ -86,5 +88,18 @@ const resolvedUnknown = {
 };
 assert.ok(validateCapabilityInventionDemand(resolvedUnknown).some(error =>
     error.includes('resolved diagnosis should not retain UNKNOWN')));
+
+const recurrentAcquisitionWithoutResolution = {
+    ...valid,
+    rows: [{
+        ...baseRow,
+        id: 'CID-0003',
+        diagnosisStatus: 'partial',
+        workClass: 'EXTENSION',
+        recurrenceScope: 'multiple-independent-parents',
+    }],
+};
+assert.ok(validateCapabilityInventionDemand(recurrentAcquisitionWithoutResolution).some(error =>
+    error.includes('requires resolution or resolutionRef')));
 
 console.log('capability-invention-demand-node-test: ok');
