@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7000 max=9500 -->
 # Semantic forcedness / hidden branching preflight
 
-> **Status:** preregistered contingent opportunity-sizing question with production-inert capture/reconcile tooling implemented; no population dispatch or production change authorized.
+> **Status:** preregistered deferred opportunity-sizing question with production-inert capture/reconcile tooling implemented; no population dispatch or production change authorized.
 > **Date:** 2026-09-21.
 > **Priority authority:** `solver-optimization-workstreams.md`.
 > **Method authority:** `solver-research-operating-model.md`.
