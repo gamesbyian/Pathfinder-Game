@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scope": "Machine-readable failure-evidence and durability disposition for every solver-running GitHub Actions workflow (docs/solver-search-loss-evidence-implementation-plan.md Phase 3). Validation combines the maintained evidence-producing lifecycle inventory with supplementary workflow detection, and exact-checks automatic-harvest declarations against the harvester trigger names.",
+  "scope": "Machine-readable failure-evidence transport and workflow-level durability disposition for every solver-running GitHub Actions workflow (docs/solver-search-loss-evidence-implementation-plan.md Phase 3). Validation combines the maintained evidence-producing lifecycle inventory with supplementary workflow detection, and exact-checks automatic-harvest declarations against harvester trigger names. A durability mode describes the workflow's retention rail/participation, not a guarantee that every evidence layer or primary row from that run is durably preserved; consumers must inspect the supported harvester/importer or alternate rail for layer coverage.",
   "catalogDocument": "docs/solver-search-loss-evidence-implementation-plan.md",
   "producers": [
     {
