@@ -77,7 +77,7 @@ First execution:
 npm run research:forced-work-prevalence -- \
   --corpus=data/stress/stress-levels-random.json \
   --levels-file=reports/stress/forced-work-prevalence-sample-2026-09-21.json \
-  --profile=objectiveFirst --width=500 \
+  --profile=objectiveFirst --width=5000 \
   --work-budget=5000000 --budget-ms=600000 \
   --out=reports/stress/forced-work-prevalence-current-residual-2026-09-21.json
 ```
