@@ -33,7 +33,7 @@ Before broad compute or a new dataset:
 6. Prefer an existing evidence join over generation when it answers the gate.
 7. Record materially relevant rejected assets when that prevents rediscovery.
 
-Broad asset/feature mining creates selection pressure; discovered relationships remain development evidence until independently checked.
+Broad asset mining creates selection pressure; discoveries remain development evidence until independently checked.
 
 ## Evidence topology
 
@@ -122,6 +122,6 @@ When a durable evidence family changes, update [`solver-research-data-assets.jso
 
 When a focused resource audit changes scientific semantics, update its audit-grade declaration in [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) and satisfy [the closeout gate](solver-research-resource-contract.md). Never fill unknown fields merely to mark a resource audited.
 
-Capability evidence is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the question.
+Capability evidence is derived, not an outcome authority. Keep source provenance and rebuild against the baseline relevant to the question.
 
 Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry or resource contract.
