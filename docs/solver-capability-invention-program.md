@@ -111,9 +111,7 @@ A candidate capability climbs this ladder:
 
 ### 0. FORMALIZATION / REDUNDANCY
 
-Before population work, state the semantic claim precisely enough to falsify, map which mechanics preserve/transform/invalidate it, and identify the smallest witness where it says something current production machinery does not already know. For invariant/projection work, use the Stage-0 contract in [small exact projections](solver-small-exact-projections-program.md).
-
-A candidate with no novelty witness stops here even if mathematically elegant.
+State the claim, mechanic scope and smallest novelty witness against current solver reasoning before population work. Exact/projection premises use [the Stage-0 contract](solver-small-exact-projections-program.md).
 
 ### 1. EXISTENCE
 
@@ -143,9 +141,7 @@ Compare at matched machine-independent work. A real semantic capability can stil
 
 A negative at stages 2-5 closes only the tested form/consumer/economics contract. Preserve the parent semantic premise unless the evidence actually falsifies it.
 
-### Sibling-form checkpoint
-
-When one formulation becomes productive, do not immediately mistake it for the concept. Before implementation/promotion, enumerate the nearest materially different siblings in the same semantic family and record why each is redundant, unsupported, lower-value, or separately queued. Also distinguish **proof value** (sound reject/bound) from **response value** (explains technique/path behavior). A positive or negative on one channel does not silently settle the other.
+Before implementation, apply the operating model's concept-family checkpoint so the first positive/negative formulation does not silently define the whole semantic family.
 
 ## Capability probe contract
 
