@@ -557,6 +557,10 @@ export interface ConnectivityCertificateShadowObserver {
     /** Maximum certificates retained in one solve. Default 64; bounded to keep research lookup
      * overhead from turning this opportunity-sizing probe into a cache implementation. */
     maxCertificates?: number;
+    /** Opt in to probing retained cuts at candidates where production deliberately skips the
+     * ordinary connectivity fill. Off by default so proof-identity observers do not inherit
+     * this much heavier opportunity-sizing instrumentation. */
+    observeUnscheduled?: boolean;
 }
 
 
