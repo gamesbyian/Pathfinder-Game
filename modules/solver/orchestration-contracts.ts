@@ -7,7 +7,7 @@
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, JointObligationObserver, BeamResearchObserver, ParityCapacityObserver, ParityPhaseDistanceObserver } from './types.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
-import { normalizeHistoricalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
+import { canonicalAblationFeatureName, normalizeHistoricalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
 import { normalizeSolverStageId } from './stage-policy.js';
 import type { SolverStageId } from './stage-policy.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -683,17 +683,16 @@ const ABLATION_NON_FLAG_KEYS = new Set(['ATTEMPT_ORDER', '_randomSeed']);
 // the real culprit was `enable_flags=STRATEGY_REPAIR_TURN_BIAS` silently also enabling
 // STRATEGY_REPAIR_ELITE_PREFIX_DFS (independently validated net-negative) via exactly this gap.
 // See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md.
-export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
+function normalizeAblationConfigWith(
+    raw: AblationConfig | null | undefined,
+    normalizeFeatureName: (featureName: string) => string,
+): AblationConfig | null {
     if (raw == null) return null;
 
-    // Decode historical feature aliases once at this compatibility boundary. Current constructors
-    // dual-read/single-write seam: old persisted configs remain readable, while enumeration/spread
-    // of the normalized config exposes only canonical names. Conflicting old+new spellings fail
-    // loudly rather than making precedence depend on object key order.
     const canonicalRaw: AblationConfig = {};
     for (const [rawKey, value] of Object.entries(raw)) {
         if (value === undefined) continue;
-        const key = normalizeHistoricalAblationFeatureName(rawKey);
+        const key = ABLATION_NON_FLAG_KEYS.has(rawKey) ? rawKey : normalizeFeatureName(rawKey);
         if (Object.prototype.hasOwnProperty.call(canonicalRaw, key) && canonicalRaw[key] !== value)
             throw new Error(`Conflicting ablation values for canonical feature ${key}`);
         canonicalRaw[key] = value;
@@ -718,4 +717,14 @@ export function normalizeAblationConfig(raw: AblationConfig | null | undefined):
             return Reflect.ownKeys(canonicalRaw);
         },
     });
+}
+
+/** Current solver/config boundary: only canonical feature names are accepted. */
+export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
+    return normalizeAblationConfigWith(raw, canonicalAblationFeatureName);
+}
+
+/** Historical/persisted config decoder. Retired feature names normalize once at artifact ingress. */
+export function normalizeHistoricalAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
+    return normalizeAblationConfigWith(raw, normalizeHistoricalAblationFeatureName);
 }
