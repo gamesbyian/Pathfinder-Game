@@ -5,6 +5,7 @@
 > **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **History:** [`archive/snapshots/solver-architectural-speed-opportunities-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-architectural-speed-opportunities-2026-09-04-pre-consolidation.md) plus dated reports.
 > **2026-09-15 audits:** [`negative review`](../reports/2026-09-15-speed-negative-methodology-review-001.md), [`full lineage audit`](../reports/2026-09-15-solver-performance-evidence-lineage-audit-001.md).
+> **2026-09-21 batch-digestion closeout:** [`recovered execution evidence`](../reports/2026-09-21-solver-batch-digestion-audit-recovered-evidence-closeout-001.md).
 
 This file owns current performance methodology/dispositions. Chronology and detailed measurements belong in reports. The live queue remains `solver-optimization-workstreams.md`.
 
@@ -32,6 +33,29 @@ Pure implementation speed preserves logical search/work while reducing CPU/wall 
 | Remove `cellDenseIndex` | **EVIDENCE_INCOMPLETE as speed-positive** | First short run improved, replication reversed sign; source report explicitly found no reliable wall-time gain. Landed for simpler representation/no hard-tail cost. |
 
 Evidence: [`July hot path`](../reports/2026-07-30-solver-hot-path-pure-speed.md), [`lazy keys`](../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md), [`numeric keys`](../reports/2026-08-23-beam-dedup-numeric-key-arena.md), [`dense static neighbors`](../reports/2026-08-23-dense-static-neighbor-keys.md), [`dense follow-up`](../reports/2026-08-26-dense-index-architecture-followup.md).
+
+## Current batch-digestion ceilings (2026-09-21)
+
+The batch-digestion audit measured current HEAD rather than inferring from historical profiles.
+
+- Raw validation/normalization is negligible for solver speed. Fresh medians were 0.003-0.018 ms for normalization across published/Corpus-1/Corpus-2 samples.
+- `prepLevel` is measurable but a tiny share of realistic solve wall: about **0.335%** of a 160-level published fixed-node run and **0.0113%** of a 24-level hard Corpus-2 sample.
+- A complete 1,962-level published + Corpus-1 + Corpus-2 census found **0 exact duplicate groups** and **0 strict 8-way symmetry-equivalent groups**.
+- Initial all-gates parity infeasibility and initial BC1 bridge-excursion presolve each had **0 incidence** across all 1,962 levels.
+- Generated family variants do have substantial provenance-known constructive reuse, but that is an operational/family-lineage fact, not a pure-speed property of the solver and is forbidden as hidden answer leakage in blind capability experiments.
+- Family compilation deltas are heterogeneous: only 243/1,265 variants changed at most one broad dependency class. This does not earn a generic incremental compiler.
+
+Current dispositions:
+
+| Family | Status | Boundary / reopen condition |
+|---|---|---|
+| Raw level tokenization / alternate serialization / normalization cache | **DEFERRED_LOW_VALUE via strong opportunity sizing** | Reopen only for correctness/storage reasons or if a materially different workload makes ingestion a measured bottleneck. |
+| General reusable `CompiledLevel` speed refactor | **DEFERRED_LOW_VALUE via solve-relative ceiling** | Semantic lifetime split remains valid, but speed case is too small. Reopen only for a concrete high-multiplicity consumer whose end-to-end wall is demonstrably setup-dominated. |
+| Global exact/symmetry canonicalization to avoid solves | **DEFERRED_LOW_VALUE via zero-hit census** | 0/1,962 current levels collapse. Reopen only after corpus/generator changes create measurable natural duplicate/equivalence burden. |
+| Generic family incremental compiler | **ARCHITECTURALLY_DEFERRED** | Controlled deltas exist but are mode-dependent; start with a narrow live consumer such as required-metric or density sweeps before building invalidation machinery. |
+| Initial parity / initial BC1 presolve as speed treatment | **DEFERRED_LOW_VALUE via zero-incidence census** | Dynamic BC1 is a distinct search-reduction question and is not closed by this initial-state result. |
+
+These results do not settle whole-representation hot-path work such as a native dense execution substrate, because that question is about CPU/cache behavior *during search*, not level ingestion or compile reuse.
 
 ## Negative/deferred dispositions
 
