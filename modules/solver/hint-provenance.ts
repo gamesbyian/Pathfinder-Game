@@ -139,7 +139,7 @@ export function deriveHistoricalSolveAttemptInfo(attempts: HistoricalAttemptLike
     return solveAttemptInfoFromWinner(normalized, list.indexOf(winner), tier);
 }
 
-function provenanceFromSolveAttemptInfo(result: SolveResultLike, info: SolveAttemptInfo, ctx: ProvenanceContext): HintProvenanceEntry {
+function provenanceFromSolveAttemptInfo(result: Omit<SolveResultLike, 'attempts'>, info: SolveAttemptInfo, ctx: ProvenanceContext): HintProvenanceEntry {
     return makeProvenanceEntry(info.technique, {
         solverVersion: ctx.solverVersion ?? null,
         scoringProfileId: info.scoringProfileId,
