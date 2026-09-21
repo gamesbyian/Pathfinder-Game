@@ -1,7 +1,7 @@
 // Maps solver/variety-search results into the canonical Hint provenance schema.
 import { makeProvenanceEntry, toHint } from '../domain/hint-types.js';
 import { GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS } from './attempts.js';
-import { classifyAttemptTier } from './orchestration.js';
+import { classifyHistoricalAttemptTier } from './orchestration.js';
 import type { Hint, HintProvenanceEntry, HintTechniqueCensusCellContext } from '../domain/hint-types.js';
 import type { Attempt } from './orchestration.js';
 
@@ -94,7 +94,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         };
     }
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : (winner.admissibleOrder ? 'admissible-order-fallback' : 'dfs'));
-    const attemptTierLabel = classifyAttemptTier(winner);
+    const attemptTierLabel = classifyHistoricalAttemptTier(winner);
     const attemptIndex = list.indexOf(winner);
     return {
         technique,
