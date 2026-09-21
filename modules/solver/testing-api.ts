@@ -16,6 +16,7 @@ import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import { getRealLengthFromState } from './solution.js';
 import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
 import { structuralSolutionFamilySignature } from '../domain/path-features.js';
+import { connectivityResearchSnapshot } from './topology.js';
 
 /** The canonical solver analysis/debug surface (also a named Solver export). */
 export function createSolverTestingApi() {
@@ -68,6 +69,7 @@ export function createSolverTestingApi() {
         mustCrossLowerBound,
         mustPassLowerBound,
         structuralSolutionFamilySignature,
+        connectivityResearchSnapshot,
     });
 }
 
