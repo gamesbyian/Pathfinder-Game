@@ -5,11 +5,11 @@
  * (or any other level's) becoming misattributed.
  */
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { readLevelsWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, setLevelHintRecords, AmbiguousLevelSpecError } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, readLevelsWithHints, writeLevelCorpusDocumentWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, setLevelHintRecords, AmbiguousLevelSpecError } from './level-data-io.mjs';
 
 function makeLevel(overrides = {}) {
     return {
@@ -44,6 +44,48 @@ test('hintsDirFor derives a sibling hints-<suffix>/ for any stress-levels-<suffi
     // exactly the bug a hardcoded `=== 'stress-levels-random'` check would have reintroduced.
     assert.equal(hintsDirFor('data/stress/stress-levels-envelope.json'), path.normalize('data/stress/hints-envelope'));
     assert.equal(hintsDirFor('data/levels.json'), path.normalize('data/hints'));
+});
+
+test('explicit corpus document I/O preserves bare-array storage without hidden wrapper state', () => {
+    withTempDir((dir) => {
+        const levelsJsonPath = path.join(dir, 'levels.json');
+        writeFileSync(levelsJsonPath, JSON.stringify([makeLevel({ id: 'P00001' })]));
+        const document = readLevelCorpusDocumentWithHints(levelsJsonPath);
+        assert.equal(document.storageShape, 'array');
+        assert.deepEqual(document.metadata, {});
+        assert.equal(document.levels[0].id, 'P00001');
+
+        document.levels[0].description = 'changed';
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, document);
+        const stored = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
+        assert.ok(Array.isArray(stored));
+        assert.equal(stored[0].description, 'changed');
+    });
+});
+
+test('explicit corpus document I/O preserves wrapped metadata by value, not array identity', () => {
+    withTempDir((dir) => {
+        const levelsJsonPath = path.join(dir, 'stress-levels.json');
+        writeFileSync(levelsJsonPath, JSON.stringify({
+            generatedAt: 'fixture-time',
+            masterSeed: 42,
+            levels: [makeLevel({ id: 'S00001' })],
+        }));
+        const document = readLevelCorpusDocumentWithHints(levelsJsonPath);
+        assert.equal(document.storageShape, 'object');
+        assert.deepEqual(document.metadata, { generatedAt: 'fixture-time', masterSeed: 42 });
+        assert.equal(document.levels[0].id, 'S00001');
+
+        const copiedDocument = {
+            ...document,
+            levels: document.levels.map(level => ({ ...level, description: 'copied-and-changed' })),
+        };
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, copiedDocument);
+        const stored = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
+        assert.equal(stored.generatedAt, 'fixture-time');
+        assert.equal(stored.masterSeed, 42);
+        assert.equal(stored.levels[0].description, 'copied-and-changed');
+    });
 });
 
 test('a level with an id keeps its hints after being reordered in the corpus array', () => {
