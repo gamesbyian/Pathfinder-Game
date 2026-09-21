@@ -30,7 +30,7 @@
 // its own doc comment in orchestration.ts, never meant to cross a real worker boundary) are
 // rejected before postMessage rather than silently stripped or left to throw a DataCloneError.
 
-import type { SolveOpts } from './orchestration.js';
+import type { SolveOpts, SolveResult } from './orchestration-contracts.js';
 import { validateRawLevel } from '../domain/level-schema.js';
 import { normalizeRawLevel } from './normalization.js';
 
@@ -74,7 +74,7 @@ export function buildWorkerSolveOpts(opts: SolveOpts = {}): Record<string, unkno
 }
 
 /** Convert the SOLVE postMessage envelope back into the direct SolveResult public shape. */
-export function normalizeSolveWorkerResult(message: Record<string, any>): Record<string, any> {
+export function normalizeSolveWorkerResult(message: Record<string, any>): SolveResult {
     const {
         type: _transportType,
         id: _transportId,
@@ -88,7 +88,7 @@ export function normalizeSolveWorkerResult(message: Record<string, any>): Record
     for (const key of Object.keys(result)) {
         if (result[key] === undefined) delete result[key];
     }
-    return result;
+    return result as SolveResult;
 }
 
 function assertNormalizedSolveLevel(level: any) {
@@ -138,7 +138,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
         _pending.clear();
     };
 
-    const solveLevel = (level: any, opts: SolveOpts = {}) => {
+    const solveLevel = (level: any, opts: SolveOpts = {}): Promise<SolveResult> => {
         assertNormalizedSolveLevel(level);
         const id = _nextId++;
         const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
