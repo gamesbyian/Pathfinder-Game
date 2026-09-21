@@ -190,6 +190,10 @@ Continue cheap falsifiers for objects other than valid forward prefixes: relaxed
 
 Observers matter only if they expose a decision-bearing distinction. Advance from invariant -> consequence -> smallest consumer. Avoid decorative descriptors.
 
+### Small exact projections
+
+Use [the small exact projections program](solver-small-exact-projections-program.md) to search for compressed exact consequences before escalating to broad exact search or new architecture. The pattern is: exact law -> incremental distinction -> smallest consumer. Parity is the worked example; cut/boundary balance is the first successor audit. Matching pressure, dominance, planar separation, commutativity, finite-state residues and exact symmetry remain candidate families until individually earned.
+
 ### Solve-local knowledge
 
 Measure repeated derivation before building persistence. A capability demand exists when the same sound fact or stronger equivalent is repeatedly paid for and could be reused across branches, attempts, stages, or search paradigms.
