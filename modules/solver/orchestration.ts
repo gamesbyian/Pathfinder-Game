@@ -23,7 +23,7 @@ import type { Attempt, ShrunkBiasedTier, SolveOpts, SolveResult } from './orches
 
 // Re-exported for compatibility with every existing './orchestration.js' import path.
 export type { Attempt, HistoricalAttemptTierFlags, SolveOpts, AttemptResult, SearchResult } from './orchestration-contracts.js';
-export { classifyAttemptTier, classifyHistoricalAttemptTier, attemptConfigKey, normalizeAblationConfig, getActiveGates, getFalseGoalTriggerSearchBudgetMs } from './orchestration-contracts.js';
+export { classifyAttemptTier, classifyHistoricalAttemptTier, attemptConfigKey, normalizeAblationConfig, normalizeHistoricalAblationConfig, getActiveGates, getFalseGoalTriggerSearchBudgetMs } from './orchestration-contracts.js';
 export { runAttempt } from './orchestration-run-attempt.js';
 export { attemptBudgetShare } from './orchestration-main-search.js';
 export {
