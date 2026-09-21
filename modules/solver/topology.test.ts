@@ -102,6 +102,55 @@ test('fires when the goal is walled off; passes when it is reachable', () => {
         { verdict: 'reject', reached: 1, rejected: 1 }, 'connectivity is the isolated first firing rule');
 });
 
+test('connectivity goal-cut shadow reuses a portal-free cut across a different exact state without steering search', () => {
+    const level = makeLevel({
+        blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }],
+        reqLen: 6,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+
+    const source = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), source, level, prep), false, 'source state must produce the cut certificate');
+    assert.equal(records.filter(r => r.kind === 'certificate').length, 1);
+    assert.equal(records.filter(r => r.kind === 'probe').length, 0, 'certificate cannot hit on its own producing call');
+
+    // A distinct exact state remains on the same side of the static wall. The shadow may predict
+    // goal-unreachability, but isConnected still runs its real flood fill and remains authoritative.
+    const later = stateAt(level, prep, [K(1, 1), K(2, 1)]);
+    assert.equal(isConnected(K(2, 1), later, level, prep), false);
+    const hit = records.find(r => r.kind === 'probe' && r.hitCertificateId !== undefined);
+    assert.ok(hit, 'expected the earlier cut certificate to validate on the later state');
+    assert.equal(hit.crossExactState, true);
+    assert.equal(hit.confirmedGoalUnreachable, true);
+    assert.ok(hit.boundaryCellChecks > 0);
+});
+
+test('connectivity goal-cut shadow deliberately produces no certificate on portal levels', () => {
+    const level = makeLevel({
+        grid: { w: 5, h: 3 },
+        goal: { x: 5, y: 3 },
+        blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }],
+        portals: [{ x1: 2, y1: 1, x2: 2, y2: 3 }],
+        reqLen: 6,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+    const state = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), state, level, prep), false);
+    assert.equal(records.some(r => r.kind === 'certificate'), false);
+});
+
 test('fires when an unvisited must-pass is unreachable; not once it has been visited', () => {
     // Must-pass sits in a corner pocket sealed by two blocks (goal stays reachable).
     const pocket = makeLevel({
