@@ -13,6 +13,7 @@ import {
     queryRelation,
     summarizeIndependentSupport,
 } from './research-relations-lib.mjs';
+import { DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION, durableBundleManifestStoredPath } from './durable-evidence-bundle-lib.mjs';
 import {
     assertCanonicalResearchArtifactEnvelope,
     assertCanonicalResearchArtifactLocations,
@@ -31,6 +32,30 @@ const model = {
 assert.deepEqual(queryRelation(model, 'demo', { query: 'topology separator' }).rows.map(row => row.id), ['A']);
 assert.deepEqual(queryRelation(model, 'demo', { status: 'closed' }).rows.map(row => row.id), ['B']);
 assert.throws(() => indexBy([{ id: 'x' }, { id: 'x' }], 'id'), /duplicate relation identity/);
+assert.equal(
+    durableBundleManifestStoredPath({
+        schemaVersion: DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION,
+        manifestStoredPath: 'manifest.json',
+        files: [],
+    }),
+    'manifest.json',
+);
+assert.throws(
+    () => durableBundleManifestStoredPath({
+        schemaVersion: DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION,
+        files: [{ source: 'manifest.json', stored: 'legacy-manifest.json' }],
+    }),
+    /current durable evidence bundle lacks manifestStoredPath/,
+    'v2 current bundles must not silently recover the v1 files[] convention',
+);
+assert.equal(
+    durableBundleManifestStoredPath({
+        schemaVersion: 1,
+        files: [{ source: 'manifest.json', stored: 'legacy-manifest.json' }],
+    }),
+    'legacy-manifest.json',
+    'v1 archive bundles retain fixture-backed historical manifest lookup',
+);
 assert.deepEqual(normalizePremiseAdmissions({
     records: [
         { id: 'P1', status: 'admitted' },
