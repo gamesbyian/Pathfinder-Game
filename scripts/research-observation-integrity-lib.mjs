@@ -59,3 +59,47 @@ export function buildResearchPopulationIntegrity(expectedIds, rows) {
     outcomes,
   };
 }
+
+
+/**
+ * Normalize one persisted population-integrity record at ingress.
+ *
+ * Historical `complete` may establish coverage only. Decision validity is never inferred from
+ * legacy counters or a clean coverage shape: only an explicit decisionValidComplete:true survives
+ * as decision-bearing authority.
+ */
+export function normalizeResearchPopulationIntegrity(integrity, { requireExpectedIds = false } = {}) {
+  if (!integrity || typeof integrity !== 'object' || Array.isArray(integrity)) {
+    throw new Error('population integrity must be an object');
+  }
+
+  const rawExpectedIds = Array.isArray(integrity.expectedIds) ? integrity.expectedIds : null;
+  if (requireExpectedIds && !rawExpectedIds) throw new Error('population integrity lacks expectedIds');
+  const expectedIds = rawExpectedIds
+    ? canonicalizeResearchIdentities(rawExpectedIds).identities
+    : [];
+
+  const normalizeIds = value => Array.isArray(value)
+    ? canonicalizeResearchIdentities(value, { rejectDuplicates: false }).identities
+    : [];
+
+  const coverageComplete = integrity.coverageComplete === true
+    || (integrity.coverageComplete == null && integrity.complete === true);
+  const decisionValidComplete = integrity.decisionValidComplete === true;
+
+  return {
+    ...integrity,
+    expectedIds,
+    expectedCount: Number.isFinite(integrity.expectedCount) ? Number(integrity.expectedCount) : expectedIds.length,
+    observedCount: Number.isFinite(integrity.observedCount) ? Number(integrity.observedCount) : null,
+    duplicateIds: normalizeIds(integrity.duplicateIds),
+    unexpectedIds: normalizeIds(integrity.unexpectedIds),
+    missingIds: normalizeIds(integrity.missingIds),
+    coverageComplete,
+    complete: coverageComplete,
+    decisionValidComplete,
+    outcomes: integrity.outcomes && typeof integrity.outcomes === 'object' && !Array.isArray(integrity.outcomes)
+      ? { ...integrity.outcomes }
+      : {},
+  };
+}
