@@ -387,6 +387,6 @@ const recoveredReordered = combinePopulationIntegrity([
 assert.equal(recovered.populationIdentityHash, recoveredReordered.populationIdentityHash);
 
 // Repeated local IDs under distinct semantic scopes remain distinct scientific subjects.
-assert.equal(new Set(recovered.canonicalExpectedIds).size, 4);
+assert.equal(new Set(recovered.expectedIds).size, 4);
 
 console.log('research transaction recovery/identity fixture passed');
