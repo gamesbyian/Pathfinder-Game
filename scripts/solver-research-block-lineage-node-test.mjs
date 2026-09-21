@@ -8,6 +8,7 @@ import {
     researchBlockIdentity,
     researchBlockIssues,
     researchPopulationIdentity,
+    summarizeResearchBlockUsageOverlap,
     summarizeResearchConsumption,
 } from './solver-research-block-lineage.mjs';
 
@@ -96,6 +97,52 @@ assert.deepEqual(consumptionSummary.byScopeKind, { block: 1 });
 assert.deepEqual(consumptionSummary.openedOutcomeKinds, ['control', 'treatment']);
 assert.equal(consumptionSummary.firstConsumedAt, '2026-09-18T03:15:00.000Z');
 assert.equal(consumptionSummary.lastConsumedAt, '2026-09-18T03:15:00.000Z');
+
+
+const fullOverlap = summarizeResearchBlockUsageOverlap(consumed, ['R10002', 'R99999'], {
+    questionId: block.questionId,
+    relatedQuestionIds: [],
+});
+assert.equal(fullOverlap.relationToBlockPopulation, 'overlap');
+assert.deepEqual(fullOverlap.overlappingParentIds, ['R10002']);
+assert.deepEqual(fullOverlap.knownConsumedOverlappingParentIds, ['R10002']);
+assert.deepEqual(fullOverlap.knownUntouchedOverlappingParentIds, []);
+assert.equal(fullOverlap.blockScopeConsumptionEvents, 1);
+
+const parentScoped = appendResearchConsumption(block, {
+    questionId: block.questionId,
+    decisionRef: 'reports/ws2-parent-decision.md',
+    scope: { kind: 'parent', id: 'R10001' },
+    evidenceRole: 'confirmation',
+    conditioning: ['none-known'],
+    openedOutcomeKinds: ['treatment'],
+    runRef: 'run-124',
+    consumedAt: '2026-09-18T04:15:00.000Z',
+}, { populationIdentity });
+const partialOverlap = summarizeResearchBlockUsageOverlap(parentScoped, ['R10001', 'R10002'], {
+    questionId: block.questionId,
+    relatedQuestionIds: [],
+});
+assert.deepEqual(partialOverlap.knownConsumedOverlappingParentIds, ['R10001']);
+assert.deepEqual(partialOverlap.knownUntouchedOverlappingParentIds, ['R10002']);
+assert.equal(partialOverlap.interpretation, 'diagnostic-parent-scope-complete');
+
+const familyScoped = appendResearchConsumption(block, {
+    questionId: block.questionId,
+    decisionRef: 'reports/ws2-family-decision.md',
+    scope: { kind: 'family', id: 'FAMILY-1' },
+    evidenceRole: 'confirmation',
+    conditioning: ['family-selected'],
+    openedOutcomeKinds: ['treatment'],
+    runRef: 'run-125',
+    consumedAt: '2026-09-18T05:15:00.000Z',
+}, { populationIdentity });
+const familyOverlap = summarizeResearchBlockUsageOverlap(familyScoped, ['R10001'], {
+    questionId: block.questionId,
+    relatedQuestionIds: [],
+});
+assert.deepEqual(familyOverlap.unresolvedFamilyScopeIds, ['FAMILY-1']);
+assert.equal(familyOverlap.interpretation, 'diagnostic-partial-family-scope');
 
 const unavailable = researchBlockEligibility(consumed, {
     questionId: block.questionId,
