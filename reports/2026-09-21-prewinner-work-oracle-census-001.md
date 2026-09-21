@@ -89,6 +89,28 @@ These are selected diagnostic nominations for later pair-targeted overlap work, 
 
 The first pair alone represents about **9.6%** of all C2 pre-winner work. These rankings are useful because they tell operational-overlap research where a positive finding could actually eliminate substantial work.
 
+## Cheap selector baseline: exact action identity is unsafe
+
+A deterministic 70/30 split by SHA-256(level ID) gives 1,186 C2 development levels and 514 validation levels, of which 356 validation levels are solved.
+
+A deliberately crude policy says: skip an exact action key on validation only when that key appeared in development and recorded **zero wins** there. Unknown action keys remain protected.
+
+That policy nominates **25.58%** of validation pre-winner work for removal, but it also suppresses the eventual winner on **10/356 validation solves**.
+
+Making the zero-win requirement more conservative does not repair the problem cleanly:
+
+| minimum development attempts with zero wins | captured validation pre-winner work | validation winners suppressed |
+|---:|---:|---:|
+| 1 | 25.58% | 10 |
+| 100 | 22.05% | 8 |
+| 200 | 19.60% | 7 |
+| 500 | 4.97% | 3 |
+| 1,000 | 0% | 0 |
+
+Several lost winners came from exact actions with hundreds of development attempts and no development wins. Thus simple historical action identity has real economic signal but is not a safe deletion rule. Rare capability survives precisely where a global “this action never wins” rule looks most tempting.
+
+This baseline is selected diagnostic evidence on the frozen production population. It earns contextual/current-instance discrimination, not global action removal.
+
 ## Interpretation
 
 The admission question is decisively answered: action-selection economics has enough theoretical headroom to matter.
