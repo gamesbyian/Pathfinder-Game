@@ -7,7 +7,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 | Descendant | Reopen / advancement condition |
 |---|---|
-| General solve-local proof store / blackboard | One concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot |
+| General solve-local proof store / blackboard | **Still deferred.** The 2026-09-21 computational-work-elimination audit produced one narrow proof-bearing candidate (portal-free connectivity cut implication) and a bounded shadow, but recurrence + lookup + saved-work economics are not yet established. Reopen the general abstraction only after this or another concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot. [W4 disposition](../reports/2026-09-21-computational-work-elimination-reusable-failure-output-001.md) |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
 | Production bounded exact-query service | D1's observation found 0/120 production disagreements (2026-09-18) -- closed for this predicate. Reopen only under a materially different predicate/seam/population |
 | Region/AND-OR decomposition engine | C0-C2 ladder closed representation-explosive at C2. Reopen only if a different frozen interface contract restores repeated outcome equivalence without near-unique/full-prefix state. [`result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md) |
