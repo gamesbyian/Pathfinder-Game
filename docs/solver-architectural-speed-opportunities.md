@@ -1,4 +1,3 @@
-<!-- agent-context-budget: warn=8000 max=10500 -->
 # Solver architectural speed opportunities
 
 > **Status:** supporting program; no current implementation candidate is nominated.
