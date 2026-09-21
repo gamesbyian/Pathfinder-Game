@@ -199,15 +199,28 @@ export const LEGACY_FEATURE_ALIASES: Readonly<Record<string, string>> = Object.f
     TEMPLATE_SIDE_Y_HIGH: 'ORDERING_BIAS_SIDE_Y_HIGH',
 });
 
-/** Normalize one historical feature name to the canonical registry key. */
+/** Validate one CURRENT canonical feature name. Retired spellings are rejected. */
 export function canonicalAblationFeatureName(featureName: string): string {
-    if (featureName === 'SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE') return 'SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE';
-    return LEGACY_FEATURE_ALIASES[featureName] ?? featureName;
+    if (featureName in FEATURES) return featureName;
+    throw new Error(`Unknown canonical feature: ${featureName}`);
 }
 
-/** True for canonical feature names and supported historical aliases. */
+/** Decode a feature name from historical/persisted evidence. Canonical names pass through. */
+export function normalizeHistoricalAblationFeatureName(featureName: string): string {
+    const normalized = featureName === 'SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE'
+        ? 'SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE'
+        : (LEGACY_FEATURE_ALIASES[featureName] ?? featureName);
+    return canonicalAblationFeatureName(normalized);
+}
+
+/** True only for canonical current feature names. */
 export function isKnownAblationFeatureName(featureName: string): boolean {
-    return canonicalAblationFeatureName(featureName) in FEATURES;
+    return featureName in FEATURES;
+}
+
+/** True for canonical names and supported historical aliases. */
+export function isKnownHistoricalAblationFeatureName(featureName: string): boolean {
+    try { normalizeHistoricalAblationFeatureName(featureName); return true; } catch { return false; }
 }
 
 // ─── Ordering-bias → config key mapping ──────────────────────────────────────
@@ -263,7 +276,6 @@ export function defaultConfig(): AblationConfig {
 /** One feature disabled, all others at production defaults. @param {string} featureName @returns {Record<string, any>} */
 export function withFeatureDisabled(featureName: string): AblationConfig {
     const canonical = canonicalAblationFeatureName(featureName);
-    if (!(canonical in FEATURES)) throw new Error(`Unknown feature: ${featureName}`);
     const cfg = defaultConfig();
     cfg[canonical] = false;
     return cfg;
@@ -274,7 +286,6 @@ export function withFeaturesDisabled(featureNames: string[]): AblationConfig {
     const cfg = defaultConfig();
     for (const f of featureNames) {
         const canonical = canonicalAblationFeatureName(f);
-        if (!(canonical in FEATURES)) throw new Error(`Unknown feature: ${f}`);
         cfg[canonical] = false;
     }
     return cfg;
@@ -285,7 +296,6 @@ export function soloConfig(featureNames: string[]): AblationConfig {
     const cfg = Object.fromEntries(Object.keys(FEATURES).map(k => [k, false]));
     for (const f of featureNames) {
         const canonical = canonicalAblationFeatureName(f);
-        if (!(canonical in FEATURES)) throw new Error(`Unknown feature: ${f}`);
         cfg[canonical] = true;
     }
     return cfg;
