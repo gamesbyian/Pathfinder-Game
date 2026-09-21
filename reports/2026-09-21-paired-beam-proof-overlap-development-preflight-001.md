@@ -1,6 +1,6 @@
 # Paired beam-width proof-overlap development preflight 001
 
-> **Status:** superseded / concluded-without-execution
+> **Status:** superseded
 > **Last evidence:** 2026-09-21 — top eight parents were frozen from the historical Card-E 2K/5K absolute normalized support-depth divergence before inspecting any new proof-overlap result.
 > **Decision:** do not execute this connectivity-cut overlap study; later W1 dominated-work evidence made the result non-decision-bearing. See [paired proof-overlap disposition 002](2026-09-21-computational-work-elimination-paired-proof-overlap-disposition-002.md).
 > **Remaining gate:** reopen W2 only for a proof family that first clears soundness, recurrence and removable-work economics under its own canonical owner.
