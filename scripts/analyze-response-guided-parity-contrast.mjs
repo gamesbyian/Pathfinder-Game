@@ -129,7 +129,7 @@ export function analyzeResponseGuidedParityContrasts({
                 both: pair.both,
                 neither: pair.neither,
             },
-            legacyPortalCountEffect: pair.topEffects.find(effect => effect.feature === 'portals') ?? null,
+            portalPairCountBaseline: parityEffects.find(effect => effect.feature === 'portalPairs') ?? null,
             parityEffects,
             gateDemand: {
                 leftOnly: countBy(left.map(row => row.gateDemand)),
