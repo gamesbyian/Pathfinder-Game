@@ -104,7 +104,29 @@ One narrow action, main-search DFS perimeterCCW, happens to keep every observed 
 old p75/p90 cap while truncating some failures. Its project-level ceiling is too small to justify a
 standalone treatment from this selected observation.
 
-## 6. What remains genuinely new
+## 6. Conservative full-batch ceiling after protected late retries
+
+The gross 94.74% solved-row oracle number is dominated in part by deliberately late treatment stages, especially the promoted portal-coarse dead-last retry. To avoid using protected placement as evidence for a general selector, a conservative decomposition was computed from the same frozen production-boundary artifact.
+
+Restricting the eventual winner to the ordinary primary ladder (`early-repair-search`, `main-search`, `repair-fallback`, `admissible-order-fallback`):
+
+- 874 solved rows;
+- 14,070,783,830 canonical work before the winner;
+- 16,533,435,130 canonical work on those solved rows;
+- 85.11% pre-winner share within that subset;
+- the pre-winner numerator is **6.80% of all canonical work across the full 1,700-level Corpus-2 batch**, including unsolved rows.
+
+Restricting further to ordinary `main-search` winners:
+
+- 646 solved rows;
+- 11,202,006,403 canonical work before the winner;
+- 12,867,322,422 canonical work on those solved rows;
+- 87.06% pre-winner share within that subset;
+- the pre-winner numerator is **5.41% of full-batch canonical work**.
+
+So the WS1 opportunity remains material even after stripping away the most obvious protected late-retry contribution. These percentages remain perfect-hindsight ceilings, not achievable savings estimates.
+
+## 7. What remains genuinely new
 
 The current production result does **not** say:
 
@@ -131,7 +153,7 @@ It must not be:
 - a retuned cap chosen to fit this same population;
 - an unchanged static-portfolio/resumable-tranche treatment.
 
-## 7. Relationship to prior static-selector negative
+## 8. Relationship to prior static-selector negative
 
 The September 10 action-selection preflight correctly found that generic static routing/topology
 features did not add useful held-out value over coarse structure.
@@ -143,7 +165,7 @@ The new evidence changes the **value of finding a new signal**, not the quality 
 Therefore do not launch a broad feature-engineering exercise. Start from a mechanism-specific
 discriminator or observed response contrast.
 
-## 8. Canonical disposition
+## 9. Canonical disposition
 
 Route this finding to **WS1 automatic action selection**.
 
