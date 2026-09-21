@@ -38,11 +38,6 @@ function normalizedConfigIdentity(value) {
     try { return normalizeAttemptIdentityKey(value); } catch { return value; }
 }
 
-function normalizedActionIdentity(value) {
-    if (typeof value !== 'string' || !value.length) return value ?? null;
-    try { return normalizeAttemptActionKey(value); } catch { return value; }
-}
-
 /**
  * Read-time identity compatibility view for compact failure-response rows.
  *
