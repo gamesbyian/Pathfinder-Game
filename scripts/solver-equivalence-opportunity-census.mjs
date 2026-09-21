@@ -146,7 +146,8 @@ export function analyzeEquivalenceCorpora(corpora) {
             exactDuplicateRowsAvoidableAfterRepresentative: duplicateRows(exactGroups),
             symmetryEquivalentGroupsIncludingExact: symmetryGroups.length,
             strictSymmetryEquivalentGroups: strictSymmetryGroups.length,
-            strictSymmetryRowsAvoidableAfterRepresentative: duplicateRows(strictSymmetryGroups),
+            additionalRowsAvoidableBySymmetryAfterExactDedup: strictSymmetryGroups.reduce(
+                (sum, group) => sum + Math.max(0, new Set(group.map(row => row.exactKey)).size - 1), 0),
         },
         exactDuplicateGroups: summarizeGroups(exactGroups),
         strictSymmetryEquivalentGroups: summarizeGroups(strictSymmetryGroups),
