@@ -91,7 +91,7 @@ During hygiene, proactively inspect authorities/routes that are materially into 
 
 At or above `compactAtBytes`, perform one coherent reduction/restructure with substantial margin back toward `targetBytes`. Prefer removing chronology/duplication, improving routing, splitting along real ownership seams, or moving detail to specialist/report/archive surfaces over sentence-by-sentence shaving. Never raise a trigger merely to accommodate unexplained growth.
 
-After edits and after integrating current `main`, run the silent `node scripts/agent-context-budget.mjs --check` finish-line check. High-churn or concurrently edited authorities should leave merge-composable headroom after any maintenance event.
+After edits and after integrating current `main`, run `node scripts/agent-context-budget.mjs --check --full-check` so the hygiene pass, unlike ordinary PR work, owns every repository-wide maintenance trigger. High-churn or concurrently edited authorities should leave merge-composable headroom after any maintenance event.
 
 ## 3. Non-core plans, proposals, backlogs, and debt queues
 
