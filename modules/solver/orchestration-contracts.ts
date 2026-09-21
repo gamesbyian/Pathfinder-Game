@@ -330,8 +330,6 @@ export interface SolveOpts {
      *  persisted or exposed by Solver's facade; absent in every production caller. */
     jointObligationObserver?: JointObligationObserver;
     legacyLatencyPortfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
-    /** @deprecated Historical option name; read for compatibility, never emitted. */
-    portfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
     /** Overrides REPAIR_ADDITIVE_BUDGET_MULTIPLIER for this solve only — offline batch tooling's cost
      *  control (see docs/solver-architecture.md's cost-gotcha note). A DEDICATED top-level option,
      *  deliberately NOT an ablation flag: every existing ablation-gated strategy toggle in this
