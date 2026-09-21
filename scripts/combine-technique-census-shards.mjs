@@ -10,7 +10,7 @@ import process from 'node:process';
 
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
-import { readLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import {
     dedupeTechniqueCensusResults,
     inferredVariantLabel,
@@ -443,7 +443,7 @@ if (SAVE_HINTS) {
     }
     for (const [corpus, cellResults] of byCorpus) {
         const corpusPath = CORPUS_FILES[corpus];
-        const levels = readLevelsWithHints(path.resolve(corpusPath));
+        const levels = readLevelCorpusDocumentWithHints(path.resolve(corpusPath)).levels;
         const capture = await createHintCapture({
             solverVersion: SOLVER_VERSION, budgetMs: null, enabled: true, isolatedTechnique: true,
         });
