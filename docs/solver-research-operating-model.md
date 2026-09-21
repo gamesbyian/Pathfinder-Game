@@ -21,10 +21,10 @@ Correctness bugs may go directly to fix + regression/soundness validation. Specu
 Reuse the smallest common semantic owners where their meaning genuinely matches:
 
 - `research-semantic-identity-lib.mjs` — canonical semantic hashing only; each specialist owner still defines its hash domain.
-- `research-population-identity-lib.mjs` — canonical identity sets/parsing and population hashes; not a full sample ontology.
+- `research-population-identity-lib.mjs` — canonical identity sets/parsing, population hashes, and same-domain set relations; callers still prove identity-basis compatibility.
 - `research-observation-integrity-lib.mjs` — generic row outcomes and structural/decision-valid completeness; specialist verdicts stay separate.
 - `research-question-contract-lib.mjs` — live ambiguity, discriminating observable, outcome interpretation, and MO syntax.
-- `research-evidence-applicability-lib.mjs` — the shared admissible/context-bound/inadmissible lattice; evidence purposes and classifiers remain specialist.
+- `research-evidence-applicability-lib.mjs` — the shared purpose-local admissible/context-bound/inadmissible lattice plus conservative meet; evidence purposes and classifiers remain specialist.
 - `research-evaluation-evidence-role-lib.mjs` — development/confirmation/transfer evaluation roles; broader report roles stay separate.
 - `research-claim-lib.mjs` — claim identity, material edges, bounded reverse invalidation; payloads stay specialist.
 - `research-resolution-envelope-lib.mjs` — observability axes/blockers/readiness; producers own derivation/discriminator/verdict.
@@ -33,6 +33,8 @@ Reuse the smallest common semantic owners where their meaning genuinely matches:
 - `research-repository-ref-lib.mjs` — exact repository-reference syntax/optional tracked existence; consumers own allowed roots, relation semantics, and off-main policy.
 
 Do not route a specialist contract through one of these merely because field names resemble each other. Shared ownership applies only to the exact semantic invariant named above.
+
+Algebraic/compositional hardening of these primitives is tracked in [the research-system algebra audit](solver-research-system-algebra-audit.md). Add operators one semantic law at a time; do not build a generic algebra framework.
 
 ## Research authority ownership
 
