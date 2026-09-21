@@ -38,7 +38,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { computeMcNeighborBudget } from './lib/mc-neighbor-budget.mjs';
@@ -218,7 +218,7 @@ function analyzeAtlas() {
     // Avoid loading the standing stress corpus in that case; ordinary non-empty analysis is
     // unchanged and still uses the exact same corpus/hint reader.
     const corpusLevels = pruneGapFiles.length
-        ? readLevelsWithHints(path.join(root, CORPORA.corpus2.levels))
+        ? readLevelCorpusDocumentWithHints(path.join(root, CORPORA.corpus2.levels)).levels
         : [];
     const grouped = new Map();
     const overall = new Map();
