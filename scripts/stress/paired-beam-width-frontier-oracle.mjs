@@ -8,7 +8,8 @@
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/paired-beam-width-frontier-oracle.mjs -- \
- *     --corpus=data/stress/stress-levels-random.json --levels=R00001,R00002 \
+ *     --corpora=data/levels.json,data/stress/stress-levels.json,data/stress/stress-levels-random.json \
+ *     --levels=P00001,S00001,R00001 \
  *     --profile=objectiveFirst --widths=2000,5000 --depth-fraction=0.2 \
  *     --out=tmp/paired-width-frontier.json
  */
@@ -128,7 +129,8 @@ async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, 
 }
 
 async function main() {
-    const corpusFile = arg('corpus', 'data/stress/stress-levels-random.json');
+    const corpusFiles = String(arg('corpora', arg('corpus', 'data/stress/stress-levels-random.json')))
+        .split(',').map(value => value.trim()).filter(Boolean);
     const levelIds = String(arg('levels', '')).split(',').map(value => value.trim()).filter(Boolean);
     const profileName = arg('profile', 'objectiveFirst');
     const widths = String(arg('widths', '2000,5000')).split(',').map(Number);
@@ -152,15 +154,24 @@ async function main() {
     const profile = SOLVER_TESTING_API.SCORING_PROFILES[profileName];
     if (!profile) throw new Error(`unknown scoring profile: ${profileName}`);
 
-    const document = JSON.parse(readFileSync(path.resolve(corpusFile), 'utf8'));
-    const rows = Array.isArray(document) ? document : document.levels;
-    if (!Array.isArray(rows)) throw new Error('corpus must be an array or {levels:[...]}');
-    const byId = new Map(rows.map(row => [String(row.id), row]));
+    if (!corpusFiles.length) throw new Error('--corpora/--corpus must contain at least one corpus file');
+    const byId = new Map();
+    for (const corpusFile of corpusFiles) {
+        const document = JSON.parse(readFileSync(path.resolve(corpusFile), 'utf8'));
+        const rows = Array.isArray(document) ? document : document.levels;
+        if (!Array.isArray(rows)) throw new Error(`corpus ${corpusFile} must be an array or {levels:[...]}`);
+        for (const row of rows) {
+            const id = String(row?.id ?? '');
+            if (!id) throw new Error(`corpus ${corpusFile} contains a level without id`);
+            if (byId.has(id)) throw new Error(`duplicate level id across corpus inputs: ${id}`);
+            byId.set(id, row);
+        }
+    }
 
     const results = [];
     for (const levelId of levelIds) {
         const raw = byId.get(levelId);
-        if (!raw) throw new Error(`level ${levelId} missing from ${corpusFile}`);
+        if (!raw) throw new Error(`level ${levelId} missing from corpus inputs: ${corpusFiles.join(',')}`);
         const { id: _id, stressMeta: _stressMeta, ...rawLevel } = raw;
         const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
         const pauseAfterPhases = Math.max(1, Math.round(level.requiredLength * depthFraction));
@@ -228,7 +239,7 @@ async function main() {
         evidenceRole: 'development',
         premiseUse: 'consumer-oracle-only',
         protocol: {
-            corpus: corpusFile,
+            corpora: corpusFiles,
             levelIds,
             profile: profileName,
             widths,
