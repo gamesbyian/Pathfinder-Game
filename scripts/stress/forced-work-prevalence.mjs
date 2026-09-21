@@ -122,7 +122,7 @@ async function main() {
         .split(',').map(value => value.trim()).filter(Boolean);
     const levelIds = readLevelIds();
     const profileName = String(arg('profile', 'objectiveFirst'));
-    const width = Number(arg('width', 500));
+    const width = Number(arg('width', 5000));
     const workBudget = Number(arg('work-budget', 5_000_000));
     const budgetMs = Number(arg('budget-ms', 600_000));
     const outFile = arg('out', null);
