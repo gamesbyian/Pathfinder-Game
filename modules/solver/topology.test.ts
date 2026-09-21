@@ -134,6 +134,39 @@ test('connectivity goal-cut shadow reuses a portal-free cut across a different e
     // fresh flood fill reaches a smaller component and therefore derives a different certificate.
 });
 
+test('connectivity goal-cut shadow observes an applicable proof when the caller skips the scheduled fill', () => {
+    const level = makeLevel({
+        blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }],
+        reqLen: 6,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+
+    const source = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), source, level, prep), false);
+
+    const later = stateAt(level, prep, [K(1, 1), K(2, 1)]);
+    const verdict = evaluatePrunedMove(
+        K(2, 1), 1, later, level, prep, { PRUNE_CONNECTIVITY: true }, false,
+    );
+    assert.equal(verdict, 'pass', 'shadow observation must not acquire prune authority');
+
+    const hit = records.find(r => r.kind === 'unscheduled-probe' && r.hitCertificateId !== undefined);
+    assert.ok(hit, 'expected the retained cut to apply between scheduled connectivity fills');
+    assert.equal(hit.scheduled, false);
+    assert.equal(hit.crossExactState, true);
+    assert.ok(hit.positionEligibleCertificates > 0);
+    assert.ok(hit.boundaryCellChecks > 0);
+
+    // Independent ordinary fill confirms the exact implication on the same state.
+    assert.equal(isConnected(K(2, 1), later, level, prep), false);
+});
+
 test('connectivity goal-cut shadow invalidates a prior dynamic boundary when it becomes traversable', () => {
     const level = makeLevel({
         grid: { w: 3, h: 1 },
