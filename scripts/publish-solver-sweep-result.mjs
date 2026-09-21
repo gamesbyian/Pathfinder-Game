@@ -65,19 +65,35 @@ if (outcomeFile) {
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 
+const claimedPublishedPaths = new Map();
+
 function copyRequested(source, role) {
   if (!fs.existsSync(source)) return { role, source, published: null, missing: true };
   const stat = fs.statSync(source);
   const relative = role === 'primary'
     ? (stat.isDirectory() ? 'result' : `result${path.extname(source) || '.txt'}`)
     : path.join('files', path.basename(source));
+  const published = relative.replaceAll('\\', '/');
+  const priorSource = claimedPublishedPaths.get(published);
+  if (priorSource != null) {
+    throw new Error(
+      `published evidence path collision: ${source} and ${priorSource} both map to ${published}`,
+    );
+  }
+  claimedPublishedPaths.set(published, source);
   const destination = path.join(outDir, relative);
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   fs.cpSync(source, destination, { recursive: stat.isDirectory() });
-  return { role, source, published: relative.replaceAll('\\', '/'), missing: false };
+  return { role, source, published, missing: false };
 }
 
-const entries = [copyRequested(primary, 'primary'), ...includes.map(p => copyRequested(p, 'include'))];
+let entries;
+try {
+  entries = [copyRequested(primary, 'primary'), ...includes.map(p => copyRequested(p, 'include'))];
+} catch (error) {
+  console.error(`publish-solver-sweep-result: ${error.message}`);
+  process.exit(2);
+}
 let primaryDocument = null;
 if (!entries[0].missing && entries[0].published?.endsWith('.json')) {
   try { primaryDocument = JSON.parse(fs.readFileSync(path.join(outDir, entries[0].published), 'utf8')); } catch { /* Non-JSON evidence still gets a manifest. */ }
