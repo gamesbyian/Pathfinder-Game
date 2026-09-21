@@ -35,9 +35,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "single-mutable-authority",
-      "status": "in-progress",
+      "status": "complete",
       "retirementGate": "current writers mutate canonical Hint records only; bare paths are projections; sharded write safety retained",
-      "progress": "Added setLevelHintRecords as the canonical mutation boundary: producers supply provenance-rich Hint records and the helper derives the legacy bare-path projection. Four batch hint producers plus published-level import now use it; concurrency and import provenance tests exercise the new path. Interactive UI/editor dual-field writers remain before write-time reconciliation can retire."
+      "progress": "Closed: Hint records are the sole mutable/persisted authority. Batch producers, published-level import, editor actions, async editor loading, and review-mode ingestion all mutate through setLevelHintRecords(); bare .hints paths are derived projections. writeLevelCorpusDocumentWithHints no longer reconciles sibling fields and persists hintRecords directly. Historical bare paths are upgraded only during ingress/hydration; sharded-write untouched-level safety is retained."
     },
     {
       "id": "PSC-002",
@@ -60,9 +60,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
+      "status": "complete",
       "retirementGate": "Migrate/prove all remaining readLevelsWithHints/writeLevelsWithHints callers, then remove LEVEL_WRAPPERS and the array facade. Preserve both on-disk storage shapes unless a separate corpus-format migration is justified.",
-      "progress": "Added explicit readLevelCorpusDocumentWithHints()/writeLevelCorpusDocumentWithHints() boundary: every read becomes {levels, metadata, storageShape}, so wrapped-corpus metadata and array-vs-object storage are ordinary data rather than hidden array-identity state. Round-trip tests prove copied/replaced levels arrays preserve metadata. Major batch hint writers plus portfolio-solve-sweep now carry the explicit corpus document. Legacy readLevelsWithHints()/writeLevelsWithHints() remain as a temporary WeakMap-backed compatibility facade until untouched callers are exhaustively migrated."
+      "progress": "Closed: all identified production callers carry explicit {levels, metadata, storageShape} corpus documents. Published-level import was the final known production holdout. The readLevelsWithHints()/writeLevelsWithHints() array facade and LEVEL_WRAPPERS WeakMap have been removed; both historical on-disk storage shapes remain supported explicitly at the document boundary."
     },
     {
       "id": "PSC-003",
@@ -538,8 +538,8 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "migrate-current-state",
-      "status": "in-progress",
-      "progress": "Separated current input property from legitimate domain/result vocabulary. Portfolio sweep, stress benchmark, and level-blind capability sweep now map --work-budget to SolveOpts.baseWorkBudget. Raced contract/tests name baseWorkBudget as the unsupported canonical input. CLI/report/result workBudget fields remain unchanged because they describe the budget itself, not the deprecated SolveOpts property.",
+      "status": "complete",
+      "progress": "Closed: current SolveOpts accepts baseWorkBudget only. The deprecated SolveOpts.workBudget property and solveLevel dual-read/disagreement logic are removed after portfolio sweep, stress benchmark, and level-blind capability sweep producers migrated. CLI/report/SolveResult workBudget fields remain because they describe the budget as domain/result data, not a solver input alias.",
       "retirementGate": "Exhaustively migrate remaining current SolveOpts.workBudget producers. Then either delete the alias outright or move any proven historical replay decoding into one explicit boundary normalizer; do not rename SolveResult/report workBudget."
     }
   ],
