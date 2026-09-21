@@ -227,7 +227,8 @@ try {
         schemaVersion: 1,
         kind: 'pathfinder-search-loss-capture',
         researchEnrichmentKind: 'observation',
-        population: { source: 'test-population.json', populationIdentity: searchLossPopulationIdentity, parentCount: 1 },
+        populationIdentity: searchLossPopulationIdentity,
+        population: { source: 'test-population.json', parentCount: 1 },
         researchBlock: searchLossBlock,
         capsules: [],
     }));
