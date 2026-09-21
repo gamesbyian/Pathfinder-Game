@@ -8,9 +8,8 @@
 
 Parity worked because a huge completion space admits a tiny exact image: moves update it cheaply, every real completion obeys its law, impossibility in the image is decisive, and distance from the boundary can still explain search behavior.
 
-Search for compressed **exact consequences**, not decorative mathematics:
-`current puzzle/state -> small invariant / relaxation / order / quotient -> necessary consequence`.
-The procedure must generalize; per-level outputs need not recur.
+Search for compressed **exact consequences**:
+`current state -> small invariant / relaxation / order / quotient -> necessary consequence`.
 
 ## Four projection/certificate families
 
@@ -64,7 +63,7 @@ A theorem that cannot survive this micro-instance attack does not earn an observ
 
 ## Failure-seam discovery axis
 
-The projection-family matrix is only one way to search. Also start from a measured solver contrast or first-loss seam and ask which **small exact fact would have changed that decision**.
+Also start from measured solver contrast/first-loss seams and ask which **small exact fact would have changed that decision**.
 
 Use [response-guided capability invention](solver-response-guided-capability-invention.md) for:
 - technique A-only vs B-only populations;
@@ -72,7 +71,7 @@ Use [response-guided capability invention](solver-response-guided-capability-inv
 - repaired-vs-unrepaired near misses;
 - complementary capability-memory signatures.
 
-This prevents the program from walking mathematical families in isolation from solve behavior. A response contrast nominates a theorem search; it never authorizes historical-ID routing.
+A response contrast nominates theorem search, never historical-ID routing.
 
 ## First live candidate: cut / region-flow balance
 
@@ -87,7 +86,7 @@ The first audit should determine which consequences are genuinely exact. Possibl
 - maximum future crossings allowed by remaining legal interfaces under the declared edge/cell-use semantics;
 - small flow/degree balance at a region interface.
 
-This is **not Lane A reopened**. Lane A C0-C2 asked whether a compact interface signature repeatedly predicted outcome and closed representation-explosive at C2. This asks whether a board-specific cut supports a sound conservation/capacity consequence even when its exact interface description never recurs cross-level.
+This is not Lane A reopened: C0-C2 tested recurring interface identity; this tests board-specific exact conservation/capacity even when interfaces never recur cross-level.
 
 ### Cheapest audit
 
@@ -101,7 +100,7 @@ For each candidate law:
 5. inspect retained valid paths/exact states for incidence;
 6. only then add one production-inert observer if denominator/opportunity remains unknown.
 
-Advance only on incremental, decision-bearing information with a cheaper plausible consumer than residual search.
+Advance only on incremental decision-bearing information with a cheaper plausible consumer than residual search.
 
 ## Candidate families after region-flow balance
 
