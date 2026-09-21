@@ -1009,6 +1009,32 @@
         "Other projection families remain candidates, not live experiments, until separately earned."
       ],
       "reopensOn": null
+    },
+    {
+      "id": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+      "question": "Given only level-blind information available immediately before the next production action, can a cheap rule capture a material fraction of pre-winner work while protecting rare winning capability and beating simple fixed-order/tranche baselines?",
+      "owner": "WS1",
+      "state": "active-candidate",
+      "aliases": [
+        "action-selection legal signal",
+        "pre-winner work capture",
+        "action-boundary capture",
+        "avoidable predecessor work"
+      ],
+      "constrainedBy": [
+        "reports/2026-09-21-prewinner-work-oracle-census-001.md",
+        "reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md"
+      ],
+      "result": "Perfect-hindsight headroom is large on the frozen current production boundary (94.74% of C2 solved-row canonical attempt work and 87.58% of C1 occurs before the eventual winner), but exact historical action identity is unsafe: even high-support zero-development-win actions suppress held-out winners. The earned gate is production-inert legal-signal capture with level-level development/validation splits, capability protection, and fixed/static baselines before any live scheduler treatment.",
+      "constrains": [
+        "Do not treat pre-winner work as ex-ante redundant; predecessor attempts may provide information, preserve rare capability, or change later state/budget.",
+        "Do not use level identity, future attempts, eventual winner identity, hints, census membership, stored solutions, or other historical outcome leakage as candidate policy inputs.",
+        "No live skipping, reordering, dynamic budgeting, or learned selector is earned until a fixed simple legal-signal rule shows held-out captured-work value, protects rare winners, and beats fixed-order/tranche baselines."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "acquisitionNeed": "telemetry-or-economics"
     }
   ]
 }
