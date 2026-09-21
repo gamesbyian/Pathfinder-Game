@@ -1,11 +1,9 @@
 # Connectivity cut-certificate shadow: frozen development run 001
 
-> **Status:** FROZEN BEFORE EXECUTION.
-> **Date:** 2026-09-21.
-> **Parent audit:** [computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).
-> **Mechanism proof:** [connectivity certificate source audit 001](2026-09-21-connectivity-certificate-source-audit-001.md).
-> **Runner:** `scripts/connectivity-certificate-shadow-audit.mjs`.
-> **Evidence role:** development opportunity sizing; no production efficacy claim.
+> **Status:** superseded
+> **Last evidence:** 2026-09-21 — frozen positions 81-104 completed in Actions run 35568807183 but emitted zero certificates because the producer was narrower than the proved theorem.
+> **Decision:** preserve this run as the preregistered population/resource contract and classify its result as an observability miss; development preflight 002 reruns the same parents after correcting theorem scope.
+> **Remaining gate:** superseded by connectivity-certificate-shadow-development-preflight-002.md; do not reinterpret run 001 as recurrence or economics evidence.
 
 ## Question
 
