@@ -6,7 +6,7 @@ import { evaluateObligationClusters } from './joint-obligation-propagation.js';
 import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustCrossNeighborBudgetDeadlocked, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
 import { stateSignature } from './nogood-cache.js';
-import { isConnected } from './topology.js';
+import { isConnected, probeUnscheduledConnectivityGoalCutCertificate } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, PrepLevel, SolverSearchState } from './types.js';
@@ -227,6 +227,32 @@ export function evaluatePrunedMove(
         reached(diagnostics, 'PRUNE_INTERSECTION_DEFICIT');
         const intNeeded = level.requiredIntersections - state.ints;
         if (intNeeded > rSteps) return reject(diagnostics, 'PRUNE_INTERSECTION_DEFICIT');
+    }
+
+    // Computational-work-elimination research shadow: at candidates where the caller's production
+    // schedule deliberately SKIPS connectivity, ask only whether an already-retained portal-free
+    // cut implication applies. This is exact proof validation, not another flood fill, and never
+    // changes the verdict. It runs only when the opt-in certificate shadow exists.
+    const connectivityShadow = prep._connectivityCertificateShadow;
+    if (!runConnectivity && connectivityShadow && (!cfg || cfg.PRUNE_CONNECTIVITY)) {
+        const probe = probeUnscheduledConnectivityGoalCutCertificate(next, state, level, prep);
+        if (probe) {
+            connectivityShadow.observer.observe({
+                kind: 'unscheduled-probe',
+                scheduled: false,
+                work: prep._workMeter.units,
+                certificatesScanned: probe.certificatesScanned,
+                boundaryCellChecks: probe.boundaryCellChecks,
+                positionEligibleCertificates: probe.positionEligibleCertificates,
+                ...(probe.hitCertificateId !== undefined
+                    ? {
+                        hitCertificateId: probe.hitCertificateId,
+                        hitSourceWork: probe.hitSourceWork,
+                        crossExactState: probe.crossExactState,
+                    }
+                    : {}),
+            });
+        }
     }
 
     if (runConnectivity && (!cfg || cfg.PRUNE_CONNECTIVITY)) {
