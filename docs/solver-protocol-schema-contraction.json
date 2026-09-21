@@ -55,7 +55,8 @@
       "id": "PSC-003",
       "concept": "candidate path encoding",
       "owners": [
-        "modules/domain/path-validator.ts"
+        "modules/domain/path-validator.ts",
+        "modules/domain/path-validator.test.ts"
       ],
       "forms": [
         "packed numeric cell keys",
@@ -67,8 +68,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "wire decoding is separate from canonical path validation; internal validation accepts one path representation"
+      "status": "in-progress",
+      "retirementGate": "wire decoding is separate from canonical path validation; internal validation accepts one path representation",
+      "progress": "decodeCandidatePath now owns packed-key / 1-indexed tuple / 0-indexed object decoding; validateCanonicalPath is a packed-key-only referee; validateCandidatePath remains the compatibility/import adapter. Internal canonical callers still need census/migration before retirement."
     },
     {
       "id": "PSC-004",
