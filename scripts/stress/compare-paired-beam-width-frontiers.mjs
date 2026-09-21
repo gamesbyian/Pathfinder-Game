@@ -94,14 +94,17 @@ async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, 
     prep._cfg = null;
     prep._metrics = { nodesExpanded: 0 };
     const connectivityCutProofs = new Set();
+    let connectivityCutProofsDropped = 0;
     if (collectConnectivityCutProofs) {
         prep._connectivityCertificateShadow = {
             observer: {
                 maxCertificates: 128,
                 observe(record) {
-                    if (record.kind === 'certificate' && record.certificateSignature) {
+                    if ((record.kind === 'certificate' || record.kind === 'certificate-dropped')
+                        && record.certificateSignature) {
                         connectivityCutProofs.add(record.certificateSignature);
                     }
+                    if (record.kind === 'certificate-dropped') connectivityCutProofsDropped++;
                 },
             },
             certificates: [],
@@ -132,6 +135,7 @@ async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, 
             nodesExpanded: prep._metrics.nodesExpanded,
             workSpent: prep._workMeter.units,
             connectivityCutProofs: [...connectivityCutProofs].sort(),
+            connectivityCutProofsDropped,
         };
     }
     if (!out.pausedContinuation) {
@@ -141,6 +145,7 @@ async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, 
             nodesExpanded: prep._metrics.nodesExpanded,
             workSpent: prep._workMeter.units,
             connectivityCutProofs: [...connectivityCutProofs].sort(),
+            connectivityCutProofsDropped,
         };
     }
     return {
@@ -148,6 +153,8 @@ async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, 
         frontier: out.pausedContinuation.frontier,
         nodesExpanded: prep._metrics.nodesExpanded,
         workSpent: prep._workMeter.units,
+        connectivityCutProofs: [...connectivityCutProofs].sort(),
+        connectivityCutProofsDropped,
     };
 }
 
@@ -245,6 +252,8 @@ async function main() {
                     frontierSize: captures[0].frontier.length,
                     nodesExpanded: captures[0].nodesExpanded,
                     workSpent: captures[0].workSpent,
+                    connectivityCutProofs: captures[0].connectivityCutProofs?.length ?? 0,
+                    connectivityCutProofsDropped: captures[0].connectivityCutProofsDropped ?? 0,
                 },
                 right: {
                     width: widths[1],
@@ -252,6 +261,8 @@ async function main() {
                     frontierSize: captures[1].frontier.length,
                     nodesExpanded: captures[1].nodesExpanded,
                     workSpent: captures[1].workSpent,
+                    connectivityCutProofs: captures[1].connectivityCutProofs?.length ?? 0,
+                    connectivityCutProofsDropped: captures[1].connectivityCutProofsDropped ?? 0,
                 },
                 comparison,
                 proofOverlap: proofComparison ? {
@@ -279,8 +290,11 @@ async function main() {
         });
     }
 
-    const comparable = results.flatMap(row => row.gates.map(gate => ({ levelId: row.levelId, ...gate })))
-        .filter(row => row.comparison);
+    const allGateRows = results.flatMap(row => row.gates.map(gate => ({ levelId: row.levelId, ...gate })));
+    const comparable = allGateRows.filter(row => row.comparison);
+    const proofComparable = collectConnectivityCutProofs
+        ? allGateRows.filter(row => row.proofOverlap && (row.proofOverlap.left + row.proofOverlap.right) > 0)
+        : [];
     const report = {
         schemaVersion: 1,
         kind: 'pathfinder-paired-beam-width-frontier-comparison',
@@ -298,8 +312,11 @@ async function main() {
             execution: 'two isolated beam searches per gate, same profile/checkpoint; no production policy change',
         },
         interpretation: {
-            allowed: 'test state-support nesting/overlap before dominance or retention hypotheses',
-            forbidden: 'infer feasibility, production benefit, or a routing rule from frontier membership alone',
+            allowed: 'test exact path-support overlap and, when enabled, exact connectivity-cut proof-object overlap between isolated beams',
+            forbidden: 'infer feasibility, production benefit, residual equivalence, a cache key, or a routing rule from overlap alone',
+            proofOverlapSemantics: collectConnectivityCutProofs
+                ? 'same cut signature means same reached-component + complete-cardinal-boundary implication template; later applicability still requires current boundary validation'
+                : null,
         },
         summary: {
             requestedParents: results.length,
@@ -311,12 +328,15 @@ async function main() {
             meanJaccard: comparable.length
                 ? comparable.reduce((sum, row) => sum + (row.comparison.jaccard ?? 0), 0) / comparable.length
                 : null,
-            connectivityCutProofComparableGates: collectConnectivityCutProofs
-                ? comparable.filter(row => row.proofOverlap && (row.proofOverlap.left + row.proofOverlap.right) > 0).length
-                : 0,
+            connectivityCutProofComparableGates: proofComparable.length,
+            connectivityCutProofSharedSignatures: proofComparable.reduce((sum, row) => sum + row.proofOverlap.shared, 0),
+            connectivityCutProofLeftSignatures: proofComparable.reduce((sum, row) => sum + row.proofOverlap.left, 0),
+            connectivityCutProofRightSignatures: proofComparable.reduce((sum, row) => sum + row.proofOverlap.right, 0),
+            connectivityCutProofRetentionDrops: allGateRows.reduce((sum, row) =>
+                sum + (row.left.connectivityCutProofsDropped || 0) + (row.right.connectivityCutProofsDropped || 0), 0),
             meanConnectivityCutProofJaccard: collectConnectivityCutProofs
                 ? (() => {
-                    const rows = comparable.filter(row => row.proofOverlap?.jaccard != null);
+                    const rows = proofComparable.filter(row => row.proofOverlap?.jaccard != null);
                     return rows.length
                         ? rows.reduce((sum, row) => sum + row.proofOverlap.jaccard, 0) / rows.length
                         : null;
