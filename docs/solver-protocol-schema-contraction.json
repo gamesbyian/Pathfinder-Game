@@ -299,19 +299,23 @@
       "id": "PSC-013",
       "concept": "Lane A cut identity",
       "owners": [
-        "scripts/stress/lane-a-c0-signature-collision-analysis.mjs"
+        "scripts/stress/lane-a-cut-identity-lib.mjs",
+        "scripts/stress/lane-a-c0-signature-collision-analysis.mjs",
+        "scripts/stress/lane-a-build-c0-collision-cases.mjs",
+        "scripts/stress/lane-a-c0-signature-collision-analysis-node-test.mjs"
       ],
       "forms": [
         "source.cutSignature",
         "cut signature parsed from caseId delimiter"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "permanent-archive-reader",
-      "status": "open",
-      "retirementGate": "new rows require structured source.cutSignature; delimiter parsing remains fixture-backed historical decode only"
+      "status": "complete",
+      "retirementGate": "closed: current rows require structured source.cutSignature; delimiter parsing is explicit historical decode only",
+      "progress": "Current Lane A C0 case production already writes structured source.cutSignature. Analysis now requires structured identity from the result/frozen case by default; the historical `${cutSignature}::${originalCaseId}` parser lives in lane-a-cut-identity-lib.mjs and is reachable only with --allow-historical-case-id. Tests pin both strict current behavior and archive decoding."
     },
     {
       "id": "PSC-014",
