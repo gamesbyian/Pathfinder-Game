@@ -433,9 +433,9 @@ Decision: promote concrete presolve/decomposition experiments through canonical 
 
 ### Phase 5 - wait-less research audit
 
-- [ ] replay historical batches for decision-time curves;
+- [ ] replay/census historical batches for decision-time curves; architecture audit found an existing completion-order `stopAfter` worker primitive and a safe first target: irreversible negative decision locks. See `../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md`;
 - [ ] separate compute completion time from decision time;
-- [ ] design candidate prospective stopping contract;
+- [x] design candidate prospective stopping contract at architecture level: start with loss-ceiling/futility locks only, keep partial coverage explicit, and separate decision acquisition from optional characterization;
 - [ ] validate on untouched/fresh experiment if earned.
 
 Decision: integrate sequential stopping into research operating model only with prospective support.
@@ -491,6 +491,15 @@ Every lane/candidate should eventually record:
 7. update this plan and the PR after each material finding.
 
 ## 10. Progress log
+
+### 2026-09-20 - research decision-latency audit
+
+- Added [`../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md`](../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md).
+- Existing `runWorkerPool` already has completion-order `stopAfter` cancellation; scheduler plumbing is not the missing capability.
+- The safest first adaptive-stop form is an irreversible negative lock, especially a first loss under a frozen zero-loss gate. Positive locks are usually much later because unseen regressions remain possible.
+- Early-stopped artifacts must remain coverage-incomplete and may only claim the narrow cannot-promote decision they prove.
+- Separate required decision acquisition from optional characterization so mechanism/capability follow-up need not delay the decision report.
+
 
 ### 2026-09-20 - presolve reconciliation
 
