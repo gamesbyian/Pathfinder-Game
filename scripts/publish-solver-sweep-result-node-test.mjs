@@ -75,6 +75,8 @@ try {
   assert.match(manifest.experiment.configurationHash, /^sha256:[0-9a-f]{64}$/);
   assert.equal(manifest.experiment.resolvedSha, 'b'.repeat(40));
   assert.deepEqual(manifest.experiment.sourceRuns, ['fixture-acquisition-a', 'fixture-acquisition-b']);
+  assert.equal(manifest.experiment.sourceProtocolHash, null);
+  assert.equal(manifest.experiment.sourceSetHash, null);
   assert.equal(manifest.experiment.reconciliationRun.kind, 'recombine-only');
   assert.equal(manifest.experiment.reconciliationRun.acquisitionRecomputed, false);
   assert.equal(manifest.execution.levelBlind, true);
