@@ -76,7 +76,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane I — small exact projections
 
-**PREMISE GENERATION; no consumer authorized.** Audit `WS2-CUT-BALANCE-PROJECTION` first: derive exact crossing-balance laws and incremental opportunity distinct from connectivity and Lane-A C0-C2. Other projection families stay unqueued until earned. [program](solver-small-exact-projections-program.md)
+**PREMISE GENERATION; no consumer authorized.** Audit `WS2-CUT-BALANCE-PROJECTION` first, while using existing technique/decision discordance as a response-guided theorem-discovery input. Other projection families stay unqueued until earned. [program](solver-small-exact-projections-program.md) · [response-guided loop](solver-response-guided-capability-invention.md)
 
 ### Post-mining premise-map handoff closeout
 
