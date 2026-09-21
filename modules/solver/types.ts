@@ -319,6 +319,9 @@ export interface PrepLevel {
         /** Research-only exact proof-template dedupe. Lazily initialized so direct tests that
          * construct the shadow by hand stay source-compatible. */
         signatureToCertificateId?: Map<string, number>;
+        /** Research-only current-position selector: packed cell -> retained certificate ids whose
+         * certified reached component contains that cell. Built only when the shadow is enabled. */
+        certificateIdsByCell?: Map<number, number[]>;
     } | null;
     /** Research-only Lane H2 checkerboard-capacity shadow observer. Reads the connectivity fill's
      *  existing reached set after goal/objective reachability succeeds; never changes pruning. */
@@ -524,7 +527,7 @@ export interface ConnectivityRejectionObserver {
  * the ordinary scheduled flood fill; `confirmedGoalUnreachable` is populated only on a shadow hit
  * and is checked against the real flood fill that still runs immediately afterward. */
 export interface ConnectivityCertificateShadowRecord {
-    kind: 'certificate' | 'certificate-duplicate' | 'certificate-dropped' | 'probe';
+    kind: 'certificate' | 'certificate-duplicate' | 'certificate-dropped' | 'probe' | 'unscheduled-probe';
     work: number;
     certificateId?: number;
     /** Normalized proof-object identity: reached component rows + sorted complete cardinal boundary.
@@ -541,6 +544,9 @@ export interface ConnectivityCertificateShadowRecord {
     hitSourceWork?: number;
     crossExactState?: boolean;
     confirmedGoalUnreachable?: boolean;
+    /** False only for the production-inert hard-prune-seam probe executed when the caller's
+     * connectivity schedule deliberately skipped the ordinary flood fill. */
+    scheduled?: boolean;
 }
 
 /** Production-inert one-solve shadow observer for the portal-free goal cut certificate documented
