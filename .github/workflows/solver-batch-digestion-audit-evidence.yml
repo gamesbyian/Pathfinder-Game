@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/solver-batch-digestion-audit-evidence.yml'
       - 'scripts/solver-batch-cost-probe.mjs'
+      - 'scripts/initial-presolve-opportunity-census.mjs'
       - 'modules/solver/**'
       - 'modules/domain/**'
       - 'package.json'
@@ -59,11 +60,23 @@ jobs:
             --node-budget=250000 --budget-ms=600000 \
             --out=tmp/solver-batch-digestion/corpus2-solve.json
 
+      - name: Measure initial presolve opportunity
+        run: |
+          npm run solver:audit-initial-presolve -- \
+            --corpus=data/levels.json \
+            --out=tmp/solver-batch-digestion/presolve-published.json
+          npm run solver:audit-initial-presolve -- \
+            --corpus=data/stress/stress-levels.json \
+            --out=tmp/solver-batch-digestion/presolve-corpus1.json
+          npm run solver:audit-initial-presolve -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --out=tmp/solver-batch-digestion/presolve-corpus2.json
+
       - name: Summarize evidence
         run: |
           node <<'NODE'
           const fs = require('fs');
-          for (const name of ['published', 'corpus1', 'corpus2', 'published-solve', 'corpus2-solve']) {
+          for (const name of ['published', 'corpus1', 'corpus2', 'published-solve', 'corpus2-solve', 'presolve-published', 'presolve-corpus1', 'presolve-corpus2']) {
             const doc = JSON.parse(fs.readFileSync(`tmp/solver-batch-digestion/${name}.json`, 'utf8'));
             console.log(JSON.stringify({ name, summary: doc.summary }, null, 2));
           }
