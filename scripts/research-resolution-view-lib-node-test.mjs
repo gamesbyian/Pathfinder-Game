@@ -96,10 +96,21 @@ const composition = summarizeResearchResolutionComposition([
 assert.equal(composition.length, 1);
 assert.equal(composition[0].questionId, 'Q-BLOCKED');
 assert.equal(composition[0].compatibleInterpretationContract, true);
-assert.deepEqual(composition[0].axisCoverage.participation.satisfiedSources, ['companion.json']);
-assert.deepEqual(composition[0].axisCoverage.participation.blockedSources, ['blocked.json']);
+assert.deepEqual(composition[0].axisCoverage.participation.satisfiedSources, [{ source: 'companion.json', sourceIndex: 1 }]);
+assert.deepEqual(composition[0].axisCoverage.participation.blockedSources, [{ source: 'blocked.json', sourceIndex: 0 }]);
 assert.equal(composition[0].compositionStatus, 'diagnostic-only');
 assert.equal(composition[0].decisionEntitlement, 'none');
+
+
+const duplicateSourceLabels = summarizeResearchResolutionComposition([
+  { source: null, document: { resolution: blocked } },
+  { source: null, document: { resolution: companion } },
+]);
+assert.deepEqual(
+  duplicateSourceLabels[0].axisCoverage.participation.statuses.map(row => row.sourceIndex),
+  [0, 1],
+  'composition identity must not depend on unique source labels',
+);
 
 const incompatible = summarizeResearchResolutionComposition([
   { source: 'blocked.json', document: { resolution: blocked } },
