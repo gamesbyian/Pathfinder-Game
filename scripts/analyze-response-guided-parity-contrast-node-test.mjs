@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 
+import { freezeResponseGuidedContrasts } from './freeze-response-guided-contrasts.mjs';
+
 import { analyzeResponseGuidedParityContrasts } from './analyze-response-guided-parity-contrast.mjs';
 
 const rawLevel = (id, { portals = [], gate = { x: 1, y: 1 }, goal = { x: 5, y: 5 }, reqLen = 8 } = {}) => ({
@@ -32,8 +34,9 @@ const base = {
 
 const twistPortal = [{ x1: 1, y1: 2, x2: 2, y2: 2, color: '#123456' }];
 const samePortal = [{ x1: 1, y1: 2, x2: 3, y2: 2, color: '#654321' }];
+const frozenContrasts = freezeResponseGuidedContrasts(base, { pairs: [['left', 'right']] });
 const result = analyzeResponseGuidedParityContrasts({
-    base,
+    frozenContrasts,
     pairs: [['left', 'right']],
     levels: [
         rawLevel('A', { portals: twistPortal }),
@@ -60,7 +63,7 @@ assert.deepEqual(pair.gateDemand.rightOnly, { 'all-even': 1 });
 
 assert.throws(
     () => analyzeResponseGuidedParityContrasts({
-        base,
+        frozenContrasts,
         pairs: [['left', 'right']],
         levels: [rawLevel('A'), rawLevel('A')],
     }),
