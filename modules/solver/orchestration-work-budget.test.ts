@@ -195,7 +195,7 @@ test('strictTotalWorkBudget installs one remaining-work cap across every additiv
     };
     for (const [name, attempt] of Object.entries(paths)) {
         assert.ok(attempt, `${name} must be reached by the controlled dispatch`);
-        assert.ok(attempt.allocatedWorkCeiling != null && attempt.allocatedWorkCeiling <= common.workBudget,
+        assert.ok(attempt.allocatedWorkCeiling != null && attempt.allocatedWorkCeiling <= common.baseWorkBudget,
             `${name} must see the immutable whole-solve cap`);
         assert.ok(attempt.allocatedNodeCeiling != null, `${name} must record its node allowance`);
     }
