@@ -4,7 +4,7 @@
 > **Opened:** 2026-09-20
 > **Audit basis:** [protocol/schema contraction audit 001](../reports/2026-09-20-protocol-schema-contraction-audit-001.md)
 > **Purpose:** reduce live solver/research polymorphism without rewriting historical evidence or losing durable compatibility.
-> **Progress (2026-09-20, PR #1937):** current APIs/producers are increasingly canonical-only while historical compatibility is being pushed behind named ingress readers. Twelve registry seams are now closed. This session closed the hint mutable-representation seam (canonical Hint records are the sole write authority; bare paths are derived), the corpus-document seam (explicit {levels, metadata, storageShape} end to end; LEVEL_WRAPPERS and array facades removed), and the SolveOpts work-budget seam (baseWorkBudget only on current input). It also removed residual stage-budget option aliases that contradicted PSC-022's earlier closeout and repaired the resulting stale CI fixtures/types without restoring retired compatibility. Remaining work is concentrated in candidate-path caller cleanup, sweep/research envelope finalization, historical-reader censuses, population-integrity output contraction, durable level addressing, family-attempt archival strategy, hint-provenance old-field audit, explicit corpus write-set semantics, and the research-consumption sidecar model.
+> **Progress (2026-09-20, PR #1937):** current APIs/producers are increasingly canonical-only while historical compatibility is being pushed behind named ingress readers. Fourteen registry seams are now closed. This session closed the hint mutable-representation seam (canonical Hint records are the sole write authority; bare paths are derived), the corpus-document seam (explicit {levels, metadata, storageShape} end to end; LEVEL_WRAPPERS and array facades removed), and the SolveOpts work-budget seam (baseWorkBudget only on current input). It also removed residual stage-budget option aliases that contradicted PSC-022's earlier closeout and repaired the resulting stale CI fixtures/types without restoring retired compatibility. Remaining work is concentrated in candidate-path caller cleanup, sweep/research envelope finalization, historical-reader censuses, population-integrity output contraction, durable level addressing, family-attempt archival strategy, hint-provenance old-field audit, explicit corpus write-set semantics, and the research-consumption sidecar model.
 
 ## Goal
 
@@ -204,13 +204,7 @@ Define one shared extractor/validator for common research metadata:
 
 Choose one canonical current location and migrate current producers.
 
-Historical alternatives:
-- top-level `populationIdentity`;
-- `population.corpusIdentity`;
-- `population.populationIdentity`;
-- top-level versus nested `researchBlock`;
-
-should normalize only through the shared ingress adapter.
+Historical alternatives such as nested `population.corpusIdentity`, `population.populationIdentity`, and `population.researchBlock` normalize only through the shared ingress adapter. Current writers use top-level `populationIdentity` and, when the artifact genuinely carries research-block lineage, top-level `researchBlock`. A producer without block lineage must not manufacture a block merely to satisfy envelope uniformity.
 
 Remove duplicated fallback chains from `research-relations-lib.mjs`, `research-consumption-link.mjs`, and later consumers.
 
@@ -496,6 +490,7 @@ The live finish-line interpretation is now concrete:
 - **Closed hidden corpus container state:** production callers carry the explicit corpus document. The LEVEL_WRAPPERS WeakMap plus readLevelsWithHints() / writeLevelsWithHints() compatibility facade are gone; array/object on-disk shapes remain explicit storage metadata.
 - **Closed current work-budget alias:** SolveOpts.workBudget and solve-time dual-read logic are gone. baseWorkBudget is the sole current solver input; report/result workBudget remains valid descriptive data.
 - **Closed candidate-path polymorphism:** internal packed-key producers validate with validateCanonicalPath(); alternate coordinate encodings survive only at the named external/import adapter.
+- **Closed research-envelope locations:** current producers place populationIdentity and any researchBlock lineage at top level; the shared envelope decoder alone owns historical nested locations. Producers with no block lineage do not synthesize a fake researchBlock.
 - **Corrected PSC-022 residue:** retired dedupNearTie*, attractionDiversity*, and mainLoopLateReserve* SolveOpts aliases are no longer read in stage-budget planning, and tests no longer preserve them.
 - **Still open inside package B:** concurrency safety still uses read-time hintRecords reference identity to skip untouched hint files. B3 should replace that implicit touched-state heuristic with an explicit write-set/changed-ID contract before the overall package is considered maximally contracted.
 
