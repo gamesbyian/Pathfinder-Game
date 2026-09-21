@@ -1,11 +1,11 @@
 <!-- agent-context-budget: warn=12000 max=16000 -->
 # Solver research population + family integration plan
 
-> **Status:** implementation plan; not a priority authority.
+> **Status:** implementation plan; Phases 0-5 complete, Phase 6 infrastructure pilots still unproven; not a priority authority.
 > **Priority:** `solver-optimization-workstreams.md`.
 > **Method:** `solver-research-operating-model.md`, `solver-evaluation-evidence.md`, `solver-research-resource-contract.md`.
 > **Goal:** make existing population, family, frontier/state, exact/reference, observation, and evidence resources compose as one progressive workflow without a second evidence warehouse.
-> **Progress (2026-09-17):** Phases 0-5 are complete. Post-Phase-5 hardening now includes a derived question dossier, active-premise relations, stable question/premise/MO joins where earned, authored multi-asset relationship discovery, bounded block/durable-evidence discovery, contract-aware acquisition hints, independent-unit opportunity sizing, selection-consumption sidecars, and a CI integration audit, without a warehouse or persistent index. Phase 6's two live pilots remain required; D1 stays governed by its queue/preflight. See `../reports/2026-09-17-research-infrastructure-composition-integration-001.md` and `../reports/2026-09-17-research-infrastructure-second-order-composition-002.md`.
+> **Progress (reconciled 2026-09-21):** Phases 0-5 are complete. Later F3 topology and H3 remaining-length studies advanced their scientific questions but did not exercise the Phase-6 shared research-block/consumption lineage contract, so they do not retroactively satisfy the two required infrastructure pilots. F3's tested descriptor is now closed without a consumer; H3's independent transfer is positive and has its own earned matched-work consumer-design gate. Phase 6 therefore remains open only for two *future live ranked questions that naturally need the substrate*: one family-microscope pilot and one broad-population-first pilot. Do not revive F3 or rerun H3 merely to close this plan. See `../reports/2026-09-17-research-infrastructure-composition-integration-001.md`, `../reports/2026-09-17-research-infrastructure-second-order-composition-002.md`, `../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md`, and `../reports/2026-09-20-h3-independent-transfer-result-001.md`.
 
 ## 0. Target workflow
 
@@ -118,36 +118,42 @@ Durable completed contracts:
 5. `research:acquisition-preflight` emits one conservative route, discovers known blocks, carries audit-grade Resource Contract limits, and names existing source families only when generation is earned; it never generates automatically.
 6. `research:dossier` is the derived question join; `research:record-consumption` records later use ancestry; `research:integration-audit` checks seams in CI. Front doors live in `AGENTS.md`/`tooling-catalog.md`; do not add a warehouse, global freshness flag, or alternate lineage schema.
 
-## 10. Phase 6 — two end-to-end pilots
+## 10. Phase 6 — two end-to-end infrastructure pilots
 
-Use live ranked questions when this phase starts. Scientific success is not required; infrastructure lineage/accounting is.
+Use future **live ranked questions that already need this substrate**. Scientific success is not required; infrastructure lineage/accounting is. Do not resurrect a closed question to complete infrastructure ceremony.
 
-### Pilot A: F3 topology descriptor
+The 2026-09-17 F3 topology expansion and 2026-09-20 H3 remaining-length transfer are useful scientific evidence but are **not Phase-6 completion evidence**: their reports preserve populations/selection, but they do not demonstrate the shared frozen-block + consumption-lineage path this phase exists to validate.
 
-Exercises rare-opportunity acquisition + family microscope.
+### Pilot A: family-microscope path
 
-1. Query natural/human/topology assets.
+Choose the next live question that genuinely needs controlled descendants.
+
+1. Discover existing assets/blocks before generation.
 2. Define structural opportunity before outcomes.
-3. Estimate yield cheaply if needed.
-4. Acquire minimum independent parents.
-5. Family-expand only parents where the prespecified controlled topology contrast is useful.
-6. Freeze states before exact labels.
-7. Exact-label nominated states only.
-8. Report parents separately from descendant pairs.
-9. If a descriptor emerges, confirm on untouched parents/blocks.
+3. Freeze a source-specific parent block with question/role/independent-unit identity.
+4. Family-expand only parents where the prespecified controlled contrast is useful.
+5. Record originating-block ancestry and consumption lineage.
+6. Freeze selected states/events before exact labels where enrichment is needed.
+7. Report parent support separately from descendant rows.
+8. Preserve untouched confirmation material when the claim requires confirmation.
 
-### Pilot B: H3 repair-commitment **or** remaining-length transfer
+F3 was the original candidate but is now closed in its tested form and must not be reopened merely to serve as this pilot.
 
-Choose whichever is live.
+### Pilot B: broad-population-first path
 
-- **H3:** matched/stratified descendants control remaining length while perturbing commitment structure.
-- **Remaining length:** independent shared-budget parent block first; families only if needed to distinguish length from correlated structure.
+Choose the next live question whose first decision-bearing evidence is a broad independent population.
 
-Pilot B must exercise broad population evidence before family expansion so the substrate is not F3-shaped.
+1. Freeze the independent parent block before downstream outcome-conditioned selection.
+2. Record the question/role/source revision and later consumption explicitly.
+3. Run the broad population measurement first.
+4. Use families only if the result creates a concrete causal ambiguity that descendants can discriminate.
+5. Keep development, confirmation and transfer blocks distinguishable.
 
-### Optional C: behavioral quotient
+H3 remaining-length now has a positive independent-transfer result and an earned matched-work consumer-design gate. That result does not count as this infrastructure pilot, and H3 should not be rerun simply to satisfy Phase 6.
 
-Only if still live: broad independent exact-labelled parents first, then family neighborhoods as adversarial signature falsifiers.
+### Optional third pilot
+
+Only if naturally earned by a live question. Behavioral quotient is no longer a standing candidate; any third pilot must come from current queue demand rather than this plan.
 
 ## 11. Phase 7 — consolidate
 
@@ -200,4 +206,6 @@ Do not stack all phases on one branch.
 
 ## 15. Next agent handoff
 
-Do not restart Phases 0-5. Return to the canonical solver queue. Begin Phase 6 only when a live ranked question actually requires one of its end-to-end pilots. Read the relevant completed-phase report only when changing that substrate.
+Do not restart Phases 0-5 and do not replay F3/H3 for plan completion. Return to the canonical solver queue.
+
+When a live ranked question naturally requires family expansion or a broad-population-first acquisition, use it as the corresponding Phase-6 pilot **prospectively** and require the shared block/consumption lineage explicitly. After both materially different paths have been demonstrated, execute Phase 7 immediately: audit bespoke glue, simplify where earned, reconcile front doors/resources, mark this plan completed/history-only, and move any surviving descendants to canonical workstream/future-work authorities.
