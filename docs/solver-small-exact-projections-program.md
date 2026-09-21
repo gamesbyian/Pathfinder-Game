@@ -62,6 +62,18 @@ For an exact claim, prefer tiny exhaustive or enumerated referee-valid instances
 
 A theorem that cannot survive this micro-instance attack does not earn an observer. Exhaustive tiny-instance evidence validates semantics, not population value.
 
+## Failure-seam discovery axis
+
+The projection-family matrix is only one way to search. Also start from a measured solver contrast or first-loss seam and ask which **small exact fact would have changed that decision**.
+
+Use [response-guided capability invention](solver-response-guided-capability-invention.md) for:
+- technique A-only vs B-only populations;
+- retained-vs-lost viable candidates;
+- repaired-vs-unrepaired near misses;
+- complementary capability-memory signatures.
+
+This prevents the program from walking mathematical families in isolation from solve behavior. A response contrast nominates a theorem search; it never authorizes historical-ID routing.
+
 ## First live candidate: cut / region-flow balance
 
 Stable question: `WS2-CUT-BALANCE-PROJECTION`.
