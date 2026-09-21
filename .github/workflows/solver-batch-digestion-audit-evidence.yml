@@ -7,6 +7,7 @@ on:
       - '.github/workflows/solver-batch-digestion-audit-evidence.yml'
       - 'scripts/solver-batch-cost-probe.mjs'
       - 'scripts/initial-presolve-opportunity-census.mjs'
+      - 'scripts/solver-equivalence-opportunity-census.mjs'
       - 'modules/solver/**'
       - 'modules/domain/**'
       - 'package.json'
@@ -72,11 +73,16 @@ jobs:
             --corpus=data/stress/stress-levels-random.json \
             --out=tmp/solver-batch-digestion/presolve-corpus2.json
 
+      - name: Measure exact/symmetry equivalence opportunity
+        run: |
+          npm run solver:audit-equivalence -- \
+            --out=tmp/solver-batch-digestion/equivalence.json
+
       - name: Summarize evidence
         run: |
           node <<'NODE'
           const fs = require('fs');
-          for (const name of ['published', 'corpus1', 'corpus2', 'published-solve', 'corpus2-solve', 'presolve-published', 'presolve-corpus1', 'presolve-corpus2']) {
+          for (const name of ['published', 'corpus1', 'corpus2', 'published-solve', 'corpus2-solve', 'presolve-published', 'presolve-corpus1', 'presolve-corpus2', 'equivalence']) {
             const doc = JSON.parse(fs.readFileSync(`tmp/solver-batch-digestion/${name}.json`, 'utf8'));
             console.log(JSON.stringify({ name, summary: doc.summary }, null, 2));
           }
