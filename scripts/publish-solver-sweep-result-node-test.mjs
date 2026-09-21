@@ -115,6 +115,39 @@ try {
   assert.equal(collisionError.status, 2);
   assert.match(String(collisionError.stderr), /published evidence path collision/u);
 
+  const largePrimaryDir = path.join(temp, 'large-primary-dir');
+  fs.mkdirSync(largePrimaryDir, { recursive: true });
+  const first24Hashes = [];
+  for (let i = 0; i < 25; i++) {
+    const file = path.join(largePrimaryDir, `result-${String(i).padStart(2, '0')}.json`);
+    fs.writeFileSync(file, JSON.stringify({
+      commitSha: 'b'.repeat(40),
+      configurationHash: primaryConfigurationHash,
+      levels: [{ id: `L${i}`, ok: i % 2 === 0, status: i % 2 === 0 ? 'success' : 'exhausted' }],
+    }));
+    if (i < 24) first24Hashes.push(contentHash(file));
+  }
+  const sampledBindingOutcome = path.join(temp, 'sampled-binding-outcome.json');
+  fs.writeFileSync(sampledBindingOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'incorrectly bound to only the first 24 result files',
+    binding: { resultContentHashes: first24Hashes },
+  }));
+  const sampledBindingOut = path.join(temp, 'sampled-binding-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${largePrimaryDir}`,
+    `--outcome-file=${sampledBindingOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${sampledBindingOut}`,
+  ], { cwd: root });
+  const sampledBindingManifest = JSON.parse(fs.readFileSync(path.join(sampledBindingOut, 'manifest.json')));
+  assert.ok(
+    sampledBindingManifest.decisionContractIssues.includes('researchOutcome.binding.resultContentHashes disagree with published result files'),
+    'scientific verdict binding must inspect result files beyond the 24-file human-summary sampling limit',
+  );
+
   const unboundOutcome = path.join(temp, 'unbound-outcome.json');
   fs.writeFileSync(unboundOutcome, JSON.stringify({
     schemaVersion: 1, outcome: 'completed-positive', reason: 'unbound completed verdict',
