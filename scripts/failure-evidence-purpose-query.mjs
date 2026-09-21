@@ -15,7 +15,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 
-import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { failureResponseIdentityView, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import {
     FAILURE_EVIDENCE_APPLICABILITY,
     FAILURE_EVIDENCE_PURPOSES,
@@ -69,6 +69,7 @@ const admissibleStrata = new Set();
 for (const file of inputFiles) {
     const document = validateFailureResponseDocument(JSON.parse(readFileSync(file, 'utf8')));
     for (const row of document.records) {
+        const identity = failureResponseIdentityView(row);
         const classification = classifyFailureEvidenceApplicability(document, row, purpose, options);
         counts[classification.applicability] += 1;
         reasons.set(classification.reason, (reasons.get(classification.reason) ?? 0) + 1);
@@ -83,7 +84,8 @@ for (const file of inputFiles) {
             runId: row.runId,
             protocolHash: row.protocolHash ?? document.protocolHash ?? null,
             solverRef: row.solverRef ?? document.solverRef ?? null,
-            actionKey: row.actionKey,
+            configurationKey: identity.configurationKey,
+            actionKey: identity.actionKey,
             stageId: row.stageId,
             applicability: classification.applicability,
             reason: classification.reason,
