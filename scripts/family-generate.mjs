@@ -41,7 +41,7 @@ const {
 } = await import('./stress/witness.mjs');
 const { witnessFromLevelAndPath } = await import('./stress/witness-adapter.mjs');
 const { inheritedWitnessHint, transformedWitnessHint } = await import('./stress/witness-provenance.mjs');
-const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, hintsDirFor } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, hintsDirFor, setLevelHintRecords } = await import('./level-data-io.mjs');
 const { generatorImplementationProvenance } = await import('./generator-implementation-provenance.mjs');
 const { loadResearchQuestionRegistry } = await import('./research-question-relations-lib.mjs');
 const { assertResearchBlock } = await import('./solver-research-block-lineage.mjs');
@@ -745,8 +745,7 @@ async function main() {
             },
         })]);
         const levelFp = await getLevelFingerprint(finalRaw);
-        finalRaw.hintRecords = [witnessTag === 'transformed' ? transformedWitnessHint(witnessObj.path, levelFp) : inheritedWitnessHint(witnessObj.path, levelFp)];
-        finalRaw.hints = [witnessObj.path];
+        setLevelHintRecords(finalRaw, [witnessTag === 'transformed' ? transformedWitnessHint(witnessObj.path, levelFp) : inheritedWitnessHint(witnessObj.path, levelFp)]);
 
         accepted.push(finalRaw);
         variantManifests.push({
@@ -924,7 +923,8 @@ async function main() {
     const outAbs = resolveFromRoot(OUT_FILE);
     mkdirSync(path.dirname(outAbs), { recursive: true });
     outputDocument.levels = accepted;
-    const { levelsChanged, hintFilesChanged } = writeLevelCorpusDocumentWithHints(outAbs, outputDocument);
+    const changedHintLevels = newlyAcceptedCount > 0 ? accepted.slice(-newlyAcceptedCount) : [];
+    const { levelsChanged, hintFilesChanged } = writeLevelCorpusDocumentWithHints(outAbs, outputDocument, { changedHintLevels });
     console.log(`Wrote ${accepted.length} level(s) total to ${OUT_FILE} (changed=${levelsChanged}), ${hintFilesChanged} hint file(s) written to ${path.join(path.dirname(OUT_FILE), 'hints')}/.`);
 
     const manifestAbs = resolveFromRoot(MANIFEST_FILE);
