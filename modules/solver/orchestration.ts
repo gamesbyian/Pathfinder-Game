@@ -58,6 +58,9 @@ import { computeStageBudgetPlan, computeShrinkRecoveryBudget, buildStageBudgetEn
 // Override) cannot drift between the additive reserve and the actual execution loop.
 
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
+    if (Object.prototype.hasOwnProperty.call(opts, 'workBudget')) {
+        throw new Error('solveLevel: retired SolveOpts.workBudget input; use baseWorkBudget');
+    }
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const nodeBudget = Number(opts.nodeBudget) > 0 ? Number(opts.nodeBudget) : Infinity;
     // The ladder always divides WORK, never wall clock. `timeBudgetMs` survives only as an outer
