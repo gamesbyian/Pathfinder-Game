@@ -115,9 +115,9 @@ The frozen 64-parent census completed successfully in GitHub Actions run `356579
 - work at one-successor parents: **22,944,663** (**25.33%** oracle ceiling);
 - all **64/64** independent sampled parents exceeded the preregistered 5% headroom threshold;
 - per-parent forced-work share: **11.68% min / 24.81% median / 46.65% max**;
-- observed forced chains: **5,813,731**, pooled mean length **1.31**, typical per-level p90 **2**, maximum length **14**.
+- chain anatomy from the first run is **quarantined**: unique-child identity was reconstructed from the generated-stage diagnostic path list rather than the later post-hard-prune survivor list. This does not affect `generatedCandidates`, parent counts, work totals, or the 25.33% prevalence/economics ceiling. A corrected rerun is measuring chain shape only.
 
-This is far above the preregistered **HEADROOM POSITIVE** gate. The opportunity is broad rather than a single-family spike, but the short-chain distribution changes the implementation hypothesis: do not build a long-chain compressor first. Measure whether frequent individual forced steps can bypass enough repeated generation/pruning/scoring/retention work to survive their own recognition and transition costs.
+This is far above the preregistered **HEADROOM POSITIVE** gate. The opportunity is broad rather than a single-family spike. Consumer shape must wait for the corrected chain-anatomy rerun; capture-fraction/economics remains earned regardless.
 
 The 25.33% figure remains an **upper bound**, not expected speedup. It includes work that a correct forced-step consumer may still need to perform.
 
