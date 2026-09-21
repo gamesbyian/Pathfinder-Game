@@ -65,17 +65,25 @@ Claim capsules already encode direct material dependencies and bounded reverse i
 
 Current WS2 claim production still derives from artifacts/contracts/protocols rather than upstream claim identities, so there is no real multi-hop claim chain yet. Revisit only when persisted claim-to-claim identity edges exist; closure would mean “reconsider,” never “rewrite.”
 
-## G. Research-unit topology — **PARTITION MODEL BLOCKED ON MAPPINGS**
+## G. Research-unit topology — **NARROW GROUPING PRIMITIVE EARNED**
 
-Observation -> dependence cluster -> analysis unit often is a quotient/partition. But the current primitive intentionally stores unit names, not observation-to-cluster mappings.
+The full quotient/partition model is still not earned: `unitTopology` names units but does not persist a universal observation→cluster map.
 
-Next: find studies that already persist both observation and parent/family/cluster IDs. Repeated manual collapsing can earn a partition helper for refinement/coarsening and pseudoreplication checks.
+A smaller repeated operation *is* real. Reserve-starvation and Class-3 dose analysis both group observation rows by an explicitly supplied parent/independent-unit identity before interpreting repeated measures. `research-observation-integrity-lib.mjs` now owns `groupResearchObservationsByUnit(rows, unitOf)`, which reports canonical unit IDs, repeated units and missing-key row indexes without assigning scientific meaning.
 
-## H. Research relation graph — **ONE LAW AT A TIME**
+Both live consumers now reuse it. Refinement/coarsening algebra remains deferred until actual nested partition mappings recur.
 
-Generic transitive closure would manufacture science. Some relations may have explicit algebraic laws; others do not. The existing reciprocal `calibratedBy/calibrates` validator is the model.
+## H. Research relation graph — **AUDIT CLOSED; ONLY AUTHORED LAWS**
 
-Next: relation-kind table declaring symmetry/transitivity/inverse behavior only where already semantically justified.
+Current relation counts show enough use to test semantics, but not a generic algebra. `calibratedBy/calibrates` is the one explicit inverse pair and reciprocity is already validated.
+
+`implies` and `triggeredBy` are **not** inverses: 10 directed pairs currently mirror, while 2 implication edges lack a trigger mirror and 12 trigger edges lack an implication mirror. Preserve the distinction:
+- `implies`: authored scientific/logical bearing from one question/result premise to another;
+- `triggeredBy`: authored research-genesis/dependency history for why a question was opened.
+
+`negativeControlFor` remains directed and non-transitive by default. `supersedes` and `duplicateOf` currently have no live edges, so no stronger symmetry/transitivity rules are earned.
+
+Rule: relation kinds are directed/non-transitive unless their owner explicitly declares a law. Add validators one law at a time; never infer scientific closure from graph shape.
 
 ## I. Evidence-role lifecycle — **EXPLICIT NON-GOAL**
 
@@ -89,8 +97,8 @@ The standard is prevention of real research errors, not mathematical elegance.
 
 ## Priority after first audit
 
-- **Done:** applicability meet; population set relation; capability-memory set migration + regression/ownership guards; block-consumption summary view.
-- **Next:** claim-chain persistence and unit-partition recurrence only when real mapped data appears. Envelope composition is deferred until a real same-question multi-envelope consumer appears.
+- **Done:** applicability meet; population set relation; capability-memory set migration; block-consumption summary; independent-unit grouping shared by two analyses; relation-law audit.
+- **Next:** claim-chain persistence only when real claim→claim identity edges appear. Full partition refinement/coarsening and envelope composition remain deferred until real consumers appear.
 - **Then:** claim-chain persistence, independence-axis categories, unit-partition recurrence.
 - **Guarded:** typed relation laws.
 - **Never implied:** evidence-role ordering or a generic algebra framework.
