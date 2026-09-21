@@ -77,7 +77,7 @@ Optimize docs for **decision density**: state contracts/state/gates directly; ke
 node scripts/agent-context-budget.mjs --check
 ```
 
-Use `node scripts/agent-context-budget.mjs --report` during periodic hygiene or deliberate context maintenance. Repository growth is acceptable; below `compactAtBytes`, size alone is not actionable debt. Do not spend ordinary PR effort trimming a healthy document merely because it exceeds `targetBytes`.
+On PRs and normal local branches, `--check` scopes maintenance-trigger failures to changed authorities and affected required routes, so pre-existing debt cannot block unrelated work. Use `node scripts/agent-context-budget.mjs --report` during periodic hygiene or deliberate context maintenance, and `--check --full-check` for the hygiene finish line. Repository growth is acceptable; below `compactAtBytes`, size alone is not actionable debt. Do not spend ordinary PR effort trimming a healthy document merely because it exceeds `targetBytes`.
 
 ## Verification
 
