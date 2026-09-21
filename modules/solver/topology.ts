@@ -496,10 +496,13 @@ function _retainConnectivityGoalCutCertificate(
     }
 
     const id = shadow.nextId++;
+    const signature = cert.reachedRows.map(word => (word >>> 0).toString(16)).join(',')
+        + '|' + cert.boundaryCells.join(',');
     shadow.certificates.push({
         id,
         reachedRows: cert.reachedRows,
         boundaryCells: cert.boundaryCells,
+        signature,
         sourceStateFingerprint: stateSignature(state),
         createdWork: prep._workMeter.units,
     });
@@ -507,6 +510,7 @@ function _retainConnectivityGoalCutCertificate(
         kind: 'certificate',
         work: prep._workMeter.units,
         certificateId: id,
+        certificateSignature: signature,
         boundarySize: cert.boundaryCells.length,
     });
 }
