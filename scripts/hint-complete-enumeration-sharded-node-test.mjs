@@ -19,7 +19,7 @@ import { buildBundle } from './run-bundled.mjs';
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const COMPLETE_SHARDED_BUNDLE = buildBundle('scripts/hint-complete-enumeration-sharded.mjs');
-const { readLevelsWithHints } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
 // A 3x3 grid, gate (1,1) -> goal (3,3), reqLen 4, reqInt 0: Manhattan distance 4, so every
 // solution is a monotone lattice path (2 rights + 2 ups) — exactly C(4,2) = 6 solutions, none
@@ -143,7 +143,7 @@ async function main() {
         await runSharded([
             `--levels-json=${writeFixturePath}`, '--levels=pos:1', '--shards-per-gate=2', '--write-levels', `--output=${writeOutput}`,
         ]);
-        const writtenLevels = readLevelsWithHints(writeFixturePath);
+        const writtenLevels = readLevelCorpusDocumentWithHints(writeFixturePath).levels;
         assert.equal(writtenLevels[0].hints.length, 6);
     } finally {
         await rm(tempDir, { recursive: true, force: true });
