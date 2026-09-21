@@ -1,6 +1,6 @@
 # Connectivity cut-certificate unscheduled caller attribution preflight 005
 
-> **Status:** concluded-positive; executed
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-21 — attribution assigned 47,389 / 49,270 unscheduled cut hits to ordinary DFS. [Result 005](2026-09-21-connectivity-cut-unscheduled-caller-attribution-result-005.md)
 > **Decision:** only ordinary DFS advanced to dominated-work economics; beam and repair did not justify separate tracing on this population.
 > **Remaining gate:** none for this preflight; DFS dominated-work result 006 subsequently closed the behavioral consumer.
