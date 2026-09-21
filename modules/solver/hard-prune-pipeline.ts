@@ -234,7 +234,7 @@ export function evaluatePrunedMove(
     // cut implication applies. This is exact proof validation, not another flood fill, and never
     // changes the verdict. It runs only when the opt-in certificate shadow exists.
     const connectivityShadow = prep._connectivityCertificateShadow;
-    if (!runConnectivity && connectivityShadow && (!cfg || cfg.PRUNE_CONNECTIVITY)) {
+    if (!runConnectivity && connectivityShadow?.observer.observeUnscheduled === true && (!cfg || cfg.PRUNE_CONNECTIVITY)) {
         const probe = probeUnscheduledConnectivityGoalCutCertificate(next, state, level, prep);
         if (probe) {
             connectivityShadow.observer.observe({
