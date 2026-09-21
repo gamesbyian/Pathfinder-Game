@@ -14,6 +14,14 @@ assert.match(capabilityMemory, /research-population-identity-lib\.mjs/u,
 assert.doesNotMatch(capabilityMemory, /function setIntersection|function setUnion/u,
   'capability memory must not redeclare shared identity-set algebra');
 
+const parityPrep = source('modules/solver/prep.ts');
+assert.match(parityPrep, /parity-structure\.js/u,
+  'solver prep must consume the shared static parity/portal structure owner');
+
+const responseGuidedParity = source('scripts/analyze-response-guided-parity-contrast.mjs');
+assert.match(responseGuidedParity, /solver\/parity-structure\.js/u,
+  'response-guided parity analysis must reuse the solver-owned parity structure');
+
 const failureResponse = source('scripts/solver-failure-response-lib.mjs');
 assert.doesNotMatch(failureResponse, /from ['"]\.\/solver-experiment-contract\.mjs['"]/u);
 assert.match(failureResponse, /research-observation-integrity-lib\.mjs/u);
