@@ -9,7 +9,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { readLevelCorpusDocumentWithHints, readLevelsWithHints, writeLevelCorpusDocumentWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, setLevelHintRecords, AmbiguousLevelSpecError } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, setLevelHintRecords, AmbiguousLevelSpecError } from './level-data-io.mjs';
 
 function makeLevel(overrides = {}) {
     return {
@@ -19,6 +19,11 @@ function makeLevel(overrides = {}) {
         designerName: '', description: '', difficulty: null,
         ...overrides,
     };
+}
+
+function withHintPaths(level, paths) {
+    setLevelHintRecords(level, paths.map(path => ({ path, provenance: [] })));
+    return level;
 }
 
 function withTempDir(fn) {
@@ -91,18 +96,18 @@ test('explicit corpus document I/O preserves wrapped metadata by value, not arra
 test('a level with an id keeps its hints after being reordered in the corpus array', () => {
     withTempDir((dir) => {
         const levelsJsonPath = path.join(dir, 'levels.json');
-        const a = { id: 'P00001', ...makeLevel(), hints: [[0, 1]] };
-        const b = { id: 'P00002', ...makeLevel(), hints: [[2, 3]] };
+        const a = withHintPaths({ id: 'P00001', ...makeLevel() }, [[0, 1]]);
+        const b = withHintPaths({ id: 'P00002', ...makeLevel() }, [[2, 3]]);
 
-        writeLevelsWithHints(levelsJsonPath, [a, b]);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [a, b], metadata: {}, storageShape: 'array' });
 
         // Reorder: b now comes first (position 1), a second (position 2) -- the exact scenario
         // the whole id-unification plan exists to make safe.
-        const reordered = readLevelsWithHints(levelsJsonPath);
+        const reordered = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const [readB, readA] = [reordered.find((l) => l.id === 'P00002'), reordered.find((l) => l.id === 'P00001')];
-        writeLevelsWithHints(levelsJsonPath, [readB, readA]);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [readB, readA], metadata: {}, storageShape: 'array' });
 
-        const final = readLevelsWithHints(levelsJsonPath);
+        const final = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const finalA = final.find((l) => l.id === 'P00001');
         const finalB = final.find((l) => l.id === 'P00002');
         assert.deepEqual(finalA.hints, [[0, 1]], 'level a keeps its own hints regardless of array position');
@@ -124,18 +129,18 @@ test('setLevelHintRecords makes canonical records the mutation input and derives
 test('a level with no id (an editor draft) falls back to position-keyed storage', () => {
     withTempDir((dir) => {
         const levelsJsonPath = path.join(dir, 'levels.json');
-        const draft = { ...makeLevel(), hints: [[9, 9]] };
-        writeLevelsWithHints(levelsJsonPath, [draft]);
-        const reread = readLevelsWithHints(levelsJsonPath);
+        const draft = withHintPaths(makeLevel(), [[9, 9]]);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [draft], metadata: {}, storageShape: 'array' });
+        const reread = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         assert.deepEqual(reread[0].hints, [[9, 9]]);
     });
 });
 
 test('two processes reading the same corpus and each writing back only their own chunk do not clobber each other', () => {
     // Regression test for a real data-loss bug: a caller (e.g. hint-workbench.mjs sharded across
-    // concurrent processes) calls readLevelsWithHints once, mutates only SOME levels' .hints/
-    // .hintRecords, then calls writeLevelsWithHints once with the FULL array. Before the fix,
-    // writeLevelsWithHints rewrote every level's hint file from its in-memory content regardless
+    // concurrent processes) calls the explicit corpus-document reader once, mutates only SOME levels' .hints/
+    // .hintRecords, then calls the explicit corpus-document writer once with the FULL level set. Before the fix,
+    // the old writer rewrote every level's hint file from its in-memory content regardless
     // of whether that level was actually touched -- so a second process's untouched, stale
     // start-of-run snapshot of a level the FIRST process already updated would silently revert it
     // when the second process's write ran later. Simulated here without real subprocesses: two
@@ -144,12 +149,12 @@ test('two processes reading the same corpus and each writing back only their own
     // would have reverted the first process's write under the old behavior.
     withTempDir((dir) => {
         const levelsJsonPath = path.join(dir, 'levels.json');
-        const a = { id: 'P00001', ...makeLevel(), hints: [[0, 1]] };
-        const b = { id: 'P00002', ...makeLevel(), hints: [[2, 3]] };
-        writeLevelsWithHints(levelsJsonPath, [a, b]);
+        const a = withHintPaths({ id: 'P00001', ...makeLevel() }, [[0, 1]]);
+        const b = withHintPaths({ id: 'P00002', ...makeLevel() }, [[2, 3]]);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [a, b], metadata: {}, storageShape: 'array' });
 
         // "Process 1" reads the corpus and updates only level a.
-        const process1Levels = readLevelsWithHints(levelsJsonPath);
+        const process1Levels = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const process1A = process1Levels.find((l) => l.id === 'P00001');
         setLevelHintRecords(process1A, [
             ...process1A.hintRecords,
@@ -157,7 +162,7 @@ test('two processes reading the same corpus and each writing back only their own
         ]);
 
         // "Process 2" reads the corpus (before process 1 writes) and updates only level b.
-        const process2Levels = readLevelsWithHints(levelsJsonPath);
+        const process2Levels = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const process2B = process2Levels.find((l) => l.id === 'P00002');
         setLevelHintRecords(process2B, [
             ...process2B.hintRecords,
@@ -165,13 +170,13 @@ test('two processes reading the same corpus and each writing back only their own
         ]);
 
         // Process 1 writes its full in-memory snapshot (a updated, b untouched/stale) first...
-        writeLevelsWithHints(levelsJsonPath, process1Levels);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: process1Levels, metadata: {}, storageShape: 'array' });
         // ...then process 2 writes its full in-memory snapshot (b updated, a untouched/stale).
         // Before the fix, this second write would revert level a's file back to its stale
         // 2-hint content, discarding process 1's real update.
-        writeLevelsWithHints(levelsJsonPath, process2Levels);
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: process2Levels, metadata: {}, storageShape: 'array' });
 
-        const final = readLevelsWithHints(levelsJsonPath);
+        const final = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const finalA = final.find((l) => l.id === 'P00001');
         const finalB = final.find((l) => l.id === 'P00002');
         assert.deepEqual(finalA.hints, [[0, 1], [4, 5]], "process 1's update to level a must survive process 2's later write");
