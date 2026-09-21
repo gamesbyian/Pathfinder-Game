@@ -52,17 +52,13 @@ A smaller repeated operation *is* real. Reserve-starvation and Class-3 dose anal
 
 Both live consumers now reuse it. Refinement/coarsening algebra remains deferred until actual nested partition mappings recur.
 
-## H. Research relation graph — **AUDIT CLOSED; ONLY AUTHORED LAWS**
+## H. Research relation graph — **AUDIT CLOSED; DERIVED TOPOLOGY VIEW IMPLEMENTED**
 
-Current relation counts show enough use to test semantics, but not a generic algebra. `calibratedBy/calibrates` is the one explicit inverse pair and reciprocity is already validated.
+`calibratedBy/calibrates` remains the one explicit inverse pair. `implies` and `triggeredBy` are not inverses: they represent epistemic bearing versus research genealogy.
 
-`implies` and `triggeredBy` are **not** inverses: 10 directed pairs currently mirror, while 2 implication edges lack a trigger mirror and 12 trigger edges lack an implication mirror. Preserve the distinction:
-- `implies`: authored scientific/logical bearing from one question/result premise to another;
-- `triggeredBy`: authored research-genesis/dependency history for why a question was opened.
+The question-authority audit now exposes mirrored, implication-only, and trigger-only directed pairs as a read-only diagnostic. It never creates relations or closure.
 
-`negativeControlFor` remains directed and non-transitive by default. `supersedes` and `duplicateOf` currently have no live edges, so no stronger symmetry/transitivity rules are earned.
-
-Rule: relation kinds are directed/non-transitive unless their owner explicitly declares a law. Add validators one law at a time; never infer scientific closure from graph shape.
+`negativeControlFor` stays directed/non-transitive by default; `supersedes` and `duplicateOf` have no live edges, so no stronger laws are earned. Relation kinds remain directed/non-transitive unless their owner explicitly declares otherwise.
 
 ## I. Evidence-role lifecycle — **EXPLICIT NON-GOAL**
 
