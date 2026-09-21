@@ -309,6 +309,11 @@ assert.ok(real.relations.premises.some(row => row.premiseId === 'P204'));
 assert.ok(real.relations.premiseEdges.some(row => row.from === 'P204' && row.to === 'P183'));
 assert.ok(Array.isArray(real.relations.durableEvidence));
 assert.ok(Array.isArray(real.relations.promotions));
+assert.ok(Array.isArray(real.relations.capabilityDemands));
+assert.ok(real.relations.capabilityDemands.length >= 26);
+assert.ok(real.relations.capabilityDemands.every(row => row.questionId === 'WS2-CAPABILITY-INVENTION-DEMAND'));
+assert.ok(real.relations.capabilityDemands.some(row => row.id === 'CID-0003' && row.workClass === 'EXTENSION'));
+assert.ok(real.relations.capabilityDemands.every(row => row._researchSource?.relation === 'capabilityDemands'));
 assert.ok(real.relations.promotions.some(row =>
     row.mechanisms.includes('STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY')
     && row.decisionEvidenceRef === 'reports/2026-09-16-class4-113-allocation-promotion-001.md'),
