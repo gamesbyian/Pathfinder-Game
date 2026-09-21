@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { analyzePrewinnerWorkDocuments } from './analyze-prewinner-work-oracle.mjs';
+import { analyzePrewinnerWorkDocuments, analyzeZeroWinActionShadow } from './analyze-prewinner-work-oracle.mjs';
 
 const result = analyzePrewinnerWorkDocuments([{ source: 'fixture', document: { levels: [
   { id:'A', ok:true, attempts:[
@@ -23,4 +23,18 @@ assert.equal(result.byWinningStage.find(r => r.winningStage === 'late').preWinne
 assert.equal(result.predecessorWinningStagePairs[0].predecessorStage, 'early');
 assert.equal(result.predecessorWinningStagePairs[0].winningStage, 'late');
 assert.equal(result.predecessorWinningStagePairs[0].preWinnerWork, 30);
+
+const shadow = analyzeZeroWinActionShadow({ levels: [
+  { id:'A', ok:false, attempts:[{ outcome:'failed', actionKey:'rare', workSpent:10 }] },
+  { id:'B', ok:true, attempts:[{ outcome:'success', ok:true, actionKey:'common', workSpent:5 }] },
+  { id:'C', ok:true, attempts:[
+    { outcome:'failed', actionKey:'common', workSpent:20 },
+    { outcome:'success', ok:true, actionKey:'rare', workSpent:5 },
+  ]},
+]}, { minAttemptThresholds:[1] });
+assert.equal(shadow.developmentLevels, 2);
+assert.equal(shadow.validationLevels, 1);
+assert.equal(shadow.policies[0].validationSolvedLevels, 1);
+assert.equal(shadow.policies[0].lostWinners, 1);
+assert.equal(shadow.policies[0].capturedPreWinnerWorkShare, 0);
 console.log('analyze-prewinner-work-oracle: ok');
