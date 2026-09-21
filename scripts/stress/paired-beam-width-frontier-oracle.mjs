@@ -1,0 +1,236 @@
+#!/usr/bin/env node
+/**
+ * Response-guided consumer oracle for non-monotonic beam-width inversions.
+ *
+ * Captures two isolated beam frontiers at the same scoring profile and phase checkpoint on an
+ * explicit development population. It compares exact prefix identities only; it does not claim
+ * feasibility, dominance, routing value, or production benefit.
+ *
+ * Usage:
+ *   node scripts/run-bundled.mjs scripts/stress/paired-beam-width-frontier-oracle.mjs -- \
+ *     --corpus=data/stress/stress-levels-random.json --levels=R00001,R00002 \
+ *     --profile=objectiveFirst --widths=2000,5000 --depth-fraction=0.2 \
+ *     --out=tmp/paired-width-frontier.json
+ */
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+
+import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
+import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { reconstructBeamPath } from './production-search-frontier-sampler-lib.mjs';
+
+const argv = process.argv.slice(2);
+const arg = (name, fallback = null) => {
+    const hit = argv.find(value => value.startsWith(`--${name}=`));
+    return hit === undefined ? fallback : hit.slice(name.length + 3);
+};
+
+const pathIdentity = prefix => JSON.stringify(prefix);
+
+export function compareFrontierIdentitySets(leftIds, rightIds) {
+    const left = new Set(leftIds.map(String));
+    const right = new Set(rightIds.map(String));
+    const shared = [...left].filter(id => right.has(id)).sort();
+    const leftOnly = [...left].filter(id => !right.has(id)).sort();
+    const rightOnly = [...right].filter(id => !left.has(id)).sort();
+    const union = shared.length + leftOnly.length + rightOnly.length;
+    return {
+        left: left.size,
+        right: right.size,
+        shared: shared.length,
+        leftOnly: leftOnly.length,
+        rightOnly: rightOnly.length,
+        jaccard: union ? shared.length / union : null,
+        leftContainedInRight: leftOnly.length === 0,
+        rightContainedInLeft: rightOnly.length === 0,
+        sharedIds: shared,
+        leftOnlyIds: leftOnly,
+        rightOnlyIds: rightOnly,
+    };
+}
+
+export function compareBeamFrontiers(leftFrontier, rightFrontier) {
+    const identityRows = frontier => frontier.map((node, index) => {
+        const prefix = reconstructBeamPath(node);
+        return {
+            index,
+            id: pathIdentity(prefix),
+            prefix,
+            score: node.score,
+        };
+    });
+    const left = identityRows(leftFrontier);
+    const right = identityRows(rightFrontier);
+    const comparison = compareFrontierIdentitySets(
+        left.map(row => row.id),
+        right.map(row => row.id),
+    );
+    const byLeft = new Map(left.map(row => [row.id, row]));
+    const byRight = new Map(right.map(row => [row.id, row]));
+    return {
+        ...comparison,
+        leftOnlyRows: comparison.leftOnlyIds.map(id => byLeft.get(id)),
+        rightOnlyRows: comparison.rightOnlyIds.map(id => byRight.get(id)),
+        sharedRows: comparison.sharedIds.map(id => ({
+            id,
+            left: byLeft.get(id),
+            right: byRight.get(id),
+        })),
+    };
+}
+
+async function captureFrontier({ level, gate, profile, width, pauseAfterPhases, budgetMs }) {
+    const { prepLevel, beamSearchFromGate } = SOLVER_TESTING_API;
+    const prep = prepLevel(level);
+    prep._cfg = null;
+    prep._metrics = { nodesExpanded: 0 };
+    const out = {};
+    const result = await beamSearchFromGate(
+        gate,
+        level,
+        prep,
+        profile,
+        budgetMs,
+        Date.now(),
+        null,
+        width,
+        null,
+        false,
+        out,
+        Infinity,
+        undefined,
+        pauseAfterPhases,
+    );
+    if (result) {
+        return {
+            status: 'solved-before-checkpoint',
+            frontier: [],
+            nodesExpanded: prep._metrics.nodesExpanded,
+            workSpent: prep._workMeter.units,
+        };
+    }
+    if (!out.pausedContinuation) {
+        return {
+            status: 'exhausted-before-checkpoint',
+            frontier: [],
+            nodesExpanded: prep._metrics.nodesExpanded,
+            workSpent: prep._workMeter.units,
+        };
+    }
+    return {
+        status: 'paused',
+        frontier: out.pausedContinuation.frontier,
+        nodesExpanded: prep._metrics.nodesExpanded,
+        workSpent: prep._workMeter.units,
+    };
+}
+
+async function main() {
+    const corpusFile = arg('corpus', 'data/stress/stress-levels-random.json');
+    const levelIds = String(arg('levels', '')).split(',').map(value => value.trim()).filter(Boolean);
+    const profileName = arg('profile', 'objectiveFirst');
+    const widths = String(arg('widths', '2000,5000')).split(',').map(Number);
+    const depthFraction = Number(arg('depth-fraction', 0.2));
+    const budgetMs = Number(arg('budget-ms', 600_000));
+    const outFile = arg('out', null);
+
+    if (!outFile) throw new Error('--out is required');
+    if (!levelIds.length) throw new Error('--levels must contain at least one explicit level id');
+    if (new Set(levelIds).size !== levelIds.length) throw new Error('--levels contains duplicate ids');
+    if (widths.length !== 2 || widths.some(width => !Number.isInteger(width) || width < 1) || widths[0] === widths[1]) {
+        throw new Error('--widths must contain two distinct positive integers');
+    }
+    if (!(depthFraction > 0 && depthFraction < 1)) throw new Error('--depth-fraction must be in (0,1)');
+    if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
+
+    installBrowserStubs();
+    const Solver = createSolver();
+    const profile = SOLVER_TESTING_API.SCORING_PROFILES[profileName];
+    if (!profile) throw new Error(`unknown scoring profile: ${profileName}`);
+
+    const document = JSON.parse(readFileSync(path.resolve(corpusFile), 'utf8'));
+    const rows = Array.isArray(document) ? document : document.levels;
+    if (!Array.isArray(rows)) throw new Error('corpus must be an array or {levels:[...]}');
+    const byId = new Map(rows.map(row => [String(row.id), row]));
+
+    const results = [];
+    for (const levelId of levelIds) {
+        const raw = byId.get(levelId);
+        if (!raw) throw new Error(`level ${levelId} missing from ${corpusFile}`);
+        const { id: _id, stressMeta: _stressMeta, ...rawLevel } = raw;
+        const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
+        const gate = level.gateKeys[0];
+        const pauseAfterPhases = Math.max(1, Math.round(level.requiredLength * depthFraction));
+
+        const captures = [];
+        for (const width of widths) {
+            captures.push(await captureFrontier({
+                level, gate, profile, width, pauseAfterPhases, budgetMs,
+            }));
+        }
+
+        const comparison = captures.every(row => row.status === 'paused')
+            ? compareBeamFrontiers(captures[0].frontier, captures[1].frontier)
+            : null;
+
+        results.push({
+            levelId,
+            pauseAfterPhases,
+            widths,
+            left: {
+                width: widths[0],
+                status: captures[0].status,
+                frontierSize: captures[0].frontier.length,
+                nodesExpanded: captures[0].nodesExpanded,
+                workSpent: captures[0].workSpent,
+            },
+            right: {
+                width: widths[1],
+                status: captures[1].status,
+                frontierSize: captures[1].frontier.length,
+                nodesExpanded: captures[1].nodesExpanded,
+                workSpent: captures[1].workSpent,
+            },
+            comparison,
+        });
+    }
+
+    const comparable = results.filter(row => row.comparison);
+    const report = {
+        schemaVersion: 1,
+        kind: 'pathfinder-paired-beam-width-frontier-oracle',
+        evidenceRole: 'development',
+        premiseUse: 'consumer-oracle-only',
+        protocol: {
+            corpus: corpusFile,
+            levelIds,
+            profile: profileName,
+            widths,
+            depthFraction,
+            budgetMs,
+            execution: 'two isolated beam searches, same gate/profile/checkpoint; no production policy change',
+        },
+        interpretation: {
+            allowed: 'test state-support nesting/overlap before dominance or retention hypotheses',
+            forbidden: 'infer feasibility, production benefit, or a routing rule from frontier membership alone',
+        },
+        summary: {
+            requestedParents: results.length,
+            comparableParents: comparable.length,
+            leftContainedInRight: comparable.filter(row => row.comparison.leftContainedInRight).length,
+            rightContainedInLeft: comparable.filter(row => row.comparison.rightContainedInLeft).length,
+            meanJaccard: comparable.length
+                ? comparable.reduce((sum, row) => sum + (row.comparison.jaccard ?? 0), 0) / comparable.length
+                : null,
+        },
+        parents: results,
+    };
+
+    const absolute = path.resolve(outFile);
+    mkdirSync(path.dirname(absolute), { recursive: true });
+    writeFileSync(absolute, `${JSON.stringify(report, null, 2)}\n`);
+    console.log(JSON.stringify({ out: outFile, ...report.summary }, null, 2));
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
