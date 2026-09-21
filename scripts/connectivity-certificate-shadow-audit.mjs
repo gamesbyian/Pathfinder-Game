@@ -17,7 +17,7 @@ const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map
     return [k, v.join('=')];
 }));
 const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels-random.json';
-const LEVEL_SPEC = args.get('--levels') || 'pos:1-24';
+const LEVEL_SPEC = args.get('--levels') || 'pos:81-104';
 const BASE_WORK_BUDGET = Number(args.get('--work-budget') || 500000);
 const TIME_BUDGET_MS = Number(args.get('--time-budget-ms') || 30000);
 const MAX_CERTIFICATES = Number(args.get('--max-certificates') || 64);
