@@ -180,12 +180,15 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
     const _dfsCutObserver = prep._connectivityCertificateShadow?.observer;
     const _measureDfsCutDominance = _dfsCutObserver?.observeUnscheduled === true
         && _dfsCutObserver.measureDfsDominatedWork === true;
-    type DfsCutHit = { certificateId: number; sourceWork: number; crossExactState: boolean; boundaryCellChecks: number };
-    type DfsCutActive = DfsCutHit & { depth: number; hitWork: number; hitNodes: number; remainingSteps: number };
-    let _pendingDfsCutHit: DfsCutHit | null = null;
+    type DfsCutHitSignal = { certificateId: number; sourceWork: number; crossExactState: boolean; boundaryCellChecks: number };
+    type DfsCutPending = DfsCutHitSignal & { hitWork: number; hitNodes: number };
+    type DfsCutActive = DfsCutPending & { depth: number; remainingSteps: number };
+    let _pendingDfsCutHit: DfsCutPending | null = null;
     let _activeDfsCut: DfsCutActive | null = null;
     const _captureDfsCutHit = _measureDfsCutDominance
-        ? (hit: DfsCutHit) => { _pendingDfsCutHit = hit; }
+        ? (hit: DfsCutHitSignal) => {
+            _pendingDfsCutHit = { ...hit, hitWork: prep._workMeter.units, hitNodes: nodesExpanded };
+        }
         : undefined;
     const _emitDfsCutDominance = (outcome: 'exhausted' | 'timeout' | 'solution', censored: boolean) => {
         if (!_activeDfsCut || !_dfsCutObserver) return;
@@ -319,7 +322,9 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
                     researchCaller: 'dfs',
                     researchSchedulePhase: nodesExpanded & 63,
                     researchRemainingSteps: rSteps,
-                    onUnscheduledConnectivityCertificateHit: _captureDfsCutHit,
+                    ...(_captureDfsCutHit
+                        ? { onUnscheduledConnectivityCertificateHit: _captureDfsCutHit }
+                        : {}),
                 }
                 : undefined);
 
@@ -340,8 +345,6 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
             _activeDfsCut = {
                 ..._pendingDfsCutHit,
                 depth: stack.length,
-                hitWork: prep._workMeter.units,
-                hitNodes: nodesExpanded,
                 remainingSteps: rSteps,
             };
         }
