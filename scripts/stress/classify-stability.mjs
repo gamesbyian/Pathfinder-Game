@@ -27,6 +27,7 @@
  *       [--budget-ms=20000] [--compare=<second-run-shaped file>] [--out=<file>]
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { normalizeSolverSweepReportInput } from '../solver-sweep-report-input.mjs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -59,10 +60,12 @@ function main() {
     }
 
     const readJson = (p) => JSON.parse(readFileSync(path.resolve(ROOT, p), 'utf8'));
-    const data = readJson(IN_FILE);
-    const budgetMs = Number(args.get('--budget-ms') || data.budgetMs || 20000);
+    const data = normalizeSolverSweepReportInput(readJson(IN_FILE), IN_FILE);
+    const budgetMs = Number(args.get('--budget-ms') || data.summary.budgetMs || 20000);
 
-    const compareById = COMPARE_FILE ? new Map(readJson(COMPARE_FILE).levels.map(lv => [lv.id, lv])) : null;
+    const compareById = COMPARE_FILE
+        ? new Map(normalizeSolverSweepReportInput(readJson(COMPARE_FILE), COMPARE_FILE).levels.map(lv => [lv.id, lv]))
+        : null;
 
     const classified = data.levels.map(lv => {
         let stability = classifyOne(lv, budgetMs);
