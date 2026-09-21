@@ -128,7 +128,10 @@ test('connectivity goal-cut shadow reuses a portal-free cut across a different e
     assert.ok(hit, 'expected the earlier cut certificate to validate on the later state');
     assert.equal(hit.crossExactState, true);
     assert.equal(hit.confirmedGoalUnreachable, true);
+    assert.ok(hit.positionEligibleCertificates > 0);
     assert.ok(hit.boundaryCellChecks > 0);
+    assert.ok(records.some(r => r.kind === 'certificate-duplicate'),
+        'the later ordinary rejection should rediscover the same proof template without consuming another retained slot');
 });
 
 test('connectivity goal-cut shadow invalidates a prior dynamic boundary when it becomes traversable', () => {
