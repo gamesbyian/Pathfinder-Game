@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { gzipSync } from 'node:zlib';
 import { execFileSync } from 'node:child_process';
 
