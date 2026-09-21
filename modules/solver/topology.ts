@@ -477,7 +477,12 @@ function _retainConnectivityGoalCutCertificate(
     maxVisit: number, pos: number, mcOpenMask: number, axisExhausted: boolean,
 ): void {
     const shadow = prep._connectivityCertificateShadow;
-    if (!shadow || level.portalMap.size !== 0 || state.mustMask !== 0 || state.mustCrossMask !== 0 || mcOpenMask !== 0) return;
+    // The proof is only about the fixed goal lying outside a presently closed portal-free component.
+    // Pending obligations and the reserved-MC regime can change WHICH boundary cells are passable,
+    // but they do not change the cut theorem: construction below mirrors the source state's exact
+    // connectivity predicate, and every later application revalidates the whole boundary under that
+    // later state's predicate. Do not narrow the producer by obligation masks.
+    if (!shadow || level.portalMap.size !== 0) return;
 
     const cert = _buildConnectivityGoalCutCertificate(
         level, state, prep, maxVisit, pos, mcOpenMask, level.mustCrossKeys, axisExhausted,
