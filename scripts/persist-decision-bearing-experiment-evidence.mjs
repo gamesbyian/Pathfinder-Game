@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { decisionBearingExperimentResultIssues } from './solver-experiment-contract.mjs';
+import { DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION } from './durable-evidence-bundle-lib.mjs';
 
 const args = process.argv.slice(2);
 const values = new Map();
@@ -205,7 +206,7 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
     }
 
     const bundle = {
-      schemaVersion: 1,
+      schemaVersion: DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION,
       kind: 'pathfinder-durable-experiment-evidence-bundle',
       experimentId: manifest?.experiment?.experimentId ?? null,
       workflowFamily: manifest?.experiment?.workflowFamily ?? null,
@@ -331,6 +332,7 @@ function selfTest() {
     assert.equal(bundle.researchQuestion.measurementOpportunity, 'MO-002');
     assert.equal(bundle.researchBlock.blockId, 'BLOCK-001');
     assert.equal(bundle.researchBlock.evidenceRole, 'development');
+    assert.equal(bundle.schemaVersion, DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION);
     assert.equal(bundle.manifestStoredPath, 'manifest.json');
     assert.equal(bundle.files.length, 3);
     const manifestRecord = bundle.files.find(file => file.source === 'manifest.json');
