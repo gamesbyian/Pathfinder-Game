@@ -17,6 +17,34 @@ export function classifyResearchObservationOutcome(row) {
   return 'unknown';
 }
 
+
+export function groupResearchObservationsByUnit(rows, unitOf) {
+  if (!Array.isArray(rows)) throw new Error('research observations must be an array');
+  if (typeof unitOf !== 'function') throw new Error('unitOf must be a function');
+  const groups = new Map();
+  const missingRows = [];
+  rows.forEach((row, index) => {
+    const raw = unitOf(row, index);
+    if (raw == null || String(raw).trim() === '') {
+      missingRows.push(index);
+      return;
+    }
+    const unitId = String(raw);
+    const group = groups.get(unitId) ?? [];
+    group.push(row);
+    groups.set(unitId, group);
+  });
+  return {
+    groups,
+    unitIds: [...groups.keys()].sort(),
+    missingRowIndexes: missingRows,
+    repeatedUnitIds: [...groups.entries()]
+      .filter(([, group]) => group.length > 1)
+      .map(([unitId]) => unitId)
+      .sort(),
+  };
+}
+
 export function buildResearchPopulationIntegrity(expectedIds, rows) {
   const expected = canonicalizeResearchIdentities(expectedIds).identities;
   const actualRaw = (rows ?? []).map(researchObservationIdentity).filter(id => id != null).map(String);
