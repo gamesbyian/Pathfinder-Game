@@ -160,43 +160,52 @@ async function main() {
         if (!raw) throw new Error(`level ${levelId} missing from ${corpusFile}`);
         const { id: _id, stressMeta: _stressMeta, ...rawLevel } = raw;
         const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
-        const gate = level.gateKeys[0];
         const pauseAfterPhases = Math.max(1, Math.round(level.requiredLength * depthFraction));
+        const gates = [];
 
-        const captures = [];
-        for (const width of widths) {
-            captures.push(await captureFrontier({
-                level, gate, profile, width, pauseAfterPhases, budgetMs,
-            }));
+        for (const [gateIndex, gate] of level.gateKeys.entries()) {
+            const captures = [];
+            for (const width of widths) {
+                captures.push(await captureFrontier({
+                    level, gate, profile, width, pauseAfterPhases, budgetMs,
+                }));
+            }
+
+            const comparison = captures.every(row => row.status === 'paused')
+                ? compareBeamFrontiers(captures[0].frontier, captures[1].frontier)
+                : null;
+
+            gates.push({
+                gateIndex,
+                gateKey: gate,
+                left: {
+                    width: widths[0],
+                    status: captures[0].status,
+                    frontierSize: captures[0].frontier.length,
+                    nodesExpanded: captures[0].nodesExpanded,
+                    workSpent: captures[0].workSpent,
+                },
+                right: {
+                    width: widths[1],
+                    status: captures[1].status,
+                    frontierSize: captures[1].frontier.length,
+                    nodesExpanded: captures[1].nodesExpanded,
+                    workSpent: captures[1].workSpent,
+                },
+                comparison,
+            });
         }
-
-        const comparison = captures.every(row => row.status === 'paused')
-            ? compareBeamFrontiers(captures[0].frontier, captures[1].frontier)
-            : null;
 
         results.push({
             levelId,
             pauseAfterPhases,
             widths,
-            left: {
-                width: widths[0],
-                status: captures[0].status,
-                frontierSize: captures[0].frontier.length,
-                nodesExpanded: captures[0].nodesExpanded,
-                workSpent: captures[0].workSpent,
-            },
-            right: {
-                width: widths[1],
-                status: captures[1].status,
-                frontierSize: captures[1].frontier.length,
-                nodesExpanded: captures[1].nodesExpanded,
-                workSpent: captures[1].workSpent,
-            },
-            comparison,
+            gates,
         });
     }
 
-    const comparable = results.filter(row => row.comparison);
+    const comparable = results.flatMap(row => row.gates.map(gate => ({ levelId: row.levelId, ...gate })))
+        .filter(row => row.comparison);
     const report = {
         schemaVersion: 1,
         kind: 'pathfinder-paired-beam-width-frontier-oracle',
@@ -209,7 +218,7 @@ async function main() {
             widths,
             depthFraction,
             budgetMs,
-            execution: 'two isolated beam searches, same gate/profile/checkpoint; no production policy change',
+            execution: 'two isolated beam searches per gate, same profile/checkpoint; no production policy change',
         },
         interpretation: {
             allowed: 'test state-support nesting/overlap before dominance or retention hypotheses',
@@ -217,7 +226,9 @@ async function main() {
         },
         summary: {
             requestedParents: results.length,
-            comparableParents: comparable.length,
+            requestedGates: results.reduce((sum, row) => sum + row.gates.length, 0),
+            comparableGates: comparable.length,
+            parentsWithComparableGates: new Set(comparable.map(row => row.levelId)).size,
             leftContainedInRight: comparable.filter(row => row.comparison.leftContainedInRight).length,
             rightContainedInLeft: comparable.filter(row => row.comparison.rightContainedInLeft).length,
             meanJaccard: comparable.length
