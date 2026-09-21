@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { readLevelsWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, AmbiguousLevelSpecError } from './level-data-io.mjs';
+import { readLevelsWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, setLevelHintRecords, AmbiguousLevelSpecError } from './level-data-io.mjs';
 
 function makeLevel(overrides = {}) {
     return {
@@ -68,6 +68,17 @@ test('a level with an id keeps its hints after being reordered in the corpus arr
     });
 });
 
+test('setLevelHintRecords makes canonical records the mutation input and derives bare paths', () => {
+    const level = makeLevel({ hints: [[9, 9]] });
+    const records = [
+        { path: [1, 2, 3], provenance: [] },
+        { path: [4, 5, 6], provenance: [{ solver: { id: 'fixture' } }] },
+    ];
+    assert.equal(setLevelHintRecords(level, records), records);
+    assert.equal(level.hintRecords, records);
+    assert.deepEqual(level.hints, [[1, 2, 3], [4, 5, 6]]);
+});
+
 test('a level with no id (an editor draft) falls back to position-keyed storage', () => {
     withTempDir((dir) => {
         const levelsJsonPath = path.join(dir, 'levels.json');
@@ -98,14 +109,18 @@ test('two processes reading the same corpus and each writing back only their own
         // "Process 1" reads the corpus and updates only level a.
         const process1Levels = readLevelsWithHints(levelsJsonPath);
         const process1A = process1Levels.find((l) => l.id === 'P00001');
-        process1A.hints = [...process1A.hints, [4, 5]];
-        process1A.hintRecords = [...process1A.hintRecords, { path: [4, 5], provenance: [] }];
+        setLevelHintRecords(process1A, [
+            ...process1A.hintRecords,
+            { path: [4, 5], provenance: [] },
+        ]);
 
         // "Process 2" reads the corpus (before process 1 writes) and updates only level b.
         const process2Levels = readLevelsWithHints(levelsJsonPath);
         const process2B = process2Levels.find((l) => l.id === 'P00002');
-        process2B.hints = [...process2B.hints, [6, 7]];
-        process2B.hintRecords = [...process2B.hintRecords, { path: [6, 7], provenance: [] }];
+        setLevelHintRecords(process2B, [
+            ...process2B.hintRecords,
+            { path: [6, 7], provenance: [] },
+        ]);
 
         // Process 1 writes its full in-memory snapshot (a updated, b untouched/stale) first...
         writeLevelsWithHints(levelsJsonPath, process1Levels);
