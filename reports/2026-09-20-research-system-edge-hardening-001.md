@@ -1,9 +1,9 @@
 # Research-system edge hardening 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-20 — PR #1930 branch hardening through join integrity, executable-surface coverage, shared-v3 execution identity, lineage, durable evidence, family/corpus identity, census and CP-SAT partition joins.
+> **Status:** handoff-ready / PR #1930 remains draft pending one final stable-head validation pass.
+> **Last evidence:** 2026-09-20 — branch head `efd97e762c` after join-integrity, executable-surface, execution-revision, exact-result verdict binding, durable-evidence, family/corpus identity, census, CP-SAT partition and workflow-persistence hardening.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
-> **Remaining gate:** finish branch validation once on a stable head; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
+> **Remaining gate:** the last observed CI run (`20e77ed39d`) had every lane green except one stale publisher fixture; `efd97e762c` fixes that fixture. Do not repeatedly poll Actions. At the next natural checkpoint, run/inspect one final stable-head validation. After merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
 ## Why this pass exists
 
@@ -196,7 +196,53 @@ The shard-family closure pass also found one remaining combine-boundary gap in m
 
 The proposal-method calibration audit exposed a different systems failure: a closeout can correctly defer until future evidence exists while leaving no process that will ever produce that evidence. `docs/investigation-report-conventions.md` now requires a prospective/data-gated remaining gate to name its producer/detection path when known, or explicitly say detection is opportunistic. This keeps “wait for evidence” from becoming a disguised dead end.
 
-## L. Validation boundary
+## L. Fresh authority requires explicit decision-validity and execution revision
+
+The closure pass tightened a subtle but important distinction between “readable historical evidence” and “fresh decision-bearing authority.”
+
+Fresh authority now requires an explicit `decisionValidComplete: true`; older structural-completeness shapes remain readable for reanalysis but are not upgraded by inference. This prevents a legacy object from gaining modern scientific authority merely because its old fields happen to imply no visible truncation.
+
+Execution revision is likewise carried and checked through specialist shard families rather than inferred from orchestration context:
+
+- method-probe shards record the executed solver revision, the combiner requires agreement, and outer-shard coverage is checked against the authored shard count;
+- technique-census shards/results retain solver revision and the combiner rejects revision disagreement;
+- static-portfolio results preserve the same execution-revision join;
+- fresh standard publication requires an immutable execution SHA independently present in the primary result. Exact/reference-style `solverRef` is accepted as that independent evidence where that producer owns it; workflow `GITHUB_SHA` is not substituted for executed solver identity.
+
+This closes another backward-compatibility trap: modern authority does not silently fall back to weaker legacy provenance when some newer identity field is absent.
+
+## M. Scientific verdict sidecars are bound to the exact results they classify
+
+A completed positive/negative outcome sidecar is now treated as a claim about exact acquired evidence, not merely a nearby file with the right population label.
+
+For standalone completed verdicts, publication requires exact binding unless the primary result already embeds the identical completed verdict. Supported binding dimensions are checked against the published result set:
+
+- population identity;
+- result configuration hashes;
+- executed solver revisions;
+- exact result-content SHA-256 hashes.
+
+Paired verdict construction records the execution revisions and exact result bytes of the control/treatment inputs. Publication rejects stale revision bindings, stale configuration bindings, stale result-content bindings, and unbound completed sidecars. A fallback classifier is not allowed to overwrite or weaken an already completed authoritative verdict.
+
+This is the strongest formulation produced by the reconsidered audit lens: **scientific joins are claims and must carry proof of what they joined.** Matching filenames, workflow step order, nearby manifests, population counts, or a previously true `decisionBearing` boolean are all weaker than explicit identity.
+
+The final CI failure observed before handoff was a test fixture that violated this new rule: it reused an outcome file whose content hash referred to a different primary fixture. Commit `efd97e762c` repairs the test by generating a verdict bound to the exact `solverRef` result bytes. No product invariant was weakened.
+
+## N. Recovered branch state and non-stranded work
+
+A final recovery pass treated the branch itself as authority rather than the interrupted conversation. PR #1930 contains the full work: there is no known implementation work sitting only in chat or outside the PR branch.
+
+Later commits already rescued several lines that had looked conversationally unfinished:
+
+- historical broad/residual classifier impact was checked; no paid post-introduction confirmation run was found to have lost its verdict;
+- the over-broad first CLI static-analysis rule was narrowed and the production scan is green;
+- exact plan/result joins, shard partition identity, corpus-scoped variant identity, failure/hint population joins and compact-document identity precedence were implemented and tested;
+- high-consequence CLI surfaces were exercised through real subprocess fixtures;
+- completed verdict preservation, revision binding and result-byte binding were implemented rather than left as recommendations.
+
+The only deliberately unresolved runtime item is the post-merge reusable targeted-sweep persistence canary described below. The generic publisher-side comparison between a composite experiment configuration hash and a single component result also remains intentionally unimplemented until the contract has an explicit single-result/composite ownership signal.
+
+## O. Validation boundary
 
 Current validation is split intentionally:
 
