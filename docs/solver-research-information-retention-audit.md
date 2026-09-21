@@ -75,6 +75,41 @@ At each arrow record:
 7. whether the lost information has plausible future research value;
 8. whether retaining a bounded projection would be cheap and semantically stable.
 
+
+## 3A. Expanded model: retention is not one boolean
+
+The first audit pass used "durable" too coarsely. Current evidence shows at least five separate questions:
+
+1. **Transport:** did the workflow upload bytes somewhere?
+2. **Publication:** did the bytes enter the standard `solver-sweep-result`/manifest surface?
+3. **Canonical persistence:** did a harvester or workflow commit an evidence-bearing copy to durable repository state?
+4. **Layer coverage:** which parts survived — solved paths, primary rows, compact failure response, rich capture, console logs, derived analyses?
+5. **Scientific role:** after persistence, is the object still raw observation, a lossy projection, a decision-bearing bundle, a generated interface, a historical report, or operational state?
+
+A workflow can therefore truthfully be "automatically harvested" while its successful paths survive and its failed-attempt/process rows do not. Likewise, a standard artifact can be well formed without qualifying as decision-bearing, and a generated resource can be well specified without any current durable instance.
+
+The retention audit must record **evidence-layer coverage**, not infer it from workflow-level transport labels.
+
+### Semantic phase transitions
+
+Add another question at each boundary:
+
+> Did this object change scientific role here, and is that transition explicit?
+
+Important transitions include:
+
+- exploratory observation -> decision-bearing experiment evidence;
+- current capability observation -> historical/forensic nomination;
+- raw row -> compact response -> aggregate;
+- generated interface/contract -> actual retained instance;
+- exact/reference label -> downstream annotation;
+- successful path -> hint provenance;
+- partial/failed workflow output -> salvageable forensic evidence;
+- one-shot primary evidence -> dated closeout report.
+
+A role transition is not information loss by itself. It becomes risky when consumers can no longer tell which distinctions were dropped, or when the old role's primary evidence disappears.
+
+
 ## 4. Loss classes
 
 Use the following classes so unlike problems are not conflated.
@@ -401,6 +436,129 @@ This avoids paying full-attempt payload cost for the entire unsuccessful matrix 
 **Audit implication:** this is closer to the desired model than “retain everything.” The remaining question is whether the compact projection preserves enough action identity, progress/reason composition, and censoring detail for recurring reconnaissance. Any implementation proposal should prefer improving the compact projection over broadly enabling full unsuccessful-cell attempts.
 
 
+
+### IR-016 — automatic-harvest is a transport label, not an evidence-coverage guarantee
+
+**Class:** R1/R2 documentation semantics.
+
+`docs/solver-failure-evidence-disposition.json` assigns workflow-level durability modes such as `automatic-harvest`, `artifact-only`, and `alternate-rail`.
+
+For standard solver workflows, `automatic-harvest` means `harvest-solver-evidence.yml` is triggered after completion. The harvester itself persists only selected evidence classes:
+
+- structurally merged hint/provenance files;
+- reconstructed hints from solved level-blind rows;
+- isolated valid solutions;
+- pending/quarantined solve evidence;
+- **decision-bearing v3 experiment bundles**.
+
+It does **not** generally persist every compact failure-response document, full primary sweep row set, console log, compact diagnostic profile, or rich process field merely because the workflow is on the trigger list.
+
+Therefore `durability.mode: automatic-harvest` can be read too strongly if treated as "this workflow's research evidence is durable."
+
+**Implication:** future retention documentation should distinguish **harvester participation** from **evidence-layer retention coverage**. No schema change is proposed yet; this is an investigation requirement.
+
+### IR-017 — failed/cancelled-run salvage is strongly success-asymmetric
+
+**Class:** R1, intentional for some layers.
+
+The evidence harvester deliberately runs after failed/cancelled solver workflows because shard reports are written incrementally and may contain valid discoveries.
+
+That salvage path is excellent for positive evidence:
+
+- valid hint files are merged;
+- solved level-blind rows can be converted into canonical hint provenance;
+- isolated valid solutions can be recovered;
+- incompatible/stale solution evidence can be quarantined rather than discarded.
+
+But a failed/cancelled run normally cannot qualify as a complete decision-bearing experiment bundle, and the harvester has no generic durable import for its **partial negative/process rows**.
+
+Consequently a cancelled 60-shard run may permanently preserve the one novel solution it found while eventually losing hundreds of completed unsolved rows, exact failed attempts, badness/work observations, and process diagnostics when Actions artifacts expire.
+
+This asymmetry is scientifically reasonable for capability claims — partial negatives must not masquerade as a clean null — but those rows can still be legitimate **forensic/mechanism-nomination evidence** if their censoring and population incompleteness remain explicit.
+
+**Investigation gate:** determine whether recurring consumers actually need salvageable partial-negative rows before proposing any durable partial-run rail.
+
+### IR-018 — exact/reference evidence occupies a retention role not served by either hint or decision-bearing rails
+
+**Class:** R1/R3 semantic-role gap, currently intentional.
+
+`cpsat-explicit-prefix-reference.yml`:
+
+- writes explicit per-case exact/reference outputs;
+- verifies exact case-population integrity;
+- declares a native v3 experiment contract;
+- publishes a standard `solver-sweep-result`;
+- retains shard/combined artifacts for 30 days and the standard artifact for 90 days.
+
+It does **not** declare a `completed-positive` or `completed-negative` research outcome. Under `decisionBearingExperimentResultIssues()`, that correctly means it is not a decision-bearing experiment bundle.
+
+It is also intentionally outside the compact attempt-response contract: `solver-failure-evidence-disposition.json` marks it `unsupported` and `artifact-only`, because CP-SAT reference cases are downstream exact annotations rather than comparable Pathfinder node/work attempts.
+
+The resource registry separately recognizes `exact-reference-labels` as a generated interface with important `exact-control`, `correctness`, and `mechanism` roles.
+
+This leaves a real category between the existing durability rails:
+
+> scientifically meaningful exact/reference observations that are neither hint discoveries nor binary experiment verdicts.
+
+Some labelled branch sets are explicitly committed by individual investigations, but the generic explicit-prefix workflow itself has no durable retention contract beyond Actions.
+
+**Interpretation:** this is not evidence that the experiment archive should accept non-verdict objects. The likely question is whether recurring exact/reference labels deserve their own minimal resource-instance durability convention.
+
+### IR-019 — previously adjudicated non-retention must not be reopened as an accidental-loss bug
+
+**Class:** audit correction.
+
+The initial finding that `row.failureInformation` is omitted from standard compact failure response remains factually correct, but the 2026-09-19 failure-evidence program already adjudicated the broader question.
+
+The Phase-1 closeout measured the prune/beam-flow/progress diagnostic bundle at approximately:
+
+- exact solve/status/solution/node/work parity;
+- ~0.46% hosted wall overhead on the representative canary;
+- ~35.7 KB compact payload across 16 parents;
+- coverage across beam, DFS, and repair progress families.
+
+It then explicitly chose:
+
+`research-only opt-in / canonical semantics / parity-calibrated`
+
+rather than durable default promotion, because maintained producers have different scientific roles and no recurring consumer had demonstrated incremental decision value beyond automatic compact attempts.
+
+Similarly, the recurring-rich-producer audit closed negative: rich capture cost was materially higher and no genuine repeated consumer justified turning it on routinely.
+
+**Revised disposition for IR-001:** omission of `failureInformation` from the broad compact default is **intentional compression under a current authority**, not a newly discovered defect. The still-open questions are narrower:
+- whether a scoped producer now has a recurring consumer;
+- whether enabled diagnostics are retained for the intended evidence horizon;
+- whether the compact automatic layer loses unrelated identity fields such as `winningActionKey`.
+
+This audit must treat an existing explicit negative disposition as evidence, not as an implementation backlog item.
+
+### IR-020 — one-shot workflow cleanup can preserve the conclusion while leaving primary-row reconstructability on an artifact clock
+
+**Class:** R1/R6, historically variable.
+
+The workflow README's one-shot convention is sensible operationally: delete bespoke dispatch YAML after the question is answered, keep reusable local scripts, and point to the dated closeout.
+
+However several historical closeouts use "answer recorded" as the retirement criterion rather than the newer Resource Contract's stricter **reconstructability** criterion.
+
+Concrete example: `2026-08-27-repair-restart-continuation-w150m-pre-wiring-pilot-null.md` durably records:
+
+- the prespecified 36-level population definition;
+- aggregate 9/36 vs 9/36 result;
+- zero gains/losses;
+- several representative rows;
+- the source run ID and method.
+
+But it explicitly says:
+
+> Full 36-row detail is in the run's `repair-restart-continuation-pilot-combined` artifact.
+
+The one-shot workflow was then deleted. Unless those primary rows are retained elsewhere, exact 36-row reconstruction becomes Actions-retention-bound even though the scientific conclusion remains durably documented.
+
+This does not invalidate the historical conclusion. It narrows later auditability: exact row-level re-analysis, alternative summaries, or forensic checks may become impossible after artifact expiry.
+
+The modern Resource Contract already supplies the right prospective rule: preserve the smallest decision-bearing bundle needed for future reconstruction. The one-shot documentation convention has not yet visibly absorbed that newer distinction.
+
+
 ## 6. Positive findings / boundaries already working well
 
 The audit must record good boundaries as well as defects.
@@ -437,6 +595,16 @@ The current combiner refuses mismatched immutable revision/configuration and mai
 ### P-005 — several modern analyzers retain explanatory row identity
 
 Work-ladder response, technique-niche analysis, and technique-census temporal stability all preserve per-level or changed-ID detail in their generated JSON while also publishing aggregates. This is a useful precedent: derived reports can remain compact without making every later anomaly require source-artifact archaeology.
+
+
+
+### P-006 — the failure-evidence program already separates cheap automatic response from richer opt-in observation
+
+The 2026-09-19 compact diagnostic and recurring-rich producer audits are strong precedents for this audit's desired discipline: measure parity/cost, require a real consumer, and avoid universal telemetry merely because an observer exists. Information retention should reuse those gates rather than treating maximal observability as the objective.
+
+### P-007 — failed/cancelled workflows already preserve evidence before surfacing failure
+
+Several solver workflows write rows incrementally and upload artifacts before deliberately failing the job. This means the acquisition side is often much more recoverable than a red Actions badge suggests. The open problem is selective long-horizon persistence, not failure-time byte survival.
 
 
 ## 7. Investigation matrix
