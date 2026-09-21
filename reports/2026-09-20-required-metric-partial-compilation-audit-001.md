@@ -1,11 +1,9 @@
 # Required-length / intersection partial compilation audit 001
 
-> **Status:** source-level dependency audit complete; implementation/economics still gated.
-> **Date:** 2026-09-20
-> **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Evidence role:** controlled-delta compilation audit.
-> **Decision:** reqLen/reqInt sweeps are a technically clean partial-compilation case. Nearly all current prep products are invariant to challenge metrics, but the measured prep cost is small enough that implementation remains economics-gated.
-
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — source audit found reqLen/reqInt changes invalidate only a narrow subset of preparation products.
+> **Decision:** Required-length/intersection sweeps are technically clean partial-compilation cases, but current preparation cost is small.
+> **Remaining gate:** Promote only if solve-relative measurements show enough repeated-preparation cost to justify implementation.
 ## Question
 
 When `scripts/req-length-sweep.mjs` changes only `reqLen` across otherwise identical levels,
