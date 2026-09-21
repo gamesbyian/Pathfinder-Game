@@ -7,7 +7,7 @@ import { deriveHistoricalSolveAttemptInfo, deriveSolveAttemptInfo, provenanceFro
 import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from './testing-fixtures.js';
 import { withSolverStage } from './stage-policy.js';
 
-const currentAttempt = <T extends Record<string, unknown>>(attempt: T, stageId: Parameters<typeof withSolverStage>[1] = 'main-ladder') =>
+const currentAttempt = <T extends Record<string, unknown>>(attempt: T, stageId: Parameters<typeof withSolverStage>[1] = 'main-search') =>
   withSolverStage(attempt, stageId);
 
 const PERSISTENT_ATTEMPT_FIELDS = new Set([
