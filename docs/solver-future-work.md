@@ -7,7 +7,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 | Descendant | Reopen / advancement condition |
 |---|---|
-| General solve-local proof store / blackboard | **Deferred.** Portal-free cut proofs cleared recurrence and early applicability but failed downstream economics: 49,034 dominated work (~0.40% of total) versus 791,269 root boundary validations. Reopen only after a different fact family has sound cheap lookup and positive non-overlapping saved-work economics. [audit closeout](../reports/2026-09-21-computational-work-elimination-audit-closeout-001.md) |
+| General solve-local proof store / blackboard | **Deferred.** Cut proofs recurred but failed economics: 49,034 dominated work (~0.40%) vs 791,269 boundary validations. Reopen only for a different fact family with sound cheap lookup and positive non-overlapping savings. [audit closeout](../reports/2026-09-21-computational-work-elimination-audit-closeout-001.md) |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
 | Candidate-commitment viability inside LIVE search | Lane D shows within-LIVE variation (54/392 event queries infeasible; 16/23 LIVE states mixed), but D1 beam ranking closed at 0/120 disagreements. Reopen only with a materially cheaper current-input viability test **and** a different production seam with non-trivial displaced-work ceiling. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
 | Residual-interface commutativity as a revision operator | LIVE->LIVE substitutions are referee-valid in 1,453/3,121 cases (46.6%), but capability value is untested. Reopen only on DEAD/near-miss populations where current-input commuting substitution can restore feasibility, reduce work, or create solves. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
@@ -27,9 +27,9 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 - **Search loss:** P8 needs recurring rich production; P9 explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
-## Hint/failure reopen hooks
+## Hint/failure hooks
 
-Use compatible compact response first; never backfill pre-contract attempts. Try cheap descriptor/family/hint joins before richer exact/search-loss work. Recurring rich producer -> P8; explicit first-loss selection -> P9. Sampled hints cannot prove whole-space extinction.
+Use compatible compact response first; never backfill pre-contract attempts. Try cheap joins before richer exact/search-loss work. Recurring rich producer -> P8; explicit first-loss selection -> P9. Sampled hints cannot prove whole-space extinction.
 
 ## Deferred architectural questions
 
@@ -37,7 +37,7 @@ Use compatible compact response first; never backfill pre-contract attempts. Try
 |---|---|
 | Bidirectional / backward abstraction | A compact sound residual/interface signature emerges from decomposition, topology, or relational-feasibility work; do not reopen full MITM from scratch |
 | Choice-bearing macro-actions | A mechanism-specific observer shows repeated non-trivial route structure beyond one-successor chains and a macro can preserve exact transition semantics/work accounting |
-| Hidden semantic forcedness | **Deferred behind `WS2-FORCED-WORK-CAPTURE-ECONOMICS`.** Reopen after literal one-successor capture economics is disposed, or earlier if it shows the 25.33% oracle reservoir is mostly unavoidable. Then use the existing <=320-case exact-prefix preflight; do not create a new exact engine. [preflight](solver-semantic-forcedness-preflight.md) |
+| Hidden semantic forcedness | **Deferred behind `WS2-FORCED-WORK-CAPTURE-ECONOMICS`.** Reopen after literal forced-work economics, or earlier if the 25.33% reservoir proves mostly unavoidable. Then use the existing <=320-case exact-prefix preflight; no new exact engine. [preflight](solver-semantic-forcedness-preflight.md) |
 | Mechanics-derived canonicalization / symmetry / transposition | Reopen only for **within-solve/current-input** equivalence with material repeated work. Cross-level elimination is closed by the 1,962-level census (0 exact duplicate groups, 0 strict 8-way symmetry groups); generated-family symmetry uses provenance. |
 | Structural graph preprocessing | An active separator/topology/relational premise exposes a sound graph property with enough reuse to repay construction |
 | Cooperative multi-engine search | Two solver families expose complementary typed artifacts that the other cannot cheaply derive; start from one handoff rather than a framework |
@@ -50,7 +50,7 @@ Use compatible compact response first; never backfill pre-contract attempts. Try
 
 H3 remaining-length allocation and admissible-order reserve repricing are **earned experiment designs**, not reopen hooks; precommitment lives in [workstreams](solver-optimization-workstreams.md). Neither is authorized for production use.
 
-## Conditional composition/allocation work
+## Conditional composition/allocation
 
 Dormant until an active lane changes the premise.
 
@@ -61,12 +61,12 @@ Dormant until an active lane changes the premise.
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
-| Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use a bounded work ladder, not standing sweeps |
+| Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use bounded ladders, not standing sweeps |
 | Mechanism interaction | Reopen when one mechanism plausibly creates another's opportunities; test control/A/B/A+B at matched work, not broad flag matrices |
 
-## Inverse-question reopen hook
+## Inverse-question hook
 
-[Inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md): concrete success-side/work-subtraction descendants are now owned by WS1/WS2. One deferred gap remains.
+[Inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md): success-side/work-subtraction descendants are owned by WS1/WS2; one deferred gap remains.
 
 | Question | Reopen condition |
 |---|---|
@@ -84,7 +84,7 @@ Do not reopen unchanged:
 - richer twist/same-parity portal decomposition on frozen 5K plain-vs-mechanic-buckets contrasts;
 - tested static CW/CCW side/moment descriptor basis; next sibling needs operational traces or materially different exact representation.
 
-Closure is form-scoped: cross-level connectivity ≠ solve-local rediscovery; detour gadgets ≠ per-instance commutativity; blueprints ≠ future-intersection realizability; positional repair ≠ dependency-defined revision; H1 vocabulary ≠ bounded per-instance feasibility.
+Closure is form-scoped: cross-level connectivity ≠ solve-local rediscovery; gadgets ≠ per-instance commutativity; blueprints ≠ future-intersection realizability; positional repair ≠ dependency-defined revision; H1 vocabulary ≠ bounded feasibility.
 
 ## Premise-map-derived research gates
 
