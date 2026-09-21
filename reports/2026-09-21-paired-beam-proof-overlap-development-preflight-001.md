@@ -1,10 +1,9 @@
 # Paired beam-width proof-overlap development preflight 001
 
-> **Status:** FROZEN BEFORE EXECUTION.
-> **Date:** 2026-09-21.
-> **Parent audit:** [computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).
-> **Multi-query authority:** [multi-query preflight 001](2026-09-21-computational-work-elimination-multi-query-preflight-001.md).
-> **Evidence role:** selected development mechanism test; not prevalence or production efficacy.
+> **Status:** active
+> **Last evidence:** 2026-09-21 — top eight parents were frozen from the historical Card-E 2K/5K absolute normalized support-depth divergence before inspecting any new proof-overlap result.
+> **Decision:** use this enriched development cohort to compare exact frontier-prefix overlap with exact connectivity-cut proof-object overlap under isolated current-head searches.
+> **Remaining gate:** multiple independent parents must show substantial exact proof overlap with non-trivial derivation cost, especially where path-prefix overlap is lower, before any shared-computation experiment.
 
 ## Question
 
