@@ -30,14 +30,14 @@
         "level.hints bare paths",
         "level.hintRecords provenance-rich Hint records"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "single-mutable-authority",
-      "status": "complete",
-      "retirementGate": "current writers mutate canonical Hint records only; bare paths are projections; sharded write safety retained",
-      "progress": "Closed: Hint records are the sole mutable/persisted authority. Batch producers, published-level import, editor actions, async editor loading, and review-mode ingestion all mutate through setLevelHintRecords(); bare .hints paths are derived projections. writeLevelCorpusDocumentWithHints no longer reconciles sibling fields and persists hintRecords directly. Historical bare paths are upgraded only during ingress/hydration; sharded-write untouched-level safety is retained."
+      "status": "in-progress",
+      "retirementGate": "Closeout verification: no maintained writer, shared capture helper, or exercised test mutates .hints independently of canonical hintRecords; B3 write-set mechanics are tracked separately.",
+      "progress": "Re-opened for closeout verification after CI exposed scripts/hint-capture-lib.mjs as a live shared writer still assigning both hintRecords and hints. The shared capture path now mutates only through setLevelHintRecords(), family-parent replay was migrated to the same authority, and explicit corpus-document persistence is required. Keep this seam in progress until the exercised-tool caller census/CI confirms no remaining current dual writer."
     },
     {
       "id": "PSC-002",
@@ -55,14 +55,14 @@
         "bare level array",
         "object with levels array"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "complete",
-      "retirementGate": "Migrate/prove all remaining readLevelsWithHints/writeLevelsWithHints callers, then remove LEVEL_WRAPPERS and the array facade. Preserve both on-disk storage shapes unless a separate corpus-format migration is justified.",
-      "progress": "Closed: all identified production callers carry explicit {levels, metadata, storageShape} corpus documents. Published-level import was the final known production holdout. The readLevelsWithHints()/writeLevelsWithHints() array facade and LEVEL_WRAPPERS WeakMap have been removed; both historical on-disk storage shapes remain supported explicitly at the document boundary."
+      "status": "in-progress",
+      "retirementGate": "Closeout verification: no maintained script/test caller uses removed readLevelsWithHints()/writeLevelsWithHints() array facades; all current callers carry explicit corpus documents through persistence.",
+      "progress": "Re-opened for closeout verification after deleting the central facade exposed a long tail of maintained script/test callers. Level-blind sweep, technique census combine, prefix-survival collection, offline replay, evidence harvest, family generation/replay, shared hint capture, and affected hint tests have now migrated to explicit {levels, metadata, storageShape} documents. Closure now requires a no-current-consumer proof across exercised tooling, not merely deletion of LEVEL_WRAPPERS/the facade."
     },
     {
       "id": "PSC-003",
@@ -430,8 +430,8 @@
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
-      "retirementGate": "Decide/migrate remaining current compatibility outputs: legacy complete coverage mirror and legacy display identity arrays. Decision-bearing consumers are already canonical-only; do not reintroduce inference.",
-      "progress": "Population integrity normalizes once at research-observation ingress; historical complete may recover coverage only and never decision authority. Current buildResearchPopulationIntegrity(), validate-solver-sweep-integrity output, and combinePopulationIntegrity() no longer emit the legacy complete mirror: current completeness is explicit coverageComplete plus decisionValidComplete. Remaining compatibility output is the combined-population legacy display identity arrays alongside canonical JSON-tuple identities; those still need a consumer/migration decision before closeout."
+      "retirementGate": "Decide/migrate the remaining current legacy display identity arrays alongside canonical scoped identity arrays. The retired complete mirror is no longer emitted by current producers; decision-bearing consumers remain explicit and inference-free.",
+      "progress": "Population integrity normalizes once at research-observation ingress; historical complete may recover coverage only and never decision authority. Current buildResearchPopulationIntegrity(), validate-solver-sweep-integrity output, combinePopulationIntegrity(), and combine-solver-sweep-reports output no longer emit the legacy complete mirror; tests now assert its absence and distinguish coverageComplete from decisionValidComplete. Remaining compatibility output is the combined-population legacy display identity arrays alongside canonical JSON-tuple identities; those still need a consumer/migration decision before closeout."
     },
     {
       "id": "PSC-019",
@@ -514,9 +514,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "remove-current-alias",
-      "status": "complete",
-      "progress": "Removed remaining deprecated SolveOpts fields and runtime ?? fallbacks; raced engine/allowlist now canonical-only; portfolio-solve-sweep retired phase-6 CLI aliases with explicit replacement errors. With zero live dual-read override pairs remaining, check-solveopts-transport-parity.mjs and its package command were retired.",
-      "retirementGate": "closed: no current SolveOpts override or portfolio CLI path accepts the retired phase-6 vocabulary"
+      "status": "in-progress",
+      "progress": "Re-opened for closeout verification after the maintained level-blind capability sweep was found still dual-reading --main-loop-late-reserve-* and --repair-probe-adaptive-* flags even though the core SolveOpts and portfolio CLI had already contracted. Those residual aliases are now removed. Verify exercised CLI/workflow callers before re-closing.",
+      "retirementGate": "Closeout verification: no current SolveOpts or maintained CLI entrypoint accepts phase-6 retired vocabulary; historical spellings, if needed, are archive-reader only."
     },
     {
       "id": "PSC-023",
@@ -535,15 +535,15 @@
         "--work-budget CLI and SolveResult/report workBudget domain fields"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "migrate-current-state",
-      "status": "complete",
-      "progress": "Closed: current SolveOpts accepts baseWorkBudget only. The deprecated SolveOpts.workBudget property and solveLevel dual-read/disagreement logic are removed after portfolio sweep, stress benchmark, and level-blind capability sweep producers migrated. CLI/report/SolveResult workBudget fields remain because they describe the budget as domain/result data, not a solver input alias.",
-      "retirementGate": "Exhaustively migrate remaining current SolveOpts.workBudget producers. Then either delete the alias outright or move any proven historical replay decoding into one explicit boundary normalizer; do not rename SolveResult/report workBudget."
+      "status": "in-progress",
+      "progress": "Re-opened for closeout verification when CI showed two maintained callers still passing retired SolveOpts.workBudget: solver-bench and search-loss-real-canary. Both now pass baseWorkBudget while retaining their legitimate --work-budget/report vocabulary. Runtime rejection remains fail-loud; re-close after exercised-tool census/CI confirms no current caller still sends the retired option.",
+      "retirementGate": "Closeout verification: exhaustive current SolveOpts caller census uses baseWorkBudget only. CLI/report/SolveResult workBudget remains descriptive domain/result data, not an input alias."
     }
   ],
-  "lastUpdated": "2026-09-20",
+  "lastUpdated": "2026-09-21",
   "activePullRequest": 1937
 }
