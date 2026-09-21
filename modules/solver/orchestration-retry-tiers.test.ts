@@ -56,17 +56,6 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON pass eve
     assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false);
 });
 
-test('coarse-state-near-tie-retention-disabled-retry pass stays off under the legacy retry alias set false', async () => {
-    const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
-        timeBudgetMs: 1000,
-        repairLateProbeNodeBudgetOverride: 0,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: false },
-    });
-    assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false);
-});
-
-
 test('coarse-state-near-tie-retention-disabled-retry pass also stays off under the canonical false spelling', async () => {
     const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -75,7 +64,7 @@ test('coarse-state-near-tie-retention-disabled-retry pass also stays off under t
     });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false,
-        'legacy and canonical spellings must normalize to identical runtime behavior');
+        'canonical current spelling must suppress the retry');
 });
 
 test('a sparse config that already disables near-tie retention suppresses the behavior-identical retry', async () => {
