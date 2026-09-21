@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { SEARCH_LOSS_ANNOTATION_KIND, validateSearchLossAnnotation, validateSearchLossCapture } from './solver-search-loss-evidence-lib.mjs';
+import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const i = arg.indexOf('='); return [arg.slice(2, i), arg.slice(i + 1)];
@@ -34,10 +35,12 @@ const annotations = results.map((row, index) => {
         evidenceRefs: Array.isArray(row.evidenceRefs) ? row.evidenceRefs : [],
     };
 }).sort((a, b) => a.capsuleId.localeCompare(b.capsuleId));
+const captureEnvelope = extractResearchArtifactEnvelope(capture);
 const output = validateSearchLossAnnotation({
     schemaVersion: 1, kind: SEARCH_LOSS_ANNOTATION_KIND, researchEnrichmentKind: 'exact',
-    sourceCapture: args.get('capture'), populationIdentity: capture.population.populationIdentity,
-    researchBlock: capture.population.researchBlock ?? null, annotations,
+    sourceCapture: args.get('capture'), populationIdentity: captureEnvelope.populationIdentity,
+    ...(captureEnvelope.researchBlock ? { researchBlock: captureEnvelope.researchBlock } : {}),
+    annotations,
 }, { capture });
 fs.mkdirSync(path.dirname(args.get('out')), { recursive: true });
 fs.writeFileSync(args.get('out'), `${JSON.stringify(output, null, 2)}\n`);
