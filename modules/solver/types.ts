@@ -527,7 +527,7 @@ export interface ConnectivityRejectionObserver {
  * the ordinary scheduled flood fill; `confirmedGoalUnreachable` is populated only on a shadow hit
  * and is checked against the real flood fill that still runs immediately afterward. */
 export interface ConnectivityCertificateShadowRecord {
-    kind: 'certificate' | 'certificate-duplicate' | 'certificate-dropped' | 'probe' | 'unscheduled-probe';
+    kind: 'certificate' | 'certificate-duplicate' | 'certificate-dropped' | 'probe' | 'unscheduled-probe' | 'dfs-dominated-subtree';
     work: number;
     certificateId?: number;
     /** Normalized proof-object identity: reached component rows + sorted complete cardinal boundary.
@@ -553,6 +553,12 @@ export interface ConnectivityCertificateShadowRecord {
     /** Caller-local phase of the periodic connectivity schedule when meaningful. */
     researchSchedulePhase?: number | null;
     researchRemainingSteps?: number;
+    /** DFS-only opportunity sizing for an outermost unscheduled proof-hit prefix. */
+    dominatedWork?: number;
+    dominatedNodes?: number;
+    dominatedDepth?: number;
+    dominatedOutcome?: 'exhausted' | 'timeout' | 'solution';
+    dominatedCensored?: boolean;
 }
 
 /** Production-inert one-solve shadow observer for the portal-free goal cut certificate documented
@@ -567,6 +573,9 @@ export interface ConnectivityCertificateShadowObserver {
      * ordinary connectivity fill. Off by default so proof-identity observers do not inherit
      * this much heavier opportunity-sizing instrumentation. */
     observeUnscheduled?: boolean;
+    /** Opt in to DFS-only non-overlapping downstream-work accounting beneath an unscheduled
+     * proof-hit prefix. Requires observeUnscheduled; remains observational. */
+    measureDfsDominatedWork?: boolean;
 }
 
 
