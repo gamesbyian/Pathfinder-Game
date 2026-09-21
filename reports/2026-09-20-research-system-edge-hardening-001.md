@@ -1,7 +1,7 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — hostile continuation through `4d12a730f2`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite/sampling/partial-metadata leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, durable-retention stale-binding trust, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
+> **Last evidence:** 2026-09-20 — hostile continuation through `160634195e`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite/sampling/partial-metadata leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, durable-retention stale-binding trust, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
 > **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
@@ -419,3 +419,16 @@ The final fresh-eyes pass caught a test-only interaction introduced by the durab
 The fixtures now live in isolated temporary roots. This does not change product behavior; it restores the intended independence of the self-test phases and prevents a deliberate negative fixture from contaminating a later positive whole-tree scan.
 
 Commit: `4d12a730f2`.
+
+
+## W. Published file entries carry independent byte fingerprints
+
+Embedded completed verdicts have a legitimate self-reference problem: a primary result cannot contain a stable hash of its own complete bytes when the verdict and binding live inside that same file. The standard publisher previously copied primary/include files into the artifact without recording an independent publication-time fingerprint on the manifest entry, so durable retention could revalidate contract/population structure yet still lack a non-circular way to prove that an embedded-verdict primary remained byte-identical to what was published.
+
+Fresh standard publication now records a SHA-256 digest on every copied file entry, including compact failure-response evidence. Directory entries remain unhashed rather than introducing an ad hoc tree-hash contract.
+
+Durable retention rechecks any declared entry digest before copying. This gives embedded-verdict file primaries independent byte identity without requiring a self-referential verdict binding, and also protects ordinary included file evidence from silent mutation between publication and harvest.
+
+A hostile fixture mutates an embedded-verdict primary after its manifest digest is written and verifies that durable retention rejects the artifact.
+
+Commits: `12615826c9`, `053868e93a`, `160634195e`.
