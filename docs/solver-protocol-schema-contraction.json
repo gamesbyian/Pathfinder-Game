@@ -1,0 +1,382 @@
+{
+  "schemaVersion": 1,
+  "status": "active",
+  "openedAt": "2026-09-20",
+  "authority": "docs/solver-protocol-schema-contraction-plan.md",
+  "audit": "reports/2026-09-20-protocol-schema-contraction-audit-001.md",
+  "treatments": [
+    "remove-current-alias",
+    "single-mutable-authority",
+    "canonical-ingress-adapter",
+    "execution-contract-split",
+    "one-time-migrate-active-state",
+    "permanent-archive-reader",
+    "investigate"
+  ],
+  "seams": [
+    {
+      "id": "PSC-001",
+      "concept": "hint mutable representation",
+      "owners": [
+        "scripts/level-data-io.mjs",
+        "modules/domain/hint-runtime.mjs"
+      ],
+      "forms": [
+        "level.hints bare paths",
+        "level.hintRecords provenance-rich Hint records"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "single-mutable-authority",
+      "status": "open",
+      "retirementGate": "current writers mutate canonical Hint records only; bare paths are projections; sharded write safety retained"
+    },
+    {
+      "id": "PSC-002",
+      "concept": "level corpus document container",
+      "owners": [
+        "scripts/level-data-io.mjs"
+      ],
+      "forms": [
+        "bare level array",
+        "object with levels array"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "explicit canonical corpus document replaces LEVEL_WRAPPERS hidden serialization state"
+    },
+    {
+      "id": "PSC-003",
+      "concept": "candidate path encoding",
+      "owners": [
+        "modules/domain/path-validator.ts"
+      ],
+      "forms": [
+        "packed numeric cell keys",
+        "1-indexed [x,y] tuples",
+        "0-indexed {x,y} objects"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": true,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "wire decoding is separate from canonical path validation; internal validation accepts one path representation"
+    },
+    {
+      "id": "PSC-004",
+      "concept": "durable level addressing",
+      "owners": [
+        "scripts/level-data-io.mjs",
+        "solver/research CLI callers"
+      ],
+      "forms": [
+        "persistent level id",
+        "array position",
+        "numeric id suffix",
+        "structural fingerprint"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": true,
+      "treatment": "investigate",
+      "status": "open",
+      "retirementGate": "persistent level id is the durable research address; position remains explicit presentation/debug addressing only"
+    },
+    {
+      "id": "PSC-005",
+      "concept": "full solver execution request",
+      "owners": [
+        "modules/solver/solver-worker-client.ts",
+        "modules/Solver.ts",
+        "worker solve adapter"
+      ],
+      "forms": [
+        "worker solve on raw level",
+        "direct solve on normalized level"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": false,
+      "persistedExternalRequirement": false,
+      "treatment": "execution-contract-split",
+      "status": "open",
+      "retirementGate": "direct and worker full solve share one canonical request/result meaning"
+    },
+    {
+      "id": "PSC-006",
+      "concept": "raced solver capability surface",
+      "owners": [
+        "scripts/solver-parallel/race.mjs",
+        "scripts/solver-parallel/race-opts.mjs"
+      ],
+      "forms": [
+        "full SolveOpts surface",
+        "race-supported option projection"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": false,
+      "persistedExternalRequirement": false,
+      "treatment": "execution-contract-split",
+      "status": "open",
+      "retirementGate": "race backend either runs canonical orchestration or exposes a narrower typed request that cannot impersonate full solve"
+    },
+    {
+      "id": "PSC-007",
+      "concept": "solver sweep report envelope",
+      "owners": [
+        "scripts/combine-solver-sweep-reports.mjs",
+        "portfolio sweep producers"
+      ],
+      "forms": [
+        "{summary,levels} shard report",
+        "flattened combined report"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "one current report envelope; current output is valid current input without synthesized schema mutation"
+    },
+    {
+      "id": "PSC-008",
+      "concept": "research block location",
+      "owners": [
+        "scripts/research-relations-lib.mjs",
+        "scripts/research-consumption-link.mjs"
+      ],
+      "forms": [
+        "document.researchBlock",
+        "document.population.researchBlock"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "one shared research envelope/extractor and one current producer location"
+    },
+    {
+      "id": "PSC-009",
+      "concept": "research population identity location",
+      "owners": [
+        "scripts/research-relations-lib.mjs",
+        "scripts/research-consumption-link.mjs"
+      ],
+      "forms": [
+        "document.populationIdentity",
+        "document.population.corpusIdentity",
+        "document.population.populationIdentity"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "one canonical current population-identity location; historical alternatives normalize at ingress"
+    },
+    {
+      "id": "PSC-010",
+      "concept": "premise admission identity",
+      "owners": [
+        "scripts/research-relations-lib.mjs"
+      ],
+      "forms": [
+        "premiseId",
+        "id",
+        "propositionId"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "relation construction receives canonical premiseId rows rather than resolving aliases inline"
+    },
+    {
+      "id": "PSC-011",
+      "concept": "research status-like fields",
+      "owners": [
+        "scripts/research-relations-lib.mjs",
+        "scripts/research-status-index-lib.mjs"
+      ],
+      "forms": [
+        "status",
+        "state",
+        "reliability",
+        "legacy prose normalization"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "structured current state is explicit; prose/legacy state decoding is historical ingress only"
+    },
+    {
+      "id": "PSC-012",
+      "concept": "durable evidence manifest edge",
+      "owners": [
+        "scripts/research-relations-lib.mjs",
+        "durable bundle producer"
+      ],
+      "forms": [
+        "manifestStoredPath",
+        "legacy files[].source=manifest.json"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "permanent-archive-reader",
+      "status": "open",
+      "retirementGate": "new bundles always author manifestStoredPath; legacy lookup isolated to versioned/archive reader"
+    },
+    {
+      "id": "PSC-013",
+      "concept": "Lane A cut identity",
+      "owners": [
+        "scripts/stress/lane-a-c0-signature-collision-analysis.mjs"
+      ],
+      "forms": [
+        "source.cutSignature",
+        "cut signature parsed from caseId delimiter"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "permanent-archive-reader",
+      "status": "open",
+      "retirementGate": "new rows require structured source.cutSignature; delimiter parsing remains fixture-backed historical decode only"
+    },
+    {
+      "id": "PSC-014",
+      "concept": "family attempt evidence era",
+      "owners": [
+        "scripts/family-index-lib.mjs"
+      ],
+      "forms": [
+        "wide-trove attempt artifacts",
+        "variant-family-dataset attempt artifacts"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "investigate",
+      "status": "open",
+      "retirementGate": "decide one-time canonical archival import versus explicit permanent mixed-era adapter"
+    },
+    {
+      "id": "PSC-015",
+      "concept": "hint provenance schema generations",
+      "owners": [
+        "modules/domain/hint-runtime.mjs",
+        "scripts/level-data-io.mjs"
+      ],
+      "forms": [
+        "flat/transitional provenance",
+        "nested legacy provenance",
+        "canonical nested provenance"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": true,
+      "treatment": "permanent-archive-reader",
+      "status": "open",
+      "retirementGate": "all old forms normalize only through upgrader; no downstream retired-field reads"
+    },
+    {
+      "id": "PSC-016",
+      "concept": "ablation feature input vocabulary",
+      "owners": [
+        "modules/solver/ablation-config.ts"
+      ],
+      "forms": [
+        "canonical feature keys",
+        "LEGACY_FEATURE_ALIASES"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "remove-current-alias",
+      "status": "open",
+      "retirementGate": "fresh CLI/workflow/config input rejects retired feature names; historical artifacts use explicit decoder"
+    },
+    {
+      "id": "PSC-017",
+      "concept": "solver stage/attempt compatibility fields",
+      "owners": [
+        "modules/solver/orchestration-contracts.ts",
+        "attempt identity readers"
+      ],
+      "forms": [
+        "canonical stageId/attempt identity",
+        "historical boolean flags/old attempt-id grammars"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "current solver logic consumes canonical stage/attempt identity only; historical records normalize before classification"
+    },
+    {
+      "id": "PSC-018",
+      "concept": "population integrity authority",
+      "owners": [
+        "scripts/publish-solver-sweep-result.mjs",
+        "scripts/combine-population-integrity.mjs"
+      ],
+      "forms": [
+        "explicit decisionValidComplete",
+        "legacy completeness inferred from outcome counters"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "canonical-ingress-adapter",
+      "status": "open",
+      "retirementGate": "current producers write explicit decision-valid completeness; inference is historical-only"
+    },
+    {
+      "id": "PSC-019",
+      "concept": "research consumption lineage representation",
+      "owners": [
+        "scripts/research-consumption-link.mjs",
+        "scripts/research-relations-lib.mjs"
+      ],
+      "forms": [
+        "copied researchBlock aggregate with events",
+        "potential immutable block + event references"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
+      "historicalRequirement": false,
+      "persistedExternalRequirement": false,
+      "treatment": "investigate",
+      "status": "open",
+      "retirementGate": "choose and document one canonical sidecar/event model before additional producer variants appear"
+    }
+  ]
+}
