@@ -67,7 +67,7 @@ const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.jso
 const saveHints = flags.has('--save-hints');
 // No silent default: this is the historical experiment scheduler's opt-in flag, and defaulting an
 // unrecognized/omitted value into that path is the wrong failure mode for a behavior-preserving
-// migration. Every live workflow already passes --scheduler-mode explicitly (currently `legacy`).
+// migration. Every live workflow must pass one canonical --scheduler-mode value explicitly.
 const rawSchedulerMode = argMap.get('--scheduler-mode');
 const schedulerMode = normalizeSchedulerMode(rawSchedulerMode);
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
