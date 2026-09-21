@@ -140,7 +140,11 @@ const corpusSha256 = createHash('sha256').update(corpusBytes).digest('hex');
 const rawLevels = Array.isArray(parsedCorpus) ? parsedCorpus : parsedCorpus.levels;
 if (!Array.isArray(rawLevels)) throw new Error(`${corpusPath}: expected an array or {levels:[...]}`);
 const targets = parseLevelPositions(argMap.get('--levels'), { maxLevel: rawLevels.length });
-const sampleSha256 = createHash('sha256').update(targets.join('\n')).digest('hex');
+const targetIds = targets.map(position => rawLevels[position - 1]?.id);
+if (targetIds.some(id => typeof id !== 'string' || !id)) {
+    throw new Error('level-blind capability research requires persistent level ids; array position is selection/debug metadata only');
+}
+const sampleSha256 = createHash('sha256').update([...targetIds].sort().join('\n')).digest('hex');
 const commit = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
 
 // Explicit allowlist of puzzle mechanics. Deliberately excludes raw `id`, `hints`, designerName,
@@ -223,7 +227,7 @@ function writeReport() {
     const solved = levels.filter(r => r.ok).length;
     const summary = {
         generatedAt: new Date().toISOString(), commit,
-        corpus: path.relative(root, corpusPath), corpusSha256, sampleSha256,
+        corpus: path.relative(root, corpusPath), corpusSha256, sampleSha256, expectedIds: targetIds,
         schedulerMode: 'production', levelBlind: true,
         solverInputFields: PUZZLE_FIELDS, historicalInputs: [], budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
