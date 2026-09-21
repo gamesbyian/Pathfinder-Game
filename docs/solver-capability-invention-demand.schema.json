@@ -3,10 +3,11 @@
   "$id": "pathfinder.solver-capability-invention-demand/v1",
   "title": "Pathfinder solver capability-invention demand register",
   "type": "object",
-  "required": ["schemaVersion", "purpose", "rows"],
+  "required": ["schemaVersion", "purpose", "researchQuestion", "rows"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "purpose": { "type": "string", "minLength": 1 },
+    "researchQuestion": { "type": "string", "minLength": 1 },
     "productionBoundary": { "type": ["string", "null"] },
     "updatedAt": { "type": ["string", "null"], "format": "date" },
     "rows": {
