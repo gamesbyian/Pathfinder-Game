@@ -63,7 +63,7 @@ For relationship quality, prefer: validated authored ID/edge > authored one-way 
 
 ## Concept-family and inversion checkpoint
 
-Before implementing or promoting a premise/question: state its claim/soundness direction, mechanic support, novelty witness, opportunity denominator, proof-versus-response value, nearest material siblings, and nearest **useful inverse**. Inverses test directional bias such as add/remove, starvation/overexposure, DEAD/LIVE-slack, universal/per-instance, failure/success, or invention/obsolescence. They create no queue entitlement: reuse an existing owner or pass the ordinary evidence/discriminator/population gates. See [small exact projections](solver-small-exact-projections-program.md) and the [inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md).
+Before promoting a premise/question, state its claim, mechanic support, novelty witness, opportunity denominator, proof/response value, nearest material siblings, and nearest **useful inverse**. Inverses test directional bias such as add/remove, starvation/overexposure, DEAD/LIVE-slack, universal/per-instance, failure/success, or invention/obsolescence. They create no queue entitlement: reuse an owner or pass the ordinary evidence/discriminator/population gates. See [small exact projections](solver-small-exact-projections-program.md) and the [inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md).
 
 ## Stop rules
 
