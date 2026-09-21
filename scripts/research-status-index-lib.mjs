@@ -177,7 +177,7 @@ function reportMachineMetadata(source, reportPath) {
     };
 }
 
-export function buildResearchStatusIndex(root) {
+export function buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable = false } = {}) {
     const reportsRoot = path.join(root, 'reports');
     const topics = [];
     const legacyEvidence = [];
@@ -232,7 +232,12 @@ export function buildResearchStatusIndex(root) {
     // Preserve the public `queue` collection name for index consumers, but source it from the
     // current authority. Workstream IDs are stable identifiers, explicitly not execution ranks.
     const structuredWorkstreamRows = tableRows(workstreamsSource, '## Workstream state');
-    const legacyWorkstreamRows = structuredWorkstreamRows.length ? [] : tableRows(workstreamsSource, '## Active workstreams');
+    if (!structuredWorkstreamRows.length && !allowHistoricalWorkstreamTable) {
+        throw new Error(`${workstreamsPath}: current authority requires structured ## Workstream state table`);
+    }
+    const legacyWorkstreamRows = structuredWorkstreamRows.length
+        ? []
+        : tableRows(workstreamsSource, '## Active workstreams');
     const queue = structuredWorkstreamRows.length
         ? structuredWorkstreamRows.map(([id, question, executionStateRaw, state, gate, questionRef]) => {
             const executionState = String(executionStateRaw ?? '').replaceAll('`', '').trim();
