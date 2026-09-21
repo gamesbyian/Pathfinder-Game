@@ -2,13 +2,30 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getFalseGoalTriggerSearchBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, normalizeAblationConfig } from './orchestration.js';
+import { classifyAttemptTier, classifyHistoricalAttemptTier, getFalseGoalTriggerSearchBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, normalizeAblationConfig } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
 import { prepLevel } from './prep.js';
 import { buildExperimentList, defaultConfig, FEATURES, OPT_IN_FEATURES } from './ablation-config.js';
 import { makeLineLevel, makeRepairGatedInfeasibleLevel, exhaustingDispatch } from './orchestration-test-support.js';
+
+test('current attempt tier classification requires stageId; historical fallback is explicit', () => {
+    assert.equal(classifyAttemptTier({ stageId: 'main-search' }), 'main-ladder');
+    assert.equal(classifyAttemptTier({ stageId: 'repair-shrink-recovery' }), 'early-repair-search');
+    assert.throws(
+        () => classifyAttemptTier({ repairLateProbe: true } as any),
+        /requires canonical stageId/,
+    );
+    assert.equal(
+        classifyHistoricalAttemptTier({ repairLateProbe: true }),
+        'late-repair-search',
+    );
+    assert.equal(
+        classifyHistoricalAttemptTier({ dedupNearTieRetry: true }),
+        'coarse-state-near-tie-retention-disabled-retry',
+    );
+});
 
 test('solveLevel solves a simple prepared level', async () => {
     const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
