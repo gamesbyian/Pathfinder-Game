@@ -492,6 +492,15 @@ Every lane/candidate should eventually record:
 
 ## 10. Progress log
 
+### 2026-09-20 - same-process reuse customer census
+
+- Added [`../reports/2026-09-20-solver-batch-reuse-opportunity-census-001.md`](../reports/2026-09-20-solver-batch-reuse-opportunity-census-001.md).
+- `run-ablation.mjs` is the cleanest exact compile-reuse customer: experiment-outer / level-inner nesting re-normalizes and re-prepares the same level once per experiment while ablation config is not a prep input.
+- `req-length-sweep.mjs` supplies two distinct reuse cases: exact same-level reuse across repeats and partial invalidation across reqLen points.
+- Reuse is now explicitly tiered: same object/process -> same semantics/process -> controlled delta -> family/topology -> cross-process persistence. Do not jump directly to persisted compiled artifacts.
+- First compile-reuse implementation remains gated on current-head fixed-cost evidence and memory economics.
+
+
 ### 2026-09-20 - branch reconciliation staging
 
 - PR #1938 (`chatgpt/parity-response-signature-integration-2026-09-20`) was merged into this branch with both histories preserved in merge commit `2f2367575d35cd2408b8b6b7a3e206a0f3876bab`.
