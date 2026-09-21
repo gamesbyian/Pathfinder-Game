@@ -1,11 +1,10 @@
 # Deterministic refresh compact-retention measurement 001
 
-> **Status:** concluded-negative for full compact-per-run persistence; bounded snapshot improvement adopted
+> **Status:** concluded-negative
 > **Last evidence:** 2026-09-21 — CI run 35569466174, current tracked C1/C2 full stress reports, corrected compact failure-response projection
 > **Decision:** do not persist a full compact failure-response document for every deterministic refresh at current granularity; retain `winningActionKey` in the existing immutable per-level capability snapshots instead
-> **Remaining gate:** none for this retention proposal. Reopen only if a recurring consumer demonstrates that per-attempt historical sequence/work is materially needed beyond Actions retention and existing derived products.
->
-> **Evidence role:** forensic / storage-economics
+> **Remaining gate:** none; reopen only if a recurring consumer needs per-attempt historical sequence/work beyond Actions retention and existing derived products.
+> **Evidence role:** forensic
 > **Source plan:** `docs/solver-research-information-retention-implementation-plan.md`
 > **Measurement tool:** `scripts/measure-deterministic-retention-payload.mjs`
 
