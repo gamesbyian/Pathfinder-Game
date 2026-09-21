@@ -185,7 +185,7 @@ async function main() {
         if (verbose && outcome.report.errors.length > 0) console.log(`    errors: ${outcome.report.errors.join('; ')}`);
 
         // Checkpoint after every level.
-        writeLevelCorpusDocumentWithHints(levelsJsonAbs, corpusDocument);
+        writeLevelCorpusDocumentWithHints(levelsJsonAbs, corpusDocument, { changedHintLevels: outcome.novel.length > 0 ? [raw] : [] });
         await atomicWriteJson(outputFile, {
             timestamp: new Date().toISOString(),
             commitSha: getCommitSha(),
