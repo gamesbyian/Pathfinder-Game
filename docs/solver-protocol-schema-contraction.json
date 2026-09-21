@@ -233,7 +233,8 @@
       "id": "PSC-010",
       "concept": "premise admission identity",
       "owners": [
-        "scripts/research-relations-lib.mjs"
+        "scripts/research-relations-lib.mjs",
+        "scripts/research-relations-node-test.mjs"
       ],
       "forms": [
         "premiseId",
@@ -241,12 +242,13 @@
         "propositionId"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "relation construction receives canonical premiseId rows rather than resolving aliases inline"
+      "status": "complete",
+      "retirementGate": "closed: relation construction receives canonical premiseId rows; historical alias decoding is isolated at premise-admission ingress",
+      "progress": "normalizePremiseAdmissions() now owns both historical container shapes and row identity aliases. It requires one unambiguous identity, canonicalizes id/propositionId/premiseId to premiseId, strips retired identity fields, and rejects missing/conflicting aliases. buildResearchRelations() receives canonical premiseId rows and performs no inline alias resolution."
     },
     {
       "id": "PSC-011",
