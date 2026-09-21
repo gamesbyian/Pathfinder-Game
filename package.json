@@ -367,7 +367,8 @@
     "test:cut-bridge-incidence": "node scripts/run-bundled.mjs scripts/stress/cut-bridge-incidence-node-test.mjs",
     "research:freeze-response-guided-contrasts": "node scripts/freeze-response-guided-contrasts.mjs",
     "test:freeze-response-guided-contrasts": "node scripts/freeze-response-guided-contrasts-node-test.mjs",
-    "solver:audit-batch-cost": "node scripts/run-bundled.mjs scripts/solver-batch-cost-probe.mjs"
+    "solver:audit-batch-cost": "node scripts/run-bundled.mjs scripts/solver-batch-cost-probe.mjs",
+    "solver:audit-initial-presolve": "node scripts/run-bundled.mjs scripts/initial-presolve-opportunity-census.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
