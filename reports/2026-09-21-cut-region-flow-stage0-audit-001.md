@@ -141,6 +141,45 @@ The bundled test covers the smallest connectivity-passing bridge-pocket witness 
 
 Do not run Tarjan on every hot-path connectivity call yet. Execute this analyzer on a frozen development frontier population first. Only non-trivial parent-level recurrence earns a production-inert observer.
 
+#### Prespecified first Stage-B population
+
+Use a small outcome-blind Corpus 2 development screen:
+
+- parent source: `data/stress/stress-levels-random.json`;
+- selection: uniform deterministic sample, **24 parents**;
+- seed: `ws2-cut-balance-bc1-stageb-v1`;
+- independent unit: parent level;
+- frontier profile: `intersectionHarvest`;
+- width: 5000;
+- depth fraction: 0.20;
+- picks: 12 distinct frontier states per sampled parent;
+- downstream BC1 denominator: only sampled states where existing connectivity passes.
+
+The sample size is a recurrence screen, not a prevalence estimate. Zero or near-zero parent recurrence closes BC1 as a near-term prune candidate on this population; material recurrence earns a larger development incidence pass before any observer.
+
+Reproduction sequence:
+
+```bash
+npm run stress:select-random-sample -- \
+  --corpus=data/stress/stress-levels-random.json --corpus-label=corpus2 \
+  --sample=24 --seed=ws2-cut-balance-bc1-stageb-v1 \
+  --out=tmp/bc1-stageb-parents.json
+
+BC1_IDS=$(node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('tmp/bc1-stageb-parents.json'));process.stdout.write(r.map(x=>x.levelId).join(','))")
+
+node scripts/run-bundled.mjs scripts/stress/production-search-frontier-sampler.mjs -- \
+  --corpus=data/stress/stress-levels-random.json --levels="$BC1_IDS" \
+  --depth-fraction=0.20 --picks=12 --seed=ws2-cut-balance-bc1-stageb-v1 \
+  --profile=intersectionHarvest --width=5000 \
+  --question=WS2-CUT-BALANCE-PROJECTION --evidence-role=development \
+  --population-out=tmp/bc1-stageb-frontier.json
+
+npm run research:cut-bridge-incidence -- \
+  --population=tmp/bc1-stageb-frontier.json \
+  --corpus=data/stress/stress-levels-random.json \
+  --out=tmp/bc1-stageb-incidence.json
+```
+
 ## 8. Consumer boundary
 
 If BC1 recurs:
