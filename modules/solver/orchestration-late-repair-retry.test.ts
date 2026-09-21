@@ -396,7 +396,7 @@ test('adaptive gate weighting cannot claim more than the remaining tier budget (
     const workBudget = 500_000;
     const result = await solveLevel(level as unknown as NormalizedLevel, {
         timeBudgetMs: 60_000,
-        workBudget,
+        baseWorkBudget: workBudget,
         nodeBudget: 50_000_000,
         attemptBudgetTelemetry: true,
         disableExtraBudgetPasses: true,
