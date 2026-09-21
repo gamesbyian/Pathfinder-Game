@@ -14,30 +14,40 @@ export function createForcedWorkCollector() {
                 for (const path of record.paths ?? []) incoming.add(pathIdentity(path));
                 return;
             }
+            if (record.stage === 'post-hard-prune') {
+                const childrenByParent = new Map();
+                for (const child of record.paths ?? []) {
+                    if (!Array.isArray(child) || child.length < 2) continue;
+                    const parentId = pathIdentity(child.slice(0, -1));
+                    const bucket = childrenByParent.get(parentId) ?? [];
+                    bucket.push(child);
+                    childrenByParent.set(parentId, bucket);
+                }
+                for (const [parentId, children] of childrenByParent) {
+                    const expansion = expansions.get(parentId);
+                    if (!expansion) continue;
+                    expansion.uniqueChildId = children.length === 1 ? pathIdentity(children[0]) : null;
+                }
+                return;
+            }
             if (record.stage !== 'generated') return;
             const rows = record.details?.parentExpansions;
             if (!Array.isArray(rows)) return;
             observedGeneratedRecords++;
-            const generatedPaths = Array.isArray(record.paths) ? record.paths : [];
-            const childrenByParent = new Map();
-            for (const child of generatedPaths) {
-                if (!Array.isArray(child) || child.length < 2) continue;
-                const parentId = pathIdentity(child.slice(0, -1));
-                const bucket = childrenByParent.get(parentId) ?? [];
-                bucket.push(child);
-                childrenByParent.set(parentId, bucket);
-            }
             for (const row of rows) {
                 if (!Array.isArray(row.path)) continue;
                 const id = pathIdentity(row.path);
-                const children = childrenByParent.get(id) ?? [];
                 expansions.set(id, {
                     id,
                     path: row.path,
                     depth: row.path.length - 1,
                     workSpent: Number(row.workSpent) || 0,
                     generatedCandidates: Number(row.generatedCandidates) || 0,
-                    uniqueChildId: children.length === 1 ? pathIdentity(children[0]) : null,
+                    // Filled from the later post-hard-prune stage. The generated-stage path list
+                    // intentionally includes hard-pruned diagnostic candidates, so deriving the
+                    // unique survivor from it would corrupt chain anatomy while leaving prevalence
+                    // counts intact.
+                    uniqueChildId: null,
                 });
             }
         },
