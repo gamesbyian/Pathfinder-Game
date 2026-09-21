@@ -96,12 +96,15 @@ const originalStructure = describeStaticOrientationStructure(
 const mirroredStructure = describeStaticOrientationStructure(
     Solver.prepareLevelForSolver(mirrorRawHorizontal(metamorphicRaw), { source: 'raw' }),
 );
-assert.equal(mirroredStructure.gateGoalDxMean, -originalStructure.gateGoalDxMean);
+assert.equal(mirroredStructure.gateGoalDxMean + originalStructure.gateGoalDxMean, 0);
 assert.equal(mirroredStructure.gateGoalDyMean, originalStructure.gateGoalDyMean);
-assert.equal(mirroredStructure.gateGoalCenterSideBalance, -originalStructure.gateGoalCenterSideBalance);
+assert.equal(
+    mirroredStructure.gateGoalCenterSideBalance + originalStructure.gateGoalCenterSideBalance,
+    0,
+);
 for (const key of ['blocks', 'mustPass', 'mustCross', 'portalTerminals', 'flippers', 'constrained']) {
-    assert.equal(mirroredStructure[key].sideBalance, -originalStructure[key].sideBalance, key);
-    assert.equal(mirroredStructure[key].signedMoment, -originalStructure[key].signedMoment, key);
+    assert.equal(mirroredStructure[key].sideBalance + originalStructure[key].sideBalance, 0, key);
+    assert.equal(mirroredStructure[key].signedMoment + originalStructure[key].signedMoment, 0, key);
     assert.equal(mirroredStructure[key].absoluteMoment, originalStructure[key].absoluteMoment, key);
 }
 
