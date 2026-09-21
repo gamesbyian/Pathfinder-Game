@@ -9,7 +9,7 @@
 // single-worker path, scripts/portfolio-solve-sweep-worker.mjs's forked-worker path, and
 // scripts/stress/benchmark.mjs's --engine=raced path) built this subset by hand, inline, as a
 // fresh object literal. That let two classes of bug ship silently:
-//   - a SolveOpts field race.mjs never reads at all (e.g. workBudget, nodeBudget,
+//   - a SolveOpts field race.mjs never reads at all (e.g. baseWorkBudget, nodeBudget,
 //     mainSearchLateReserveFractionOverride, admissibleOrder*) gets threaded into the literal by
 //     a caller who assumes it's honored (scripts/stress/benchmark.mjs actually did this for
 //     --work-budget), and race.mjs silently ignores it -- no warning, no error -- while any
@@ -69,7 +69,7 @@ export function toRaceLevelOpts(solveOpts = {}) {
         throw new Error(
             `toRaceLevelOpts: SolveOpts field(s) not supported by the raced engine were requested and would be silently dropped: ${rejected.sort().join(', ')}. `
             + 'scripts/solver-parallel/race.mjs reimplements only main-search + repair-fallback + goal-attraction-disabled-retry '
-            + '(see its RACE_SUPPORTED_STAGE_IDS) and has no nodeBudget/workBudget, static-portfolio, admissible-order, or '
+            + '(see its RACE_SUPPORTED_STAGE_IDS) and has no nodeBudget/baseWorkBudget, static-portfolio, admissible-order, or '
             + 'main-search-late-reserve concept. Either omit these option(s) for this run, or do not race it '
             + '(drop --race-pool-size / use --engine=sequential).',
         );
