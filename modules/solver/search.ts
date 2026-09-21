@@ -174,43 +174,6 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
     let nodesExpanded = 0;
     let lastYield = levelStartTime;
 
-    // Computational-work-elimination research only: measure non-overlapping DFS work beneath the
-    // first unscheduled exact cut-proof hit. Keep this entirely parallel to DfsFrame so production
-    // frame shape/allocation stays unchanged.
-    const _dfsCutObserver = prep._connectivityCertificateShadow?.observer;
-    const _measureDfsCutDominance = _dfsCutObserver?.observeUnscheduled === true
-        && _dfsCutObserver.measureDfsDominatedWork === true;
-    type DfsCutHitSignal = { certificateId: number; sourceWork: number; crossExactState: boolean; boundaryCellChecks: number };
-    type DfsCutPending = DfsCutHitSignal & { hitWork: number; hitNodes: number };
-    type DfsCutActive = DfsCutPending & { depth: number; remainingSteps: number };
-    let _pendingDfsCutHit: DfsCutPending | null = null;
-    let _activeDfsCut: DfsCutActive | null = null;
-    const _captureDfsCutHit = _measureDfsCutDominance
-        ? (hit: DfsCutHitSignal) => {
-            _pendingDfsCutHit = { ...hit, hitWork: prep._workMeter.units, hitNodes: nodesExpanded };
-        }
-        : undefined;
-    const _emitDfsCutDominance = (outcome: 'exhausted' | 'timeout' | 'solution', censored: boolean) => {
-        if (!_activeDfsCut || !_dfsCutObserver) return;
-        _dfsCutObserver.observe({
-            kind: 'dfs-dominated-subtree',
-            scheduled: false,
-            work: prep._workMeter.units,
-            hitCertificateId: _activeDfsCut.certificateId,
-            hitSourceWork: _activeDfsCut.sourceWork,
-            crossExactState: _activeDfsCut.crossExactState,
-            boundaryCellChecks: _activeDfsCut.boundaryCellChecks,
-            researchCaller: 'dfs',
-            researchRemainingSteps: _activeDfsCut.remainingSteps,
-            dominatedWork: Math.max(0, prep._workMeter.units - _activeDfsCut.hitWork),
-            dominatedNodes: Math.max(0, nodesExpanded - _activeDfsCut.hitNodes),
-            dominatedDepth: _activeDfsCut.depth,
-            dominatedOutcome: outcome,
-            dominatedCensored: censored,
-        });
-        _activeDfsCut = null;
-    };
-
     // _DFS_DEBUG-only backtrack-depth tracking. `_dbgPushNodesAt[d]`/`_dbgPushDepthAt[d]` record,
     // parallel to `stack` (index d = stack depth, kept in lockstep with push/pop), the nodesExpanded
     // count and requiredLength-relative depth at the moment a frame was pushed — so when it's later popped
@@ -269,7 +232,6 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
                     out.timedOut = true; out.nodesExpanded = nodesExpanded; out.finalBadness = computeBadness(state, level);
                     prep._failureProgressObserver?.observe({ family: 'dfs', workSpent: prep._workMeter.units, badness: out.finalBadness, kind: 'terminal' });
                 }
-                if (_activeDfsCut) _emitDfsCutDominance('timeout', true);
                 _dbgFlushDfs('timeout');
                 return null;
             }
@@ -281,9 +243,6 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 
         const top = stack[stack.length - 1];
         if (top.childIdx >= top.children.length) {
-            if (_activeDfsCut && _activeDfsCut.depth === stack.length - 1) {
-                _emitDfsCutDominance('exhausted', false);
-            }
             if (_DFS_DEBUG) {
                 const depth = stack.length - 1;
                 const size = nodesExpanded - _dbgPushNodesAt.pop()!;
@@ -315,21 +274,12 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         // boolean since the throttle schedule (nodesExpanded) is DFS-loop-local — see
         // hard-prune-pipeline.ts's file doc for why this differs per caller.
         const runConnectivity = rSteps <= 10 || (nodesExpanded & 63) === 0;
-        _pendingDfsCutHit = null;
         const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity,
             prep._connectivityCertificateShadow?.observer.observeUnscheduled === true
-                ? {
-                    researchCaller: 'dfs',
-                    researchSchedulePhase: nodesExpanded & 63,
-                    researchRemainingSteps: rSteps,
-                    ...(_captureDfsCutHit
-                        ? { onUnscheduledConnectivityCertificateHit: _captureDfsCutHit }
-                        : {}),
-                }
+                ? { researchCaller: 'dfs', researchSchedulePhase: nodesExpanded & 63, researchRemainingSteps: rSteps }
                 : undefined);
 
         if (verdict === 'solution') {
-            if (_activeDfsCut) _emitDfsCutDominance('solution', true);
             if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
             if (out) out.nodesExpanded = nodesExpanded;
             _dbgFlushDfs('solution');
@@ -341,13 +291,6 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         const nextNeighbors = getNeighbors(next, state, level, prep);
         if (nextNeighbors.length === 0 && rSteps > 0) { if (_DFS_DEBUG) _dbgInstantRejects++; undoMove(undo, state); continue; }
         scoreAndSort(nextNeighbors, next, state, level, prep, profile, orderingBias);
-        if (_measureDfsCutDominance && _activeDfsCut === null && _pendingDfsCutHit !== null) {
-            _activeDfsCut = {
-                ..._pendingDfsCutHit,
-                depth: stack.length,
-                remainingSteps: rSteps,
-            };
-        }
         if (_DFS_DEBUG) _dbgPushNodesAt.push(nodesExpanded);
         stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo, disc: childDisc });
     }
