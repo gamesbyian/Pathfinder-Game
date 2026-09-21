@@ -276,9 +276,10 @@ function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStat
     const observed = publishedStats.map(stat => {
       const document = JSON.parse(fs.readFileSync(stat.file, 'utf8'));
       return document?.configurationHash ?? null;
-    }).filter(Boolean).sort();
+    });
     const expected = [...binding.resultConfigurationHashes].sort();
-    if (JSON.stringify(observed) !== JSON.stringify(expected)) {
+    if (observed.some(value => !value) || observed.length !== expected.length
+        || JSON.stringify([...observed].sort()) !== JSON.stringify(expected)) {
       issues.push('researchOutcome.binding.resultConfigurationHashes disagree with published result files');
     }
   }
@@ -286,9 +287,10 @@ function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStat
     const observed = publishedStats.map(stat => {
       const document = JSON.parse(fs.readFileSync(stat.file, 'utf8'));
       return document?.commitSha ?? document?.summary?.commit ?? document?.commit ?? document?.solverRef ?? null;
-    }).filter(Boolean).sort();
+    });
     const expected = [...binding.resultResolvedShas].sort();
-    if (JSON.stringify(observed) !== JSON.stringify(expected)) {
+    if (observed.some(value => !value) || observed.length !== expected.length
+        || JSON.stringify([...observed].sort()) !== JSON.stringify(expected)) {
       issues.push('researchOutcome.binding.resultResolvedShas disagree with published result files');
     }
   }
