@@ -105,16 +105,21 @@ Prefer existing evidence in this order:
 
 Historical identity never becomes a runtime feature.
 
-## First execution slice
+## First execution slice — implemented
 
-Upgrade the existing relative-advantage analyzer to retain the actual left-only/right-only/both contrast identities alongside aggregate effects. Use the already-prespecified technique pairs as the first premise-nomination population.
+The existing relative-advantage analyzer now preserves left-only/right-only/both level identities for its prespecified technique pairs.
 
-Then reinterpret the strongest existing contrasts:
-- repeated portal-heavy diverse-beam advantage;
-- large CW/CCW disagreement with weak coarse descriptors;
-- non-monotonic 2K/5K beam inversions.
+`modules/solver/parity-structure.ts` owns portal twist classification and per-gate required twist parity; production prep consumes the same owner.
 
-For each, nominate the smallest exact or relational explanation class and the next cheapest falsifier. Do not design routing rules yet.
+Run the first no-search response analysis with:
+
+```bash
+npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
+```
+
+It normalizes raw levels through the solver boundary and compares portal-pair phase structure and gate parity demand across frozen technique-discordance cohorts. The output remains outcome-selected development evidence and can only nominate Stage-0 premises.
+
+The first nominations are recorded in [the 2026-09-21 report](../reports/2026-09-21-response-guided-premise-nominations-001.md).
 
 ## Rebirth rule
 
