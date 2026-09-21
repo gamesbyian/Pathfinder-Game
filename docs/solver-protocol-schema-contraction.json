@@ -100,7 +100,7 @@
         "numeric id suffix",
         "structural fingerprint"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
@@ -175,8 +175,8 @@
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
-      "retirementGate": "one current report envelope; current output is valid current input without synthesized schema mutation",
-      "progress": "Added a pure ingress adapter for shard-envelope and flattened combined reports. combine-solver-sweep-reports no longer mutates flattened inputs to synthesize summary in place; both shapes normalize to one internal {summary, levels} contract before scientific validation. Tests cover source immutability and execution/provenance metadata preservation. Current output remains intentionally re-combinable; next question is whether a single current write envelope can replace the benchmark-flat publication shape without breaking downstream consumers."
+      "retirementGate": "Single current write envelope is implemented. Close after CI/exercised-consumer verification confirms no maintained current reader still requires the retired benchmark-flat output; historical flat artifacts remain archive-readable at normalizeSolverSweepReportInput().",
+      "progress": "Current writes are now single-form: combine-solver-sweep-reports emits the same {summary, levels} envelope as portfolio shard producers, with population/populationIntegrity retained as structured attachments. Historical benchmark-flat reports remain readable only through solver-sweep-report-input.mjs. classify-stability and curate-dev-benchmark, the maintained consumers that actually depended on top-level budgetMs, now normalize through that ingress; rank-levels only consumes levels and required no schema compatibility. Combiner tests were migrated to the canonical envelope. Keep in closeout verification until CI/caller fallout is exhausted."
     },
     {
       "id": "PSC-008",
