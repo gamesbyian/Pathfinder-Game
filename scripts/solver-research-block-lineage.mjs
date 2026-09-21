@@ -71,6 +71,45 @@ export function appendResearchConsumption(block, event, { populationIdentity } =
     return candidate;
 }
 
+
+export function summarizeResearchConsumption(block) {
+    const events = Array.isArray(block?.consumptionEvents) ? block.consumptionEvents : [];
+    const increment = (target, key) => {
+        const value = String(key ?? '');
+        if (!value) return;
+        target[value] = (target[value] ?? 0) + 1;
+    };
+    const byQuestion = {};
+    const byEvidenceRole = {};
+    const byScopeKind = {};
+    const openedOutcomeKinds = new Set();
+    const decisionRefs = new Set();
+    const times = [];
+
+    for (const event of events) {
+        increment(byQuestion, event?.questionId);
+        increment(byEvidenceRole, event?.evidenceRole);
+        increment(byScopeKind, event?.scope?.kind);
+        for (const kind of event?.openedOutcomeKinds ?? []) openedOutcomeKinds.add(String(kind));
+        if (nonEmpty(event?.decisionRef)) decisionRefs.add(event.decisionRef);
+        if (nonEmpty(event?.consumedAt) && !Number.isNaN(Date.parse(event.consumedAt))) {
+            times.push(event.consumedAt);
+        }
+    }
+    times.sort((a, b) => Date.parse(a) - Date.parse(b));
+
+    return {
+        totalEvents: events.length,
+        byQuestion,
+        byEvidenceRole,
+        byScopeKind,
+        openedOutcomeKinds: [...openedOutcomeKinds].sort(),
+        decisionRefs: [...decisionRefs].sort(),
+        firstConsumedAt: times[0] ?? null,
+        lastConsumedAt: times.at(-1) ?? null,
+    };
+}
+
 export function researchBlockEligibility(block, {
     questionId,
     evidenceRole = 'development',
