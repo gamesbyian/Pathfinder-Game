@@ -19,7 +19,7 @@ import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { hintFilePathFor, hintKeyForLevel, readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } from './level-data-io.mjs';
+import { hintFilePathFor, hintKeyForLevel, readLevelsWithHints, writeLevelsWithHints, parseLevelSelector, setLevelHintRecords } from './level-data-io.mjs';
 import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
@@ -1182,8 +1182,7 @@ for (const levelNumber of levelNumbers) {
     totalDuplicateProvenance += result.duplicateProvenanceCount;
     if (!opts.auditMode && (result.acceptedCount > 0 || result.duplicateProvenanceCount > 0)) {
         if (opts.writeLevels && !opts.writePatch) {
-            raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
-            raw.hintRecords = mergeHints(raw.hintRecords || [], [...result.acceptedHints, ...result.duplicateProvenanceHints]);
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], [...result.acceptedHints, ...result.duplicateProvenanceHints]));
             changedHintFiles.push(relativePath(hintFilePathFor(levelsPath, hintKeyForLevel(raw, levelNumber))));
             // Persist after EVERY level rather than only once at the very end: a long multi-level run
             // used to lose all its work on an interruption, and its progress was invisible until it
