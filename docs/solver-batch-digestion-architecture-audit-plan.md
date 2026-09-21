@@ -395,7 +395,7 @@ Deliverable: audit matrix with `known / measured / unmeasured / constrained`.
 
 ### Phase 1 - current batch cost anatomy
 
-- [ ] instrument or reuse observability for fixed overhead versus search;
+- [x] add bounded fixed-cost observability for validation/normalization/`prepLevel` (`solver:audit-batch-cost`); execution evidence still pending;
 - [ ] measure cheap, mixed, hard-tail workloads;
 - [x] inspect process/worker/workflow lifecycle costs;
 - [ ] quantify repeated same-level and same-family solve frequency.
@@ -491,6 +491,14 @@ Every lane/candidate should eventually record:
 7. update this plan and the PR after each material finding.
 
 ## 10. Progress log
+
+### 2026-09-20 - Phase 1/2 instrumentation and boundary design
+
+- Added `scripts/solver-batch-cost-probe.mjs`, exposed as `npm run solver:audit-batch-cost -- ...`. It measures validation, normalization, and `prepLevel` without requiring search; optional `--solve` adds ordinary solve wall time under a fixed work/node budget.
+- Added [`../reports/2026-09-20-compiled-level-solve-context-boundary-audit.md`](../reports/2026-09-20-compiled-level-solve-context-boundary-audit.md).
+- The recommended first implementation, only if Phase 1 earns it, is a compatibility-preserving static-data builder plus fresh execution shell. Do not begin with persistence, a global cache, semantic hashing, or a dense-core rewrite.
+- Required-length sweeps are a particularly clean reuse question because changing only `reqLen` conceptually invalidates less than a full `prepLevel` rebuild, but actual economics remain unmeasured.
+- Cross-solve lower-bound memoization is separated from immutable compilation: it has independent key-completeness, memory, concurrency, and experiment-warmth questions.
 
 ### 2026-09-20 - Phase 0 evidence map completed
 
