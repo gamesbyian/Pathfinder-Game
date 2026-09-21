@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
     compactFailureResponseRow,
     createFailureResponseDocument,
+    failureResponseIdentityView,
     summarizeFailureResponse,
 } from './solver-failure-response-lib.mjs';
 import { auditFailureResponseIdentity } from './failure-response-identity-audit-lib.mjs';
@@ -20,11 +21,37 @@ const cellRow = {
 const compactCell = compactFailureResponseRow(cellRow);
 assert.equal(compactCell.identity, 'corpus2/000042/T1/beam');
 assert.equal(compactCell.outcome, 'nodeLimited');
-assert.equal(compactCell.actionKey, 'beam');
+assert.equal(compactCell.actionKey, null, 'technique-set labels are not canonical scheduler action identity');
+assert.equal(compactCell.configurationKey, null);
 assert.equal(compactCell.nodeCeiling, 50000000);
 assert.equal(compactCell.nodesExpanded, 4200);
 assert.equal(compactCell.workSpent, null, 'a field the row does not report stays null, never a fabricated 0');
 assert.equal(compactCell.refereeInvalid, null, 'absence of referee evidence stays unknown');
+
+
+const winnerIdentity = compactFailureResponseRow({
+    id: 'WIN-ID',
+    ok: true,
+    winningConfig: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain',
+    winningActionKey: 'main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain',
+});
+assert.equal(winnerIdentity.configurationKey, 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain');
+assert.equal(winnerIdentity.actionKey, 'main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain');
+
+const legacyIdentityView = failureResponseIdentityView({
+    actionKey: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain',
+    configurationKey: null,
+});
+assert.equal(legacyIdentityView.configurationKey, 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain',
+    'historical config-in-action rows are reinterpreted as configuration-only identity');
+assert.equal(legacyIdentityView.actionKey, null, 'historical compatibility must not invent a scheduler stage');
+
+const currentIdentityView = failureResponseIdentityView({
+    actionKey: 'main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain',
+    configurationKey: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain',
+});
+assert.equal(currentIdentityView.actionKey, 'main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain');
+assert.equal(currentIdentityView.configurationKey, 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain');
 
 const refereeInvalidRow = { cellId: 'x', ok: false, status: 'referee-invalid' };
 assert.equal(compactFailureResponseRow(refereeInvalidRow).refereeInvalid, true);
