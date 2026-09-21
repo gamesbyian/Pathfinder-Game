@@ -1,6 +1,6 @@
 # Response-guided execution protocol
 
-> **Status:** concluded-positive execution protocol
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-21 — frozen execution completed in GHA run `35560075075` (artifact `10621363382`): parity/orientation contrasts, both paired-width cohorts, and BC1 Stage-B.
 > **Decision:** this frozen protocol is complete. Tested portal-parity/static-orientation explanations closed; non-nested width composition and BC1 advanced to their canonical successor gates. No production routing or pruning is authorized.
 > **Remaining gate:** none for this protocol; selected CW/CCW traces, bounded exclusive-prefix viability/dominance, and BC1 safety/economics are owned by `solver-optimization-workstreams.md`.
