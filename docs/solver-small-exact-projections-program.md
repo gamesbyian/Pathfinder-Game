@@ -1,146 +1,122 @@
 <!-- agent-context-budget: warn=6500 max=8500 -->
 # Solver small exact projections program
 
-> **Status:** ACTIVE PREMISE-GENERATION PROGRAM; production behavior unchanged.
-> **Priority owner:** [solver optimization workstreams](solver-optimization-workstreams.md).
-> **Capability owner:** [solver capability invention program](solver-capability-invention-program.md).
-> **Origin:** the parity audit showed that a tiny exact projection can support correctness, opportunity measurement, response explanation, and eventually a small solver consumer without solving the residual problem itself.
+> **Status:** ACTIVE PREMISE-GENERATION PROGRAM; production unchanged.
+> **Priority:** [workstreams](solver-optimization-workstreams.md) · **Capability method:** [invention program](solver-capability-invention-program.md)
 
 ## Thesis
 
-Parity is valuable not because modulo 2 is special, but because it is a **small exact projection of the completion problem**:
+Parity worked because a huge completion space admits a tiny exact image: moves update it cheaply, every real completion obeys its law, impossibility in the image is decisive, and distance from the boundary can still explain search behavior.
 
-1. every legal move has a cheap projection update;
-2. every real completion obeys an exact law in the projected space;
-3. projected impossibility proves real impossibility;
-4. distance from projected impossibility may explain solver behavior before it earns a hard consumer.
+Search for similarly compressed **exact consequences**, not decorative mathematics:
 
-Search for other projections with the same computational role. Do not search for decorative mathematical descriptors.
+`current puzzle/state -> small invariant / relaxation / order / quotient -> necessary consequence`
 
-A candidate projection should be expressible as:
+The procedure must generalize; its per-level output need not recur.
 
-`current puzzle/state -> small projected state / bound / feasibility relation`
+## Four projection/certificate families
 
-with explicit soundness direction, bounded update/construction cost, and at least one plausible decision seam.
+Do not give unlike ideas one proof contract.
 
-## Candidate-quality screen
+1. **Conserved/transition invariants.** A small state evolves by an exact transition law: parity, cut/region flow balance, finite mechanic residues. Hard use requires proving the update law under every supported mechanic.
+2. **Exact necessary-condition relaxations.** A smaller feasibility problem contains every real completion: obligation-resource matching, bounded flow/capacity, relaxed phase-distance. Infeasibility is sound only when the relaxation direction is explicit.
+3. **Partial orders.** One state can safely dominate another without being equivalent. Soundness requires an option-containment/resource argument, not a hash resemblance.
+4. **Quotients/equivalences.** Exact symmetry or another equivalence identifies states/actions with identical relevant futures. This has the strongest equivalence burden and should not inherit permission from lossy coarse-state success.
 
-Before implementation, score a concept qualitatively on:
+Planar separation/homology and commutativity may instantiate more than one family; classify the specific claim before testing it.
 
-- **exactness:** what statement is guaranteed for every legal completion?
-- **compression:** how much smaller is the projection than the full residual state?
-- **incrementality:** can moves update it cheaply, or can prep amortize it?
-- **strength:** can it prove anything current scalar/connectivity rules miss?
-- **mechanic coverage:** which portals/filters/flippers/intersections/path-history features preserve or alter the law?
-- **consumer breadth:** prune, bound, order, retain, explain, route, repair, decompose?
-- **counterexample tractability:** can smallest witnesses and false-reject checks be constructed?
-- **response value:** can the projected quantity be joined to technique/hint evidence without historical leakage?
+## Stage-0 concept audit
 
-A beautiful invariant with no incremental decision-bearing opportunity stops.
+Before observer code:
 
-## First live candidate: cut / boundary-crossing balance
+- state the exact theorem/necessary condition;
+- define projected state and update/construction cost;
+- create a **mechanic perturbation matrix**: each portal/filter/flipper/intersection/path-history feature preserves, transforms, consumes, or makes the claim unsupported;
+- map dependency on existing prep/state facts;
+- prove **novelty against current machinery**: identify the smallest witness where the new consequence differs from scalar distance, parity, connectivity, mechanic bounds, or an already-closed form;
+- construct a redundancy witness where both old and new logic agree;
+- name the opportunity denominator and smallest consumer;
+- separate two possible values: **proof value** (new sound reject/bound) and **response value** (explains technique/path behavior without proving death).
+
+If no novelty witness exists, stop before population work.
+
+## First live candidate: cut / region-flow balance
 
 Stable question: `WS2-CUT-BALANCE-PROJECTION`.
 
-For any current-input region or cut, a Gate-to-Goal path has constrained crossing balance. Endpoints on opposite sides require odd net crossing parity; endpoints on the same side require even parity. Existing path use, remaining traversable interfaces, portals that cross the cut, and obligations trapped on either side can strengthen the requirement from parity to a small integer lower/upper balance.
+Treat a region boundary as a small interface through which one continuous Gate-to-Goal path must route its remaining obligations. Endpoint sides, required visits on each side, already-used interfaces, remaining legal interfaces, and portal jumps that change side constrain future boundary traffic.
 
-The useful question is not “does a separator exist?” Lane A already measured one compact interface representation and closed that tested form at C2. The new premise is narrower and more exact:
+The first audit should determine which consequences are genuinely exact. Possible forms include:
 
-> Can a cheaply chosen cut expose a **sound crossing-balance impossibility or pressure signal** that scalar connectivity/volume and the closed Lane-A signature do not?
+- parity of boundary crossings implied by endpoint sides;
+- minimum future entries/exits forced by obligations stranded across the cut;
+- maximum future crossings allowed by remaining legal interfaces under the declared edge/cell-use semantics;
+- small flow/degree balance at a region interface.
+
+This is **not Lane A reopened**. Lane A C0-C2 asked whether a compact interface signature repeatedly predicted outcome and closed representation-explosive at C2. This asks whether a board-specific cut supports a sound conservation/capacity consequence even when its exact interface description never recurs cross-level.
 
 ### Cheapest audit
 
-Reuse current static/residual graph structure. Begin with cuts already naturally nominated by:
-- articulation/chokepoint structure or small separators;
-- board boundary / obstacle-defined regions;
-- path-created residual components or narrow interfaces;
-- required-object partitions.
+Nominate cuts from structure already available or cheaply derivable: articulation/chokepoint structure, small separators, obstacle/boundary regions, path-created narrow interfaces, or required-object partitions.
 
-For each supported state/level, derive only quantities whose semantics are explicit:
-- current side of path head and goal;
-- remaining required obligations by side;
-- unused legal crossing interfaces;
-- already-consumed crossings where reconstructable;
-- portal pairs whose jump changes cut side;
-- minimum required future cut crossings and maximum available future crossings.
+For each candidate law:
+1. prove ordinary-move semantics;
+2. add intersections and portal side-changes explicitly;
+3. state unsupported mechanic combinations rather than hand-wave them;
+4. build smallest positive, redundancy, and adversarial counterexamples;
+5. inspect retained valid paths/exact states for incidence;
+6. only then add one production-inert observer if denominator/opportunity remains unknown.
 
-First measure contradictions and tight margins in shadow/offline form. Do not build a decomposition engine.
+Advance only on incremental, decision-bearing information with a cheaper plausible consumer than residual search.
 
-### Advancement
+## Candidate families after region-flow balance
 
-Advance only when the projection:
-1. is sound on the declared mechanic scope;
-2. produces incremental information beyond connectivity/scalar bounds;
-3. has non-trivial decision-bearing incidence;
-4. admits a cheaper consumer than solving the residual;
-5. survives valid-path/referee replay and differential checks before hard use.
-
-## Ranked candidate families after cut balance
-
-These are premise families, not live experiments.
+These are **not live experiments**.
 
 ### Obligation-resource matching / Hall pressure
-
-Several remaining obligations can each be individually feasible while a subset collectively has too few compatible scarce supports: approach axes, crossing cells, separator interfaces, turn slots, portal opportunities, or region-entry opportunities.
-
-Look first for a **small support graph already implicit in existing mechanic analysis**. A Hall deficit is a sound impossibility; near-deficit may be an explanatory pressure signal. Do not launch generic matching over arbitrary invented resources.
+Several obligations may each be feasible while a subset has too few compatible scarce supports: approach axes, crossing cells, region interfaces, turn slots, or portal opportunities. Start from support relations already implied by mechanic analysis; do not invent arbitrary resources to make matching interesting.
 
 ### Dominance / monotone option containment
+Seek one-way dominance before equivalence: no more resource spent, no additional scarce opportunity consumed, and a sound superset of future options. This is distinct from naive transposition.
 
-One state may provably dominate another without being equivalent: no more resource spent, no extra scarce interface consumed, and a superset of future options under a sound dependency key.
-
-This is distinct from naive exact transposition. Start by asking whether any existing cull/repair population contains repeated comparable states for which one-way dominance can be certified cheaply.
-
-### Planar separation / enclosure
-
-Move beyond generic “topology” toward small exact consequences: required objects separated from the goal, residual faces/regions whose access has become irrevocably constrained, or path-created enclosures. Reuse topology evidence, but require a discrete actionable consequence rather than another raw phase coordinate.
+### Planar separation / cycle-space consequences
+Turn “topology” into discrete consequences: required objects cut off from the goal, enclosure, residual face access, or a small homology/cycle-space coordinate whose change has a proved completion consequence. Raw phase coordinates are nominations, not consumers.
 
 ### Partial-order independence / commutativity
-
-Ask which remaining commitments are independent and which induce dependency edges. Existing residual-interface commutativity is narrow positive evidence, not a general license. A small exact independence relation could reduce order branching or define decomposition boundaries.
+Ask which remaining commitments commute and which create dependency edges. The existing splice result is narrow evidence. A sound independence relation could reduce order branching or expose decomposition boundaries.
 
 ### Finite-state residues
-
-Audit finite-state mechanics for small quotients analogous to parity: cyclic or residue state whose transition law constrains whole-path completion. Do not begin with “try mod 3/mod 4”; derive the quotient from mechanic transition semantics.
+Inspect mechanic transition systems for small quotients. Derive any modulo/cyclic law from the mechanic automaton; do not start by trying arbitrary moduli.
 
 ### Exact symmetry / automorphisms
+Only automorphisms preserving gate/goal roles, mechanic labels/state, portal pairing/orientation and relevant path history count. This is narrower than generic canonicalization.
 
-Only exact current-input automorphisms preserving role, mechanic state, portal pairing, orientation and path history count. This is narrower than generic canonicalization/transposition and should be tested only where symmetry survives all relevant labels.
+## Evidence ladder
 
-## Relationship to existing programs
+1. Stage-0 theorem + novelty audit.
+2. Retained witness/counterexample replay using exact/referee-valid evidence.
+3. Incidence and overlap with current rejects/decisions.
+4. Existing technique-census/capability/hint joins for **response nomination**, with proper protocol and success-selection caveats.
+5. Production-inert observer only if existing evidence cannot establish opportunity.
+6. Smallest consumer.
+7. Matched-work economics and independent confirmation proportional to selection pressure.
 
-- **Parity Lane H** is the worked example and a sibling, not a dependency.
-- **Lane A separator/decomposition** closed one repeated interface signature; cut-balance may reuse separators but asks an exact conservation question rather than outcome-equivalent region identity.
-- **Lane D relational feasibility** can consume or calibrate matching/commutativity projections.
-- **Topology F3** can nominate planar-separation consequences, but raw topology phase does not itself earn a projection.
-- **Capability invention** owns classification: a new exact consequence of existing graph facts may be EXTENSION; a genuinely new projected reasoning operation may be INVENTION.
-- **WS1** becomes relevant only after a legal projected feature predicts differentiated technique response and independently transfers.
+Hard and soft descendants are independent: negligible prune incidence does not automatically kill a response feature, and a response association does not prove sound rejection.
 
-## Evidence order
+## Candidate-ranking rule
 
-Prefer zero/new-low-compute evidence in this order:
+Do not rank concepts by elegance. Prefer:
 
-1. derive projection from current puzzle/state semantics;
-2. search retained exact/referee-valid states/paths for witnesses and counterexamples;
-3. join to existing technique census / capability evidence for response nomination where valid;
-4. add a production-inert observer only if the existing evidence cannot answer incidence;
-5. test the smallest consumer only after distinction is established.
+`expected information value ≈ supported opportunity × novelty × consumer leverage ÷ derivation cost`
 
-Historical outcomes may nominate populations. They never enter cold runtime policy.
+No scalar score is authoritative; the decomposition forces the right questions. A broad concept may lose to a narrow exact law with a cheap denominator and obvious consumer.
 
-## Stop rule
+## Stop and closure semantics
 
-Stop a projection family when its exact law is merely a restatement of an existing bound, its supported scope is too narrow, its projected state grows toward full residual identity, or its incremental decision value is negligible. Preserve the semantic reason for closure so a materially different projection is not falsely inherited as negative.
+Stop when the claim restates an existing bound, supported scope is vanishing, projected state approaches full residual identity, construction cost rivals the avoided work, or incremental decision value is negligible.
+
+Record *which family and theorem closed*. A failed matching relaxation does not close conserved cut flow; a failed symmetry quotient does not close dominance; a failed cross-level interface signature does not close board-specific conservation.
 
 ## Current next action
 
-Run the **cut/boundary-balance concept audit** before implementation:
-
-- enumerate exact cut-balance laws under ordinary moves, intersections and portal side changes;
-- identify the smallest mechanic-complete supported scope;
-- map existing connectivity/separator/topology machinery that can supply the needed facts;
-- construct smallest positive and redundancy witnesses;
-- define one production-inert incidence measurement;
-- explicitly state how the test differs from Lane A C0-C2 and ordinary connectivity.
-
-Only after that audit should code be considered.
+Complete the `WS2-CUT-BALANCE-PROJECTION` Stage-0 audit. Its deliverable is a small theorem/mechanic/novelty matrix plus witnesses and one earned incidence measurement, not solver code.
