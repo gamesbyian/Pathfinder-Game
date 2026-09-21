@@ -1,4 +1,10 @@
 <!-- agent-context-budget: warn=7000 max=10000 -->
+
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-21 — recovered fixed-cost execution, complete 1,962-level equivalence/presolve census and family provenance/partial-compilation census closed the broad ingestion-speed hypotheses.
+> **Decision:** no general compiled-level speed refactor, global exact/symmetry canonicalizer, initial parity presolve, initial BC1 presolve or generic family incremental compiler is earned for current corpora.
+> **Remaining gate:** closed forms reopen only with materially different evidence or a concrete setup-dominated consumer; dynamic search-reduction questions are owned by the computational-work-elimination successor audit and existing solver workstreams.
+
 # Solver batch digestion audit: recovered execution evidence and dispositions
 
 > **Status:** closeout evidence recovered from successful GitHub Actions run.
