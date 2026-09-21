@@ -83,9 +83,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
+      "status": "complete",
       "retirementGate": "Migrate remaining internal callers that already own packed-key paths; keep validateCandidatePath only on wire/import/public API surfaces that genuinely accept alternate coordinate encodings.",
-      "progress": "Split permissive decodeCandidatePath() from packed-key-only validateCanonicalPath(); validateCandidatePath() remains the import/API adapter. Hint acceptance decodes explicitly before canonical validation. Internal packed-key producers now use the strict referee in variety-search and pooled enumeration. Injected/public solverApi validation remains permissive at its intentional boundary."
+      "progress": "Closed: candidate decoding and rule validation are split. decodeCandidatePath()/validateCandidatePath() remain the explicit external/import/public adapter for alternate encodings; internal packed-key producers in variety-search and pooled worker enumeration call validateCanonicalPath() directly. The canonical referee rejects coordinate arrays/objects rather than reinterpreting them."
     },
     {
       "id": "PSC-004",
