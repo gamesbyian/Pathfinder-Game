@@ -20,6 +20,7 @@ const PACKAGE_PATH = path.join(ROOT, 'package.json');
 const TOOLING_LIFECYCLE_PATH = path.join(ROOT, 'scripts', 'tooling-lifecycle.json');
 const AGENT_CONTEXT_CHECK_PATH = path.join(ROOT, 'scripts', 'agent-context-budget.mjs');
 const CI_GATE_PARITY_CHECK_PATH = path.join(ROOT, 'scripts', 'check-ci-gate-parity.mjs');
+const VALIDATION_GROUP_CHECK_PATH = path.join(ROOT, 'scripts', 'validation-groups.mjs');
 const VALID_TOOLING_LIFECYCLES = new Set(['completed-migration', 'specialist-forensic', 'cold-research']);
 const NODE_FLAGS_WITH_VALUES = new Set([
   '--conditions',
@@ -191,5 +192,6 @@ function runRequiredCheck(scriptPath, label) {
 
 runRequiredCheck(AGENT_CONTEXT_CHECK_PATH, 'Agent-context budget check');
 runRequiredCheck(CI_GATE_PARITY_CHECK_PATH, 'Local/GitHub Actions gate parity check');
+runRequiredCheck(VALIDATION_GROUP_CHECK_PATH, 'Validation ownership registry parity check');
 
-console.log('Package script entrypoints, tooling lifecycle references, permanent-CI lifecycle, agent-context budgets, and CI gate parity are valid.');
+console.log('Package script entrypoints, tooling lifecycle references, permanent-CI lifecycle, agent-context budgets, CI gate parity, and validation ownership registry are valid.');
