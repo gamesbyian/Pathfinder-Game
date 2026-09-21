@@ -59,9 +59,16 @@ export function analyzeRelativeAdvantage(base, pairs = DEFAULT_PAIRS) {
         return {
             leftAction, rightAction,
             leftOnly: leftOnly.length, rightOnly: rightOnly.length, both: both.length, neither,
+            contrastPopulation: {
+                identityBasis: 'levelId',
+                leftOnlyIds: leftOnly.map(row => String(row.levelId)).sort(),
+                rightOnlyIds: rightOnly.map(row => String(row.levelId)).sort(),
+                bothIds: both.map(row => String(row.levelId)).sort(),
+            },
             topEffects: effects.slice(0, 8),
             maxAbsoluteStandardizedDifference: effects.length ? Math.abs(effects[0].standardizedDifference) : null,
             evidenceRole: 'outcome-selected-development',
+            premiseUse: 'offline-premise-nomination-only',
         };
     });
     return {
