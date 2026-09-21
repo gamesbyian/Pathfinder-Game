@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=5000 max=7000 -->
 # Solver parity response-signature preflight
 
-> **Status:** ACTIVE CHEAP OFFLINE ANALYSIS; no production decisions changed.
+> **Status:** ACTIVE CHEAP OFFLINE ANALYSIS; shared static parity/portal feature owner and response-guided contrast analyzer implemented; no production decisions changed.
 > **Owner:** `WS2-PARITY-RESPONSE-SIGNATURE`, queued under Lane H in [solver optimization workstreams](solver-optimization-workstreams.md).
 > **Parent invariant:** [parity phase/capacity preflight](solver-parity-phase-capacity-preflight.md).
 
@@ -13,6 +13,9 @@ Do not prespecify named parity level classes. Treat parity as a feature basis fi
 
 ## Static feature basis
 
+`modules/solver/parity-structure.ts` now owns portal-pair twist classification and per-gate required twist parity. Production prep consumes the same owner. Research code must reuse it rather than rederive portal parity semantics.
+
+
 Derive from the level only:
 
 - required twist parity for each gate; summarize all-even / all-odd / mixed gate demand;
@@ -23,6 +26,14 @@ Derive from the level only:
 - no-twist initial checkerboard-capacity margin where defined.
 
 These are legal cold current-input facts. Historical solver outcomes, saved hints and provenance may be joined offline but are never feature inputs to production routing.
+
+Run the first response-guided static contrast without solver search:
+
+```bash
+npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
+```
+
+This reuses the prespecified technique-pair contrast populations and the production normalization/parity owner. It remains outcome-selected development evidence.
 
 ## Discriminator A: technique census
 
