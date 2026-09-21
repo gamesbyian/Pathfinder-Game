@@ -84,12 +84,15 @@ The likely missing object is not a level category but a **retention relation**:
 
 ### Cheapest falsifier
 
-Use existing production/census decision evidence where candidate sets are available and perform a **consumer-oracle replay**:
-- identify candidates retained by 2K but displaced before the corresponding 5K completion;
-- test whether any cheap exact projection distinguishes those survivors;
-- measure the maximum number of real decisions the fact could have changed if free.
+The retained evidence does **not** currently contain a paired 2K/5K candidate-decision population on these inversion levels. D1 has rich 5K cutoff evidence and the generic frontier sampler is width-specific, but neither can honestly reconstruct this contrast after the fact.
 
-Do not build another beam-width treatment until an explanatory decision seam is observed.
+A bounded consumer oracle is now implemented as `research:paired-beam-width-frontier`. On explicit frozen inversion IDs it runs both widths per gate at the same scoring profile and phase checkpoint, compares exact prefix identities, and reports shared/2K-only/5K-only support plus bounded examples.
+
+First gate:
+- if every 2K frontier is contained in 5K, simple state-support displacement is not the explanation at that checkpoint;
+- if support is materially non-nested, freeze a bounded set of exclusive prefixes and only then test dominance/feasibility/regime explanations.
+
+Frontier membership itself is not viability. Do not build another beam-width treatment until an explanatory decision seam is observed.
 
 ## Cross-cutting opportunity — product projections
 
@@ -121,6 +124,7 @@ The next code should **not** be a selector. It should be the smallest shared cur
 ```bash
 npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
 npm run research:response-guided-orientation -- --out=tmp/response-guided-orientation-contrast.json
+# Width oracle intentionally requires explicit frozen --levels; see Nomination 3.
 ```
 
 This command performs normalization and static feature analysis only; it runs no solver search.
