@@ -3,9 +3,13 @@
  * Computational-work-elimination audit: portal-free connectivity goal-cut certificate shadow.
  * Runs the ordinary solver under a strict whole-solve work cap. The shadow never prunes.
  */
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
+import { hashResearchPopulation } from './research-population-identity-lib.mjs';
+import { researchSemanticHash } from './research-semantic-identity-lib.mjs';
+import { validateResearchUnitTopology } from './research-unit-topology-lib.mjs';
 
 installBrowserStubs();
 const { createSolver } = await import('../modules/solver.js');
@@ -77,9 +81,42 @@ function attributionBucket(map, caller) {
 
 const callerAggregate = new Map();
 
-const corpusDoc = JSON.parse(readFileSync(path.resolve(CORPUS_FILE), 'utf8'));
+const corpusRaw = readFileSync(path.resolve(CORPUS_FILE), 'utf8');
+const corpusDoc = JSON.parse(corpusRaw);
 const corpusLevels = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
 const sample = selectLevelsBySpec(corpusLevels, LEVEL_SPEC);
+const corpusIdentity = `sha256:${createHash('sha256').update(corpusRaw).digest('hex')}`;
+const selectedLevelIds = sample.map(({ entry, pos }) => String(entry?.id ?? `pos:${pos}`));
+const populationSelection = {
+    corpus: CORPUS_FILE,
+    levelSpec: LEVEL_SPEC,
+    selectedLevelIds,
+    role: 'prespecified-development-shadow-population',
+};
+const populationIdentity = hashResearchPopulation({
+    kind: 'pathfinder-connectivity-goal-cut-certificate-shadow-population',
+    identityBasis: 'levelId-with-corpus-content-identity',
+    identities: selectedLevelIds,
+    corpusIdentity,
+    selection: populationSelection,
+}).identityHash;
+const protocolIdentity = researchSemanticHash({
+    kind: 'pathfinder-connectivity-goal-cut-certificate-shadow-protocol',
+    baseWorkBudget: BASE_WORK_BUDGET,
+    strictTotalWorkBudget: true,
+    timeBudgetMs: TIME_BUDGET_MS,
+    maxCertificates: MAX_CERTIFICATES,
+    observeUnscheduled: true,
+    behavior: 'shadow-only-ordinary-connectivity-authoritative',
+});
+const unitTopology = validateResearchUnitTopology({
+    observationUnit: 'connectivity-certificate-or-probe-event',
+    opportunityUnit: 'scheduled-or-unscheduled-connectivity-check-candidate',
+    assignmentUnit: null,
+    dependenceClusterUnit: 'level',
+    analysisUnit: 'level-and-event-summary',
+    generalizationUnit: 'selected-development-level-under-recorded-shadow-protocol',
+});
 console.log('connectivity-certificate-shadow-audit: ' + sample.length + ' level(s), work=' + BASE_WORK_BUDGET + ', cap=' + MAX_CERTIFICATES);
 
 const levels = [];
@@ -232,7 +269,13 @@ const summary = {
     schemaVersion: 1,
     kind: 'pathfinder-connectivity-goal-cut-certificate-shadow',
     evidenceRole: 'development',
+    researchEnrichmentKind: 'observation',
     scope: 'portal-free goal-unreachability; scheduled connectivity replacement opportunity only',
+    populationIdentity,
+    populationSelection,
+    unitTopology,
+    protocolIdentity,
+    sourceArtifacts: [{ path: CORPUS_FILE, contentIdentity: corpusIdentity }],
     population: {
         corpus: CORPUS_FILE, levelSpec: LEVEL_SPEC, sampledLevels: sample.length, completedRows: levels.length,
         baseWorkBudget: BASE_WORK_BUDGET, strictTotalWorkBudget: true,
