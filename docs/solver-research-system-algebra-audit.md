@@ -34,11 +34,13 @@ Boundary: never combine classifications from different purposes/regimes without 
 
 Boundary: callers still prove corpus/identity-basis compatibility. The helper deliberately does not infer semantic domain or auto-build cross-domain unions/hashes. Capability-memory now reuses it for historical-signature intersections and pairwise nomination overlap; policy-specific greedy coverage remains local.
 
-## C. Research-block consumption — **MATURE SEMANTICS; AUDIT NEXT**
+## C. Research-block consumption — **AUDIT CLOSED; SUMMARY VIEW SUFFICIENT**
 
-`solver-research-block-lineage.mjs` already behaves like a linear resource: consumption history grows monotonically; copying artifacts does not mint independent freshness; confirmation/transfer eligibility is lineage/scope-sensitive; development remains reusable.
+`solver-research-block-lineage.mjs` behaves like a scoped consumable resource: history grows monotonically; copying artifacts does not mint independence; confirmation/transfer eligibility is lineage/scope-sensitive; development remains reusable.
 
-Do not collapse this to spent/unspent or order evidence roles. A pure consumption summary is now exposed through the relation model (question/role/scope counts, opened outcomes, decision refs, time span). Next: audit `research:record-consumption` call sites for duplicate freshness logic or artifact-copy loopholes before adding anything stronger.
+The call-site/docs audit found one canonical recording path: `research:record-consumption` writes sidecars, including matched-cohort parent scopes derived from selection artifacts, while source blocks remain immutable. No competing fresh/spent registry or alternate block mutation path is currently authoritative.
+
+The relation model now exposes a pure consumption summary (question/role/scope counts, opened outcomes, decision refs, time span). That is enough for audit/orientation. Do not add a spent/unspent state machine or order evidence roles unless a second real consumer needs semantics the summary cannot express.
 
 ## D. Observability envelopes — **COMPOSITION CENSUS NEGATIVE; KEEP SINGLE-ENVELOPE OWNER**
 
@@ -88,7 +90,7 @@ The standard is prevention of real research errors, not mathematical elegance.
 ## Priority after first audit
 
 - **Done:** applicability meet; population set relation; capability-memory set migration + regression/ownership guards; block-consumption summary view.
-- **Next:** block-consumption call-site audit. Envelope composition is deferred until a real same-question multi-envelope consumer appears.
+- **Next:** claim-chain persistence and unit-partition recurrence only when real mapped data appears. Envelope composition is deferred until a real same-question multi-envelope consumer appears.
 - **Then:** claim-chain persistence, independence-axis categories, unit-partition recurrence.
 - **Guarded:** typed relation laws.
 - **Never implied:** evidence-role ordering or a generic algebra framework.
