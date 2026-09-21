@@ -109,20 +109,15 @@ Only an inverse with a concrete evidence source, decision-changing discriminator
 
 ## Immediate readiness check
 
-The current evidence topology does **not** justify promoting either new hook today.
+The readiness picture changed while this audit was being integrated.
 
-- **Success-side avoidable work:** lifecycle telemetry, compact failure response, hint discovery process and search-loss solved controls can describe work and successful controls, but none currently owns a leakage-safe oracle for the earliest current-input point at which the eventual success became effectively determined. The one-successor beam probe in PR #1952 is a narrower, already-owned oracle-ceiling question and should run first.
+- **Success-side avoidable work:** PR #1954 directly measured the action-selection form. On the frozen production boundary, 94.74% of C2 and 87.58% of C1 solved-row canonical attempt work occurred before the eventual winner. That is a perfect-hindsight ceiling, not a safe deletion rule, but it is enough to earn a concrete WS1 successor: `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`, which asks how much of that ceiling simple level-blind signals can capture at action boundaries while protecting rare winners. This is no longer deferred work and must not be duplicated here.
 - **Capability obsolescence:** capability evidence already exposes historical/current gains, losses, overlap, unique nominations and displacement, and the capability-evidence contract explicitly asks whether current production absorbs or exchanges old basins. That is enough to nominate an obsolescence audit after boundary churn, but not enough to remove a current stage: deletion requires current-code participation, unique marginal solves/displacement and removable-work economics under a compatible production boundary.
-
-Therefore both remain precise deferred hooks rather than unexecuted active experiments.
 
 ## Queue disposition
 
-No new active workstream is created by this audit.
+No new broad workstream is created by this audit.
 
-Two deferred hooks are worth preserving because they are not fully owned by current questions:
+The action-selection success-side descendant is now owned by WS1 through `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` on PR #1954. The one-successor/forced-work prevalence probe remains separately owned by PR #1952, and BC1 removable-work economics remains with its existing WS2 owner.
 
-- **success-side avoidable work / early determination:** reopen when retained solved-run evidence can define a leakage-safe offline oracle for the earliest current-input decision point after which measurable downstream work is avoidable;
-- **capability obsolescence / dominated production stages:** reopen after a material production-boundary change or portfolio churn when current evidence can measure unique marginal solves and removable work for existing stages/techniques.
-
-The one-successor/forced-work prevalence probe and BC1 removable-work economics remain with their existing owners.
+Only one new inverse hook remains deferred: **capability obsolescence / dominated production stages**, reopened after material production-boundary churn when current evidence can measure unique marginal solves and removable work for existing stages/techniques.
