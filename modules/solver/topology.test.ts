@@ -131,6 +131,43 @@ test('connectivity goal-cut shadow reuses a portal-free cut across a different e
     assert.ok(hit.boundaryCellChecks > 0);
 });
 
+test('connectivity goal-cut shadow invalidates a prior dynamic boundary when it becomes traversable', () => {
+    const level = makeLevel({
+        grid: { w: 3, h: 1 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 3, y: 1 },
+        flippingFilters: [{ x: 2, y: 1, axis: 1 }],
+        reqLen: 2,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+
+    // Source sibling: treat the only bridge cell as an already-used flipper. The ordinary fill
+    // rejects and produces a certificate whose complete boundary is that dynamically blocked cell.
+    const blocked = stateAt(level, prep, [K(1, 1)]);
+    const fi = prep.flipperIndexMap[K(2, 1)] - 1;
+    assert.ok(fi >= 0, 'fixture must index the flipping filter');
+    blocked.flipperUsedMask |= 1 << fi;
+    assert.equal(isConnected(K(1, 1), blocked, level, prep), false);
+    const produced = records.find(r => r.kind === 'certificate');
+    assert.ok(produced?.certificateSignature, 'expected a normalized proof-object identity');
+
+    // Fresh sibling: the same boundary cell is traversable again. The old implication must NOT
+    // validate, and ordinary connectivity must pass. This is the critical one-way-proof guard:
+    // matching geometry alone cannot become a stale cache hit.
+    const fresh = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), fresh, level, prep), true);
+    const probes = records.filter(r => r.kind === 'probe');
+    assert.ok(probes.length > 0, 'expected the retained certificate to be considered');
+    assert.equal(probes.some(r => r.hitCertificateId !== undefined), false,
+        'a reopened dynamic boundary must invalidate the old certificate');
+});
+
 test('connectivity goal-cut shadow deliberately produces no certificate on portal levels', () => {
     const level = makeLevel({
         grid: { w: 5, h: 3 },
