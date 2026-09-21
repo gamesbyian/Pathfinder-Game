@@ -8,23 +8,23 @@
 > **Method authority:** [`solver-research-operating-model.md`](solver-research-operating-model.md).
 > **Evidence authority:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 > **Deferred/reopen authority:** [`solver-future-work.md`](solver-future-work.md).
-> **Capability-history authority:** [`solver-capability-memory.md`](solver-capability-memory.md).
+> **Capability-history authority:** [`solver-capability-evidence.md`](solver-capability-evidence.md).
 > **Search-loss implementation authority:** [`solver-search-loss-evidence-implementation-plan.md`](solver-search-loss-evidence-implementation-plan.md).
 
-## Implementation status (2026-09-19)
+## Implementation status (reconciled 2026-09-21)
 
-Direct implementation/precommitment work that does not require new solver evidence is exhausted as of [the pre-handoff audit](../reports/2026-09-19-failure-evidence-prehandoff-direct-work-audit-001.md). The plan remains open because Phases 3-4 have real acquisition gates and Phases 5-8 are condition/authority-gated; do not manufacture data or consumers to force closure.
+Direct implementation/precommitment work is exhausted; surviving science is routed through current workstream/future-work authorities.
 
-- **Phase 0 — complete:** authority/discoverability closed by [Phase-0 closeout](../reports/2026-09-19-failure-evidence-phase0-authority-closeout-001.md).
-- **Phase 1 — complete:** compact prune/flow/progress stays supported research-only opt-in; no durable default promotion is earned. See [Phase-1 disposition](../reports/2026-09-19-compact-failure-diagnostic-phase1-closeout-001.md) and [producer audit](../reports/2026-09-19-compact-failure-response-producer-suitability-audit-001.md).
-- **Phase 2 — complete for automatic compact response:** common query covers parent/protocol accounting, exact action/stage dose, censoring/outcome support, badness support and protocol-compatible repeats. See [Phase-2 closeout](../reports/2026-09-19-failure-response-query-phase2-closeout-001.md).
-- **Phase 3 — precommitted / data-blocked:** analyze the first eligible post-instrumentation population under [the WS2 reconnaissance preflight](../reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md) and its [machine analysis contract](../reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-contract-001.json); execute through `npm run research:ws2-failure-response-reconnaissance` so analysis identity, scientific eligibility, unit topology, instrument scope and routing decision remain separate. Do not backfill prevalence from pre-contract runs.
-- **Phase 4A — zero-compute population frozen / acquisition-blocked:** the committed 23-parent expectation map now preserves current Class-3 membership + 24 exact rescuer identities from the 35066677597 boundary and 33717910218 census; downstream classification is implemented. Remaining scientific input is shared-production exact-action dose under [the Class-3 preflight](../reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md).
-- **Phase 4B — dispatch-ready:** frozen 40-parent default admissible-order probe plus mechanical reducer; only GHA measurement remains.
-- **Phase 4C/4D — independently live:** H3/Lane G keep their existing designs; failure evidence is secondary/optional.
-- **Phase 4E — complete:** capability memory accepts protocol-compatible failure-response joins as derived premise/capability evidence, not production policy.
-- **Phase 5 — audited / condition-gated:** no recurring rich producer is justified yet; if a repeated event/state consumer emerges, bounded targeted sweep is the preferred first host. See [producer-candidate audit](../reports/2026-09-19-recurring-rich-search-loss-producer-candidate-audit-001.md).
-- **Phases 6-8 — condition-gated:** Resource audit waits on real recurrence; phenotype mining waits on repeats; first-loss waits on WS2 selection.
+- **Phases 0-2 — complete:** authority/discoverability, research-only compact diagnostics, and automatic compact-response/query support are implemented. See the Phase-0/1/2 closeouts linked below in this plan.
+- **Phase 3 — completed / routed:** the first eligible WS2 reconnaissance population routed to allocation-specific follow-up, not a generic phenotype program. [Result](../reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md).
+- **Phase 4A — completed / resolved:** Class-3 exact-action dose is **0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative**. Repair deadline allocation now owns the censored repair-family follow-up. [Result](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md).
+- **Phase 4B — completed / design earned:** admissible-order reserve starvation recurs on **2/40 independent parents**, earning the smallest matched-total-work reserve-fraction A/B design. No dispatch is authorized yet. [Result](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md).
+- **Phase 4C/4D — resolved by specialist owners:** H3 remaining-length independently transfers and earns a matched-work consumer-design gate; Lane G modest completion-dose escalation is closed negative.
+- **Phase 4E — complete:** capability evidence may consume protocol-compatible failure-response joins as derived research evidence, never production policy.
+- **Phase 5 — condition-gated:** no recurring rich producer is justified; a repeated event/state consumer may reopen bounded targeted capture. [Audit](../reports/2026-09-19-recurring-rich-search-loss-producer-candidate-audit-001.md).
+- **Phases 6-8 — condition-gated / routed:** repeated compatible populations may earn richer reducers/resource work; recurring rich production routes to search-loss P8; explicit first-loss selection routes to P9.
+
+Do not manufacture populations or select a discriminator to close this plan. Live descendants are the repair-deadline experiment, reserve-repricing experiment design, and future recurrence/first-loss triggers owned by canonical authorities.
 
 ## 1. Why this plan exists
 

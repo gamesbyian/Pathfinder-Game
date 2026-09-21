@@ -43,16 +43,18 @@ Use compatible compact response first; never backfill pre-contract attempts. Try
 | Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules remain nominations until independently confirmed |
 | Heuristic-to-theorem subdomain audit | An active microscope reveals a soft relation with a clearly identifiable exact subdomain worth a prune, lower bound, forced move, decomposition, or exact-mode switch |
 
+## Earned experiment designs
+
+H3 remaining-length allocation and admissible-order reserve repricing have cleared their evidence gates. They are **earned experiment designs**, not reopen hooks; precommitment lives in [solver optimization workstreams](solver-optimization-workstreams.md). Neither is authorized for dispatch or production use.
+
 ## Conditional composition/allocation work
 
 Dormant until an active lane changes the premise.
 
 | Question | Reopen condition |
 |---|---|
-| Automatic selector/profile calibration | **Remaining-length transfer condition MET (2026-09-20).** [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md) nominates a bounded matched-work production consumer pilot; that pilot needs its own precommitment before dispatch and does not itself open a WS1 gate |
 | Cross-attempt basin overlap | A real handoff/allocation question exists; measure canonical action participation and solve-local rediscovery simultaneously |
 | Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates a concrete handoff value proposition |
-| Admissible-order retry repricing | **Recurrence condition MET (2026-09-20): 2/40 independent parents.** [`result`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) nominates the smallest matched-total-work `admissibleOrderNodeReserveFractionOverride` A/B; candidate fractions must be predeclared from the observed cost curve, not fit to the confirmation outcomes, and the A/B itself is not yet designed or dispatched |
 | Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
