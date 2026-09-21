@@ -22,8 +22,8 @@ import { EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, EARLY_REPAIR_SEARCH_A
 import type { Attempt, ShrunkBiasedTier, SolveOpts, SolveResult } from './orchestration-contracts.js';
 
 // Re-exported for compatibility with every existing './orchestration.js' import path.
-export type { Attempt, AttemptTierFlags, SolveOpts, AttemptResult, SearchResult } from './orchestration-contracts.js';
-export { classifyAttemptTier, attemptConfigKey, normalizeAblationConfig, getActiveGates, getFalseGoalTriggerSearchBudgetMs } from './orchestration-contracts.js';
+export type { Attempt, HistoricalAttemptTierFlags, SolveOpts, AttemptResult, SearchResult } from './orchestration-contracts.js';
+export { classifyAttemptTier, classifyHistoricalAttemptTier, attemptConfigKey, normalizeAblationConfig, getActiveGates, getFalseGoalTriggerSearchBudgetMs } from './orchestration-contracts.js';
 export { runAttempt } from './orchestration-run-attempt.js';
 export { attemptBudgetShare } from './orchestration-main-search.js';
 export {
