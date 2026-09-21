@@ -13,20 +13,19 @@
     "derivedInventory": "scripts/research-system-inventory-lib.mjs"
   },
   "counts": {
-    "windowQuestions": 30,
+    "windowQuestions": 31,
     "answerability": {
-      "answerable-or-concluded": 25,
-      "evidence/population-blocked": 4,
+      "answerable-or-concluded": 30,
       "measurement-blocked": 1
     },
     "proposalProvenance": {
-      "explicitTrigger": 14,
-      "candidateSetVisible": 17,
+      "explicitTrigger": 15,
+      "candidateSetVisible": 18,
       "neitherTriggerNorCandidateSet": 7
     },
     "instrumentShaping": {
       "questionsWithMeasurementOpportunity": 5,
-      "questionsWithoutMeasurementOpportunity": 25,
+      "questionsWithoutMeasurementOpportunity": 26,
       "uniqueMeasurementOpportunitiesUsed": 3,
       "underExplicitOpportunitiesUsed": [
         "MO-005"
@@ -67,7 +66,7 @@
     {
       "id": "WS1-REMAINING-LENGTH-ALLOCATION",
       "owner": "WS1",
-      "state": "deferred-reopen",
+      "state": "concluded-positive",
       "question": "Does remaining path length provide transferable current-input allocation value under a shared fixed work budget beyond the Card-E completion-search population?",
       "evidenceRefs": [
         "reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md"
@@ -86,9 +85,9 @@
         }
       ],
       "answerability": {
-        "disposition": "evidence/population-blocked",
+        "disposition": "answerable-or-concluded",
         "evidenceDeficit": true,
-        "strongEvidenceGate": true,
+        "strongEvidenceGate": false,
         "measurementDeficit": false,
         "computeDeficit": true,
         "codeDeficit": false,
@@ -100,7 +99,8 @@
           "WS2-H3-REPAIR-COMMITMENT-INTERFACE"
         ],
         "constraints": [
-          "docs/solver-failure-evidence-research-integration-plan.md"
+          "docs/solver-failure-evidence-research-integration-plan.md",
+          "reports/2026-09-20-h3-independent-transfer-result-001.md"
         ],
         "aliases": [
           "H3 allocation",
@@ -108,14 +108,14 @@
           "remaining length allocation"
         ],
         "explicitTrigger": true,
-        "explicitConstraintSources": 1,
+        "explicitConstraintSources": 2,
         "candidateSetVisible": false
       }
     },
     {
       "id": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "concluded-positive",
       "question": "Does fixed stage-reserve allocation recurrently starve admissible-order fallback (or another later stage) that could solve within the existing total work budget if more of that fixed budget reached it?",
       "evidenceRefs": [
         "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
@@ -133,9 +133,9 @@
         }
       ],
       "answerability": {
-        "disposition": "evidence/population-blocked",
+        "disposition": "answerable-or-concluded",
         "evidenceDeficit": true,
-        "strongEvidenceGate": true,
+        "strongEvidenceGate": false,
         "measurementDeficit": false,
         "computeDeficit": true,
         "codeDeficit": false,
@@ -151,7 +151,8 @@
           "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
           "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md",
           "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
-          "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md"
+          "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
+          "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
         ],
         "aliases": [
           "R00044 allocation-order artifact",
@@ -159,7 +160,7 @@
           "reserve starvation"
         ],
         "explicitTrigger": true,
-        "explicitConstraintSources": 5,
+        "explicitConstraintSources": 6,
         "candidateSetVisible": true
       }
     },
@@ -306,7 +307,7 @@
     {
       "id": "WS2-CLASS3-DOSE-EXPOSURE",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "concluded-positive",
       "question": "Did the Class-3 residual receive enough exact-action work from its historically implicated techniques to support any negative capability inference?",
       "evidenceRefs": [
         "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md",
@@ -326,9 +327,9 @@
         }
       ],
       "answerability": {
-        "disposition": "evidence/population-blocked",
+        "disposition": "answerable-or-concluded",
         "evidenceDeficit": true,
-        "strongEvidenceGate": true,
+        "strongEvidenceGate": false,
         "measurementDeficit": false,
         "computeDeficit": true,
         "codeDeficit": false,
@@ -342,6 +343,7 @@
         "constraints": [
           "docs/solver-failure-evidence-research-integration-plan.md",
           "reports/2026-09-19-class3-exact-action-dose-acquisition-preflight-001.md",
+          "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
           "reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md",
           "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
           "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
@@ -357,7 +359,7 @@
           "dose reconciliation"
         ],
         "explicitTrigger": true,
-        "explicitConstraintSources": 10,
+        "explicitConstraintSources": 11,
         "candidateSetVisible": false
       }
     },
@@ -521,7 +523,7 @@
     {
       "id": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "concluded-positive",
       "question": "What does protocol-compatible compact failure-response evidence say about the cheapest next WS2 discriminator: operational divergence/first-loss, rejection counterfactuals, a producer-consumer 2x2, or no expensive follow-on yet?",
       "evidenceRefs": [
         "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md",
@@ -531,12 +533,12 @@
       "measurementOpportunities": [],
       "measurementOpportunityStatus": [],
       "answerability": {
-        "disposition": "evidence/population-blocked",
+        "disposition": "answerable-or-concluded",
         "evidenceDeficit": true,
         "strongEvidenceGate": true,
         "measurementDeficit": false,
         "computeDeficit": true,
-        "codeDeficit": true,
+        "codeDeficit": false,
         "conceptDeficit": false,
         "reopenConditionPresent": true
       },
@@ -551,6 +553,7 @@
           "reports/2026-09-19-ws2-failure-response-reconnaissance-analysis-preflight-001.md",
           "reports/2026-09-19-ws2-failure-response-reconnaissance-readiness-audit-001.md",
           "reports/2026-09-20-ws2-class3-shared-acquisition-freeze-001.md",
+          "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md",
           "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
           "scripts/failure-evidence-purpose-query.mjs",
           "scripts/failure-response-query.mjs"
@@ -561,7 +564,7 @@
           "post-work-ladder discriminator"
         ],
         "explicitTrigger": true,
-        "explicitConstraintSources": 9,
+        "explicitConstraintSources": 10,
         "candidateSetVisible": true
       }
     },
@@ -999,6 +1002,47 @@
       }
     },
     {
+      "id": "WS2-PARITY-RESPONSE-SIGNATURE",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "question": "Do current-input parity features explain technique-response discordance or successful-path realization beyond existing structural descriptors strongly enough to nominate a transferable solver consumer?",
+      "evidenceRefs": [
+        "reports/2026-09-19-solver-parity-invariant-audit-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": false
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-CHECKERBOARD-CAPACITY",
+          "WS2-PARITY-PHASE-DISTANCE"
+        ],
+        "constraints": [
+          "docs/solver-parity-phase-capacity-preflight.md",
+          "docs/solver-parity-response-signature-preflight.md",
+          "reports/2026-09-19-solver-parity-invariant-audit-001.md"
+        ],
+        "aliases": [
+          "parity capability axis",
+          "parity pressure",
+          "parity response signature"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 3,
+        "candidateSetVisible": true
+      }
+    },
+    {
       "id": "WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION",
       "owner": "WS2",
       "state": "concluded-positive",
@@ -1248,42 +1292,6 @@
     }
   ],
   "capabilityGaps": [
-    {
-      "questionId": "WS1-REMAINING-LENGTH-ALLOCATION",
-      "disposition": "evidence/population-blocked",
-      "needsEvidenceOrPopulation": true,
-      "needsMeasurement": false,
-      "needsCompute": true,
-      "needsCode": false,
-      "needsConceptOrRepresentation": false
-    },
-    {
-      "questionId": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
-      "disposition": "evidence/population-blocked",
-      "needsEvidenceOrPopulation": true,
-      "needsMeasurement": false,
-      "needsCompute": true,
-      "needsCode": false,
-      "needsConceptOrRepresentation": false
-    },
-    {
-      "questionId": "WS2-CLASS3-DOSE-EXPOSURE",
-      "disposition": "evidence/population-blocked",
-      "needsEvidenceOrPopulation": true,
-      "needsMeasurement": false,
-      "needsCompute": true,
-      "needsCode": false,
-      "needsConceptOrRepresentation": false
-    },
-    {
-      "questionId": "WS2-FAILURE-RESPONSE-RECONNAISSANCE",
-      "disposition": "evidence/population-blocked",
-      "needsEvidenceOrPopulation": true,
-      "needsMeasurement": false,
-      "needsCompute": true,
-      "needsCode": true,
-      "needsConceptOrRepresentation": false
-    },
     {
       "questionId": "WS2-G1-COMPLETE-PATH-LNS",
       "disposition": "measurement-blocked",

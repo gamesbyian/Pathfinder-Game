@@ -8,7 +8,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 import { createState, applyMove } from './search-state.js';
-import { __setReachGenerationForTests, isConnected, isConnectedForFalseGoalTriggerSearch } from './topology.js';
+import { __setReachGenerationForTests, connectivityResearchSnapshot, isConnected, isConnectedForFalseGoalTriggerSearch } from './topology.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 
@@ -41,6 +41,49 @@ function connectivityDiagnostic(next: number, state: any, level: any, prep: any)
         rejected: diagnostics.rejected.PRUNE_CONNECTIVITY ?? 0,
     };
 }
+
+test('connectivity research snapshot exposes a reachable one-interface obligation pocket', () => {
+    const bridgePocket = makeLevel({
+        grid: { w: 5, h: 3 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 1, y: 3 },
+        blocks: [{ x: 3, y: 1 }, { x: 3, y: 3 }],
+        mustPass: [{ x: 4, y: 2 }],
+        reqLen: 6,
+    });
+    const prep = prepLevel(bridgePocket);
+    const state = stateAt(bridgePocket, prep, [K(1, 1)]);
+    const snapshot = connectivityResearchSnapshot(K(1, 1), state, bridgePocket, prep);
+
+    assert.equal(snapshot.connected, true, 'ordinary connectivity/volume must pass the novelty witness');
+    assert.ok(snapshot.nodes.includes(K(4, 2)), 'pending must-pass must be in the reached graph');
+    assert.deepEqual(snapshot.pendingMandatory, [K(4, 2)]);
+    assert.ok(snapshot.edges.some(edge =>
+        edge.kind === 'cardinal'
+        && new Set([edge.a, edge.b]).has(K(3, 2))
+        && new Set([edge.a, edge.b]).has(K(4, 2))),
+    'the one-cell corridor must be represented as a distinct cardinal transition resource');
+});
+
+test('connectivity research snapshot preserves parallel cardinal and portal resources', () => {
+    const level = makeLevel({
+        grid: { w: 4, h: 1 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 4, y: 1 },
+        reqLen: 3,
+        portals: [{ x1: 2, y1: 1, x2: 3, y2: 1 }],
+    });
+    const prep = prepLevel(level);
+    const state = stateAt(level, prep, [K(1, 1)]);
+    const snapshot = connectivityResearchSnapshot(K(1, 1), state, level, prep);
+    const pairEdges = snapshot.edges.filter(edge =>
+        new Set([edge.a, edge.b]).has(K(2, 1))
+        && new Set([edge.a, edge.b]).has(K(3, 1)));
+
+    assert.equal(snapshot.connected, true);
+    assert.equal(pairEdges.length, 2, 'cardinal adjacency and portal jump must remain parallel multiedges');
+    assert.deepEqual(new Set(pairEdges.map(edge => edge.kind)), new Set(['cardinal', 'portal']));
+});
 
 test('fires when the goal is walled off; passes when it is reachable', () => {
     const open = makeLevel();

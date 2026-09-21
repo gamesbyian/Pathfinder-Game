@@ -3,7 +3,7 @@ import { buildAxisApproachMap, buildDistMap, buildParityPhaseDistArrays, denseIn
 import type { DistMapOpts } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
 import { MAX_BITROW_DIM } from './topology.js';
-import { keyParity } from '../domain/cell-key.js';
+import { describeStaticParityStructure } from './parity-structure.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel } from './types.js';
 
@@ -185,13 +185,13 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // dist maps above; low call-frequency in isolation (once per move, only on twist-portal
     // levels) but the same mechanical, zero-risk win, so no reason to leave it as the odd one out.
     prep.parityPortalDistMaps = [];
-    const _seenPortalPairs = new Set<number>();
-    for (const [a, info] of level.portalMap.entries()) {
-        const b = info.dest;
-        if (_seenPortalPairs.has(b)) continue; // each pair appears as both a→b and b→a
-        _seenPortalPairs.add(a);
-        if (keyParity(a) === keyParity(b)) continue; // twist=0: doesn't fix a parity mismatch
-        prep.parityPortalDistMaps.push({ a, b, dist: distMapToArray(buildDistMap(level, [a, b], distOpts), level.grid.w, level.grid.h) });
+    const parityStructure = describeStaticParityStructure(level);
+    for (const { a, b } of parityStructure.twistPortalPairs) {
+        prep.parityPortalDistMaps.push({
+            a,
+            b,
+            dist: distMapToArray(buildDistMap(level, [a, b], distOpts), level.grid.w, level.grid.h),
+        });
     }
 
     // Lane H1 research representation. Build only when twist portals exist; on no-twist levels the

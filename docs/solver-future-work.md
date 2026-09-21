@@ -20,6 +20,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 ## Deferred plan closeouts
 
 - **Parity:** [preflight](solver-parity-phase-capacity-preflight.md).
+- **Exact projections:** cut balance is active; matching/dominance/separation/commutativity/residue/symmetry stay gated. Retain sibling audits for phase-conditioned checkerboard capacity and tiny product projections (for example parity phase × cut side) only when a novelty witness exists. [program](solver-small-exact-projections-program.md) · [response-guided loop](solver-response-guided-capability-invention.md)
 - **Failure evidence:** Class-3 dose and reconnaissance are concluded; repair-deadline allocation is active, reserve repricing independently nominated, and P7 still needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
 - **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
@@ -77,6 +78,8 @@ Do not reopen unchanged:
 - broad alternative-search frameworks before their active cheap falsifier;
 - hazard/bandit/ML scheduling before a fixed-work marginal-value premise;
 - bulk variant generation without a frozen causal question.
+- richer twist/same-parity portal-count decomposition as an explanation of the frozen 5K plain-vs-mechanic-buckets response contrast; raw portal count remained stronger in both scoring families;
+- the tested static CW/CCW side-balance / signed-moment / absolute-moment descriptor basis as a sufficient explanation of perimeter direction disagreement; next sibling must use operational traces or a materially different exact representation.
 
 Closure is form-scoped: cross-level connectivity does not close solve-local rediscovery; detour gadgets do not close per-instance commutativity; blueprint implementations do not close future-intersection realizability; positional repair does not close dependency-defined revision; H1 vocabulary does not close bounded per-instance feasibility.
 

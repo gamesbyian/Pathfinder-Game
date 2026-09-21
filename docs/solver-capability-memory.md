@@ -194,7 +194,7 @@ Use existing compatible historical rows first. Re-execute an old anchor only whe
 Capability memory feeds existing owners rather than becoming a new workstream.
 
 - **WS2 / fixed-work allocation:** measure complementary capability, residual coverage, overlap, work economics, and oracle union/headroom under compatible evidence.
-- **WS1 / action selection:** seek legal generic features that distinguish where materially different actions/policies win. Historical exact IDs may nominate the contrast but cannot be the selector.
+- **WS1 / action selection:** seek legal generic features that distinguish where materially different actions/policies win. Exact-invariant features such as parity phase/slack may be tested against technique-response discordance; historical exact IDs and hint/provenance may nominate the contrast but cannot be selector inputs.
 - **WS4 / retention and representation:** repeated known-live loss across materially distinct policies is stronger evidence than one policy's isolated failure.
 - **WS6 / repair and handoff:** use complementary producer/consumer capability only after exposure/operator evidence establishes a real handoff opportunity.
 - **WS0 / restart/randomization:** reopen only when capability-memory evidence supports a recurring restart/commitment-diversity deficit under the existing reopen rules.

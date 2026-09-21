@@ -171,6 +171,8 @@ Audit checks themselves. Look for exact-prose enforcement, redundant representat
 
 Prefer semantic/structural checks over brittle sentence/regex shape checks. When a validator necessarily depends on syntax/pattern matching, periodically challenge it with nearby equivalent forms or fixtures. A ratchet that misses semantically identical debt because the syntax changed needs either a stronger matcher or an explicit documented boundary.
 
+For layered validator tests, audit whether each fixture introduces one intended semantic fault from an otherwise valid canonical fixture. If a stronger earlier validator intercepts the case, fix the fixture and assertion rather than weakening validation or pinning incidental first-error ordering.
+
 When a migration/research campaign/temporary bridge closes:
 
 1. enumerate its tests, validators, aliases, workflows, triggers, fixtures, inventories, and compatibility owners;

@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 // census refresh's solvingActions moved to this format and every DEFAULT_PAIRS entry stopped
 // matching anything (0/8 pairs found any left/right/both rows) -- this is a key-spelling fix
 // for the same eight comparisons, not a reselection of which pairs to test.
-const DEFAULT_PAIRS = [
+export const DEFAULT_PAIRS = [
     ['admissible-order|tieBreak=default|lds=off', 'admissible-order|tieBreak=mustCrossFirst|lds=off'],
     ['dfs|score=harvestThenFinish|bias=none', 'dfs|score=portalFirstTransfer|bias=none'],
     ['beam|score=objectiveFirst|bias=none|width=2000|retention=plain', 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain'],
@@ -59,9 +59,16 @@ export function analyzeRelativeAdvantage(base, pairs = DEFAULT_PAIRS) {
         return {
             leftAction, rightAction,
             leftOnly: leftOnly.length, rightOnly: rightOnly.length, both: both.length, neither,
+            contrastPopulation: {
+                identityBasis: 'levelId',
+                leftOnlyIds: leftOnly.map(row => String(row.levelId)).sort(),
+                rightOnlyIds: rightOnly.map(row => String(row.levelId)).sort(),
+                bothIds: both.map(row => String(row.levelId)).sort(),
+            },
             topEffects: effects.slice(0, 8),
             maxAbsoluteStandardizedDifference: effects.length ? Math.abs(effects[0].standardizedDifference) : null,
             evidenceRole: 'outcome-selected-development',
+            premiseUse: 'offline-premise-nomination-only',
         };
     });
     return {
@@ -82,4 +89,5 @@ async function main() {
     console.log(`Wrote ${output}: ${result.pairs.length} prespecified pair summaries`);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
+if (process.argv[1] && path.basename(process.argv[1]).startsWith('analyze-technique-relative-advantage')
+    && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();

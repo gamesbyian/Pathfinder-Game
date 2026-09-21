@@ -82,14 +82,14 @@ const orchestrationOnlySha = clone(manifest);
 delete orchestrationOnlySha.experiment.resolvedSha;
 orchestrationOnlySha.sha = 'a'.repeat(40);
 assert.throws(
-  () => validateReconciliationSources([{ runId: 'legacy', manifest: orchestrationOnlySha }]),
+  () => validateReconciliationSources([{ runId: '1', manifest: orchestrationOnlySha }]),
   /no declared experiment resolved SHA/u,
 );
 const legacyTopLevelConfiguration = clone(manifest);
 delete legacyTopLevelConfiguration.experiment.configurationHash;
 legacyTopLevelConfiguration.configurationHash = `sha256:${'b'.repeat(64)}`;
 assert.throws(
-  () => validateReconciliationSources([{ runId: 'legacy-config', manifest: legacyTopLevelConfiguration }]),
+  () => validateReconciliationSources([{ runId: '1', manifest: legacyTopLevelConfiguration }]),
   /no declared experiment configuration hash/u,
 );
 
@@ -111,8 +111,10 @@ assert.throws(
   () => validateReconciliationSources([{ runId: '1', manifest: missingDeclaredAttempt }]),
   /no declared experiment workflow run attempt/u,
 );
+const duplicateRunManifest = clone(secondManifest);
+duplicateRunManifest.experiment.workflowRunId = '1';
 assert.throws(
-  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: secondManifest }]),
+  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: duplicateRunManifest }]),
   /source run IDs must be unique/u,
 );
 const mismatchedConfiguration = clone(secondManifest);
@@ -132,7 +134,7 @@ nestedReconciliation.experiment.reconciliationRun = {
   sourceRuns: ['leaf-a', 'leaf-b'],
 };
 assert.throws(
-  () => validateReconciliationSources([{ runId: 'nested', manifest: nestedReconciliation }]),
+  () => validateReconciliationSources([{ runId: '1', manifest: nestedReconciliation }]),
   /already a reconciliation result.*leaf acquisition runs/u,
 );
 

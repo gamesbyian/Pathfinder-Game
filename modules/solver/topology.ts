@@ -602,6 +602,77 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
 // additional triggerable false-goal cells on both completing and partial levels (final
 // triggerable cells are gated by a full win-condition check before being added), so the
 // looser bound buys nothing here — it would only prune less for no benefit.
+
+/**
+ * Research/testing-only view of the exact reached relation produced by isConnected().
+ *
+ * Calls the real connectivity prune once, then exposes its reached cells as an undirected
+ * multigraph. Cardinal and portal transitions remain distinct resources even when they share the
+ * same endpoint pair. This function makes no bridge/cut judgment and is never called by production
+ * search.
+ */
+export function connectivityResearchSnapshot(
+    pos: number,
+    state: SolverSearchState,
+    level: NormalizedLevel,
+    prep: PrepLevel,
+) {
+    const connected = isConnected(pos, state, level, prep);
+    const { w, h } = level.grid;
+    const nodes: number[] = [];
+    const nodeSet = new Set<number>();
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const key = (y << 16) | x;
+            if (!_reached(key)) continue;
+            nodes.push(key);
+            nodeSet.add(key);
+        }
+    }
+
+    const edges: { id: string; a: number; b: number; kind: 'cardinal' | 'portal' }[] = [];
+    for (const key of nodes) {
+        const x = key & 0xFFFF;
+        const y = (key >>> 16) & 0xFFFF;
+        if (x + 1 < w) {
+            const right = key + 1;
+            if (nodeSet.has(right)) edges.push({ id: `c:${key}:${right}`, a: key, b: right, kind: 'cardinal' });
+        }
+        if (y + 1 < h) {
+            const down = key + 0x10000;
+            if (nodeSet.has(down)) edges.push({ id: `c:${key}:${down}`, a: key, b: down, kind: 'cardinal' });
+        }
+    }
+
+    const seenPortals = new Set<string>();
+    for (const [a, portal] of level.portalMap) {
+        const b = portal.dest;
+        if (!nodeSet.has(a) || !nodeSet.has(b)) continue;
+        const lo = Math.min(a, b), hi = Math.max(a, b);
+        const pairId = `${lo}:${hi}`;
+        if (seenPortals.has(pairId)) continue;
+        seenPortals.add(pairId);
+        edges.push({ id: `p:${pairId}`, a: lo, b: hi, kind: 'portal' });
+    }
+
+    const pendingMandatory: number[] = [];
+    for (let i = 0; i < level.mustPassKeys.length; i++) {
+        if ((state.mpVisitedMask & (1 << i)) === 0) pendingMandatory.push(level.mustPassKeys[i]);
+    }
+    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+        if ((state.mustCrossMask & (1 << i)) !== 0) pendingMandatory.push(level.mustCrossKeys[i]);
+    }
+
+    return {
+        connected,
+        current: pos,
+        goal: level.goalKey,
+        nodes,
+        edges,
+        pendingMandatory: [...new Set(pendingMandatory)].sort((a, b) => a - b),
+    };
+}
+
 export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     const intNeeded = level.requiredIntersections - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;

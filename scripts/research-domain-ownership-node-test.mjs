@@ -8,6 +8,20 @@ assert.doesNotMatch(blockLineage, /from ['"]\.\/solver-experiment-contract\.mjs[
 assert.match(blockLineage, /research-semantic-identity-lib\.mjs/u);
 assert.match(blockLineage, /research-evaluation-evidence-role-lib\.mjs/u);
 
+const capabilityMemory = source('scripts/solver-capability-memory-lib.mjs');
+assert.match(capabilityMemory, /research-population-identity-lib\.mjs/u,
+  'capability memory must use the shared population identity-set relation owner');
+assert.doesNotMatch(capabilityMemory, /function setIntersection|function setUnion/u,
+  'capability memory must not redeclare shared identity-set algebra');
+
+const parityPrep = source('modules/solver/prep.ts');
+assert.match(parityPrep, /parity-structure\.js/u,
+  'solver prep must consume the shared static parity/portal structure owner');
+
+const responseGuidedParity = source('scripts/analyze-response-guided-parity-contrast.mjs');
+assert.match(responseGuidedParity, /solver\/parity-structure\.js/u,
+  'response-guided parity analysis must reuse the solver-owned parity structure');
+
 const failureResponse = source('scripts/solver-failure-response-lib.mjs');
 assert.doesNotMatch(failureResponse, /from ['"]\.\/solver-experiment-contract\.mjs['"]/u);
 assert.match(failureResponse, /research-observation-integrity-lib\.mjs/u);
@@ -110,6 +124,12 @@ assert.match(ws2AnalysisContract, /research-unit-topology-lib\.mjs/u,
 const class3DoseAnalysis = source('scripts/analyze-class3-dose-exposure.mjs');
 assert.match(class3DoseAnalysis, /research-unit-topology-lib\.mjs/u,
   'Class-3 dose analysis must validate its frozen unit topology');
+assert.match(class3DoseAnalysis, /research-observation-integrity-lib\.mjs/u,
+  'Class-3 dose analysis must reuse shared independent-unit grouping');
+
+const reserveStarvationAnalysis = source('scripts/analyze-reserve-starvation-probe.mjs');
+assert.match(reserveStarvationAnalysis, /research-observation-integrity-lib\.mjs/u,
+  'reserve-starvation analysis must reuse shared independent-unit grouping');
 
 const ws2Recon = source('scripts/ws2-failure-response-reconnaissance.mjs');
 assert.match(ws2Recon, /research-resolution-envelope-lib\.mjs/u);

@@ -3,6 +3,7 @@ import {
     isResearchEvaluationEvidenceRole,
     validateResearchEvaluationEvidenceRole,
 } from './research-evaluation-evidence-role-lib.mjs';
+import { compareResearchIdentitySets } from './research-population-identity-lib.mjs';
 
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 const SCOPE_KINDS = new Set(['block', 'parent', 'family']);
@@ -69,6 +70,97 @@ export function appendResearchConsumption(block, event, { populationIdentity } =
     const candidate = { ...block, consumptionEvents: [...(block?.consumptionEvents ?? []), event] };
     assertResearchBlock(candidate, { populationIdentity });
     return candidate;
+}
+
+
+export function summarizeResearchConsumption(block) {
+    const events = Array.isArray(block?.consumptionEvents) ? block.consumptionEvents : [];
+    const increment = (target, key) => {
+        const value = String(key ?? '');
+        if (!value) return;
+        target[value] = (target[value] ?? 0) + 1;
+    };
+    const byQuestion = {};
+    const byEvidenceRole = {};
+    const byScopeKind = {};
+    const openedOutcomeKinds = new Set();
+    const decisionRefs = new Set();
+    const times = [];
+
+    for (const event of events) {
+        increment(byQuestion, event?.questionId);
+        increment(byEvidenceRole, event?.evidenceRole);
+        increment(byScopeKind, event?.scope?.kind);
+        for (const kind of event?.openedOutcomeKinds ?? []) openedOutcomeKinds.add(String(kind));
+        if (nonEmpty(event?.decisionRef)) decisionRefs.add(event.decisionRef);
+        if (nonEmpty(event?.consumedAt) && !Number.isNaN(Date.parse(event.consumedAt))) {
+            times.push(event.consumedAt);
+        }
+    }
+    times.sort((a, b) => Date.parse(a) - Date.parse(b));
+
+    return {
+        totalEvents: events.length,
+        byQuestion,
+        byEvidenceRole,
+        byScopeKind,
+        openedOutcomeKinds: [...openedOutcomeKinds].sort(),
+        decisionRefs: [...decisionRefs].sort(),
+        firstConsumedAt: times[0] ?? null,
+        lastConsumedAt: times.at(-1) ?? null,
+    };
+}
+
+export function summarizeResearchBlockUsageOverlap(block, proposedParentIds, {
+    questionId = null,
+    relatedQuestionIds = null,
+} = {}) {
+    if (!Array.isArray(proposedParentIds)) throw new Error('proposedParentIds must be an array');
+    if (relatedQuestionIds != null && !Array.isArray(relatedQuestionIds)) {
+        throw new Error('relatedQuestionIds must be an array or null');
+    }
+
+    const relation = compareResearchIdentitySets(proposedParentIds, block?.parentIds ?? []);
+    const questionIds = questionId == null
+        ? null
+        : new Set([String(questionId), ...(relatedQuestionIds ?? []).map(String)]);
+    const relevantEvents = (block?.consumptionEvents ?? []).filter(event =>
+        questionIds == null || questionIds.has(String(event?.questionId)));
+
+    const overlapping = new Set(relation.intersection);
+    const knownConsumed = new Set();
+    let blockScopeEvents = 0;
+    const unresolvedFamilyScopeIds = new Set();
+
+    for (const event of relevantEvents) {
+        const scope = event?.scope;
+        if (scope?.kind === 'block' && String(scope.id) === String(block?.blockId)) {
+            blockScopeEvents++;
+            for (const id of overlapping) knownConsumed.add(id);
+        } else if (scope?.kind === 'parent' && overlapping.has(String(scope.id))) {
+            knownConsumed.add(String(scope.id));
+        } else if (scope?.kind === 'family') {
+            unresolvedFamilyScopeIds.add(String(scope.id));
+        }
+    }
+
+    const knownUntouched = relation.intersection.filter(id => !knownConsumed.has(id));
+    return {
+        relationToBlockPopulation: relation.relation,
+        proposedParents: relation.counts.left,
+        blockParents: relation.counts.right,
+        overlappingParents: relation.counts.intersection,
+        overlappingParentIds: relation.intersection,
+        relevantConsumptionEvents: relevantEvents.length,
+        blockScopeConsumptionEvents: blockScopeEvents,
+        knownConsumedOverlappingParentIds: [...knownConsumed].sort(),
+        knownUntouchedOverlappingParentIds: knownUntouched,
+        unresolvedFamilyScopeIds: [...unresolvedFamilyScopeIds].sort(),
+        interpretation: unresolvedFamilyScopeIds.size
+            ? 'diagnostic-partial-family-scope'
+            : 'diagnostic-parent-scope-complete',
+        authority: 'researchBlockEligibility remains authoritative for evidence-role eligibility',
+    };
 }
 
 export function researchBlockEligibility(block, {

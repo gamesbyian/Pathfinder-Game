@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { compareResearchIdentitySets } from './research-population-identity-lib.mjs';
 
 function numberOrZero(value) {
   const n = Number(value);
@@ -78,14 +79,6 @@ function aggregateCost(rows) {
   };
 }
 
-function setIntersection(a, b) {
-  return new Set([...a].filter(value => b.has(value)));
-}
-
-function setUnion(a, b) {
-  return new Set([...a, ...b]);
-}
-
 function sorted(set) {
   return [...set].sort();
 }
@@ -132,14 +125,16 @@ export function compareCandidateRows(baselineRows, candidateRows) {
 function normalizeSignature(candidate, baselineSolvedSet, baselineResidualSet) {
   const demonstratedGains = new Set((candidate.signature?.gainIds ?? []).map(String));
   const demonstratedLosses = new Set((candidate.signature?.lossIds ?? []).map(String));
+  const residualRelation = compareResearchIdentitySets([...demonstratedGains], [...baselineResidualSet]);
+  const solvedRelation = compareResearchIdentitySets([...demonstratedGains], [...baselineSolvedSet]);
   return {
     sourceMode: 'historical-signature',
     demonstratedGains: demonstratedGains.size,
     demonstratedLosses: demonstratedLosses.size,
     demonstratedGainIds: sorted(demonstratedGains),
     demonstratedLossIds: sorted(demonstratedLosses),
-    currentResidualNominationIds: sorted(setIntersection(demonstratedGains, baselineResidualSet)),
-    currentlySolvedHistoricalGainIds: sorted(setIntersection(demonstratedGains, baselineSolvedSet)),
+    currentResidualNominationIds: residualRelation.intersection,
+    currentlySolvedHistoricalGainIds: solvedRelation.intersection,
     currentResidualConfirmedGainIds: [],
     currentResidualConfirmedGains: 0,
     warning: 'Historical signatures nominate capability only. They are not current-code/current-budget confirmation and may not steer production by level identity.',
@@ -203,15 +198,14 @@ export function buildCapabilityMemory({ baselineId = 'baseline', baselineRows, c
       const b = normalizedCandidates[j];
       const setA = nominationSets.get(a.id);
       const setB = nominationSets.get(b.id);
-      const intersection = setIntersection(setA, setB);
-      const union = setUnion(setA, setB);
+      const relation = compareResearchIdentitySets([...setA], [...setB]);
       pairwise.push({
         a: a.id,
         b: b.id,
-        overlap: intersection.size,
-        union: union.size,
-        jaccard: union.size ? intersection.size / union.size : null,
-        overlapIds: sorted(intersection),
+        overlap: relation.counts.intersection,
+        union: relation.counts.union,
+        jaccard: relation.counts.union ? relation.counts.intersection / relation.counts.union : null,
+        overlapIds: relation.intersection,
       });
     }
   }

@@ -2,7 +2,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-20.
+> **Reconciled:** 2026-09-21.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability memory: [`capability memory`](solver-capability-memory.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Capability acquisition: [`invention program`](solver-capability-invention-program.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
@@ -72,13 +72,17 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane H — parity invariants
 
-**PARALLEL PREMISE OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` together; advance only after resolution-ready incidence and soundness. [preflight](solver-parity-phase-capacity-preflight.md)
+**PARALLEL PREMISE OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` together; advance only after resolution-ready incidence and soundness. The response-guided static portal decomposition is separately **CLOSED IN TESTED FORM**: on the frozen plain/diverse contrasts it adds no explanatory value beyond raw portal count. [preflight](solver-parity-phase-capacity-preflight.md) · [response result](../reports/2026-09-21-response-guided-premise-nominations-001.md)
+
+#### Lane I — small exact projections
+
+**BC1 INCIDENCE POSITIVE; production unchanged.** `WS2-CUT-BALANCE-PROJECTION` Stage A is sound and the preregistered Stage-B screen finds BC1 conflicts on 22/24 eligible parents (105/263 connectivity-passing states). Next is the smallest production-inert safety/economics consumer with prospective later-disposition overlap; general k-cut/flow and sibling projection families stay unqueued. [program](solver-small-exact-projections-program.md) · [result](../reports/2026-09-21-cut-region-flow-stage0-audit-001.md)
 
 ### Post-mining premise-map handoff closeout
 
 Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: A closes at C2, D1's ranking consumer is negative, and F3 has no compact decision-bearing consumer. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** HARVEST adds the repair node-cap seam and designs its matched-work A/B; reserve repricing is separately nominated. ACQUISITION runs the 3-row beam freshness gate, then broadens first-loss sampling beyond capability-selected Class 3. [`invention`](solver-capability-invention-program.md)
+**Current WS2 gate:** HARVEST adds the repair node-cap seam and designs its matched-work A/B; reserve repricing is separately nominated. ACQUISITION runs the 3-row beam freshness gate, broadens first-loss sampling beyond capability-selected Class 3, and now has two earned response-guided follow-ups: bounded 2K/5K exclusive-prefix viability/dominance tracing and a selected CW/CCW operational-trace discriminator. BC1 separately advances to a production-inert safety/economics consumer. [`invention`](solver-capability-invention-program.md)
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. H3 remaining-length ordering independently transferred: 10/12 achievable rescues at 20% shared budget, nominating a bounded matched-work production consumer pilot. [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md)
@@ -91,6 +95,8 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 | 2I | Capability invention demand | `active` | **ACQUISITION** | Run 3-row beam freshness gate; expand first-loss sampling outside capability-selected Class 3 | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
+| 2R | Parity response signature | `supporting` | **NARROWED** | Static portal decomposition closed; reopen only on a different parity mechanism from success/prospective seam evidence | `WS2-PARITY-RESPONSE-SIGNATURE` |
+| 2X | Small exact projections | `supporting` | **BC1 CONSUMER EARNED** | Production-inert safety differential + cost/work-saved observer; no hot-path prune yet | `WS2-CUT-BALANCE-PROJECTION` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |

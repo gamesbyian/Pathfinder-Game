@@ -9,6 +9,7 @@ import {
 import {
     assertResearchBlock,
     researchBlockEligibility,
+    summarizeResearchConsumption,
 } from './solver-research-block-lineage.mjs';
 import { researchSemanticHash as stableHash } from './research-semantic-identity-lib.mjs';
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
@@ -225,6 +226,7 @@ function buildResearchArtifactRelations(root, artifactPaths, eligibility = null)
             independentUnit: block.independentUnit,
             parentCount: block.parentIds.length,
             consumptionCount: block.consumptionEvents.length,
+            consumptionSummary: summarizeResearchConsumption(block),
             eligibility: eligibilityResult,
             _researchSource: { relation: 'researchBlocks', source: [...row.artifactRefs] },
         };
