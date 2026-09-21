@@ -7,7 +7,7 @@
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, JointObligationObserver, BeamResearchObserver, ParityCapacityObserver, ParityPhaseDistanceObserver } from './types.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
-import { canonicalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
+import { normalizeHistoricalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
 import { normalizeSolverStageId } from './stage-policy.js';
 import type { SolverStageId } from './stage-policy.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -686,14 +686,14 @@ const ABLATION_NON_FLAG_KEYS = new Set(['ATTEMPT_ORDER', '_randomSeed']);
 export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
     if (raw == null) return null;
 
-    // Canonicalize historical feature aliases once at the boundary. This is the solver-wide
+    // Decode historical feature aliases once at this compatibility boundary. Current constructors
     // dual-read/single-write seam: old persisted configs remain readable, while enumeration/spread
     // of the normalized config exposes only canonical names. Conflicting old+new spellings fail
     // loudly rather than making precedence depend on object key order.
     const canonicalRaw: AblationConfig = {};
     for (const [rawKey, value] of Object.entries(raw)) {
         if (value === undefined) continue;
-        const key = canonicalAblationFeatureName(rawKey);
+        const key = normalizeHistoricalAblationFeatureName(rawKey);
         if (Object.prototype.hasOwnProperty.call(canonicalRaw, key) && canonicalRaw[key] !== value)
             throw new Error(`Conflicting ablation values for canonical feature ${key}`);
         canonicalRaw[key] = value;
