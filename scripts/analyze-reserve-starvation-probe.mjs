@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { groupResearchObservationsByUnit } from './research-observation-integrity-lib.mjs';
 import { buildResearchResolutionEnvelope } from './research-resolution-envelope-lib.mjs';
 import { validateResearchIndependenceVector } from './research-independence-vector-lib.mjs';
 
@@ -61,16 +62,13 @@ const independenceDesign = validateResearchIndependenceVector(sample.independenc
     path: 'sample.independenceDesign',
 });
 
-const recordsByParent = new Map();
-for (const row of document.records) {
-    const parentId = String(row.parentId ?? row.levelId ?? row.identity ?? '');
-    if (!parentId) continue;
-    const list = recordsByParent.get(parentId) ?? [];
-    list.push(row);
-    recordsByParent.set(parentId, list);
-}
-const duplicateParents = [...recordsByParent].filter(([, rows]) => rows.length !== 1).map(([id]) => id).sort();
-const observedIds = [...recordsByParent.keys()].sort();
+const parentGrouping = groupResearchObservationsByUnit(
+    document.records,
+    row => row.parentId ?? row.levelId ?? row.identity ?? null,
+);
+const recordsByParent = parentGrouping.groups;
+const duplicateParents = parentGrouping.repeatedUnitIds;
+const observedIds = parentGrouping.unitIds;
 const expectedSet = new Set(expectedIds);
 const missingIds = expectedIds.filter(id => !recordsByParent.has(id));
 const unexpectedIds = observedIds.filter(id => !expectedSet.has(id));
