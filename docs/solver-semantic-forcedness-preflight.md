@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7000 max=9500 -->
 # Semantic forcedness / hidden branching preflight
 
-> **Status:** preregistered contingent opportunity-sizing question; no execution or production change authorized.
+> **Status:** preregistered contingent opportunity-sizing question with production-inert capture/reconcile tooling implemented; no population dispatch or production change authorized.
 > **Date:** 2026-09-21.
 > **Priority authority:** `solver-optimization-workstreams.md`.
 > **Method authority:** `solver-research-operating-model.md`.
@@ -93,9 +93,24 @@ and:
 - supports broad sharding across independent cases;
 - checks population integrity.
 
-The only missing acquisition step is to retain or emit selected multi-successor parent paths plus their post-hard-prune child paths.
+The acquisition/reconciliation loop is now implemented on this branch without changing solver internals:
 
-PR #1952 already consumes the same beam research parent-expansion seam. Do not modify its active branch for this experiment.
+- `scripts/stress/semantic-forcedness-capture.mjs`
+- `scripts/stress/semantic-forcedness-lib.mjs`
+- `scripts/stress/semantic-forcedness-reconcile.mjs`
+- focused synthetic test: `scripts/stress/semantic-forcedness-lib-node-test.mjs`
+
+Package commands:
+
+```bash
+npm run research:semantic-forcedness-capture -- ...
+npm run research:semantic-forcedness-reconcile -- ...
+npm run test:semantic-forcedness
+```
+
+The capture uses the existing `includeParentExpansionWork` BeamResearch seam, retains only bounded eligible 2-4-child parent groups, and emits every surviving child as a generic explicit-prefix case. The reconciler joins the reference rows back to parent states and computes the preregistered classifications/rates. It treats missing/UNKNOWN/alarm-bearing child evidence as unresolved.
+
+PR #1952 already consumes the same beam research parent-expansion seam for a different question. Do not modify or depend on its implementation details; reconcile its final frozen parent population before dispatching this experiment.
 
 After #1952 lands, extend or reuse that seam in the smallest separate extractor.
 
@@ -317,11 +332,11 @@ Do not delay BC1's already-earned economics experiment for this work.
 
 ## Implementation sequence if the pilot is eventually run
 
-1. Wait for #1952 to land or otherwise reconcile with its final observer contract.
-2. Add a production-inert extractor that retains only the prespecified sampled multi-successor parent and child paths.
-3. Emit a committed generic `cases` document for the existing explicit-prefix reference workflow.
-4. Dispatch <=320 cases.
-5. Reconcile child labels into parent-state semantic classifications.
+1. Wait for #1952 to land or otherwise reconcile with its final frozen parent population.
+2. Run the committed production-inert capture tool on at most 16 parents / 5 eligible states per gate/population rule.
+3. Commit/freeze the emitted generic child-prefix `cases` document before exact labels are opened.
+4. Dispatch <=320 cases through `cpsat-explicit-prefix-reference.yml`.
+5. Reconcile with `research:semantic-forcedness-reconcile`.
 6. Report parent-level clustering, state prevalence, work-weighted ceiling, UNKNOWN rate and correctness alarms.
 7. Stop or nominate one narrower follow-up according to the frozen bands.
 
