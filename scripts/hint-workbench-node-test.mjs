@@ -367,7 +367,7 @@ async function main() {
         assert.equal(upgradedHints[0].provenance[0].search.nodesExpanded, 42);
         assert.equal(upgradedHints[0].provenance[0].search.elapsedMs, 7);
         assert.equal(typeof upgradedHints[0].provenance[0].foundAt, 'string');
-        assert.deepEqual(readLevelCorpusDocumentWithHints(path.join(wrappedHintsDir, 'levels.json'))[0].hints, [[4, 5, 6]]);
+        assert.deepEqual(readLevelCorpusDocumentWithHints(path.join(wrappedHintsDir, 'levels.json')).levels[0].hints, [[4, 5, 6]]);
 
         const patchDir = path.join(tempDir, 'fixture-patch');
         await mkdir(patchDir, { recursive: true });
