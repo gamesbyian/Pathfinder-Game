@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "surfaces": [
+    "repo",
+    "game",
+    "solver",
+    "research",
+    "data",
+    "shared"
+  ],
+  "fallback": "all",
+  "policy": {
+    "firstMatchWins": true,
+    "unknown": "all",
+    "note": "Phase-1 conservative classifier. all means every semantic surface. package/dependency/router authorities intentionally escalate until semantic diffing or repo reshaping earns a narrower rule."
+  },
+  "rules": [
+    {
+      "id": "ci-routing-infrastructure",
+      "pattern": "^(?:\\.github/|scripts/(?:validation-groups|check-ci-gate-parity|check-package-scripts|run-scripts-parallel)\\.)",
+      "surfaces": [
+        "all"
+      ],
+      "reason": "CI/router/workflow authority"
+    },
+    {
+      "id": "package-build-authority",
+      "pattern": "^(?:package(?:-lock)?\\.json|tsconfig(?:\\.[^/]+)?\\.json|vite\\.config\\.[^/]+|vitest\\.config\\.[^/]+|eslint\\.config\\.[^/]+|firebase\\.json|firestore\\.(?:rules|indexes\\.json))$",
+      "surfaces": [
+        "all"
+      ],
+      "reason": "dependency/build/type/test/config authority"
+    },
+    {
+      "id": "production-solver",
+      "pattern": "^modules/(?:solver(?:/|\\.(?:ts|js)$)|solver\\.ts$)",
+      "surfaces": [
+        "solver",
+        "research"
+      ],
+      "reason": "production solver producer; research consumers are downstream"
+    },
+    {
+      "id": "shared-domain",
+      "pattern": "^modules/domain/",
+      "surfaces": [
+        "shared",
+        "game",
+        "solver",
+        "research"
+      ],
+      "reason": "shared executable domain semantics"
+    },
+    {
+      "id": "game-modules",
+      "pattern": "^modules/(?:ui|render|input|engine|persistence|runtime|state|theme)(?:/|\\.)|^modules/(?:app|boot|editor|audio-service|data|debug|error-reporting|level-data|ports|state-slices)\\.",
+      "surfaces": [
+        "game"
+      ],
+      "reason": "browser/game/runtime implementation"
+    },
+    {
+      "id": "game-assets",
+      "pattern": "^(?:styles/|public/|index\\.html$)",
+      "surfaces": [
+        "game"
+      ],
+      "reason": "production browser assets"
+    },
+    {
+      "id": "runtime-data",
+      "pattern": "^data/(?:levels\\.json|level-heatmaps\\.json|themes\\.json|hints(?:/|$))",
+      "surfaces": [
+        "data",
+        "game",
+        "solver",
+        "research"
+      ],
+      "reason": "runtime-shipped data consumed by game and solver"
+    },
+    {
+      "id": "research-data",
+      "pattern": "^data/(?:stress|families)(?:/|$)",
+      "surfaces": [
+        "data",
+        "research"
+      ],
+      "reason": "research population/corpus/family assets"
+    },
+    {
+      "id": "research-reports",
+      "pattern": "^(?:reports/|logs/)",
+      "surfaces": [
+        "research"
+      ],
+      "reason": "research evidence/report surfaces"
+    },
+    {
+      "id": "solver-research-docs",
+      "pattern": "^docs/(?:solver-|variant-level-research|human-parent-contrast-research|technique-census-analysis)",
+      "surfaces": [
+        "repo",
+        "research"
+      ],
+      "reason": "solver research/architecture authorities and premise inputs"
+    },
+    {
+      "id": "research-scripts",
+      "pattern": "^scripts/(?:stress/|research-|analyze-|capture-|annotate-|combine-|family-|hint-|solver-|ablation-|technique-|experiment-|failure-|sweep-|portfolio-|method-|cpsat-|known-|class|reserve-|capability-|freeze-|write-solver|publish-solver|validate-solver)",
+      "surfaces": [
+        "research"
+      ],
+      "reason": "downstream research/tooling consumers"
+    },
+    {
+      "id": "repository-docs",
+      "pattern": "^(?:AGENTS\\.md$|DEVELOPER_REFERENCE\\.md$|docs/|reports/README\\.md$|scripts/README\\.md$)",
+      "surfaces": [
+        "repo"
+      ],
+      "reason": "repository documentation/agent authority"
+    },
+    {
+      "id": "other-data",
+      "pattern": "^data/",
+      "surfaces": [
+        "data",
+        "shared"
+      ],
+      "reason": "unclassified data with conservative shared escalation"
+    },
+    {
+      "id": "other-modules",
+      "pattern": "^modules/",
+      "surfaces": [
+        "game",
+        "shared"
+      ],
+      "reason": "unclassified executable module"
+    },
+    {
+      "id": "other-scripts",
+      "pattern": "^scripts/",
+      "surfaces": [
+        "repo",
+        "shared"
+      ],
+      "reason": "unclassified executable tooling"
+    }
+  ]
+}
