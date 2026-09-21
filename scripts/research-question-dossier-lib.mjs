@@ -133,9 +133,13 @@ export function buildQuestionDossier(root = process.cwd(), {
     )];
     const evidenceRefs = [...new Set([...answerRefs, ...constraintRefs])];
     const evidenceRefSet = new Set(evidenceRefs);
-    const capabilityDemands = model.relations.capabilityDemands.filter(row =>
-        row.questionId === questionId
-        || (row.evidenceRefs ?? []).some(ref => evidenceRefSet.has(ref)));
+    const capabilityDemandOwnerMatches = model.relations.capabilityDemands.filter(row =>
+        row.questionId === questionId);
+    const capabilityDemandEvidenceMatches = model.relations.capabilityDemands.filter(row =>
+        (row.evidenceRefs ?? []).some(ref => evidenceRefSet.has(ref)));
+    const capabilityDemands = [...new Map(
+        [...capabilityDemandOwnerMatches, ...capabilityDemandEvidenceMatches].map(row => [row.id, row]),
+    ).values()];
 
     return {
         schemaVersion: 1,
@@ -165,9 +169,10 @@ export function buildQuestionDossier(root = process.cwd(), {
             experiments: model.relations.experiments.filter(authorityMatch),
             experimentMatchMode: 'lexical-discovery-only',
             capabilityDemands,
-            capabilityDemandMatchMode: capabilityDemands.some(row => row.questionId === questionId)
+            capabilityDemandMatchMode: capabilityDemandOwnerMatches.length && capabilityDemandEvidenceMatches.length
                 ? 'owning-question-id+exact-evidence-ref'
-                : capabilityDemands.length ? 'exact-evidence-ref' : 'none',
+                : capabilityDemandOwnerMatches.length ? 'owning-question-id'
+                    : capabilityDemandEvidenceMatches.length ? 'exact-evidence-ref' : 'none',
         },
         answerRefs,
         constraintRefs,
