@@ -73,6 +73,39 @@ If support is nonzero and ordinary wasted work is material relative to essential
 
 If support is zero or search rejects at negligible cost, close it as a presolve optimization while retaining the exact fact.
 
+
+## 3A. P1 opportunity census result: published + Corpus 1
+
+The exact all-gates parity test can be evaluated directly from raw current input, so it was censused
+without waiting for the execution harness.
+
+Complete populations:
+
+- published: 160 levels;
+- Corpus 1: 102 levels;
+- total: 262.
+
+Results:
+
+| Population | Rows | No-twist eligible | Zero parity-feasible gates |
+|---|---:|---:|---:|
+| published | 160 | 136 | **0** |
+| Corpus 1 | 102 | 64 | **0** |
+| combined | 262 | 200 | **0** |
+
+So on these two complete populations the exact whole-level P1 condition has **zero initial-state
+incidence**.
+
+This closes P1 as a meaningful presolve optimization for published + Corpus 1. The theorem remains
+correct and may still be useful as an explicit semantic assertion, but there is no speed case there.
+
+Corpus 2 remains unmeasured because its large raw corpus body is not exposed through the current
+connector. The committed execution census will complete that check when an execution surface is
+available.
+
+This result also illustrates why the audit measures opportunity before implementation: adding an
+explicit solve-level infeasibility path for P1 would currently save no searches in these populations.
+
 ## 4. Candidate P2 — checkerboard-split capacity
 
 The current H2 checkerboard-capacity premise is a safe relaxed impossibility condition on future-no-twist states:
