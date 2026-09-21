@@ -1,5 +1,5 @@
 /**
- * Canonical solver stage IDs and the single dual-read legacy-to-canonical normalizer.
+ * Canonical solver stage IDs, strict current validation, and one historical alias decoder.
  *
  * Plain JS (not `.ts`) so research/tooling `.mjs` scripts that run directly under plain `node`
  * (no `tsx`/esbuild step) can import this without triggering Node's lack of native TypeScript
@@ -38,14 +38,24 @@ const LEGACY_SOLVER_STAGE_ID_MAP = Object.freeze({
 });
 
 /**
- * Accept a historical or canonical solver stage id and return the canonical form.
+ * Validate one CURRENT solver stage id. Retired spellings are rejected.
  * @param {string} id
  * @returns {typeof SOLVER_STAGE_IDS[number]}
  */
 export function normalizeSolverStageId(id) {
-    const normalized = LEGACY_SOLVER_STAGE_ID_MAP[id] ?? id;
-    if (SOLVER_STAGE_IDS.includes(normalized)) return normalized;
-    throw new Error(`Unknown solver stage: ${String(id)}`);
+    if (SOLVER_STAGE_IDS.includes(id)) return id;
+    throw new Error(`Unknown canonical solver stage: ${String(id)}`);
+}
+
+/**
+ * Decode a solver stage id from historical/persisted evidence.
+ * Canonical values pass through; retired spellings normalize through the one alias map above.
+ *
+ * @param {string} id
+ * @returns {typeof SOLVER_STAGE_IDS[number]}
+ */
+export function normalizeHistoricalSolverStageId(id) {
+    return normalizeSolverStageId(LEGACY_SOLVER_STAGE_ID_MAP[id] ?? id);
 }
 
 
@@ -56,7 +66,7 @@ export function normalizeSolverStageId(id) {
  * @returns {readonly string[]}
  */
 export function solverStageIdentityTerms(id) {
-    const canonical = normalizeSolverStageId(id);
+    const canonical = normalizeHistoricalSolverStageId(id);
     return Object.freeze([
         canonical,
         ...Object.entries(LEGACY_SOLVER_STAGE_ID_MAP)
