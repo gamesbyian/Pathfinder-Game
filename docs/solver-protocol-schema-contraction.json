@@ -357,9 +357,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "permanent-archive-reader",
-      "status": "in-progress",
-      "retirementGate": "Closeout verification: all retired Attempt/provenance spellings normalize only through named historical ingress; current provenance construction and current hint capture read canonical fields only.",
-      "progress": "The general provenance converter is now canonical-only. `provenanceFromSolveResult()` and `deriveSolveAttemptInfo()` consume canonical Attempt fields and explicit stageId; persisted aliases are handled only by `normalizeHistoricalPersistedAttempt()`, `deriveHistoricalSolveAttemptInfo()`, and `provenanceFromHistoricalSolveResult()`. The hint harvester uses `recordHistorical()` explicitly, while current solver/census capture stays on `record()`. Tests now exercise canonical and historical paths separately. Keep in closeout verification until CI and caller census confirm no downstream retired-field reads remain."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: current provenance construction accepts canonical Attempt fields only; persisted generations normalize through explicitly historical entrypoints before canonical projection.",
+      "progress": "Closed after maintained-reader census. HistoricalAttemptLike and normalizeHistoricalPersistedAttempt() are confined to explicitly historical provenance APIs; current deriveSolveAttemptInfo()/provenanceFromSolveResult() read canonical fields only. hint capture separates record() from recordHistorical(), and persisted report harvesters use the historical path deliberately."
     },
     {
       "id": "PSC-016",
@@ -413,9 +413,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
-      "retirementGate": "Closeout verification: every persisted Attempt/stage reader normalizes through a named historical ingress before current projection/semantics; no current writer or general converter dual-reads retired fields.",
-      "progress": "Current Attempt report projection is canonical-only: `attemptRecord()`, config/action-key reconstruction, and projected errors no longer dual-read profile/template/diverseBeam or phase-6 telemetry aliases. `modules/solver/historical-attempt-normalization.mjs` owns persisted Attempt field/stage/config normalization. The reader census found and migrated three additional maintained consumers: analyze-technique-campaign, early-repair-search-badness-report, and the equal-work production-reach join now normalize persisted Attempts at named ingress before canonical semantics. Family winner analysis does the same. Portfolio projection tests normalize historical fixtures before calling the current writer, and hint provenance uses the same historical ingress boundary. Remaining closeout is CI plus any final exercised-reader fallout, not a known architectural dual-read."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: every maintained persisted Attempt/stage reader found in the census normalizes through named historical ingress; current writers/projection/classification require canonical fields/stageId.",
+      "progress": "Closed after migrating technique-campaign analysis, early-repair diagnostics, equal-work production joins, family winner analysis, portfolio historical fixtures, and hint provenance onto modules/solver/historical-attempt-normalization.mjs or explicitly historical tier classification. Current attemptRecord(), config/action projection, and classifyAttemptTier() are canonical-only."
     },
     {
       "id": "PSC-018",
@@ -523,9 +523,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "remove-current-alias",
-      "status": "in-progress",
-      "progress": "Re-opened for closeout verification after the maintained level-blind capability sweep was found still dual-reading --main-loop-late-reserve-* and --repair-probe-adaptive-* flags even though the core SolveOpts and portfolio CLI had already contracted. Those residual aliases are now removed. Verify exercised CLI/workflow callers before re-closing.",
-      "retirementGate": "Closeout verification: no current SolveOpts or maintained CLI entrypoint accepts phase-6 retired vocabulary; historical spellings, if needed, are archive-reader only."
+      "status": "complete",
+      "progress": "Closed after a final owner census removed the last leftover public SolveOpts declaration for attractionDiversityBudgetFractionOverride. Stage-budget planning, orchestration, portfolio/race/level-blind CLIs, and transport parity use canonical names only. Historical telemetry aliases remain intentionally isolated in historical Attempt normalization.",
+      "retirementGate": "Satisfied 2026-09-21: current SolveOpts and maintained CLI entrypoints use phase-6 canonical vocabulary only; retired aliases survive solely in explicitly historical Attempt/provenance decoders."
     },
     {
       "id": "PSC-023",
@@ -548,9 +548,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "migrate-current-state",
-      "status": "in-progress",
-      "progress": "Re-opened for closeout verification when CI showed two maintained callers still passing retired SolveOpts.workBudget: solver-bench and search-loss-real-canary. Both now pass baseWorkBudget while retaining their legitimate --work-budget/report vocabulary. Runtime rejection remains fail-loud; re-close after exercised-tool census/CI confirms no current caller still sends the retired option.",
-      "retirementGate": "Closeout verification: exhaustive current SolveOpts caller census uses baseWorkBudget only. CLI/report/SolveResult workBudget remains descriptive domain/result data, not an input alias."
+      "status": "complete",
+      "progress": "Closed after CI found and migrated solver-bench and search-loss-real-canary. Portfolio, benchmark, level-blind, direct bench, and canary callers now map CLI work-budget values to SolveOpts.baseWorkBudget. The remaining workBudget fields are output/static-portfolio/descriptive concepts rather than a SolveOpts alias.",
+      "retirementGate": "Satisfied 2026-09-21: SolveOpts exposes baseWorkBudget only and maintained solver callers pass it. Runtime explicitly rejects an own-property retired workBudget input; CLI/report/SolveResult workBudget remains descriptive domain data."
     }
   ],
   "lastUpdated": "2026-09-21",
