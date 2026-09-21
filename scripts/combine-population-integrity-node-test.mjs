@@ -21,7 +21,7 @@ const combined = combinePopulationIntegrity([
   { label: 'c1', integrity: base },
   { label: 'c2', integrity: { ...base, complete: false, coverageComplete: false, decisionValidComplete: false, observedCount: 1, missingIds: ['b'], outcomes: { solved: 1, missing: 1 } } },
 ], { kind: 'test-population' });
-assert.equal(combined.complete, false);
+assert.equal('complete' in combined, false, 'current combined integrity must not re-emit the historical coverage mirror');
 assert.equal(combined.coverageComplete, false);
 assert.equal(combined.decisionValidComplete, false);
 assert.equal(combined.expectedCount, 4);
