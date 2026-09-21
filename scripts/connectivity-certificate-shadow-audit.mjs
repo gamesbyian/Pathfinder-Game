@@ -22,14 +22,14 @@ const BASE_WORK_BUDGET = Number(args.get('--work-budget') || 500000);
 const TIME_BUDGET_MS = Number(args.get('--time-budget-ms') || 30000);
 const MAX_CERTIFICATES = Number(args.get('--max-certificates') || 64);
 const OUT_FILE = args.get('--out') || 'reports/stress/connectivity-certificate-shadow-audit.json';
-const SUMMARY_OUT_FILE = args.get('--summary-out') || OUT_FILE.replace(/\\.json$/u, '-summary.md');
+const SUMMARY_OUT_FILE = args.get('--summary-out') || OUT_FILE.replace(/\.json$/u, '-summary.md');
 
 function selectLevelsBySpec(levels, spec) {
     const tokens = String(spec || '').split(',').map(t => t.trim()).filter(Boolean);
     const out = [];
     for (const token of tokens) {
         const body = token.startsWith('pos:') ? token.slice(4) : token;
-        const range = body.match(/^(\\d+)-(\\d+)$/);
+        const range = body.match(/^(\d+)-(\d+)$/);
         if (range) {
             const start = Number(range[1]), end = Number(range[2]);
             for (let p = start; p <= end; p++) out.push({ entry: levels[p - 1], pos: p });
