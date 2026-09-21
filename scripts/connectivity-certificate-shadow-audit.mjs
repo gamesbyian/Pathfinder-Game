@@ -55,6 +55,9 @@ function makeLevelStats(levelId, levelPos) {
         scheduledProbeCalls: 0, certificatesScanned: 0, positionEligibleCertificates: 0, boundaryCellChecks: 0,
         shadowHits: 0, crossExactStateHits: 0, confirmedGoalUnreachableHits: 0,
         falsePositiveHits: 0, hitSourceAgeWork: [], hitBoundarySizes: [],
+        unscheduledProbeCalls: 0, unscheduledCertificatesScanned: 0,
+        unscheduledPositionEligibleCertificates: 0, unscheduledBoundaryCellChecks: 0,
+        unscheduledHits: 0, unscheduledCrossExactStateHits: 0, unscheduledHitSourceAgeWork: [],
     };
 }
 
@@ -92,6 +95,19 @@ for (const { entry, pos } of sample) {
                     stats.certificatesDuplicated++;
                 } else {
                     stats.certificatesDropped++;
+                }
+                return;
+            }
+            if (record.kind === 'unscheduled-probe') {
+                stats.unscheduledProbeCalls++;
+                stats.unscheduledCertificatesScanned += record.certificatesScanned ?? 0;
+                stats.unscheduledPositionEligibleCertificates += record.positionEligibleCertificates ?? 0;
+                stats.unscheduledBoundaryCellChecks += record.boundaryCellChecks ?? 0;
+                if (record.hitCertificateId === undefined) return;
+                stats.unscheduledHits++;
+                if (record.crossExactState) stats.unscheduledCrossExactStateHits++;
+                if (Number.isFinite(record.hitSourceWork)) {
+                    stats.unscheduledHitSourceAgeWork.push(Math.max(0, record.work - record.hitSourceWork));
                 }
                 return;
             }
@@ -141,6 +157,7 @@ for (const { entry, pos } of sample) {
         boundarySizes: undefined,
         hitSourceAgeWork: undefined,
         hitBoundarySizes: undefined,
+        unscheduledHitSourceAgeWork: undefined,
         certificateOccurrences,
         uniqueCertificateSignatures: stats.certificateSignatureCounts.size,
         repeatedCertificateOccurrences,
@@ -152,6 +169,7 @@ for (const { entry, pos } of sample) {
         hitBoundarySizeP50: percentile(stats.hitBoundarySizes, 0.5),
         hitBoundarySizeP90: percentile(stats.hitBoundarySizes, 0.9),
         hitSourceAgeWorkP50: percentile(stats.hitSourceAgeWork, 0.5),
+        unscheduledHitSourceAgeWorkP50: percentile(stats.unscheduledHitSourceAgeWork, 0.5),
         ok: !!result?.ok,
         status: result?.status ?? null,
         nodesExpanded: result?.nodesExpanded ?? null,
@@ -187,6 +205,13 @@ const summary = {
     crossExactStateHits: sum('crossExactStateHits'),
     confirmedGoalUnreachableHits: sum('confirmedGoalUnreachableHits'),
     falsePositiveHits: sum('falsePositiveHits'),
+    unscheduledProbeCalls: sum('unscheduledProbeCalls'),
+    unscheduledCertificatesScanned: sum('unscheduledCertificatesScanned'),
+    unscheduledPositionEligibleCertificates: sum('unscheduledPositionEligibleCertificates'),
+    unscheduledBoundaryCellChecks: sum('unscheduledBoundaryCellChecks'),
+    unscheduledHits: sum('unscheduledHits'),
+    unscheduledCrossExactStateHits: sum('unscheduledCrossExactStateHits'),
+    levelsWithUnscheduledHits: levels.filter(row => row.unscheduledHits > 0).length,
     levelsWithHits: levels.filter(row => row.shadowHits > 0).length,
     levelsWithCrossExactStateHits: levels.filter(row => row.crossExactStateHits > 0).length,
     levelsWithFalsePositives: levels.filter(row => row.falsePositiveHits > 0).length,
@@ -202,6 +227,12 @@ summary.positionEligibilityRate = summary.certificatesScanned
     : null;
 summary.positionIndexScanReductionUpperBound = summary.certificatesScanned
     ? 1 - summary.positionEligibleCertificates / summary.certificatesScanned
+    : null;
+summary.unscheduledHitRate = summary.unscheduledProbeCalls
+    ? summary.unscheduledHits / summary.unscheduledProbeCalls
+    : null;
+summary.unscheduledAveragePositionCandidates = summary.unscheduledProbeCalls
+    ? summary.unscheduledPositionEligibleCertificates / summary.unscheduledProbeCalls
     : null;
 
 mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true });
@@ -226,6 +257,8 @@ const md = [
     '- Confirmed goal-unreachable hits: ' + summary.confirmedGoalUnreachableHits + '.',
     '- False positives: ' + summary.falsePositiveHits + ' on ' + summary.levelsWithFalsePositives + ' level(s).',
     '- Potentially replaceable scheduled connectivity calls: ' + summary.potentiallyReplaceableConnectivityCalls + ' (' + rate + ' of probed scheduled calls).',
+    '- Unscheduled hard-prune candidates probed: ' + summary.unscheduledProbeCalls + '; cut hits: ' + summary.unscheduledHits + ' across ' + summary.levelsWithUnscheduledHits + ' level(s).',
+    '- Unscheduled indexed candidate checks: ' + summary.unscheduledCertificatesScanned + '; boundary-cell checks: ' + summary.unscheduledBoundaryCellChecks + '.',
     '',
     'The shadow never prunes. Every hit is checked against the ordinary flood fill on the same call. Canonical replacement economics must combine these counts with the solver work model and a separate observer-overhead comparison before any behavioral consumer is considered.',
     '',
