@@ -125,8 +125,8 @@ The next code should **not** be a selector. It should be the smallest shared cur
 npm run research:freeze-response-guided-contrasts -- \
   --base=reports/stress/technique-niches/2026-09-03/level-capability.json \
   --out=tmp/response-guided-contrast-population.json
-npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
-npm run research:response-guided-orientation -- --out=tmp/response-guided-orientation-contrast.json
+npm run research:response-guided-parity -- --cohorts=tmp/response-guided-contrast-population.json --out=tmp/response-guided-parity-contrast.json
+npm run research:response-guided-orientation -- --cohorts=tmp/response-guided-contrast-population.json --out=tmp/response-guided-orientation-contrast.json
 # Width oracle intentionally requires explicit frozen --levels; see Nomination 3.
 ```
 
