@@ -5,6 +5,7 @@ import {
     analyzeResponseGuidedOrientationContrasts,
     describeStaticOrientationStructure,
 } from './analyze-response-guided-orientation-contrast.mjs';
+import { freezeResponseGuidedContrasts } from './freeze-response-guided-contrasts.mjs';
 
 const rawLevel = (id, block) => ({
     id,
