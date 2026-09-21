@@ -340,7 +340,10 @@
       "concept": "hint provenance schema generations",
       "owners": [
         "modules/domain/hint-runtime.mjs",
-        "scripts/level-data-io.mjs"
+        "scripts/level-data-io.mjs",
+        "modules/solver/hint-provenance.ts",
+        "modules/solver/historical-attempt-normalization.mjs",
+        "scripts/hint-capture-lib.mjs"
       ],
       "forms": [
         "flat/transitional provenance",
@@ -353,8 +356,8 @@
       "persistedExternalRequirement": true,
       "treatment": "permanent-archive-reader",
       "status": "in-progress",
-      "retirementGate": "all old forms normalize only through upgrader; no downstream retired-field reads",
-      "progress": "Downstream audit found remaining retired attempt/provenance-field reads in modules/solver/hint-provenance.ts: provenanceFromSolveResult still accepts persisted Attempt aliases such as profile/template/diverseBeam and historical tier booleans via classifyHistoricalAttemptTier(). This is a real remaining seam, not current hint writer duality: canonical hint mutation/persistence is already closed under PSC-001. Next step is to split historical SolveResult/Attempt normalization from canonical provenance construction so old fields stop being read by the general converter."
+      "retirementGate": "Closeout verification: all retired Attempt/provenance spellings normalize only through named historical ingress; current provenance construction and current hint capture read canonical fields only.",
+      "progress": "The general provenance converter is now canonical-only. `provenanceFromSolveResult()` and `deriveSolveAttemptInfo()` consume canonical Attempt fields and explicit stageId; persisted aliases are handled only by `normalizeHistoricalPersistedAttempt()`, `deriveHistoricalSolveAttemptInfo()`, and `provenanceFromHistoricalSolveResult()`. The hint harvester uses `recordHistorical()` explicitly, while current solver/census capture stays on `record()`. Tests now exercise canonical and historical paths separately. Keep in closeout verification until CI and caller census confirm no downstream retired-field reads remain."
     },
     {
       "id": "PSC-016",
@@ -394,7 +397,8 @@
         "scripts/hint-query-lib.mjs",
         "scripts/portfolio-solve-sweep-lib.mjs",
         "scripts/stress/lifecycle-failure-map.mjs",
-        "scripts/stress/early-repair-search-badness-report.mjs"
+        "scripts/stress/early-repair-search-badness-report.mjs",
+        "modules/solver/historical-attempt-normalization.mjs"
       ],
       "forms": [
         "canonical stageId/attempt identity",
@@ -406,8 +410,8 @@
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
-      "retirementGate": "Finish caller census for historical attempt/stage readers and old persisted attempt-field projection. Current solver logic, current AttemptConfig parsing, and current stage writers are already canonical-only; keep legacy booleans/old grammars only at named artifact-ingress readers.",
-      "progress": "Current solver tier classification, stage validation, and fresh attempt/config parsing are canonical-only. Historical stage/attempt readers are concentrated in named analysis/search helpers, but the census found one current report-write projection still dual-reading retired Attempt fields: scripts/portfolio-solve-sweep-lib.mjs attemptRecord() maps profile/template/diverseBeam and several retired telemetry booleans into canonical output, with tests explicitly preserving that behavior. Move that compatibility into an explicit persisted-attempt ingress normalizer, then make attemptRecord() canonical-only. modules/solver/hint-provenance.ts is the adjacent PSC-015 downstream residue."
+      "retirementGate": "Closeout verification: every persisted Attempt/stage reader normalizes through a named historical ingress before current projection/semantics; no current writer or general converter dual-reads retired fields.",
+      "progress": "Current Attempt report projection is now canonical-only: `attemptRecord()`, config/action-key reconstruction, and projected errors no longer dual-read profile/template/diverseBeam or phase-6 telemetry aliases. `modules/solver/historical-attempt-normalization.mjs` now owns persisted Attempt field/stage/config normalization. Portfolio projection tests normalize historical fixtures before calling the current writer. Hint provenance uses the same historical ingress boundary rather than reading aliases in its general converter. Remaining work is caller/reader census and CI verification, not further current-writer compatibility."
     },
     {
       "id": "PSC-018",
