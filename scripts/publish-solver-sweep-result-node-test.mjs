@@ -38,9 +38,13 @@ try {
       workflowFamily: 'fixture-family', producer: 'fixture-producer', entrypoint: 'fixture.mjs',
       configurationHash: primaryConfigurationHash, resolvedSha: 'b'.repeat(40),
       sourceRuns: ['fixture-acquisition-a', 'fixture-acquisition-b'],
+      sourceProtocolHash: `sha256:${'1'.repeat(64)}`,
+      sourceSetHash: `sha256:${'2'.repeat(64)}`,
       reconciliationRun: {
         kind: 'recombine-only',
         sourceRuns: ['fixture-acquisition-a', 'fixture-acquisition-b'],
+        sourceProtocolHash: `sha256:${'1'.repeat(64)}`,
+        sourceSetHash: `sha256:${'2'.repeat(64)}`,
         preservesExperimentIdentity: true,
         acquisitionRecomputed: false,
       },
@@ -75,8 +79,10 @@ try {
   assert.match(manifest.experiment.configurationHash, /^sha256:[0-9a-f]{64}$/);
   assert.equal(manifest.experiment.resolvedSha, 'b'.repeat(40));
   assert.deepEqual(manifest.experiment.sourceRuns, ['fixture-acquisition-a', 'fixture-acquisition-b']);
-  assert.equal(manifest.experiment.sourceProtocolHash, null);
-  assert.equal(manifest.experiment.sourceSetHash, null);
+  assert.equal(manifest.experiment.sourceProtocolHash, `sha256:${'1'.repeat(64)}`);
+  assert.equal(manifest.experiment.sourceSetHash, `sha256:${'2'.repeat(64)}`);
+  assert.equal(manifest.experiment.reconciliationRun.sourceProtocolHash, `sha256:${'1'.repeat(64)}`);
+  assert.equal(manifest.experiment.reconciliationRun.sourceSetHash, `sha256:${'2'.repeat(64)}`);
   assert.equal(manifest.experiment.reconciliationRun.kind, 'recombine-only');
   assert.equal(manifest.experiment.reconciliationRun.acquisitionRecomputed, false);
   assert.equal(manifest.execution.levelBlind, true);
