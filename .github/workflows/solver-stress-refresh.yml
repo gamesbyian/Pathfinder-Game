@@ -372,6 +372,7 @@ jobs:
                 id: x.id ?? String(x.level), level: x.level, ok: x.ok, status: x.status,
                 nodesExpanded: x.nodesExpanded, workSpent: x.workSpent, elapsedMs: x.elapsedMs,
                 deadlineTruncated: x.deadlineTruncated, winningConfig: x.winningConfig,
+                winningActionKey: x.winningActionKey,
                 attemptCount: x.attemptCount, failedStrategies: x.failedStrategies,
                 solution: x.solution,
               })),
