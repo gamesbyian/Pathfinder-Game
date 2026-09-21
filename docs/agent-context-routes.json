@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
-  "purpose": "Budget default agent orientation and keep compact live authorities from regrowing into narrative notebooks.",
-  "measurement": "UTF-8 bytes are the stable proxy. Optional drill-down does not count against route budgets. Individual authority budgets are declared in each authority document header so editors see them before changing the file.",
+  "schemaVersion": 4,
+  "purpose": "Budget default agent orientation with silent growth runway and batched maintenance triggers, so ordinary PRs do not pay continuous compaction tax.",
+  "measurement": "UTF-8 bytes are a stable proxy. targetBytes is the preferred post-maintenance steady state, not an ordinary-work limit. compactAtBytes is the actionable maintenance trigger, normally 2x target. Optional drill-down does not count against route budgets.",
   "routes": [
     {
       "id": "product-code-change",
@@ -14,8 +14,8 @@
         "docs/testing.md",
         "DEVELOPER_REFERENCE.md"
       ],
-      "warnBytes": 30000,
-      "maxBytes": 45000
+      "targetBytes": 30000,
+      "compactAtBytes": 60000
     },
     {
       "id": "periodic-repository-hygiene",
@@ -30,8 +30,8 @@
         "reports/README.md",
         "scripts/README.md"
       ],
-      "warnBytes": 38000,
-      "maxBytes": 50000
+      "targetBytes": 38000,
+      "compactAtBytes": 76000
     },
     {
       "id": "solver-implementation",
@@ -45,8 +45,8 @@
         "docs/solver-correctness-hardening.md",
         "DEVELOPER_REFERENCE.md"
       ],
-      "warnBytes": 55000,
-      "maxBytes": 80000
+      "targetBytes": 55000,
+      "compactAtBytes": 110000
     },
     {
       "id": "solver-research",
@@ -60,8 +60,8 @@
         "docs/solver-research-data-assets.md",
         "docs/solver-research-post-naming-resumption.md"
       ],
-      "warnBytes": 40000,
-      "maxBytes": 55000
+      "targetBytes": 40000,
+      "compactAtBytes": 80000
     },
     {
       "id": "solver-workflow-evidence-remediation",
@@ -78,8 +78,8 @@
         "docs/solver-budget-determinism.md",
         ".github/workflows/README.md"
       ],
-      "warnBytes": 57000,
-      "maxBytes": 82000
+      "targetBytes": 57000,
+      "compactAtBytes": 114000
     },
     {
       "id": "solver-scheduler-research",
@@ -94,8 +94,8 @@
         "docs/solver-budget-determinism.md",
         "docs/solver-research-data-assets.md"
       ],
-      "warnBytes": 58000,
-      "maxBytes": 75000
+      "targetBytes": 58000,
+      "compactAtBytes": 116000
     },
     {
       "id": "prior-experiment-archaeology",
@@ -108,8 +108,8 @@
         "docs/investigation-report-conventions.md",
         "docs/solver-optimization-workstreams.md"
       ],
-      "warnBytes": 38000,
-      "maxBytes": 55000
+      "targetBytes": 38000,
+      "compactAtBytes": 76000
     },
     {
       "id": "variant-family-research",
@@ -123,74 +123,106 @@
         "docs/solver-research-data-assets.md",
         "DEVELOPER_REFERENCE.md"
       ],
-      "warnBytes": 60000,
-      "maxBytes": 85000
+      "targetBytes": 60000,
+      "compactAtBytes": 120000
     }
   ],
   "authorities": [
     {
       "path": "AGENTS.md",
-      "purpose": "Canonical agent router and durable working rules."
+      "purpose": "Canonical agent router and durable working rules.",
+      "targetBytes": 10500,
+      "compactAtBytes": 21000
     },
     {
       "path": "docs/periodic-repository-hygiene.md",
-      "purpose": "Executable recurring hygiene procedure; comprehensive but not an append-only hygiene diary."
+      "purpose": "Executable recurring hygiene procedure; comprehensive but not an append-only hygiene diary.",
+      "targetBytes": 24000,
+      "compactAtBytes": 48000
     },
     {
       "path": "docs/solver-optimization-workstreams.md",
-      "purpose": "Current solver priority/state/gates only; chronology belongs in reports/archive."
+      "purpose": "Current solver priority/state/gates only; chronology belongs in reports/archive.",
+      "targetBytes": 10500,
+      "compactAtBytes": 21000
     },
     {
       "path": "docs/solver-optimization-current-queue.md",
-      "purpose": "Compatibility pointer only; mutable queue state belongs in workstreams."
+      "purpose": "Compatibility pointer only; mutable queue state belongs in workstreams.",
+      "targetBytes": 700,
+      "compactAtBytes": 1400
     },
     {
       "path": "docs/solver-future-work.md",
-      "purpose": "Deferred questions and reopen conditions only; active gates/results belong in workstreams, specialist docs, or reports."
+      "purpose": "Deferred questions and reopen conditions only; active gates/results belong in workstreams, specialist docs, or reports.",
+      "targetBytes": 7500,
+      "compactAtBytes": 15000
     },
     {
       "path": "docs/architecture-unification-debt.md",
-      "purpose": "Current structural-debt queue and durable boundary rules; dated evidence and solver-policy state belong elsewhere."
+      "purpose": "Current structural-debt queue and durable boundary rules; dated evidence and solver-policy state belong elsewhere.",
+      "targetBytes": 10000,
+      "compactAtBytes": 20000
     },
     {
       "path": "docs/solver-research-data-assets.md",
-      "purpose": "Cross-asset topology/boundaries; per-asset detail belongs in the JSON registry."
+      "purpose": "Cross-asset topology/boundaries; per-asset detail belongs in the JSON registry.",
+      "targetBytes": 9000,
+      "compactAtBytes": 18000
     },
     {
       "path": "docs/solver-budget-determinism.md",
-      "purpose": "Current work/budget/determinism contract; migration chronology belongs in reports/archive."
+      "purpose": "Current work/budget/determinism contract; migration chronology belongs in reports/archive.",
+      "targetBytes": 12000,
+      "compactAtBytes": 24000
     },
     {
       "path": "docs/solver-workflow-evidence-remediation-plan.md",
-      "purpose": "Completed solver workflow/result-integrity remediation program; historical authority for that campaign only."
+      "purpose": "Completed solver workflow/result-integrity remediation program; historical authority for that campaign only.",
+      "targetBytes": 28000,
+      "compactAtBytes": 56000
     },
     {
       "path": "docs/solver-workflow-remediation-implementation-handoff.md",
-      "purpose": "Completed remediation execution handoff; historical contract and closeout context only."
+      "purpose": "Completed remediation execution handoff; historical contract and closeout context only.",
+      "targetBytes": 12000,
+      "compactAtBytes": 24000
     },
     {
       "path": "docs/tooling-catalog.md",
-      "purpose": "Family-level tool map; named command discovery belongs to tooling-census."
+      "purpose": "Family-level tool map; named command discovery belongs to tooling-census.",
+      "targetBytes": 10500,
+      "compactAtBytes": 21000
     },
     {
       "path": "docs/solver-search-resumability.md",
-      "purpose": "Current continuation mechanism/dispositions; rung chronology belongs in reports/archive."
+      "purpose": "Current continuation mechanism/dispositions; rung chronology belongs in reports/archive.",
+      "targetBytes": 7500,
+      "compactAtBytes": 15000
     },
     {
       "path": "docs/solver-architectural-speed-opportunities.md",
-      "purpose": "Current speed gates/dispositions; experiment chronology belongs in reports/archive."
+      "purpose": "Current speed gates/dispositions; experiment chronology belongs in reports/archive.",
+      "targetBytes": 8000,
+      "compactAtBytes": 16000
     },
     {
       "path": "docs/README.md",
-      "purpose": "Ownership inventory, not a second agent guide."
+      "purpose": "Ownership inventory, not a second agent guide.",
+      "targetBytes": 10000,
+      "compactAtBytes": 20000
     },
     {
       "path": "reports/README.md",
-      "purpose": "Report conventions/routing, not a hand-maintained experiment index."
+      "purpose": "Report conventions/routing, not a hand-maintained experiment index.",
+      "targetBytes": 7000,
+      "compactAtBytes": 14000
     },
     {
       "path": "scripts/README.md",
-      "purpose": "Local tooling map, not an exhaustive script catalogue."
+      "purpose": "Local tooling map, not an exhaustive script catalogue.",
+      "targetBytes": 8500,
+      "compactAtBytes": 17000
     }
   ]
 }
