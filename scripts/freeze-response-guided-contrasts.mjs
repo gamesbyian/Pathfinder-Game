@@ -14,6 +14,7 @@ import {
     analyzeRelativeAdvantage,
     DEFAULT_PAIRS,
 } from './analyze-technique-relative-advantage.mjs';
+import { hashResearchPopulation } from './research-population-identity-lib.mjs';
 
 const sha256 = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 
@@ -45,12 +46,43 @@ export function freezeResponseGuidedContrasts(base, {
     pairs = DEFAULT_PAIRS,
 } = {}) {
     const analysis = analyzeRelativeAdvantage(base, pairs);
+    const frozenPairs = analysis.pairs.map(row => ({
+        leftAction: row.leftAction,
+        rightAction: row.rightAction,
+        counts: {
+            leftOnly: row.leftOnly,
+            rightOnly: row.rightOnly,
+            both: row.both,
+            neither: row.neither,
+        },
+        population: row.contrastPopulation,
+    }));
+    const selectedIds = [...new Set(frozenPairs.flatMap(row => [
+        ...(row.population?.leftOnlyIds ?? []),
+        ...(row.population?.rightOnlyIds ?? []),
+        ...(row.population?.bothIds ?? []),
+    ]).map(String))].sort();
+    const populationSelection = {
+        sourceSha256,
+        pairActions: frozenPairs.map(row => [row.leftAction, row.rightAction]),
+        includedOutcomeBuckets: ['leftOnly', 'rightOnly', 'both'],
+        excludedOutcomeBucket: 'neither',
+        role: 'outcome-selected-development-contrast',
+    };
+    const populationIdentity = hashResearchPopulation({
+        kind: 'pathfinder-response-guided-contrast-population',
+        identityBasis: 'levelId',
+        identities: selectedIds,
+        selection: populationSelection,
+    }).identityHash;
     return {
         schemaVersion: 1,
         kind: 'pathfinder-response-guided-contrast-population',
         evidenceRole: 'development',
         premiseUse: 'offline-premise-nomination-only',
         identityBasis: 'levelId',
+        populationIdentity,
+        populationSelection,
         source: {
             path: sourcePath,
             sha256: sourceSha256,
@@ -60,17 +92,7 @@ export function freezeResponseGuidedContrasts(base, {
             allowed: 'replay exact technique-discordance cohorts for offline premise discovery',
             forbidden: 'use historical cohort membership as a production solver feature or routing rule',
         },
-        pairs: analysis.pairs.map(row => ({
-            leftAction: row.leftAction,
-            rightAction: row.rightAction,
-            counts: {
-                leftOnly: row.leftOnly,
-                rightOnly: row.rightOnly,
-                both: row.both,
-                neither: row.neither,
-            },
-            population: row.contrastPopulation,
-        })),
+        pairs: frozenPairs,
     };
 }
 
