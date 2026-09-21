@@ -170,14 +170,14 @@
         "{summary,levels} shard report",
         "flattened combined report"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
-      "retirementGate": "Single current write envelope is implemented. Close after CI/exercised-consumer verification confirms no maintained current reader still requires the retired benchmark-flat output; historical flat artifacts remain archive-readable at normalizeSolverSweepReportInput().",
-      "progress": "Current writes are now single-form: combine-solver-sweep-reports emits the same {summary, levels} envelope as portfolio shard producers, with population/populationIntegrity retained as structured attachments. Historical benchmark-flat reports remain readable only through solver-sweep-report-input.mjs. classify-stability and curate-dev-benchmark, the maintained consumers that actually depended on top-level budgetMs, now normalize through that ingress; rank-levels only consumes levels and required no schema compatibility. Combiner tests were migrated to the canonical envelope. Keep in closeout verification until CI/caller fallout is exhausted."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: current shard and combined sweep producers emit the canonical {summary, levels} envelope; maintained consumers normalize through solver-sweep-report-input.mjs where historical flat artifacts are required. No maintained current reader requires fresh benchmark-flat output.",
+      "progress": "Closed after consumer and exercised-test census. combine-solver-sweep-reports now writes the same summary envelope as portfolio shards, with population attachments retained structurally. classify-stability and curate-dev-benchmark use the shared ingress, rank-levels consumes only levels, and recombination tests exercise canonical current output plus explicit historical-flat ingress without reintroducing a second current producer schema."
     },
     {
       "id": "PSC-008",
