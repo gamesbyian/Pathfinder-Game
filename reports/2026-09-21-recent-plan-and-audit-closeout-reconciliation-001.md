@@ -1,10 +1,10 @@
 # Recent solver research plans and audits closeout reconciliation 001
 
 > **Status:** concluded-positive
-> **Date:** 2026-09-21
-> **Scope:** solver/research audits, plans, handoffs and overlapping agent branches worked during approximately 2026-09-20 through 2026-09-21.
+> **Last evidence:** 2026-09-21 — final branch/PR, plan/audit lifecycle, queue/future-work, and retained-evidence reconciliation across the September 20-21 solver-research work.
 > **Decision:** finite audit/implementation programs in scope are complete or explicitly superseded; genuinely unfinished scientific work is owned by canonical workstreams/future-work authorities rather than stranded in reports or branches.
 > **Remaining gate:** none for this reconciliation. Active scientific successors remain owned by `docs/solver-optimization-workstreams.md` and deferred reopen conditions by `docs/solver-future-work.md`.
+> **Scope:** solver/research audits, plans, handoffs and overlapping agent branches worked during approximately 2026-09-20 through 2026-09-21.
 
 ## Purpose
 
