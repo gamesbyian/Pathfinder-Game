@@ -180,7 +180,7 @@ async function main() {
 
         const exact = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002'], levels: combined.levels });
         assert.equal(exact.coverageComplete, true);
-        assert.equal(exact.decisionValidComplete, true);
+        assert.equal(exact.decisionValidComplete, false, 'status-less negative rows are coverage-complete but not decision-valid');
         assert.equal('complete' in exact, false);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels }), /missing results: R00003/);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001'], levels: combined.levels }), /unexpected results: R00002/);
