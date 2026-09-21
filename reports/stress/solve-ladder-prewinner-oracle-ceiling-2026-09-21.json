@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-solve-ladder-prewinner-oracle-ceiling",
+  "createdDate": "2026-09-21",
+  "source": {
+    "productionBoundaryRunId": 35066677597,
+    "artifactId": 10439992643,
+    "artifactDigest": "sha256:73ced0ff248c59abe11bddf88a9f9c11901b4421546ddff08c7b3b0fea90743e",
+    "headSha": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "sourcePath": "reports/stress/solver-corpus2-latest.json",
+    "corpus": "data/stress/stress-levels-random.json"
+  },
+  "population": {
+    "c2Rows": 1700,
+    "solvedRows": 1169,
+    "unsolvedRows": 531,
+    "selection": "outcome-conditioned solved subset of the full current C2 production-boundary refresh"
+  },
+  "summary": {
+    "solvedLevelWork": 69302968971,
+    "preWinnerWork": 65657307264,
+    "weightedPreWinnerWorkShare": 0.9473953026669675,
+    "allC2Work": 207030206477,
+    "preWinnerWorkShareOfAllC2": 0.3171387807667293,
+    "medianPerLevelPreWinnerShare": 0.8903878346922692,
+    "p75PerLevelPreWinnerShare": 0.9637226244060186,
+    "p90PerLevelPreWinnerShare": 0.9870029635827674,
+    "levelsWithZeroPreWinnerWork": 208,
+    "levelsWithPreWinnerShareOver50Pct": 914,
+    "levelsWithPreWinnerShareOver80Pct": 767,
+    "medianWinningAttemptIndexZeroBased": 4,
+    "p90WinningAttemptIndexZeroBased": 59
+  },
+  "byWinningStage": {
+    "portal-coarse-state-merge-dead-last-retry": {"levels":121,"totalWork":31594581414,"preWinnerWork":31151838906,"weightedPreWinnerShare":0.9859867582292509,"medianPreWinnerShare":0.9860555568270281},
+    "main-search": {"levels":646,"totalWork":12867322422,"preWinnerWork":11202006403,"weightedPreWinnerShare":0.8705778899149434,"medianPreWinnerShare":0.8526717795448601},
+    "late-repair-multiseed-retry": {"levels":33,"totalWork":6389947901,"preWinnerWork":6203674361,"weightedPreWinnerShare":0.9708489735932199,"medianPreWinnerShare":0.9799201987111977},
+    "goal-attraction-disabled-retry": {"levels":51,"totalWork":4051347308,"preWinnerWork":3866796644,"weightedPreWinnerShare":0.9544470888399085,"medianPreWinnerShare":0.9544917692248193},
+    "admissible-order-alternate-tiebreak-retry": {"levels":30,"totalWork":2429226004,"preWinnerWork":2309403721,"weightedPreWinnerShare":0.9506747075806455,"medianPreWinnerShare":0.976162260902007},
+    "guidance-goal-distance-retry": {"levels":10,"totalWork":1994593569,"preWinnerWork":1952839768,"weightedPreWinnerShare":0.979066511770148,"medianPreWinnerShare":0.9767365461591663},
+    "coarse-state-near-tie-retention-disabled-retry": {"levels":17,"totalWork":1950827637,"preWinnerWork":1879236628,"weightedPreWinnerShare":0.9633022376543254,"medianPreWinnerShare":0.9637226244060186},
+    "late-repair-search": {"levels":17,"totalWork":1925042644,"preWinnerWork":1846443681,"weightedPreWinnerShare":0.9591702743599066,"medianPreWinnerShare":0.958551426172336},
+    "must-cross-neighbor-prune-disabled-retry": {"levels":12,"totalWork":1839183541,"preWinnerWork":1807264850,"weightedPreWinnerShare":0.9826451845134253,"medianPreWinnerShare":0.9841749596343776},
+    "admissible-order-fallback": {"levels":43,"totalWork":1961861933,"preWinnerWork":1735078140,"weightedPreWinnerShare":0.8844037956059367,"medianPreWinnerShare":0.9261179070273969},
+    "early-repair-search": {"levels":179,"totalWork":1219432468,"preWinnerWork":781022241,"weightedPreWinnerShare":0.6404801098013736,"medianPreWinnerShare":0.0},
+    "connectivity-axis-prune-disabled-retry": {"levels":4,"totalWork":594783823,"preWinnerWork":569024875,"weightedPreWinnerShare":0.9566919156104889,"medianPreWinnerShare":0.960753595708016},
+    "repair-fallback": {"levels":6,"totalWork":484818307,"preWinnerWork":352677046,"weightedPreWinnerShare":0.7274416846639415,"medianPreWinnerShare":0.7624177336332177}
+  }
+}
