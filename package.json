@@ -58,6 +58,7 @@
     "solver:reconcile-d1-cases": "node scripts/stress/reconcile-d1-explicit-prefix-cases.mjs",
     "solver:regression": "node scripts/run-bundled.mjs scripts/solver-bench.mjs",
     "solver:measure-speed": "node scripts/run-bundled.mjs scripts/solver-speed-probe.mjs",
+    "solver:audit-batch-cost": "node scripts/run-bundled.mjs scripts/solver-batch-cost-probe.mjs",
     "solver:fingerprint": "node scripts/run-bundled.mjs scripts/solver-fingerprint.mjs",
     "solver:fingerprint:compare": "node scripts/compare-solver-fingerprints.mjs",
     "solver:req-length-sweep": "node scripts/run-bundled.mjs scripts/req-length-sweep.mjs",
