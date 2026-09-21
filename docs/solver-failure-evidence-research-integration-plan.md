@@ -13,20 +13,18 @@
 
 ## Implementation status (reconciled 2026-09-21)
 
-Direct implementation/precommitment work that does not require new solver evidence is exhausted. The September 19 acquisition gates have now partly resolved; surviving work is owned by current workstream/future-work authorities rather than by stale parent-plan gates.
+Direct implementation/precommitment work is exhausted; surviving science is routed through current workstream/future-work authorities.
 
-- **Phase 0 — complete:** authority/discoverability closed by [Phase-0 closeout](../reports/2026-09-19-failure-evidence-phase0-authority-closeout-001.md).
-- **Phase 1 — complete:** compact prune/flow/progress stays supported research-only opt-in; no durable default promotion is earned. See [Phase-1 disposition](../reports/2026-09-19-compact-failure-diagnostic-phase1-closeout-001.md) and [producer audit](../reports/2026-09-19-compact-failure-response-producer-suitability-audit-001.md).
-- **Phase 2 — complete for automatic compact response:** common query covers parent/protocol accounting, exact action/stage dose, censoring/outcome support, badness support and protocol-compatible repeats. See [Phase-2 closeout](../reports/2026-09-19-failure-response-query-phase2-closeout-001.md).
-- **Phase 3 — completed / routed:** the first eligible WS2 reconnaissance population was analyzed. Stage A routes to allocation-specific follow-up rather than a generic failure-phenotype program; see [final result](../reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md).
-- **Phase 4A — completed / resolved:** Class-3 exact-action dose is resolved at **0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative**. Repair-family deadline censoring now belongs to `WS2-REPAIR-DEADLINE-ALLOCATION`; see [resolution](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md).
-- **Phase 4B — completed / experiment design earned:** admissible-order reserve-starvation recurs on **2/40 independent parents**, clearing its frozen bar for the smallest matched-total-work reserve-fraction A/B. The A/B is not yet designed or authorized for dispatch; see [result](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md).
-- **Phase 4C/4D — scientifically resolved by their own owners:** H3 remaining-length independently transfers and earns a bounded matched-work consumer-design gate; Lane G modest completion-dose escalation is closed negative. Failure evidence remains secondary to those owners.
-- **Phase 4E — complete:** capability evidence may consume protocol-compatible failure-response joins as derived premise/capability evidence, never production policy.
-- **Phase 5 — audited / condition-gated:** no recurring rich producer is justified yet; if a repeated event/state consumer emerges, bounded targeted sweep is the preferred first host. See [producer-candidate audit](../reports/2026-09-19-recurring-rich-search-loss-producer-candidate-audit-001.md).
-- **Phases 6-8 — condition-gated and durably routed:** repeated compatible populations may earn richer phenotype reducers/resource work; recurring rich production routes to search-loss P8; explicit first-loss selection routes to P9. Do not manufacture populations or select a discriminator merely to close this plan.
+- **Phases 0-2 — complete:** authority/discoverability, research-only compact diagnostics, and automatic compact-response/query support are implemented. See the Phase-0/1/2 closeouts linked below in this plan.
+- **Phase 3 — completed / routed:** the first eligible WS2 reconnaissance population routed to allocation-specific follow-up, not a generic phenotype program. [Result](../reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md).
+- **Phase 4A — completed / resolved:** Class-3 exact-action dose is **0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative**. Repair deadline allocation now owns the censored repair-family follow-up. [Result](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md).
+- **Phase 4B — completed / design earned:** admissible-order reserve starvation recurs on **2/40 independent parents**, earning the smallest matched-total-work reserve-fraction A/B design. No dispatch is authorized yet. [Result](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md).
+- **Phase 4C/4D — resolved by specialist owners:** H3 remaining-length independently transfers and earns a matched-work consumer-design gate; Lane G modest completion-dose escalation is closed negative.
+- **Phase 4E — complete:** capability evidence may consume protocol-compatible failure-response joins as derived research evidence, never production policy.
+- **Phase 5 — condition-gated:** no recurring rich producer is justified; a repeated event/state consumer may reopen bounded targeted capture. [Audit](../reports/2026-09-19-recurring-rich-search-loss-producer-candidate-audit-001.md).
+- **Phases 6-8 — condition-gated / routed:** repeated compatible populations may earn richer reducers/resource work; recurring rich production routes to search-loss P8; explicit first-loss selection routes to P9.
 
-The live scientific descendants are therefore the repair deadline A/B, reserve-repricing A/B design, and whatever current workstream later satisfies the explicit recurrence/first-loss triggers. This document is an implementation/handoff record, not a competing execution queue.
+Do not manufacture populations or select a discriminator to close this plan. Live descendants are the repair-deadline experiment, reserve-repricing experiment design, and future recurrence/first-loss triggers owned by canonical authorities.
 
 ## 1. Why this plan exists
 
