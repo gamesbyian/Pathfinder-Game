@@ -1,6 +1,6 @@
 # Response-guided premise nominations from existing technique discordance
 
-> **Status:** concluded-positive nominations; successors handed off
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-21 — frozen parity/orientation contrasts plus paired 2K/5K frontier comparison on the prespecified discordance cohorts
 > **Decision:** close richer parity decomposition beyond raw portal count and the tested static orientation basis; hand non-nested width composition and CW/CCW operational-trace descendants to the canonical WS2 queue.
 > **Remaining gate:** none for this nomination report; bounded exclusive-prefix viability/dominance and selected CW/CCW operational traces remain active under `solver-optimization-workstreams.md`; no routing or production change is licensed
