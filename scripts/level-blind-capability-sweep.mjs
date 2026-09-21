@@ -206,7 +206,8 @@ if (ablation) solveOpts.ablation = ablation;
 
 // Output-side hint state is deliberately distinct from mechanicsOnlyCorpus. Never pass hintLevels
 // or corpusPath to the solver worker.
-const hintLevels = saveHints ? readLevelCorpusDocumentWithHints(corpusPath).levels : null;
+const hintDocument = saveHints ? readLevelCorpusDocumentWithHints(corpusPath) : null;
+const hintLevels = hintDocument?.levels ?? null;
 const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints });
 if (saveHints) await hintCapture.prepare(targets.map(n => hintLevels[n - 1]));
 
@@ -316,7 +317,7 @@ try {
             if (saveHints) {
                 row.hintAppended = hintCapture.record(hintLevels[levelNumber - 1], result);
                 if (row.hintAppended) {
-                    const flush = hintCapture.flush(corpusPath, hintLevels);
+                    const flush = hintCapture.flush(corpusPath, hintDocument);
                     hintChanges += flush.hintFilesChanged;
                 }
             }
