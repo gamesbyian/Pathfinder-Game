@@ -150,6 +150,31 @@ For Phase-8+ naming-cleanup batches:
 
 Use this recipe when a change is conceptually small but crosses representations or execution boundaries. The point is to prevent plausible 80%-complete patches, not to make ordinary local renames ceremonial.
 
+## GitHub Actions workflow or artifact-pipeline change
+
+Treat a workflow edit as a data/control-flow change, not merely YAML. Trace the live path before editing:
+
+1. trigger and `workflow_dispatch` inputs;
+2. job matrix/shard identity and environment propagation;
+3. checkout/materialized workspace state;
+4. generated or downloaded artifacts and their staging layout;
+5. combiner/validator/interpreter;
+6. publisher/persistence and lifecycle/discovery registration;
+7. downstream consumer or research decision that trusts the result.
+
+For the affected path:
+
+- run `npm run check:workflow-actions` and the smallest local tests for called scripts/helpers;
+- test semantic cardinality edges when layout/behavior can differ: zero, one, and many artifacts/shards where applicable;
+- inspect step ordering and action defaults for destructive or relocating behavior, especially checkout/clean, download staging, cache restore, and publish steps;
+- use the actual interchange contract. Do not parse a one-ID-per-line file as generic comma/whitespace-delimited text, infer identity from an incidental index, or assume a directory shape that an action does not guarantee;
+- use shared writers/parsers/stagers for experiment contracts, manifests, status documents, and repeated summarize/publish logic instead of workflow-local copies;
+- keep expensive compute separable from downstream recombine/validate/publish work when retained artifacts can safely support recovery;
+- if a new workflow/input/artifact surface participates in lifecycle or evidence registries, update that canonical owner in the same change;
+- verify that a failure cannot silently become a plausible successful/negative result because inputs were omitted, discovery returned zero rows, or completeness metadata was lost.
+
+After integrating current `main`, validate the actual combined head when adjacent PRs changed workflow registries, package aliases, shared helpers, or CI authorities. A green component branch does not prove the union is wired correctly.
+
 ## Solver attempt, stage, or retry
 
 Before adding one, answer the policy question first: **why is this a new production stage rather than a candidate action/configuration for the scheduler?** A dead-last placement that cannot regress already-solved levels is a safety property, not evidence that the added work is worth its cost.
