@@ -1,7 +1,7 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — hostile continuation through `5fc20988d3`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite and sampling leaks, reconciliation source relabelling, mixed modern/legacy execution-revision upgrade, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
+> **Last evidence:** 2026-09-20 — hostile continuation through `fdf63e3353`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite and sampling leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
 > **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
@@ -356,3 +356,24 @@ Method-probe had already been hardened to know the authored outer-shard count an
 The combiner now canonicalizes outer shard indices, rejects duplicate/out-of-range identities, records the exact missing outer-shard IDs, and requires every worker result/log filename to carry the containing outer shard index. The single-artifact flat layout remains supported as shard 1.
 
 Commits: `715c01f91a`, `5fc20988d3`.
+
+
+## R. Reconciliation proof must survive durable publication
+
+The reconciliation validator already computed two useful canonical hashes:
+
+- `protocolHash`: the common experiment protocol proved across source runs;
+- `sourceSetHash`: the exact canonical source membership, including source workflow run ID, run attempt, resolved execution SHA, configuration hash and source population identity.
+
+The prior contract retained only bare `sourceRuns` plus `sourceProtocolHash`, and the standard publisher rebuilt its experiment envelope without preserving even that protocol hash. Thus a richer source identity was proved at validation time and then compressed before durable publication.
+
+The repair now:
+
+- carries both `sourceProtocolHash` and `sourceSetHash` on the reconciliation experiment contract;
+- mirrors them into the typed `reconciliationRun` record;
+- preserves both fields when the standard publisher rebuilds the durable manifest;
+- includes `logs/solver-combined/source-provenance.json` in the standard published bundle so the canonical source-set preimage remains auditable after upstream Actions artifacts expire.
+
+This is deliberately not a new lineage framework. It preserves data the existing validator already owns and proves.
+
+Commits: `7c246797d4`, `924bfcaa28`, `650c388df3`, `04bef5d788`, `ccc20ac2b5`, `fdf63e3353`.
