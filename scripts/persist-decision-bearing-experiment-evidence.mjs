@@ -423,8 +423,8 @@ function selfTest() {
     fs.writeFileSync(path.join(artifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 13 }] }));
     assert.throws(
       () => persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 }),
-      /durable evidence identity collision.*immutable source run\/attempt bytes differ/u,
-      'same run/attempt identity with changed source bytes must fail rather than overwrite retained science',
+      /(?:retained scientific binding is stale.*bytes no longer match manifest sha256|durable evidence identity collision.*immutable source run\/attempt bytes differ)/u,
+      'same run/attempt identity with changed source bytes must fail before any retained science can be overwritten',
     );
 
     const forgedStaging = path.join(temp, 'forged-staging');
