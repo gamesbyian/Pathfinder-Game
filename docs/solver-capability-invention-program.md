@@ -9,7 +9,7 @@
 
 ## Purpose
 
-The solver is mature at redeploying capabilities it already has. As harvest opportunities shrink, solve growth must also come from new semantic operations: new facts represented, conclusions derived, knowledge preserved/composed, causal commitments revised, new search objects manipulated, or useful facts transported between search processes.
+As harvest opportunities shrink, solve growth must also come from new semantic operations: new facts, inferences, composition, revision, search objects, or useful fact transport.
 
 The goal remains **new cold level-blind solves at acceptable machine-independent work**. Invention is not exempt from economics.
 
@@ -21,7 +21,7 @@ Classify proposals before implementation.
 - **EXTENSION:** an existing semantic primitive gains genuinely new scope or consequences.
 - **INVENTION:** the solver gains a reasoning operation it previously lacked.
 
-A new stage, scorer profile, threshold, width, or retry shell is not invention unless it changes the semantic operation.
+A stage, scorer, threshold, width, or retry shell is not invention unless the semantic operation changes.
 
 ## Portfolio rule
 
