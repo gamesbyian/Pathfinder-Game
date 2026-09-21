@@ -26,21 +26,20 @@ assert.equal(combined.coverageComplete, false);
 assert.equal(combined.decisionValidComplete, false);
 assert.equal(combined.expectedCount, 4);
 assert.equal(combined.observedCount, 3);
-assert.deepEqual(combined.missingIds, ['c2:b']);
-assert.deepEqual(combined.canonicalMissingIds, ['["c2","b"]']);
-assert.deepEqual(combined.canonicalDuplicateIds, []);
-assert.deepEqual(combined.canonicalUnexpectedIds, []);
+assert.deepEqual(combined.missingIds, ['["c2","b"]']);
+assert.deepEqual(combined.duplicateIds, []);
+assert.deepEqual(combined.unexpectedIds, []);
+assert.equal('canonicalMissingIds' in combined, false);
+assert.equal('canonicalDuplicateIds' in combined, false);
+assert.equal('canonicalUnexpectedIds' in combined, false);
 assert.deepEqual(combined.outcomes, { missing: 1, solved: 2, unknown: 1 });
-assert.deepEqual(combined.expectedIds, ['c1:a', 'c1:b', 'c2:a', 'c2:b']);
-assert.match(combined.populationIdentityHash, /^sha256:[0-9a-f]{64}$/);
-assert.equal(combined.identityCodec, 'json-tuple-v1');
-assert.deepEqual(combined.identityFields, {
-  canonical: 'canonicalExpectedIds/canonicalDuplicateIds/canonicalUnexpectedIds/canonicalMissingIds',
-  legacyDisplayOnly: 'expectedIds/duplicateIds/unexpectedIds/missingIds',
-});
-assert.deepEqual(combined.canonicalExpectedIds, [
+assert.deepEqual(combined.expectedIds, [
   '["c1","a"]', '["c1","b"]', '["c2","a"]', '["c2","b"]',
 ]);
+assert.match(combined.populationIdentityHash, /^sha256:[0-9a-f]{64}$/);
+assert.equal(combined.identityCodec, 'json-tuple-v1');
+assert.equal('identityFields' in combined, false, 'no current dual-form identity field registry remains');
+assert.equal('canonicalExpectedIds' in combined, false, 'standard integrity fields are now the canonical scoped identities');
 
 const delimiterLeft = encodeScopedPopulationIdentity('scope:a', 'b');
 const delimiterRight = encodeScopedPopulationIdentity('scope', 'a:b');
@@ -55,7 +54,7 @@ const repeatedLocal = combinePopulationIntegrity([
   { label: 'parent-A', integrity: { ...base, expectedCount: 1, observedCount: 1, expectedIds: ['local-1'], outcomes: { solved: 1 } } },
   { label: 'parent-B', integrity: { ...base, expectedCount: 1, observedCount: 1, expectedIds: ['local-1'], outcomes: { solved: 1 } } },
 ]);
-assert.deepEqual(repeatedLocal.canonicalExpectedIds, ['["parent-A","local-1"]', '["parent-B","local-1"]']);
+assert.deepEqual(repeatedLocal.expectedIds, ['["parent-A","local-1"]', '["parent-B","local-1"]']);
 
 
 const fullyValid = combinePopulationIntegrity([
