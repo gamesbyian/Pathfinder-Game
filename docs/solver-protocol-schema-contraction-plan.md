@@ -484,7 +484,7 @@ For scientific evidence, semantic parity matters more than byte parity. Preserve
 - Solver research priority remains owned by `solver-optimization-workstreams.md`; this plan is infrastructure/correctness work and must not masquerade as a solver capability experiment.
 
 
-## 2026-09-20 implementation checkpoint
+## 2026-09-21 implementation checkpoint
 
 The live finish-line interpretation is now concrete:
 
@@ -498,8 +498,9 @@ The live finish-line interpretation is now concrete:
 - **Corrected closeout scope for PSC-001/002:** CI exposed `scripts/hint-capture-lib.mjs` as a remaining dual hint writer and multiple maintained scripts/tests as callers of the deleted corpus-array facade. The shared capture path now writes through `setLevelHintRecords()` and requires an explicit corpus document; level-blind sweep, technique census, prefix survival, offline replay, evidence harvest, family generation/replay, and affected hint tests have been migrated. These seams are temporarily in progress until a full exercised-tool no-current-consumer proof lands.
 - **Corrected PSC-023 caller census:** core `SolveOpts.workBudget` was already gone, but solver-bench and search-loss real-canary still sent the retired option. They now use `baseWorkBudget`; descriptive CLI/report `workBudget` remains valid.
 - **Further contracted PSC-018:** the sweep combiner no longer emits the retired population-integrity `complete` mirror, and tests now distinguish `coverageComplete` from `decisionValidComplete`. The remaining PSC-018 decision is the legacy display-identity arrays versus canonical scoped JSON-tuple identities.
-- **Still-open historical-attempt/provenance seam:** the caller census found current report projection in scripts/portfolio-solve-sweep-lib.mjs still dual-reading retired Attempt fields, and modules/solver/hint-provenance.ts still reads those fields in the general provenance converter. These are now explicitly assigned to PSC-017/PSC-015 rather than being mistaken for already-centralized archival reads.
+- **Historical Attempt/provenance split implemented:** `modules/solver/historical-attempt-normalization.mjs` now owns retired persisted Attempt field/stage/config spellings. Current `attemptRecord()` / config/action projection and `provenanceFromSolveResult()` / `deriveSolveAttemptInfo()` are canonical-only. Historical provenance is explicit through `deriveHistoricalSolveAttemptInfo()` / `provenanceFromHistoricalSolveResult()` and hint capture's `recordHistorical()`; the level-blind report harvester uses that path. Tests now normalize historical fixtures before current projection instead of teaching current writers the old vocabulary. PSC-015/017 remain in closeout verification pending caller census/CI.
 - **Still open inside package B:** concurrency safety still uses read-time hintRecords reference identity to skip untouched hint files. B3 should replace that implicit touched-state heuristic with an explicit write-set/changed-ID contract before the overall package is considered maximally contracted.
+- **Closeout method revised by implementation evidence:** a seam can move from complete back to in-progress when exercised callers reveal residue. This is intentional, not regression in the plan: completion now requires the central owner to be canonical *and* maintained entrypoints/shared helpers/tests to prove there is no current consumer of the retired contract.
 
 ## Completion criteria
 
