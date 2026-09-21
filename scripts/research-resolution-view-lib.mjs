@@ -53,40 +53,49 @@ export function summarizeResearchResolutionDocuments(entries) {
 }
 
 export function summarizeResearchResolutionComposition(entries) {
-  const summaries = summarizeResearchResolutionDocuments(entries);
+  const resolved = entries.flatMap(({ source = null, document }, index) => {
+    const envelope = extractResearchResolutionEnvelope(document);
+    if (!envelope) return [];
+    return [{
+      source,
+      sourceIndex: index,
+      envelope,
+      compact: compactResearchResolution(envelope, { source }),
+    }];
+  });
   const byQuestion = new Map();
-  for (const row of summaries) {
-    if (!row.questionId || row.resolutionStatus === 'no-resolution-envelope') continue;
-    if (!byQuestion.has(row.questionId)) byQuestion.set(row.questionId, []);
-    byQuestion.get(row.questionId).push(row);
+  for (const row of resolved) {
+    if (!byQuestion.has(row.envelope.questionId)) byQuestion.set(row.envelope.questionId, []);
+    byQuestion.get(row.envelope.questionId).push(row);
   }
 
   return [...byQuestion.entries()].map(([questionId, rows]) => {
-    const signatures = new Set(rows.map(row => JSON.stringify({
-      liveRivals: row.liveRivals ?? [],
-      discriminatingObservable: row.discriminatingObservable ?? null,
-      requiredAxes: row.requiredAxes ?? [],
-      negativeInterpretationPolicy: row.negativeInterpretationPolicy ?? null,
+    const signatures = new Set(rows.map(({ compact }) => JSON.stringify({
+      liveRivals: compact.liveRivals ?? [],
+      discriminatingObservable: compact.discriminatingObservable ?? null,
+      requiredAxes: compact.requiredAxes ?? [],
+      negativeInterpretationPolicy: compact.negativeInterpretationPolicy ?? null,
     })));
     const axes = {};
     for (const axis of RESEARCH_OBSERVABILITY_AXES) {
-      const statuses = rows.map(row => {
-        const envelope = extractResearchResolutionEnvelope(entries.find(entry => entry.source === row.source)?.document);
-        return {
-          source: row.source,
-          status: envelope?.axes?.[axis]?.status ?? 'unknown',
-        };
-      });
+      const statuses = rows.map(({ source, sourceIndex, envelope }) => ({
+        source,
+        sourceIndex,
+        status: envelope.axes?.[axis]?.status ?? 'unknown',
+      }));
       axes[axis] = {
         statuses,
-        satisfiedSources: statuses.filter(item => item.status === 'satisfied').map(item => item.source),
-        blockedSources: statuses.filter(item => item.status === 'blocked').map(item => item.source),
-        unknownSources: statuses.filter(item => item.status === 'unknown').map(item => item.source),
+        satisfiedSources: statuses.filter(item => item.status === 'satisfied')
+          .map(({ source, sourceIndex }) => ({ source, sourceIndex })),
+        blockedSources: statuses.filter(item => item.status === 'blocked')
+          .map(({ source, sourceIndex }) => ({ source, sourceIndex })),
+        unknownSources: statuses.filter(item => item.status === 'unknown')
+          .map(({ source, sourceIndex }) => ({ source, sourceIndex })),
       };
     }
     return {
       questionId,
-      sources: rows.map(row => row.source),
+      sources: rows.map(({ source, sourceIndex }) => ({ source, sourceIndex })),
       compatibleInterpretationContract: signatures.size === 1,
       interpretationContractVariants: signatures.size,
       axisCoverage: axes,
