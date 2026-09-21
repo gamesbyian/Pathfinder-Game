@@ -369,8 +369,6 @@ export interface SolveOpts {
      *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
      *  preserves COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION exactly. */
     coarseStateNearTieRetentionRetryBudgetFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    dedupNearTieRetryBudgetFractionOverride?: number;
     /** Overrides COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION for this solve only — same dedicated
      *  top-level-option shape as admissibleOrderNodeReserveFractionOverride above, but NOT the same
      *  mechanism as of REVISION 2 (see the constant's own comment): this fraction is ADDITIVE headroom
@@ -378,8 +376,6 @@ export interface SolveOpts {
      *  ceiling to plain `nodeBudget` (no extra headroom at all). Undefined (production default)
      *  preserves the constant exactly. */
     coarseStateNearTieRetentionRetryNodeReserveFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    dedupNearTieRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION for this solve only — same
      *  dedicated top-level-option shape as coarseStateNearTieRetentionRetryBudgetFractionOverride above (NOT an
      *  ablation flag). Undefined (production default, and solver-controller.ts/review-controller.ts's
@@ -496,13 +492,9 @@ export interface SolveOpts {
      *  is withheld from the repair probe and the main loop's early config prefix, then becomes
      *  available to the final N ordinary configs without reordering them. */
     mainSearchLateReserveFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    mainLoopLateReserveFractionOverride?: number;
     /** Number of final ordinary configs eligible for the experimental reserve. See the fraction
      *  override above. Values are clamped to the main config count; 0 disables the reserve. */
     mainSearchLateReserveConfigCountOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    mainLoopLateReserveConfigCountOverride?: number;
     /** Override for EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE for this solve only — same
      *  dedicated-override shape as the reserve-fraction overrides above (NOT an ablation flag: the
      *  gate is read unconditionally inside the STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET branch,
@@ -514,16 +506,12 @@ export interface SolveOpts {
      *  (every production/interactive caller) preserves EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE
      *  exactly. */
     earlyRepairSearchAdaptiveBiasedBadnessGateOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    repairProbeAdaptiveBiasedBadnessGateOverride?: number;
     /** Override for EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE for this solve only — same shape and
      *  rationale as earlyRepairSearchAdaptiveBiasedBadnessGateOverride above; kept as a separate field
      *  (not folded into one object) to match every other override in this file being a single
      *  scalar. Undefined (every production/interactive caller) preserves
      *  EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE exactly. */
     earlyRepairSearchAdaptiveBiasedMinScaleOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairAdditiveBudgetMultiplierOverride,
      *  goalAttractionDisabledRetryBudgetFractionOverride, coarseStateNearTieRetentionRetryBudgetFractionOverride,
      *  admissibleOrderBudgetFractionOverride, admissibleOrderNonDefaultRetryBudgetFractionOverride,
