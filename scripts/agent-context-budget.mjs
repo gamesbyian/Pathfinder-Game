@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+import { prChangedFiles } from './repository-file-view.mjs';
 
 const root = process.cwd();
 const configPath = path.join(root, 'docs', 'agent-context-routes.json');
@@ -9,7 +12,37 @@ const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
 const selectedRoute = value('route');
 const check = args.includes('--check');
+const fullCheck = args.includes('--full-check');
 const report = args.includes('--report') || !check;
+
+function changedFilesForCheck() {
+    if (!check || fullCheck) return null;
+    const prChanged = prChangedFiles(root);
+    if (prChanged) return new Set(prChanged);
+
+    // Local agent branches normally retain a local main ref. Scope the finish-line check to the
+    // branch diff so pre-existing maintenance debt cannot block unrelated work.
+    try {
+        execFileSync('git', ['rev-parse', '--verify', 'main'], { cwd: root, stdio: 'ignore' });
+        const mergeBase = execFileSync(
+            'git',
+            ['merge-base', 'HEAD', 'main'],
+            { cwd: root, encoding: 'utf8' },
+        ).trim();
+        return new Set(execFileSync(
+            'git',
+            ['diff', '--name-only', '--diff-filter=ACMR', '-z', mergeBase, 'HEAD'],
+            { cwd: root, encoding: 'utf8' },
+        ).split('\0').filter(Boolean));
+    } catch {
+        // Unknown local topology: fail safe on configuration/missing files, but do not turn an
+        // unrelated full-repository size condition into surprise cleanup. Hygiene uses --full-check.
+        return new Set();
+    }
+}
+
+const changed = changedFilesForCheck();
+const configChanged = changed?.has('docs/agent-context-routes.json') ?? false;
 
 function fileBytes(relativePath) {
     const absolute = path.join(root, relativePath);
@@ -103,7 +136,19 @@ if (selectedRoute && routes.length === 0) {
 } else {
     const failures = [
         ...routes
-            .filter(route => route.status === 'maintenance-required' || route.status === 'invalid-budget' || route.missingRequired.length > 0)
+            .filter(route => (
+                route.status === 'invalid-budget'
+                || route.missingRequired.length > 0
+                || (
+                    route.status === 'maintenance-required'
+                    && (
+                        fullCheck
+                        || changed == null
+                        || configChanged
+                        || route.required.some(path => changed.has(path))
+                    )
+                )
+            ))
             .map(route => ({
                 kind: 'route',
                 id: route.id,
@@ -115,7 +160,18 @@ if (selectedRoute && routes.length === 0) {
                 budgetError: route.budgetError,
             })),
         ...authorities
-            .filter(authority => ['maintenance-required', 'invalid-budget', 'missing'].includes(authority.status))
+            .filter(authority => (
+                ['invalid-budget', 'missing'].includes(authority.status)
+                || (
+                    authority.status === 'maintenance-required'
+                    && (
+                        fullCheck
+                        || changed == null
+                        || configChanged
+                        || changed.has(authority.path)
+                    )
+                )
+            ))
             .map(authority => ({
                 kind: 'authority',
                 path: authority.path,
@@ -137,6 +193,11 @@ if (selectedRoute && routes.length === 0) {
             },
             routes,
             authorities,
+            checkScope: fullCheck
+                ? 'full-repository'
+                : changed == null
+                    ? 'report-only'
+                    : { changedPaths: [...changed].sort(), configChanged },
             failures,
         }, null, 2));
     }
@@ -159,7 +220,7 @@ if (selectedRoute && routes.length === 0) {
             }
         }
         console.error(
-            '\nThis is a batched maintenance event, not a trim-to-fit exercise. '
+            '\nThis changed surface reached its maintenance trigger. This is a batched maintenance event, not a trim-to-fit exercise. '
             + 'Compact/restructure toward targetBytes with substantial headroom. '
             + 'Documents below compactAtBytes are healthy and require no size-only cleanup.',
         );
