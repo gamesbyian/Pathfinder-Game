@@ -144,31 +144,6 @@ jobs:
         # npm-audit output was informational here, not a CI gate, and security checks have their own
         # explicit repository commands.
         run: npm ci --prefer-offline --no-audit --fund=false
-      # One-shot branch-gated execution rail for the computational-work-elimination audit.
-      # Remove after the evidence is recovered/dispositioned; ordinary PRs never execute this step.
-      - name: Run unscheduled connectivity cut applicability development sample
-        if: github.event_name == 'pull_request' && github.head_ref == 'chatgpt/solver-batch-digestion-audit-closeout-2026-09-21'
-        id: cwe_cut_early_probe
-        continue-on-error: true
-        run: |
-          node scripts/run-bundled.mjs scripts/connectivity-certificate-shadow-audit.mjs -- \
-            --corpus=data/stress/stress-levels-random.json \
-            --levels=pos:81-104 \
-            --work-budget=500000 \
-            --time-budget-ms=30000 \
-            --max-certificates=64 \
-            --out=reports/stress/connectivity-cut-unscheduled-development-004.json \
-            --summary-out=reports/stress/connectivity-cut-unscheduled-development-004-summary.md
-      - name: Upload unscheduled connectivity cut applicability evidence
-        if: always() && github.event_name == 'pull_request' && github.head_ref == 'chatgpt/solver-batch-digestion-audit-closeout-2026-09-21'
-        uses: actions/upload-artifact@v7
-        with:
-          name: connectivity-cut-unscheduled-development-004
-          path: |
-            reports/stress/connectivity-cut-unscheduled-development-004.json
-            reports/stress/connectivity-cut-unscheduled-development-004-summary.md
-          if-no-files-found: warn
-          retention-days: 7
       - name: Check package-script reachability
         id: dead_scripts
         continue-on-error: true
@@ -228,10 +203,9 @@ jobs:
           NODE_TESTS: ${{ steps.node_tests.outcome }}
           SOLVER_CANARY: ${{ steps.solver_canary.outcome }}
           BUILD: ${{ steps.build.outcome }}
-          CWE_CUT_EARLY_PROBE: ${{ steps.cwe_cut_early_probe.outcome }}
         run: |
           failed=0
-          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD CWE_CUT_EARLY_PROBE; do
+          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD; do
             status="${!name}"
             printf '%-14s %s\n' "$name" "$status"
             if [[ "$status" != "success" ]]; then
