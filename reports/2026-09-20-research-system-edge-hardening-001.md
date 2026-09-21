@@ -1,7 +1,7 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — hostile continuation through `32078354c2`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite, reconciliation source relabelling, and mixed modern/legacy execution-revision upgrade in the core sweep combiner.
+> **Last evidence:** 2026-09-20 — hostile continuation through `5fc20988d3`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite and sampling leaks, reconciliation source relabelling, mixed modern/legacy execution-revision upgrade, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
 > **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
@@ -300,3 +300,59 @@ The core `combine-solver-sweep-reports.mjs` revision check previously compared c
 The combiner now rejects partial immutable revision presence: once any source report carries a real immutable execution SHA, every source must carry immutable revision provenance. Legacy/local-only combines remain available as weak analysis, but they cannot be silently promoted by mixing in one modern shard. A subprocess test pins the real-SHA-plus-`unknown` rejection.
 
 Commits: `1309022932`, `32078354c2`.
+
+
+## Q. Continuation pass: sampling authority, append-order authority and shard transport identity
+
+A further hostile pass found another cluster where convenience mechanisms were accidentally allowed to define scientific authority.
+
+### Q1. Human-summary sampling cannot bound scientific verdict binding
+
+The standard publisher intentionally sampled at most 24 JSON files and skipped files above 128 MB when building human-facing summary statistics. The same sampled `stats` collection was also used by population/result/verdict binding checks. A large published directory could therefore contain additional level-bearing result files that were copied into the bundle but never participated in exact verdict-content, revision/configuration, or population binding.
+
+The publisher now has two distinct views:
+
+- bounded summary statistics remain capped for human-readable reporting;
+- scientific binding walks the complete published JSON set and parses all level-bearing result documents.
+
+A subprocess fixture publishes 25 result files and supplies a verdict bound only to the first 24. That verdict now fails exact-content binding instead of being accidentally validated by the presentation sampling limit.
+
+Commits: `ea4ad396ad`, `1d4e0dc4cf`.
+
+### Q2. Append-only family summary reruns cannot use "last row wins"
+
+Variant-family dataset summary files are append-only across reruns. Repeated task rows are therefore expected when a shard is revisited. The merge previously selected the last occurrence for a namespaced `(corpus,id,mode)` task, which meant a conflicting rerun could let line/filesystem order choose the canonical solve count.
+
+Identical repeats are now treated as harmless transport duplication. A repeated task with a different `solved/total` outcome is an integrity collision and fails loudly. The merge no longer lets append order choose scientific outcome identity.
+
+Commits: `a636883834`, `01075aee32`.
+
+### Q3. Static-portfolio publication counts the shards that were actually downloaded
+
+`static-portfolio-confirmation.yml` downloads shard artifacts with `merge-multiple: true` into `artifact-staging/downloaded`. Its standard publisher nevertheless counted `shard-*.json` under `logs/static-portfolio-confirmation`, where those downloaded shard files do not live. A successful experiment could therefore publish `shardsObserved=0` and mark its artifact coverage incomplete despite the combiner having consumed real shard results.
+
+The publisher now counts `artifact-staging/downloaded/shard-*.json`, the actual transport location. No global “download path must equal count path” abstraction was added because several maintained workflows legitimately transform or relocate artifacts before publication.
+
+Commit: `a2f2ba5855`.
+
+### Q4. Technique-census outer shard identity is explicit
+
+Technique-census shard documents already declare both `shard` and `shards`, but the combiner previously trusted directory discovery and selected the first matching shard JSON from each artifact directory. It now requires:
+
+- exactly one shard result JSON per outer artifact;
+- artifact directory index, shard filename index and document `shard` to agree;
+- one unique outer shard index;
+- a consistent authored total shard count;
+- explicit synthesis of missing outer shard identities.
+
+The workflow now passes its authored 120-shard count to the combiner. Partial analysis remains possible, but missing transport cannot masquerade as complete shard topology.
+
+Commits: `362e31cc10`, `40bb3fbaf4`, `85bbf10af8`, `df9040d629`.
+
+### Q5. Method-probe outer shard count is now identity-aware, not merely cardinality-aware
+
+Method-probe had already been hardened to know the authored outer-shard count and tolerate the one-artifact flat download layout. The remaining seam was that it counted discovered artifact directories without proving their semantic shard indices. Two differently spelled directories for the same shard index could satisfy a raw count while another shard was absent; worker result filenames could also disagree with the containing artifact identity.
+
+The combiner now canonicalizes outer shard indices, rejects duplicate/out-of-range identities, records the exact missing outer-shard IDs, and requires every worker result/log filename to carry the containing outer shard index. The single-artifact flat layout remains supported as shard 1.
+
+Commits: `715c01f91a`, `5fc20988d3`.
