@@ -91,13 +91,15 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 
 | ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|
-| 2 | Residual capability + premise acquisition | `active` | **HARVEST** | Add repair node-cap seam; preflight matched-work A/B; reserve repricing separately nominated | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2 | Residual capability + premise acquisition | `active` | **HARVEST** | Add repair node-cap seam; preflight matched-work A/B | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2A | Admissible-order reserve repricing | `supporting` | **EXPERIMENT DESIGN EARNED** | Precommit the smallest matched-total-work reserve-fraction A/B, including earlier-stage loss controls; no dispatch until that design is frozen | `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` |
 | 2I | Capability invention demand | `active` | **ACQUISITION** | Run 3-row beam freshness gate; expand first-loss sampling outside capability-selected Class 3 | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
 | 2R | Parity response signature | `supporting` | **NARROWED** | Static portal decomposition closed; reopen only on a different parity mechanism from success/prospective seam evidence | `WS2-PARITY-RESPONSE-SIGNATURE` |
 | 2X | Small exact projections | `supporting` | **BC1 CONSUMER EARNED** | Production-inert safety differential + cost/work-saved observer; no hot-path prune yet | `WS2-CUT-BALANCE-PROJECTION` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
+| 1A | Remaining-length allocation | `supporting` | **EXPERIMENT DESIGN EARNED** | Precommit bounded matched-work near-miss completion ordering by ascending remaining length; no production change or dispatch implied | `WS1-REMAINING-LENGTH-ALLOCATION` |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
 | 8 | Isolated capability | `subsumed` | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
