@@ -157,21 +157,14 @@ export interface Attempt {
      *  consume the experimental reserved node slice. Never set when the experiment is disabled. */
     mainSearchLateReserve?: boolean;
 }
-/** The subset of Attempt's fields classifyAttemptTier actually reads — kept as its own minimal
- *  structural type (rather than requiring the full Attempt interface) so a duck-typed caller like
- *  hint-provenance.ts's AttemptLike can pass its own attempt objects straight through without
- *  needing every one of Attempt's required fields (gateKey/elapsedMs/allocatedBudgetMs/outcome).
- *  `stageId` is the canonical field classifyAttemptTier now reads first; every OTHER field here is
- *  a COMPATIBILITY-ONLY fallback for an attempt object that predates `stageId` (historical/
- *  persisted records, or a duck-typed test fixture) — see classifyAttemptTier's own doc. */
-export interface AttemptTierFlags {
+/** Minimal historical attempt shape accepted only by compatibility readers. */
+export interface HistoricalAttemptTierFlags {
     stageId?: SolverStageId | string;
     repairLateProbe?: boolean;
     repairElitePrefixDfsRetry?: boolean;
     mcNeighborBudgetRetry?: boolean;
     connectivityAxisExhaustedRetry?: boolean;
     coarseStateNearTieRetentionRetry?: boolean;
-    /** @deprecated Historical attempt telemetry field accepted on read only. */
     dedupNearTieRetry?: boolean;
     admissibleOrderNonDefaultRetry?: boolean;
     admissibleOrder?: boolean;
@@ -180,39 +173,25 @@ export interface AttemptTierFlags {
     goalAttractionDisabledRetry?: boolean;
 }
 
-/** Maps a canonical `stageId` to classifyAttemptTier's own (pre-existing, string-literal) label
- *  vocabulary, for the two stages where they differ: `main-search` was always labeled 'main-ladder'
- *  here, and a repair-shrink-recovery attempt was always grouped under the broader
- *  'early-repair-search' label. Every other stageId already equals its own label. Kept as its own lookup
- *  rather than changing the label vocabulary itself, since hint-provenance.ts's `forcing.retryTier`
- *  and this file's own lifecycle telemetry both persist these exact strings. */
+/** Maps canonical stage identity onto the persisted provenance/lifecycle tier-label vocabulary. */
 const STAGE_ID_TO_TIER_LABEL: Partial<Record<SolverStageId, string>> = {
     'main-search': 'main-ladder',
     'repair-shrink-recovery': 'early-repair-search',
 };
 
-/** Which ladder tier an attempt actually belongs to. Canonical policy identity first: an attempt
- *  carrying `stageId` (every attempt produced by the CURRENT solver — Attempt.stageId is a
- *  required field) is classified from that alone via STAGE_ID_TO_TIER_LABEL, one canonical read,
- *  no branching on internal policy state. The legacy boolean chain below only ever runs for an
- *  attempt WITHOUT `stageId` — compatibility only (historical/persisted records predating it, or a
- *  duck-typed fixture) — most-specific-first, because several retry tiers ALSO set `repair`/
- *  `admissibleOrder` on their attempts (they rerun repairConfigs/admissibleOrderConfigs), so their
- *  own distinguishing field must be checked before the broader bucket it would otherwise fall
- *  into. Do not add a new tier's policy decision to this fallback chain — give it a stageId
- *  instead (stage-policy.ts) and let this function read that.
- *
- *  The single shared source of truth for "which tier won" — used both for lifecycle-telemetry
- *  labeling (this file's own `finish()`) and for hint provenance
- *  (hint-provenance.ts's `deriveSolveAttemptInfo`, which stores this as `forcing.retryTier` so a
- *  persisted hint can be told apart from an ordinary main-ladder/repair-fallback/admissible-order-fallback
- *  find — see docs/solver-optimization-workstreams.md's Priority 0). */
-export function classifyAttemptTier(attempt: AttemptTierFlags): string {
-    if (attempt.stageId) {
-        const stageId = normalizeSolverStageId(attempt.stageId);
-        return STAGE_ID_TO_TIER_LABEL[stageId] ?? stageId;
-    }
-    // Compatibility-only fallback — see this function's own doc comment.
+/** Current solver classification. Current attempts must carry canonical stageId. */
+export function classifyAttemptTier(attempt: Pick<Attempt, 'stageId'> | { stageId: SolverStageId | string }): string {
+    if (!attempt?.stageId) throw new Error('classifyAttemptTier requires canonical stageId');
+    const stageId = normalizeSolverStageId(attempt.stageId);
+    return STAGE_ID_TO_TIER_LABEL[stageId] ?? stageId;
+}
+
+/**
+ * Historical attempt-record normalizer. This is the ONLY owner of pre-stageId boolean fallbacks.
+ * New solver logic must call classifyAttemptTier() and must not add policy decisions here.
+ */
+export function classifyHistoricalAttemptTier(attempt: HistoricalAttemptTierFlags): string {
+    if (attempt?.stageId) return classifyAttemptTier({ stageId: attempt.stageId });
     return attempt.repairLateProbe ? 'late-repair-search'
         : attempt.repairElitePrefixDfsRetry ? 'repair-elite-prefix-dfs-retry'
             : attempt.mcNeighborBudgetRetry ? 'must-cross-neighbor-prune-disabled-retry'
