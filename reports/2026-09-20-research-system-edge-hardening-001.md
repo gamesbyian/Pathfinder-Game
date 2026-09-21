@@ -1,7 +1,7 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — hostile continuation through `d853a7bd04`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite/sampling/partial-metadata leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, durable-retention stale-binding trust, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
+> **Last evidence:** 2026-09-20 — hostile continuation through `4d12a730f2`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite/sampling/partial-metadata leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, durable-retention stale-binding trust, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
 > **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
@@ -410,3 +410,12 @@ Two small follow-ups close ambiguity created by the previous shard-topology hard
 - method-probe staging rejects a mixed flat-and-nested download layout. The Actions transport has two supported shapes: one flat artifact or multiple named artifact directories. Seeing both at once is treated as ambiguous/stale transport evidence rather than silently preferring the named directories and ignoring root shard files.
 
 Commits: `99ba6a284a`, `3aee3ed53a`, `d853a7bd04`.
+
+
+## V. Final interaction audit: hostile fixtures must not contaminate later whole-tree tests
+
+The final fresh-eyes pass caught a test-only interaction introduced by the durable-retention hardening. The new exact-byte and population-mismatch fixtures were intentionally mutated into stale/invalid states, but they were created under the same parent staging directory later reused by the idempotent whole-tree re-harvest assertion. That meant the later scan could correctly reject those hostile fixtures and thereby fail a test that was supposed to exercise only the original retained artifact.
+
+The fixtures now live in isolated temporary roots. This does not change product behavior; it restores the intended independence of the self-test phases and prevents a deliberate negative fixture from contaminating a later positive whole-tree scan.
+
+Commit: `4d12a730f2`.
