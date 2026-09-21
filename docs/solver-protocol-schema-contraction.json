@@ -473,6 +473,31 @@
       "status": "complete",
       "progress": "Removed remaining deprecated SolveOpts fields and runtime ?? fallbacks; raced engine/allowlist now canonical-only; portfolio-solve-sweep retired phase-6 CLI aliases with explicit replacement errors. With zero live dual-read override pairs remaining, check-solveopts-transport-parity.mjs and its package command were retired.",
       "retirementGate": "closed: no current SolveOpts override or portfolio CLI path accepts the retired phase-6 vocabulary"
+    },
+    {
+      "id": "PSC-023",
+      "concept": "solve input work-budget vocabulary",
+      "owners": [
+        "modules/solver/orchestration-contracts.ts",
+        "modules/solver/orchestration.ts",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/stress/benchmark.mjs",
+        "scripts/level-blind-capability-sweep.mjs",
+        "scripts/solver-parallel/race-opts.mjs"
+      ],
+      "forms": [
+        "SolveOpts.baseWorkBudget canonical input",
+        "SolveOpts.workBudget deprecated input alias",
+        "--work-budget CLI and SolveResult/report workBudget domain fields"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": false,
+      "treatment": "migrate-current-state",
+      "status": "in-progress",
+      "progress": "Separated current input property from legitimate domain/result vocabulary. Portfolio sweep, stress benchmark, and level-blind capability sweep now map --work-budget to SolveOpts.baseWorkBudget. Raced contract/tests name baseWorkBudget as the unsupported canonical input. CLI/report/result workBudget fields remain unchanged because they describe the budget itself, not the deprecated SolveOpts property.",
+      "retirementGate": "Exhaustively migrate remaining current SolveOpts.workBudget producers. Then either delete the alias outright or move any proven historical replay decoding into one explicit boundary normalizer; do not rename SolveResult/report workBudget."
     }
   ],
   "lastUpdated": "2026-09-20",
