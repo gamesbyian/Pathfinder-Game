@@ -337,7 +337,7 @@ assert.deepEqual(
     ['E1'],
 );
 assert.ok(real.relations.assetRelationships.length >= 16);
-assert.ok(real.relations.assetRelationships.some(row => row.id === 'capability-memory-to-mechanism'));
+assert.ok(real.relations.assetRelationships.some(row => row.id === 'capability-evidence-to-mechanism'));
 assert.ok(real.relations.questions.every(row => row._researchSource?.relation === 'questions'));
 
 console.log('research-relations-node-test: ok');
