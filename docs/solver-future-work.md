@@ -7,7 +7,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 | Descendant | Reopen / advancement condition |
 |---|---|
-| General solve-local proof store / blackboard | **Still deferred.** The 2026-09-21 computational-work-elimination audit produced one narrow proof-bearing candidate (portal-free connectivity cut implication) and a bounded shadow, but recurrence + lookup + saved-work economics are not yet established. Reopen the general abstraction only after this or another concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot. [W4 disposition](../reports/2026-09-21-computational-work-elimination-reusable-failure-output-001.md) |
+| General solve-local proof store / blackboard | **Deferred.** Portal-free connectivity cuts now show real cross-state recurrence, but naive linear lookup is uneconomic. Reopen the general abstraction only after a concrete fact family has sound cheap lookup and a positive saved-work handoff pilot. [W4](../reports/2026-09-21-computational-work-elimination-reusable-failure-output-001.md) · [cut result](../reports/2026-09-21-connectivity-cut-certificate-shadow-development-result-002.md) |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
 | Production bounded exact-query service | D1's observation found 0/120 production disagreements (2026-09-18) -- closed for this predicate. Reopen only under a materially different predicate/seam/population |
 | Region/AND-OR decomposition engine | C0-C2 ladder closed representation-explosive at C2. Reopen only if a different frozen interface contract restores repeated outcome equivalence without near-unique/full-prefix state. [`result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md) |
@@ -20,9 +20,9 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 ## Deferred plan closeouts
 
 - **Parity:** [preflight](solver-parity-phase-capacity-preflight.md).
-- **Exact projections:** cut balance is active; matching/dominance/separation/commutativity/residue/symmetry stay gated. Retain sibling audits for phase-conditioned checkerboard capacity and tiny product projections (for example parity phase × cut side) only when a novelty witness exists. [program](solver-small-exact-projections-program.md) · [response-guided loop](solver-response-guided-capability-invention.md)
-- **Failure evidence:** Class-3 dose and reconnaissance are concluded; repair-deadline allocation is active, reserve repricing independently nominated, and P7 still needs repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
-- **Search loss:** P8 needs recurring rich production; P9 needs explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
+- **Exact projections:** cut balance active; siblings stay gated on novelty. [program](solver-small-exact-projections-program.md)
+- **Failure evidence:** Class-3 dose/reconnaissance concluded; repair-deadline active; reserve repricing nominated; P7 awaits repeated compatible populations. [plan](solver-failure-evidence-research-integration-plan.md)
+- **Search loss:** P8 needs recurring rich production; P9 explicit first-loss selection. [plan](solver-search-loss-evidence-implementation-plan.md)
 - **Population/family:** after two pilots, run P7. [plan](solver-research-population-family-integration-plan.md)
 
 ## Hint/failure reopen hooks
@@ -81,13 +81,11 @@ Do not reopen unchanged:
 - richer twist/same-parity portal-count decomposition as an explanation of the frozen 5K plain-vs-mechanic-buckets response contrast; raw portal count remained stronger in both scoring families;
 - the tested static CW/CCW side-balance / signed-moment / absolute-moment descriptor basis as a sufficient explanation of perimeter direction disagreement; next sibling must use operational traces or a materially different exact representation.
 
-Closure is form-scoped: cross-level connectivity does not close solve-local rediscovery; detour gadgets do not close per-instance commutativity; blueprint implementations do not close future-intersection realizability; positional repair does not close dependency-defined revision; H1 vocabulary does not close bounded per-instance feasibility.
+Closure is form-scoped: cross-level connectivity ≠ solve-local rediscovery; detour gadgets ≠ per-instance commutativity; blueprints ≠ future-intersection realizability; positional repair ≠ dependency-defined revision; H1 vocabulary ≠ bounded per-instance feasibility.
 
 ## Premise-map-derived research gates
 
-Replication earned no queue expansion. Robust regions strengthen provenance only; evidence remains process-conditioned and negatives scope-bound. Reopen the fourth cell only for a concrete decision that cannot otherwise separate ontology, mining-method and robust-concept explanations.
-
-Measurement opportunities are non-queue. Promote one only for a live ambiguity with a valid discriminator/population/cost/authority contract and decision-changing outcomes; MO-005/MO-007 remain observables.
+Replication earned no queue expansion; negatives remain scope-bound. Reopen the fourth cell only for a decision that cannot otherwise separate ontology, mining-method and robust-concept explanations. Measurement opportunities remain non-queue; promote one only for a live, decision-changing discriminator with valid population/cost/authority. MO-005/MO-007 remain observables.
 
 ## Research hygiene
 
