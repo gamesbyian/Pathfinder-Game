@@ -215,6 +215,46 @@ A negative on beam-width queries does not semantically close every query family,
 
 No multi-query shared-computation implementation is earned from retained evidence.
 
-The smallest new measurement, if the successor audit reaches runtime instrumentation, is an enrichment of the existing paired beam-width comparison with one or two selected exact/safe reason families. It should remain two isolated searches plus offline overlap accounting.
+The smallest new measurement is now implemented, still without shared execution.
+
+`scripts/stress/compare-paired-beam-width-frontiers.mjs` accepts:
+
+```
+--reason-overlap=connectivity-cut
+```
+
+When enabled, the two beam widths remain isolated searches. Each attaches the production-inert portal-free connectivity cut shadow and records normalized **proof-object identities**:
+
+`reached component rows + complete sorted cardinal boundary`.
+
+The paired report now compares:
+
+- exact path-prefix frontier overlap;
+- exact connectivity-cut proof-object overlap;
+- bounded-retention drops separately from observed proof identities.
+
+A retention drop does not censor the proof-overlap denominator: the observer emits the exact proof signature even when the runtime certificate is not retained for later lookup. That keeps "bounded candidate cache economics" separate from "what proof was derived?"
+
+The relation remains deliberately narrow:
+
+> same cut signature means the same cut implication template was independently derived; it does **not** mean the residual states are equivalent, and a later state still requires current boundary validation before the proof applies.
+
+The tool also marks overlap as development evidence and forbids inferring a cache key, feasibility, production benefit, or routing policy from overlap alone.
+
+### Next empirical discriminator
+
+On a frozen development population exhibiting a real 2K/5K response contrast, compare:
+
+1. exact prefix Jaccard;
+2. connectivity-cut proof Jaccard;
+3. number of shared proof identities;
+4. total work in each isolated search.
+
+Interpretation:
+
+- **low prefix + low proof overlap:** close this proof family as a multi-query sharing reservoir for the tested workload;
+- **low prefix + high proof overlap:** strong evidence that "proof" is a useful computation unit below path identity; then measure derivation/lookup economics before any shared runtime;
+- **high prefix + high proof overlap:** proof sharing may add little beyond ordinary shared search ancestry;
+- **high proof overlap but trivial derivation cost:** interesting structural recurrence, not an optimization.
 
 This preserves the scientific question without smuggling shared execution into the measurement.
