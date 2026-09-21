@@ -47,7 +47,7 @@ Start from a current miss or contrast, not an algorithm name. Ask which capabili
 
 Record a capability demand without forcing a favored implementation.
 
-Before promoting that demand into a new scientific question, run the operating model's [question-inversion checkpoint](solver-research-operating-model.md#question-inversion-checkpoint). In particular, test whether the same evidence is better explained by removable/overallocated work, obsolete or dominated capability, a useful passing-side slack/fragility signal, or an instance-specific/non-compressible relation. An interesting inverse is a rival/nominator, not automatic queue authority.
+Before promoting that demand into a new scientific question, run the operating model's [question-inversion checkpoint](solver-research-operating-model.md#concept-family-and-inversion-checkpoint). In particular, test whether the same evidence is better explained by removable/overallocated work, obsolete or dominated capability, a useful passing-side slack/fragility signal, or an instance-specific/non-compressible relation. An interesting inverse is a rival/nominator, not automatic queue authority.
 
 ## Acquisition instruments
 
