@@ -2,10 +2,9 @@
 // Exposes solve()/findTriggerableFalseGoalCells() methods that run the same search as
 // Solver.solve()/Solver.findTriggerableFalseGoalCells(), but this is NOT a drop-in swap: it
 // implements only these two methods (not the full SolverApi surface), and
-// its solve() takes a differently-shaped level than Solver.solve() does —
-// see the input-format note below. A caller switching between the on-thread
-// solverApi and this client must adapt the level it passes, not just the
-// call site.
+// its public solve() is a raw-level convenience boundary, while the worker transport itself now
+// carries the same normalized level shape consumed by direct solveLevel(). A caller may keep
+// passing raw wire levels here; normalization happens before postMessage, not inside the worker.
 //
 // Usage:
 //   import { createSolverWorkerClient } from './modules/solver/solver-worker-client.js';
@@ -18,13 +17,10 @@
 //   // schedulerMode, legacyLatencyPortfolioExperiment. See worker-result-serialization.mjs's buildSolveWorkerResult.
 //   (A URL argument is also accepted and constructed here — used by tests.)
 //
-// Input-format note: this solve()'s levelRaw must be RAW wire format (1-indexed coords) —
-// normalization happens inside the worker. Solver.solve() (createSolver() in Solver.ts), by
-// contrast, expects an ALREADY-NORMALIZED level and does no raw normalization itself (that's a
-// separate prepareLevelForSolver() call on that facade) — so a raw level that's correct for
-// THIS client's solve() is the wrong shape for the on-thread solverApi.solve(), and vice versa.
-// findTriggerableFalseGoalCells() here takes a NORMALIZED level either way — postMessage's structured clone
-// carries its Sets/Maps intact.
+// Input-format note: this public solve() accepts RAW wire format (1-indexed coords) for convenience.
+// It validates + normalizes locally, then sends a NORMALIZED level to the worker. The worker SOLVE
+// branch and direct solveLevel() therefore share one internal level contract. findTriggerableFalseGoalCells()
+// likewise transports a normalized level; structured clone carries Sets/Maps intact.
 //
 // solve() accepts the FULL SolveOpts the direct/on-thread solver does (fixed 2026-08-20 — it used
 // to silently forward only timeBudgetMs/yieldFn, dropping ablation/nodeBudget/baseWorkBudget/workBudget/
@@ -37,6 +33,8 @@
 // stripped before postMessage rather than left to throw a DataCloneError.
 
 import type { SolveOpts } from './orchestration.js';
+import { validateRawLevel } from '../domain/level-schema.js';
+import { normalizeRawLevel } from './normalization.js';
 
 interface FalseGoalTriggerWorkerOpts {
     timeLimitMs?: number;
@@ -84,6 +82,12 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
 
     return {
         solve(levelRaw: any, opts: SolveOpts = {}) {
+            const validation = validateRawLevel(levelRaw);
+            const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
+            if (solverBoundaryErrors.length > 0) {
+                throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
+            }
+            const level = normalizeRawLevel(levelRaw);
             const id = _nextId++;
             const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
             // Forward everything EXCEPT timeBudgetMs/yieldFn (specially handled below) and any
@@ -125,7 +129,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
                 }
 
                 _pending.set(id, { resolve, reject, pollTimer });
-                worker.postMessage({ type: 'SOLVE', id, levelRaw, budgetMs, solveOpts });
+                worker.postMessage({ type: 'SOLVE', id, level, budgetMs, solveOpts });
             });
         },
 
