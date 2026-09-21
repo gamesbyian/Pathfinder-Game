@@ -14,7 +14,7 @@
 // duplicate before validation, invalid before canonical-duplicate, canonical-duplicate before
 // policy) — this mirrors both prior implementations and avoids wasted validation/policy work on
 // a candidate that's already known to be unusable.
-import { validateCandidatePath } from './path-validator.js';
+import { decodeCandidatePath, validateCanonicalPath } from './path-validator.js';
 import { pathSignature } from './hint-novelty.js';
 import type { NormalizedLevel } from './types.js';
 import type { HintNoveltyLevel } from './hint-novelty.js';
@@ -66,7 +66,11 @@ export function evaluateCandidateAcceptance(
         return { stage: 'exact-duplicate', accept: false, reason: 'exact-duplicate', inputPathSignature };
     }
 
-    const validation = validateCandidatePath(normalizedLevel, candidatePath);
+    const decodedPath = decodeCandidatePath(candidatePath);
+    if (!decodedPath) {
+        return { stage: 'invalid', accept: false, reason: 'invalid:Invalid path coordinate format.', inputPathSignature };
+    }
+    const validation = validateCanonicalPath(normalizedLevel, decodedPath);
     if (!validation.ok) {
         return { stage: 'invalid', accept: false, reason: `invalid:${validation.reason}`, inputPathSignature };
     }
