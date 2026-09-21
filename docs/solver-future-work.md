@@ -45,14 +45,9 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 | Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules remain nominations until independently confirmed |
 | Heuristic-to-theorem subdomain audit | An active microscope reveals a soft relation with a clearly identifiable exact subdomain worth a prune, lower bound, forced move, decomposition, or exact-mode switch |
 
-## Earned experiment designs awaiting precommitment
+## Earned experiment designs
 
-These are **not generic reopen hooks**. Their prerequisite evidence gates have already been met, but neither experiment is authorized for dispatch until its own design is frozen. Canonical execution state also appears in [solver optimization workstreams](solver-optimization-workstreams.md).
-
-| Experiment | Earned evidence | Next design obligation |
-|---|---|---|
-| Remaining-length allocation consumer | Independent transfer confirms 10/12 achievable rescues at 20% shared budget. [`result`](../reports/2026-09-20-h3-independent-transfer-result-001.md) | Precommit a bounded matched-work pilot ordering near-miss completion candidates by ascending remaining length, with population, budget grid, work accounting, gains/losses and regression controls fixed before dispatch |
-| Admissible-order reserve repricing | Reserve-starvation recurrence is 2/40 independent parents. [`result`](../reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md) | Precommit the smallest matched-total-work `admissibleOrderNodeReserveFractionOverride` A/B; candidate fractions come from the observed cost curve and the design must measure earlier-stage losses |
+H3 remaining-length allocation and admissible-order reserve repricing have already cleared their evidence gates. They are **earned experiment designs**, not deferred reopen hooks; their precommitment gates live in [solver optimization workstreams](solver-optimization-workstreams.md). Neither is authorized for dispatch or production use yet.
 
 ## Conditional composition/allocation work
 
