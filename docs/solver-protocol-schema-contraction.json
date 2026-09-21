@@ -367,19 +367,29 @@
       "concept": "solver stage/attempt compatibility fields",
       "owners": [
         "modules/solver/orchestration-contracts.ts",
-        "attempt identity readers"
+        "modules/solver/stage-id-normalization.mjs",
+        "modules/solver/stage-policy.ts",
+        "modules/solver/attempt-identity.mjs",
+        "modules/solver/hint-provenance.ts",
+        "scripts/attempt-config-key.mjs",
+        "scripts/analyze-technique-campaign.mjs",
+        "scripts/hint-query-lib.mjs",
+        "scripts/portfolio-solve-sweep-lib.mjs",
+        "scripts/stress/lifecycle-failure-map.mjs",
+        "scripts/stress/early-repair-search-badness-report.mjs"
       ],
       "forms": [
         "canonical stageId/attempt identity",
         "historical boolean flags/old attempt-id grammars"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "current solver logic consumes canonical stage/attempt identity only; historical records normalize before classification"
+      "status": "in-progress",
+      "retirementGate": "Finish caller census for historical attempt/stage readers and old persisted attempt-field projection. Current solver logic, current AttemptConfig parsing, and current stage writers are already canonical-only; keep legacy booleans/old grammars only at named artifact-ingress readers.",
+      "progress": "Current solver tier classification is stageId-only: classifyAttemptTier() rejects boolean-only records, while classifyHistoricalAttemptTier() exclusively owns pre-stageId boolean fallbacks for persisted/provenance readers. Current attempt identity parsing accepts only the structured grammar; compact ida:/dfs:/beam: historical keys normalize through parseHistoricalAttemptIdentityKey() and historical normalization/search helpers. Current stage-id validation now rejects retired names; normalizeHistoricalSolverStageId() exclusively owns the legacy stage alias map. Known research/report readers that analyze persisted attempts/stageLifecycle have been moved to the explicit historical decoder."
     },
     {
       "id": "PSC-018",
