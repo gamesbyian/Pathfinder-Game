@@ -75,6 +75,20 @@ Winning-stage decomposition is descriptive, not an instruction to skip stages.
 
 The late portal retry is especially visible because it wins after a long ladder, but that does **not** imply moving it earlier is safe or economical. Its 121 wins may depend on preserving other capabilities or on residual conditioning created by the existing order.
 
+## Highest-cost predecessor → winner nominations
+
+These are selected diagnostic nominations for later pair-targeted overlap work, not causal redundancy claims.
+
+| predecessor stage | eventual winning stage | pre-winner work | levels |
+|---|---|---:|---:|
+| early-repair-search | main-search | 6.30B | 300 |
+| guidance-goal-distance-retry | portal-coarse-state-merge-dead-last-retry | 5.83B | 121 |
+| main-search | main-search | 4.90B | 384 |
+| main-search | portal-coarse-state-merge-dead-last-retry | 3.87B | 121 |
+| late-repair-multiseed-retry | portal-coarse-state-merge-dead-last-retry | 3.83B | 33 |
+
+The first pair alone represents about **9.6%** of all C2 pre-winner work. These rankings are useful because they tell operational-overlap research where a positive finding could actually eliminate substantial work.
+
 ## Interpretation
 
 The admission question is decisively answered: action-selection economics has enough theoretical headroom to matter.
