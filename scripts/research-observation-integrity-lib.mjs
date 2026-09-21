@@ -55,7 +55,6 @@ export function buildResearchPopulationIntegrity(expectedIds, rows) {
     missingIds,
     coverageComplete,
     decisionValidComplete,
-    complete: coverageComplete,
     outcomes,
   };
 }
@@ -96,7 +95,6 @@ export function normalizeResearchPopulationIntegrity(integrity, { requireExpecte
     unexpectedIds: normalizeIds(integrity.unexpectedIds),
     missingIds: normalizeIds(integrity.missingIds),
     coverageComplete,
-    complete: coverageComplete,
     decisionValidComplete,
     outcomes: integrity.outcomes && typeof integrity.outcomes === 'object' && !Array.isArray(integrity.outcomes)
       ? { ...integrity.outcomes }
