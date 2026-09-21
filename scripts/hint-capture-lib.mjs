@@ -92,8 +92,10 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
             if (!document || typeof document !== 'object' || Array.isArray(document) || !Array.isArray(document.levels)) {
                 throw new Error('hint capture flush requires an explicit corpus document');
             }
-            const { hintFilesChanged } = writeLevelCorpusDocumentWithHints(levelsJsonPath, document);
-            return { levelsTouched: touched.size, hintFilesChanged, newPaths, rediscoveries };
+            const levelsTouched = touched.size;
+            const { hintFilesChanged } = writeLevelCorpusDocumentWithHints(levelsJsonPath, document, { changedHintLevels: touched });
+            touched.clear();
+            return { levelsTouched, hintFilesChanged, newPaths, rediscoveries };
         },
     };
 
