@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { createSearchLossCollector, decisionObservationToSearchLossCapsule, searchLossCapsuleIdentity, validateSearchLossCapture } from './solver-search-loss-evidence-lib.mjs';
-import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
+import { assertCanonicalResearchArtifactLocations, extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const i = arg.indexOf('='); return [arg.slice(2, i), arg.slice(i + 1)];
@@ -68,6 +68,7 @@ const capture = validateSearchLossCapture({
     capture: { captureProfileId: metadata.captureProfileId, observerParityVerified: metadata.observerParityVerified === true, selectorSummaries: snapshot.selectorSummaries },
     capsules: snapshot.capsules.sort((a, b) => a.capsuleId.localeCompare(b.capsuleId)),
 });
+assertCanonicalResearchArtifactLocations(capture);
 fs.mkdirSync(path.dirname(args.get('out')), { recursive: true });
 fs.writeFileSync(args.get('out'), `${JSON.stringify(capture, null, 2)}\n`);
 console.log(JSON.stringify({ parents: capture.population.parentCount, capsules: capture.capsules.length, selectors: capture.capture.selectorSummaries }));
