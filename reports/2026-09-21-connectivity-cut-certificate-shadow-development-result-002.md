@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-21 — 24-parent hard-C2 shadow produced 650 confirmed scheduled-call hits, 612 across different exact states, with zero false positives.
 > **Decision:** implication-level proof recurrence is real; close the naive 64-entry linear-scan consumer because its optimistic replaced work is ~0.064% of total solve work before lookup overhead.
-> **Remaining gate:** measure exact proof-template duplication, hit concentration, boundary size and cheap selector fanout before any behavioral or unscheduled consumer.
+> **Remaining gate:** selector gate completed in [result 003](2026-09-21-connectivity-cut-certificate-selector-economics-result-003.md); scheduled replacement remains closed and the surviving next question is unscheduled applicability between production connectivity checks.
 > **Evidence role:** development.
 > **Question:** does the proved portal-free goal-cut implication recur across distinct exact states often enough to constitute a real reusable-reasoning reservoir, and does the first bounded linear shadow already justify a behavioral consumer?
 > **Execution:** GitHub Actions CI run `35569648501`, fast-gate job `106238397113`, branch head `6ff95507f652e3e3ea20a7934ca371e0b4d77fb3`.
