@@ -269,9 +269,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
+      "status": "complete",
       "retirementGate": "Audit remaining status/state/reliability consumers and ensure any prose/status-block normalization is evidence-history ingress only. Current control-plane workstream/experiment state is already explicit and structured.",
-      "progress": "Current workstream authority now requires the structured ## Workstream state table; buildResearchStatusIndex() fails closed if it is absent. Reconstruction from the historical ## Active workstreams table requires explicit allowHistoricalWorkstreamTable:true. Legacy status-block/prose parsing remains available only for dated evidence discovery, while structured closeout metadata wins and structured/prose disagreement fails."
+      "progress": "Closed after consumer audit. Current workstream authority requires the structured Workstream state table and current experiment authority uses explicit promotion-state tokens; historical workstream-table recovery is opt-in only, and dated report prose/status-block parsing is evidence-history ingress. Structured closeout/prose disagreement fails closed. research-relations queryRelation() still projects a searchable status dimension across heterogeneous canonical relation types via status/state/reliability, but it does not normalize or authorize current control-plane state."
     },
     {
       "id": "PSC-012",
