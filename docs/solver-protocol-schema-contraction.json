@@ -352,8 +352,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "permanent-archive-reader",
-      "status": "open",
-      "retirementGate": "all old forms normalize only through upgrader; no downstream retired-field reads"
+      "status": "in-progress",
+      "retirementGate": "all old forms normalize only through upgrader; no downstream retired-field reads",
+      "progress": "Downstream audit found remaining retired attempt/provenance-field reads in modules/solver/hint-provenance.ts: provenanceFromSolveResult still accepts persisted Attempt aliases such as profile/template/diverseBeam and historical tier booleans via classifyHistoricalAttemptTier(). This is a real remaining seam, not current hint writer duality: canonical hint mutation/persistence is already closed under PSC-001. Next step is to split historical SolveResult/Attempt normalization from canonical provenance construction so old fields stop being read by the general converter."
     },
     {
       "id": "PSC-016",
@@ -406,7 +407,7 @@
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
       "retirementGate": "Finish caller census for historical attempt/stage readers and old persisted attempt-field projection. Current solver logic, current AttemptConfig parsing, and current stage writers are already canonical-only; keep legacy booleans/old grammars only at named artifact-ingress readers.",
-      "progress": "Current solver tier classification is stageId-only: classifyAttemptTier() rejects boolean-only records, while classifyHistoricalAttemptTier() exclusively owns pre-stageId boolean fallbacks for persisted/provenance readers. Current attempt identity parsing accepts only the structured grammar; compact ida:/dfs:/beam: historical keys normalize through parseHistoricalAttemptIdentityKey() and historical normalization/search helpers. Current stage-id validation now rejects retired names; normalizeHistoricalSolverStageId() exclusively owns the legacy stage alias map. Known research/report readers that analyze persisted attempts/stageLifecycle have been moved to the explicit historical decoder."
+      "progress": "Current solver tier classification, stage validation, and fresh attempt/config parsing are canonical-only. Historical stage/attempt readers are concentrated in named analysis/search helpers, but the census found one current report-write projection still dual-reading retired Attempt fields: scripts/portfolio-solve-sweep-lib.mjs attemptRecord() maps profile/template/diverseBeam and several retired telemetry booleans into canonical output, with tests explicitly preserving that behavior. Move that compatibility into an explicit persisted-attempt ingress normalizer, then make attemptRecord() canonical-only. modules/solver/hint-provenance.ts is the adjacent PSC-015 downstream residue."
     },
     {
       "id": "PSC-018",
