@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) method; [invention program](solver-capability-invention-program.md) capability classification. Queue shrinkage does not reopen architecture.
+Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns active state; [operating model](solver-research-operating-model.md) method; [invention](solver-capability-invention-program.md) capability class. Queue shrinkage does not reopen architecture.
 
 ## Deferred descendants of active premises
 
@@ -9,8 +9,8 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 |---|---|
 | General solve-local proof store / blackboard | **Deferred.** Portal-free cut proofs cleared recurrence and early applicability but failed downstream economics: 49,034 dominated work (~0.40% of total) versus 791,269 root boundary validations. Reopen only after a different fact family has sound cheap lookup and positive non-overlapping saved-work economics. [audit closeout](../reports/2026-09-21-computational-work-elimination-audit-closeout-001.md) |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
-| Candidate-commitment viability inside LIVE search | Lane D exact queries show real within-LIVE variation (54/392 event queries infeasible; 16/23 LIVE states mixed), but the D1 beam-ranking consumer is closed at 0/120 retention disagreements. Reopen only when a materially cheaper current-input viability test exists **and** a different production seam shows a non-trivial perfect-information displaced-work ceiling. Do not reopen by annotating more candidates at the already-negative beam cutoff seam. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
-| Residual-interface commutativity as a revision operator | Length-matched LIVE->LIVE interface substitutions are referee-valid in 1,453/3,121 cases (46.6%), but capability value is untested. Reopen only on a real DEAD/near-miss population where a current-input-derived commuting substitution can restore feasibility, reduce residual work, or create solves; LIVE->LIVE splice legality alone is not enough. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
+| Candidate-commitment viability inside LIVE search | Lane D shows within-LIVE variation (54/392 event queries infeasible; 16/23 LIVE states mixed), but D1 beam ranking closed at 0/120 disagreements. Reopen only with a materially cheaper current-input viability test **and** a different production seam with non-trivial displaced-work ceiling. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
+| Residual-interface commutativity as a revision operator | LIVE->LIVE substitutions are referee-valid in 1,453/3,121 cases (46.6%), but capability value is untested. Reopen only on DEAD/near-miss populations where current-input commuting substitution can restore feasibility, reduce work, or create solves. [reconciliation](../reports/2026-09-21-relational-query-next-question-reconciliation-001.md) |
 | Production bounded exact-query service | D1's observation found 0/120 production disagreements (2026-09-18) -- closed for this predicate. Reopen only under a materially different predicate/seam/population |
 | Region/AND-OR decomposition engine | C0-C2 ladder closed representation-explosive at C2. Reopen only if a different frozen interface contract restores repeated outcome equivalence without near-unique/full-prefix state. [`result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md) |
 | Production topology-aware state relation | Fresh independent parents show a reliable compact descriptor with non-zero decision-bearing discordance; then seek a sound actionable consequence beyond raw phase |
@@ -38,7 +38,7 @@ Use compatible compact response first; never backfill pre-contract attempts. Try
 | Bidirectional / backward abstraction | A compact sound residual/interface signature emerges from decomposition, topology, or relational-feasibility work; do not reopen full MITM from scratch |
 | Choice-bearing macro-actions | A mechanism-specific observer shows repeated non-trivial route structure beyond one-successor chains and a macro can preserve exact transition semantics/work accounting |
 | Hidden semantic forcedness | **Deferred behind `WS2-FORCED-WORK-CAPTURE-ECONOMICS`.** Reopen after literal one-successor capture economics is disposed, or earlier if it shows the 25.33% oracle reservoir is mostly unavoidable. Then use the existing <=320-case exact-prefix preflight; do not create a new exact engine. [preflight](solver-semantic-forcedness-preflight.md) |
-| Mechanics-derived canonicalization / symmetry / transposition | Reopen only for **within-solve/current-input** equivalence when telemetry shows material repeated equivalent work. Cross-level exact/symmetry solve elimination is currently closed by the 2026-09-21 complete 1,962-level census (0 exact duplicate groups, 0 strict 8-way symmetry groups); generated family symmetries should use explicit provenance instead. Naive exact transposition remains weak. |
+| Mechanics-derived canonicalization / symmetry / transposition | Reopen only for **within-solve/current-input** equivalence with material repeated work. Cross-level elimination is closed by the 1,962-level census (0 exact duplicate groups, 0 strict 8-way symmetry groups); generated-family symmetry uses provenance. |
 | Structural graph preprocessing | An active separator/topology/relational premise exposes a sound graph property with enough reuse to repay construction |
 | Cooperative multi-engine search | Two solver families expose complementary typed artifacts that the other cannot cheaply derive; start from one handoff rather than a framework |
 | Declarative mechanic automata | Repeated active descendants need a shared mechanic-state contract enough to justify migration-scale complexity |
@@ -48,7 +48,7 @@ Use compatible compact response first; never backfill pre-contract attempts. Try
 
 ## Earned experiment designs
 
-H3 remaining-length allocation and admissible-order reserve repricing have cleared their evidence gates. They are **earned experiment designs**, not reopen hooks; precommitment lives in [solver optimization workstreams](solver-optimization-workstreams.md). Neither is authorized for dispatch or production use.
+H3 remaining-length allocation and admissible-order reserve repricing are **earned experiment designs**, not reopen hooks; precommitment lives in [workstreams](solver-optimization-workstreams.md). Neither is authorized for production use.
 
 ## Conditional composition/allocation work
 
@@ -77,19 +77,19 @@ Dormant until an active lane changes the premise.
 Do not reopen unchanged:
 
 - broad retries/seed fan-out/threshold widening/scorer proliferation/universal beam widening; global portal coarse-state merge;
-- late must-turn repair forms, August quota projection, fixed-endpoint homotopy, cross-level learned-connectivity reason checker;
-- generic detour gadgets, blueprint/synthetic-must-cross production, H1's frozen descriptor vocabulary;
-- naive exact transposition/full MITM without a new compact identity; broad alternative-search or hazard/bandit/ML scheduling before cheap premises;
-- bulk variant generation without a frozen causal question.
-- richer twist/same-parity portal-count decomposition as an explanation of the frozen 5K plain-vs-mechanic-buckets response contrast; raw portal count remained stronger in both scoring families;
-- the tested static CW/CCW side-balance / signed-moment / absolute-moment descriptor basis as a sufficient explanation of perimeter direction disagreement; next sibling must use operational traces or a materially different exact representation.
+- late must-turn repair, August quota projection, fixed-endpoint homotopy, cross-level learned-connectivity reason checker;
+- generic detour gadgets, blueprint/synthetic-MC production, H1 frozen vocabulary;
+- naive exact transposition/full MITM without new compact identity; broad alternative-search or hazard/bandit/ML scheduling before cheap premises;
+- bulk variant generation without a frozen causal question;
+- richer twist/same-parity portal decomposition on frozen 5K plain-vs-mechanic-buckets contrasts;
+- tested static CW/CCW side/moment descriptor basis; next sibling needs operational traces or materially different exact representation.
 
 Closure is form-scoped: cross-level connectivity ≠ solve-local rediscovery; detour gadgets ≠ per-instance commutativity; blueprints ≠ future-intersection realizability; positional repair ≠ dependency-defined revision; H1 vocabulary ≠ bounded per-instance feasibility.
 
 ## Premise-map-derived research gates
 
-Replication earned no queue expansion; negatives remain scope-bound. Reopen the fourth cell only for a decision that cannot otherwise separate ontology, mining-method and robust-concept explanations. Measurement opportunities remain non-queue; promote one only for a live, decision-changing discriminator with valid population/cost/authority. MO-005/MO-007 remain observables.
+Replication earned no queue expansion; negatives stay scope-bound. Reopen the fourth cell only when needed to separate ontology, mining-method and robust-concept explanations. Measurement opportunities stay non-queue; promote only live decision-changing discriminators. MO-005/MO-007 remain observables.
 
 ## Research hygiene
 
-Classify historical negatives with the stop taxonomy in [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md); only `SEMANTIC-CLOSED` blocks a materially different form. Active execution stays in workstreams and chronology in reports.
+Use the [stop taxonomy](solver-capability-gap-stop-condition-reconciliation.md); only `SEMANTIC-CLOSED` blocks a materially different form. Active execution stays in workstreams; chronology in reports.
