@@ -1,23 +1,30 @@
 // Maps solver/variety-search results into the canonical Hint provenance schema.
 import { makeProvenanceEntry, toHint } from '../domain/hint-types.js';
 import { GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS } from './attempts.js';
-import { classifyHistoricalAttemptTier } from './orchestration.js';
+import { classifyAttemptTier, classifyHistoricalAttemptTier } from './orchestration.js';
+import { normalizeHistoricalPersistedAttempt } from './historical-attempt-normalization.mjs';
 import type { Hint, HintProvenanceEntry, HintTechniqueCensusCellContext } from '../domain/hint-types.js';
 import type { Attempt } from './orchestration.js';
 
-/** Partial attempts remain typed from orchestration's canonical Attempt contract. */
-type AttemptLike = Omit<Partial<Attempt>, 'stageId'> & {
-    stageId?: Attempt['stageId'] | string;
+/** Current provenance construction consumes the canonical Attempt vocabulary only. */
+type AttemptLike = Partial<Attempt> & {
     ok?: boolean;
-    /** Historical persisted attempt fields accepted on read only. */
+    /** In-memory carrier attached by technique-census result normalization. Non-enumerable there so
+     * combined-cells.json is not bloated; persisted only on the resulting Hint provenance. */
+    techniqueCensusCell?: HintTechniqueCensusCellContext | null;
+};
+
+/** Persisted evidence may predate canonical Attempt field/stage names. Historical entrypoints only. */
+type HistoricalAttemptLike = AttemptLike & {
+    stageId?: Attempt['stageId'] | string;
     profile?: string;
     template?: string | null;
     diverseBeam?: boolean;
     dedupNearTieRetry?: boolean;
-    goalAttractionDisabledRetry?: boolean;
-    /** In-memory carrier attached by technique-census result normalization. Non-enumerable there so
-     * combined-cells.json is not bloated; persisted only on the resulting Hint provenance. */
-    techniqueCensusCell?: HintTechniqueCensusCellContext | null;
+    attractionDiversity?: boolean;
+    mainLoopLateReserve?: boolean;
+    repairProbe?: boolean;
+    repairProbeShrinkRecovery?: boolean;
 };
 
 interface SolveResultLike {
@@ -81,27 +88,15 @@ const RETRY_TIER_LABELS = new Set([
     'connectivity-axis-prune-disabled-retry', 'coarse-state-near-tie-retention-disabled-retry', 'admissible-order-alternate-tiebreak-retry',
 ]);
 
-/** Extract canonical winning-attempt metadata; returns solve-unknown if no winner is recorded. */
-export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
-    const list = attempts || [];
-    const winner = list.find(a => a.outcome === 'success' || (a.outcome === undefined && a.ok));
-    if (!winner) {
-        return {
-            technique: 'solve-unknown', scoringProfileId: null, orderingBiasId: null, beamWidth: null, mechanicBucketRetention: null,
-            gateKey: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null,
-            randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, goalAttractionDisabledRetry: false,
-            retryTier: null, techniqueCensusCell: null,
-        };
-    }
+/** Convert one already-canonical winner plus an explicit tier label into provenance metadata. */
+function solveAttemptInfoFromWinner(winner: AttemptLike, attemptIndex: number, attemptTierLabel: string): SolveAttemptInfo {
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : (winner.admissibleOrder ? 'admissible-order-fallback' : 'dfs'));
-    const attemptTierLabel = classifyHistoricalAttemptTier(winner);
-    const attemptIndex = list.indexOf(winner);
     return {
         technique,
-        scoringProfileId: winner.scoringProfileId ?? winner.profile ?? null,
-        orderingBiasId: winner.orderingBiasId ?? winner.template ?? null,
+        scoringProfileId: winner.scoringProfileId ?? null,
+        orderingBiasId: winner.orderingBiasId ?? null,
         beamWidth: winner.beamWidth ?? null,
-        mechanicBucketRetention: winner.beamWidth ? !!(winner.mechanicBucketRetention ?? winner.diverseBeam) : null,
+        mechanicBucketRetention: winner.beamWidth ? !!winner.mechanicBucketRetention : null,
         gateKey: winner.gateKey ?? null,
         attemptIndex: attemptIndex >= 0 ? attemptIndex : null,
         elapsedMs: winner.elapsedMs ?? null,
@@ -117,9 +112,34 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
     };
 }
 
-/** Provenance for the single solution returned by solveLevel(). */
-export function provenanceFromSolveResult(result: SolveResultLike, ctx: ProvenanceContext = {}): HintProvenanceEntry {
-    const info = deriveSolveAttemptInfo(result.attempts);
+function unknownSolveAttemptInfo(): SolveAttemptInfo {
+    return {
+        technique: 'solve-unknown', scoringProfileId: null, orderingBiasId: null, beamWidth: null, mechanicBucketRetention: null,
+        gateKey: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null,
+        randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, goalAttractionDisabledRetry: false,
+        retryTier: null, techniqueCensusCell: null,
+    };
+}
+
+/** Extract metadata from a CURRENT canonical solve result. */
+export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
+    const list = attempts || [];
+    const winner = list.find(a => a.outcome === 'success' || (a.outcome === undefined && a.ok));
+    if (!winner) return unknownSolveAttemptInfo();
+    return solveAttemptInfoFromWinner(winner, list.indexOf(winner), classifyAttemptTier(winner as Pick<Attempt, 'stageId'>));
+}
+
+/** Explicit historical boundary for persisted solve results. Retired Attempt names do not flow past here. */
+export function deriveHistoricalSolveAttemptInfo(attempts: HistoricalAttemptLike[] | undefined): SolveAttemptInfo {
+    const list = attempts || [];
+    const winner = list.find(a => a.outcome === 'success' || (a.outcome === undefined && a.ok));
+    if (!winner) return unknownSolveAttemptInfo();
+    const normalized = normalizeHistoricalPersistedAttempt(winner) as AttemptLike;
+    const tier = classifyHistoricalAttemptTier(winner);
+    return solveAttemptInfoFromWinner(normalized, list.indexOf(winner), tier);
+}
+
+function provenanceFromSolveAttemptInfo(result: SolveResultLike, info: SolveAttemptInfo, ctx: ProvenanceContext): HintProvenanceEntry {
     return makeProvenanceEntry(info.technique, {
         solverVersion: ctx.solverVersion ?? null,
         scoringProfileId: info.scoringProfileId,
@@ -154,6 +174,19 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         } : {}),
         ...(info.retryTier !== null ? { forcingRetryTier: info.retryTier } : {}),
     });
+}
+
+/** Provenance for a CURRENT solveLevel() result. Historical Attempt fields are rejected by type/contract. */
+export function provenanceFromSolveResult(result: SolveResultLike, ctx: ProvenanceContext = {}): HintProvenanceEntry {
+    return provenanceFromSolveAttemptInfo(result, deriveSolveAttemptInfo(result.attempts), ctx);
+}
+
+/** Named historical ingress for persisted solve results that may carry retired Attempt fields. */
+export function provenanceFromHistoricalSolveResult(
+    result: Omit<SolveResultLike, 'attempts'> & { attempts?: HistoricalAttemptLike[] },
+    ctx: ProvenanceContext = {},
+): HintProvenanceEntry {
+    return provenanceFromSolveAttemptInfo(result, deriveHistoricalSolveAttemptInfo(result.attempts), ctx);
 }
 
 /** Canonical Hints for every newly saved variety-search path. Prefix-anchored finds are hint-guided. */
