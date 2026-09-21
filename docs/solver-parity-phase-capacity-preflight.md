@@ -66,7 +66,7 @@ Shadow without changing decisions. Record evaluated candidates, incremental deat
 
 **Advance** only on non-trivial opportunity, then require synthetic witnesses, stored/referee-valid prefix replay with zero false rejects, differential/reference checking, and the smallest consumer. Prefer ordering before hard prune when the fact changes rank more often than it proves death; routing waits for differentiated-response evidence.
 
-The 2026-08-08 existence-only portal envelope remains closed. `WS2-PARITY-PHASE-DISTANCE` is a materially different conditioned-distance predicate, not a rerun of “some twist remains / all twists consumed.”
+The closed 2026-08-08 existence-only portal envelope is distinct from this conditioned-distance predicate.
 
 ## 3. Premise `WS2-CHECKERBOARD-CAPACITY`: checkerboard-split connectivity capacity
 
@@ -110,7 +110,7 @@ Full feature basis, evidence semantics and stop/advance rules: [parity response-
 
 ## 5. Secondary observational seams
 
-These do not outrank the phase-distance and checkerboard-capacity premises and should reuse their representation rather than creating parallel parity machinery.
+Reuse the same parity representation; do not create parallel machinery.
 
 ### Admissible-order propagation
 
@@ -136,11 +136,11 @@ Before changing behavior:
 - measure actual wasted work after first-step prune;
 - prefer one explicit solve-level infeasibility result to an accidental empty-loop behavior.
 
-Likely low solve-value; treat as correctness/representation cleanup unless measurement shows otherwise.
+Treat as representation cleanup unless measurement shows real work savings.
 
 ### Complete/random hint enumeration
 
-Sound ordinary parity rejection can reduce complete enumeration on no-twist levels without changing completeness. Keep this outside the production solve priority unless hint-enumeration cost makes it independently worthwhile.
+Ordinary no-twist parity may reduce complete enumeration; keep it outside production priority unless hint cost justifies it.
 
 ## 6. Derivations that are not premises
 
@@ -159,7 +159,7 @@ Hard consumers follow [solver correctness hardening](solver-correctness-hardenin
 
 ## 8. Queue boundary
 
-Lane H is a cheap premise-acquisition lane and may run in parallel with the current Workstream-2 failure-response gate. It does not replace or reorder that gate.
+Lane H runs in parallel with the current WS2 failure-response gate and does not reorder it.
 
 `WS2-PARITY-PHASE-DISTANCE`, `WS2-CHECKERBOARD-CAPACITY`, and `WS2-PARITY-RESPONSE-SIGNATURE` are active premise tests. The remaining seams are downstream or secondary measurements. Contingent architectures/treatments belong in `solver-future-work.md`, not here or in the audit report as a second queue.
 
