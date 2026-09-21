@@ -117,6 +117,14 @@ const class3DoseAnalysis = source('scripts/analyze-class3-dose-exposure.mjs');
 assert.match(class3DoseAnalysis, /research-unit-topology-lib\.mjs/u,
   'Class-3 dose analysis must validate its frozen unit topology');
 
+const class3DoseAnalysis = source('scripts/analyze-class3-dose-exposure.mjs');
+assert.match(class3DoseAnalysis, /research-observation-integrity-lib\.mjs/u,
+  'Class-3 dose analysis must reuse shared independent-unit grouping');
+
+const reserveStarvationAnalysis = source('scripts/analyze-reserve-starvation-probe.mjs');
+assert.match(reserveStarvationAnalysis, /research-observation-integrity-lib\.mjs/u,
+  'reserve-starvation analysis must reuse shared independent-unit grouping');
+
 const ws2Recon = source('scripts/ws2-failure-response-reconnaissance.mjs');
 assert.match(ws2Recon, /research-resolution-envelope-lib\.mjs/u);
 
