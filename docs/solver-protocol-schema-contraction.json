@@ -170,7 +170,13 @@
         "scripts/research-relations-lib.mjs",
         "scripts/research-consumption-link.mjs",
         "scripts/research-enrichment-link.mjs",
-        "scripts/research-artifact-envelope-lib.mjs"
+        "scripts/research-artifact-envelope-lib.mjs",
+        "scripts/level-data-io.mjs",
+        "scripts/level-data-io-unit-tests.mjs",
+        "scripts/hint-complete-enumeration-sharded.mjs",
+        "scripts/hint-corpus-expand.mjs",
+        "scripts/hint-diversification.mjs",
+        "scripts/hint-workbench.mjs"
       ],
       "forms": [
         "document.researchBlock",
@@ -182,8 +188,8 @@
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
-      "retirementGate": "one shared research envelope/extractor and one current producer location",
-      "progress": "Shared decoder owns top-level/nested reads across relations, consumption-link, and enrichment-link; conflicting duplicate researchBlock locations fail closed. Canonical current location is top-level researchBlock. New consumption/enrichment link producers assert canonical layout before writing. Remaining producer census includes specialist capture families."
+      "retirementGate": "Migrate/prove all remaining readLevelsWithHints/writeLevelsWithHints callers, then remove LEVEL_WRAPPERS and the array facade. Preserve both on-disk storage shapes unless a separate corpus-format migration is justified.",
+      "progress": "Added explicit readLevelCorpusDocumentWithHints()/writeLevelCorpusDocumentWithHints() boundary: every read becomes {levels, metadata, storageShape}, so wrapped-corpus metadata and array-vs-object storage are ordinary data rather than hidden array-identity state. Round-trip tests prove copied/replaced levels arrays preserve metadata. Major batch hint writers (complete enumeration, corpus expansion, diversification, workbench) now carry the explicit corpus document. Legacy readLevelsWithHints()/writeLevelsWithHints() remain as a temporary WeakMap-backed compatibility facade until untouched callers are exhaustively migrated."
     },
     {
       "id": "PSC-009",
