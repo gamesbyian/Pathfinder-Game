@@ -1,11 +1,9 @@
 # Solver presolve opportunity audit 001
 
-> **Status:** Phase 4 static reconciliation complete; empirical initial-state incidence remains open.
-> **Date:** 2026-09-20
-> **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Evidence role:** architecture reconciliation / opportunity nomination.
-> **Decision:** treat presolve as a small exact/safe-relaxed consumer layer, not a decomposition architecture. Three bounded candidates merit initial-state opportunity sizing: all-gates parity infeasibility, checkerboard capacity, and BC1 bridge-excursion impossibility.
-
+> **Status:** active
+> **Last evidence:** 2026-09-20 — static reconciliation narrowed presolve to bounded exact/safe candidates and measured zero P1 incidence on published + Corpus 1.
+> **Decision:** Treat presolve as a small consumer layer, not a decomposition architecture; P1 is closed for published/Corpus 1 while P3/P2 remain census-gated.
+> **Remaining gate:** Complete current-population initial-state incidence/economics for BC1 and, only if cheap, checkerboard capacity.
 ## 1. Question
 
 How much Pathfinder can be rejected, simplified, or structurally constrained **before ordinary DFS/beam/repair search begins**, using facts already developed elsewhere in the research system?
