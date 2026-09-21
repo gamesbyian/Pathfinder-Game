@@ -395,20 +395,25 @@
       "id": "PSC-018",
       "concept": "population integrity authority",
       "owners": [
+        "scripts/research-observation-integrity-lib.mjs",
         "scripts/publish-solver-sweep-result.mjs",
-        "scripts/combine-population-integrity.mjs"
+        "scripts/combine-population-integrity.mjs",
+        "scripts/validate-solver-sweep-integrity.mjs",
+        "scripts/solver-experiment-contract.mjs"
       ],
       "forms": [
-        "explicit decisionValidComplete",
-        "legacy completeness inferred from outcome counters"
+        "explicit coverageComplete + decisionValidComplete",
+        "historical complete coverage mirror",
+        "legacy display identity arrays alongside canonical scoped identity arrays"
       ],
       "currentWritesMultipleForms": true,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "current producers write explicit decision-valid completeness; inference is historical-only"
+      "status": "in-progress",
+      "retirementGate": "Decide/migrate remaining current compatibility outputs: legacy complete coverage mirror and legacy display identity arrays. Decision-bearing consumers are already canonical-only; do not reintroduce inference.",
+      "progress": "Added normalizeResearchPopulationIntegrity() at the canonical research-observation integrity owner. Persisted records now normalize once: historical complete may recover coverageComplete, but decisionValidComplete is explicit-only and is never inferred from clean-looking legacy outcomes; absent expectedIds stays unknown rather than becoming an empty population. combine-population-integrity and publish-solver-sweep-result consume normalized integrity and no longer carry their own coverage fallback expressions. Current observation builders already emit explicit decision validity."
     },
     {
       "id": "PSC-019",
