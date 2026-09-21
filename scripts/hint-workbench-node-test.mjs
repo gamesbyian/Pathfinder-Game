@@ -12,7 +12,7 @@ const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NODE = process.execPath;
 const WORKBENCH_BUNDLE = buildBundle('scripts/hint-workbench.mjs');
-const { readLevelHints, readLevelsWithHints } = await import('./level-data-io.mjs');
+const { readLevelHints, readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
 function syntheticWorkbenchLevel({ id = 'P00001' } = {}) {
     return {
@@ -349,7 +349,7 @@ async function main() {
         assert.equal(typeof newlyAcceptedHint.provenance[0].solver.technique, 'string');
 
         // This sub-test exercises the position-keyed fallback using the same synthetic level
-        // shape but no persistent id, so readLevelsWithHints must use hints/00001.json.
+        // shape but no persistent id, so readLevelCorpusDocumentWithHints must use hints/00001.json.
         const wrappedHintsDir = path.join(tempDir, 'wrapped-hints');
         const wrappedSourceLevel = syntheticWorkbenchLevel({ id: '' });
         await mkdir(path.join(wrappedHintsDir, 'hints'), { recursive: true });
@@ -367,7 +367,7 @@ async function main() {
         assert.equal(upgradedHints[0].provenance[0].search.nodesExpanded, 42);
         assert.equal(upgradedHints[0].provenance[0].search.elapsedMs, 7);
         assert.equal(typeof upgradedHints[0].provenance[0].foundAt, 'string');
-        assert.deepEqual(readLevelsWithHints(path.join(wrappedHintsDir, 'levels.json'))[0].hints, [[4, 5, 6]]);
+        assert.deepEqual(readLevelCorpusDocumentWithHints(path.join(wrappedHintsDir, 'levels.json'))[0].hints, [[4, 5, 6]]);
 
         const patchDir = path.join(tempDir, 'fixture-patch');
         await mkdir(patchDir, { recursive: true });
