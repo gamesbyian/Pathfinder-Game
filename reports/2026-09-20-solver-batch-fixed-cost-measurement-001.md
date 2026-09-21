@@ -1,12 +1,9 @@
 # Solver batch fixed-cost measurement 001
 
-> **Status:** concluded opportunity-sizing measurement; solve-relative share follow-up pending.
-> **Date:** 2026-09-20
-> **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Execution:** GitHub Actions run `35562250904`, head `014c5052ce953eb0704071c4e260853a22e20c6c`
-> **Artifact:** `solver-batch-digestion-fixed-cost`, artifact id `10622946301`, digest `sha256:c880895480f687bc4baf66c7473e2eb2b656dda298d32027e72c7e5f906d2689`
-> **Evidence role:** current-head implementation-cost opportunity sizing. No solver treatment was tested.
-
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — GHA run 35562250904 measured validation, normalization, and prepLevel fixed costs on current code.
+> **Decision:** Parser/normalization speed is closed as meaningful optimization; prepLevel is measurable but only a high-multiplicity reuse candidate.
+> **Remaining gate:** Use solve-relative measurements to determine whether repeated prep cost is large enough for a compile-reuse prototype.
 ## Question
 
 How much wall time does the current level-shaped fixed pipeline consume before ordinary search?
