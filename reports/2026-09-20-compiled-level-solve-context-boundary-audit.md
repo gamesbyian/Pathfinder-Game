@@ -1,11 +1,9 @@
 # Compiled-level / solve-context boundary audit
 
-> **Status:** concluded architecture inventory; implementation remains measurement-gated.
-> **Date:** 2026-09-20
-> **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Evidence role:** static ownership/dependency audit.
-> **Decision:** the current `PrepLevel` has a viable conceptual split into immutable compiled problem data and fresh solve-local execution state. Do not implement the split until current-head fixed-cost and reuse-frequency measurements show enough ceiling.
-
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — source ownership audit found a viable immutable compiled-level / fresh solve-context split.
+> **Decision:** The conceptual boundary is sound, but implementation remains gated by measured preparation cost and reuse frequency.
+> **Remaining gate:** Use current-head fixed-cost and solve-relative reuse measurements to decide whether a compile-once / solve-many prototype is economical.
 ## Question
 
 Is `PrepLevel` merely a convenient bag of solver data, or does it currently fuse two distinct architectural objects whose separation could enable safe compile-once / solve-many execution?
