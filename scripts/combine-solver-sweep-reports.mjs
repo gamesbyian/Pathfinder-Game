@@ -278,7 +278,7 @@ function main() {
         : levels;
     const integrity = intendedPopulationKnown
         ? buildPopulationIntegrity(expectedIds, integrityRows)
-        : { ...buildPopulationIntegrity(levelIds, integrityRows), complete: false, coverageComplete: false,
+        : { ...buildPopulationIntegrity(levelIds, integrityRows), coverageComplete: false,
             decisionValidComplete: false, expectedCount: null, missingIds: [], intendedPopulationKnown: false };
     integrity.populationIdentityHash = populationDescriptor.identityHash;
     if (intendedPopulationKnown) integrity.expectedIds = populationDescriptor.identities;
