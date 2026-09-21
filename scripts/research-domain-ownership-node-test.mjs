@@ -116,8 +116,6 @@ assert.match(ws2AnalysisContract, /research-unit-topology-lib\.mjs/u,
 const class3DoseAnalysis = source('scripts/analyze-class3-dose-exposure.mjs');
 assert.match(class3DoseAnalysis, /research-unit-topology-lib\.mjs/u,
   'Class-3 dose analysis must validate its frozen unit topology');
-
-const class3DoseAnalysis = source('scripts/analyze-class3-dose-exposure.mjs');
 assert.match(class3DoseAnalysis, /research-observation-integrity-lib\.mjs/u,
   'Class-3 dose analysis must reuse shared independent-unit grouping');
 
