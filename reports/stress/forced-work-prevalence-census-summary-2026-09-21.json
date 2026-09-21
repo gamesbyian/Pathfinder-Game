@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-forced-work-prevalence-result-summary",
+  "date": "2026-09-21",
+  "sourceRunId": 35657944874,
+  "sourceArtifactId": 10666349433,
+  "sourceArtifactDigest": "sha256:9d31657134b8dd01eac5ab89c33fdcb00f4f10bc04c742689a41150de20f8061",
+  "headSha": "4020daa71077c29171ce8c83805b6f3bea6a0b27",
+  "population": {
+    "manifest": "data/stress/forced-work-prevalence-sample-2026-09-21.json",
+    "independentParents": 64,
+    "sourceResidualCount": 531
+  },
+  "protocol": {
+    "profile": "objectiveFirst",
+    "beamWidth": 5000,
+    "perGateWorkBudget": 5000000,
+    "wallSafetyMs": 600000
+  },
+  "coverage": {
+    "runs": 64,
+    "exhausted": 63,
+    "workBudgetPhaseBoundary": 1,
+    "timedOut": 0
+  },
+  "aggregate": {
+    "expandedParents": 19260501,
+    "oneSuccessorParents": 7617557,
+    "oneSuccessorParentRate": 0.3955014981178319,
+    "totalExpansionWork": 90572067,
+    "oneSuccessorExpansionWork": 22944663,
+    "oneSuccessorExpansionWorkShare": 0.25333045562491135
+  },
+  "parentDistribution": {
+    "minExpansionWorkShare": 0.11683004566701091,
+    "medianExpansionWorkShare": 0.24806710810645402,
+    "meanExpansionWorkShare": 0.2513622592414563,
+    "p90ExpansionWorkShare": 0.3368584857693163,
+    "maxExpansionWorkShare": 0.46645689521997546,
+    "parentsAtOrAboveFivePercent": 64,
+    "parentsAtOrAboveTwentyPercent": 47
+  },
+  "chains": {
+    "observedChainStarts": 5813731,
+    "maxObservedLength": 14,
+    "maxObservedChainWork": 131,
+    "terminationCounts": {
+      "branch": 2152773,
+      "no-surviving-child-id": 1569940,
+      "forced-child-not-retained": 1409561,
+      "dead-end": 681457
+    }
+  },
+  "disposition": "HEADROOM_POSITIVE",
+  "interpretation": "The preregistered prevalence gate clears decisively. This is an oracle ceiling over measured parent-expansion work, not expected production savings. Next measure capture fraction and semantic safety before any forced-chain consumer."
+}
