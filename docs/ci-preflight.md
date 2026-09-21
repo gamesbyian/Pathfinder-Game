@@ -97,7 +97,7 @@ For ordinary work, use:
 node scripts/agent-context-budget.mjs --check
 ```
 
-Successful checks are intentionally silent. A route or authority below `compactAtBytes` is healthy even when it exceeds `targetBytes`; do not compact, split, archive, or shorten it solely for size. If a trigger is reached, treat that as one batched maintenance event and reduce/restructure with substantial margin back toward `targetBytes`, rather than shaving bytes until the check barely passes.
+Successful checks are intentionally silent. In PR CI and normal local branches, trigger failures are scoped to changed authorities and affected required routes; pre-existing size debt elsewhere does not block the change. A route or authority below `compactAtBytes` is healthy even when it exceeds `targetBytes`; do not compact, split, archive, or shorten it solely for size. If a changed surface reaches a trigger, treat that as one batched maintenance event and reduce/restructure with substantial margin back toward `targetBytes`, rather than shaving bytes until the check barely passes.
 
 Detailed ratios and headroom belong to periodic hygiene or deliberate context maintenance:
 
