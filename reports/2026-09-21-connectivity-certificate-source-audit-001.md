@@ -1,10 +1,9 @@
 # Computational work elimination: connectivity certificate source audit 001
 
-> **Status:** CONCLUDED-POSITIVE FOR ONE NARROW SHADOW CANDIDATE; no production behavior change.
-> **Date:** 2026-09-21.
-> **Parent preflight:** [connectivity certificate economics](../docs/solver-computational-work-elimination-connectivity-certificate-preflight.md).
-> **Source inspected:** `modules/solver/topology.ts`, current PR #1947 branch.
-> **Prior evidence:** [2026-08-28 Stage B](2026-08-28-connectivity-rejection-stage-b-audit.md).
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — source audit plus development run 001 showed the portal-free cut theorem is sound but the first implementation was over-narrow and emitted 0 certificates on the frozen 24-parent block.
+> **Decision:** retain the one-way portal-free goal cut implication; broaden its producer to every ordinary portal-free goal-unreachable rejection because pending obligations/reserved-MC state only alter boundary passability, which is fully revalidated.
+> **Remaining gate:** rerun the unchanged frozen positions 81-104 under broadened theorem scope; require zero false positives and multi-parent cross-exact-state recurrence before behavioral economics.
 
 ## Decision
 
@@ -18,15 +17,18 @@ It is a one-way sufficient cut certificate:
 
 This is **IMPLICATION**, not identity or equivalence.
 
-The first probe should restrict further to the historical dominant cluster:
+The first implementation initially restricted itself to the historical Stage-B cluster description ("goal / no pending obligation / no reserved wall / portal-free"). Development run 001 exposed that restriction as an instrumentation mistake rather than a theorem requirement.
 
-- rejection subtype `goal`;
-- no pending must-pass;
-- no pending must-cross;
-- no reserved-wall regime;
-- portal-free level.
+The retained Stage-B record contains `mpVisitedMask`, which means **must-pass cells already visited**, not pending must-pass obligations. Therefore `mpVisitedMask=0` never established "no pending must-pass."
 
-That keeps the first theorem and consumer small.
+The actual proof scope is:
+
+- ordinary rejection subtype `goal`;
+- portal-free level;
+- any pending must-pass/must-cross state;
+- any reserved-intersection-wall state supported by ordinary `isConnected()`.
+
+Pending obligations and reserved-MC state only change the current connectivity passability predicate. Certificate construction mirrors that exact source predicate, and application revalidates every old boundary cell under the later state's current predicate.
 
 ## Why the theorem is sound in this scope
 
@@ -130,7 +132,7 @@ Add an opt-in research-only **certificate shadow** with one-solve lifetime.
 
 ### Producer
 
-Only after a normal portal-free `goal` connectivity rejection in the simple dominant scope:
+Only after a normal portal-free `goal` connectivity rejection:
 
 - retain the reached-set row bitset;
 - retain the complete cardinal boundary cell list;
@@ -185,7 +187,7 @@ Advance to a behavioral matched-work prototype only if:
 5. the candidate remains useful after certificate-construction overhead;
 6. no large/full-state key is needed.
 
-A positive Phase 1 still licenses only portal-free, simple-scope goal-unreachability replacement.
+A positive Phase 1 still licenses only portal-free goal-unreachability replacement under the exact boundary-validation contract.
 
 ## Phase-1 stop gate
 
