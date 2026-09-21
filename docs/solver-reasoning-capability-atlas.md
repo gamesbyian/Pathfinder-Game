@@ -179,6 +179,14 @@ Gap labels: **EXPOSURE + ARCHITECTURAL**.
 
 The semantic premise is "a bounded exact answer can save more heuristic work or create capability than it costs", not "use CP-SAT".
 
+## Cross-cutting acquisition method: small exact projections
+
+Parity demonstrates a reusable pattern: project the residual problem into a much smaller exact space where every real completion obeys a cheap law. Useful siblings include cut/boundary crossing balance, scarce-obligation matching, one-way dominance, discrete planar separation, exact independence relations, finite-state mechanic residues and exact automorphisms.
+
+This is **not** a new architecture category. It is a premise-generation method spanning the atlas gaps above, especially joint future feasibility, topology and decomposition. A candidate projection earns attention only when it is exact in a declared scope, materially smaller than residual identity, cheap to derive/update, and capable of an incremental decision-bearing consequence.
+
+The active worked successor is `WS2-CUT-BALANCE-PROJECTION`; the broader candidate screen and lineage are in [small exact projections](solver-small-exact-projections-program.md).
+
 ## Areas that are not major missing-capability premises
 
 The atlas deliberately demotes several tempting categories.
