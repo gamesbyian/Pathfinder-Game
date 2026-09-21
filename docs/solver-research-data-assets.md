@@ -19,7 +19,7 @@ node scripts/tooling-census.mjs --compact --query=<term>
 
 Use `research-asset-query --id=<asset-id>` for exact registry detail; `--full` includes the complete declaration.
 
-Asset/interface existence and evidence-instance survival are separate questions. A `generated-interface` entry means the repository has a defined way to produce/query that evidence shape; it does not guarantee that a particular historical instance is still retained. Likewise, workflow participation in an automatic harvester only guarantees that the harvester inspects that run for the evidence classes it knows how to preserve. For a conclusion that depends on later row-level reconstruction, verify whether the needed source is canonical/merged history, a durable experiment bundle, branch-bound, artifact-bound, or deterministically recomputable rather than inferring durability from the asset/workflow label alone.
+Asset/interface existence does not prove a historical evidence instance survives. A `generated-interface` means the shape can be produced/queried; harvester participation means only that the run is inspected for supported evidence classes. For row-level reconstruction, verify that the needed source is merged/canonical, durably bundled, branch/artifact-bound, or deterministically recomputable.
 
 ## Required evidence preflight
 
@@ -33,7 +33,7 @@ Before broad compute or a new dataset:
 6. Prefer an existing evidence join over generation when it answers the gate.
 7. Record materially relevant rejected assets when that prevents rediscovery.
 
-Broad asset/feature mining creates selection pressure; discovered relationships remain development evidence until independently checked.
+Broad asset mining creates selection pressure; discoveries remain development evidence until independently checked.
 
 ## Evidence topology
 
@@ -68,7 +68,7 @@ Generic exact/reference workflows are acquisition surfaces, not universal archiv
 
 ## High-value joins
 
-Use the smallest useful join. High-value examples include failure response × census/benchmarks, provenance × profiles/census, hint discovery process × failure response/manifests, hint harvest selection × provenance/manifests, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units.
+Use the smallest useful join: failure response × census/benchmarks, provenance × profiles/census, hint process × failure response/manifests, harvest selection × provenance/manifests, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units.
 
 ### Four-resource lineage recipe
 
@@ -120,8 +120,8 @@ Historical capability may survive code drift as forensic nomination, but current
 
 When a durable evidence family changes, update [`solver-research-data-assets.json`](solver-research-data-assets.json), not parallel prose. Registry entries should own stable ID/status, grain/independent unit, locations/authorities, query entry points, join keys, related assets, evidence roles, and leakage/freshness/selection caveats. Human/editor contrasts stay under `variant-family-data` unless they create a genuinely separate persisted interface.
 
-When a focused resource audit changes scientific semantics, also update its audit-grade declaration under [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) and satisfy the closeout gate in [`solver-research-resource-contract.md`](solver-research-resource-contract.md). Do not mark unaudited resources “audited” by filling unknown fields with guesses.
+When a focused resource audit changes scientific semantics, update its audit-grade declaration in [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) and satisfy [the closeout gate](solver-research-resource-contract.md). Never fill unknown fields merely to mark a resource audited.
 
-Capability evidence is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the question.
+Capability evidence is derived, not an outcome authority. Keep source provenance and rebuild against the baseline relevant to the question.
 
-Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry or resource contract.
+Add prose only for cross-asset rules not clear in the registry or resource contract.
