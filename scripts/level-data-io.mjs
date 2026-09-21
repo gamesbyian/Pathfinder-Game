@@ -62,12 +62,7 @@ export function readLevelHints(levelsJsonPath, levelNumber) {
 // Backward-compatible script import surface while the canonical owner lives in hint-runtime.mjs.
 export { setLevelHintRecords };
 
-/** Attach `.hints` and `.hintRecords` to every level. Artifact hints beat inline fixture hints. */
-export function readLevelsWithHints(levelsJsonPath) {
-    const parsed = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
-    const levels = Array.isArray(parsed) ? parsed : parsed?.levels;
-    if (!Array.isArray(levels)) throw new Error(`${levelsJsonPath} must contain a JSON array of levels or an object with a levels array`);
-    if (!Array.isArray(parsed)) LEVEL_WRAPPERS.set(levels, parsed);
+function hydrateLevelHints(levelsJsonPath, levels) {
     const dir = hintsDirFor(levelsJsonPath);
     levels.forEach((level, i) => {
         if (!level || typeof level !== 'object') return;
@@ -85,6 +80,37 @@ export function readLevelsWithHints(levelsJsonPath) {
     return levels;
 }
 
+/**
+ * Explicit corpus-document reader. The in-memory contract is always one object:
+ *   { levels, metadata, storageShape }
+ *
+ * Bare-array corpora remain readable, but their storage shape is explicit rather than hidden in
+ * array identity. Wrapped corpora preserve every top-level field other than levels in metadata.
+ */
+export function readLevelCorpusDocumentWithHints(levelsJsonPath) {
+    const parsed = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
+    const storageShape = Array.isArray(parsed) ? 'array' : 'object';
+    const levels = storageShape === 'array' ? parsed : parsed?.levels;
+    if (!Array.isArray(levels)) {
+        throw new Error(`${levelsJsonPath} must contain a JSON array of levels or an object with a levels array`);
+    }
+    const metadata = storageShape === 'object'
+        ? Object.fromEntries(Object.entries(parsed).filter(([key]) => key !== 'levels'))
+        : {};
+    hydrateLevelHints(levelsJsonPath, levels);
+    return { levels, metadata, storageShape };
+}
+
+/**
+ * Compatibility array facade. New mutation/persistence callers should carry the explicit corpus
+ * document returned by readLevelCorpusDocumentWithHints instead of relying on this hidden map.
+ */
+export function readLevelsWithHints(levelsJsonPath) {
+    const document = readLevelCorpusDocumentWithHints(levelsJsonPath);
+    LEVEL_WRAPPERS.set(document.levels, document);
+    return document.levels;
+}
+
 /** Serialize canonical hints one record per line. */
 export function stringifyHints(records) {
     return stringifyCorpusJson({ schemaVersion: HINT_SCHEMA_VERSION, hints: records }, 'hints');
@@ -95,8 +121,13 @@ export function stringifyHints(records) {
  * array refs are skipped: this is required for safe concurrent shard writers over disjoint levels,
  * not merely an optimization. New zero-hint files are not created; existing emptied files remain.
  */
-export function writeLevelsWithHints(levelsJsonPath, levels) {
-    if (!Array.isArray(levels)) throw new Error('levels must be an array');
+export function writeLevelCorpusDocumentWithHints(levelsJsonPath, document) {
+    if (!document || typeof document !== 'object' || Array.isArray(document)) throw new Error('corpus document must be an object');
+    const { levels, metadata = {}, storageShape = 'object' } = document;
+    if (!Array.isArray(levels)) throw new Error('corpus document levels must be an array');
+    if (storageShape !== 'array' && storageShape !== 'object') throw new Error('corpus document storageShape must be "array" or "object"');
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) throw new Error('corpus document metadata must be an object');
+
     const dir = hintsDirFor(levelsJsonPath);
     mkdirSync(dir, { recursive: true });
 
@@ -122,14 +153,24 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
         const { hints: _hints, hintRecords: _hintRecords, ...rest } = level;
         return rest;
     });
-    const wrapper = LEVEL_WRAPPERS.get(levels);
-    const output = wrapper ? { ...wrapper, levels: stripped } : stripped;
+    const output = storageShape === 'object' ? { ...metadata, levels: stripped } : stripped;
     const prevLevels = existsSync(levelsJsonPath) ? readFileSync(levelsJsonPath, 'utf8') : null;
     const nextLevels = stringifyCorpusJson(output);
     const levelsChanged = prevLevels !== nextLevels;
     if (levelsChanged) writeFileSync(levelsJsonPath, nextLevels);
 
     return { levelsChanged, hintFilesChanged };
+}
+
+/**
+ * Compatibility array writer. New callers should use writeLevelCorpusDocumentWithHints().
+ * Array callers retain their historical storage shape only through the temporary WeakMap facade.
+ */
+export function writeLevelsWithHints(levelsJsonPath, levels) {
+    if (!Array.isArray(levels)) throw new Error('levels must be an array');
+    const remembered = LEVEL_WRAPPERS.get(levels);
+    const document = remembered ?? { levels, metadata: {}, storageShape: 'array' };
+    return writeLevelCorpusDocumentWithHints(levelsJsonPath, { ...document, levels });
 }
 
 /** Sorted hint artifact filenames accepted by validators. */
