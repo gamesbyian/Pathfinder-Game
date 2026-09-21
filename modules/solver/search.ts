@@ -274,7 +274,10 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         // boolean since the throttle schedule (nodesExpanded) is DFS-loop-local — see
         // hard-prune-pipeline.ts's file doc for why this differs per caller.
         const runConnectivity = rSteps <= 10 || (nodesExpanded & 63) === 0;
-        const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity);
+        const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity,
+            prep._connectivityCertificateShadow?.observer.observeUnscheduled === true
+                ? { researchCaller: 'dfs', researchSchedulePhase: nodesExpanded & 63, researchRemainingSteps: rSteps }
+                : undefined);
 
         if (verdict === 'solution') {
             if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
@@ -1052,7 +1055,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 const pruneDiagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} }
                     : prep._pruneDiagnostics as PruneDiagnostics | undefined;
                 const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity,
-                    { diagnostics: pruneDiagnostics });
+                    prep._connectivityCertificateShadow?.observer.observeUnscheduled === true
+                        ? { diagnostics: pruneDiagnostics, researchCaller: 'beam',
+                            researchSchedulePhase: realLen & 7, researchRemainingSteps: rSteps }
+                        : { diagnostics: pruneDiagnostics });
                 if (_BEAM_DEBUG && runConnectivity) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
                 if (verdict === 'solution') {
                     // ws.path is already [startKey, ..., pos, next] — return it
