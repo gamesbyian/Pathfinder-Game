@@ -50,10 +50,11 @@ function percentile(values, p) {
 function makeLevelStats(levelId, levelPos) {
     return {
         levelId, levelPos,
-        certificatesProduced: 0, certificatesDropped: 0, boundarySizes: [],
-        scheduledProbeCalls: 0, certificatesScanned: 0, boundaryCellChecks: 0,
+        certificatesProduced: 0, certificatesDuplicated: 0, certificatesDropped: 0, boundarySizes: [],
+        certificateSignatureCounts: new Map(), retainedCertificatesById: new Map(), hitCountsBySignature: new Map(),
+        scheduledProbeCalls: 0, certificatesScanned: 0, positionEligibleCertificates: 0, boundaryCellChecks: 0,
         shadowHits: 0, crossExactStateHits: 0, confirmedGoalUnreachableHits: 0,
-        falsePositiveHits: 0, hitSourceAgeWork: [],
+        falsePositiveHits: 0, hitSourceAgeWork: [], hitBoundarySizes: [],
     };
 }
 
@@ -71,18 +72,33 @@ for (const { entry, pos } of sample) {
     const observer = {
         maxCertificates: MAX_CERTIFICATES,
         observe(record) {
-            if (record.kind === 'certificate') {
-                stats.certificatesProduced++;
+            if (record.kind === 'certificate' || record.kind === 'certificate-duplicate' || record.kind === 'certificate-dropped') {
+                if (record.certificateSignature) {
+                    stats.certificateSignatureCounts.set(
+                        record.certificateSignature,
+                        (stats.certificateSignatureCounts.get(record.certificateSignature) ?? 0) + 1,
+                    );
+                }
                 if (Number.isFinite(record.boundarySize)) stats.boundarySizes.push(record.boundarySize);
-                return;
-            }
-            if (record.kind === 'certificate-dropped') {
-                stats.certificatesDropped++;
+                if (record.kind === 'certificate') {
+                    stats.certificatesProduced++;
+                    if (record.certificateId !== undefined) {
+                        stats.retainedCertificatesById.set(record.certificateId, {
+                            signature: record.certificateSignature ?? null,
+                            boundarySize: record.boundarySize ?? null,
+                        });
+                    }
+                } else if (record.kind === 'certificate-duplicate') {
+                    stats.certificatesDuplicated++;
+                } else {
+                    stats.certificatesDropped++;
+                }
                 return;
             }
             if (record.kind !== 'probe') return;
             stats.scheduledProbeCalls++;
             stats.certificatesScanned += record.certificatesScanned ?? 0;
+            stats.positionEligibleCertificates += record.positionEligibleCertificates ?? 0;
             stats.boundaryCellChecks += record.boundaryCellChecks ?? 0;
             if (record.hitCertificateId === undefined) return;
             stats.shadowHits++;
@@ -90,6 +106,11 @@ for (const { entry, pos } of sample) {
             if (record.confirmedGoalUnreachable) stats.confirmedGoalUnreachableHits++;
             else stats.falsePositiveHits++;
             if (Number.isFinite(record.hitSourceWork)) stats.hitSourceAgeWork.push(Math.max(0, record.work - record.hitSourceWork));
+            const retained = stats.retainedCertificatesById.get(record.hitCertificateId);
+            if (retained?.signature) {
+                stats.hitCountsBySignature.set(retained.signature, (stats.hitCountsBySignature.get(retained.signature) ?? 0) + 1);
+            }
+            if (Number.isFinite(retained?.boundarySize)) stats.hitBoundarySizes.push(retained.boundarySize);
         },
     };
 
@@ -108,12 +129,28 @@ for (const { entry, pos } of sample) {
         continue;
     }
 
+    const certificateOccurrences = [...stats.certificateSignatureCounts.values()].reduce((sum, count) => sum + count, 0);
+    const repeatedCertificateOccurrences = [...stats.certificateSignatureCounts.values()]
+        .reduce((sum, count) => sum + Math.max(0, count - 1), 0);
+    const topHitCounts = [...stats.hitCountsBySignature.values()].sort((a, b) => b - a).slice(0, 8);
     levels.push({
         ...stats,
+        certificateSignatureCounts: undefined,
+        retainedCertificatesById: undefined,
+        hitCountsBySignature: undefined,
         boundarySizes: undefined,
         hitSourceAgeWork: undefined,
+        hitBoundarySizes: undefined,
+        certificateOccurrences,
+        uniqueCertificateSignatures: stats.certificateSignatureCounts.size,
+        repeatedCertificateOccurrences,
+        signaturesWithHits: stats.hitCountsBySignature.size,
+        maxHitsPerSignature: topHitCounts[0] ?? 0,
+        topHitCounts,
         boundarySizeP50: percentile(stats.boundarySizes, 0.5),
         boundarySizeP90: percentile(stats.boundarySizes, 0.9),
+        hitBoundarySizeP50: percentile(stats.hitBoundarySizes, 0.5),
+        hitBoundarySizeP90: percentile(stats.hitBoundarySizes, 0.9),
         hitSourceAgeWorkP50: percentile(stats.hitSourceAgeWork, 0.5),
         ok: !!result?.ok,
         status: result?.status ?? null,
@@ -136,9 +173,15 @@ const summary = {
         timeBudgetMs: TIME_BUDGET_MS, maxCertificates: MAX_CERTIFICATES,
     },
     certificatesProduced: sum('certificatesProduced'),
+    certificatesDuplicated: sum('certificatesDuplicated'),
     certificatesDropped: sum('certificatesDropped'),
+    certificateOccurrences: sum('certificateOccurrences'),
+    uniqueCertificateSignatures: sum('uniqueCertificateSignatures'),
+    repeatedCertificateOccurrences: sum('repeatedCertificateOccurrences'),
+    signaturesWithHits: sum('signaturesWithHits'),
     scheduledProbeCalls: sum('scheduledProbeCalls'),
     certificatesScanned: sum('certificatesScanned'),
+    positionEligibleCertificates: sum('positionEligibleCertificates'),
     boundaryCellChecks: sum('boundaryCellChecks'),
     shadowHits: sum('shadowHits'),
     crossExactStateHits: sum('crossExactStateHits'),
@@ -151,6 +194,15 @@ const summary = {
     potentiallyReplaceableConnectivityCallRate: sum('scheduledProbeCalls') ? sum('confirmedGoalUnreachableHits') / sum('scheduledProbeCalls') : null,
     totalSolveWork: sum('workSpent'),
 };
+summary.repeatedCertificateOccurrenceRate = summary.certificateOccurrences
+    ? summary.repeatedCertificateOccurrences / summary.certificateOccurrences
+    : null;
+summary.positionEligibilityRate = summary.certificatesScanned
+    ? summary.positionEligibleCertificates / summary.certificatesScanned
+    : null;
+summary.positionIndexScanReductionUpperBound = summary.certificatesScanned
+    ? 1 - summary.positionEligibleCertificates / summary.certificatesScanned
+    : null;
 
 mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true });
 writeFileSync(path.resolve(OUT_FILE), JSON.stringify({ summary, levels }, null, 2) + '\n');
@@ -165,9 +217,10 @@ const md = [
     '',
     '## Result',
     '',
-    '- Certificates produced: ' + summary.certificatesProduced + '; dropped at capacity: ' + summary.certificatesDropped + '.',
+    '- Certificates retained: ' + summary.certificatesProduced + '; exact duplicates suppressed: ' + summary.certificatesDuplicated + '; dropped at capacity: ' + summary.certificatesDropped + '.',
+    '- Derived proof occurrences: ' + summary.certificateOccurrences + '; unique per-level signatures: ' + summary.uniqueCertificateSignatures + '; repeated occurrences: ' + summary.repeatedCertificateOccurrences + '.',
     '- Scheduled connectivity points with retained certificates: ' + summary.scheduledProbeCalls + '.',
-    '- Certificate scans: ' + summary.certificatesScanned + '; boundary-cell checks: ' + summary.boundaryCellChecks + '.',
+    '- Certificate scans: ' + summary.certificatesScanned + '; current-position-eligible certificates: ' + summary.positionEligibleCertificates + '; boundary-cell checks: ' + summary.boundaryCellChecks + '.',
     '- Shadow hits: ' + summary.shadowHits + ' on ' + summary.levelsWithHits + ' level(s).',
     '- Cross-exact-state hits: ' + summary.crossExactStateHits + ' on ' + summary.levelsWithCrossExactStateHits + ' level(s).',
     '- Confirmed goal-unreachable hits: ' + summary.confirmedGoalUnreachableHits + '.',
