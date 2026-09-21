@@ -74,6 +74,17 @@ assert.deepEqual(
     { applicability: 'admissible', reason: 'declared-complete-parent-population' },
 );
 
+const populationScopedA = failureEvidenceDependencyStratum(
+    { populationIntegrity: { populationIdentityHash: 'population-a' } },
+    { parentId: 'A' },
+);
+const populationScopedB = failureEvidenceDependencyStratum(
+    { populationIntegrity: { populationIdentityHash: 'population-b' } },
+    { parentId: 'A' },
+);
+assert.notEqual(populationScopedA, populationScopedB,
+    'same display parent id in different populations must not collapse into one dependence stratum');
+
 const summary = summarizeFailureEvidenceApplicability(document, 'forensic');
 assert.equal(summary.admissibleRecords, 3);
 assert.equal(summary.independentSupportStrata, 2);

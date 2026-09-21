@@ -1,37 +1,9 @@
-# Solver two-phase residual confirmation: generate ONE fresh, sealed pool; run the CONTROL ladder
-# alone across it; freeze the subset it fails to solve as a sealed residual corpus; then run the
-# real control/treatment A/B only on that frozen residual.
-#
-# WHY THIS EXISTS (see reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md's
-# "Repair-saturation gap" and confirm-broad-004 sections for the full diagnosis): a candidate mined
-# from a residual-miss analysis (the dominant source of Priority 1's candidates) is, by definition,
-# "helps solve levels the whole current ladder including repair already fails on." A plain fresh
-# uniform-random cohort (see solver-broad-confirmation.yml) draws overwhelmingly from levels the
-# ladder already solves, so such a candidate's new configs may never execute on a single row no
-# matter how large the cohort -- confirm-broad-003 (256 levels) and confirm-broad-004 (1,200 levels,
-# ~4.7x larger) both came back byte-identical aggregate work in both arms, ruling out chance at the
-# larger size (P~=7e-10) while a local sanity check confirmed the candidate mechanism itself was
-# never broken. Scaling `count` a third time is not a sound response to that result.
-#
-# This workflow instead mines its own residual, mirroring exactly how the original 724-level
-# Corpus-2 residual population (the source of most Priority 1 candidates) was defined -- by which
-# levels the current ladder fails to solve -- but applied to a fresh generated pool instead of the
-# existing corpus:
-#   Phase 1: generate a fresh pool, run the CONTROL ladder alone across it, freeze the subset it
-#            fails to solve (no routing-regime-rate guessing needed -- this population *is* fresh-
-#            generated "repair-resistant" by the same construction that made the original
-#            development population participate).
-#   Phase 2: run the real control/treatment A/B only on that frozen residual.
-# Filtering by whether *control* solves a level, decided entirely before phase 2's real comparison
-# ever runs, is a pre-outcome-neutral selection rule -- not the same as selecting by whether
-# *treatment* succeeds. Once a residual's composition has informed a decision for one candidate it
-# must not be reused for a different candidate; reserve a fresh cohort_id/master_seed/id_prefix each
-# time, same discipline as solver-broad-confirmation.yml.
-#
-# Kept as durable, reusable plumbing (not one-shot) for the same reason solver-broad-confirmation.yml
-# was kept: this confirmation-methodology gap is likely to recur for any future candidate mined from
-# a residual-miss analysis, not just this one candidate.
-
+# Two-phase residual confirmation.
+# Phase 1 generates one fresh sealed pool and runs control only; its unsolved subset is frozen.
+# Phase 2 runs the real control/treatment A/B only on that pre-treatment residual.
+# This avoids the participation failure of uniform broad cohorts for mechanisms mined from residual
+# misses. Residual composition must never be reused across candidates. Full rationale and historical
+# measurements: reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md.
 name: Solver two-phase residual confirmation
 run-name: "Residual confirm · ${{ inputs.cohort_id }} · flags=${{ inputs.enable_flags || 'control' }}"
 
@@ -725,8 +697,11 @@ jobs:
           work_allocation=$(( NODE_BUDGET * 134 / 100 ))
           work_ceiling=null; [ "$STRICT_TOTAL_WORK_BUDGET" = true ] && work_ceiling=$work_allocation
           wall_binding=true; [ "$DETERMINISTIC" = true ] && wall_binding=false
+          control_hash=null; treatment_hash=null
+          [ -f reports/stress/residual-confirmation-phase2-control.json ] && control_hash=$(node -p "JSON.stringify(require('./reports/stress/residual-confirmation-phase2-control.json').configurationHash)")
+          [ -f reports/stress/residual-confirmation-phase2-treatment.json ] && treatment_hash=$(node -p "JSON.stringify(require('./reports/stress/residual-confirmation-phase2-treatment.json').configurationHash)")
           cat > logs/solver-residual-confirmation/experiment-contract-spec.json <<SPEC
-          {"configuration": {"cohortId": "$COHORT_ID", "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS", "nodeBudget": $NODE_BUDGET, "budgetMs": $BUDGET_MS},
+          {"configuration": {"cohortId": "$COHORT_ID", "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS", "nodeBudget": $NODE_BUDGET, "budgetMs": $BUDGET_MS, "observedExecution": {"control": $control_hash, "treatment": $treatment_hash}},
           "workflowFamily": "residual-confirmation", "producer": "solver-residual-confirmation.yml", "entrypoint": "scripts/level-blind-capability-sweep.mjs",
           "population": {"kind": "sealed-residual-corpus", "identityBasis": "stable-level-id"},
           "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $DETERMINISTIC, "producerFamily": "residual-confirmation", "schedulerMode": "paired-control-treatment"},
@@ -748,6 +723,7 @@ jobs:
           node scripts/classify-paired-solver-outcome.mjs \
             --control="reports/stress/residual-confirmation-phase2-control.json" \
             --treatment="reports/stress/residual-confirmation-phase2-treatment.json" \
+            --integrity="logs/solver-residual-confirmation/paired-integrity.json" \
             --outcome-out="reports/stress/residual-confirmation-outcome.json" \
             --min-gains="$MIN_GAINS" \
             --max-losses="$MAX_LOSSES" \
@@ -768,25 +744,26 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [ "${{ needs.solve-phase2.result }}" != success ]; then
-            if [ "${{ needs.solve-phase2.result }}" = cancelled ]; then
-              outcome=infrastructure-error
-              reason='The phase-2 solve matrix was cancelled before normal completion.'
+          if [ ! -s reports/stress/residual-confirmation-outcome.json ]; then
+            if [ "${{ needs.solve-phase2.result }}" != success ]; then
+              if [ "${{ needs.solve-phase2.result }}" = cancelled ]; then
+                outcome=infrastructure-error
+                reason='The phase-2 solve matrix was cancelled before normal completion.'
+              else
+                outcome=harness-error
+                reason='At least one phase-2 solve shard reported an unexpected execution failure.'
+              fi
             else
-              outcome=harness-error
-              reason='At least one phase-2 solve shard reported an unexpected execution failure.'
-            fi
-            node scripts/research-workflow-outcome.mjs --out=reports/stress/residual-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
-          elif [ ! -s reports/stress/residual-confirmation-outcome.json ]; then
-            if [ "${{ steps.download_control.outcome }}" != success ] || [ "${{ steps.download_treatment.outcome }}" != success ]; then
-              outcome=infrastructure-error
-              reason='A required phase-2 shard artifact could not be downloaded.'
-            elif [ "${{ steps.coverage.outcome }}" = failure ]; then
-              outcome=invariant-violation
-              reason='Combined phase-2 control/treatment coverage was incomplete.'
-            else
-              outcome=harness-error
-              reason='The residual-confirmation harness failed before it could declare a scientific verdict.'
+              if [ "${{ steps.download_control.outcome }}" != success ] || [ "${{ steps.download_treatment.outcome }}" != success ]; then
+                outcome=infrastructure-error
+                reason='A required phase-2 shard artifact could not be downloaded.'
+              elif [ "${{ steps.coverage.outcome }}" = failure ]; then
+                outcome=invariant-violation
+                reason='Combined phase-2 control/treatment coverage was incomplete.'
+              else
+                outcome=harness-error
+                reason='The residual-confirmation harness failed before it could declare a scientific verdict.'
+              fi
             fi
             node scripts/research-workflow-outcome.mjs --out=reports/stress/residual-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
           fi

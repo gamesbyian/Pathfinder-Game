@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { readResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 import { buildResearchPopulationIntegrity as buildPopulationIntegrity } from './research-observation-integrity-lib.mjs';
 import { hashResearchPopulation as hashPopulation } from './research-population-identity-lib.mjs';
 import {
   EXPERIMENT_RESULT_KIND,
   EXPERIMENT_SCHEMA_VERSION,
+  decisionBearingExperimentResultIssues,
   decisionContractIssues,
   declaredDecisionContractIssues,
+  isImmutableCommitSha,
 } from './solver-experiment-contract.mjs';
 import { FAILURE_RESPONSE_SCHEMA_VERSION, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import { SEARCH_LOSS_CAPTURE_KIND } from './solver-search-loss-evidence-lib.mjs';
@@ -62,19 +65,38 @@ if (outcomeFile) {
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 
+const claimedPublishedPaths = new Map();
+
 function copyRequested(source, role) {
   if (!fs.existsSync(source)) return { role, source, published: null, missing: true };
   const stat = fs.statSync(source);
   const relative = role === 'primary'
     ? (stat.isDirectory() ? 'result' : `result${path.extname(source) || '.txt'}`)
     : path.join('files', path.basename(source));
+  const published = relative.replaceAll('\\', '/');
+  const priorSource = claimedPublishedPaths.get(published);
+  if (priorSource != null) {
+    throw new Error(
+      `published evidence path collision: ${source} and ${priorSource} both map to ${published}`,
+    );
+  }
+  claimedPublishedPaths.set(published, source);
   const destination = path.join(outDir, relative);
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   fs.cpSync(source, destination, { recursive: stat.isDirectory() });
-  return { role, source, published: relative.replaceAll('\\', '/'), missing: false };
+  return {
+    role, source, published, missing: false,
+    ...(stat.isFile() ? { sha256: `sha256:${createHash('sha256').update(fs.readFileSync(destination)).digest('hex')}` } : {}),
+  };
 }
 
-const entries = [copyRequested(primary, 'primary'), ...includes.map(p => copyRequested(p, 'include'))];
+let entries;
+try {
+  entries = [copyRequested(primary, 'primary'), ...includes.map(p => copyRequested(p, 'include'))];
+} catch (error) {
+  console.error(`publish-solver-sweep-result: ${error.message}`);
+  process.exit(2);
+}
 let primaryDocument = null;
 if (!entries[0].missing && entries[0].published?.endsWith('.json')) {
   try { primaryDocument = JSON.parse(fs.readFileSync(path.join(outDir, entries[0].published), 'utf8')); } catch { /* Non-JSON evidence still gets a manifest. */ }
@@ -107,7 +129,7 @@ const failureResponseComplete = Boolean(failureResponseDocument
   && failureResponseDocument.missingSourceFiles.length === 0
   && failureResponseDocument.invalidSourceFiles.length === 0);
 
-function collectJsonFiles(root, limit = 24) {
+function collectJsonFiles(root, limit = Infinity) {
   const found = [];
   function visit(current) {
     if (found.length >= limit || !fs.existsSync(current)) return;
@@ -144,9 +166,9 @@ function buildStageStats(levels) {
   return [...byStage.values()].sort((a, b) => b.attempts - a.attempts || a.stageId.localeCompare(b.stageId));
 }
 
-function levelStats(file) {
+function levelStats(file, { maxBytes = 128 * 1024 * 1024 } = {}) {
   try {
-    if (fs.statSync(file).size > 128 * 1024 * 1024) return null;
+    if (Number.isFinite(maxBytes) && fs.statSync(file).size > maxBytes) return null;
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
     const levels = Array.isArray(parsed?.levels) ? parsed.levels : null;
     if (!levels) return null;
@@ -167,17 +189,132 @@ function levelStats(file) {
 }
 
 function isDecisionValidIntegrity(integrity) {
-  if (!integrity || typeof integrity !== 'object') return false;
-  if (integrity.decisionValidComplete != null) return integrity.decisionValidComplete === true;
-  if (integrity.complete !== true || !integrity.outcomes || typeof integrity.outcomes !== 'object') return false;
-  return (integrity.outcomes.deadlineTruncated ?? 0) === 0
-    && (integrity.outcomes.harnessError ?? 0) === 0
-    && (integrity.outcomes.malformed ?? 0) === 0
-    && (integrity.outcomes.missing ?? 0) === 0
-    && (integrity.outcomes.unknown ?? 0) === 0;
+  return integrity?.decisionValidComplete === true;
 }
 
-const stats = collectJsonFiles(outDir).map(levelStats).filter(Boolean);
+function rowIdentity(row) {
+  const value = row?.id ?? row?.levelId ?? row?.level ?? null;
+  return value == null ? null : String(value);
+}
+
+function exactPopulationIssues(rows, expectedIds, label) {
+  if (!Array.isArray(rows) || !Array.isArray(expectedIds)) {
+    return [`${label}: exact row/expected identity is unavailable`];
+  }
+  const actual = rows.map(rowIdentity);
+  if (actual.some(value => value == null)) return [`${label}: result contains a row without identity`];
+  if (new Set(actual).size !== actual.length) return [`${label}: result contains duplicate row identities`];
+  const expected = expectedIds.map(String);
+  if (new Set(expected).size !== expected.length) return [`${label}: integrity expectedIds contain duplicates`];
+  const a = [...actual].sort();
+  const b = [...expected].sort();
+  return JSON.stringify(a) === JSON.stringify(b) ? [] : [`${label}: result rows do not match integrity expectedIds`];
+}
+
+function populationIntegrityBindingIssues(primary, integrity, publishedStats) {
+  if (!integrity || typeof integrity !== 'object') return [];
+  const issues = [];
+
+  if (Array.isArray(integrity.components) && integrity.components.length > 0) {
+    const resultHashes = publishedStats.map(stat => {
+      const document = JSON.parse(fs.readFileSync(stat.file, 'utf8'));
+      return document?.population?.identityHash ?? document?.populationIntegrity?.populationIdentityHash ?? null;
+    }).filter(Boolean);
+    for (const component of integrity.components) {
+      if (!component?.populationIdentityHash) {
+        issues.push(`populationIntegrity component ${component?.label ?? '(unlabeled)'} lacks populationIdentityHash`);
+        continue;
+      }
+      const matches = resultHashes.filter(hash => hash === component.populationIdentityHash).length;
+      if (matches !== 1) {
+        issues.push(`populationIntegrity component ${component.label ?? '(unlabeled)'} matches ${matches} published result population(s), expected exactly 1`);
+      }
+    }
+    return issues;
+  }
+
+  if (!Array.isArray(integrity.expectedIds)) {
+    return ['populationIntegrity lacks expectedIds needed to bind it to the published result'];
+  }
+
+  if (integrity.arms && typeof integrity.arms === 'object') {
+    for (const stat of publishedStats) {
+      issues.push(...exactPopulationIssues(stat.levels, integrity.expectedIds, path.basename(stat.file)));
+    }
+    if (publishedStats.length < 2) issues.push('paired populationIntegrity has fewer than two published level-bearing results');
+    return issues;
+  }
+
+  issues.push(...exactPopulationIssues(primary?.levels, integrity.expectedIds, 'primary result'));
+  return issues;
+}
+function researchOutcomePrimaryConsistencyIssues(outcome, primary) {
+  if (!outcome || !['completed-positive', 'completed-negative'].includes(outcome.outcome)) return [];
+  const embedded = primary?.researchOutcome;
+  if (!embedded) return [];
+  if (embedded.outcome !== outcome.outcome || embedded.reason !== outcome.reason) {
+    return ['researchOutcome sidecar disagrees with primary result embedded verdict'];
+  }
+  return [];
+}
+
+function researchOutcomeBindingIssues(outcome, populationIdentity, publishedStats, primary) {
+  const binding = outcome?.binding;
+  const completed = ['completed-positive', 'completed-negative'].includes(outcome?.outcome);
+  const embedded = primary?.researchOutcome;
+  const mirrorsPrimary = completed && embedded?.outcome === outcome.outcome && embedded?.reason === outcome.reason;
+  if (!binding) {
+    return completed && !mirrorsPrimary
+      ? ['completed researchOutcome sidecar without an identical primary verdict requires exact resultContentHashes binding']
+      : [];
+  }
+  const issues = [];
+  if (completed && !mirrorsPrimary && !Array.isArray(binding.resultContentHashes)) {
+    issues.push('completed researchOutcome sidecar without an identical primary verdict requires exact resultContentHashes binding');
+  }
+  if (binding.populationIdentityHash != null && binding.populationIdentityHash !== populationIdentity) {
+    issues.push('researchOutcome.binding.populationIdentityHash disagrees with published population');
+  }
+  if (Array.isArray(binding.resultConfigurationHashes)) {
+    const observed = publishedStats.map(stat => {
+      const document = JSON.parse(fs.readFileSync(stat.file, 'utf8'));
+      return document?.configurationHash ?? null;
+    });
+    const expected = [...binding.resultConfigurationHashes].sort();
+    if (observed.some(value => !value) || observed.length !== expected.length
+        || JSON.stringify([...observed].sort()) !== JSON.stringify(expected)) {
+      issues.push('researchOutcome.binding.resultConfigurationHashes disagree with published result files');
+    }
+  }
+  if (Array.isArray(binding.resultResolvedShas)) {
+    const observed = publishedStats.map(stat => {
+      const document = JSON.parse(fs.readFileSync(stat.file, 'utf8'));
+      return document?.commitSha ?? document?.summary?.commit ?? document?.commit ?? document?.solverRef ?? null;
+    });
+    const expected = [...binding.resultResolvedShas].sort();
+    if (observed.some(value => !value) || observed.length !== expected.length
+        || JSON.stringify([...observed].sort()) !== JSON.stringify(expected)) {
+      issues.push('researchOutcome.binding.resultResolvedShas disagree with published result files');
+    }
+  }
+  if (Array.isArray(binding.resultContentHashes)) {
+    const observed = publishedStats
+      .map(stat => `sha256:${createHash('sha256').update(fs.readFileSync(stat.file)).digest('hex')}`)
+      .sort();
+    const expected = [...binding.resultContentHashes].sort();
+    if (JSON.stringify(observed) !== JSON.stringify(expected)) {
+      issues.push('researchOutcome.binding.resultContentHashes disagree with published result files');
+    }
+  }
+  return issues;
+}
+
+
+// Human-facing summaries stay deliberately bounded, but scientific binding must inspect every
+// level-bearing JSON file in the published bundle. A display/performance sampling limit must never
+// decide which result bytes or populations a verdict is entitled to classify.
+const stats = collectJsonFiles(outDir, 24).map(file => levelStats(file)).filter(Boolean);
+const bindingStats = collectJsonFiles(outDir).map(file => levelStats(file, { maxBytes: Infinity })).filter(Boolean);
 function statsForSource(re) {
   const e = entries.find(x => !x.missing && re.test(x.source));
   if (!e) return null;
@@ -262,11 +399,12 @@ if (failureResponseDocument) {
   const published = 'failure-response/compact.json';
   fs.mkdirSync(path.join(outDir, 'failure-response'), { recursive: true });
   fs.writeFileSync(path.join(outDir, published), `${JSON.stringify(failureResponseDocument, null, 2)}\n`);
-  failureResponseEntry = { role: 'compact-failure-response', source: failureResponseFile, published, missing: false };
+  failureResponseEntry = {
+    role: 'compact-failure-response', source: failureResponseFile, published, missing: false,
+    sha256: `sha256:${createHash('sha256').update(fs.readFileSync(path.join(outDir, published))).digest('hex')}`,
+  };
   entries.push(failureResponseEntry);
 }
-const outcomeDecisionBearing = researchOutcome && ['completed-positive', 'completed-negative'].includes(researchOutcome.outcome);
-const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
 const contract = {
   experiment: {
     experimentId: declaredContract?.experiment?.experimentId ?? process.env.GITHUB_RUN_ID ?? null,
@@ -281,6 +419,8 @@ const contract = {
     workflowRunId: process.env.GITHUB_RUN_ID ?? null,
     workflowRunAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
     sourceRuns: declaredContract?.experiment?.sourceRuns ?? [],
+    sourceProtocolHash: declaredContract?.experiment?.sourceProtocolHash ?? null,
+    sourceSetHash: declaredContract?.experiment?.sourceSetHash ?? null,
     reconciliationRun: declaredContract?.experiment?.reconciliationRun ?? null,
     configurationHash: declaredContract?.experiment?.configurationHash ?? primaryDocument?.configurationHash ?? null,
   },
@@ -331,11 +471,36 @@ const contract = {
 const compactTelemetryIssue = contract.sideEffects.telemetry === 'compact' && !failureResponseComplete
   ? [`sideEffects.telemetry compact requires complete valid failure response${failureResponseError ? ` (${failureResponseError})` : ''}`]
   : [];
+const primaryResolvedSha = primaryDocument?.commitSha
+  ?? primaryDocument?.summary?.commit
+  ?? primaryDocument?.commit
+  ?? primaryDocument?.solverRef
+  ?? null;
+let sourceIdentityIssue = [];
+if (declaredContract?.experiment?.resolvedSha) {
+  if (!isImmutableCommitSha(primaryResolvedSha)) {
+    sourceIdentityIssue = ['primary result lacks immutable execution SHA needed to bind experiment.resolvedSha'];
+  } else if (declaredContract.experiment.resolvedSha !== primaryResolvedSha) {
+    sourceIdentityIssue = ['experiment.resolvedSha disagrees with primary result commit'];
+  }
+}
+const populationBindingIssues = populationIntegrityBindingIssues(primaryDocument, populationIntegrity, bindingStats);
+const outcomeBindingIssues = [
+  ...researchOutcomeBindingIssues(researchOutcome, populationIdentity, bindingStats, primaryDocument),
+  ...researchOutcomePrimaryConsistencyIssues(researchOutcome, primaryDocument),
+];
 const contractIssues = declaredContract
-  ? [...new Set([...declaredDecisionContractIssues(declaredContract), ...decisionContractIssues(contract), ...compactTelemetryIssue])]
+  ? [...new Set([
+      ...declaredDecisionContractIssues(declaredContract),
+      ...decisionContractIssues(contract),
+      ...compactTelemetryIssue,
+      ...sourceIdentityIssue,
+      ...populationBindingIssues,
+      ...outcomeBindingIssues,
+    ])]
   : ['missing declared experiment contract'];
 const contractDecisionEligible = contractIssues.length === 0;
-
+const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
 const manifest = {
   schemaVersion: EXPERIMENT_SCHEMA_VERSION,
   kind: EXPERIMENT_RESULT_KIND,
@@ -355,7 +520,7 @@ const manifest = {
   populationIntegrity,
   populationIdentityHash: populationIdentity,
   decisionContractIssues: contractIssues,
-  decisionBearing: Boolean(contractDecisionEligible && integrityDecisionValid && !populationIntegrity?.inferredExpectedPopulation && outcomeDecisionBearing),
+  decisionBearing: false,
   failureEvidence: {
     schemaVersion: FAILURE_RESPONSE_SCHEMA_VERSION,
     disposition: contract.sideEffects.telemetry,
@@ -371,6 +536,7 @@ const manifest = {
   researchOutcome,
   entries,
 };
+manifest.decisionBearing = decisionBearingExperimentResultIssues(manifest).length === 0;
 fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 
 if (provenanceOut) {

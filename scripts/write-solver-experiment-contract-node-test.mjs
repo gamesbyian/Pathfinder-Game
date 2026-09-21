@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { buildContract } from './write-solver-experiment-contract.mjs';
 
 const resolvedSha = 'a'.repeat(40);
@@ -21,6 +25,19 @@ assert.deepEqual(contract.population, { kind: 'explicit-ids', identityBasis: 'st
 assert.deepEqual(contract.execution, { levelBlind: true, historyAware: false });
 assert.deepEqual(contract.limits, { cumulativeNodeCeiling: 50_000_000 });
 assert.deepEqual(contract.sideEffects, { hints: 'none' });
+const observedConfigurationHash = `sha256:${'7'.repeat(64)}`;
+const observedContract = buildContract({
+  configuration: { baselineRef: 'b'.repeat(40), treatmentRef: 'c'.repeat(40), incompleteMirror: true },
+  configurationHash: observedConfigurationHash,
+  workflowFamily: 'observed-fixture', producer: 'fixture.yml', entrypoint: 'fixture.mjs',
+}, { resolvedSha });
+assert.equal(observedContract.experiment.configurationHash, observedConfigurationHash,
+  'an observed execution hash must override a weaker descriptive configuration mirror');
+assert.ok(observedContract.experiment.arms, 'descriptive configuration remains available for paired-arm inference');
+assert.throws(() => buildContract({
+  configurationHash: 'not-a-hash', workflowFamily: 'x', producer: 'y', entrypoint: 'z',
+}, { resolvedSha }), /configurationHash must be sha256/);
+
 const recoveryContract = buildContract({
   configuration: { corpus: 'fixture' },
   workflowFamily: 'fixture', producer: 'fixture.yml', entrypoint: 'fixture.mjs',
@@ -171,5 +188,28 @@ assert.throws(() => buildContract({
     outcomeInterpretation: { yes: 'z' }, measurementOpportunity: 'MO-002',
   },
 }, { resolvedSha }), /not mapped to researchQuestion\.questionId/);
+
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'experiment-contract-cli-'));
+try {
+  const spec = path.join(temp, 'spec.json');
+  const out = path.join(temp, 'contract.json');
+  fs.writeFileSync(spec, JSON.stringify({
+    configuration: { corpus: 'fixture', nodeBudget: 1 },
+    workflowFamily: 'cli-fixture', producer: 'fixture.yml', entrypoint: 'fixture.mjs',
+    population: { kind: 'explicit-ids', identityBasis: 'stable-level-id' },
+    execution: { levelBlind: true, historyAware: false },
+    limits: { cumulativeNodeCeiling: 1 },
+    sideEffects: { hints: 'none' },
+  }));
+  execFileSync(process.execPath, [
+    'scripts/write-solver-experiment-contract.mjs',
+    `--spec=${spec}`, `--out=${out}`,
+  ], { cwd: process.cwd(), stdio: 'pipe' });
+  const written = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert.equal(written.experiment.workflowFamily, 'cli-fixture');
+  assert.match(written.experiment.resolvedSha, /^[0-9a-f]{40}$/u);
+} finally {
+  fs.rmSync(temp, { recursive: true, force: true });
+}
 
 console.log('write solver experiment contract tests passed');

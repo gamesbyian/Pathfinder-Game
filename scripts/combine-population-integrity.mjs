@@ -20,13 +20,9 @@ export function combinePopulationIntegrity(inputs, { kind = 'multi-population', 
     integrity.expectedIds.map(id => encodeScopedPopulationIdentity(String(label), String(id))));
   const outcomeKeys = [...new Set(inputs.flatMap(({ integrity }) => Object.keys(integrity.outcomes)))].sort();
   const coverageComplete = inputs.every(({ integrity }) => (integrity.coverageComplete ?? integrity.complete) === true);
-  const decisionValidComplete = inputs.every(({ integrity }) => {
-    if (integrity.decisionValidComplete != null) return integrity.decisionValidComplete === true;
-    return (integrity.coverageComplete ?? integrity.complete) === true
-      && (integrity.outcomes.deadlineTruncated ?? 0) === 0
-      && (integrity.outcomes.harnessError ?? 0) === 0
-      && (integrity.outcomes.unknown ?? 0) === 0;
-  });
+  // Fresh decision authority is explicit and non-inferable. A combined population must not
+  // re-upgrade a legacy component merely because its older coverage/outcome shape looks clean.
+  const decisionValidComplete = inputs.every(({ integrity }) => integrity.decisionValidComplete === true);
   return {
     complete: coverageComplete,
     coverageComplete,

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { hashConfiguration } from './solver-experiment-contract.mjs';
 
 const root = process.cwd();
@@ -13,17 +14,37 @@ try {
   const outcome = path.join(temp, 'outcome.json');
   const contractFile = path.join(temp, 'contract.json');
   const out = path.join(temp, 'published');
-  fs.writeFileSync(primary, JSON.stringify({ producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family', levels: [{ id: 'A', ok: true, status: 'success' }] }));
+  const primaryConfigurationHash = hashConfiguration({ budget: 1 });
+  const contentHash = file => `sha256:${createHash('sha256').update(fs.readFileSync(file)).digest('hex')}`;
+  fs.writeFileSync(primary, JSON.stringify({
+    producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
+    commitSha: 'b'.repeat(40), configurationHash: primaryConfigurationHash,
+    levels: [{ id: 'A', ok: true, status: 'success' }],
+  }));
   fs.writeFileSync(integrity, JSON.stringify({ complete: true, coverageComplete: true, decisionValidComplete: true, expectedCount: 1, observedCount: 1, expectedIds: ['A'], duplicateIds: [], unexpectedIds: [], missingIds: [], outcomes: { solved: 1, exhaustedNegative: 0, nodeLimited: 0, workLimited: 0, deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 }, populationIdentityHash: `sha256:${'a'.repeat(64)}` }));
-  fs.writeFileSync(outcome, JSON.stringify({ schemaVersion: 1, outcome: 'completed-positive', reason: 'frozen gate passed' }));
+  fs.writeFileSync(outcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'frozen gate passed',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [contentHash(primary)],
+    },
+  }));
   fs.writeFileSync(contractFile, JSON.stringify({
     experiment: {
       workflowFamily: 'fixture-family', producer: 'fixture-producer', entrypoint: 'fixture.mjs',
-      configurationHash: hashConfiguration({ budget: 1 }), resolvedSha: 'b'.repeat(40),
+      configurationHash: primaryConfigurationHash, resolvedSha: 'b'.repeat(40),
       sourceRuns: ['fixture-acquisition-a', 'fixture-acquisition-b'],
+      sourceProtocolHash: `sha256:${'1'.repeat(64)}`,
+      sourceSetHash: `sha256:${'2'.repeat(64)}`,
       reconciliationRun: {
         kind: 'recombine-only',
         sourceRuns: ['fixture-acquisition-a', 'fixture-acquisition-b'],
+        sourceProtocolHash: `sha256:${'1'.repeat(64)}`,
+        sourceSetHash: `sha256:${'2'.repeat(64)}`,
         preservesExperimentIdentity: true,
         acquisitionRecomputed: false,
       },
@@ -51,6 +72,7 @@ try {
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${contractFile}`, `--out=${out}`], { cwd: root });
   const manifest = JSON.parse(fs.readFileSync(path.join(out, 'manifest.json')));
   assert.equal(manifest.schemaVersion, 3);
+  assert.match(manifest.entries[0].sha256, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(manifest.population.expectedCount, 1);
   assert.equal(manifest.population.identityHash, `sha256:${'a'.repeat(64)}`);
   assert.equal(manifest.coverage.populationIntegrity.coverageComplete, true);
@@ -58,6 +80,10 @@ try {
   assert.match(manifest.experiment.configurationHash, /^sha256:[0-9a-f]{64}$/);
   assert.equal(manifest.experiment.resolvedSha, 'b'.repeat(40));
   assert.deepEqual(manifest.experiment.sourceRuns, ['fixture-acquisition-a', 'fixture-acquisition-b']);
+  assert.equal(manifest.experiment.sourceProtocolHash, `sha256:${'1'.repeat(64)}`);
+  assert.equal(manifest.experiment.sourceSetHash, `sha256:${'2'.repeat(64)}`);
+  assert.equal(manifest.experiment.reconciliationRun.sourceProtocolHash, `sha256:${'1'.repeat(64)}`);
+  assert.equal(manifest.experiment.reconciliationRun.sourceSetHash, `sha256:${'2'.repeat(64)}`);
   assert.equal(manifest.experiment.reconciliationRun.kind, 'recombine-only');
   assert.equal(manifest.experiment.reconciliationRun.acquisitionRecomputed, false);
   assert.equal(manifest.execution.levelBlind, true);
@@ -74,6 +100,306 @@ try {
   assert.equal(manifest.failureEvidence.compactPresent, false);
   assert.equal(manifest.failureEvidence.summary, null);
   assert.equal(manifest.failureEvidence.richCapturePresent, false);
+
+  const includeA = path.join(temp, 'include-a', 'summary.json');
+  const includeB = path.join(temp, 'include-b', 'summary.json');
+  fs.mkdirSync(path.dirname(includeA), { recursive: true });
+  fs.mkdirSync(path.dirname(includeB), { recursive: true });
+  fs.writeFileSync(includeA, JSON.stringify({ source: 'A' }));
+  fs.writeFileSync(includeB, JSON.stringify({ source: 'B' }));
+  const collisionOut = path.join(temp, 'include-collision-out');
+  let collisionError = null;
+  try {
+    execFileSync('node', [
+      'scripts/publish-solver-sweep-result.mjs',
+      `--primary=${primary}`,
+      `--include=${includeA}`,
+      `--include=${includeB}`,
+      `--out=${collisionOut}`,
+    ], { cwd: root, stdio: 'pipe' });
+  } catch (error) {
+    collisionError = error;
+  }
+  assert.ok(collisionError, 'distinct include sources with the same basename must fail instead of overwriting published evidence');
+  assert.equal(collisionError.status, 2);
+  assert.match(String(collisionError.stderr), /published evidence path collision/u);
+
+  const largePrimaryDir = path.join(temp, 'large-primary-dir');
+  fs.mkdirSync(largePrimaryDir, { recursive: true });
+  const first24Hashes = [];
+  for (let i = 0; i < 25; i++) {
+    const file = path.join(largePrimaryDir, `result-${String(i).padStart(2, '0')}.json`);
+    fs.writeFileSync(file, JSON.stringify({
+      commitSha: 'b'.repeat(40),
+      configurationHash: primaryConfigurationHash,
+      levels: [{ id: `L${i}`, ok: i % 2 === 0, status: i % 2 === 0 ? 'success' : 'exhausted' }],
+    }));
+    if (i < 24) first24Hashes.push(contentHash(file));
+  }
+  const sampledBindingOutcome = path.join(temp, 'sampled-binding-outcome.json');
+  fs.writeFileSync(sampledBindingOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'incorrectly bound to only the first 24 result files',
+    binding: { resultContentHashes: first24Hashes },
+  }));
+  const sampledBindingOut = path.join(temp, 'sampled-binding-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${largePrimaryDir}`,
+    `--outcome-file=${sampledBindingOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${sampledBindingOut}`,
+  ], { cwd: root });
+  const sampledBindingManifest = JSON.parse(fs.readFileSync(path.join(sampledBindingOut, 'manifest.json')));
+  assert.ok(
+    sampledBindingManifest.decisionContractIssues.includes('researchOutcome.binding.resultContentHashes disagree with published result files'),
+    'scientific verdict binding must inspect result files beyond the 24-file human-summary sampling limit',
+  );
+
+  const unboundOutcome = path.join(temp, 'unbound-outcome.json');
+  fs.writeFileSync(unboundOutcome, JSON.stringify({
+    schemaVersion: 1, outcome: 'completed-positive', reason: 'unbound completed verdict',
+  }));
+  const unboundOut = path.join(temp, 'unbound-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${unboundOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${unboundOut}`,
+  ], { cwd: root });
+  const unboundManifest = JSON.parse(fs.readFileSync(path.join(unboundOut, 'manifest.json')));
+  assert.equal(unboundManifest.decisionBearing, false);
+  assert.ok(unboundManifest.decisionContractIssues.includes(
+    'completed researchOutcome sidecar without an identical primary verdict requires exact resultContentHashes binding'));
+
+  const wrongPopulationIntegrity = path.join(temp, 'wrong-population-integrity.json');
+  fs.writeFileSync(wrongPopulationIntegrity, JSON.stringify({
+    ...JSON.parse(fs.readFileSync(integrity, 'utf8')),
+    expectedIds: ['B'],
+  }));
+  const wrongPopulationOut = path.join(temp, 'wrong-population-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${wrongPopulationIntegrity}`,
+    `--outcome-file=${outcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${wrongPopulationOut}`,
+  ], { cwd: root });
+  const wrongPopulationManifest = JSON.parse(fs.readFileSync(path.join(wrongPopulationOut, 'manifest.json')));
+  assert.equal(wrongPopulationManifest.decisionBearing, false);
+  assert.ok(wrongPopulationManifest.decisionContractIssues.some(issue =>
+    issue.includes('primary result: result rows do not match integrity expectedIds')),
+    'an integrity file for a different population must not certify the primary result');
+
+  const boundOutcome = path.join(temp, 'bound-outcome.json');
+  fs.writeFileSync(boundOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'bound gate passed',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [contentHash(primary)],
+    },
+  }));
+  const boundOut = path.join(temp, 'bound-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${boundOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${boundOut}`,
+  ], { cwd: root });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(boundOut, 'manifest.json'))).decisionBearing, true);
+
+  const staleBoundOutcome = path.join(temp, 'stale-bound-outcome.json');
+  fs.writeFileSync(staleBoundOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'stale verdict',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [`sha256:${'f'.repeat(64)}`],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [contentHash(primary)],
+    },
+  }));
+  const staleBoundOut = path.join(temp, 'stale-bound-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${staleBoundOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${staleBoundOut}`,
+  ], { cwd: root });
+  const staleBoundManifest = JSON.parse(fs.readFileSync(path.join(staleBoundOut, 'manifest.json')));
+  assert.equal(staleBoundManifest.decisionBearing, false);
+  assert.ok(staleBoundManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultConfigurationHashes disagree with published result files'));
+
+  const staleRevisionOutcome = path.join(temp, 'stale-revision-outcome.json');
+  fs.writeFileSync(staleRevisionOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'stale revision verdict',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['c'.repeat(40)],
+      resultContentHashes: [contentHash(primary)],
+    },
+  }));
+  const staleRevisionOut = path.join(temp, 'stale-revision-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${staleRevisionOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${staleRevisionOut}`,
+  ], { cwd: root });
+  const staleRevisionManifest = JSON.parse(fs.readFileSync(path.join(staleRevisionOut, 'manifest.json')));
+  assert.equal(staleRevisionManifest.decisionBearing, false);
+  assert.ok(staleRevisionManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultResolvedShas disagree with published result files'));
+
+  const partialMetadataDir = path.join(temp, 'partial-metadata-primary');
+  fs.mkdirSync(partialMetadataDir, { recursive: true });
+  const metadataA = path.join(partialMetadataDir, 'a.json');
+  const metadataB = path.join(partialMetadataDir, 'b.json');
+  fs.writeFileSync(metadataA, JSON.stringify({
+    commitSha: 'b'.repeat(40), configurationHash: primaryConfigurationHash,
+    levels: [{ id: 'A', ok: true }],
+  }));
+  fs.writeFileSync(metadataB, JSON.stringify({
+    levels: [{ id: 'B', ok: false, status: 'exhausted' }],
+  }));
+  const partialMetadataOutcome = path.join(temp, 'partial-metadata-outcome.json');
+  fs.writeFileSync(partialMetadataOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'binding must cover every result metadata slot',
+    binding: {
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [contentHash(metadataA), contentHash(metadataB)],
+    },
+  }));
+  const partialMetadataOut = path.join(temp, 'partial-metadata-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${partialMetadataDir}`,
+    `--outcome-file=${partialMetadataOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${partialMetadataOut}`,
+  ], { cwd: root });
+  const partialMetadataManifest = JSON.parse(fs.readFileSync(path.join(partialMetadataOut, 'manifest.json')));
+  assert.ok(partialMetadataManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultConfigurationHashes disagree with published result files'));
+  assert.ok(partialMetadataManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultResolvedShas disagree with published result files'));
+
+  const staleContentOutcome = path.join(temp, 'stale-content-outcome.json');
+  fs.writeFileSync(staleContentOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'stale content verdict',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [`sha256:${'9'.repeat(64)}`],
+    },
+  }));
+  const staleContentOut = path.join(temp, 'stale-content-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${primary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${staleContentOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${staleContentOut}`,
+  ], { cwd: root });
+  const staleContentManifest = JSON.parse(fs.readFileSync(path.join(staleContentOut, 'manifest.json')));
+  assert.equal(staleContentManifest.decisionBearing, false);
+  assert.ok(staleContentManifest.decisionContractIssues.includes(
+    'researchOutcome.binding.resultContentHashes disagree with published result files'));
+
+  const wrongRevisionPrimary = path.join(temp, 'wrong-revision-result.json');
+  fs.writeFileSync(wrongRevisionPrimary, JSON.stringify({
+    producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
+    commitSha: 'c'.repeat(40), levels: [{ id: 'A', ok: true, status: 'success' }],
+  }));
+  const wrongRevisionOut = path.join(temp, 'wrong-revision-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${wrongRevisionPrimary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${outcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${wrongRevisionOut}`,
+  ], { cwd: root });
+  const wrongRevisionManifest = JSON.parse(fs.readFileSync(path.join(wrongRevisionOut, 'manifest.json')));
+  assert.equal(wrongRevisionManifest.decisionBearing, false);
+  assert.ok(wrongRevisionManifest.decisionContractIssues.includes('experiment.resolvedSha disagrees with primary result commit'));
+
+  const missingRevisionPrimary = path.join(temp, 'missing-revision-result.json');
+  fs.writeFileSync(missingRevisionPrimary, JSON.stringify({
+    producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
+    configurationHash: primaryConfigurationHash,
+    levels: [{ id: 'A', ok: true, status: 'success' }],
+  }));
+  const missingRevisionOut = path.join(temp, 'missing-revision-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${missingRevisionPrimary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${outcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${missingRevisionOut}`,
+  ], { cwd: root });
+  const missingRevisionManifest = JSON.parse(fs.readFileSync(path.join(missingRevisionOut, 'manifest.json')));
+  assert.equal(missingRevisionManifest.decisionBearing, false);
+  assert.ok(missingRevisionManifest.decisionContractIssues.includes(
+    'primary result lacks immutable execution SHA needed to bind experiment.resolvedSha',
+  ));
+
+  const solverRefPrimary = path.join(temp, 'solver-ref-result.json');
+  fs.writeFileSync(solverRefPrimary, JSON.stringify({
+    producer: 'fixture-producer', entrypoint: 'fixture.mjs', workflowFamily: 'fixture-family',
+    solverRef: 'b'.repeat(40), configurationHash: primaryConfigurationHash,
+    levels: [{ id: 'A', ok: true, status: 'success' }],
+  }));
+  const solverRefOutcome = path.join(temp, 'solver-ref-outcome.json');
+  fs.writeFileSync(solverRefOutcome, JSON.stringify({
+    schemaVersion: 1,
+    outcome: 'completed-positive',
+    reason: 'solverRef-bound gate passed',
+    binding: {
+      populationIdentityHash: `sha256:${'a'.repeat(64)}`,
+      resultConfigurationHashes: [primaryConfigurationHash],
+      resultResolvedShas: ['b'.repeat(40)],
+      resultContentHashes: [contentHash(solverRefPrimary)],
+    },
+  }));
+  const solverRefOut = path.join(temp, 'solver-ref-out');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs',
+    `--primary=${solverRefPrimary}`,
+    `--integrity-file=${integrity}`,
+    `--outcome-file=${solverRefOutcome}`,
+    `--contract-file=${contractFile}`,
+    `--out=${solverRefOut}`,
+  ], { cwd: root });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(solverRefOut, 'manifest.json'))).decisionBearing, true,
+    'an exact/reference-style solverRef is valid independent execution revision evidence when the verdict is bound to those exact result bytes');
 
   const noContractOut = path.join(temp, 'no-contract');
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--out=${noContractOut}`], { cwd: root });
@@ -101,7 +427,8 @@ try {
   fs.writeFileSync(legacyWithOutcomes, JSON.stringify({ complete: true, expectedCount: 1, observedCount: 1, expectedIds: ['A'], duplicateIds: [], unexpectedIds: [], missingIds: [], outcomes: { solved: 1, deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 }, populationIdentityHash: `sha256:${'a'.repeat(64)}` }));
   const legacyValidOut = path.join(temp, 'legacy-valid');
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${legacyWithOutcomes}`, `--outcome-file=${outcome}`, `--contract-file=${contractFile}`, `--out=${legacyValidOut}`], { cwd: root });
-  assert.equal(JSON.parse(fs.readFileSync(path.join(legacyValidOut, 'manifest.json'))).decisionBearing, true, 'legacy integrity may be decision-valid only when normalized outcome counts and a complete contract prove it');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(legacyValidOut, 'manifest.json'))).decisionBearing, false,
+    'legacy integrity without explicit decisionValidComplete must remain readable but non-decision-bearing');
 
   const incompleteContract = path.join(temp, 'incomplete-contract.json');
   const parsedContract = JSON.parse(fs.readFileSync(contractFile));

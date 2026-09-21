@@ -463,8 +463,11 @@ jobs:
           work_allocation=$(( NODE_BUDGET * 134 / 100 ))
           work_ceiling=null; [ "$STRICT_TOTAL_WORK_BUDGET" = true ] && work_ceiling=$work_allocation
           wall_binding=true; [ "$DETERMINISTIC" = true ] && wall_binding=false
+          control_hash=null; treatment_hash=null
+          [ -f reports/stress/routing-regime-ab-control.json ] && control_hash=$(node -p "JSON.stringify(require('./reports/stress/routing-regime-ab-control.json').configurationHash)")
+          [ -f reports/stress/routing-regime-ab-treatment.json ] && treatment_hash=$(node -p "JSON.stringify(require('./reports/stress/routing-regime-ab-treatment.json').configurationHash)")
           cat > logs/solver-routing-regime-sample/experiment-contract-spec.json <<SPEC
-          {"configuration": {"routingRegimes": "$ROUTING_REGIMES", "baselineRef": "$BASELINE_REF", "treatmentRef": "$TREATMENT_REF", "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS", "nodeBudget": $NODE_BUDGET, "budgetMs": $BUDGET_MS},
+          {"configuration": {"routingRegimes": "$ROUTING_REGIMES", "baselineRef": "$BASELINE_REF", "treatmentRef": "$TREATMENT_REF", "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS", "nodeBudget": $NODE_BUDGET, "budgetMs": $BUDGET_MS, "observedExecution": {"control": $control_hash, "treatment": $treatment_hash}},
           "workflowFamily": "routing-regime-sample-ab", "producer": "solver-routing-regime-sample-ab.yml", "entrypoint": "scripts/level-blind-capability-sweep.mjs",
           "population": {"kind": "sealed-stratified-sample", "identityBasis": "stable-level-id"},
           "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $DETERMINISTIC, "producerFamily": "routing-regime-sample-ab", "schedulerMode": "paired-control-treatment"},

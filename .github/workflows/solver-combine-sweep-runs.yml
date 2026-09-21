@@ -65,9 +65,15 @@ jobs:
           # measured that path silently dropping pages of results (see harvest-solver-evidence.yml's
           # own note). One artifact per run here, but stay consistent with the house convention.
           IFS=',' read -ra RUN_IDS <<< "${{ inputs.run_ids }}"
+          declare -A seen=()
           for run_id in "${RUN_IDS[@]}"; do
             run_id="$(echo "$run_id" | tr -d '[:space:]')"
             [ -n "$run_id" ] || continue
+            if [ -n "${seen[$run_id]:-}" ]; then
+              echo "Duplicate source run id: $run_id" >&2
+              exit 1
+            fi
+            seen[$run_id]=1
             dest="logs/solver-combined/sources/${run_id}"
             mkdir -p "$dest"
             gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "${{ inputs.artifact_name }}" --dir "$dest"
@@ -81,8 +87,12 @@ jobs:
             fi
           done
 
-      - name: Validate source-run provenance and scientific-protocol compatibility
-        run: node scripts/validate-reconciliation-sources.mjs --sources-dir=logs/solver-combined/sources --out=logs/solver-combined/source-provenance.json
+      - name: Validate source-run provenance and build typed recombination lineage
+        run: >-
+          node scripts/validate-reconciliation-sources.mjs
+          --sources-dir=logs/solver-combined/sources
+          --out=logs/solver-combined/source-provenance.json
+          --contract-out=logs/solver-combined/experiment-contract.json
 
       - name: Combine every source run's report into one
         shell: bash
@@ -101,38 +111,6 @@ jobs:
             --expected-ids="${{ inputs.expected_ids_file }}" \
             --result=logs/solver-combined/combined.json \
             --integrity-out=logs/solver-combined/population-integrity.json
-
-      - name: Build reconciliation experiment contract
-        shell: bash
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const provenance = JSON.parse(fs.readFileSync('logs/solver-combined/source-provenance.json'));
-          fs.writeFileSync('logs/solver-combined/experiment-contract.json', `${JSON.stringify({
-            experiment: {
-              ...provenance.sourceExperiment,
-              resolvedSha: provenance.resolvedSha,
-              configurationHash: provenance.configurationHash,
-              sourceRuns: provenance.sources,
-              sourceProtocolHash: provenance.protocolHash,
-              reconciliationRun: {
-                runId: process.env.GITHUB_RUN_ID ?? null,
-                runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
-                resolvedSha: process.env.GITHUB_SHA ?? null,
-                producer: 'solver-combine-sweep-runs.yml',
-                entrypoint: 'scripts/combine-solver-sweep-reports.mjs',
-              },
-            },
-            population: {
-              kind: 'explicit-reconciled-population',
-              identityBasis: provenance.population.identityBasis,
-              corpusIdentity: provenance.population.corpusIdentity,
-            },
-            execution: provenance.execution,
-            limits: provenance.limits,
-            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
-          }, null, 2)}\n`);
-          NODE
 
       - name: Print a solved-count summary to the job log
         if: always()
@@ -183,6 +161,7 @@ jobs:
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/solver-combined/combined.json" \
             --include="${{ inputs.expected_ids_file }}" \
+            --include="logs/solver-combined/source-provenance.json" \
             --shards-expected="$(echo '${{ inputs.run_ids }}' | tr ',' '\n' | grep -c .)" \
             --shards-observed="$(find logs/solver-combined/sources -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
             --shards-basis="source runs merged; exact expected population validated separately" \

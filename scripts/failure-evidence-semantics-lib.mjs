@@ -42,9 +42,16 @@ function substantiveOutcome(row) {
  * same parent are repeated measures, not independent parents. Callers may count richer repeated
  * measures separately, but must not turn them into extra independent support.
  */
-export function failureEvidenceDependencyStratum(_document, row) {
+export function failureEvidenceDependencyStratum(document, row) {
+    const populationIdentity = document?.populationIntegrity?.populationIdentityHash
+        ?? document?.populationIdentityHash
+        ?? null;
     const parent = parentIdentity(row);
-    if (parent != null && String(parent).length) return `parent:${String(parent)}`;
+    if (parent != null && String(parent).length) {
+        return populationIdentity
+            ? `population:${String(populationIdentity)}:parent:${String(parent)}`
+            : `parent:${String(parent)}`;
+    }
     if (row?.identity != null && String(row.identity).length) return `record:${String(row.identity)}`;
     return 'unattributed-record';
 }

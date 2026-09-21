@@ -1,0 +1,66 @@
+name: Persist targeted-sweep compact failure response
+
+on:
+  workflow_call:
+
+jobs:
+  persist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      # Checkout must precede artifact staging: checkout's default clean:true removes untracked
+      # files in the worktree, which is exactly how the first persistence run lost its download.
+      - name: Check out main before staging artifacts
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download standard solver sweep result
+        uses: actions/download-artifact@v8
+        with:
+          name: solver-sweep-result
+          path: artifact-staging/solver-sweep-result
+
+      - name: Persist the compact failure-response document
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="artifact-staging/solver-sweep-result/failure-response/compact.json"
+          if [ ! -f "$SRC" ]; then
+            echo "Persistence was requested but the standard compact failure-response document is missing." >&2
+            exit 1
+          fi
+
+          DEST_DIR="reports/stress/failure-evidence/targeted-sweep-runs/${{ github.run_id }}"
+          if [ "${{ github.run_attempt }}" != "1" ]; then
+            DEST_DIR="${DEST_DIR}-attempt-${{ github.run_attempt }}"
+          fi
+          mkdir -p "$DEST_DIR"
+          cp "$SRC" "$DEST_DIR/compact-failure-response.json"
+          cp artifact-staging/solver-sweep-result/manifest.json "$DEST_DIR/manifest.json"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain -- "$DEST_DIR")" ]; then
+            echo "No new failure-response evidence to persist."
+            exit 0
+          fi
+
+          git add "$DEST_DIR"
+          git commit -m "Persist compact failure-response evidence (run ${{ github.run_id }})"
+
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            git fetch origin main
+            git rebase origin/main
+            sleep $((attempt * 5))
+          done
+
+          echo "Failed to persist failure-response evidence after four retries." >&2
+          exit 1

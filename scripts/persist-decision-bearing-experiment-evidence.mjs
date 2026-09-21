@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { decisionBearingExperimentResultIssues } from './solver-experiment-contract.mjs';
 
 const args = process.argv.slice(2);
 const values = new Map();
@@ -44,6 +45,80 @@ function walk(root) {
   };
   visit(root);
   return files;
+}
+
+function directoryBytesEqual(leftRoot, rightRoot) {
+  const relativeFiles = root => walk(root)
+    .map(file => path.relative(root, file).replaceAll('\\', '/'))
+    .sort();
+  const leftFiles = relativeFiles(leftRoot);
+  const rightFiles = relativeFiles(rightRoot);
+  if (JSON.stringify(leftFiles) !== JSON.stringify(rightFiles)) return false;
+  return leftFiles.every(relative =>
+    fs.readFileSync(path.join(leftRoot, relative)).equals(fs.readFileSync(path.join(rightRoot, relative))));
+}
+
+function levelBearingJsonFiles(root) {
+  return walk(root).filter(file => {
+    if (!file.endsWith('.json') || path.basename(file) === 'manifest.json') return false;
+    try {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      return Array.isArray(parsed?.levels);
+    } catch {
+      return false;
+    }
+  });
+}
+
+function entryByteBindingIssues(manifest, artifactRoot) {
+  const issues = [];
+  for (const entry of manifest?.entries ?? []) {
+    if (entry?.missing || !entry?.published || entry?.sha256 == null) continue;
+    const target = path.resolve(artifactRoot, entry.published);
+    if (!isInside(artifactRoot, target) || !fs.existsSync(target) || fs.statSync(target).isDirectory()) {
+      issues.push(`entry ${entry.published} cannot satisfy declared sha256 binding`);
+      continue;
+    }
+    if (sha256(fs.readFileSync(target)) !== entry.sha256) {
+      issues.push(`entry ${entry.published} bytes no longer match manifest sha256`);
+    }
+  }
+  return issues;
+}
+
+function exactOutcomeBindingIssues(manifest, artifactRoot) {
+  const binding = manifest?.researchOutcome?.binding;
+  if (!Array.isArray(binding?.resultContentHashes)) return [];
+  const observed = levelBearingJsonFiles(artifactRoot)
+    .map(file => sha256(fs.readFileSync(file)))
+    .sort();
+  const expected = [...binding.resultContentHashes].map(String).sort();
+  return JSON.stringify(observed) === JSON.stringify(expected)
+    ? []
+    : ['researchOutcome.binding.resultContentHashes no longer match the artifact result bytes'];
+}
+
+function simplePopulationBindingIssues(manifest, artifactRoot) {
+  const integrity = manifest?.populationIntegrity ?? manifest?.coverage?.populationIntegrity ?? null;
+  if (!Array.isArray(integrity?.expectedIds) || integrity?.components || integrity?.arms) return [];
+  const primaryEntry = (manifest?.entries ?? []).find(entry => entry?.role === 'primary' && !entry?.missing && entry?.published);
+  if (!primaryEntry) return ['simple population integrity has no retained primary entry to revalidate'];
+  const primaryPath = path.resolve(artifactRoot, primaryEntry.published);
+  if (!isInside(artifactRoot, primaryPath) || !fs.existsSync(primaryPath) || fs.statSync(primaryPath).isDirectory()) {
+    return [];
+  }
+  let parsed;
+  try { parsed = JSON.parse(fs.readFileSync(primaryPath, 'utf8')); } catch { return []; }
+  if (!Array.isArray(parsed?.levels)) return [];
+  const actual = parsed.levels.map(row => row?.id ?? row?.levelId ?? row?.level ?? null);
+  if (actual.some(value => value == null)) return ['simple primary result contains a row without identity'];
+  const actualStrings = actual.map(String);
+  if (new Set(actualStrings).size !== actualStrings.length) return ['simple primary result contains duplicate row identities'];
+  const expected = integrity.expectedIds.map(String);
+  if (new Set(expected).size !== expected.length) return ['populationIntegrity.expectedIds contains duplicate identities'];
+  return JSON.stringify([...actualStrings].sort()) === JSON.stringify([...expected].sort())
+    ? []
+    : ['simple primary result rows no longer match populationIntegrity.expectedIds'];
 }
 
 function findDecisionBearingManifests(root) {
@@ -98,22 +173,35 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
   const retained = [];
 
   for (const { file: manifestFile, manifest } of findDecisionBearingManifests(staging)) {
+    const eligibilityIssues = decisionBearingExperimentResultIssues(manifest);
+    if (eligibilityIssues.length > 0) {
+      throw new Error(
+        `refusing to persist manifest that claims decisionBearing=true but fails shared eligibility: ${path.relative(staging, manifestFile)}: ${eligibilityIssues.join(', ')}`,
+      );
+    }
     const artifactRoot = path.dirname(manifestFile);
+    const entryBindingIssues = entryByteBindingIssues(manifest, artifactRoot);
+    const byteBindingIssues = exactOutcomeBindingIssues(manifest, artifactRoot);
+    const populationBindingIssues = simplePopulationBindingIssues(manifest, artifactRoot);
+    const retainedBindingIssues = [...entryBindingIssues, ...byteBindingIssues, ...populationBindingIssues];
+    if (retainedBindingIssues.length > 0) {
+      throw new Error(
+        `refusing to persist decision-bearing artifact whose retained scientific binding is stale: ${path.relative(staging, manifestFile)}: ${retainedBindingIssues.join(', ')}`,
+      );
+    }
     const experimentId = safeSegment(manifest?.experiment?.experimentId, 'experiment');
     const runId = safeSegment(manifest?.experiment?.workflowRunId ?? manifest?.runId, 'unknown-run');
     const runAttempt = safeSegment(manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt, '1');
     const destinationRoot = path.join(output, `${experimentId}__run-${runId}__attempt-${runAttempt}`);
-    fs.rmSync(destinationRoot, { recursive: true, force: true });
-    fs.mkdirSync(destinationRoot, { recursive: true });
-
+    const candidateRoot = fs.mkdtempSync(path.join(output, '.incoming-'));
     const files = [];
-    copyEvidenceFile(manifestFile, artifactRoot, destinationRoot, 'manifest.json', files, compressAboveBytes, { allowCompression: false });
+    copyEvidenceFile(manifestFile, artifactRoot, candidateRoot, 'manifest.json', files, compressAboveBytes, { allowCompression: false });
     for (const entry of manifest.entries || []) {
       if (entry?.missing || !entry?.published) continue;
       const source = path.resolve(artifactRoot, entry.published);
       const role = safeSegment(entry.role, 'entry');
       const logical = path.join('evidence', role, entry.published);
-      copyEvidenceFile(source, artifactRoot, destinationRoot, logical, files, compressAboveBytes);
+      copyEvidenceFile(source, artifactRoot, candidateRoot, logical, files, compressAboveBytes);
     }
 
     const bundle = {
@@ -140,8 +228,26 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
       manifestStoredPath: files.find(file => file.source === 'manifest.json')?.stored ?? null,
       files,
     };
-    fs.writeFileSync(path.join(destinationRoot, 'bundle.json'), `${JSON.stringify(bundle, null, 2)}\n`);
-    retained.push({ experimentId: bundle.experimentId, workflowRunId: bundle.workflowRunId, path: destinationRoot, files: files.length });
+    fs.writeFileSync(path.join(candidateRoot, 'bundle.json'), `${JSON.stringify(bundle, null, 2)}\n`);
+    if (fs.existsSync(destinationRoot)) {
+      const identical = directoryBytesEqual(destinationRoot, candidateRoot);
+      fs.rmSync(candidateRoot, { recursive: true, force: true });
+      if (!identical) {
+        throw new Error(
+          `durable evidence identity collision for ${path.basename(destinationRoot)}: immutable source run/attempt bytes differ from the retained bundle`,
+        );
+      }
+      retained.push({
+        experimentId: bundle.experimentId, workflowRunId: bundle.workflowRunId,
+        path: destinationRoot, files: files.length, disposition: 'unchanged',
+      });
+      continue;
+    }
+    fs.renameSync(candidateRoot, destinationRoot);
+    retained.push({
+      experimentId: bundle.experimentId, workflowRunId: bundle.workflowRunId,
+      path: destinationRoot, files: files.length, disposition: 'created',
+    });
   }
   return retained;
 }
@@ -163,12 +269,28 @@ function selfTest() {
     const manifest = {
       schemaVersion: 3,
       kind: 'pathfinder-solver-experiment-result',
+      status: 'published',
+      decisionContractIssues: [],
       decisionBearing: true,
       runId: '123',
       runAttempt: '2',
-      experiment: { experimentId: 'fixture/experiment', workflowFamily: 'fixture', workflowRunId: '123', workflowRunAttempt: '2', resolvedSha: 'a'.repeat(40), configurationHash: `sha256:${'b'.repeat(64)}` },
+      experiment: {
+        experimentId: 'fixture/experiment', workflowFamily: 'fixture', producer: 'fixture.yml',
+        entrypoint: 'fixture.mjs', workflowRunId: '123', workflowRunAttempt: '2',
+        resolvedSha: 'a'.repeat(40), configurationHash: `sha256:${'b'.repeat(64)}`,
+      },
+      populationIdentityHash: `sha256:${'c'.repeat(64)}`,
+      populationIntegrity: {
+        complete: true, coverageComplete: true, decisionValidComplete: true,
+        inferredExpectedPopulation: false, populationIdentityHash: `sha256:${'c'.repeat(64)}`,
+        expectedIds: ['A'],
+        expectedCount: 1,
+        observedCount: 1,
+        outcomes: { deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 },
+      },
       population: {
-        identityHash: `sha256:${'c'.repeat(64)}`,
+        kind: 'explicit-ids', identityBasis: 'stable-level-id',
+        identityHash: `sha256:${'c'.repeat(64)}`, independentUnit: 'parent-level',
         researchBlock: {
           blockId: 'BLOCK-001', questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
           evidenceRole: 'development', independentUnit: 'parent-level',
@@ -181,10 +303,19 @@ function selfTest() {
         outcomeInterpretation: { disagreement: 'economics gate earned' },
         measurementOpportunity: 'MO-002',
       },
+      execution: {
+        levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true,
+        producerFamily: 'fixture', schedulerMode: 'production',
+      },
+      limits: {
+        cumulativeNodeCeiling: 1, initialWorkAllocation: 1, totalWorkCeiling: 1,
+        wallSafetyDeadlineMs: 1000, wallDeadlineBinding: false,
+      },
+      sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
       researchOutcome: { outcome: 'completed-positive' },
       entries: [
-        { role: '../primary', source: 'fixture', published: 'result.json', missing: false },
-        { role: 'compact-failure-response', source: 'fixture-compact', published: 'failure-response/compact.json', missing: false },
+        { role: '../primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(primary) },
+        { role: 'compact-failure-response', source: 'fixture-compact', published: 'failure-response/compact.json', missing: false, sha256: sha256(compact) },
       ],
     };
     fs.writeFileSync(path.join(artifact, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -192,6 +323,7 @@ function selfTest() {
 
     const retained = persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 });
     assert.equal(retained.length, 1);
+    assert.equal(retained[0].disposition, 'created');
     const destination = path.join(output, 'fixture-experiment__run-123__attempt-2');
     const bundle = JSON.parse(fs.readFileSync(path.join(destination, 'bundle.json'), 'utf8'));
     assert.equal(bundle.decisionBearing, true);
@@ -215,6 +347,96 @@ function selfTest() {
     assert.ok(compactRecord, 'published compact response follows the ordinary durable evidence rail');
     assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, compactRecord.stored))), compact);
     assert.equal(fs.existsSync(path.join(output, 'experiment__run-123__attempt-2')), false);
+
+    const exactBoundArtifact = path.join(temp, 'exact-bound-artifact');
+    fs.mkdirSync(exactBoundArtifact, { recursive: true });
+    const exactResult = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true }] }));
+    fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), exactResult);
+    const exactManifest = {
+      ...manifest,
+      runId: '124',
+      runAttempt: '1',
+      experiment: { ...manifest.experiment, experimentId: 'fixture/exact-bound', workflowRunId: '124', workflowRunAttempt: '1' },
+      researchOutcome: {
+        outcome: 'completed-positive',
+        reason: 'exact result fixture',
+        binding: { resultContentHashes: [sha256(exactResult)] },
+      },
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(exactResult) }],
+    };
+    fs.writeFileSync(path.join(exactBoundArtifact, 'manifest.json'), `${JSON.stringify(exactManifest, null, 2)}\n`);
+    const exactRetained = persistDecisionBearingExperimentEvidence({ stagingDir: exactBoundArtifact, outRoot: path.join(temp, 'exact-retained'), compressAboveBytes: 8 });
+    assert.equal(exactRetained.length, 1, 'exact-bound artifact persists while its classified bytes match');
+    fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: false }] }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: exactBoundArtifact, outRoot: path.join(temp, 'exact-retained-2'), compressAboveBytes: 8 }),
+      /retained scientific binding is stale.*resultContentHashes no longer match/u,
+      'durable retention must re-prove an exact verdict-byte binding instead of trusting the manifest boolean',
+    );
+
+    const populationMismatchArtifact = path.join(temp, 'population-mismatch-artifact');
+    fs.mkdirSync(populationMismatchArtifact, { recursive: true });
+    const populationMismatchResult = Buffer.from(JSON.stringify({ levels: [{ id: 'B', ok: true }] }));
+    fs.writeFileSync(path.join(populationMismatchArtifact, 'result.json'), populationMismatchResult);
+    fs.writeFileSync(path.join(populationMismatchArtifact, 'manifest.json'), JSON.stringify({
+      ...manifest,
+      runId: '125',
+      experiment: { ...manifest.experiment, experimentId: 'fixture/population-mismatch', workflowRunId: '125', workflowRunAttempt: '1' },
+      researchOutcome: {
+        outcome: 'completed-positive',
+        reason: 'bytes are exact but population is stale',
+        binding: { resultContentHashes: [sha256(populationMismatchResult)] },
+      },
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(populationMismatchResult) }],
+    }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: populationMismatchArtifact, outRoot: path.join(temp, 'population-mismatch-retained') }),
+      /retained scientific binding is stale.*rows no longer match populationIntegrity\.expectedIds/u,
+      'exact content binding must not substitute for revalidating the retained simple population join',
+    );
+
+    const staleEntryArtifact = path.join(temp, 'stale-entry-artifact');
+    fs.mkdirSync(staleEntryArtifact, { recursive: true });
+    const staleEntryOriginal = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true }] }));
+    fs.writeFileSync(path.join(staleEntryArtifact, 'result.json'), staleEntryOriginal);
+    fs.writeFileSync(path.join(staleEntryArtifact, 'manifest.json'), JSON.stringify({
+      ...manifest,
+      runId: '126',
+      experiment: { ...manifest.experiment, experimentId: 'fixture/stale-entry', workflowRunId: '126', workflowRunAttempt: '1' },
+      researchOutcome: { outcome: 'completed-positive', reason: 'embedded verdict fixture' },
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false, sha256: sha256(staleEntryOriginal) }],
+    }));
+    fs.writeFileSync(path.join(staleEntryArtifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: false }] }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: staleEntryArtifact, outRoot: path.join(temp, 'stale-entry-retained') }),
+      /entry result\.json bytes no longer match manifest sha256/u,
+      'durable retention must re-prove publisher entry bytes even when an embedded verdict has no self-referential content binding',
+    );
+
+    const bundleBeforeReharvest = fs.readFileSync(path.join(destination, 'bundle.json'));
+    const reharvested = persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 });
+    assert.equal(reharvested[0].disposition, 'unchanged', 'same immutable run/attempt reharvest is idempotent');
+    assert.deepEqual(fs.readFileSync(path.join(destination, 'bundle.json')), bundleBeforeReharvest);
+
+    fs.writeFileSync(path.join(artifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 13 }] }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 }),
+      /durable evidence identity collision.*immutable source run\/attempt bytes differ/u,
+      'same run/attempt identity with changed source bytes must fail rather than overwrite retained science',
+    );
+
+    const forgedStaging = path.join(temp, 'forged-staging');
+    const forgedArtifact = path.join(forgedStaging, 'forged');
+    fs.mkdirSync(forgedArtifact, { recursive: true });
+    fs.writeFileSync(path.join(forgedArtifact, 'manifest.json'), JSON.stringify({
+      ...manifest,
+      status: 'missing-primary',
+      decisionBearing: true,
+    }));
+    assert.throws(
+      () => persistDecisionBearingExperimentEvidence({ stagingDir: forgedStaging, outRoot: path.join(temp, 'forged-out') }),
+      /claims decisionBearing=true but fails shared eligibility.*status/u,
+    );
     console.log('persist decision-bearing experiment evidence self-test passed');
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });
@@ -233,7 +455,7 @@ if (values.has('self-test')) {
   } else {
     console.log(`Retained ${retained.length} decision-bearing experiment evidence bundle(s).`);
     for (const item of retained) {
-      console.log(`- ${item.experimentId ?? 'unknown experiment'} run ${item.workflowRunId ?? 'unknown'} -> ${path.relative(process.cwd(), item.path).replaceAll('\\', '/')} (${item.files} files)`);
+      console.log(`- ${item.experimentId ?? 'unknown experiment'} run ${item.workflowRunId ?? 'unknown'} -> ${path.relative(process.cwd(), item.path).replaceAll('\\', '/')} (${item.files} files; ${item.disposition})`);
     }
   }
 }

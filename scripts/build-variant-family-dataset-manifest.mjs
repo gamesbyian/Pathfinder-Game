@@ -55,7 +55,11 @@ const CORPORA = [
 const censusManifest = readJson('data/families/fragile-robust-census-manifest.json');
 const localBatchIds = ['R00500', 'R03013', 'R02057', 'R02897', 'R01155', 'R03288', 'R02717', 'R01000',
     'R02593', 'R02432', 'R01234', 'R00340', 'R02734', 'R02816', 'R01609', 'R02989'];
-const alreadyCoveredIds = new Set([...censusManifest.map(e => e.id), ...localBatchIds]);
+// The prior fragile/robust census and local batch are corpus-2 evidence. Bare ids are not
+// repository-wide identities: corpus-1 and corpus-2 can share the same id (for example R02000).
+const alreadyCoveredPopulationKeys = new Set(
+    [...censusManifest.map(e => e.id), ...localBatchIds].map(id => `corpus2:${id}`),
+);
 
 const FULL_MODES = ['symmetry', 'local-mutant', 'swap', 'group-reshuffle', 'constrained-shuffle'];
 const PARTIAL_MODES = ['swap', 'group-reshuffle', 'constrained-shuffle'];
@@ -67,7 +71,7 @@ for (const { name, path: corpusPath } of CORPORA) {
     for (const level of levels) {
         const id = level.id;
         if (!id) continue;
-        const modes = (alreadyCoveredIds.has(id) ? PARTIAL_MODES : FULL_MODES).slice();
+        const modes = (alreadyCoveredPopulationKeys.has(`${name}:${id}`) ? PARTIAL_MODES : FULL_MODES).slice();
         const group = pickGroup(level);
         const finalModes = group ? modes : modes.filter(m => m !== 'group-reshuffle');
         if (finalModes.length === 0) continue;

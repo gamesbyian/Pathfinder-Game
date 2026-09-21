@@ -40,6 +40,8 @@ const sum = arr => arr.reduce((a, l) => a + l.workSpent, 0);
 
 console.log('=== Aggregate workSpent ===');
 console.log(`Levels: ${levels.length} total, ${solved.length} solved, ${unsolved.length} unsolved, ${withWork.length}/${levels.length} report a non-null workSpent`);
+console.log('Solved: ' + (solved.map(l => l.id).join(', ') || '(none)'));
+console.log('Unsolved: ' + (unsolved.map(l => l.id + ' (' + l.status + ')').join(', ') || '(none)'));
 console.log(`Aggregate workSpent (all levels with a value): ${sum(withWork).toLocaleString()}`);
 console.log(`Aggregate workSpent (solved subset): ${sum(withWork.filter(l => l.ok)).toLocaleString()}`);
 console.log(`Aggregate workSpent (unsolved subset): ${sum(withWork.filter(l => !l.ok)).toLocaleString()}`);

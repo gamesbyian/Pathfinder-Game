@@ -45,6 +45,40 @@ try {
     assert.equal(summaryContract.protocolHash, 'protocol-from-contract');
     assert.equal(summaryContract.solverRef, 'solver-from-contract');
 
+    const weakContract = path.join(temp, 'weak-contract.json');
+    fs.writeFileSync(weakContract, JSON.stringify({
+        experiment: { configurationHash: 'protocol-only' },
+        solverRef: 'legacy-contract-solver',
+    }));
+    const sourceWithLegacyIdentity = path.join(temp, 'source-with-legacy-identity.json');
+    fs.writeFileSync(sourceWithLegacyIdentity, JSON.stringify({
+        solverRef: 'source-solver',
+        commitSha: 'source-commit',
+        levels: [{ id: 'W1', ok: false, status: 'exhausted' }],
+    }));
+    const weakOut = path.join(temp, 'summary-weak-contract.json');
+    execFileSync('node', [
+        'scripts/summarize-solver-failure-response.mjs',
+        `--in=${sourceWithLegacyIdentity}`,
+        '--rows-key=levels',
+        `--contract-file=${weakContract}`,
+        `--out=${weakOut}`,
+    ], { cwd: root, env: { ...process.env, GITHUB_SHA: 'f'.repeat(40) } });
+    const weakSummary = JSON.parse(fs.readFileSync(weakOut, 'utf8'));
+    assert.equal(weakSummary.protocolHash, 'protocol-only');
+    assert.equal(weakSummary.solverRef, null,
+        'a supplied weak contract must not borrow source/workflow SHA to become comparable-run evidence');
+
+    const sourceOnlyOut = path.join(temp, 'summary-source-only.json');
+    execFileSync('node', [
+        'scripts/summarize-solver-failure-response.mjs',
+        `--in=${sourceWithLegacyIdentity}`,
+        '--rows-key=levels',
+        `--out=${sourceOnlyOut}`,
+    ], { cwd: root, env: { ...process.env, GITHUB_SHA: 'f'.repeat(40) } });
+    assert.equal(JSON.parse(fs.readFileSync(sourceOnlyOut, 'utf8')).solverRef, 'source-solver',
+        'without a contract, shared source-document identity remains available as contextual provenance');
+
     // solver-stress-refresh-shaped combined report, with its own populationIntegrity, across two files
     const report1 = path.join(temp, 'corpus1-latest.json');
     const report2 = path.join(temp, 'corpus2-latest.json');

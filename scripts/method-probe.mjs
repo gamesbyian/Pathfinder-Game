@@ -36,6 +36,7 @@
  *   node scripts/run-bundled.mjs scripts/method-probe.mjs -- --list-profiles
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -46,6 +47,10 @@ import { compareSiblingRankings } from './operational-similarity-lib.mjs';
 import { beamResearchRecordToDecisionObservation, createDecisionObservationCollector } from './solver-decision-observation-lib.mjs';
 
 const ROOT = process.cwd();
+const commit = (() => {
+    try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); }
+    catch { return 'local'; }
+})();
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter(a => a.startsWith('--') && !a.includes('=')));
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -312,6 +317,7 @@ for (let i = 0; i < levels.length; i++) {
     console.log(`  [${i + 1}/${levels.length}] ${entry.id ?? '?'} ok=${r.ok ? '✓' : '✗'}${r.ok ? ` via ${r.winningConfigKey}` : ''}`);
     // Report/persist between levels, not only at the end — see CLAUDE.md's batch-tool requirement.
     if (OUT_FILE) writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({
+        commit,
         corpus: CORPUS_FILE, only: configs.map(c => c.key), budgetMs: BUDGET_MS,
         workBudget: WORK_BUDGET === Infinity ? null : WORK_BUDGET,
         nodeBudget: NODE_BUDGET === Infinity ? null : NODE_BUDGET, levels: results,

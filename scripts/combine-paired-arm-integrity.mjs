@@ -19,15 +19,25 @@ function assertSameCount(field, left, right) {
 }
 
 export function combinePairedArmIntegrity(left, right) {
+  if (!Array.isArray(left?.expectedIds) || !Array.isArray(right?.expectedIds)) {
+    throw new Error('paired arms must carry exact expectedIds from their population-integrity records');
+  }
+  if (JSON.stringify(left.expectedIds) !== JSON.stringify(right.expectedIds)) {
+    throw new Error('paired arms disagree on exact expectedIds despite their population identity metadata');
+  }
   if (!left?.populationIdentityHash || left.populationIdentityHash !== right?.populationIdentityHash) {
     throw new Error(`paired arms observed different populations: ${left?.populationIdentityHash ?? '(missing)'} vs ${right?.populationIdentityHash ?? '(missing)'}`);
   }
   const expectedCount = assertSameCount('expectedCount', left, right);
   const observedCount = assertSameCount('observedCount', left, right);
+  if (expectedCount !== left.expectedIds.length) {
+    throw new Error(`paired integrity expectedCount ${expectedCount} does not match expectedIds length ${left.expectedIds.length}`);
+  }
   const coverageComplete = Boolean(left.coverageComplete) && Boolean(right.coverageComplete);
   const decisionValidComplete = Boolean(left.decisionValidComplete) && Boolean(right.decisionValidComplete);
   return {
     populationIdentityHash: left.populationIdentityHash,
+    expectedIds: left.expectedIds,
     expectedCount,
     observedCount,
     coverageComplete,
