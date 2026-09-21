@@ -1,4 +1,3 @@
-<!-- agent-context-budget: warn=10500 max=14000 -->
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
