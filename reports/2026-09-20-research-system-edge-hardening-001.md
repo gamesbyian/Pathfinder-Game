@@ -1,7 +1,7 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — hostile continuation through `415eb81fc4`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite, and reconciliation source relabelling.
+> **Last evidence:** 2026-09-20 — hostile continuation through `32078354c2`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite, reconciliation source relabelling, and mixed modern/legacy execution-revision upgrade in the core sweep combiner.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
 > **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
@@ -291,3 +291,12 @@ Two nearby seams were inspected and did not earn changes:
 - the method-probe flat-versus-nested staging adapter is layout-sensitive by necessity, but exact population validation, duplicate result detection, authored outer-shard count and execution-metadata agreement prevent that layout from becoming scientific identity.
 
 The deliberate non-fixes remain unchanged: no generic composite-configuration-vs-single-result hash equality assertion without an ownership signal, and no claim that the extracted targeted-persistence workflow has passed its required post-merge runtime canary.
+
+
+### P5. A modern shard cannot lend its immutable revision to legacy siblings
+
+The core `combine-solver-sweep-reports.mjs` revision check previously compared commits only when both inputs supplied non-`local`/non-`unknown` values. A mixed combine containing one real immutable SHA and one legacy/unknown revision therefore passed, after which the combined artifact selected the first available commit and could stamp the known SHA over rows whose execution revision was never proved.
+
+The combiner now rejects partial immutable revision presence: once any source report carries a real immutable execution SHA, every source must carry immutable revision provenance. Legacy/local-only combines remain available as weak analysis, but they cannot be silently promoted by mixing in one modern shard. A subprocess test pins the real-SHA-plus-`unknown` rejection.
+
+Commits: `1309022932`, `32078354c2`.
