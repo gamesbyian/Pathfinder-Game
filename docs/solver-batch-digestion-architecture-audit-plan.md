@@ -414,9 +414,9 @@ Decision: retain conceptual split only, or implement reusable immutable compilat
 
 ### Phase 3 - solve-less opportunity census
 
-- [ ] corpus exact-symmetry/equivalence duplicate census;
-- [ ] prior-solution transform/direct-validation hit rate;
-- [ ] family shared-structure/incremental-compile opportunity sizing;
+- [ ] corpus exact-symmetry/equivalence duplicate census; instrumentation committed (`solver:audit-equivalence`) and evidence run pending;
+- [ ] prior-solution transform/direct-validation hit rate; generated-family constructive-witness census committed (`solver:audit-family-constructive-reuse`), with scientific-consumption restrictions explicit;
+- [ ] family shared-structure/incremental-compile opportunity sizing; broad dependency-class invariance census committed (`solver:audit-family-compile-reuse`), field-level invalidation proof still required for any implementation;
 - [ ] multi-query overlap/divergence sizing;
 - [ ] historical-computation index hit-rate pilot.
 
@@ -491,6 +491,14 @@ Every lane/candidate should eventually record:
 7. update this plan and the PR after each material finding.
 
 ## 10. Progress log
+
+### 2026-09-20 - solve-less census instrumentation
+
+- Added `scripts/solver-equivalence-opportunity-census.mjs` for exact semantic duplicate and exact 8-way symmetry-class opportunity across the committed published/stress corpora. Generated symmetry families are excluded by default so known constructed siblings cannot inflate the corpus opportunity.
+- Added `scripts/family-constructive-reuse-census.mjs` to count generated variants whose accepted generation contract already carries an exact-coordinate or transformed constructive witness. This is operational reuse evidence only; consuming those witnesses inside blind solver-capability experiments would invalidate the experiment and is not authorized.
+- Added `scripts/family-compile-reuse-census.mjs` to measure broad parent->variant invariance classes (grid, challenge metrics, endpoints, static occupancy, obligations, mechanics, landmarks) by family mode. This sizes partial-compilation opportunity but does not prove field-level cache-key sufficiency.
+- All three censuses are wired into the temporary one-shot audit evidence workflow. The family and equivalence questions remain measurement-gated; no canonicalizer, solution index, or incremental compiler is authorized yet.
+
 
 ### 2026-09-20 - initial presolve census implementation
 
