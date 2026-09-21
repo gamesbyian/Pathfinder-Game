@@ -482,7 +482,7 @@ async function main() {
         const flatSource2 = path.join(tempDir, 'flat-source-02.json');
         await run([`--in=${batch1}`, `--out=${flatSource1}`]);
         await writeFile(flatSource2, JSON.stringify({
-            commitSha: 'abc123', corpus: 'data/stress/stress-levels-random.json', budgetMs: 8000, nodeBudget: 50000000, schedulerMode: 'production',
+            commitSha: 'abc123', corpus: 'data/stress/stress-levels-random.json', budgetMs: 8000, nodeBudget: 50000000, schedulerMode: 'production', levelBlind: null,
             levels: [{ level: 2, id: 'R00002', ok: true, status: 'success', totalMs: 200, elapsedMs: 200, attempts: [], attemptCount: 0, failedStrategies: [] }],
         }));
         const reconciled = path.join(tempDir, 'reconciled.json');
