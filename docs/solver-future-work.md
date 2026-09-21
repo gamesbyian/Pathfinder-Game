@@ -63,11 +63,11 @@ Dormant until an active lane changes the premise.
 
 ## Inverse-question reopen hook
 
-The [question inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md) found one remaining deferred blind spot not yet owned by a live question. Success-side action-selection work has since advanced into the active WS1 legal-signal capture question on PR #1954 and must not be duplicated here.
+[Inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md): success-side action selection is now owned by WS1/PR #1954. One deferred gap remains.
 
 | Question | Reopen condition |
 |---|---|
-| Capability obsolescence / dominated production stages | A material production-boundary change or portfolio churn makes current unique-contribution evidence stale enough to justify remeasurement. Compare stage/technique participation, unique marginal solves, displacement and removable work under current code; low participation alone is not removal evidence, and deletion needs capability-protecting confirmation. |
+| Capability obsolescence / dominated production stages | After material boundary/portfolio churn, remeasure current participation, unique marginal solves, displacement and removable work. Low participation is insufficient; removal needs capability-protecting confirmation. |
 
 ## Closed forms that stay closed
 
