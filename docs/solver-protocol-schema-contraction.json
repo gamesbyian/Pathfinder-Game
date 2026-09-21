@@ -105,9 +105,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "investigate",
-      "status": "in-progress",
-      "retirementGate": "Close after maintained research-entrypoint census confirms persistent level id is the durable research address everywhere; `pos:` remains an explicit selection/presentation coordinate only, while legacy no-id hint sidecars remain a documented archive/storage exception rather than research identity.",
-      "progress": "The central selector contract already rejects ambiguous bare numeric/range selectors and distinguishes `pos:` from id-based lookup. The level-blind capability sweep was a remaining exception: it had a bespoke parser accepting bare numerics and hashed selected array positions into sampleSha256. It now uses parseLevelPositions(), requires explicit `pos:` selection, requires persistent ids for research rows, hashes the stable selected ids, and records them as summary.expectedIds. Continue the research-CLI census before closeout; level-data-io numeric hint sidecar fallback is retained only for legacy/no-id corpus storage compatibility and must not be treated as durable research addressing."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: maintained research/workflow selection uses explicit pos:/id/full-id syntax; durable outputs, shard plans, hashes, expected populations, and result rows use persistent level IDs. Position is execution/presentation coordinate only. Numeric hint sidecar fallback remains a documented legacy/no-id storage exception.",
+      "progress": "Closed after maintained workflow/entrypoint census. Solver workflows pass explicit pos: ranges when they need array slicing; targeted/high-budget flows freeze or recover populations through ID files. method-probe-shard-plan selects with the shared parser, requires string ids, and emits IDs for downstream shards. Portfolio/result rows retain stable ids, benchmark reconciliation is id-keyed, and level-blind sample identity hashes selected stable ids rather than positions."
     },
     {
       "id": "PSC-005",
