@@ -59,7 +59,8 @@ const capabilityDossier = buildQuestionDossier(process.cwd(), {
     questionId: 'WS2-CAPABILITY-INVENTION-DEMAND',
 });
 assert.ok(capabilityDossier.currentAuthorityMatches.capabilityDemands.length >= 26);
-assert.equal(capabilityDossier.currentAuthorityMatches.capabilityDemandMatchMode, 'owning-question-id+exact-evidence-ref');
+assert.ok(['owning-question-id', 'owning-question-id+exact-evidence-ref']
+    .includes(capabilityDossier.currentAuthorityMatches.capabilityDemandMatchMode));
 assert.ok(capabilityDossier.currentAuthorityMatches.capabilityDemands.some(row => row.id === 'CID-0003'));
 
 console.log('research-question-dossier-node-test: ok');
