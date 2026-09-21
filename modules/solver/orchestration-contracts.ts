@@ -244,11 +244,7 @@ export interface SolveOpts {
      *  Under historical production semantics this is NOT necessarily a whole-solve cap: additive
      *  fallback/retry stages may receive fresh work beyond it. */
     baseWorkBudget?: number;
-    /** @deprecated Compatibility name for baseWorkBudget. If both are supplied they must match.
-     *  Kept because existing workflows/artifacts use this public field extensively. If neither is
-     *  supplied, legacy ms-shaped callers normalize once through budget-units.ts. */
-    workBudget?: number;
-    /** Experiment-only whole-solve enforcement: turns `workBudget` from the legacy scheduler's base
+    /** Experiment-only whole-solve enforcement: turns `baseWorkBudget` from the production scheduler's base
      * allocation into an immutable total work cap. Omitted/false preserves production additive tiers. */
     strictTotalWorkBudget?: boolean;
     /** Opt-in diagnostic attempt-ceiling fields. Omitted keeps ordinary result objects unchanged. */
