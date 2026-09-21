@@ -8,6 +8,7 @@ import {
     researchBlockIdentity,
     researchBlockIssues,
     researchPopulationIdentity,
+    summarizeResearchConsumption,
 } from './solver-research-block-lineage.mjs';
 
 const derivedPopulationIdentityA = researchPopulationIdentity(['P2', 'P1'], ['v2:b', 'v2:a']);
@@ -87,6 +88,14 @@ const consumed = appendResearchConsumption(block, {
 }, { populationIdentity });
 assert.equal(block.consumptionEvents.length, 0, 'append must not mutate the original block');
 assert.equal(consumed.consumptionEvents.length, 1);
+const consumptionSummary = summarizeResearchConsumption(consumed);
+assert.equal(consumptionSummary.totalEvents, 1);
+assert.deepEqual(consumptionSummary.byQuestion, { [block.questionId]: 1 });
+assert.deepEqual(consumptionSummary.byEvidenceRole, { confirmation: 1 });
+assert.deepEqual(consumptionSummary.byScopeKind, { block: 1 });
+assert.deepEqual(consumptionSummary.openedOutcomeKinds, ['control', 'treatment']);
+assert.equal(consumptionSummary.firstConsumedAt, '2026-09-18T03:15:00.000Z');
+assert.equal(consumptionSummary.lastConsumedAt, '2026-09-18T03:15:00.000Z');
 
 const unavailable = researchBlockEligibility(consumed, {
     questionId: block.questionId,
