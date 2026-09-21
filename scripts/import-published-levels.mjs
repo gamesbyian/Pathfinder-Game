@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
-import { readLevelsWithHints, writeLevelsWithHints, setLevelHintRecords } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, setLevelHintRecords } from './level-data-io.mjs';
 import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 // Run under tsx (see package.json) so this plain-.mjs script can import the TS domain
 // module directly — the same canonical, mechanics-aware fingerprint the app uses for
@@ -22,8 +22,8 @@ const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
 const heatmapsJsonPath = path.join(repoRoot, 'data', 'level-heatmaps.json');
 const firebaseConfigPath = path.join(repoRoot, 'firebase-config.js');
 
-function loadRawLevels() {
-  return readLevelsWithHints(levelsJsonPath);
+function loadRawCorpusDocument() {
+  return readLevelCorpusDocumentWithHints(levelsJsonPath);
 }
 
 function loadFirebaseConfig() {
@@ -62,9 +62,9 @@ function decodeFirestoreFields(fields) {
 // This script carries BOTH fields of the dual-field pattern: `.hints` (bare paths, what fingerprint/
 // dedup logic reads) and `.hintRecords` (canonical Hint[] WITH provenance). It used to keep only
 // bare paths, which silently discarded every player-contributed hint's provenance on import (all of
-// P00157+ landed with empty provenance); writeLevelsWithHints's reconcileHints then persists the
+// P00157+ landed with empty provenance); the corpus writer then persists the
 // records, so the provenance a player captured survives the round-trip. An existing on-disk level
-// already has its real .hintRecords hydrated by readLevelsWithHints — keep those; only an incoming
+// already has its real .hintRecords hydrated by the corpus reader — keep those; only an incoming
 // Firestore level (no .hintRecords) derives them from its canonical hints.
 function decodeHints(level) {
   if (!Array.isArray(level?.hints) && !Array.isArray(level?.hintRecords)) return level;
@@ -96,8 +96,8 @@ export function levelFingerprint(level) {
   return getLevelFingerprintSource(level);
 }
 
-function writeLevels(levels) {
-  writeLevelsWithHints(levelsJsonPath, levels.map(normalizeLevel));
+function writeLevels(document, levels) {
+  writeLevelCorpusDocumentWithHints(levelsJsonPath, { ...document, levels: levels.map(normalizeLevel) });
 }
 
 // Uncapped: the 1000-hint cap was a UI-latency guard for player-initiated searches, not a data
@@ -188,7 +188,8 @@ async function fetchPublishedLevels() {
 }
 
 export async function main() {
-  const levels = loadRawLevels().map(normalizeLevel);
+  const corpusDocument = loadRawCorpusDocument();
+  const levels = corpusDocument.levels.map(normalizeLevel);
   // Fingerprint → existing level object (structural fingerprint ignores hints/metadata), so a
   // published level that already exists is matched and its NEW hints merged in, rather than
   // re-appended as a duplicate level. Existing levels keep their position (no reordering).
@@ -212,11 +213,11 @@ export async function main() {
       newLevels++;
     }
   }
-  writeLevels(levels);
+  writeLevels(corpusDocument, levels);
   console.log(`Imported ${newLevels} new published level(s); appended ${hintsAdded} new hint(s) to ${levelsUpdated} existing level(s).`);
 
   if (newLevels > 0 || hintsAdded > 0) {
-    const written = loadRawLevels();
+    const written = loadRawCorpusDocument().levels;
     const output = writeHeatmapsFile(written, heatmapsJsonPath);
     console.log(`Updated heat maps for ${output.levels.length} levels in data/level-heatmaps.json.`);
   }
