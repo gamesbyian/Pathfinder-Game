@@ -418,7 +418,15 @@ function selfTest() {
     assert.equal(reharvested[0].disposition, 'unchanged', 'same immutable run/attempt reharvest is idempotent');
     assert.deepEqual(fs.readFileSync(path.join(destination, 'bundle.json')), bundleBeforeReharvest);
 
-    fs.writeFileSync(path.join(artifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 13 }] }));
+    const changedSource = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 13 }] }));
+    fs.writeFileSync(path.join(artifact, 'result.json'), changedSource);
+    const changedManifest = JSON.parse(fs.readFileSync(path.join(artifact, 'manifest.json'), 'utf8'));
+    changedManifest.entries = changedManifest.entries.map(entry =>
+      entry.published === 'result.json' ? { ...entry, sha256: sha256(changedSource) } : entry);
+    if (Array.isArray(changedManifest?.researchOutcome?.binding?.resultContentHashes)) {
+      changedManifest.researchOutcome.binding.resultContentHashes = [sha256(changedSource)];
+    }
+    fs.writeFileSync(path.join(artifact, 'manifest.json'), `${JSON.stringify(changedManifest, null, 2)}\n`);
     assert.throws(
       () => persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 }),
       /durable evidence identity collision.*immutable source run\/attempt bytes differ/u,
