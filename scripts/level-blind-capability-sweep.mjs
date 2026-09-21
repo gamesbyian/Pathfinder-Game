@@ -17,7 +17,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { buildRow } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool } from './solver-worker-pool.mjs';
@@ -206,7 +206,7 @@ if (ablation) solveOpts.ablation = ablation;
 
 // Output-side hint state is deliberately distinct from mechanicsOnlyCorpus. Never pass hintLevels
 // or corpusPath to the solver worker.
-const hintLevels = saveHints ? readLevelsWithHints(corpusPath) : null;
+const hintLevels = saveHints ? readLevelCorpusDocumentWithHints(corpusPath).levels : null;
 const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints });
 if (saveHints) await hintCapture.prepare(targets.map(n => hintLevels[n - 1]));
 
