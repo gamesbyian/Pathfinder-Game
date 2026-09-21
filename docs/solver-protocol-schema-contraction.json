@@ -199,9 +199,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
-      "retirementGate": "Complete producer census, then require top-level researchBlock for every current writer while retaining nested historical normalization only in research-artifact-envelope-lib.mjs.",
-      "progress": "Shared envelope decoder owns current top-level researchBlock plus the historical nested population.researchBlock form and rejects conflicting duplicates. Current consumption/enrichment writers and search-loss capture/annotation/canary producers now guard canonical shared-field locations before serialization. Historical nested artifacts remain readable at ingress."
+      "status": "complete",
+      "retirementGate": "Every current writer that carries research-block lineage writes researchBlock only at top level; producers with no block lineage do not invent one. Historical nested population.researchBlock normalizes only in research-artifact-envelope-lib.mjs.",
+      "progress": "Closed after owner census. Consumption/enrichment sidecars require canonical top-level researchBlock; search-loss capture/annotation propagate it top-level when their source has block lineage; search-loss real-canary has no block lineage and correctly does not synthesize one. The shared envelope decoder is the sole owner of historical population.researchBlock decoding and conflicting duplicates fail closed."
     },
     {
       "id": "PSC-009",
@@ -225,9 +225,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
-      "retirementGate": "Complete current-producer census, then treat top-level populationIdentity as the only current write location and retain historical alternatives only inside the shared ingress decoder.",
-      "progress": "Shared decoder owns three historical/current identity locations and rejects conflicts. Search-loss capture, annotation, and real-canary producers now write and guard top-level populationIdentity; consumption/enrichment producers likewise assert canonical layout. Historical nested identity remains readable only through the shared envelope adapter."
+      "status": "complete",
+      "retirementGate": "Every current writer that carries population identity writes populationIdentity only at top level; historical population.corpusIdentity/population.populationIdentity alternatives normalize only in research-artifact-envelope-lib.mjs.",
+      "progress": "Closed after owner census. Consumption/enrichment, search-loss capture/annotation, and real-canary producers all write top-level populationIdentity and current-location assertions guard serialization. Historical nested identity locations remain readable only through the shared envelope decoder; conflicting duplicates fail closed."
     },
     {
       "id": "PSC-010",
