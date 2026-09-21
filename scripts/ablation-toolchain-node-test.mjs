@@ -25,6 +25,7 @@ assert.throws(() => canonicalAblationFeatureName('SCORE_TEMPLATE_BONUS'), /Unkno
 assert.throws(() => canonicalAblationFeatureName('TEMPLATE_PERIMETER_CW'), /Unknown canonical feature/);
 assert.equal(normalizeHistoricalAblationFeatureName('SCORE_TEMPLATE_BONUS'), 'SCORE_ORDERING_BIAS_BONUS');
 assert.equal(normalizeHistoricalAblationFeatureName('TEMPLATE_PERIMETER_CW'), 'ORDERING_BIAS_PERIMETER_CW');
+assert.equal(buildExperimentList('baseline')[0].config, null, 'saved/reused baseline artifacts never carry a feature config to replay');
 assert.ok(canonicalBiases.some(x => x.name === 'ordering-bias-off:perimeterCW'),
     'current ordering-bias experiment names must stay canonical while old feature flags remain readable only through the historical decoder');
 
@@ -53,6 +54,9 @@ try {
             },
             {
                 name: 'scoring-profile-off:default', label: 'Scoring profile removed: default',
+                // Historical artifacts can contain retired feature spellings. The analyzer treats
+                // persisted config as opaque evidence; it must not feed it back into current solver input.
+                config: { SCORE_TEMPLATE_BONUS: false },
                 tags: ['scoring-profile', 'single-feature'], summary: failedSummary,
                 solvedLevels: [], failedLevels: [1],
                 levels: [{ level: 1, ok: false, elapsedMs: 10, nodesExpanded: 100 }],
@@ -75,6 +79,8 @@ try {
     assert.equal(analysis.orderingBiasRanking[0]?.orderingBiasId, 'cornerHarvest');
     assert.equal('profileRanking' in analysis, false, 'current analyzer must single-write canonical ranking names');
     assert.equal('templateRanking' in analysis, false, 'current analyzer must single-write canonical ranking names');
+    assert.equal(JSON.stringify(analysis).includes('SCORE_TEMPLATE_BONUS'), false,
+        'historical persisted config is not re-emitted as a current analysis contract');
 } finally {
     await rm(dir, { recursive: true, force: true });
 }
