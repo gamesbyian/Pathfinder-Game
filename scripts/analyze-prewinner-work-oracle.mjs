@@ -69,6 +69,30 @@ export function analyzePrewinnerWorkDocuments(documents) {
         ...g, preWinnerWorkShare: ratio(g.preWinnerWork, g.totalWork),
     })).sort((a,b) => b.preWinnerWork - a.preWinnerWork || a.winningStage.localeCompare(b.winningStage));
 
+    const pairMap = new Map();
+    for (const { source, document } of documents) {
+        const levels = Array.isArray(document) ? document : (document?.levels ?? document?.data?.levels ?? []);
+        for (const level of levels) {
+            if (!(level?.ok === true || level?.status === 'success')) continue;
+            const attempts = Array.isArray(level?.attempts) ? level.attempts : [];
+            const winnerIndex = attempts.findIndex(success);
+            if (winnerIndex < 0) continue;
+            const winningStage = attempts[winnerIndex]?.stageId ?? level?.winningStage ?? '(unknown)';
+            for (const attempt of attempts.slice(0, winnerIndex)) {
+                const predecessorStage = attempt?.stageId ?? '(unknown)';
+                const key = `${predecessorStage}\u0000${winningStage}`;
+                const g = pairMap.get(key) ?? { predecessorStage, winningStage, preWinnerWork:0, attemptCount:0, levelIds:new Set(), sources:new Set() };
+                g.preWinnerWork += num(attempt?.workSpent); g.attemptCount++; g.levelIds.add(String(level?.id ?? level?.level ?? '')); g.sources.add(source);
+                pairMap.set(key, g);
+            }
+        }
+    }
+    const predecessorWinningStagePairs = [...pairMap.values()].map(g => ({
+        predecessorStage:g.predecessorStage, winningStage:g.winningStage, preWinnerWork:g.preWinnerWork,
+        levelCount:g.levelIds.size, attemptCount:g.attemptCount, sourceCount:g.sources.size,
+        shareOfAllPreWinnerWork: ratio(g.preWinnerWork, preWork),
+    })).sort((a,b) => b.preWinnerWork - a.preWinnerWork || a.predecessorStage.localeCompare(b.predecessorStage));
+
     return {
         schemaVersion: 1,
         kind: 'pathfinder-prewinner-work-oracle-census',
@@ -93,6 +117,7 @@ export function analyzePrewinnerWorkDocuments(documents) {
             p75PerLevelPreWinnerWorkShare: pct(shares, .75),
         },
         byWinningStage,
+        predecessorWinningStagePairs,
         levels: rows,
     };
 }
