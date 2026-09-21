@@ -142,7 +142,8 @@ async function main() {
         })));
         await run([`--in=${mixedA},${mixedB}`, `--out=${mixedOut}`, '--allow-mixed-corpora']);
         const mixedCombined = JSON.parse(await readFile(mixedOut, 'utf8'));
-        assert.equal(mixedCombined.populationIntegrity.complete, true);
+        assert.equal(mixedCombined.populationIntegrity.coverageComplete, true);
+        assert.equal('complete' in mixedCombined.populationIntegrity, false);
         assert.equal(mixedCombined.populationIntegrity.expectedCount, 2);
         assert.equal(mixedCombined.population.identityCodec, 'json-tuple-v1');
         assert.deepEqual(mixedCombined.populationIntegrity.expectedIds, [
