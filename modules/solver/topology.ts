@@ -484,20 +484,24 @@ function _retainConnectivityGoalCutCertificate(
     );
     if (!cert) return;
 
+    const signature = cert.reachedRows.map(word => (word >>> 0).toString(16)).join(',')
+        + '|' + cert.boundaryCells.join(',');
     const configuredCap = Number(shadow.observer.maxCertificates);
     const cap = Number.isInteger(configuredCap) && configuredCap >= 0 ? Math.min(configuredCap, 1024) : 64;
     if (shadow.certificates.length >= cap) {
+        // Retention is bounded for lookup economics, but the research denominator should still know
+        // which exact proof object was derived. Emit the signature even when the certificate is not
+        // retained, so proof-overlap measurement is not silently censored by cache capacity.
         shadow.observer.observe({
             kind: 'certificate-dropped',
             work: prep._workMeter.units,
+            certificateSignature: signature,
             boundarySize: cert.boundaryCells.length,
         });
         return;
     }
 
     const id = shadow.nextId++;
-    const signature = cert.reachedRows.map(word => (word >>> 0).toString(16)).join(',')
-        + '|' + cert.boundaryCells.join(',');
     shadow.certificates.push({
         id,
         reachedRows: cert.reachedRows,
