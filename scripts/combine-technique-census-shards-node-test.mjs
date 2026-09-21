@@ -30,6 +30,8 @@ try {
     `--staging-dir=${staging}`,
     `--out-dir=${out}`,
     `--solver-version=${commit}`,
+    '--expected-shards=2',
+    '--expected-shards=2',
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.equal(ok.status, 0, ok.stderr);
   const combined = JSON.parse(fs.readFileSync(path.join(out, 'combined-cells.json'), 'utf8'));
@@ -45,7 +47,31 @@ try {
   assert.notEqual(mismatch.status, 0);
   assert.match(mismatch.stderr, /execution revisions disagree/u);
 
+  const duplicateDir = path.join(staging, 'technique-census-shard-001');
+  fs.writeFileSync(path.join(duplicateDir, 'shard-099.json'), JSON.stringify({
+    commit, shard: 99, shards: 2, partial: false, results: [],
+  }));
+  const duplicateFile = spawnSync(process.execPath, [
+    'scripts/combine-technique-census-shards.mjs',
+    `--staging-dir=${staging}`,
+    `--out-dir=${path.join(temp, 'duplicate-file-out')}`,
+    '--expected-shards=2',
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.notEqual(duplicateFile.status, 0);
+  assert.match(duplicateFile.stderr, /contains 2 shard result files; expected exactly one/u);
+  fs.rmSync(path.join(duplicateDir, 'shard-099.json'), { force: true });
+
   fs.rmSync(path.join(staging, 'technique-census-shard-002'), { recursive: true, force: true });
+  const missingOuter = spawnSync(process.execPath, [
+    'scripts/combine-technique-census-shards.mjs',
+    `--staging-dir=${staging}`,
+    `--out-dir=${path.join(temp, 'missing-outer-out')}`,
+    '--expected-shards=2',
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.equal(missingOuter.status, 0, missingOuter.stderr);
+  const missingCombined = JSON.parse(fs.readFileSync(path.join(temp, 'missing-outer-out', 'combined-cells.json'), 'utf8'));
+  assert.deepEqual(missingCombined.missingShards, ['technique-census-shard-2']);
+
   writeShard(staging, 2, null);
   const mixed = spawnSync(process.execPath, [
     'scripts/combine-technique-census-shards.mjs',
