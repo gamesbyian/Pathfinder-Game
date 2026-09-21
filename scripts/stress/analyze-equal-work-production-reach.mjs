@@ -22,7 +22,7 @@ import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 
 import { normalizeAttemptActionKey, normalizeAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
-import { normalizeSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
+import { normalizeHistoricalSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
 import { attemptActionKey, canonicalAttemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 
 function canonicalCorpusName(value) {
@@ -51,7 +51,7 @@ function canonicalActionOf(attempt) {
 
 function canonicalStageOf(attempt, actionKey) {
     if (attempt?.stageId) {
-        try { return normalizeSolverStageId(attempt.stageId); } catch { return String(attempt.stageId); }
+        try { return normalizeHistoricalSolverStageId(attempt.stageId); } catch { return String(attempt.stageId); }
     }
     const separator = actionKey?.indexOf('|') ?? -1;
     return separator > 0 ? actionKey.slice(0, separator) : null;
