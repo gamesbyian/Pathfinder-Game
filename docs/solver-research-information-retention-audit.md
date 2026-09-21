@@ -559,6 +559,63 @@ This does not invalidate the historical conclusion. It narrows later auditabilit
 The modern Resource Contract already supplies the right prospective rule: preserve the smallest decision-bearing bundle needed for future reconstruction. The one-shot documentation convention has not yet visibly absorbed that newer distinction.
 
 
+
+## 5B. Transient solver-knowledge inventory
+
+This pass asks the negative-space question from the original audit:
+
+> What does search know or compute during a failed attempt that disappears completely when the attempt returns?
+
+The answer is narrower than expected because much of the solver already has research-only observer seams.
+
+| Internal information | Current exposure | Survival today | Preliminary disposition |
+|---|---|---|---|
+| beam generation/prune/merge/cull/retain flow | `_beamFlowCounters` + beam research observer | opt-in diagnostics/captures only | already adjudicated; do not default-promote without recurring consumer |
+| typed hard-prune reach/reject counts | `_pruneDiagnostics` | opt-in diagnostics only | already adjudicated compact-diagnostic layer |
+| DFS/beam/repair progress/badness transitions | `_failureProgressObserver` | bounded opt-in diagnostic records | already adjudicated; retain observed/retained/truncated when enabled |
+| beam candidate/state decisions and parent expansion work | `_beamResearchObserver`, optional parent-expansion work | specialist method-probe/search-loss outputs | rich/specialist; existing selector/cost rules apply |
+| repair elite arrivals | `_repairEliteResearchObserver` | specialist investigations only | existing rich observer, not a default-retention candidate |
+| repair choice candidate set / chosen move / random draws | `_repairChoiceResearchObserver` | specialist investigations only | existing rich observer; potentially useful for divergence studies |
+| connectivity rejection subtype/state/boundary sketch | `_connectivityRejectionObserver` | specialist investigations only | explicitly staged Stage-A/Stage-B observer; preserve current scoped economics |
+| parity-capacity / phase-distance shadow facts | dedicated research observers | question-specific pilots | already purpose-built, no general retention case established |
+| joint-obligation propagation verdicts | `_jointObligationObserver` | question-specific pilot evidence | already purpose-built |
+| beam resumable frontier / live continuation | explicit `BeamContinuation` capture | opt-in research only | rich mutable execution state; intentionally unsuitable for generic persistence |
+| DFS exhausted-subtree size/depth distribution and instant rejects | `PF_DFS_DEBUG` env-gated console aggregation | ephemeral console output | **R4 candidate**, but debug collection changes allocation/workload shape and is forensic rather than cheap default telemetry |
+| must-pass/must-cross lower-bound memo reuse | solve-local caches exist, no hit/miss counters | values disappear with `PrepLevel` | **R4 candidate for performance/reuse research**, better owned by batch-digestion architecture audit unless a solver-capability question emerges |
+| repair nogood-cache recurrence | exact signatures stored solve-locally; API exposes size/has/add, no hit/miss history | cache discarded at attempt end | **R4 candidate** for recurrence/redundant-work questions; overlaps search-loss/resumability and should not create a parallel instrumentation line |
+| full search state/frontiers/visited arrays | live mutable execution structures | discarded | intentionally not a retention target; use selected capsules/continuations when a concrete question requires state identity |
+
+### Transient-knowledge conclusion
+
+The high-value gap is **not** “instrument the solver generally.”
+
+There are three buckets:
+
+1. **Already observed and already adjudicated:** beam flow, prune composition, bounded progress. These have measured economics and a current opt-in disposition.
+2. **Already observable through specialist hooks:** beam decisions, repair choices/elites, connectivity/parity/joint-obligation records, continuations. The issue is acquisition/retention for a concrete consumer, not missing instrumentation.
+3. **Still genuinely unobserved in compact form:** repeated-work/cache economics and DFS subtree/backtrack anatomy. These are plausible research leads, but they overlap existing batch-digestion/search-loss questions and need opportunity sizing before any new counters.
+
+This sharply reduces the case for broad new solver instrumentation.
+
+
+
+### IR-021 — badness fields are structurally preserved but semantically heterogeneous across search families
+
+**Class:** semantic downgrade risk, not raw information loss.
+
+The common attempt/result layer can retain `bestBadness` and `finalBadness`, and the compact failure-response/query layer preserves and aggregates them.
+
+However the producer semantics differ:
+
+- repair `bestBadness` is explicitly the **lowest badness reached across restarts**, a real best-ever progress measure;
+- DFS/beam `finalBadness` is a **one-shot terminal snapshot** of whichever live state the search happened to occupy at timeout; comments explicitly warn it is not a tracked best-ever minimum;
+- a family may omit one field entirely rather than produce an equivalent measurement.
+
+`failure-response-query.mjs` correctly labels badness deltas descriptive-only, and action/stage identities remain available for stratification. But its default aggregate `badness.best` / `badness.final` statistics can still pool measurements with different observational meanings if a consumer does not stratify by family/action.
+
+**Disposition:** documentation/query-semantics issue first. Do not solve by fabricating a universal progress metric. Any cross-family research use should name the measurement semantics or use the bounded progress observer where comparable best-over-time behavior is actually needed.
+
+
 ## 6. Positive findings / boundaries already working well
 
 The audit must record good boundaries as well as defects.
