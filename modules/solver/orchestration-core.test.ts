@@ -300,26 +300,15 @@ test('getFalseGoalTriggerSearchBudgetMs scales the search-dependent cost with ga
 });
 
 
-test('historical scheduler modes remain readable but normalize to canonical behavior', async () => {
-    const production = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'legacy' });
-    assert.equal(production.ok, true);
-    assert.equal(production.schedulerMode, undefined, 'historical legacy mode reads as canonical production scheduling');
-
-    const historicalPortfolio = await solveLevel(makeLineLevel(), {
-        timeBudgetMs: 1000,
-        schedulerMode: 'portfolio-experiment',
-        portfolioExperiment: {
-            pass1Ms: 500,
-            pass2Ms: 1000,
-            pass3Ms: 2000,
-            pass2Configs: new Set(),
-            pass3Configs: new Set(),
-            conditionalPasses: [],
-        },
-    });
-    assert.equal(historicalPortfolio.ok, true);
-    assert.equal(historicalPortfolio.schedulerMode, 'legacy-latency-portfolio-experiment');
-    assert.equal(historicalPortfolio.attempts.find(attempt => attempt.ok)?.schedulerPhase, 'legacy-latency-portfolio');
+test('solveLevel rejects retired scheduler spellings instead of translating fresh input', async () => {
+    await assert.rejects(
+        () => solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'legacy' as any }),
+        /unsupported schedulerMode "legacy"/,
+    );
+    await assert.rejects(
+        () => solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'portfolio-experiment' as any }),
+        /unsupported schedulerMode "portfolio-experiment"/,
+    );
 });
 
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
