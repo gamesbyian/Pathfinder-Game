@@ -28,7 +28,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
         levels: [{ id: 'R1' }],
     };
     const normalizedShard = normalizeSolverSweepReportInput(shard, 'shard.json');
-    assert.equal(normalizedShard.inputShape, 'shard-envelope');
+    assert.equal(normalizedShard.inputShape, 'summary-envelope');
     assert.deepEqual(normalizedShard.summary, shard.summary);
     assert.equal(shard.inputShape, undefined);
 
@@ -90,15 +90,15 @@ async function main() {
 
         await run([`--in=${batch1},${batch2}`, `--out=${outFile}`]);
         const combined = JSON.parse(await readFile(outFile, 'utf8'));
-        assert.equal(combined.budgetMs, 8000, 'budgetMs flattened to top level');
-        assert.equal(combined.corpus, 'data/stress/stress-levels-random.json');
+        assert.equal(combined.summary.budgetMs, 8000, 'budgetMs lives in the canonical summary envelope');
+        assert.equal(combined.summary.corpus, 'data/stress/stress-levels-random.json');
         assert.equal(combined.levels.length, 2);
-        assert.equal(combined.solved, 1);
-        assert.equal(combined.outcomes.deadlineTruncated, 1);
-        assert.equal(combined.outcomes.harnessError, 0);
+        assert.equal(combined.summary.solved, 1);
+        assert.equal(combined.summary.outcomes.deadlineTruncated, 1);
+        assert.equal(combined.summary.outcomes.harnessError, 0);
         assert.equal('complete' in combined.populationIntegrity, false, 'current sweep reports must not emit the retired complete mirror');
         assert.equal(combined.populationIntegrity.expectedCount, null);
-        assert.equal(combined.total, null, 'unknown intended population must not use observed rows as the denominator');
+        assert.equal(combined.summary.total, null, 'unknown intended population must not use observed rows as the denominator');
         console.log('  ✓ merges two batches into one flat, budgetMs-bearing report');
 
         const expectedFile = path.join(tempDir, 'expected.txt');
@@ -109,7 +109,7 @@ async function main() {
         assert.equal(exactCombined.populationIntegrity.coverageComplete, true);
         assert.equal(exactCombined.populationIntegrity.decisionValidComplete, false, 'deadline-truncated rows are coverage-complete but not decision-valid');
         assert.equal('complete' in exactCombined.populationIntegrity, false);
-        assert.equal(exactCombined.expectedCount, 2);
+        assert.equal(exactCombined.summary.expectedCount, 2);
         assert.match(exactCombined.population.identityHash, /^sha256:[0-9a-f]{64}$/);
         console.log('  ✓ intended ID input makes exact completeness and denominator explicit');
 
@@ -165,8 +165,8 @@ async function main() {
         })));
         await run([`--in=${mixedConfigA},${mixedConfigB}`, `--out=${mixedConfigOut}`, '--allow-mixed-corpora']);
         const mixedConfigCombined = JSON.parse(await readFile(mixedConfigOut, 'utf8'));
-        assert.equal(Object.keys(mixedConfigCombined.effectiveConfig.byCorpus).length, 2);
-        assert.equal(mixedConfigCombined.configurationHash, hashConfiguration(mixedConfigCombined.effectiveConfig));
+        assert.equal(Object.keys(mixedConfigCombined.summary.effectiveConfig.byCorpus).length, 2);
+        assert.equal(mixedConfigCombined.summary.configurationHash, hashConfiguration(mixedConfigCombined.summary.effectiveConfig));
         console.log('  ✓ mixed-corpus observed execution identity composes per-corpus configs instead of requiring false equality');
 
         const mixedExpectedLegacy = path.join(tempDir, 'mixed-expected-legacy.txt');
@@ -355,10 +355,10 @@ async function main() {
         })));
         await run([`--in=${config1},${config2}`, `--out=${configOut}`]);
         const configCombined = JSON.parse(await readFile(configOut, 'utf8'));
-        assert.deepEqual(configCombined.executionConfig.enableFlags, ['FLAG_A', 'FLAG_B']);
-        assert.equal(configCombined.executionConfig.workers, 4);
-        assert.equal(configCombined.executionConfig.admissibleOrderNonDefaultRetryBudgetFraction, 0.18);
-        assert.equal(configCombined.executionConfig.strictTotalWorkBudget, true);
+        assert.deepEqual(configCombined.summary.enableFlags, ['FLAG_A', 'FLAG_B']);
+        assert.equal(configCombined.summary.workers, 4);
+        assert.equal(configCombined.summary.admissibleOrderNonDefaultRetryBudgetFraction, 0.18);
+        assert.equal(configCombined.summary.strictTotalWorkBudget, true);
         console.log('  ✓ combined artifact preserves canonical resolved treatment configuration');
 
         const configMismatch = path.join(tempDir, 'config-mismatch.json');
@@ -392,9 +392,9 @@ async function main() {
         })));
         await run([`--in=${observedConfig1},${observedConfig2}`, `--out=${observedConfigOut}`]);
         const observedCombined = JSON.parse(await readFile(observedConfigOut, 'utf8'));
-        assert.deepEqual(observedCombined.effectiveConfig, observedEffectiveConfig);
-        assert.match(observedCombined.effectiveConfigDigest, /^[0-9a-f]{64}$/u);
-        assert.equal(observedCombined.configurationHash, hashConfiguration(observedEffectiveConfig),
+        assert.deepEqual(observedCombined.summary.effectiveConfig, observedEffectiveConfig);
+        assert.match(observedCombined.summary.effectiveConfigDigest, /^[0-9a-f]{64}$/u);
+        assert.equal(observedCombined.summary.configurationHash, hashConfiguration(observedEffectiveConfig),
             'standard configuration identity must be derived from observed solver execution when available');
 
         const observedConfigMismatch = path.join(tempDir, 'observed-config-mismatch.json');
@@ -486,7 +486,7 @@ async function main() {
         const reconciledReport = JSON.parse(await readFile(reconciled, 'utf8'));
         assert.equal(reconciledReport.levels.length, 2, 'both already-flattened sources merged into one population');
         assert.deepEqual(reconciledReport.levels.map(l => l.id).sort(), ['R00001', 'R00002']);
-        assert.equal(reconciledReport.solved, 2);
+        assert.equal(reconciledReport.summary.solved, 2);
         console.log('  ✓ re-combines already-flattened reports (cross-run reconciliation) idempotently');
 
         const flatMismatch = path.join(tempDir, 'flat-mismatch.json');
@@ -510,8 +510,8 @@ async function main() {
         })));
         await run([`--in=${nb1},${nb2}`, `--out=${nbOut}`]);
         const nbCombined = JSON.parse(await readFile(nbOut, 'utf8'));
-        assert.equal(nbCombined.nodeBudget, 20000000, 'agreed nodeBudget carried through as a scalar');
-        assert.equal(nbCombined.repairBudgetFraction, 0, 'repairBudgetFraction carried through');
+        assert.equal(nbCombined.summary.nodeBudget, 20000000, 'agreed nodeBudget carried through as a scalar');
+        assert.equal(nbCombined.summary.repairBudgetFraction, 0, 'repairBudgetFraction carried through');
         console.log('  ✓ carries nodeBudget/repairBudgetFraction through when every shard agrees');
 
         const nb3 = path.join(tempDir, 'nb-03.json');
