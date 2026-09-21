@@ -1,9 +1,18 @@
 # Response-guided premise nominations from existing technique discordance
 
-> **Status:** development-premise nomination only; no routing or production change.
+> **Status:** active
+> **Last evidence:** 2026-09-21 — preserved technique contrast populations plus shared static parity/portal feature owner
+> **Decision:** retain three response-guided premise nominations; no routing or production change is licensed
+> **Remaining gate:** run the shared parity/portal contrast analysis on the prespecified pairs, then apply Stage-0 theorem/novelty gates to any surviving signal
+> **Evidence role:** discovery
+> **Selection:** observational; A-only/B-only cohorts are selected on technique outcomes within prespecified technique pairs
+> **Population identity:** `reports/stress/technique-niches/2026-09-01/level-capability.json` with its embedded source identities
+> **Selection history:** frozen T1 technique-census outcomes joined to legal static descriptors; this report reinterprets retained contrasts after seeing those outcomes
+> **Inference scope:** offline premise nomination only; not confirmation and not runtime routing evidence
+> **Proposal provenance:** response-guided reinterpretation of existing technique discordance after the parity/exact-projection audit
 > **Method:** [response-guided capability invention](../docs/solver-response-guided-capability-invention.md).
-> **Source evidence:** [2026-09-01 technique relative-advantage follow-up](2026-09-01-technique-relative-advantage-followup.md) and its prespecified technique-pair analysis.
-> **Compute:** no new solver runs. This is a reinterpretation of already-retained technique-response evidence under the exact-projection/invention framework.
+> **Source evidence:** [2026-09-01 technique relative-advantage follow-up](2026-09-01-technique-relative-advantage-followup.md).
+> **Compute:** no new solver search.
 
 ## Question
 
@@ -106,3 +115,11 @@ A negative prune result must not silently kill a useful response signal, and an 
 The existing relative-advantage analyzer must preserve the actual contrast identities, not only counts/effect summaries. That change is part of this branch and turns the old analysis into a reusable premise-nomination input.
 
 The next code should **not** be a selector. It should be the smallest shared current-input feature owner required by whichever first Stage-0 audit survives: portal/parity structure for nomination 1, or transformation-aware geometry for nomination 2.
+
+## Reproduction
+
+```bash
+npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
+```
+
+This command performs normalization and static feature analysis only; it runs no solver search.
