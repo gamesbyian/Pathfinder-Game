@@ -7,7 +7,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { stringifyCorpusJson } from './level-json-format.mjs';
-import { hintPaths, reconcileHints, setLevelHintRecords, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-runtime.mjs';
+import { reconcileHints, setLevelHintRecords, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-runtime.mjs';
 
 const LEVEL_WRAPPERS = new WeakMap();
 const HINT_SCHEMA_VERSION = 3;
