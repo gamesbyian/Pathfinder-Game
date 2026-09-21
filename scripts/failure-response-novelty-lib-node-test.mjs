@@ -33,6 +33,31 @@ assert.equal(
     'dose/run variation must not manufacture a new categorical failure phenotype',
 );
 
+
+const configOnly = 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain';
+const historicalConfigInAction = { ...row, actionKey: configOnly, configurationKey: null, stageId: null, attempts: [] };
+const correctedConfigIdentity = { ...row, actionKey: null, configurationKey: configOnly, stageId: null, attempts: [] };
+assert.equal(
+    failureResponseRecordPhenotypeSignature(historicalConfigInAction),
+    failureResponseRecordPhenotypeSignature(correctedConfigIdentity),
+    'corrected projection must not manufacture longitudinal novelty against historical config-in-action rows',
+);
+const sameConfigDifferentActionA = {
+    ...correctedConfigIdentity,
+    actionKey: 'main-search|' + configOnly,
+    stageId: 'main-search',
+};
+const sameConfigDifferentActionB = {
+    ...correctedConfigIdentity,
+    actionKey: 'static-portfolio|' + configOnly,
+    stageId: 'static-portfolio',
+};
+assert.notEqual(
+    failureResponseRecordPhenotypeSignature(sameConfigDifferentActionA),
+    failureResponseRecordPhenotypeSignature(sameConfigDifferentActionB),
+    'true stage/action differences must remain distinct after the compatibility normalization',
+);
+
 const differentOutcome = { ...row, outcome: 'exhaustedNegative' };
 assert.notEqual(failureResponseRecordPhenotypeSignature(row), failureResponseRecordPhenotypeSignature(differentOutcome));
 
