@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { SEARCH_LOSS_ANNOTATION_KIND, validateSearchLossAnnotation, validateSearchLossCapture } from './solver-search-loss-evidence-lib.mjs';
-import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
+import { assertCanonicalResearchArtifactLocations, extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const i = arg.indexOf('='); return [arg.slice(2, i), arg.slice(i + 1)];
@@ -42,6 +42,7 @@ const output = validateSearchLossAnnotation({
     ...(captureEnvelope.researchBlock ? { researchBlock: captureEnvelope.researchBlock } : {}),
     annotations,
 }, { capture });
+assertCanonicalResearchArtifactLocations(output);
 fs.mkdirSync(path.dirname(args.get('out')), { recursive: true });
 fs.writeFileSync(args.get('out'), `${JSON.stringify(output, null, 2)}\n`);
 console.log(`annotated ${annotations.length} search-loss capsule(s)`);
