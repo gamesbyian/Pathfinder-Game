@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { createSearchLossCollector, decisionObservationToSearchLossCapsule, searchLossCapsuleIdentity, validateSearchLossCapture } from './solver-search-loss-evidence-lib.mjs';
+import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const i = arg.indexOf('='); return [arg.slice(2, i), arg.slice(i + 1)];
@@ -17,7 +18,15 @@ if (!Number.isSafeInteger(limit) || limit < 0) throw new Error('--selector-limit
 for (const field of ['runId', 'solverRef', 'producer', 'protocolHash', 'configurationHash']) {
     if (metadata.run?.[field] == null) throw new Error(`metadata.run.${field} is required`);
 }
-if (!metadata.population?.populationIdentity || !metadata.population?.source) throw new Error('metadata.population identity/source are required');
+const metadataEnvelope = extractResearchArtifactEnvelope(metadata);
+if (!metadataEnvelope.populationIdentity || !metadata.population?.source) {
+    throw new Error('metadata population identity/source are required');
+}
+const {
+    populationIdentity: _legacyPopulationIdentity,
+    researchBlock: _legacyResearchBlock,
+    ...populationMetadata
+} = metadata.population;
 
 const selectorIds = ['score-width-cull', 'mechanic-bucket-cull', 'ints-bucket-cull'];
 const collector = createSearchLossCollector({ captureProfileId: metadata.captureProfileId, selectorLimits: Object.fromEntries(selectorIds.map(id => [id, limit])) });
@@ -53,7 +62,9 @@ const capture = validateSearchLossCapture({
     kind: 'pathfinder-search-loss-capture',
     researchEnrichmentKind: 'observation',
     run: { ...metadata.run, levelBlind: metadata.run.levelBlind },
-    population: { ...metadata.population, parentCount: new Set(records.map(row => row.parentId)).size },
+    populationIdentity: metadataEnvelope.populationIdentity,
+    ...(metadataEnvelope.researchBlock ? { researchBlock: metadataEnvelope.researchBlock } : {}),
+    population: { ...populationMetadata, parentCount: new Set(records.map(row => row.parentId)).size },
     capture: { captureProfileId: metadata.captureProfileId, observerParityVerified: metadata.observerParityVerified === true, selectorSummaries: snapshot.selectorSummaries },
     capsules: snapshot.capsules.sort((a, b) => a.capsuleId.localeCompare(b.capsuleId)),
 });
