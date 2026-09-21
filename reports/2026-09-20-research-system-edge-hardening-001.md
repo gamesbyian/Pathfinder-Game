@@ -1,9 +1,9 @@
 # Research-system edge hardening 001
 
-> **Status:** handoff-ready / PR #1930 remains draft pending one final stable-head validation pass.
-> **Last evidence:** 2026-09-20 — branch head `efd97e762c` after join-integrity, executable-surface, execution-revision, exact-result verdict binding, durable-evidence, family/corpus identity, census, CP-SAT partition and workflow-persistence hardening.
+> **Status:** active
+> **Last evidence:** 2026-09-20 — branch head `3bb2225633`; stable-head CI proved the repaired publisher fixture and Node/CLI contract suite green, with the sole red lane caused by this report's non-canonical status metadata.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
-> **Remaining gate:** the last observed CI run (`20e77ed39d`) had every lane green except one stale publisher fixture; `efd97e762c` fixes that fixture. Do not repeatedly poll Actions. At the next natural checkpoint, run/inspect one final stable-head validation. After merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
+> **Remaining gate:** revalidate once after the metadata repair while continuing the adjacent-join/executable-surface audit; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
 ## Why this pass exists
 
