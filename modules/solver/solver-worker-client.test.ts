@@ -1,6 +1,29 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { buildWorkerSolveOpts, createSolverWorkerClient } from './solver-worker-client.js';
+import { buildWorkerSolveOpts, createSolverWorkerClient, normalizeSolveWorkerResult } from './solver-worker-client.js';
+
+test('normalizeSolveWorkerResult removes transport envelope and restores direct timing field', () => {
+    assert.deepEqual(normalizeSolveWorkerResult({
+        type: 'RESULT',
+        id: 9,
+        ok: false,
+        status: 'timeout',
+        elapsedMs: 42,
+        nodesExpanded: 10,
+        attempts: [],
+        solution: null,
+        solutions: [],
+        nodeBudgetReached: undefined,
+    }), {
+        ok: false,
+        status: 'timeout',
+        nodesExpanded: 10,
+        attempts: [],
+        solution: null,
+        solutions: [],
+        totalMs: 42,
+    });
+});
 
 class FakeWorker {
     onmessage: ((event: any) => void) | null = null;
@@ -60,7 +83,7 @@ test('solve validates raw input, transports one normalized contract, and returns
         status: 'success',
         solution: [1, 2, 3],
         solutions: [[1, 2, 3]],
-        totalMs: 10,
+        elapsedMs: 10,
         nodesExpanded: 7,
         attempts: [],
     });
@@ -68,6 +91,8 @@ test('solve validates raw input, transports one normalized contract, and returns
     assert.equal(result.ok, true);
     assert.equal(result.status, 'success');
     assert.deepEqual(result.solution, [1, 2, 3]);
+    assert.equal(result.totalMs, 10);
+    assert.equal(Object.hasOwn(result, 'elapsedMs'), false, 'historical transport timing name must not leak into public solve result');
     assert.equal(Object.hasOwn(result, 'type'), false, 'worker routing type must not leak into public solve result');
     assert.equal(Object.hasOwn(result, 'id'), false, 'worker routing id must not leak into public solve result');
 
