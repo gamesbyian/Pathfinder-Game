@@ -430,14 +430,14 @@
         "historical complete coverage mirror",
         "legacy display identity arrays alongside canonical scoped identity arrays"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
-      "retirementGate": "Decide/migrate the remaining current legacy display identity arrays alongside canonical scoped identity arrays. The retired complete mirror is no longer emitted by current producers; decision-bearing consumers remain explicit and inference-free.",
-      "progress": "Population integrity normalizes once at research-observation ingress; historical complete may recover coverage only and never decision authority. Current buildResearchPopulationIntegrity(), validate-solver-sweep-integrity output, combinePopulationIntegrity(), and combine-solver-sweep-reports output no longer emit the legacy complete mirror; tests now assert its absence and distinguish coverageComplete from decisionValidComplete. Remaining compatibility output is the combined-population legacy display identity arrays alongside canonical JSON-tuple identities; those still need a consumer/migration decision before closeout."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: combined-population integrity now writes only one identity dialect. Standard expectedIds/duplicateIds/unexpectedIds/missingIds carry collision-safe scoped json-tuple-v1 identities; the parallel canonical* arrays, colon-joined display arrays, and identityFields compatibility registry are retired. Historical complete remains ingress-only coverage recovery and never decision authority.",
+      "progress": "Closed. Population integrity normalizes once at research-observation ingress; historical complete may recover coverage only and never decision authority. Current buildResearchPopulationIntegrity(), validate-solver-sweep-integrity output, combinePopulationIntegrity(), and combine-solver-sweep-reports output do not emit complete. Combined populations now use canonical scoped JSON-tuple identities directly in the standard integrity fields, eliminating the final dual-write identity representation. Tests assert both absence of complete and absence of the retired parallel canonical/display identity fields."
     },
     {
       "id": "PSC-019",
