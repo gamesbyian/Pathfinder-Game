@@ -146,6 +146,16 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
                 errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references missing sourceArtifact ${ref}`);
             }
         }
+        for (const successorQuestion of evidence.successorQuestions ?? []) {
+            if (!questionIds.has(successorQuestion)) {
+                errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown successor question ${successorQuestion}`);
+            }
+        }
+        for (const successorArtifact of evidence.successorArtifacts ?? []) {
+            if (!existsSync(path.join(root, successorArtifact))) {
+                errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references missing successor artifact ${successorArtifact}`);
+            }
+        }
     }
 
     const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
