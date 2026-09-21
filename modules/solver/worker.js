@@ -12,8 +12,7 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 //                                                    it; they stay the dedicated budgetMs param and
 //                                                    this worker's own cancellation-checking yieldFn.
 //   { type: 'FALSE_GOAL_TRIGGER_SEARCH', id, level, budgetMs } — false-goal triggerability search on a NORMALIZED level
-//                                                     (legacy inbound alias `TRAP` is also accepted;
-//                                                      0-indexed keys; postMessage's structured
+//                                                     (0-indexed keys; postMessage's structured
 //                                                     clone carries its Sets/Maps intact, so the
 //                                                     worker sees exactly what the editor sees)
 //   { type: 'ENUMERATE', id, levelKey, level, gateKey, rootChildren, nodeBudget }
@@ -133,7 +132,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
         return;
     }
 
-    if (type === 'FALSE_GOAL_TRIGGER_SEARCH' || type === 'TRAP') {
+    if (type === 'FALSE_GOAL_TRIGGER_SEARCH') {
         const { level, budgetMs = 30000 } = data;
         try {
             /** @type {number[]} */
