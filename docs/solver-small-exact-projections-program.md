@@ -128,4 +128,4 @@ Stop on redundancy, vanishing support, near-full residual identity, excessive co
 
 ## Current next action
 
-Complete the `WS2-CUT-BALANCE-PROJECTION` Stage-0 audit. Its deliverable is a small theorem/mechanic/novelty matrix plus witnesses and one earned incidence measurement, not solver code.
+`WS2-CUT-BALANCE-PROJECTION` has cleared Stage-0 soundness/novelty and its preregistered Stage-B incidence screen (22/24 eligible parents; 105/263 connectivity-passing states). Build only the smallest **production-inert** BC1 consumer next: valid/reference safety differential, prospective later-disposition overlap, and construction-cost versus saved-work accounting. Do not add BC1 to the hot path or generalize to k-cut/flow from incidence alone.
