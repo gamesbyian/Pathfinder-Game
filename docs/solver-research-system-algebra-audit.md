@@ -32,7 +32,7 @@ Boundary: never combine classifications from different purposes/regimes without 
 
 `research-population-identity-lib.mjs` now exposes canonical same-domain set comparison: equal, left proper subset/superset, overlap, disjoint, plus intersection/difference/union counts and identities.
 
-Boundary: callers still prove corpus/identity-basis compatibility. The helper deliberately does not infer semantic domain or auto-build cross-domain unions/hashes. `solver-capability-memory-lib.mjs` currently carries private intersection/union/difference logic and is the first concrete migration candidate after the shared helper proves stable.
+Boundary: callers still prove corpus/identity-basis compatibility. The helper deliberately does not infer semantic domain or auto-build cross-domain unions/hashes. Capability-memory now reuses it for historical-signature intersections and pairwise nomination overlap; policy-specific greedy coverage remains local.
 
 ## C. Research-block consumption — **MATURE SEMANTICS; AUDIT NEXT**
 
@@ -87,8 +87,8 @@ The standard is prevention of real research errors, not mathematical elegance.
 
 ## Priority after first audit
 
-- **Done:** applicability meet; population set relation; block-consumption summary view.
-- **Next:** block-consumption call-site audit; capability-memory is the first known migration candidate for shared population set relations. Envelope composition is deferred until a real same-question multi-envelope consumer appears.
+- **Done:** applicability meet; population set relation; capability-memory set migration + regression/ownership guards; block-consumption summary view.
+- **Next:** block-consumption call-site audit. Envelope composition is deferred until a real same-question multi-envelope consumer appears.
 - **Then:** claim-chain persistence, independence-axis categories, unit-partition recurrence.
 - **Guarded:** typed relation laws.
 - **Never implied:** evidence-role ordering or a generic algebra framework.
