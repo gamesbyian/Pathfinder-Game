@@ -28,8 +28,9 @@ if (!existsSync(path.resolve(ROOT, blockArtifact))) throw new Error(`missing blo
 if (!existsSync(path.resolve(ROOT, artifact))) throw new Error(`missing enrichment artifact: ${artifact}`);
 
 const blockDoc = JSON.parse(readFileSync(path.resolve(ROOT, blockArtifact), 'utf8'));
-const researchBlock = blockDoc?.researchBlock ?? blockDoc?.population?.researchBlock ?? null;
-const populationIdentity = blockDoc?.populationIdentity ?? blockDoc?.population?.corpusIdentity ?? null;
+const envelope = extractResearchArtifactEnvelope(blockDoc);
+const researchBlock = envelope.researchBlock;
+const populationIdentity = envelope.populationIdentity;
 const link = buildResearchEnrichmentLink({
     sourceBlockArtifact: blockArtifact,
     sourceArtifact: artifact,
