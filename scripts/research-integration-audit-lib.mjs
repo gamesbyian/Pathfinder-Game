@@ -125,6 +125,23 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
     }
 
+    for (const demand of model.relations.capabilityDemands ?? []) {
+        if (!questionIds.has(demand.questionId)) {
+            errors.push(`capability demand ${demand.id} references unknown owning question ${demand.questionId}`);
+        }
+        for (const ref of demand.evidenceRefs ?? []) {
+            if (/^(?:docs|reports|scripts|data|logs)\//u.test(String(ref))
+                && !existsSync(path.join(root, ref))) {
+                errors.push(`capability demand ${demand.id} references missing evidenceRef ${ref}`);
+            }
+        }
+        if (demand.resolutionRef
+            && /^(?:docs|reports|scripts|data|logs)\//u.test(String(demand.resolutionRef))
+            && !existsSync(path.join(root, demand.resolutionRef))) {
+            errors.push(`capability demand ${demand.id} references missing resolutionRef ${demand.resolutionRef}`);
+        }
+    }
+
     for (const promotion of model.relations.promotions ?? []) {
         if (promotion.decisionEvidenceRef && !existsSync(path.join(root, promotion.decisionEvidenceRef))) {
             errors.push(`promotion ${promotion.promotionId} references missing decision evidence ${promotion.decisionEvidenceRef}`);
@@ -144,6 +161,16 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         for (const ref of evidence.sourceArtifacts ?? []) {
             if (!existsSync(path.join(root, ref))) {
                 errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references missing sourceArtifact ${ref}`);
+            }
+        }
+        for (const successorQuestion of evidence.successorQuestions ?? []) {
+            if (!questionIds.has(successorQuestion)) {
+                errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown successor question ${successorQuestion}`);
+            }
+        }
+        for (const successorArtifact of evidence.successorArtifacts ?? []) {
+            if (!existsSync(path.join(root, successorArtifact))) {
+                errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references missing successor artifact ${successorArtifact}`);
             }
         }
     }

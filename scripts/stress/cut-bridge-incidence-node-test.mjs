@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { PACK } from '../../modules/solver/encoding.js';
-import { analyzeBridgeExcursionIncidence } from './cut-bridge-incidence.mjs';
+import { analyzeBridgeExcursionIncidence, attachBridgeExcursionResearchLineage } from './cut-bridge-incidence.mjs';
 
 const bridgeLevel = {
     id: 'B1',
@@ -46,6 +46,18 @@ assert.ok(result.rows[0].conflictCount >= 1);
 assert.ok(result.rows[0].conflicts.every(conflict =>
     conflict.farPendingIds.includes(String(PACK(3, 1))),
 ), 'every qualifying bridge conflict must strand the pending must-pass on the far side');
+
+const withLineage = await attachBridgeExcursionResearchLineage(result, {
+    population,
+    populationPath: 'tmp/bc1-frozen-population.json',
+    levels: [bridgeLevel],
+});
+assert.match(withLineage.populationIdentity, /^sha256:[0-9a-f]{64}$/u);
+assert.equal(withLineage.researchBlock.questionId, 'WS2-CUT-BALANCE-PROJECTION');
+assert.equal(withLineage.researchBlock.independentUnit, 'parent-level');
+assert.deepEqual(withLineage.researchBlock.parentIds, ['B1']);
+assert.equal(withLineage.researchEnrichmentKind, 'observation');
+assert.equal(withLineage.unitTopology.dependenceClusterUnit, 'parent');
 
 const noObligation = {
     ...bridgeLevel,

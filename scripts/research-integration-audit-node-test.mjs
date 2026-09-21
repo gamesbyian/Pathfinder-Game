@@ -53,6 +53,47 @@ assert.ok(missingSourceArtifact.errors.some(error =>
     /references missing sourceArtifact reports\/__missing-source-artifact__\.md/u.test(error)),
 'structured report sourceArtifact refs must resolve to tracked repository files at integration time');
 
+const withBadCapabilityDemand = {
+    ...prebuiltModel,
+    relations: {
+        ...prebuiltModel.relations,
+        capabilityDemands: [
+            ...(prebuiltModel.relations.capabilityDemands ?? []),
+            {
+                id: 'CID-TEST-BAD',
+                questionId: 'WS2-NOT-A-REAL-QUESTION',
+                evidenceRefs: ['reports/not-a-real-capability-evidence.md'],
+                resolutionRef: 'reports/not-a-real-resolution.json',
+            },
+        ],
+    },
+};
+const badCapabilityDemand = auditResearchIntegration(process.cwd(), { model: withBadCapabilityDemand });
+assert.ok(badCapabilityDemand.errors.some(error =>
+    /capability demand CID-TEST-BAD references unknown owning question WS2-NOT-A-REAL-QUESTION/u.test(error)));
+assert.ok(badCapabilityDemand.errors.some(error =>
+    /capability demand CID-TEST-BAD references missing evidenceRef reports\/not-a-real-capability-evidence\.md/u.test(error)));
+assert.ok(badCapabilityDemand.errors.some(error =>
+    /capability demand CID-TEST-BAD references missing resolutionRef reports\/not-a-real-resolution\.json/u.test(error)));
+
+const evidenceWithBadSuccessors = {
+    ...prebuiltModel,
+    relations: {
+        ...prebuiltModel.relations,
+        evidence: prebuiltModel.relations.evidence.map((row, index) =>
+            index === 0 ? {
+                ...row,
+                successorQuestions: ['WS2-NOT-A-REAL-QUESTION'],
+                successorArtifacts: ['reports/not-a-real-successor.md'],
+            } : row),
+    },
+};
+const badSuccessors = auditResearchIntegration(process.cwd(), { model: evidenceWithBadSuccessors });
+assert.ok(badSuccessors.errors.some(error =>
+    /references unknown successor question WS2-NOT-A-REAL-QUESTION/u.test(error)));
+assert.ok(badSuccessors.errors.some(error =>
+    /references missing successor artifact reports\/not-a-real-successor\.md/u.test(error)));
+
 const withConsumptionEvent = event => ({
     ...prebuiltModel,
     relations: {

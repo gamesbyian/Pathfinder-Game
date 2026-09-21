@@ -132,6 +132,8 @@ function reportMachineMetadata(source, reportPath) {
             selectionHistory: metadataScalar(source, 'Selection history'),
             inferenceScope: metadataScalar(source, 'Inference scope'),
             sourceArtifacts: [],
+            successorQuestions: [],
+            successorArtifacts: [],
         };
     }
 
@@ -174,6 +176,8 @@ function reportMachineMetadata(source, reportPath) {
         selectionHistory: metadataScalar(source, 'Selection history'),
         inferenceScope: closeout.scope?.inferenceScope ?? metadataScalar(source, 'Inference scope'),
         sourceArtifacts: closeout.sourceArtifacts ?? [],
+        successorQuestions: closeout.successors?.questions ?? [],
+        successorArtifacts: closeout.successors?.artifacts ?? [],
     };
 }
 
@@ -214,6 +218,8 @@ export function buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable 
             latestEvidence: { date: metadata.lastEvidenceDate, summary: metadata.lastEvidenceSummary, report: reportPath },
             decision: metadata.decision, remainingGate: metadata.remainingGate,
             sourceArtifacts,
+            successorQuestions: metadata.successorQuestions ?? [],
+            successorArtifacts: metadata.successorArtifacts ?? [],
             linkedArtifacts,
             artifactRelation: sourceArtifacts.length ? 'structured-source+linked-discovery' : 'linked-discovery-only',
             artifacts,

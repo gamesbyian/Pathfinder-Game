@@ -64,6 +64,8 @@ export function createResearchCloseoutCapsule({
   inferenceScope = null,
   claimRefs = [],
   sourceArtifacts = [],
+  successorQuestions = [],
+  successorArtifacts = [],
   expectation = null,
   surprise = null,
   anomaly = null,
@@ -87,6 +89,10 @@ export function createResearchCloseoutCapsule({
     },
     claimRefs: normalizeStringList(claimRefs, 'claimRefs'),
     sourceArtifacts: normalizeRepositoryRefList(sourceArtifacts, 'sourceArtifacts'),
+    successors: {
+      questions: normalizeStringList(successorQuestions, 'successorQuestions'),
+      artifacts: normalizeRepositoryRefList(successorArtifacts, 'successorArtifacts'),
+    },
     prospective: {
       expectation: optionalSingleLine(expectation, 'expectation'),
       surprise: optionalSingleLine(surprise, 'surprise'),
@@ -130,6 +136,8 @@ export function parseResearchCloseoutCapsule(markdown) {
     inferenceScope: parsed.scope?.inferenceScope,
     claimRefs: parsed.claimRefs,
     sourceArtifacts: parsed.sourceArtifacts,
+    successorQuestions: parsed.successors?.questions,
+    successorArtifacts: parsed.successors?.artifacts,
     expectation: parsed.prospective?.expectation,
     surprise: parsed.prospective?.surprise,
     anomaly: parsed.prospective?.anomaly,

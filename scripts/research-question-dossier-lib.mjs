@@ -132,6 +132,14 @@ export function buildQuestionDossier(root = process.cwd(), {
         (question.constrainedBy ?? []).filter(value => typeof value === 'string' && PATH_RE.test(value)),
     )];
     const evidenceRefs = [...new Set([...answerRefs, ...constraintRefs])];
+    const evidenceRefSet = new Set(evidenceRefs);
+    const capabilityDemandOwnerMatches = model.relations.capabilityDemands.filter(row =>
+        row.questionId === questionId);
+    const capabilityDemandEvidenceMatches = model.relations.capabilityDemands.filter(row =>
+        (row.evidenceRefs ?? []).some(ref => evidenceRefSet.has(ref)));
+    const capabilityDemands = [...new Map(
+        [...capabilityDemandOwnerMatches, ...capabilityDemandEvidenceMatches].map(row => [row.id, row]),
+    ).values()];
 
     return {
         schemaVersion: 1,
@@ -160,6 +168,11 @@ export function buildQuestionDossier(root = process.cwd(), {
             evidenceDiscoveryMode: 'lexical-discovery-only',
             experiments: model.relations.experiments.filter(authorityMatch),
             experimentMatchMode: 'lexical-discovery-only',
+            capabilityDemands,
+            capabilityDemandMatchMode: capabilityDemandOwnerMatches.length && capabilityDemandEvidenceMatches.length
+                ? 'owning-question-id+exact-evidence-ref'
+                : capabilityDemandOwnerMatches.length ? 'owning-question-id'
+                    : capabilityDemandEvidenceMatches.length ? 'exact-evidence-ref' : 'none',
         },
         answerRefs,
         constraintRefs,
