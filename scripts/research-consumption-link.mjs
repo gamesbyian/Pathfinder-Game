@@ -7,7 +7,7 @@ import {
     assertResearchBlock,
 } from './solver-research-block-lineage.mjs';
 import { loadResearchQuestionRegistry } from './research-question-relations-lib.mjs';
-import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
+import { assertCanonicalResearchArtifactEnvelope, extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -120,6 +120,7 @@ const sidecar = {
         selectionArtifact,
     },
 };
+assertCanonicalResearchArtifactEnvelope(sidecar);
 mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
 writeFileSync(path.resolve(out), JSON.stringify(sidecar, null, 2) + '\n');
 console.log(JSON.stringify({
