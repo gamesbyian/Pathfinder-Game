@@ -77,7 +77,7 @@ const reversed = validateReconciliationSources([{ runId: '2', manifest: secondMa
 assert.equal(reversed.protocolHash, result.protocolHash, 'source ordering must not change the protocol identity');
 assert.equal(reversed.sourceSetHash, result.sourceSetHash, 'source-set provenance must be canonical regardless of caller/source-directory ordering');
 
-assert.throws(() => validateReconciliationSources([{ runId: '1', manifest: {} }]), /resolved SHA/);
+assert.throws(() => validateReconciliationSources([{ runId: '1', manifest: {} }]), /workflow run ID/);
 const orchestrationOnlySha = clone(manifest);
 delete orchestrationOnlySha.experiment.resolvedSha;
 orchestrationOnlySha.sha = 'a'.repeat(40);
