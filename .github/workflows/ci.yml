@@ -157,13 +157,13 @@ jobs:
             --work-budget=500000 \
             --time-budget-ms=30000 \
             --max-certificates=64 \
-            --out=reports/stress/connectivity-certificate-shadow-development-001.json \
-            --summary-out=reports/stress/connectivity-certificate-shadow-development-001-summary.md
+            --out=reports/stress/connectivity-certificate-shadow-development-002.json \
+            --summary-out=reports/stress/connectivity-certificate-shadow-development-002-summary.md
       - name: Upload connectivity cut-certificate shadow evidence
         if: always() && github.event_name == 'pull_request' && github.head_ref == 'chatgpt/solver-batch-digestion-audit-closeout-2026-09-21'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: connectivity-certificate-shadow-development-001
+          name: connectivity-certificate-shadow-development-002
           path: |
             reports/stress/connectivity-certificate-shadow-development-001.json
             reports/stress/connectivity-certificate-shadow-development-001-summary.md
