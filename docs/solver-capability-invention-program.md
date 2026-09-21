@@ -61,9 +61,10 @@ For each sampled parent record:
 - HARVEST vs EXTENSION/INVENTION;
 - missing semantic operation;
 - smallest probe;
-- whether demand recurs across independent parents.
+- whether demand recurs across independent parents;
+- for recurrent EXTENSION/INVENTION nominations, a shared resolution envelope or durable resolution reference showing which observability/discrimination conditions are actually resolved or blocked.
 
-Do not assign an invention when causality is unresolved.
+Do not assign an invention when causality is unresolved. A capability row's `resolved | partial | unresolved` label is a program disposition, not a substitute for the shared observability/identifiability resolution contract.
 
 Machine register: `data/stress/capability-invention-demand.json`.
 
@@ -75,7 +76,7 @@ Freeze contrast identities, describe them with legal current-input facts, seek t
 
 First-loss asks **what operation is missing at a causal failure boundary?** Response-guided invention asks **what exact distinction explains why existing capabilities behave differently?**
 
-Both feed the same ladder.
+Both feed the same ladder. When compact failure-response evidence supplies action/configuration identity, consume the owning shared identity normalization/compatibility view; do not reconstruct action identity from technique-set labels or historical field placement.
 
 ## Acquisition ladder
 
@@ -154,7 +155,8 @@ A demand may nominate a live question only when:
 3. a bounded discriminator has a declared decision-changing outcome;
 4. population and independent unit are explicit;
 5. closed forms are reconciled narrowly;
-6. the next step is smaller than full architecture.
+6. the next step is smaller than full architecture;
+7. recurrent EXTENSION/INVENTION demand has a shared resolution envelope/reference rather than relying on a naked local `resolved` label.
 
 Register promoted questions in the ordinary question authority. Workstreams owns priority; this file is not a second queue.
 
