@@ -96,7 +96,7 @@ Candidate partitions include checkerboard color, cut side/region, reachable phas
 
 Prefer existing evidence in this order:
 1. prespecified technique-census pair discordance;
-2. capability-memory complementary signatures, used only to nominate explanatory contrasts;
+2. capability-evidence complementary signatures, used only to nominate explanatory contrasts;
 3. first-loss/search-loss decision observations;
 4. within-level accepted-path technique contrasts;
 5. new production-inert telemetry only after existing evidence cannot answer the discriminator.
