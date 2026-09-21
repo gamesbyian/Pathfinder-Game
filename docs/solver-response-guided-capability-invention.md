@@ -117,7 +117,9 @@ npm run research:freeze-response-guided-contrasts -- \
   --out=tmp/response-guided-contrast-population.json
 ```
 
-The freezer records the exact A-only/B-only/both identities plus the source file SHA-256. Once `--cohorts` is supplied, downstream analyzers use those identities directly rather than recomputing outcome-selected cohorts. The historical September 1 analysis remains provenance for the original nominations; new executable development work uses the tracked September 3 capability map unless an older artifact is supplied explicitly.
+The freezer records the exact A-only/B-only/both identities, source file SHA-256, explicit outcome-selection basis, and a canonical population identity over the selected level IDs. Once `--cohorts` is supplied, downstream analyzers use those identities directly rather than recomputing outcome-selected cohorts.
+
+The generic freezer intentionally does **not** mint a research block: one invocation can carry multiple technique pairs serving different research questions, and the capability artifact alone does not provide canonical parent-content fingerprints. A decision-bearing descendant that needs block eligibility/consumption lineage must become question-scoped and resolve parent content identity from an authoritative level corpus before calling the shared research-block owner. Do not fake content identity from level IDs or technique-result hashes merely to satisfy the block schema. The historical September 1 analysis remains provenance for the original nominations; new executable development work uses the tracked September 3 capability map unless an older artifact is supplied explicitly.
 
 Then run the first no-search response analysis:
 
