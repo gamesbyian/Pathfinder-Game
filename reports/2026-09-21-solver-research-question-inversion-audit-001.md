@@ -72,7 +72,7 @@ An inverse is a **question-generation diagnostic**, not a sibling experiment ent
 
 The registry contains many questions about adding capability, dose, retention, retries or exact reasoning. Their inverses repeatedly ask whether current production work can disappear.
 
-This is not a call for a second work-elimination program. The 2026-09-21 computational-work-elimination audit already closed generic proof-store/cache architecture and routed dynamic BC1 removable-work economics to its existing owner. PR #1952 separately measures the oracle ceiling for one-successor beam work. The durable lesson is methodological: every additive/allocation proposal should also ask whether the same evidence nominates removable or dominated work.
+This is not a call for a second work-elimination program. The 2026-09-21 computational-work-elimination audit already closed generic proof-store/cache architecture and routed dynamic BC1 removable-work economics to its existing owner. PR #1952's preregistered census has since found a **25.33% one-successor parent-expansion work oracle ceiling** across its frozen 64-parent sample, decisively earning capture/economics measurement while leaving production contraction unearned. The durable lesson is methodological: every additive/allocation proposal should also ask whether the same evidence nominates removable or dominated work.
 
 ### 2. Proofs have useful positive complements
 
