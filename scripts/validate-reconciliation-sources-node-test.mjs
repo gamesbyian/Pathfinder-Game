@@ -125,6 +125,7 @@ assert.throws(
   /resolved SHA .* differs .* recombine-only result cannot claim one preserved experiment identity/u,
 );
 const nestedReconciliation = clone(manifest);
+nestedReconciliation.experiment.workflowRunId = 'nested';
 nestedReconciliation.experiment.reconciliationRun = {
   kind: 'recombine-only',
   preservesExperimentIdentity: true,
