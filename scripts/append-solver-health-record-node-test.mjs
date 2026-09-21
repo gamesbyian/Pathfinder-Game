@@ -190,7 +190,7 @@ test('capability-evidence CLI materializes JSON and human summary without solver
     }));
     const out = path.join(dir, 'memory.json');
     const summaryOut = path.join(dir, 'memory.md');
-    execFileSync('node', ['scripts/solver-capability-memory.mjs', `--manifest=${path.join(dir, 'manifest.json')}`, `--out=${out}`, `--summary-out=${summaryOut}`], { encoding: 'utf8' });
+    execFileSync('node', ['scripts/solver-capability-evidence.mjs', `--manifest=${path.join(dir, 'manifest.json')}`, `--out=${out}`, `--summary-out=${summaryOut}`], { encoding: 'utf8' });
     const result = JSON.parse(readFileSync(out, 'utf8'));
     const summaryText = readFileSync(summaryOut, 'utf8');
     assert.equal(result.baseline.residual, 1);
