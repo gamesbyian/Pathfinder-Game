@@ -363,6 +363,8 @@
     "test:paired-beam-width-frontier": "node scripts/run-bundled.mjs scripts/stress/compare-paired-beam-width-frontiers-node-test.mjs",
     "test:cut-bridge-excursion": "node scripts/stress/cut-bridge-excursion-lib-node-test.mjs",
     "research:cut-bridge-incidence": "node scripts/run-bundled.mjs scripts/stress/cut-bridge-incidence.mjs",
+    "research:forced-work-prevalence": "node scripts/run-bundled.mjs scripts/stress/forced-work-prevalence.mjs --",
+    "test:forced-work-prevalence": "node scripts/stress/forced-work-prevalence-lib-node-test.mjs",
     "test:cut-bridge-incidence": "node scripts/run-bundled.mjs scripts/stress/cut-bridge-incidence-node-test.mjs",
     "research:freeze-response-guided-contrasts": "node scripts/freeze-response-guided-contrasts.mjs",
     "test:freeze-response-guided-contrasts": "node scripts/freeze-response-guided-contrasts-node-test.mjs",
