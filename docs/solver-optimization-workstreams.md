@@ -28,7 +28,7 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 - **Class 5:** topology remains research-only; F3 population 14 pairs/7 parents. No raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 - **Card-E:** 17/156 reconstructable-unexposed; both tested descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
-- **Post-topology:** H1 and DEAD-core size-1 closed; H3/H2 negative; behavioral quotient research-only. H3 allocation value: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md)
+- **Post-topology:** H1 + DEAD-core size-1 closed; H3/H2 negative; behavioral quotient research-only. H3 allocation: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md)
 
 ### Premise-acquisition lanes
 
@@ -72,7 +72,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane H — parity invariants
 
-**PARALLEL OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` + `WS2-CHECKERBOARD-CAPACITY`; advance on incidence/soundness. Static portal decomposition is **CLOSED IN TESTED FORM**: no value beyond raw portal count on frozen contrasts. [preflight](solver-parity-phase-capacity-preflight.md) · [result](../reports/2026-09-21-response-guided-premise-nominations-001.md)
+**PARALLEL OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` + `WS2-CHECKERBOARD-CAPACITY`; advance on incidence/soundness. Static portal decomposition is **CLOSED** beyond raw portal count on frozen contrasts. [preflight](solver-parity-phase-capacity-preflight.md) · [result](../reports/2026-09-21-response-guided-premise-nominations-001.md)
 
 #### Lane I — small exact projections
 
@@ -82,7 +82,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 Frozen-map mining is complete; A/D1/F3 did not earn a shared runtime substrate. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** HARVEST adds repair node-cap + matched-work A/B; reserve repricing stays separate. ACQUISITION runs beam freshness, broader first-loss sampling, then earned prefix/orientation traces. BC1 advances to inert safety/economics. Forced-work prevalence is broad (25.33% of measured parent-expansion work), but that work is already paid when one-survivor status is known; `WS2-FORCED-WORK-CAPTURE-ECONOMICS` next reruns the frozen sample with singleton/singleton->singleton phase telemetry and prices only post-recognition consequences. [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-result-001.md)
+**Current WS2 gate:** HARVEST adds repair node-cap + matched-work A/B; reserve repricing stays separate. ACQUISITION runs beam freshness, broader first-loss sampling, then earned prefix/orientation traces. BC1 advances to inert safety/economics. Forced-work prevalence is 25.33%, but expansion/pruning is already paid when forcedness is known; `WS2-FORCED-WORK-CAPTURE-ECONOMICS` next prices post-recognition singleton-chain consequences. [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-result-001.md)
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** LEGAL-SIGNAL CAPTURE ACTIVE. Next: inert action-boundary capture. [`oracle`](../reports/2026-09-21-prewinner-work-oracle-census-001.md) · [`preflight`](../reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md)
@@ -110,7 +110,7 @@ Frozen-map mining is complete; A/D1/F3 did not earn a shared runtime substrate. 
 ## Standing research rules
 
 - Compare techniques with `workSpent`; nodes are within-technique diagnostics. New actions/configs compete inside total work.
-- Cold routing cannot consume IDs, historical outcomes, hints, family labels, stored exact answers, or capability-evidence membership. Current-input exact derivation is legal only if sound/economical.
+- Cold routing cannot consume IDs, historical outcomes, hints, family labels, or stored answers. Current-input exact derivation is legal only if sound/economical.
 - Separate semantic premise from tested form before transporting a negative. Offline/exact evidence may nominate/falsify a production premise; it cannot license runtime behavior.
 - Match protocol identity, not nominal reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes generate premises, never production exceptions.
 - Prefer cheapest information-value tests. Hold out independent units; scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not proofs.
