@@ -175,7 +175,7 @@ for (const file of walk(stagingDir).sort()) {
             workSpent: row.workSpent ?? undefined,
             workBudget: summary.workBudget ?? undefined,
         };
-        if (capture.record(entry.level, syntheticResult)) recordChanges += 1;
+        if (capture.recordHistorical(entry.level, syntheticResult)) recordChanges += 1;
     }
     capture.flush(state.corpusPath, state.document);
     reportsHarvested += 1;
