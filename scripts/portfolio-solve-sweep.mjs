@@ -42,7 +42,7 @@ import { createHash } from 'node:crypto';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from '../modules/solver/legacy-latency-portfolio-experiment.js';
 import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
-import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
@@ -346,9 +346,9 @@ if (schedulerMode === 'static-portfolio') {
         ...(staticPortfolioResumableResidualPass ? { resumableResidualPass: true } : {}),
     };
 }
-// readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
-// (harmless when --save-hints is unset — we just don't write anything back).
-const rawLevels = readLevelsWithHints(corpusPath);
+// Read one explicit corpus document so wrapper/storage metadata survives any hint-writing pass.
+const corpusDocument = readLevelCorpusDocumentWithHints(corpusPath);
+const rawLevels = corpusDocument.levels;
 const levelFilter = parseLevelPositions(argMap.get('--levels'));
 let targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
@@ -381,7 +381,7 @@ const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
 if (schedulerMode === 'legacy-latency-portfolio-experiment') solveOpts.legacyLatencyPortfolioExperiment = legacyLatencyPortfolioExperiment;
 if (schedulerMode === 'static-portfolio') solveOpts.staticPortfolio = staticPortfolioConfig;
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
-if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
+if (Number.isFinite(workBudget)) solveOpts.baseWorkBudget = workBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairAdditiveBudgetMultiplierOverride = repairBudgetFraction;
 if (Number.isFinite(goalAttractionDisabledRetryBudgetFraction)) solveOpts.goalAttractionDisabledRetryBudgetFractionOverride = goalAttractionDisabledRetryBudgetFraction;
 if (Number.isFinite(admissibleOrderBudgetFraction)) solveOpts.admissibleOrderBudgetFractionOverride = admissibleOrderBudgetFraction;
@@ -700,13 +700,13 @@ function logProgress(row) {
 
 // Persist hints to disk after EVERY level, not just once at the very end -- a long-running sweep
 // (hours, e.g. under a CI job with a hard wall-clock cutoff) that gets killed mid-run must not
-// lose every solve found before the kill. writeLevelsWithHints only rewrites a level's hint file
+// lose every solve found before the kill. writeLevelCorpusDocumentWithHints only rewrites a level's hint file
 // when its content actually changed (see level-data-io.mjs), so calling it after a level that
 // found nothing new is a cheap no-op, not a redundant full-corpus rewrite -- safe to call
 // unconditionally rather than only when this specific row appended a hint.
 function persistHintsIfEnabled() {
     if (!saveHints) return;
-    totalHintFilesChanged += writeLevelsWithHints(corpusPath, rawLevels).hintFilesChanged;
+    totalHintFilesChanged += writeLevelCorpusDocumentWithHints(corpusPath, corpusDocument).hintFilesChanged;
 }
 
 // Writes the --out/--summary-out report from CURRENT levelRows/counters, not just once at the
