@@ -397,6 +397,23 @@ async function main() {
         await run([`--in=${batch1},${batchLocalCommit}`, `--out=${outFile}`]);
         console.log('  ✓ exempts local/unknown commit provenance from the wrong-ref check');
 
+        const immutableCommit = 'a'.repeat(40);
+        const batchImmutableCommit = path.join(tempDir, 'batch-immutable-commit.json');
+        const batchUnknownCommit = path.join(tempDir, 'batch-unknown-commit.json');
+        await writeFile(batchImmutableCommit, JSON.stringify(batchReport({
+            summary: { commit: immutableCommit },
+            levels: [{ level: 6, id: 'R00006', ok: true }],
+        })));
+        await writeFile(batchUnknownCommit, JSON.stringify(batchReport({
+            summary: { commit: 'unknown' },
+            levels: [{ level: 7, id: 'R00007', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${batchImmutableCommit},${batchUnknownCommit}`, `--out=${outFile}`]),
+            /some source reports carry an immutable execution revision and others omit or weaken it/u,
+        );
+        console.log('  ✓ rejects mixed modern/legacy execution revision provenance before combine can upgrade unknown rows');
+
         const batch1Again = path.join(tempDir, 'batch-01-again.json');
         await writeFile(batch1Again, JSON.stringify(batchReport({
             levels: [{ level: 1, id: 'R00001', ok: false, status: 'timeout', totalMs: 8000, elapsedMs: 8000, attempts: [], attemptCount: 0, failedStrategies: [] }],
