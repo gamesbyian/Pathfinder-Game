@@ -68,7 +68,7 @@ A `+5/-12` treatment can therefore remain `CLOSED NEGATIVE` while also carrying 
 
 Protocol-compatible compact failure-response evidence can enrich this axis without creating a new durable memory store. For matched parents/policies, derived analysis may compare exposure, work/censoring, progress, prune/flow response, or rich loss locus where available. A zero-solve-delta treatment whose operational response moves remains negative on the production axis; the movement is only premise/capability evidence. Unknown protocol identity or unmatched populations abstain.
 
-## Derived capability-evidence view
+## Derived capability evidence view
 
 `scripts/analyze-solver-capability-evidence.mjs` builds an ephemeral/rebuildable view from a baseline plus candidate evidence. It deliberately does **not** create a new permanent truth store.
 
@@ -158,7 +158,7 @@ For a materially changed production boundary:
 4. periodically ask whether losses from unrelated accepted changes recur in the same mechanism/failure phenotype;
 5. if recurrence appears, nominate the smallest generic representation/retention/routing/operator premise that explains it.
 
-This is a **counterfactual regression bank** conceptually, not necessarily a new tracked file. The health timeline and capability-evidence analyzer provide the cheap raw material; dated reports own decision-bearing interpretation.
+This is a **counterfactual regression bank** conceptually, not necessarily a new tracked file. The health timeline and capability evidence analyzer provide the cheap raw material; dated reports own decision-bearing interpretation.
 
 ## Longitudinal health
 
@@ -197,8 +197,8 @@ Capability evidence feeds existing owners rather than becoming a new workstream.
 - **WS1 / action selection:** seek legal generic features that distinguish where materially different actions/policies win. Exact-invariant features such as parity phase/slack may be tested against technique-response discordance; historical exact IDs and hint/provenance may nominate the contrast but cannot be selector inputs.
 - **WS4 / retention and representation:** repeated known-live loss across materially distinct policies is stronger evidence than one policy's isolated failure.
 - **WS6 / repair and handoff:** use complementary producer/consumer capability only after exposure/operator evidence establishes a real handoff opportunity.
-- **WS0 / restart/randomization:** reopen only when capability-evidence evidence supports a recurring restart/commitment-diversity deficit under the existing reopen rules.
-- **WS3 / generalization discipline:** capability-evidence mining increases selection pressure; any descendant selected from many historical policies/signatures is development evidence and normally needs proportionate independent confirmation.
+- **WS0 / restart/randomization:** reopen only when capability evidence supports a recurring restart/commitment-diversity deficit under the existing reopen rules.
+- **WS3 / generalization discipline:** capability-evidence analysis increases selection pressure; any descendant selected from many historical policies/signatures is development evidence and normally needs proportionate independent confirmation.
 
 A large capability-evidence union therefore says “there is demonstrable policy diversity worth explaining,” not “append all policies to production.”
 
@@ -218,7 +218,7 @@ For a current residual question:
 
 ## Freshness and residual reconciliation
 
-Capability-memory analysis makes stale residual labels more consequential, so freshness must be explicit.
+Capability-evidence analysis makes stale residual labels more consequential, so freshness must be explicit.
 
 After a material capability promotion or a provenance reinterpretation that changes class membership:
 
