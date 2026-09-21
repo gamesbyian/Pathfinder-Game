@@ -142,7 +142,7 @@ test('connectivity goal-cut shadow observes an applicable proof when the caller 
     const prep = prepLevel(level);
     const records: any[] = [];
     prep._connectivityCertificateShadow = {
-        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8, observeUnscheduled: true },
         certificates: [],
         nextId: 1,
     };
