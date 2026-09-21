@@ -24,6 +24,16 @@ assert.equal(
     'property insertion order must not change the semantic observation key',
 );
 
+
+const canonicalConfig = 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain';
+const legacyConfigAsAction = { ...base, actionKey: canonicalConfig, configurationKey: null };
+const correctedConfigOnly = { ...base, actionKey: null, configurationKey: canonicalConfig };
+assert.equal(
+    failureResponseObservationKey(document, legacyConfigAsAction),
+    failureResponseObservationKey(document, correctedConfigOnly),
+    'historical config-in-action projection must normalize to the corrected configuration-only semantic key',
+);
+
 const exact = auditFailureResponseIdentity([
     { ...document, records: [base, { ...base }] },
 ]);
