@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createBudgetEnvelope, legacyStageTags, normalizeSolverStageId, SOLVER_STAGE_IDS, SOLVER_STAGE_SPECS, solverStageSpec, withSolverStage } from './stage-policy.js';
+import { createBudgetEnvelope, legacyStageTags, normalizeHistoricalSolverStageId, normalizeSolverStageId, SOLVER_STAGE_IDS, SOLVER_STAGE_SPECS, solverStageSpec, withSolverStage } from './stage-policy.js';
 test('every policy stage has exactly one canonical spec and label', () => {
     assert.equal(Object.keys(SOLVER_STAGE_SPECS).length, SOLVER_STAGE_IDS.length);
     assert.equal(new Set(SOLVER_STAGE_IDS).size, SOLVER_STAGE_IDS.length);
     for (const id of SOLVER_STAGE_IDS) assert.equal(solverStageSpec(id).telemetryLabel, id);
-    assert.throws(() => solverStageSpec('future-stage' as never), /Unknown solver stage/);
+    assert.throws(() => solverStageSpec('future-stage' as never), /Unknown canonical solver stage/);
 });
 test('production retry metadata reports current production-default policy status', () => {
     for (const id of [
@@ -59,12 +59,15 @@ test('every historical stage ID normalizes to exactly one canonical identity wit
         'portfolio-fallback': 'legacy-latency-portfolio-fallback',
     } as const;
     for (const [legacy, canonical] of Object.entries(historicalCases)) {
-        assert.equal(normalizeSolverStageId(legacy), canonical, legacy);
+        assert.equal(normalizeHistoricalSolverStageId(legacy), canonical, legacy);
+        assert.throws(() => normalizeSolverStageId(legacy), /Unknown canonical solver stage/, legacy);
     }
     for (const canonical of SOLVER_STAGE_IDS) {
         assert.equal(normalizeSolverStageId(canonical), canonical, canonical);
+        assert.equal(normalizeHistoricalSolverStageId(canonical), canonical, canonical);
     }
     assert.equal(new Set(Object.values(historicalCases)).size, Object.keys(historicalCases).length,
         'distinct historical stage IDs must not collapse to one canonical identity');
-    assert.throws(() => normalizeSolverStageId('not-a-stage'), /Unknown solver stage/);
+    assert.throws(() => normalizeSolverStageId('not-a-stage'), /Unknown canonical solver stage/);
+    assert.throws(() => normalizeHistoricalSolverStageId('not-a-stage'), /Unknown canonical solver stage/);
 });
