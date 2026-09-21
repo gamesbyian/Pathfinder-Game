@@ -1,7 +1,7 @@
 # Forced-work prevalence result 001
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-09-21 — frozen 64-parent current-residual census, GitHub Actions run `35657944874`.
+> **Last evidence:** 2026-09-21 — frozen 64-parent current-residual census, GitHub Actions corrected rerun `35659746572` (artifact `10666891944`).
 > **Decision:** the current solver spends a material share of canonical beam parent-expansion work at post-prune one-successor states; the prevalence gate is decisively positive. Do not implement chain contraction yet.
 > **Remaining gate:** measure capture fraction and semantic safety: which portions of one-successor work are actually avoidable while preserving transition semantics, work accounting, solution recognition, mechanics, and observer behavior.
 > **Evidence role:** discovery
@@ -38,18 +38,17 @@ Machine summary: [`reports/stress/forced-work-prevalence-census-summary-2026-09-
 
 ## Chain shape
 
-The prevalence signal is mostly many short deterministic segments, not rare spectacular corridors.
+The initial successful census used a generated-stage diagnostic path list to reconstruct unique-child identity. That list includes candidates later removed by hard pruning, so its prevalence/work totals were valid but its chain anatomy was not. Corrected rerun `35659746572` reconstructs child identity after hard pruning.
 
-The reducer observed 5,813,731 chain starts. The maximum observed consecutive one-successor length was 14 and the largest single chain carried 131 measured work units. In the first rows and throughout the census, median chain length is typically 1 and p90 typically 2.
+The corrected reducer observes **4,932,517** chain starts. Across parent runs, median chain length is usually 1 or 2 and p90 is usually 2 or 3; the maximum observed consecutive one-successor length is **19**, with maximum measured chain work **196**.
 
-Termination counts:
+Corrected termination counts:
 
-- branch: 2,152,773;
-- forced child not retained: 1,409,561;
-- dead end: 681,457;
-- no surviving child identity in the retained generated set: 1,569,940.
+- branch: **2,363,307**;
+- forced child not retained: **1,700,586**;
+- dead end: **868,624**.
 
-That shape matters. A useful consumer may be less about compressing long corridors and more about avoiding repeated full parent-expansion machinery across ubiquitous locally forced steps.
+This strengthens the qualitative conclusion: the reservoir is dominated by extremely common short forced segments rather than a few spectacular corridors. The cheapest consumer may therefore target ordinary one-successor transitions or short runs, not only long-chain compression.
 
 ## What the result means
 
