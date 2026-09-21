@@ -38,7 +38,7 @@ Boundary: callers still prove corpus/identity-basis compatibility. The helper de
 
 `solver-research-block-lineage.mjs` already behaves like a linear resource: consumption history grows monotonically; copying artifacts does not mint independent freshness; confirmation/transfer eligibility is lineage/scope-sensitive; development remains reusable.
 
-Do not collapse this to spent/unspent or order evidence roles. Next: audit `research:record-consumption` call sites for duplicate freshness logic or artifact-copy loopholes. Add only a derived consumption-state view if real duplication recurs.
+Do not collapse this to spent/unspent or order evidence roles. A pure consumption summary is now exposed through the relation model (question/role/scope counts, opened outcomes, decision refs, time span). Next: audit `research:record-consumption` call sites for duplicate freshness logic or artifact-copy loopholes before adding anything stronger.
 
 ## D. Observability envelopes — **DIAGNOSTIC COMPOSITION IMPLEMENTED**
 
@@ -84,8 +84,8 @@ The standard is prevention of real research errors, not mathematical elegance.
 
 ## Priority after first audit
 
-- **Done:** applicability meet; population set relation; observability composition diagnostic.
-- **Next:** block-consumption call-site audit and envelope-composition census.
+- **Done:** applicability meet; population set relation; observability composition diagnostic; block-consumption summary view.
+- **Next:** envelope-composition census and block-consumption call-site audit; capability-memory is the first known migration candidate for shared population set relations.
 - **Then:** claim-chain persistence, independence-axis categories, unit-partition recurrence.
 - **Guarded:** typed relation laws.
 - **Never implied:** evidence-role ordering or a generic algebra framework.
