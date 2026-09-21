@@ -1,18 +1,13 @@
 <!-- agent-context-budget: warn=7000 max=10000 -->
+# Solver batch digestion audit: recovered execution evidence and dispositions
 
 > **Status:** concluded-negative
 > **Last evidence:** 2026-09-21 — recovered fixed-cost execution, complete 1,962-level equivalence/presolve census and family provenance/partial-compilation census closed the broad ingestion-speed hypotheses.
 > **Decision:** no general compiled-level speed refactor, global exact/symmetry canonicalizer, initial parity presolve, initial BC1 presolve or generic family incremental compiler is earned for current corpora.
 > **Remaining gate:** closed forms reopen only with materially different evidence or a concrete setup-dominated consumer; dynamic search-reduction questions are owned by the computational-work-elimination successor audit and existing solver workstreams.
-
-# Solver batch digestion audit: recovered execution evidence and dispositions
-
-> **Status:** closeout evidence recovered from successful GitHub Actions run.
-> **Date:** 2026-09-21.
 > **Source branch/run:** former PR #1940 / execution-only PR #1942, run `35563235874`.
 > **Artifact:** `solver-batch-digestion-fixed-cost`, artifact `10623295608`, digest `sha256:08144ee64750d6577c5e2f7feeea3ca91d5691632b68a3258c7dd1acb44b3b5e`.
 > **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md).
-> **Decision:** the audit's strongest implementation-heavy ideas are mostly closed or narrowed. No general compiled-level refactor, global equivalence canonicalizer, initial parity presolve, or initial BC1 presolve is earned. Remaining value is concentrated in narrowly scoped research-batch latency and family/query-specific reuse questions.
 
 ## 1. Recovery note
 
