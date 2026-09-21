@@ -9,6 +9,8 @@
 > **Parent result:** [caller attribution result 005](2026-09-21-connectivity-cut-unscheduled-caller-attribution-result-005.md).
 > **Execution:** GitHub Actions run `35647486103`, fast-gate job `106491849187`.
 
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-negative","lastEvidenceDate":"2026-09-21","decision":"Close the connectivity cut-certificate behavioral consumer; observed non-overlapping downstream work is too small to justify a matched-work prune A/B.","remainingGate":"reopen only if connectivity cadence or cost changes materially, or certificate applicability becomes orders of magnitude cheaper","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"development","scope":{"populationIdentity":null,"selection":"frozen 24-parent hard-C2 development population","inferenceScope":"connectivity-cut behavioral-consumer economics under the recorded shadow protocol"},"claimRefs":[],"sourceArtifacts":["scripts/connectivity-certificate-shadow-audit.mjs","reports/2026-09-21-connectivity-cut-dfs-dominated-work-preflight-006.md"],"prospective":{"expectation":"earlier theorem-backed applicability would matter only if non-overlapping dominated work exceeded certificate-checking cost by a useful margin","surprise":"49,270 unscheduled hits collapsed to 6,196 outermost subtrees and only 49,034 canonical work units","anomaly":null}} -->
+
 ## Question
 
 The earlier chain established a real theorem-backed reusable proof:
