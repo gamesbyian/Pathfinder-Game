@@ -16,6 +16,7 @@ import {
     hintPathSignature as hintPathSignatureRuntime,
     toHint as toHintRuntime,
     hintPaths as hintPathsRuntime,
+    setLevelHintRecords as setLevelHintRecordsRuntime,
     dedupeProvenanceEntries as dedupeProvenanceEntriesRuntime,
     mergeHints as mergeHintsRuntime,
     upgradeProvenanceEntry as upgradeProvenanceEntryRuntime,
@@ -209,6 +210,14 @@ export function toHint(path: number[], provenance: HintProvenanceEntry[] = []): 
 /** Return bare paths for geometry-only consumers. */
 export function hintPaths(hints: Hint[]): number[][] {
     return hintPathsRuntime(hints);
+}
+
+/** Mutate one level-like object from canonical Hint records and derive its bare-path projection. */
+export function setLevelHintRecords<T extends { hints?: number[][]; hintRecords?: Hint[] }>(
+    level: T,
+    records: Hint[],
+): Hint[] {
+    return setLevelHintRecordsRuntime(level, records) as Hint[];
 }
 
 /** Remove byte-identical provenance events while preserving order. */
