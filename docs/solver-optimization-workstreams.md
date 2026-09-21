@@ -13,7 +13,7 @@ C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedur
 
 ## Portfolio posture
 
-Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. Rules: [capability invention program](solver-capability-invention-program.md). Register: `data/stress/capability-invention-demand.json`.
+Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. Rules/register: [capability invention program](solver-capability-invention-program.md) · `data/stress/capability-invention-demand.json`.
 
 Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs have a frozen freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
@@ -72,7 +72,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane H — parity invariants
 
-**PARALLEL PREMISE OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` together; advance only after resolution-ready incidence and soundness. The response-guided static portal decomposition is separately **CLOSED IN TESTED FORM**: on the frozen plain/diverse contrasts it adds no explanatory value beyond raw portal count. [preflight](solver-parity-phase-capacity-preflight.md) · [response result](../reports/2026-09-21-response-guided-premise-nominations-001.md)
+**PARALLEL PREMISE OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` + `WS2-CHECKERBOARD-CAPACITY`; advance only after incidence/soundness. Static portal decomposition is **CLOSED IN TESTED FORM**: no value beyond raw portal count on frozen contrasts. [preflight](solver-parity-phase-capacity-preflight.md) · [result](../reports/2026-09-21-response-guided-premise-nominations-001.md)
 
 #### Lane I — small exact projections
 
