@@ -99,7 +99,7 @@ test('a level with an id keeps its hints after being reordered in the corpus arr
         const a = withHintPaths({ id: 'P00001', ...makeLevel() }, [[0, 1]]);
         const b = withHintPaths({ id: 'P00002', ...makeLevel() }, [[2, 3]]);
 
-        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [a, b], metadata: {}, storageShape: 'array' });
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [a, b], metadata: {}, storageShape: 'array' }, { changedHintLevels: [a, b] });
 
         // Reorder: b now comes first (position 1), a second (position 2) -- the exact scenario
         // the whole id-unification plan exists to make safe.
@@ -130,7 +130,7 @@ test('a level with no id (an editor draft) falls back to position-keyed storage'
     withTempDir((dir) => {
         const levelsJsonPath = path.join(dir, 'levels.json');
         const draft = withHintPaths(makeLevel(), [[9, 9]]);
-        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [draft], metadata: {}, storageShape: 'array' });
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [draft], metadata: {}, storageShape: 'array' }, { changedHintLevels: [draft] });
         const reread = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         assert.deepEqual(reread[0].hints, [[9, 9]]);
     });
@@ -170,11 +170,11 @@ test('two processes reading the same corpus and each writing back only their own
         ]);
 
         // Process 1 writes its full in-memory snapshot (a updated, b untouched/stale) first...
-        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: process1Levels, metadata: {}, storageShape: 'array' });
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: process1Levels, metadata: {}, storageShape: 'array' }, { changedHintLevels: [process1A] });
         // ...then process 2 writes its full in-memory snapshot (b updated, a untouched/stale).
         // Before the fix, this second write would revert level a's file back to its stale
         // 2-hint content, discarding process 1's real update.
-        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: process2Levels, metadata: {}, storageShape: 'array' });
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: process2Levels, metadata: {}, storageShape: 'array' }, { changedHintLevels: [process2B] });
 
         const final = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
         const finalA = final.find((l) => l.id === 'P00001');
