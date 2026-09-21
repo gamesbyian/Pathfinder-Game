@@ -2,10 +2,11 @@
 /** Validate a variant-discovered path on its canonical parent; writes only with --save-hints. */
 import { readFileSync } from 'node:fs';
 import { findFamilyResultRow } from './family-edge-identity.mjs';
-import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { normalizeRawLevel } from '../modules/solver/normalization.ts';
 import { validateCandidatePath } from '../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
+import { setLevelHintRecords } from '../modules/domain/hint-types.ts';
 import { mergeVariantDerivedHint, replayVariantPath } from './family-parent-hint-replay-lib.mjs';
 
 const argv = process.argv.slice(2);
@@ -21,7 +22,8 @@ for (const key of ['--parent-levels', '--manifest', '--variant-id']) {
 }
 
 const levelsFile = args.get('--parent-levels');
-const levels = readLevelsWithHints(levelsFile);
+const levelDocument = readLevelCorpusDocumentWithHints(levelsFile);
+const levels = levelDocument.levels;
 const manifest = JSON.parse(readFileSync(args.get('--manifest'), 'utf8'));
 const edge = manifest.variants.find(variant => String(variant.variantId) === args.get('--variant-id'));
 if (!edge) throw new Error('variant is absent from manifest');
@@ -43,15 +45,14 @@ const save = argv.includes('--save-hints');
 let persistence = { requested: save, written: false };
 if (result.accepted && save) {
     const levelRevision = await getLevelFingerprint(parent);
-    parent.hintRecords = mergeVariantDerivedHint(parent.hintRecords, result.parentPath, {
+    setLevelHintRecords(parent, mergeVariantDerivedHint(parent.hintRecords, result.parentPath, {
         variantId: edge.variantId,
         parentId: manifest.parentLevelId,
         familyId: manifest.familyId,
         levelRevision,
         foundAt: discoveryFoundAt,
-    });
-    parent.hints = parent.hintRecords.map(hint => hint.path);
-    const changed = writeLevelsWithHints(levelsFile, levels);
+    }));
+    const changed = writeLevelCorpusDocumentWithHints(levelsFile, levelDocument);
     persistence = { requested: true, written: changed.hintFilesChanged > 0, ...changed };
 }
 
