@@ -61,6 +61,14 @@ Dormant until an active lane changes the premise.
 | Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use a bounded work ladder, not standing sweeps |
 | Mechanism interaction | Reopen when one mechanism plausibly creates another's opportunities; test control/A/B/A+B at matched work, not broad flag matrices |
 
+## Inverse-question reopen hook
+
+[Inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md): concrete success-side/work-subtraction descendants are now owned by WS1/WS2. One deferred gap remains.
+
+| Question | Reopen condition |
+|---|---|
+| Capability obsolescence / dominated production stages | After material boundary/portfolio churn, remeasure current participation, unique marginal solves, displacement and removable work. Low participation is insufficient; removal needs capability-protecting confirmation. |
+
 ## Closed forms that stay closed
 
 Do not reopen unchanged:
