@@ -1,11 +1,9 @@
 # Computational work elimination audit: reusable failed-search output disposition 001
 
-> **Status:** SOURCE/AUTHORITY AUDIT COMPLETE; no proof store or database earned.
-> **Date:** 2026-09-21.
-> **Parent:** [solver computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).
-> **Failure-evidence authority:** [failure-evidence integration plan](../docs/solver-failure-evidence-research-integration-plan.md).
-> **Search-loss authority:** [search-loss evidence implementation plan](../docs/solver-search-loss-evidence-implementation-plan.md).
-> **Deferred architecture authority:** [solver future work](../docs/solver-future-work.md).
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — source audit separated observation/experience from proof and found only the portal-free connectivity cut as a new proof-bearing reuse candidate with a plausible repeated consumer.
+> **Decision:** do not build a proof/residual/clause database; exactness alone does not create a storage customer, and repair nogoods/search-loss capsules remain experience or observation unless separately upgraded by a theorem.
+> **Remaining gate:** reopen general proof-store architecture only after a concrete fact family demonstrates repeated consumption, sound cheap applicability, measurable work avoided, and bounded lifetime/invalidation cost.
 
 ## Question
 
