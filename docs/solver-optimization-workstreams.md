@@ -96,7 +96,7 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
 | 2R | Parity response signature | `supporting` | **NARROWED** | Static portal decomposition closed; reopen only on a different parity mechanism from success/prospective seam evidence | `WS2-PARITY-RESPONSE-SIGNATURE` |
-| 2X | Small exact projections | `supporting` | **BC1 CONSUMER EARNED** | Production-inert safety differential + cost/work-saved observer; no hot-path prune yet | `WS2-CUT-BALANCE-PROJECTION` |
+| 2X | Small exact projections | `supporting` | **BC1 CONSUMER EARNED** | Beam-hosted later-disposition shadow after ordinary hard-prune survival; record proof cost, work-at-proof, later reject/cull/descendant work, and valid/reference safety. No hot-path prune yet. [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md) | `WS2-CUT-BALANCE-PROJECTION` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |

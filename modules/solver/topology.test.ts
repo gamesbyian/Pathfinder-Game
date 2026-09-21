@@ -102,6 +102,161 @@ test('fires when the goal is walled off; passes when it is reachable', () => {
         { verdict: 'reject', reached: 1, rejected: 1 }, 'connectivity is the isolated first firing rule');
 });
 
+test('connectivity goal-cut shadow reuses a portal-free cut across a different exact state without steering search', () => {
+    const level = makeLevel({
+        blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }],
+        reqLen: 6,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+
+    const source = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), source, level, prep), false, 'source state must produce the cut certificate');
+    assert.equal(records.filter(r => r.kind === 'certificate').length, 1);
+    assert.equal(records.filter(r => r.kind === 'probe').length, 0, 'certificate cannot hit on its own producing call');
+
+    // A distinct exact state remains on the same side of the static wall. The shadow may predict
+    // goal-unreachability, but isConnected still runs its real flood fill and remains authoritative.
+    const later = stateAt(level, prep, [K(1, 1), K(2, 1)]);
+    assert.equal(isConnected(K(2, 1), later, level, prep), false);
+    const hit = records.find(r => r.kind === 'probe' && r.hitCertificateId !== undefined);
+    assert.ok(hit, 'expected the earlier cut certificate to validate on the later state');
+    assert.equal(hit.crossExactState, true);
+    assert.equal(hit.confirmedGoalUnreachable, true);
+    assert.ok(hit.positionEligibleCertificates > 0);
+    assert.ok(hit.boundaryCellChecks > 0);
+    // Reuse is implication-level: the later state can validate the earlier cut even when its own
+    // fresh flood fill reaches a smaller component and therefore derives a different certificate.
+});
+
+test('connectivity goal-cut shadow observes an applicable proof when the caller skips the scheduled fill', () => {
+    const level = makeLevel({
+        blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }],
+        reqLen: 6,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8, observeUnscheduled: true },
+        certificates: [],
+        nextId: 1,
+    };
+
+    const source = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), source, level, prep), false);
+
+    const later = stateAt(level, prep, [K(1, 1), K(2, 1)]);
+    const verdict = evaluatePrunedMove(
+        K(2, 1), 1, later, level, prep, { PRUNE_CONNECTIVITY: true }, false,
+    );
+    assert.equal(verdict, 'pass', 'shadow observation must not acquire prune authority');
+
+    const hit = records.find(r => r.kind === 'unscheduled-probe' && r.hitCertificateId !== undefined);
+    assert.ok(hit, 'expected the retained cut to apply between scheduled connectivity fills');
+    assert.equal(hit.scheduled, false);
+    assert.equal(hit.crossExactState, true);
+    assert.ok(hit.positionEligibleCertificates > 0);
+    assert.ok(hit.boundaryCellChecks > 0);
+
+    // Independent ordinary fill confirms the exact implication on the same state.
+    assert.equal(isConnected(K(2, 1), later, level, prep), false);
+});
+
+test('connectivity goal-cut shadow invalidates a prior dynamic boundary when it becomes traversable', () => {
+    const level = makeLevel({
+        grid: { w: 3, h: 1 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 3, y: 1 },
+        flippingFilters: [{ x: 2, y: 1, axis: 1 }],
+        reqLen: 2,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+
+    // Source sibling: treat the only bridge cell as an already-used flipper. The ordinary fill
+    // rejects and produces a certificate whose complete boundary is that dynamically blocked cell.
+    const blocked = stateAt(level, prep, [K(1, 1)]);
+    const fi = prep.flipperIndexMap[K(2, 1)] - 1;
+    assert.ok(fi >= 0, 'fixture must index the flipping filter');
+    blocked.flipperUsedMask |= 1 << fi;
+    assert.equal(isConnected(K(1, 1), blocked, level, prep), false);
+    const produced = records.find(r => r.kind === 'certificate');
+    assert.ok(produced?.certificateSignature, 'expected a normalized proof-object identity');
+
+    // Fresh sibling: the same boundary cell is traversable again. The old implication must NOT
+    // validate, and ordinary connectivity must pass. This is the critical one-way-proof guard:
+    // matching geometry alone cannot become a stale cache hit.
+    const fresh = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), fresh, level, prep), true);
+    const probes = records.filter(r => r.kind === 'probe');
+    assert.ok(probes.length > 0, 'expected the retained certificate to be considered');
+    assert.equal(probes.some(r => r.hitCertificateId !== undefined), false,
+        'a reopened dynamic boundary must invalidate the old certificate');
+});
+
+test('connectivity goal-cut shadow remains valid with pending obligations', () => {
+    const level = makeLevel({
+        grid: { w: 5, h: 3 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 5, y: 3 },
+        blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }],
+        mustPass: [{ x: 2, y: 3 }],
+        mustCross: [{ x: 2, y: 2 }],
+        reqLen: 8,
+        reqInt: 1,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+    const source = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(source.mpVisitedMask, 0, 'fixture must have an unvisited must-pass');
+    assert.ok(level.mustPassKeys.length > 0, 'fixture must contain a must-pass obligation');
+    assert.notEqual(source.mustCrossMask, 0, 'fixture must have a pending must-cross');
+    assert.equal(isConnected(K(1, 1), source, level, prep), false);
+    assert.ok(records.some(r => r.kind === 'certificate'),
+        'goal-unreachable cut proof should not be suppressed merely because obligations are pending');
+
+    const later = stateAt(level, prep, [K(1, 1), K(2, 1)]);
+    assert.equal(isConnected(K(2, 1), later, level, prep), false);
+    const hit = records.find(r => r.kind === 'probe' && r.hitCertificateId !== undefined);
+    assert.ok(hit, 'pending obligations do not weaken the closed-component goal implication');
+    assert.equal(hit.confirmedGoalUnreachable, true);
+});
+
+test('connectivity goal-cut shadow deliberately produces no certificate on portal levels', () => {
+    const level = makeLevel({
+        grid: { w: 5, h: 3 },
+        goal: { x: 5, y: 3 },
+        blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }],
+        portals: [{ x1: 2, y1: 1, x2: 2, y2: 3 }],
+        reqLen: 6,
+    });
+    const prep = prepLevel(level);
+    const records: any[] = [];
+    prep._connectivityCertificateShadow = {
+        observer: { observe: (record: any) => records.push(record), maxCertificates: 8 },
+        certificates: [],
+        nextId: 1,
+    };
+    const state = stateAt(level, prep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), state, level, prep), false);
+    assert.equal(records.some(r => r.kind === 'certificate'), false);
+});
+
 test('fires when an unvisited must-pass is unreachable; not once it has been visited', () => {
     // Must-pass sits in a corner pocket sealed by two blocks (goal stays reachable).
     const pocket = makeLevel({

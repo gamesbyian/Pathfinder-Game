@@ -262,7 +262,11 @@ export async function admissibleOrderSearch(
         const realLen = getRealLengthFromState(state);
         const rSteps = level.requiredLength - realLen;
         const runConnectivity = rSteps <= 10 || (nodesExpanded & 63) === 0;
-        const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity);
+        const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity,
+            prep._connectivityCertificateShadow?.observer.observeUnscheduled === true
+                ? { researchCaller: 'admissible-order', researchSchedulePhase: nodesExpanded & 63,
+                    researchRemainingSteps: rSteps }
+                : undefined);
 
         if (verdict === 'solution') {
             if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;

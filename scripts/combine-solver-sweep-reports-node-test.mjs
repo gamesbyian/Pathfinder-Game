@@ -483,6 +483,7 @@ async function main() {
         await run([`--in=${batch1}`, `--out=${flatSource1}`]);
         await writeFile(flatSource2, JSON.stringify({
             commitSha: 'abc123', corpus: 'data/stress/stress-levels-random.json', budgetMs: 8000, nodeBudget: 50000000, schedulerMode: 'production',
+            executionConfig: { levelBlind: null },
             levels: [{ level: 2, id: 'R00002', ok: true, status: 'success', totalMs: 200, elapsedMs: 200, attempts: [], attemptCount: 0, failedStrategies: [] }],
         }));
         const reconciled = path.join(tempDir, 'reconciled.json');
@@ -526,14 +527,14 @@ async function main() {
         })));
         await run([`--in=${nb1},${nb3}`, `--out=${nbMixedOut}`]);
         const nbMixed = JSON.parse(await readFile(nbMixedOut, 'utf8'));
-        assert.deepEqual(nbMixed.nodeBudget, [20000000, 120000000], 'differing node budgets recorded as a set, not silently collapsed');
+        assert.deepEqual(nbMixed.summary.nodeBudget, [20000000, 120000000], 'differing node budgets recorded as a set, not silently collapsed');
         console.log('  ✓ records differing per-shard node budgets instead of collapsing or throwing');
 
         const noNbOut = path.join(tempDir, 'combined-no-nb.json');
         await run([`--in=${batch1},${batch2}`, `--out=${noNbOut}`]);
         const noNb = JSON.parse(await readFile(noNbOut, 'utf8'));
-        assert.equal(noNb.nodeBudget, null, 'absent node budget recorded as explicit null');
-        assert.ok(!('repairBudgetFraction' in noNb), 'absent repairBudgetFraction omitted, not null-filled');
+        assert.equal(noNb.summary.nodeBudget, null, 'absent node budget recorded as explicit null');
+        assert.ok(!('repairBudgetFraction' in noNb.summary), 'absent repairBudgetFraction omitted, not null-filled');
         console.log('  ✓ records an absent node budget as explicit null');
 
         // --- simulateMakespan: LPT list scheduling, not sum(durations)/workers ---

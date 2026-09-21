@@ -101,6 +101,13 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     if (opts.pruneDiagnostics) prep._pruneDiagnostics = opts.pruneDiagnostics;
     if (opts.failureProgressObserver) prep._failureProgressObserver = opts.failureProgressObserver;
     if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
+    if (opts.connectivityCertificateShadowObserver) {
+        prep._connectivityCertificateShadow = {
+            observer: opts.connectivityCertificateShadowObserver,
+            certificates: [],
+            nextId: 1,
+        };
+    }
     if (opts.parityCapacityObserver) prep._parityCapacityObserver = opts.parityCapacityObserver;
     if (opts.parityPhaseDistanceObserver) prep._parityPhaseDistanceObserver = opts.parityPhaseDistanceObserver;
     if (opts.jointObligationObserver) prep._jointObligationObserver = opts.jointObligationObserver;

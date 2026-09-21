@@ -1,5 +1,10 @@
 # Post-naming semantic regression audit — 2026-09-20
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — current-surface naming audit identified and routed the durable naming regressions, with N1/N2 already implemented through the active cleanup work.
+> **Decision:** retain the temporal semantic-regression check as periodic hygiene; durable names that overclaim authority, persistence, equivalence or causality require correction, while qualified prose metaphors may remain prose.
+> **Remaining gate:** no gate for this concluded pass; future periodic hygiene reopens only on newly introduced durable vocabulary or evidence that a retained name misleads current consumers.
+
 ## Scope
 
 Baseline: completed repository-wide naming cleanup through the Phase-15 completion seal, PR #1648.

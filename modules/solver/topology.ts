@@ -386,6 +386,245 @@ function _computeBoundarySketch(
     return { reachedFingerprint: rowWords.map(word => word.toString(16)).join(','), boundaryBlockers: blockers };
 }
 
+// Computational-work-elimination audit: build the first narrow reusable cut certificate from the
+// flood fill that JUST proved the goal unreachable. Portal levels are deliberately excluded by the
+// caller because a cardinal boundary is not a complete graph cut when non-local portal edges exist.
+// Unlike ConnectivityBoundarySketch (discovery evidence), this helper aborts if ANY outside cardinal
+// neighbor cannot be classified as blocked: a reusable certificate must represent the complete exit
+// boundary, not merely the blockers we happened to understand.
+function _buildConnectivityGoalCutCertificate(
+    level: NormalizedLevel, state: SolverSearchState, prep: PrepLevel,
+    maxVisit: number, pos: number, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean,
+): { reachedRows: number[]; boundaryCells: number[] } | null {
+    const { w, h } = level.grid;
+    const reachedRows: number[] = new Array(h).fill(0);
+    const boundaryCells: number[] = [];
+    const seen = new Set<number>();
+    const addBoundary = (nk: number): boolean => {
+        if (_reached(nk) || seen.has(nk)) return true;
+        seen.add(nk);
+        if (_classifyBoundaryBlocker(nk, maxVisit, pos, state, prep, mcOpenMask, mcKeys, axisExhausted) === null) {
+            return false;
+        }
+        boundaryCells.push(nk);
+        return true;
+    };
+    for (let y = 0; y < h; y++) {
+        let word = 0;
+        for (let x = 0; x < w; x++) {
+            const k = (y << 16) | x;
+            if (!_reached(k)) continue;
+            word |= 1 << x;
+            if (x + 1 < w && !addBoundary(k + 1)) return null;
+            if (x > 0 && !addBoundary(k - 1)) return null;
+            if (y + 1 < h && !addBoundary(k + 0x10000)) return null;
+            if (y > 0 && !addBoundary(k - 0x10000)) return null;
+        }
+        reachedRows[y] = word;
+    }
+    boundaryCells.sort((a, b) => a - b);
+    return { reachedRows, boundaryCells };
+}
+
+function _probeConnectivityGoalCutCertificates(
+    pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+    maxVisit: number, mcOpenMask: number, axisExhausted: boolean,
+): {
+    certificatesScanned: number;
+    boundaryCellChecks: number;
+    positionEligibleCertificates: number;
+    hitCertificateId?: number;
+    hitSourceWork?: number;
+    crossExactState?: boolean;
+} | null {
+    const shadow = prep._connectivityCertificateShadow;
+    if (!shadow || level.portalMap.size !== 0 || shadow.certificates.length === 0) return null;
+
+    let certificatesScanned = 0;
+    let boundaryCellChecks = 0;
+    let positionEligibleCertificates = 0;
+    for (let i = shadow.certificates.length - 1; i >= 0; i--) {
+        const cert = shadow.certificates[i];
+        certificatesScanned++;
+        const x = pos & 0xFFFF;
+        const y = (pos >>> 16) & 0xFFFF;
+        if (y >= cert.reachedRows.length || (cert.reachedRows[y] & (1 << x)) === 0) continue;
+        positionEligibleCertificates++;
+
+        let boundaryStillClosed = true;
+        for (const cell of cert.boundaryCells) {
+            boundaryCellChecks++;
+            if (_classifyBoundaryBlocker(
+                cell, maxVisit, pos, state, prep, mcOpenMask, level.mustCrossKeys, axisExhausted,
+            ) === null) {
+                boundaryStillClosed = false;
+                break;
+            }
+        }
+        if (!boundaryStillClosed) continue;
+
+        const currentFingerprint = stateSignature(state);
+        return {
+            certificatesScanned,
+            boundaryCellChecks,
+            positionEligibleCertificates,
+            hitCertificateId: cert.id,
+            hitSourceWork: cert.createdWork,
+            crossExactState: currentFingerprint !== cert.sourceStateFingerprint,
+        };
+    }
+    return { certificatesScanned, boundaryCellChecks, positionEligibleCertificates };
+}
+
+function _probeConnectivityGoalCutCertificatesIndexed(
+    pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+    maxVisit: number, mcOpenMask: number, axisExhausted: boolean,
+): {
+    certificatesScanned: number;
+    boundaryCellChecks: number;
+    positionEligibleCertificates: number;
+    hitCertificateId?: number;
+    hitSourceWork?: number;
+    crossExactState?: boolean;
+} | null {
+    const shadow = prep._connectivityCertificateShadow;
+    if (!shadow || level.portalMap.size !== 0 || shadow.certificates.length === 0) return null;
+    const candidateIds = shadow.certificateIdsByCell?.get(pos) ?? [];
+    let boundaryCellChecks = 0;
+
+    for (let i = candidateIds.length - 1; i >= 0; i--) {
+        const cert = shadow.certificates[candidateIds[i] - 1];
+        if (!cert) continue;
+        let boundaryStillClosed = true;
+        for (const cell of cert.boundaryCells) {
+            boundaryCellChecks++;
+            if (_classifyBoundaryBlocker(
+                cell, maxVisit, pos, state, prep, mcOpenMask, level.mustCrossKeys, axisExhausted,
+            ) === null) {
+                boundaryStillClosed = false;
+                break;
+            }
+        }
+        if (!boundaryStillClosed) continue;
+
+        const currentFingerprint = stateSignature(state);
+        return {
+            certificatesScanned: candidateIds.length,
+            boundaryCellChecks,
+            positionEligibleCertificates: candidateIds.length,
+            hitCertificateId: cert.id,
+            hitSourceWork: cert.createdWork,
+            crossExactState: currentFingerprint !== cert.sourceStateFingerprint,
+        };
+    }
+    return {
+        certificatesScanned: candidateIds.length,
+        boundaryCellChecks,
+        positionEligibleCertificates: candidateIds.length,
+    };
+}
+
+/** Research-only cut implication probe for candidates where the caller deliberately skipped the
+ * ordinary connectivity flood fill. This duplicates isConnected's tiny policy-context calculation
+ * rather than moving a helper call onto production's million-call hot path. The actual blocker
+ * classification and certificate validation are shared with the scheduled shadow above. */
+export function probeUnscheduledConnectivityGoalCutCertificate(
+    pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+): ReturnType<typeof _probeConnectivityGoalCutCertificatesIndexed> {
+    const shadow = prep._connectivityCertificateShadow;
+    if (!shadow || level.portalMap.size !== 0 || shadow.certificates.length === 0) return null;
+
+    const intNeeded = level.requiredIntersections - state.ints;
+    let maxVisit = intNeeded > 0 ? 2 : 0;
+    let mcOpenMask = 0;
+    const cfg = prep._cfg;
+    if ((!cfg || cfg.PRUNE_MC_RESERVED_WALL) && maxVisit > 0 && state.mustCrossMask !== 0
+        && intNeeded - popcount(state.mustCrossMask) === 0) {
+        maxVisit = 0;
+        mcOpenMask = state.mustCrossMask;
+    }
+    const axisExhausted = (!cfg || cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
+    return _probeConnectivityGoalCutCertificatesIndexed(
+        pos, state, level, prep, maxVisit, mcOpenMask, axisExhausted,
+    );
+}
+
+function _retainConnectivityGoalCutCertificate(
+    state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+    maxVisit: number, pos: number, mcOpenMask: number, axisExhausted: boolean,
+): void {
+    const shadow = prep._connectivityCertificateShadow;
+    // The proof is only about the fixed goal lying outside a presently closed portal-free component.
+    // Pending obligations and the reserved-MC regime can change WHICH boundary cells are passable,
+    // but they do not change the cut theorem: construction below mirrors the source state's exact
+    // connectivity predicate, and every later application revalidates the whole boundary under that
+    // later state's predicate. Do not narrow the producer by obligation masks.
+    if (!shadow || level.portalMap.size !== 0) return;
+
+    const cert = _buildConnectivityGoalCutCertificate(
+        level, state, prep, maxVisit, pos, mcOpenMask, level.mustCrossKeys, axisExhausted,
+    );
+    if (!cert) return;
+
+    const signature = cert.reachedRows.map(word => (word >>> 0).toString(16)).join(',')
+        + '|' + cert.boundaryCells.join(',');
+    const signatureIndex = shadow.signatureToCertificateId ?? (shadow.signatureToCertificateId = new Map());
+    const existingId = signatureIndex.get(signature);
+    if (existingId !== undefined) {
+        shadow.observer.observe({
+            kind: 'certificate-duplicate',
+            work: prep._workMeter.units,
+            certificateSignature: signature,
+            duplicateOfCertificateId: existingId,
+            boundarySize: cert.boundaryCells.length,
+        });
+        return;
+    }
+    const configuredCap = Number(shadow.observer.maxCertificates);
+    const cap = Number.isInteger(configuredCap) && configuredCap >= 0 ? Math.min(configuredCap, 1024) : 64;
+    if (shadow.certificates.length >= cap) {
+        // Retention is bounded for lookup economics, but the research denominator should still know
+        // which exact proof object was derived. Emit the signature even when the certificate is not
+        // retained, so proof-overlap measurement is not silently censored by cache capacity.
+        shadow.observer.observe({
+            kind: 'certificate-dropped',
+            work: prep._workMeter.units,
+            certificateSignature: signature,
+            boundarySize: cert.boundaryCells.length,
+        });
+        return;
+    }
+
+    const id = shadow.nextId++;
+    shadow.certificates.push({
+        id,
+        reachedRows: cert.reachedRows,
+        boundaryCells: cert.boundaryCells,
+        signature,
+        sourceStateFingerprint: stateSignature(state),
+        createdWork: prep._workMeter.units,
+    });
+    signatureIndex.set(signature, id);
+    const cellIndex = shadow.certificateIdsByCell ?? (shadow.certificateIdsByCell = new Map());
+    for (let y = 0; y < cert.reachedRows.length; y++) {
+        const row = cert.reachedRows[y] >>> 0;
+        for (let x = 0; x < level.grid.w; x++) {
+            if ((row & (1 << x)) === 0) continue;
+            const key = (y << 16) | x;
+            const ids = cellIndex.get(key);
+            if (ids) ids.push(id);
+            else cellIndex.set(key, [id]);
+        }
+    }
+    shadow.observer.observe({
+        kind: 'certificate',
+        work: prep._workMeter.units,
+        certificateId: id,
+        certificateSignature: signature,
+        boundarySize: cert.boundaryCells.length,
+    });
+}
+
 // Plain module-level function, not a closure captured inside isConnected — see that function's own
 // comment on why. Called only on the (already rare relative to total isConnected calls) rejection
 // path, and only when a research observer is actually attached.
@@ -522,6 +761,15 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     }
 
     const axisExhausted = (!_cfg || _cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
+
+    // Production-inert certificate shadow: when absent (every production call), keep this to one
+    // nullable field read/branch rather than paying an extra helper call inside a 10^5-10^6-call
+    // hot loop. When present, test retained cuts BEFORE the ordinary scheduled flood fill, but never
+    // consume the result. The real flood fill below remains the sole pruning authority.
+    const certificateShadow = prep._connectivityCertificateShadow;
+    const certificateProbe = certificateShadow
+        ? _probeConnectivityGoalCutCertificates(pos, state, level, prep, maxVisit, mcOpenMask, axisExhausted)
+        : null;
     const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys);
 
     // Research-only rejection observer (see ConnectivityRejectionObserver's doc in types.ts and
@@ -535,8 +783,30 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // to be a meaningful cost share.
     const research = prep._connectivityRejectionObserver;
 
-    if (!_reached(level.goalKey)) {
+    const goalUnreachable = !_reached(level.goalKey);
+    if (certificateShadow && certificateProbe) {
+        certificateShadow.observer.observe({
+            kind: 'probe',
+            work: prep._workMeter.units,
+            certificatesScanned: certificateProbe.certificatesScanned,
+            boundaryCellChecks: certificateProbe.boundaryCellChecks,
+            positionEligibleCertificates: certificateProbe.positionEligibleCertificates,
+            ...(certificateProbe.hitCertificateId !== undefined
+                ? {
+                    hitCertificateId: certificateProbe.hitCertificateId,
+                    hitSourceWork: certificateProbe.hitSourceWork,
+                    crossExactState: certificateProbe.crossExactState,
+                    confirmedGoalUnreachable: goalUnreachable,
+                }
+                : {}),
+        });
+    }
+
+    if (goalUnreachable) {
         if (research) _reportConnectivityRejection(research, 'goal', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted);
+        if (certificateShadow) {
+            _retainConnectivityGoalCutCertificate(state, level, prep, maxVisit, pos, mcOpenMask, axisExhausted);
+        }
         return false;
     }
     for (let i = 0; i < level.mustPassKeys.length; i++) {

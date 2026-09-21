@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { buildHealthRecord, findPreviousCompatibleRun, summarizeStageParticipation } from './append-solver-health-record.mjs';
-import { buildCapabilityMemory, compareCandidateRows, hashIds } from './solver-capability-memory-lib.mjs';
+import { buildCapabilityEvidence, compareCandidateRows, hashIds } from './solver-capability-evidence-lib.mjs';
 
 let passed = 0;
 function test(name, fn) {
@@ -145,14 +145,14 @@ test('candidate comparison abstains when either baseline or candidate row is cen
     const paired = compareCandidateRows(baseline, candidate);
     assert.deepEqual(paired.gainIds, ['B']);
     assert.deepEqual(paired.inconclusiveIds, ['A']);
-    const memory = buildCapabilityMemory({ baselineRows: { levels: baseline }, candidates: [{ id: 'candidate', rows: candidate }] });
+    const memory = buildCapabilityEvidence({ baselineRows: { levels: baseline }, candidates: [{ id: 'candidate', rows: candidate }] });
     assert.equal(memory.baseline.population, 2);
     assert.equal(memory.baseline.residual, 1);
     assert.equal(memory.baseline.unknown, 1);
     assert.deepEqual(memory.union.nominatedIds, ['B']);
 });
 
-test('capability-memory comparisons preserve negative verdicts while exposing complementary gains', () => {
+test('capability-evidence comparisons preserve negative verdicts while exposing complementary gains', () => {
     const baseline = { levels: [
         { id: 'A', ok: true }, { id: 'B', ok: false }, { id: 'C', ok: false }, { id: 'D', ok: true },
     ] };
@@ -164,7 +164,7 @@ test('capability-memory comparisons preserve negative verdicts while exposing co
     assert.deepEqual(paired.gainIds, ['B']);
     assert.deepEqual(paired.lossIds, ['D']);
     assert.deepEqual(paired.inconclusiveIds, ['C']);
-    const memory = buildCapabilityMemory({
+    const memory = buildCapabilityEvidence({
         baselineId: 'current', baselineRows: baseline, candidates: [
             { id: 'live-negative', rows: candidate, disposition: 'closed-negative' },
             { id: 'old-policy', signature: { gainIds: ['B', 'C'], lossIds: ['A'] }, disposition: 'closed-negative' },
@@ -176,7 +176,7 @@ test('capability-memory comparisons preserve negative verdicts while exposing co
     assert.ok(historical.warning.includes('may not steer production'));
 });
 
-test('capability-memory CLI materializes JSON and human summary without solver compute', () => {
+test('capability-evidence CLI materializes JSON and human summary without solver compute', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'capability-memory-cli-test-'));
     writeFileSync(path.join(dir, 'baseline.json'), JSON.stringify({ levels: [{ id: 'A', ok: true }, { id: 'B', ok: false }, { id: 'C', ok: false, deadlineTruncated: true }] }));
     writeFileSync(path.join(dir, 'candidate.json'), JSON.stringify({ levels: [{ id: 'A', ok: true }, { id: 'B', ok: true, workSpent: 25 }, { id: 'C', ok: true }] }));
@@ -190,7 +190,7 @@ test('capability-memory CLI materializes JSON and human summary without solver c
     }));
     const out = path.join(dir, 'memory.json');
     const summaryOut = path.join(dir, 'memory.md');
-    execFileSync('node', ['scripts/solver-capability-memory.mjs', `--manifest=${path.join(dir, 'manifest.json')}`, `--out=${out}`, `--summary-out=${summaryOut}`], { encoding: 'utf8' });
+    execFileSync('node', ['scripts/analyze-solver-capability-evidence.mjs', `--manifest=${path.join(dir, 'manifest.json')}`, `--out=${out}`, `--summary-out=${summaryOut}`], { encoding: 'utf8' });
     const result = JSON.parse(readFileSync(out, 'utf8'));
     const summaryText = readFileSync(summaryOut, 'utf8');
     assert.equal(result.baseline.residual, 1);

@@ -303,6 +303,26 @@ export interface PrepLevel {
     _failureProgressObserver?: { observe(record: { family: 'dfs' | 'beam' | 'repair'; workSpent: number; badness: number; kind: 'new-best' | 'terminal' }): void } | null;
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
+    /** Research-only portal-free goal-unreachability certificate shadow. One solve/prep lifetime,
+     *  never consulted by production policy; see ConnectivityCertificateShadowObserver. */
+    _connectivityCertificateShadow?: {
+        observer: ConnectivityCertificateShadowObserver;
+        certificates: Array<{
+            id: number;
+            reachedRows: number[];
+            boundaryCells: number[];
+            signature: string;
+            sourceStateFingerprint: string;
+            createdWork: number;
+        }>;
+        nextId: number;
+        /** Research-only exact proof-template dedupe. Lazily initialized so direct tests that
+         * construct the shadow by hand stay source-compatible. */
+        signatureToCertificateId?: Map<string, number>;
+        /** Research-only current-position selector: packed cell -> retained certificate ids whose
+         * certified reached component contains that cell. Built only when the shadow is enabled. */
+        certificateIdsByCell?: Map<number, number[]>;
+    } | null;
     /** Research-only Lane H2 checkerboard-capacity shadow observer. Reads the connectivity fill's
      *  existing reached set after goal/objective reachability succeeds; never changes pruning. */
     _parityCapacityObserver?: ParityCapacityObserver | null;
@@ -500,6 +520,53 @@ export interface ConnectivityRejectionObserver {
      *  default (Stage A's own scope) since scanning/canonicalizing the boundary has a real cost
      *  that should be measured separately from Stage A's plain field capture. */
     includeBoundarySketch?: boolean;
+}
+
+/** Research-only shadow record for the computational-work-elimination audit's first bounded
+ * connectivity certificate. A "probe" record reports the cheap certificate scan performed before
+ * the ordinary scheduled flood fill; `confirmedGoalUnreachable` is populated only on a shadow hit
+ * and is checked against the real flood fill that still runs immediately afterward. */
+export interface ConnectivityCertificateShadowRecord {
+    kind: 'certificate' | 'certificate-duplicate' | 'certificate-dropped' | 'probe' | 'unscheduled-probe';
+    work: number;
+    certificateId?: number;
+    /** Normalized proof-object identity: reached component rows + sorted complete cardinal boundary.
+     *  Same signature means the same cut implication template, not residual-state equivalence. */
+    certificateSignature?: string;
+    boundarySize?: number;
+    certificatesScanned?: number;
+    boundaryCellChecks?: number;
+    /** Number of scanned certificates whose reached component contained the current position.
+     * A cheap position index could reduce lookup toward this denominator. */
+    positionEligibleCertificates?: number;
+    duplicateOfCertificateId?: number;
+    hitCertificateId?: number;
+    hitSourceWork?: number;
+    crossExactState?: boolean;
+    confirmedGoalUnreachable?: boolean;
+    /** False only for the production-inert hard-prune-seam probe executed when the caller's
+     * connectivity schedule deliberately skipped the ordinary flood fill. */
+    scheduled?: boolean;
+    /** Temporary development attribution for unscheduled probes; caller-owned and never inferred. */
+    researchCaller?: 'dfs' | 'beam' | 'admissible-order' | 'repair-random-walk'
+        | 'repair-completion-dfs' | 'repair-bounded-dfs' | 'repair-relink';
+    /** Caller-local phase of the periodic connectivity schedule when meaningful. */
+    researchSchedulePhase?: number | null;
+    researchRemainingSteps?: number;
+}
+
+/** Production-inert one-solve shadow observer for the portal-free goal cut certificate documented
+ * in reports/2026-09-21-connectivity-certificate-source-audit-001.md. It never authorizes pruning:
+ * the ordinary isConnected() call always runs and verifies every shadow hit. */
+export interface ConnectivityCertificateShadowObserver {
+    observe(record: ConnectivityCertificateShadowRecord): void;
+    /** Maximum certificates retained in one solve. Default 64; bounded to keep research lookup
+     * overhead from turning this opportunity-sizing probe into a cache implementation. */
+    maxCertificates?: number;
+    /** Opt in to probing retained cuts at candidates where production deliberately skips the
+     * ordinary connectivity fill. Off by default so proof-identity observers do not inherit
+     * this much heavier opportunity-sizing instrumentation. */
+    observeUnscheduled?: boolean;
 }
 
 

@@ -1,9 +1,9 @@
 <!-- agent-context-budget: warn=9000 max=12000 -->
 # Solver batch digestion and computation architecture audit
 
-> **Status:** active audit and opportunity-sizing program.
+> **Status:** concluded. Core ingestion/reuse/presolve ceilings are measured; surviving live questions are owned by existing solver-science/research authorities.
 > **Started:** 2026-09-20.
-> **Branch:** `chatgpt/solver-batch-digestion-architecture-audit-2026-09-20`.
+> **Closeout branch:** `chatgpt/solver-batch-digestion-audit-closeout-2026-09-21`.
 > **Primary goal:** reduce wall-clock latency and compute cost of large solver/research batches without sacrificing the project's solve-acquisition goal.
 > **Priority owner:** this document owns the audit only. Any promoted solver experiment must enter the canonical queue in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) rather than creating a competing queue.
 
@@ -387,18 +387,18 @@ The audit should identify where work naturally amortizes and where current one-l
 ### Phase 0 - evidence reconciliation and terminology
 
 - [x] establish audit scope and distinction from pure-speed campaign;
-- [ ] map every lane to existing docs/reports/tests;
-- [ ] record exact-form negatives and reopen boundaries;
+- [x] map every lane to existing docs/reports/tests;
+- [x] record exact-form negatives and reopen boundaries;
 - [ ] identify current batch entrypoints/workflows/scripts.
 
 Deliverable: audit matrix with `known / measured / unmeasured / constrained`.
 
 ### Phase 1 - current batch cost anatomy
 
-- [x] add bounded fixed-cost observability for validation/normalization/`prepLevel` (`solver:audit-batch-cost`); execution evidence still pending;
-- [ ] measure cheap, mixed, hard-tail workloads;
+- [x] add bounded fixed-cost observability for validation/normalization/`prepLevel` (`solver:audit-batch-cost`) and execute it on published/Corpus 1/Corpus 2;
+- [x] measure cheap and hard-tail solve-relative workloads; prep was ~0.335% of published solve wall and ~0.0113% of the sampled hard Corpus-2 solve wall;
 - [x] inspect process/worker/workflow lifecycle costs;
-- [ ] quantify repeated same-level and same-family solve frequency.
+- [x] quantify repeated same-level and same-family solve shapes; full ablation has 153 experiment passes and family censuses cover 1,265 variants / 145 families.
 
 Decision: which reuse/ingestion lanes have enough ceiling to merit prototypes?
 
@@ -407,46 +407,46 @@ Decision: which reuse/ingestion lanes have enough ceiling to merit prototypes?
 - [x] classify `PrepLevel` fields;
 - [x] derive `CompiledLevel` / `SolveContext` conceptual boundary;
 - [x] identify option-sensitive compile fields;
-- [ ] estimate memory and cache residency;
-- [ ] prototype same-process reuse only if earned.
+- [x] estimate whether memory/cache work is decision-relevant; solve-relative ceilings are too small to earn a general reusable-compile refactor, so detailed residency modeling is deferred unless a new live consumer appears;
+- [x] prototype same-process reuse only if earned; **not earned** by solve-relative economics, so no production refactor was started.
 
 Decision: retain conceptual split only, or implement reusable immutable compilation seam.
 
 ### Phase 3 - solve-less opportunity census
 
-- [ ] corpus exact-symmetry/equivalence duplicate census; instrumentation committed (`solver:audit-equivalence`) and evidence run pending;
-- [ ] prior-solution transform/direct-validation hit rate; generated-family constructive-witness census committed (`solver:audit-family-constructive-reuse`), with scientific-consumption restrictions explicit;
-- [ ] family shared-structure/incremental-compile opportunity sizing; broad dependency-class invariance census committed (`solver:audit-family-compile-reuse`), field-level invalidation proof still required for any implementation;
-- [ ] multi-query overlap/divergence sizing;
-- [ ] historical-computation index hit-rate pilot.
+- [x] corpus exact-symmetry/equivalence duplicate census; complete 1,962-level census found 0 exact duplicate groups and 0 strict symmetry-equivalent groups;
+- [x] prior-solution transform/direct-validation hit rate for generated families; 1,265/1,265 variants carry constructive witnesses by generation contract, but blind solver experiments may not consume them;
+- [x] family shared-structure/incremental-compile opportunity sizing; 243/1,265 variants change at most one broad dependency class, insufficient to earn a generic incremental compiler;
+- [x] multi-query overlap/divergence sizing; **deferred without implementation** because reusable setup is a tiny solve-wall share and simultaneous-search machinery has no measured shared-search ceiling. Reopen only for a concrete query bundle whose duplicated *search* work is measured.
+- [x] historical-computation index hit-rate pilot; exact/symmetry natural-corpus hit rate is 0/1,962 while generated-family constructive reuse is already explicit in provenance, so no new historical solution index is earned.
 
 Decision: nominate at most the best-supported reuse/elimination treatments.
 
 ### Phase 4 - search-less opportunity census
 
 - [x] map existing parity/separator/residual/algebraic assets to presolve; bounded candidates P1 all-gates parity, P3 initial-state BC1, and conditional P2 checkerboard capacity are recorded in `../reports/2026-09-20-solver-presolve-opportunity-audit-001.md`;
-- [ ] measure static propagation/decomposition opportunities on real levels;
+- [x] measure first static presolve opportunities on real levels; P1 parity and initial-state BC1 both had zero incidence across all 1,962 levels; broader decomposition remains constrained by prior negative evidence;
 - [x] identify compact proof-producing candidates; broad separator decomposition remains closed/representation-explosive, while local exact/safe consumers remain distinct;
-- [ ] estimate work removable before implementation.
+- [x] estimate work removable before implementation for measured candidates; zero-incidence P1/P3 remove no current initial search, while prep reuse removes only a tiny fraction of solve wall.
 
 Decision: promote concrete presolve/decomposition experiments through canonical queue.
 
 ### Phase 5 - wait-less research audit
 
-- [ ] replay/census historical batches for decision-time curves; architecture audit found an existing completion-order `stopAfter` worker primitive and a safe first target: irreversible negative decision locks. See `../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md`;
-- [ ] separate compute completion time from decision time;
+- [x] audit historical batch artifacts for decision-time replay feasibility; generic wall-time replay is not sound because frozen gates + true completion order are not generally both preserved. Existing `stopAfter` remains a prospective-only opportunity. See `../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md`;
+- [x] separate compute completion time from decision time conceptually and define required decision acquisition versus optional characterization;
 - [x] design candidate prospective stopping contract at architecture level: start with loss-ceiling/futility locks only, keep partial coverage explicit, and separate decision acquisition from optional characterization;
-- [ ] validate on untouched/fresh experiment if earned.
+- [x] validate on untouched/fresh experiment if earned; no standalone sequential framework is earned. Apply the narrow terminal-certificate/stop rule prospectively when a real expensive experiment first supplies a live consumer.
 
 Decision: integrate sequential stopping into research operating model only with prospective support.
 
 ### Phase 6 - architecture synthesis
 
-- [ ] rank opportunities by expected project-level value, uncertainty, implementation cost, and soundness risk;
-- [ ] update architectural speed/current queue/future-work docs;
-- [ ] create implementation preflights for promoted candidates;
-- [ ] explicitly close or defer low-ceiling lanes;
-- [ ] leave no research question stranded only in this document.
+- [x] rank opportunities by expected project-level value, uncertainty, implementation cost, and soundness risk; recovered execution evidence closes/narrows the major speed lanes and leaves search-reduction + opportunistic decision locks as the only meaningful survivors;
+- [x] update architectural speed/current queue/future-work docs; speed ceilings are recorded, canonicalization future-work is narrowed, dynamic BC1 remains in the existing canonical queue, and compile reuse creates no new queue item;
+- [x] create implementation preflights for promoted candidates; none of the measured batch-digestion implementation candidates earned promotion, so no new preflight is required;
+- [x] explicitly close or defer low-ceiling lanes; see `../reports/2026-09-21-solver-batch-digestion-audit-recovered-evidence-closeout-001.md`;
+- [x] leave no research question stranded only in this document; dynamic BC1 is in the canonical queue, irreversible decision locks are in the research operating model, and canonicalization reopen conditions are in future-work.
 
 ## 7. Audit matrix schema
 
@@ -480,17 +480,36 @@ Every lane/candidate should eventually record:
 9. **Do not make the runtime solver carry research-only complexity without an earned production use.**
 10. **Commit evidence, not vibes.** Each promoted idea needs an opportunity-sizing report or equivalent durable evidence.
 
-## 9. Immediate next actions
+## 9. Closeout actions
 
-1. complete Phase 0 evidence map from current HEAD;
-2. inventory solver/research batch entrypoints and locate where validation/normalization/`prepLevel` occur;
-3. classify `PrepLevel` fields by mutability and dependency;
-4. choose a minimal representative workload for fixed-overhead measurement;
-5. inspect existing logs for historical timing data that can answer Phase 1 without a new large run;
-6. inspect completed experiment artifacts for a cheap retrospective time-to-decision pilot;
-7. update this plan and the PR after each material finding.
+1. land the recovered execution-evidence closeout report;
+2. update `solver-architectural-speed-opportunities.md` with the measured negative ceilings;
+3. verify no compile-reuse/canonicalization/presolve candidate needs a new canonical solver-queue entry;
+4. keep dynamic BC1 and broader search-reduction work in their existing solver-science authorities;
+5. retain prospective irreversible decision-lock guidance in the research operating model only if a live expensive experiment needs it;
+6. audit concluded; reopen only through the recorded per-lane gates, not by treating this document as a standing backlog.
 
 ## 10. Progress log
+
+### 2026-09-21 - audit concluded
+
+- Updated `solver-architectural-speed-opportunities.md` with measured ingestion/compile/equivalence/presolve ceilings.
+- Kept dynamic BC1 under its existing `WS2-CUT-BALANCE-PROJECTION` canonical queue item; no duplicate batch-audit queue entry was created.
+- Added the narrow prospective irreversible-decision-lock rule to `solver-research-operating-model.md`.
+- Narrowed `solver-future-work.md` canonicalization to within-solve/current-input equivalence; cross-level exact/symmetry reuse is closed on the current 1,962-level corpus.
+- Simultaneous multi-query machinery and initial checkerboard-capacity presolve are explicitly deferred until a new live consumer/opportunity denominator earns measurement.
+- The audit is concluded and is not a standing implementation backlog.
+
+### 2026-09-21 - recovered execution evidence and closeout
+
+- Recovered successful one-shot evidence run `35563235874` / artifact `10623295608` after PR #1940 had already been merged.
+- Complete equivalence census across 1,962 published/stress levels: 0 exact duplicate groups, 0 strict symmetry-equivalent groups.
+- Initial-state presolve across the same 1,962 levels: 0 all-gates parity-infeasible rows and 0 BC1-conflicted initial gates.
+- Solve-relative cost: prep was ~0.335% of published solve wall and ~0.0113% of the sampled hard Corpus-2 solve wall.
+- Family census: all 1,265 variants have constructive witnesses by generation contract; only 243/1,265 change at most one broad compilation-dependency class.
+- Added [`../reports/2026-09-21-solver-batch-digestion-audit-recovered-evidence-closeout-001.md`](../reports/2026-09-21-solver-batch-digestion-audit-recovered-evidence-closeout-001.md).
+- General compiled-level speed refactor, global equivalence canonicalization, initial parity presolve, and initial BC1 presolve are not earned.
+
 
 ### 2026-09-20 - solve-less census instrumentation
 

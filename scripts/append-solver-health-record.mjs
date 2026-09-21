@@ -13,7 +13,7 @@ import { existsSync, readFileSync, appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { diffIdSets, hashIds, populationIds, reportRows, solvedIds } from './solver-capability-memory-lib.mjs';
+import { diffIdSets, hashIds, populationIds, reportRows, solvedIds } from './solver-capability-evidence-lib.mjs';
 
 const WORKFLOW_PROTOCOL_DEFAULTS = Object.freeze({
     corpus2_budget_ms: '86400000',

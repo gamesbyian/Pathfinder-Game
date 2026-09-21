@@ -381,7 +381,10 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
         // (no rand()) and keep this check at its default (true) — pruning dead branches there can
         // only free more budget for live ones, same as dfsFromGate/beam.
         const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false,
-            { allowNeighborBudgetPrune: false });
+            prep._connectivityCertificateShadow?.observer.observeUnscheduled === true
+                ? { allowNeighborBudgetPrune: false, researchCaller: 'repair-random-walk',
+                    researchSchedulePhase: null, researchRemainingSteps: level.requiredLength - realLen }
+                : { allowNeighborBudgetPrune: false });
 
         if (verdict === 'solution') {
             liveUndo.push(undo);
@@ -584,7 +587,11 @@ function searchCompletionFromPartialPath(ws: SolverSearchState, level: Normalize
         // it matters most.
         const rSteps = level.requiredLength - realLen;
         const runConnectivity = rSteps <= 10 || (nodes & 63) === 0;
-        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity);
+        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity,
+            prep._connectivityCertificateShadow?.observer.observeUnscheduled === true
+                ? { researchCaller: 'repair-completion-dfs', researchSchedulePhase: nodes & 63,
+                    researchRemainingSteps: rSteps }
+                : undefined);
         if (verdict === 'solution') {
             liveUndo.push(undo);
             return { solved: true, nodes };
@@ -681,7 +688,11 @@ function boundedDfsFromHere(ws: SolverSearchState, level: NormalizedLevel, prep:
         const realLen = getRealLengthFromState(ws);
         const rSteps = level.requiredLength - realLen;
         const runConnectivity = rSteps <= 10 || (nodes & 63) === 0;
-        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity);
+        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity,
+            prep._connectivityCertificateShadow?.observer.observeUnscheduled === true
+                ? { researchCaller: 'repair-bounded-dfs', researchSchedulePhase: nodes & 63,
+                    researchRemainingSteps: rSteps }
+                : undefined);
         if (verdict === 'solution') {
             liveUndo.push(undo);
             return { solved: true, nodes, bestPath: null, bestBadness: 0 };
@@ -821,7 +832,11 @@ export function relinkPaths(ws: SolverSearchState, base: number[], guide: number
             copied++;
             const realLen = getRealLengthFromState(ws);
             const runConnectivity = (level.requiredLength - realLen) <= 10 || (nodes & 63) === 0;
-            const verdict = evaluatePrunedMove(c, realLen, ws, level, prep, cfg, runConnectivity);
+            const verdict = evaluatePrunedMove(c, realLen, ws, level, prep, cfg, runConnectivity,
+                prep._connectivityCertificateShadow?.observer.observeUnscheduled === true
+                    ? { researchCaller: 'repair-relink', researchSchedulePhase: nodes & 63,
+                        researchRemainingSteps: level.requiredLength - realLen }
+                    : undefined);
             if (verdict === 'solution') { liveUndo.push(undo); return { solved: true, nodes, bestPath: null, bestBadness: 0, bestPend: null }; }
             if (verdict === 'pass') { liveUndo.push(undo); continue; }
             undoMove(undo, ws); copied--; // illegal recombination step — abandon this anchor
