@@ -91,7 +91,7 @@ for (const { entry, pos } of sample) {
     const t0 = Date.now();
     try {
         result = await Solver.solveLevel(level, {
-            workBudget: WORK_BUDGET,
+            baseWorkBudget: WORK_BUDGET,
             strictTotalWorkBudget: true,
             timeBudgetMs: TIME_BUDGET_MS,
             connectivityRejectionObserver: observer,
