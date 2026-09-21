@@ -77,28 +77,15 @@ Evidence anchors: [`scorer`](../reports/2026-08-26-current-head-specialized-scor
 
 ## Future speed campaign
 
-When solve acquisition is no longer dominant, activate two linked programs without creating a second queue.
+When solve acquisition is no longer dominant, keep one queue: first reduce machine-independent `workSpent` through WS1/WS2/WS6/WS7; then profile a stable retained boundary and optimize only measured CPU/wall cost centers. Historical scoring, replay, layout, indexing and native/WASM ideas remain hypotheses.
 
-**Algorithmic efficiency first:** freeze a retained solve boundary, then use WS1/WS2/WS6/WS7 to reduce machine-independent `workSpent`: action selection/ladder ordering, redundant retry/action cost, routing, repair futility/reachability, forced-chain traversal, pruning economics, and only earned resumability/handoff questions.
-
-**Implementation efficiency second:** once that logical-search boundary is stable enough to optimize, profile current HEAD on the retained workload and nominate only measured CPU/wall cost centers. Historical scoring, replay, allocation/layout, indexing, state plumbing and native/WASM ideas are hypotheses, not a standing backlog.
-
-Activation baseline should retain: solve boundary, total `workSpent`, total wall/CPU, work and wall/CPU before winner, winning action/config, redundant earlier-action cost, displaced capability, DFS/beam/repair contribution, participation/dose, current replay/forced-chain/major-hotspot shares, representative short/hard latency, and total retained-population compute.
+Retain the solve boundary, total and pre-winner work/wall, winner action/config, redundant earlier cost, displaced capability, technique participation, major-hotspot shares, representative short/hard latency and total population compute.
 
 ## Measurement contract
 
-For pure-speed candidates:
+Pure-speed candidates require: a fresh material profile target; representative short/hard workloads; deterministic non-binding work/node/wall contracts; solve/search parity; interleaved repeated timing; end-to-end population compute; and allocation/GC inspection for representation changes. Treat nested hot-loop timers as perturbative unless calibrated.
 
-1. current-head profile identifies a material target;
-2. representative short/hard workloads are included;
-3. deterministic work/node limits are pinned and wall deadlines are non-binding;
-4. solve/search parity is required before timing interpretation;
-5. timing is interleaved and repeated sufficiently for the claimed effect;
-6. end-to-end and total retained-population compute are reported, not only microbenchmarks/geometric means;
-7. allocation/GC is inspected for representation changes;
-8. nested hot-loop timers are treated as perturbative unless observer overhead is measured.
-
-Use `workSpent` across techniques; nodes are within-technique diagnostics; wall/CPU measures implementation cost. A binding wall cap can erase treatment differences, and fewer nodes can still cost more CPU.
+Use `workSpent` across techniques; nodes only within technique. Binding wall caps can erase differences, and fewer nodes can still cost more CPU.
 
 ## Reopen gate
 
