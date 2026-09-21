@@ -2,7 +2,7 @@
  *  must not accumulate, while genuinely distinct rediscoveries are kept. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, toHint } from './hint-types.js';
+import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint } from './hint-types.js';
 
 test('dedupeProvenanceEntries collapses recording-only differences and keeps evidence-bearing ones', () => {
   const e = makeProvenanceEntry('prefix-anchored', { foundAt: '2026-07-16T05:53:45.609Z', hintGuided: true, usedExistingHints: true });
@@ -12,6 +12,14 @@ test('dedupeProvenanceEntries collapses recording-only differences and keeps evi
   assert.equal(out.length, 2, 'timestamp-only re-recordings collapse; a different deterministic search result stays');
   assert.equal(out[0].foundAt, e.foundAt, 'the first recording is retained');
   assert.equal(out[1].search.nodesExpanded, evidenceBearing.search.nodesExpanded);
+});
+
+test('setLevelHintRecords makes canonical records authoritative and derives bare paths', () => {
+  const level: { hints?: number[][]; hintRecords?: any[] } = { hints: [[9, 9]] };
+  const records = [toHint([1, 2, 3]), toHint([4, 5, 6])];
+  assert.equal(setLevelHintRecords(level, records), records);
+  assert.equal(level.hintRecords, records);
+  assert.deepEqual(level.hints, [[1, 2, 3], [4, 5, 6]]);
 });
 
 test('mergeHints does not accumulate a byte-identical provenance entry on the same path', () => {
