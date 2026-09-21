@@ -238,13 +238,32 @@ function buildResearchArtifactRelations(root, artifactPaths, eligibility = null)
     return { blockRows, parentRows };
 }
 
-function normalizePremiseAdmissions(doc) {
+export function normalizePremiseAdmissions(doc) {
     if (!doc) return [];
-    if (Array.isArray(doc)) return doc;
-    for (const key of ['admissions', 'premises', 'records']) {
-        if (Array.isArray(doc[key])) return doc[key];
+    let rows = null;
+    if (Array.isArray(doc)) rows = doc;
+    else {
+        for (const key of ['admissions', 'premises', 'records']) {
+            if (Array.isArray(doc[key])) { rows = doc[key]; break; }
+        }
     }
-    return [];
+    if (!rows) return [];
+
+    return rows.map((row, index) => {
+        if (!row || typeof row !== 'object' || Array.isArray(row)) {
+            throw new Error(`premise admission row ${index} must be an object`);
+        }
+        const candidates = [row.premiseId, row.id, row.propositionId]
+            .filter(value => value != null)
+            .map(String);
+        const distinct = [...new Set(candidates)];
+        if (distinct.length === 0) throw new Error(`premise admission row ${index} lacks premiseId`);
+        if (distinct.length > 1) {
+            throw new Error(`premise admission row ${index} has conflicting premise identity aliases: ${distinct.join(', ')}`);
+        }
+        const { id: _legacyId, propositionId: _legacyPropositionId, premiseId: _premiseId, ...rest } = row;
+        return { ...rest, premiseId: distinct[0] };
+    });
 }
 
 export function buildResearchRelations(root = process.cwd(), { artifactPaths = [], eligibility = null, discoverArtifacts = false } = {}) {
@@ -305,10 +324,8 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
             withSource(row, 'premiseSnapshots', 'docs/solver-premise-map-snapshot-v*.json')),
         researchBlocks: artifactRelations.blockRows,
         researchParents: artifactRelations.parentRows,
-        premiseAdmissions: normalizePremiseAdmissions(admissions).map(row => {
-            const premiseId = row.premiseId ?? row.id ?? row.propositionId ?? null;
-            return withSource({ ...row, premiseId }, 'premiseAdmissions', RESEARCH_RELATION_CONTRACTS.premiseAdmissions.source);
-        }),
+        premiseAdmissions: normalizePremiseAdmissions(admissions).map(row =>
+            withSource(row, 'premiseAdmissions', RESEARCH_RELATION_CONTRACTS.premiseAdmissions.source)),
         premises: premiseMap.premises.map(row => withSource(row, 'premises', row._premiseSource)),
         premiseEdges: premiseMap.edges.map(row => withSource(row, 'premiseEdges', row.sourceFile)),
         durableEvidence,
