@@ -1,10 +1,11 @@
 # Pre-winner action-dose reconciliation 001
 
-> **Status:** concluded-narrowed.
-> **Date:** 2026-09-21.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — reconciled the current pre-winner work ceiling against historical static-portfolio, percentile-cap, and resumable-tranche evidence.
+> **Decision:** the current pre-winner reservoir survives conservative exclusions, but does not reopen the old static-portfolio scheduler, frozen percentile caps, or resumable-tranche salvage; route only the surviving new-signal question to WS1.
+> **Remaining gate:** test a new runtime-legal allocation signal through `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`; do not rerun the closed historical treatment forms unchanged.
+> **Evidence role:** forensic
 > **Trigger:** [pre-winner action work opportunity result 001](2026-09-21-pre-winner-action-work-opportunity-result-001.md).
-> **Decision:** the large current production pre-winner reservoir does not reopen the old static-portfolio scheduler or its resumable-tranche salvage. Frozen percentile caps do not transfer cleanly enough to current production attempts. Route the surviving question to WS1 as a search for a new runtime-legal allocation signal.
-> **Evidence role:** historical-current reconciliation.
 
 ## 1. Why reconcile before inventing another scheduler
 
