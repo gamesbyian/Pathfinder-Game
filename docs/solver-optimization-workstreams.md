@@ -85,7 +85,7 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 **Current WS2 gate:** HARVEST adds the repair node-cap seam and designs its matched-work A/B; reserve repricing is separately nominated. ACQUISITION runs the 3-row beam freshness gate, broadens first-loss sampling beyond capability-selected Class 3, and now has two earned response-guided follow-ups: bounded 2K/5K exclusive-prefix viability/dominance tracing and a selected CW/CCW operational-trace discriminator. BC1 separately advances to a production-inert safety/economics consumer. [`invention`](solver-capability-invention-program.md)
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** SUPPORTING / LEGAL-SIGNAL CAPTURE ACTIVE. Pre-winner work: C2 94.74%, C1 87.58%. Next: inert action-boundary capture. [`oracle`](../reports/2026-09-21-prewinner-work-oracle-census-001.md) · [`preflight`](../reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md)
+**State:** LEGAL-SIGNAL CAPTURE ACTIVE. Next: inert action-boundary capture. [`oracle`](../reports/2026-09-21-prewinner-work-oracle-census-001.md) · [`preflight`](../reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md)
 
 ## Workstream state
 
