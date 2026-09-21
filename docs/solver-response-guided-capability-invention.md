@@ -8,15 +8,13 @@
 
 ## Purpose
 
-The solver already contains unusually rich evidence about **where existing techniques disagree**: technique census, capability memory, failure response, search-loss/decision observations, accepted-path provenance, exact/reference labels and production traces.
-
-Use those disagreements as a capability-discovery instrument.
+Use existing technique, capability, failure, search-loss, provenance, exact/reference and production evidence as a capability-discovery instrument.
 
 The central question is:
 
 > What smallest legal current-input fact would explain or exploit a real decision/technique contrast that current production reasoning does not already distinguish?
 
-This closes the loop between response analysis and capability invention without turning historical winners into runtime routing.
+Historical winners remain offline labels, never runtime routing inputs.
 
 ## The loop
 
@@ -47,7 +45,7 @@ Track these separately:
 - **proof value:** the premise proves a new sound reject, lower bound or dominance fact;
 - **response value:** the premise explains/predicts differentiated solver behavior.
 
-A premise can be weak on one and strong on the other. Do not kill response value because prune incidence is low, or infer sound rejection from an observational response association.
+Do not kill response value because prune incidence is low, or infer sound rejection from response association.
 
 ## Two-way search
 
@@ -68,7 +66,7 @@ Both routes meet at the same Stage-0 and consumer-oracle gates.
 
 ## Product projections
 
-Single projections are not privileged. A tiny Cartesian product can be tested when:
+A tiny Cartesian product can be tested when:
 - each component has an exact declared transition/relaxation law;
 - the product remains much smaller than residual identity;
 - a novelty witness shows the product says something neither component says alone.
