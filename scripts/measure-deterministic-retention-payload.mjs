@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
+import { execFileSync } from 'node:child_process';
 
 import { createFailureResponseDocument } from './solver-failure-response-lib.mjs';
 
@@ -29,8 +30,20 @@ function count(rows, predicate) {
     return n;
 }
 
+function readRepositoryFile(file) {
+    if (fs.existsSync(file)) return fs.readFileSync(file);
+    try {
+        return execFileSync('git', ['show', `HEAD:${file.replaceAll('\\\\', '/')}`], {
+            encoding: null,
+            maxBuffer: 256 * 1024 * 1024,
+        });
+    } catch {
+        throw new Error(`missing repository input: ${file}`);
+    }
+}
+
 function measure(file) {
-    const raw = fs.readFileSync(file);
+    const raw = readRepositoryFile(file);
     const report = JSON.parse(raw);
     const rows = rowsOf(report);
     const document = createFailureResponseDocument(rows, {
@@ -93,10 +106,6 @@ function measure(file) {
 const args = parseArgs(process.argv.slice(2));
 const files = (args.get('in') ?? 'reports/stress/solver-corpus1-latest.json,reports/stress/solver-corpus2-latest.json')
     .split(',').map(value => value.trim()).filter(Boolean);
-
-for (const file of files) {
-    if (!fs.existsSync(file)) throw new Error(`missing input: ${file}`);
-}
 
 const measurements = files.map(file => measure(path.normalize(file)));
 const totals = measurements.reduce((acc, item) => {
