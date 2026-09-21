@@ -1,0 +1,108 @@
+# Response-guided premise nominations from existing technique discordance
+
+> **Status:** development-premise nomination only; no routing or production change.
+> **Method:** [response-guided capability invention](../docs/solver-response-guided-capability-invention.md).
+> **Source evidence:** [2026-09-01 technique relative-advantage follow-up](2026-09-01-technique-relative-advantage-followup.md) and its prespecified technique-pair analysis.
+> **Compute:** no new solver runs. This is a reinterpretation of already-retained technique-response evidence under the exact-projection/invention framework.
+
+## Question
+
+Which existing technique-response disagreements are strong enough to justify searching for a small exact current-input explanation, and what is the cheapest falsifier for each?
+
+## Nomination 1 — portal-heavy diverse-beam advantage
+
+Two independently prespecified wide-beam comparisons show the same directional coarse signal:
+
+- objective scoring: diverse-only wins are much more portal-heavy than plain-only wins;
+- intersection-harvest scoring: the same portal-heavy direction recurs.
+
+This cross-score recurrence is more interesting than either comparison alone.
+
+### What not to conclude
+
+Do not route on portal count. Portal count may proxy for endpoint geometry, phase, region transfer, or another correlated burden.
+
+### Exact-premise search
+
+First candidates:
+1. twist-vs-same-parity portal structure and required gate/goal phase;
+2. portal endpoints relative to small cuts/regions;
+3. whether portals expand or collapse scarce region/interface capacity;
+4. small product projections such as parity phase × portal-crossing cut side.
+
+### Cheapest falsifier
+
+Reuse the now-retained plain-only/diverse-only contrast IDs. Derive a compact **current-input portal-structure basis** from one shared owner and ask whether it separates the two directions beyond raw portal count and existing generic descriptors.
+
+Stop if the richer exact basis adds no stable distinction. If it does, run Stage-0 theorem/novelty work before any routing experiment.
+
+## Nomination 2 — CW/CCW orientation disagreement
+
+Both perimeter beam and perimeter DFS show large left/right disagreement populations while current count/density descriptors barely separate them.
+
+This is a high-value **representation gap**: the response signal exists, but the current static vocabulary largely cannot see it.
+
+### Exact-premise search
+
+Prefer geometry with transformation semantics rather than adding arbitrary coordinate features:
+
+1. Gate→Goal orientation relative to obstacle/obligation asymmetry;
+2. reflection/rotation symmetry class and symmetry-breaking landmarks;
+3. signed side-of-path / side-of-cut distributions for required objects;
+4. planar separation or region-order constraints that transform predictably under reflection;
+5. exact automorphisms as a negative control: on truly symmetric levels, direction should not gain semantic information from static geometry alone.
+
+### Cheapest falsifier
+
+Construct a small transformation-aware descriptor bundle and test whether it explains direction discordance on the frozen contrast IDs. Include mirrored-level metamorphic checks where mechanics preserve reflection.
+
+If orientation remains unexplained, selected operational traces are more valuable than more count features.
+
+## Nomination 3 — non-monotonic 2K/5K beam width
+
+Both objective and intersection-harvest comparisons contain real narrower-beam-only wins. In the objective pair, the 2K-only cohort is not merely smaller/easier; it skews larger in area.
+
+This argues against treating beam width as monotonic capability.
+
+### Exact-premise search
+
+The likely missing object is not a level category but a **retention relation**:
+
+1. one-way state dominance or lack thereof;
+2. viable-regime coverage lost by the wider beam through ranking/displacement;
+3. bounded future-option containment;
+4. interaction between width and diversity/score-induced survivor composition.
+
+### Cheapest falsifier
+
+Use existing production/census decision evidence where candidate sets are available and perform a **consumer-oracle replay**:
+- identify candidates retained by 2K but displaced before the corresponding 5K completion;
+- test whether any cheap exact projection distinguishes those survivors;
+- measure the maximum number of real decisions the fact could have changed if free.
+
+Do not build another beam-width treatment until an explanatory decision seam is observed.
+
+## Cross-cutting opportunity — product projections
+
+The contrast evidence suggests that single descriptors may be insufficient. Permit tiny exact products only when a specific contrast demands them and each component has an exact law.
+
+Most promising first products:
+- parity phase × cut/region side for portal-heavy contrasts;
+- region/interface capacity × obligation-support pressure;
+- symmetry class × signed Gate/Goal/landmark geometry for direction contrasts.
+
+Require a novelty witness beyond each component independently.
+
+## Cross-cutting opportunity — response/proof dual disposition
+
+Every premise nominated here should receive two dispositions:
+- **proof value:** does it prove sound deadness/bounds/dominance?
+- **response value:** does it explain differentiated solver behavior?
+
+A negative prune result must not silently kill a useful response signal, and an observational response signal never licenses a hard rule.
+
+## Implementation consequence
+
+The existing relative-advantage analyzer must preserve the actual contrast identities, not only counts/effect summaries. That change is part of this branch and turns the old analysis into a reusable premise-nomination input.
+
+The next code should **not** be a selector. It should be the smallest shared current-input feature owner required by whichever first Stage-0 audit survives: portal/parity structure for nomination 1, or transformation-aware geometry for nomination 2.
