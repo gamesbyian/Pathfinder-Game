@@ -84,7 +84,7 @@ The standard is prevention of real research errors, not mathematical elegance.
 
 ## Priority after first audit
 
-- **Done:** applicability meet; population set relation; capability-memory set migration; block-consumption summary + scoped overlap diagnostic; independent-unit grouping shared by two analyses; relation-law audit.
+- **Done:** applicability meet; population set relation; capability-evidence set migration; block-consumption summary + scoped overlap diagnostic; independent-unit grouping shared by two analyses; relation-law audit.
 - **Next:** claim-chain persistence only when real claim→claim identity edges appear. Full partition refinement/coarsening and envelope composition remain deferred until real consumers appear.
 - **Then:** claim-chain persistence, independence-axis categories, unit-partition recurrence.
 - **Guarded:** typed relation laws.
