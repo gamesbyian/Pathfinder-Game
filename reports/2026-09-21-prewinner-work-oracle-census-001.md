@@ -6,7 +6,6 @@
 > **Remaining gate:** measure how much pre-winner work can be predicted or avoided using only information available before each next action, starting with simple static/current-solve and compact failure-response signals; compare against an action-order-only baseline and preserve rare capability.
 > **Evidence role:** forensic
 > **Selection:** all solved rows in the frozen C1/C2 production-boundary result; no winner/stage subset selected after inspection.
-> **Population identity:** GitHub Actions run `35066677597`, C1 102 rows + C2 1,700 rows, solver ref `16114b80e54233910f34ec2ea8e2c1a41a859eb4`.
 > **Selection history:** C1/C2 are solver-outcome-selected development corpora; this supports current-production economics, not unseen-level prevalence.
 > **Inference scope:** retrospective oracle ceiling for work on levels production solved in this recorded run; no claim that predecessor actions were ex-ante redundant.
 
