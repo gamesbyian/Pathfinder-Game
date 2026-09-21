@@ -144,31 +144,6 @@ jobs:
         # npm-audit output was informational here, not a CI gate, and security checks have their own
         # explicit repository commands.
         run: npm ci --prefer-offline --no-audit --fund=false
-      # Temporary branch-gated execution rail for the computational-work-elimination successor audit.
-      # Remove after the artifact is recovered/dispositioned; ordinary PRs never execute this step.
-      - name: Run connectivity cut-certificate shadow development sample
-        if: github.event_name == 'pull_request' && github.head_ref == 'chatgpt/solver-batch-digestion-audit-closeout-2026-09-21'
-        id: cwe_connectivity_probe
-        continue-on-error: true
-        run: |
-          node scripts/run-bundled.mjs scripts/connectivity-certificate-shadow-audit.mjs -- \
-            --corpus=data/stress/stress-levels-random.json \
-            --levels=pos:81-104 \
-            --work-budget=500000 \
-            --time-budget-ms=30000 \
-            --max-certificates=64 \
-            --out=reports/stress/connectivity-certificate-shadow-development-002.json \
-            --summary-out=reports/stress/connectivity-certificate-shadow-development-002-summary.md
-      - name: Upload connectivity cut-certificate shadow evidence
-        if: always() && github.event_name == 'pull_request' && github.head_ref == 'chatgpt/solver-batch-digestion-audit-closeout-2026-09-21'
-        uses: actions/upload-artifact@v7
-        with:
-          name: connectivity-certificate-shadow-development-002
-          path: |
-            reports/stress/connectivity-certificate-shadow-development-001.json
-            reports/stress/connectivity-certificate-shadow-development-001-summary.md
-          if-no-files-found: warn
-          retention-days: 7
       - name: Check package-script reachability
         id: dead_scripts
         continue-on-error: true
@@ -228,10 +203,9 @@ jobs:
           NODE_TESTS: ${{ steps.node_tests.outcome }}
           SOLVER_CANARY: ${{ steps.solver_canary.outcome }}
           BUILD: ${{ steps.build.outcome }}
-          CWE_CONNECTIVITY_PROBE: ${{ steps.cwe_connectivity_probe.outcome }}
         run: |
           failed=0
-          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD CWE_CONNECTIVITY_PROBE; do
+          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD; do
             status="${!name}"
             printf '%-14s %s\n' "$name" "$status"
             if [[ "$status" != "success" ]]; then
