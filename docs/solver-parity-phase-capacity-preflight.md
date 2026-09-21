@@ -161,7 +161,7 @@ Hard consumers follow [solver correctness hardening](solver-correctness-hardenin
 
 Lane H runs in parallel with the current WS2 failure-response gate and does not reorder it.
 
-`WS2-PARITY-PHASE-DISTANCE`, `WS2-CHECKERBOARD-CAPACITY`, and `WS2-PARITY-RESPONSE-SIGNATURE` are active premise tests. The remaining seams are downstream or secondary measurements. Contingent architectures/treatments belong in `solver-future-work.md`, not here or in the audit report as a second queue.
+The three named WS2 parity questions are active premises. Other seams are downstream; contingent treatments belong in `solver-future-work.md`.
 
 
 ## 9. Implemented observational seam
