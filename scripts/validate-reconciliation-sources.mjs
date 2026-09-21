@@ -55,10 +55,34 @@ function sourceContract(manifest, runId) {
 export function validateReconciliationSources(sources) {
   if (!sources.length) throw new Error('no source manifests supplied');
   const normalized = sources.map(({ runId, manifest }) => {
-    const contract = sourceContract(manifest, runId);
+    const stagedRunId = String(runId);
+    const declaredRunId = manifest?.experiment?.workflowRunId ?? null;
+    if (declaredRunId == null) {
+      throw new Error(`source run ${stagedRunId} has no declared experiment workflow run ID; staging-directory identity is not scientific provenance`);
+    }
+    if (String(declaredRunId) !== stagedRunId) {
+      throw new Error(
+        `source staging directory ${stagedRunId} contains manifest for workflow run ${declaredRunId}; refusing to relabel acquisition provenance by directory name`,
+      );
+    }
+    if (manifest?.runId != null && String(manifest.runId) !== String(declaredRunId)) {
+      throw new Error(
+        `source run ${stagedRunId} has inconsistent manifest run identity: top-level ${manifest.runId} vs experiment ${declaredRunId}`,
+      );
+    }
+    const runAttempt = manifest?.experiment?.workflowRunAttempt ?? null;
+    if (runAttempt == null || String(runAttempt).trim() === '') {
+      throw new Error(`source run ${stagedRunId} has no declared experiment workflow run attempt`);
+    }
+    if (manifest?.runAttempt != null && String(manifest.runAttempt) !== String(runAttempt)) {
+      throw new Error(
+        `source run ${stagedRunId} has inconsistent manifest run attempt: top-level ${manifest.runAttempt} vs experiment ${runAttempt}`,
+      );
+    }
+    const contract = sourceContract(manifest, stagedRunId);
     return {
-      runId: String(runId),
-      runAttempt: manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt ?? null,
+      runId: stagedRunId,
+      runAttempt: String(runAttempt),
       resolvedSha: contract.experiment.resolvedSha,
       configurationHash: contract.experiment.configurationHash,
       populationIdentityHash: contract.population.identityHash,
