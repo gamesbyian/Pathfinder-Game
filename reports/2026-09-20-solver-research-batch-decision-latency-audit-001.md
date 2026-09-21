@@ -1,11 +1,9 @@
 # Solver research batch decision-latency audit 001
 
-> **Status:** architecture/method audit complete; historical savings census still open.
-> **Date:** 2026-09-20
-> **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Evidence role:** research-execution architecture.
-> **Decision:** pursue only monotone, prospectively frozen early-stop conditions first. The safest high-value initial form is irreversible negative stopping (for example, a zero-loss gate after the first real loss). Do not infer early positive promotion from incomplete populations.
-
+> **Status:** active
+> **Last evidence:** 2026-09-20 — execution audit found existing completion-order cancellation support but insufficient historical timing/gate evidence for truthful retrospective wall-savings claims.
+> **Decision:** Pursue only prospectively frozen monotone decision locks first, especially irreversible loss-ceiling stopping.
+> **Remaining gate:** Size a prospective decision-lock contract with explicit independent-unit, gate, lock-time, and in-flight evidence before changing research runners.
 ## 1. Question
 
 The user's practical pain is wall-clock waiting for large experiments.
