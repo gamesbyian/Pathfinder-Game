@@ -499,7 +499,7 @@ export function createRacePool(opts = {}) {
         // slots (no new spawn cost). A single queue (no repair sub-queue — attempts.ts's diversity
         // config carries no `.repair` flag), so this reuses the simpler single-queue shape of
         // phase 1's own no-repair case rather than needing a second dual-queue implementation.
-        const diversityFractionOverride = Number(levelOpts.goalAttractionDisabledRetryBudgetFractionOverride ?? levelOpts.attractionDiversityBudgetFractionOverride);
+        const diversityFractionOverride = Number(levelOpts.goalAttractionDisabledRetryBudgetFractionOverride);
         const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
             ? diversityFractionOverride
             : GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION;
@@ -691,7 +691,6 @@ export function createRacePool(opts = {}) {
  * @param {number} [opts.goalAttractionDisabledRetryBudgetFractionOverride] - overrides
  *   GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION for this call only, independent of the repair override
  *   above; 0 disables the phase entirely. See orchestration.ts's SolveOpts field of the same name.
- *   `attractionDiversityBudgetFractionOverride` is still accepted as a legacy alias.
  * @returns {Promise<{ok: boolean, status: string, solution: number[]|null, solutions: number[][], attempts: object[], totalMs: number, nodesExpanded: number}>}
  */
 export async function solveLevelRaced(rawLevel, opts = {}) {
