@@ -27,9 +27,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 ## Hint/failure reopen hooks
 
-- Use compatible compact-response evidence first; never backfill pre-contract attempts. Repeated compatible populations may earn phenotype reducers.
-- Before richer exact/search-loss work, try cheap descriptor/source, family/variant and hint-process joins with valid denominator/protocol/dependence unit.
-- Recurring rich producer -> P8; explicit first-loss selection -> P9. Sampled hints cannot prove whole-space extinction.
+Use compatible compact response first; never backfill pre-contract attempts. Try cheap descriptor/family/hint joins before richer exact/search-loss work. Recurring rich producer -> P8; explicit first-loss selection -> P9. Sampled hints cannot prove whole-space extinction.
 
 ## Deferred architectural questions
 
@@ -47,7 +45,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 ## Conditional composition/allocation work
 
-Dormant unless an active lane changes the premise.
+Dormant until an active lane changes the premise.
 
 | Question | Reopen condition |
 |---|---|
