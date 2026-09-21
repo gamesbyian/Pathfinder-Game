@@ -84,9 +84,9 @@ Default orientation:
 3. the specialist doc for the current gate
 4. compact evidence/tool queries before broad artifacts
 
-Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance and [`solver-research-resource-contract.md`](solver-research-resource-contract.md) when a decision depends on a resource's independence, identity, conditioning, missingness, freshness, information loss, or audited consumer semantics. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence. Use [`solver-archaeology-register.md`](solver-archaeology-register.md) only when tracing historical premises/dispositions; it does not rank current work.
+Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) for population/holdout/generalization questions. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundaries and [`solver-research-resource-contract.md`](solver-research-resource-contract.md) for audited resource semantics. Use the post-naming resumption guide only for frozen pre-cleanup evidence, and the archaeology register only for historical premises/dispositions.
 
-Workflow/evidence remediation is complete. Current maintenance starts from [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`solver-research-operating-model.md`](solver-research-operating-model.md), maintained lifecycle/indexes, and the code being changed. Historical conclusions remain in [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md).
+Workflow/evidence remediation is complete; current maintenance uses the evaluation/operating-model docs, maintained lifecycle/indexes, and changed code. Historical conclusions remain in [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md).
 
 ### Research instruments
 
