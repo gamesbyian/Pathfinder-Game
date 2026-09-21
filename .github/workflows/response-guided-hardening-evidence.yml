@@ -1,0 +1,143 @@
+name: Response-guided hardening evidence
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/response-guided-hardening-evidence.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Freeze technique-discordance population
+        run: |
+          mkdir -p tmp/response-guided-hardening
+          npm run research:freeze-response-guided-contrasts -- \
+            --base=reports/stress/technique-niches/2026-09-03/level-capability.json \
+            --out=tmp/response-guided-hardening/response-guided-contrast-population.json
+
+      - name: Run parity and orientation contrasts
+        run: |
+          npm run research:response-guided-parity -- \
+            --cohorts=tmp/response-guided-hardening/response-guided-contrast-population.json \
+            --out=tmp/response-guided-hardening/response-guided-parity-contrast.json
+          npm run research:response-guided-orientation -- \
+            --cohorts=tmp/response-guided-hardening/response-guided-contrast-population.json \
+            --out=tmp/response-guided-hardening/response-guided-orientation-contrast.json
+
+      - name: Derive frozen narrower-beam-only cohorts
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('tmp/response-guided-hardening/response-guided-contrast-population.json','utf8'));
+          const pairs = [
+            {
+              name: 'objective',
+              left: 'beam|score=objectiveFirst|bias=none|width=2000|retention=plain',
+              right: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain',
+            },
+            {
+              name: 'intersection',
+              left: 'beam|score=intersectionHarvest|bias=none|width=2000|retention=plain',
+              right: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain',
+            },
+          ];
+          for (const spec of pairs) {
+            const hit = p.pairs.find(x => x.leftAction === spec.left && x.rightAction === spec.right);
+            if (!hit) throw new Error('missing frozen width pair: ' + spec.name);
+            const ids = hit.population.leftOnlyIds;
+            if (!ids.length) throw new Error('no narrower-only ids for: ' + spec.name);
+            fs.writeFileSync('tmp/response-guided-hardening/' + spec.name + '-2k-only-ids.txt', ids.join(','));
+          }
+          NODE
+
+      - name: Run paired objective 2K/5K frontier oracle
+        run: |
+          IDS="$(cat tmp/response-guided-hardening/objective-2k-only-ids.txt)"
+          npm run research:paired-beam-width-frontier -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="$IDS" --profile=objectiveFirst --widths=2000,5000 \
+            --depth-fraction=0.2 --out=tmp/response-guided-hardening/paired-width-objective.json
+
+      - name: Run paired intersection 2K/5K frontier oracle
+        run: |
+          IDS="$(cat tmp/response-guided-hardening/intersection-2k-only-ids.txt)"
+          npm run research:paired-beam-width-frontier -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="$IDS" --profile=intersectionHarvest --widths=2000,5000 \
+            --depth-fraction=0.2 --out=tmp/response-guided-hardening/paired-width-intersection.json
+
+      - name: Freeze BC1 Stage-B parents
+        run: |
+          npm run stress:select-random-sample -- \
+            --corpus=data/stress/stress-levels-random.json --corpus-label=corpus2 \
+            --sample=24 --seed=ws2-cut-balance-bc1-stageb-v1 \
+            --out=tmp/response-guided-hardening/bc1-stageb-parents.json
+
+      - name: Capture BC1 Stage-B frontier
+        shell: bash
+        run: |
+          BC1_IDS="$(node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('tmp/response-guided-hardening/bc1-stageb-parents.json'));process.stdout.write(r.map(x=>x.levelId).join(','))")"
+          node scripts/run-bundled.mjs scripts/stress/production-search-frontier-sampler.mjs -- \
+            --corpus=data/stress/stress-levels-random.json --levels="$BC1_IDS" \
+            --depth-fraction=0.20 --picks=12 --seed=ws2-cut-balance-bc1-stageb-v1 \
+            --profile=intersectionHarvest --width=5000 \
+            --question=WS2-CUT-BALANCE-PROJECTION --evidence-role=development \
+            --population-out=tmp/response-guided-hardening/bc1-stageb-frontier.json
+
+      - name: Measure BC1 Stage-B incidence
+        run: |
+          npm run research:cut-bridge-incidence -- \
+            --population=tmp/response-guided-hardening/bc1-stageb-frontier.json \
+            --corpus=data/stress/stress-levels-random.json \
+            --out=tmp/response-guided-hardening/bc1-stageb-incidence.json
+
+      - name: Build compact evidence summary
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const d='tmp/response-guided-hardening/';
+          const read=n=>JSON.parse(fs.readFileSync(d+n,'utf8'));
+          const parity=read('response-guided-parity-contrast.json');
+          const orient=read('response-guided-orientation-contrast.json');
+          const objective=read('paired-width-objective.json');
+          const intersection=read('paired-width-intersection.json');
+          const bc1=read('bc1-stageb-incidence.json');
+          const summary={
+            parityPairs: parity.pairs.map(p=>({
+              leftAction:p.leftAction,rightAction:p.rightAction,support:p.support,
+              portalPairCountBaseline:p.portalPairCountBaseline,
+              topParityEffects:p.parityEffects.slice(0,8),
+              gateDemand:p.gateDemand,
+            })),
+            orientationPairs: orient.pairs.map(p=>({
+              leftAction:p.leftAction,rightAction:p.rightAction,support:p.support,
+              legacyMaxAbsoluteStandardizedDifference:p.legacyMaxAbsoluteStandardizedDifference,
+              topOrientationEffects:p.orientationEffects.slice(0,10),
+            })),
+            pairedWidth:{objective:objective.summary,intersection:intersection.summary},
+            bc1:bc1.summary,
+          };
+          fs.writeFileSync(d+'summary.json',JSON.stringify(summary,null,2)+'\n');
+          console.log(JSON.stringify(summary,null,2));
+          NODE
+
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: response-guided-hardening-evidence
+          path: tmp/response-guided-hardening
+          if-no-files-found: warn
