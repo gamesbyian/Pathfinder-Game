@@ -1,4 +1,3 @@
-<!-- agent-context-budget: warn=24000 max=30000 -->
 # Periodic repository hygiene plan
 
 > **Purpose:** recurring agent-driven entropy-control pass for Pathfinder.
@@ -38,7 +37,7 @@ Use compact discovery first:
 ```bash
 node scripts/tooling-census.mjs --compact
 node scripts/research-status-index.mjs --compact
-node scripts/agent-context-budget.mjs
+node scripts/agent-context-budget.mjs --report
 npm run check:file-size-ratchet
 ```
 
@@ -86,9 +85,13 @@ Deduplication is not the goal by itself. Avoid both duplicated live semantics an
 
 Keep provider-specific agent files thin. Reusable working rules belong in `AGENTS.md`; adapters should contain routing plus genuinely provider-specific constraints, not fork shared guidance.
 
-Run context budgets after edits and after integrating current `main`. Treat the hard ceiling as a guardrail, not a target. High-churn or concurrently edited authorities need **merge-composable headroom**: enough margin that two reasonable branches do not combine into an immediate failure. Tighten ceilings after real compaction; do not raise them to accommodate unexplained growth.
+Use `node scripts/agent-context-budget.mjs --report` here to inspect authority and route growth ratios, maintenance headroom, and churn together. `targetBytes` is the preferred post-maintenance steady state; it is not an ordinary-work limit. `compactAtBytes` is the actionable maintenance trigger, normally 2x target.
 
-When a file exceeds a hard limit, make one coherent reduction with margin rather than shaving toward the boundary.
+During hygiene, proactively inspect authorities/routes that are materially into their runway (roughly 1.5x target or higher), especially when they are high-churn, mandatory preload, or likely to receive concurrent edits. This is a prioritization signal, not automatic debt: compact early only when doing so now is cheaper than waiting for the trigger or when information architecture has genuinely degraded. Do not create size-only cleanup for healthy documents merely because they exceed target.
+
+At or above `compactAtBytes`, perform one coherent reduction/restructure with substantial margin back toward `targetBytes`. Prefer removing chronology/duplication, improving routing, splitting along real ownership seams, or moving detail to specialist/report/archive surfaces over sentence-by-sentence shaving. Never raise a trigger merely to accommodate unexplained growth.
+
+After edits and after integrating current `main`, run `node scripts/agent-context-budget.mjs --check --full-check` so the hygiene pass, unlike ordinary PR work, owns every repository-wide maintenance trigger. High-churn or concurrently edited authorities should leave merge-composable headroom after any maintenance event.
 
 ## 3. Non-core plans, proposals, backlogs, and debt queues
 
@@ -108,7 +111,7 @@ A live non-core planning item should usually contain only the question/debt, why
 
 Before compacting, retiring, or archiving a planning surface, explicitly extract any still-live reopen condition, stop condition, provenance constraint, safety boundary, deferred nomination, or handoff dependency into its real current owner. Compression should remove chronology and duplication, not future decision logic.
 
-Use size/context ceilings for recurring junk drawers. Preserve exact pre-consolidation text in a dated snapshot only when it has genuine design/research value not already captured elsewhere.
+Use target/maintenance-trigger budgets for recurring junk drawers. Below the trigger, size alone is not a reason to compact; use content/ownership quality as the deciding signal. Preserve exact pre-consolidation text in a dated snapshot only when it has genuine design/research value not already captured elsewhere.
 
 ## 4. Staleness driven by recent changes
 
@@ -254,7 +257,7 @@ Use this sequence unless evidence supports a smaller equivalent path:
 
 1. baseline/recent-history accounting and completed-program reverse sweep;
 2. cheap inventory, context, file-size, CI, and discovery signals across all domains;
-3. deep inspection where churn, age, uncertainty, near-threshold growth, or missing evidence warrants it;
+3. deep inspection where churn, age, uncertainty, maintenance-trigger proximity, or missing evidence warrants it;
 4. dead/stale cleanup and documentation/context consolidation;
 5. non-core planning compaction;
 6. tooling/workflow retirement or consolidation;
@@ -277,7 +280,7 @@ Useful heuristics:
 - Remove tools/workflows that cannot justify current maintenance cost.
 - Ask what independent evidence repeated CI work buys.
 - Re-home live invariants trapped in historical campaign shells.
-- Treat a near-limit, high-churn authority as debt even while technically green.
+- During hygiene, inspect a high-churn authority deep into its runway before it hits the maintenance trigger; do not reclassify below-trigger size as ordinary PR debt.
 - Prefer compact projections plus drill-down artifacts over duplicating full evidence everywhere.
 - When a ratchet misses a real instance, test the ratchet's detection model, not just the missed instance.
 - After one clean ownership/abstraction repair, ask what neighboring instances of the same defect class remain unexplored.
@@ -298,7 +301,7 @@ Before declaring completion ask:
 - Did a validator get weakened rather than modernized?
 - Do stale exemptions remain after their debt disappeared?
 - Can an agent actually reach the evidence needed to verify important workflow results?
-- Did concurrent/mainline changes consume the headroom of edited authorities?
+- Did concurrent/mainline changes push any route or authority to its maintenance trigger, or leave a just-maintained surface without useful headroom?
 - Did new hygiene machinery create disproportionate maintenance/context/CI cost?
 - Did recent CI/workflow failures expose a recurring agent mistake, platform assumption, or silent-data-loss path that remains possible and undocumented/unvalidated?
 - Did the first productive cleanup lens cause adjacent instances of the same defect class to be skipped?

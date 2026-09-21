@@ -1,4 +1,3 @@
-<!-- agent-context-budget: warn=12000 max=16000 -->
 # Solver work budgets and determinism
 
 > **Status:** current contract.

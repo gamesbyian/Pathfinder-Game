@@ -1,4 +1,3 @@
-<!-- agent-context-budget: warn=8500 max=11000 -->
 # Scripts and local tooling
 
 > **Historical path note:** `scripts/stress/` is the historical directory name for the current solver-research toolset. Maintained contents are current tools; the directory is not being renamed merely to modernize provenance.

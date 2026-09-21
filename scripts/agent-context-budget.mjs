@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+import { prChangedFiles } from './repository-file-view.mjs';
 
 const root = process.cwd();
 const configPath = path.join(root, 'docs', 'agent-context-routes.json');
@@ -9,7 +12,37 @@ const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
 const selectedRoute = value('route');
 const check = args.includes('--check');
-const authorityBudgetPattern = /<!--\s*agent-context-budget:\s*warn=(\d+)\s+max=(\d+)\s*-->/u;
+const fullCheck = args.includes('--full-check');
+const report = args.includes('--report') || !check;
+
+function changedFilesForCheck() {
+    if (!check || fullCheck) return null;
+    const prChanged = prChangedFiles(root);
+    if (prChanged) return new Set(prChanged);
+
+    // Local agent branches normally retain a local main ref. Scope the finish-line check to the
+    // branch diff so pre-existing maintenance debt cannot block unrelated work.
+    try {
+        execFileSync('git', ['rev-parse', '--verify', 'main'], { cwd: root, stdio: 'ignore' });
+        const mergeBase = execFileSync(
+            'git',
+            ['merge-base', 'HEAD', 'main'],
+            { cwd: root, encoding: 'utf8' },
+        ).trim();
+        return new Set(execFileSync(
+            'git',
+            ['diff', '--name-only', '--diff-filter=ACMR', '-z', mergeBase, 'HEAD'],
+            { cwd: root, encoding: 'utf8' },
+        ).split('\0').filter(Boolean));
+    } catch {
+        // Unknown local topology: fail safe on configuration/missing files, but do not turn an
+        // unrelated full-repository size condition into surprise cleanup. Hygiene uses --full-check.
+        return new Set();
+    }
+}
+
+const changed = changedFilesForCheck();
+const configChanged = changed?.has('docs/agent-context-routes.json') ?? false;
 
 function fileBytes(relativePath) {
     const absolute = path.join(root, relativePath);
@@ -17,8 +50,20 @@ function fileBytes(relativePath) {
     return { path: relativePath, exists: true, bytes: fs.statSync(absolute).size };
 }
 
-function headroom(bytes, threshold) {
-    return threshold - bytes;
+function budgetStatus(bytes, targetBytes, compactAtBytes) {
+    if (bytes >= compactAtBytes) return 'maintenance-required';
+    if (bytes > targetBytes) return 'within-runway';
+    return 'at-target';
+}
+
+function validateBudget(owner, targetBytes, compactAtBytes) {
+    if (!Number.isSafeInteger(targetBytes) || targetBytes <= 0) {
+        return `${owner}: targetBytes must be a positive integer`;
+    }
+    if (!Number.isSafeInteger(compactAtBytes) || compactAtBytes <= targetBytes) {
+        return `${owner}: compactAtBytes must be an integer greater than targetBytes`;
+    }
+    return null;
 }
 
 function summarizeRoute(route) {
@@ -28,52 +73,55 @@ function summarizeRoute(route) {
     const optionalBytes = optional.reduce((sum, item) => sum + item.bytes, 0);
     const missingRequired = required.filter(item => !item.exists).map(item => item.path);
     const missingOptional = optional.filter(item => !item.exists).map(item => item.path);
-    const status = requiredBytes > route.maxBytes ? 'over-max' : requiredBytes > route.warnBytes ? 'warning' : 'ok';
+    const budgetError = validateBudget(`route ${route.id}`, route.targetBytes, route.compactAtBytes);
+    const status = budgetError
+        ? 'invalid-budget'
+        : budgetStatus(requiredBytes, route.targetBytes, route.compactAtBytes);
     return {
         id: route.id,
         description: route.description,
         status,
         requiredBytes,
         optionalBytes,
-        warnBytes: route.warnBytes,
-        maxBytes: route.maxBytes,
-        warningHeadroomBytes: headroom(requiredBytes, route.warnBytes),
-        maxHeadroomBytes: headroom(requiredBytes, route.maxBytes),
+        targetBytes: route.targetBytes,
+        compactAtBytes: route.compactAtBytes,
+        targetRatio: route.targetBytes ? Number((requiredBytes / route.targetBytes).toFixed(3)) : null,
+        maintenanceHeadroomBytes: Number.isSafeInteger(route.compactAtBytes)
+            ? route.compactAtBytes - requiredBytes
+            : null,
         missingRequired,
         missingOptional,
         required,
         optional,
+        budgetError,
     };
-}
-
-function authorityBudget(relativePath) {
-    const absolute = path.join(root, relativePath);
-    if (!fs.existsSync(absolute)) return { status: 'missing' };
-    const prefix = fs.readFileSync(absolute, 'utf8').slice(0, 4096);
-    const match = authorityBudgetPattern.exec(prefix);
-    if (!match) return { status: 'missing-declaration' };
-    const warnBytes = Number(match[1]);
-    const maxBytes = Number(match[2]);
-    if (!Number.isSafeInteger(warnBytes) || !Number.isSafeInteger(maxBytes) || warnBytes <= 0 || maxBytes <= warnBytes) {
-        return { status: 'invalid-declaration', warnBytes, maxBytes };
-    }
-    return { status: 'ok', warnBytes, maxBytes };
 }
 
 function summarizeAuthority(authority) {
     const file = fileBytes(authority.path);
-    const budget = authorityBudget(authority.path);
-    let status = budget.status;
-    if (status === 'ok') status = file.bytes > budget.maxBytes ? 'over-max' : file.bytes > budget.warnBytes ? 'warning' : 'ok';
+    const budgetError = validateBudget(
+        `authority ${authority.path}`,
+        authority.targetBytes,
+        authority.compactAtBytes,
+    );
+    let status = budgetError ? 'invalid-budget' : budgetStatus(
+        file.bytes,
+        authority.targetBytes,
+        authority.compactAtBytes,
+    );
+    if (!file.exists) status = 'missing';
     return {
         path: authority.path,
         purpose: authority.purpose,
         status,
         bytes: file.bytes,
-        warnBytes: budget.warnBytes ?? null,
-        maxBytes: budget.maxBytes ?? null,
-        warningHeadroomBytes: budget.warnBytes == null ? null : headroom(file.bytes, budget.warnBytes),
-        maxHeadroomBytes: budget.maxBytes == null ? null : headroom(file.bytes, budget.maxBytes),
+        targetBytes: authority.targetBytes,
+        compactAtBytes: authority.compactAtBytes,
+        targetRatio: authority.targetBytes ? Number((file.bytes / authority.targetBytes).toFixed(3)) : null,
+        maintenanceHeadroomBytes: Number.isSafeInteger(authority.compactAtBytes)
+            ? authority.compactAtBytes - file.bytes
+            : null,
+        budgetError,
     };
 }
 
@@ -86,14 +134,96 @@ if (selectedRoute && routes.length === 0) {
     console.error(`Unknown route: ${selectedRoute}`);
     process.exitCode = 2;
 } else {
-    console.log(JSON.stringify({
-        schemaVersion: config.schemaVersion,
-        measurement: config.measurement,
-        routes,
-        authorities,
-    }, null, 2));
-    if (check && (
-        routes.some(route => route.status === 'over-max' || route.missingRequired.length > 0)
-        || authorities.some(authority => !['ok', 'warning'].includes(authority.status))
-    )) process.exitCode = 1;
+    const failures = [
+        ...routes
+            .filter(route => (
+                route.status === 'invalid-budget'
+                || route.missingRequired.length > 0
+                || (
+                    route.status === 'maintenance-required'
+                    && (
+                        fullCheck
+                        || changed == null
+                        || configChanged
+                        || route.required.some(path => changed.has(path))
+                    )
+                )
+            ))
+            .map(route => ({
+                kind: 'route',
+                id: route.id,
+                status: route.status,
+                bytes: route.requiredBytes,
+                targetBytes: route.targetBytes,
+                compactAtBytes: route.compactAtBytes,
+                missingRequired: route.missingRequired,
+                budgetError: route.budgetError,
+            })),
+        ...authorities
+            .filter(authority => (
+                ['invalid-budget', 'missing'].includes(authority.status)
+                || (
+                    authority.status === 'maintenance-required'
+                    && (
+                        fullCheck
+                        || changed == null
+                        || configChanged
+                        || changed.has(authority.path)
+                    )
+                )
+            ))
+            .map(authority => ({
+                kind: 'authority',
+                path: authority.path,
+                status: authority.status,
+                bytes: authority.bytes,
+                targetBytes: authority.targetBytes,
+                compactAtBytes: authority.compactAtBytes,
+                budgetError: authority.budgetError,
+            })),
+    ];
+
+    if (report) {
+        console.log(JSON.stringify({
+            schemaVersion: config.schemaVersion,
+            measurement: config.measurement,
+            policy: {
+                ordinaryWork: 'below compactAtBytes is healthy; do not compact solely because targetBytes is exceeded',
+                maintenance: 'at/above compactAtBytes, compact or restructure with substantial margin back toward targetBytes',
+            },
+            routes,
+            authorities,
+            checkScope: fullCheck
+                ? 'full-repository'
+                : changed == null
+                    ? 'report-only'
+                    : { changedPaths: [...changed].sort(), configChanged },
+            failures,
+        }, null, 2));
+    }
+
+    if (check && failures.length > 0) {
+        console.error('Agent-context maintenance trigger reached or configuration invalid:');
+        for (const failure of failures) {
+            const owner = failure.kind === 'route' ? `route ${failure.id}` : failure.path;
+            if (failure.budgetError) {
+                console.error(`  - ${owner}: ${failure.budgetError}`);
+            } else if (failure.status === 'missing') {
+                console.error(`  - ${owner}: configured authority is missing`);
+            } else if (failure.missingRequired?.length) {
+                console.error(`  - ${owner}: missing required file(s): ${failure.missingRequired.join(', ')}`);
+            } else {
+                console.error(
+                    `  - ${owner}: ${failure.bytes}B reached compactAtBytes=${failure.compactAtBytes}B `
+                    + `(steady-state targetBytes=${failure.targetBytes}B)`,
+                );
+            }
+        }
+        console.error(
+            '\nThis changed surface reached its maintenance trigger. This is a batched maintenance event, not a trim-to-fit exercise. '
+            + 'Compact/restructure toward targetBytes with substantial headroom. '
+            + 'Documents below compactAtBytes are healthy and require no size-only cleanup.',
+        );
+        process.exitCode = 1;
+    }
 }

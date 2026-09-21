@@ -1,4 +1,3 @@
-<!-- agent-context-budget: warn=10500 max=13000 -->
 # Pathfinder agent guide
 
 Compact router. Load task-specific material, not history. [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) is optional.
@@ -45,7 +44,7 @@ Use [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post
 7. Before push, follow [`docs/ci-preflight.md`](docs/ci-preflight.md): ordinary `npm run ci:fast && npm run build`; deep solver `npm run ci && npm run build`. Do not use GHA as first deterministic feedback; promote recurring CI gotchas into a guard or owning procedure.
 8. Do not weaken validation; root-cause invariant, CSP, architecture, referee, or type failures.
 9. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
-10. Honor file-size declarations: stay below `warn` when practical, never cross `max`; if already over, reduce with margin and re-measure.
+10. Treat authority-size targets as maintenance guidance, not ordinary PR debt. Below `compactAtBytes`, do not compact, split, archive, or shorten a document solely for size. At/above the trigger, perform one coherent maintenance pass back toward `targetBytes` with substantial headroom.
 
 ## Solver research invariants
 
@@ -72,14 +71,13 @@ Detailed method/stop/promotion rules: [`docs/solver-research-operating-model.md`
 Optimize docs for **decision density**: state contracts/state/gates directly; keep chronology/debugging in dated reports/archive; replace stale claims instead of appending; give mutable facts one owner; consolidate overlapping live docs; preserve useful history before destructive consolidation.
 
 ## Context budget
-`docs/agent-context-routes.json` budgets representative required orientation separately from optional drill-down. Individual authority documents declare their own `warn` and `max` byte budgets in the opening comment. Run:
+`docs/agent-context-routes.json` centrally owns representative-route and authority size budgets. Each budget has a preferred steady-state `targetBytes` and a larger `compactAtBytes` maintenance trigger, normally 2x target. Run the silent finish-line check with:
 
 ```bash
-node scripts/agent-context-budget.mjs
 node scripts/agent-context-budget.mjs --check
 ```
 
-Repository growth is acceptable; mandatory preload growth should be deliberate. Treat warning thresholds as a prompt to compact/archive before the hard route ceiling makes CI the first feedback.
+On PRs and normal local branches, `--check` scopes maintenance-trigger failures to changed authorities and affected required routes, so pre-existing debt cannot block unrelated work. Use `node scripts/agent-context-budget.mjs --report` during periodic hygiene or deliberate context maintenance, and `--check --full-check` for the hygiene finish line. Repository growth is acceptable; below `compactAtBytes`, size alone is not actionable debt. Do not spend ordinary PR effort trimming a healthy document merely because it exceeds `targetBytes`.
 
 ## Verification
 

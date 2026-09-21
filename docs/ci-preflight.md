@@ -52,7 +52,7 @@ When touching these surfaces, follow the authoring rule before relying on the co
 |---|---|
 | `reports/*.md` or live research reports | Follow [`../reports/README.md`](../reports/README.md), including the required current-state block where applicable; run the documentation check. |
 | Level-metric vocabulary or raw/normalized level fields | Follow [`change-recipes.md`](change-recipes.md) and the owning metric-boundary convention; classify any newly covered surface rather than leaving it ambiguous. |
-| Canonical agent-facing authorities | Keep current-state prose compact; run `node scripts/agent-context-budget.mjs` while editing and `--check` before push. Treat a warning threshold as a compaction prompt, not spare capacity to consume casually. |
+| Canonical agent-facing authorities | Keep current-state prose decision-dense; run `node scripts/agent-context-budget.mjs --check` before push when relevant. A document below `compactAtBytes` is healthy and requires no size-only cleanup; periodic hygiene owns proactive maintenance reporting. |
 | Package scripts, CLI entrypoints, renamed/moved scripts | Update live consumers and lifecycle references; run the dead-script/package-script checks through the local finish line. |
 | GitHub workflows, artifact pipelines, local workflow entrypoints, path filters, maintained action versions | Follow the workflow recipe in [`change-recipes.md`](change-recipes.md); keep local and Actions entrypoints semantically aligned. Run `check:workflow-actions`; `check:dead-scripts` also runs the mechanical local/GHA gate-parity check. |
 | Naming/schema/state/telemetry changes | Use [`change-recipes.md`](change-recipes.md) to chase readers, writers, persistence, worker, CLI, workflow, test, and documentation consumers. |
@@ -89,13 +89,20 @@ The check deliberately requires classification when a new `npm run ...` command 
 
 ## Context-budget discipline
 
-`docs/agent-context-routes.json` defines hard and warning budgets for mandatory agent orientation. When editing a budgeted authority:
+`docs/agent-context-routes.json` centrally defines a preferred steady-state `targetBytes` and an actionable `compactAtBytes` maintenance trigger for representative routes and canonical authorities.
+
+For ordinary work, use:
 
 ```bash
-node scripts/agent-context-budget.mjs
 node scripts/agent-context-budget.mjs --check
 ```
 
-The report includes remaining warning and hard-limit headroom for each route/authority. If an authority crosses its warning threshold, prefer replacement, compaction, links to specialist detail, or archival of chronology. If it crosses a hard maximum, compact it as part of the same change rather than waiting for CI to reject the branch.
+Successful checks are intentionally silent. In PR CI and normal local branches, trigger failures are scoped to changed authorities and affected required routes; pre-existing size debt elsewhere does not block the change. A route or authority below `compactAtBytes` is healthy even when it exceeds `targetBytes`; do not compact, split, archive, or shorten it solely for size. If a changed surface reaches a trigger, treat that as one batched maintenance event and reduce/restructure with substantial margin back toward `targetBytes`, rather than shaving bytes until the check barely passes.
 
-The durable principle is simple: repository growth is fine; mandatory preload growth must earn its cost.
+Detailed ratios and headroom belong to periodic hygiene or deliberate context maintenance:
+
+```bash
+node scripts/agent-context-budget.mjs --report
+```
+
+The durable principle is simple: mandatory preload growth should be bounded without making every PR pay a continuous prose-compaction tax.
