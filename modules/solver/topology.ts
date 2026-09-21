@@ -386,6 +386,131 @@ function _computeBoundarySketch(
     return { reachedFingerprint: rowWords.map(word => word.toString(16)).join(','), boundaryBlockers: blockers };
 }
 
+// Computational-work-elimination audit: build the first narrow reusable cut certificate from the
+// flood fill that JUST proved the goal unreachable. Portal levels are deliberately excluded by the
+// caller because a cardinal boundary is not a complete graph cut when non-local portal edges exist.
+// Unlike ConnectivityBoundarySketch (discovery evidence), this helper aborts if ANY outside cardinal
+// neighbor cannot be classified as blocked: a reusable certificate must represent the complete exit
+// boundary, not merely the blockers we happened to understand.
+function _buildConnectivityGoalCutCertificate(
+    level: NormalizedLevel, state: SolverSearchState, prep: PrepLevel,
+    maxVisit: number, pos: number, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean,
+): { reachedRows: number[]; boundaryCells: number[] } | null {
+    const { w, h } = level.grid;
+    const reachedRows: number[] = new Array(h).fill(0);
+    const boundaryCells: number[] = [];
+    const seen = new Set<number>();
+    const addBoundary = (nk: number): boolean => {
+        if (_reached(nk) || seen.has(nk)) return true;
+        seen.add(nk);
+        if (_classifyBoundaryBlocker(nk, maxVisit, pos, state, prep, mcOpenMask, mcKeys, axisExhausted) === null) {
+            return false;
+        }
+        boundaryCells.push(nk);
+        return true;
+    };
+    for (let y = 0; y < h; y++) {
+        let word = 0;
+        for (let x = 0; x < w; x++) {
+            const k = (y << 16) | x;
+            if (!_reached(k)) continue;
+            word |= 1 << x;
+            if (x + 1 < w && !addBoundary(k + 1)) return null;
+            if (x > 0 && !addBoundary(k - 1)) return null;
+            if (y + 1 < h && !addBoundary(k + 0x10000)) return null;
+            if (y > 0 && !addBoundary(k - 0x10000)) return null;
+        }
+        reachedRows[y] = word;
+    }
+    boundaryCells.sort((a, b) => a - b);
+    return { reachedRows, boundaryCells };
+}
+
+function _probeConnectivityGoalCutCertificates(
+    pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+    maxVisit: number, mcOpenMask: number, axisExhausted: boolean,
+): {
+    certificatesScanned: number;
+    boundaryCellChecks: number;
+    hitCertificateId?: number;
+    hitSourceWork?: number;
+    crossExactState?: boolean;
+} | null {
+    const shadow = prep._connectivityCertificateShadow;
+    if (!shadow || level.portalMap.size !== 0 || shadow.certificates.length === 0) return null;
+
+    let certificatesScanned = 0;
+    let boundaryCellChecks = 0;
+    for (let i = shadow.certificates.length - 1; i >= 0; i--) {
+        const cert = shadow.certificates[i];
+        certificatesScanned++;
+        const x = pos & 0xFFFF;
+        const y = (pos >>> 16) & 0xFFFF;
+        if (y >= cert.reachedRows.length || (cert.reachedRows[y] & (1 << x)) === 0) continue;
+
+        let boundaryStillClosed = true;
+        for (const cell of cert.boundaryCells) {
+            boundaryCellChecks++;
+            if (_classifyBoundaryBlocker(
+                cell, maxVisit, pos, state, prep, mcOpenMask, level.mustCrossKeys, axisExhausted,
+            ) === null) {
+                boundaryStillClosed = false;
+                break;
+            }
+        }
+        if (!boundaryStillClosed) continue;
+
+        const currentFingerprint = stateSignature(state);
+        return {
+            certificatesScanned,
+            boundaryCellChecks,
+            hitCertificateId: cert.id,
+            hitSourceWork: cert.createdWork,
+            crossExactState: currentFingerprint !== cert.sourceStateFingerprint,
+        };
+    }
+    return { certificatesScanned, boundaryCellChecks };
+}
+
+function _retainConnectivityGoalCutCertificate(
+    state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+    maxVisit: number, pos: number, mcOpenMask: number, axisExhausted: boolean,
+): void {
+    const shadow = prep._connectivityCertificateShadow;
+    if (!shadow || level.portalMap.size !== 0 || state.mustMask !== 0 || state.mustCrossMask !== 0 || mcOpenMask !== 0) return;
+
+    const cert = _buildConnectivityGoalCutCertificate(
+        level, state, prep, maxVisit, pos, mcOpenMask, level.mustCrossKeys, axisExhausted,
+    );
+    if (!cert) return;
+
+    const configuredCap = Number(shadow.observer.maxCertificates);
+    const cap = Number.isInteger(configuredCap) && configuredCap >= 0 ? Math.min(configuredCap, 1024) : 64;
+    if (shadow.certificates.length >= cap) {
+        shadow.observer.observe({
+            kind: 'certificate-dropped',
+            work: prep._workMeter.units,
+            boundarySize: cert.boundaryCells.length,
+        });
+        return;
+    }
+
+    const id = shadow.nextId++;
+    shadow.certificates.push({
+        id,
+        reachedRows: cert.reachedRows,
+        boundaryCells: cert.boundaryCells,
+        sourceStateFingerprint: stateSignature(state),
+        createdWork: prep._workMeter.units,
+    });
+    shadow.observer.observe({
+        kind: 'certificate',
+        work: prep._workMeter.units,
+        certificateId: id,
+        boundarySize: cert.boundaryCells.length,
+    });
+}
+
 // Plain module-level function, not a closure captured inside isConnected — see that function's own
 // comment on why. Called only on the (already rare relative to total isConnected calls) rejection
 // path, and only when a research observer is actually attached.
@@ -522,6 +647,13 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     }
 
     const axisExhausted = (!_cfg || _cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
+
+    // Production-inert certificate shadow: test retained cut certificates BEFORE the ordinary
+    // scheduled flood fill, but never consume the result. The real flood fill below remains the
+    // sole pruning authority and verifies every shadow hit.
+    const certificateProbe = _probeConnectivityGoalCutCertificates(
+        pos, state, level, prep, maxVisit, mcOpenMask, axisExhausted,
+    );
     const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys);
 
     // Research-only rejection observer (see ConnectivityRejectionObserver's doc in types.ts and
@@ -535,8 +667,28 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // to be a meaningful cost share.
     const research = prep._connectivityRejectionObserver;
 
-    if (!_reached(level.goalKey)) {
+    const goalUnreachable = !_reached(level.goalKey);
+    const certificateShadow = prep._connectivityCertificateShadow;
+    if (certificateShadow && certificateProbe) {
+        certificateShadow.observer.observe({
+            kind: 'probe',
+            work: prep._workMeter.units,
+            certificatesScanned: certificateProbe.certificatesScanned,
+            boundaryCellChecks: certificateProbe.boundaryCellChecks,
+            ...(certificateProbe.hitCertificateId !== undefined
+                ? {
+                    hitCertificateId: certificateProbe.hitCertificateId,
+                    hitSourceWork: certificateProbe.hitSourceWork,
+                    crossExactState: certificateProbe.crossExactState,
+                    confirmedGoalUnreachable: goalUnreachable,
+                }
+                : {}),
+        });
+    }
+
+    if (goalUnreachable) {
         if (research) _reportConnectivityRejection(research, 'goal', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted);
+        _retainConnectivityGoalCutCertificate(state, level, prep, maxVisit, pos, mcOpenMask, axisExhausted);
         return false;
     }
     for (let i = 0; i < level.mustPassKeys.length; i++) {
