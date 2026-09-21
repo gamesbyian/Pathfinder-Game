@@ -1,9 +1,9 @@
 # Forced-work prevalence preflight 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-21 — production-inert beam observer seam and prevalence probe implemented on PR #1952.
-> **Decision:** measure current-residual one-successor canonical-work prevalence before considering any forced-chain consumer.
-> **Remaining gate:** run the frozen 64-parent current-residual census below and apply the preregistered admission bands; no forced-chain consumer before that result.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — preregistered 64-parent census completed successfully in GitHub Actions run `35657944874` (artifact `10666349433`).
+> **Decision:** forced-work prevalence is decisively headroom-positive: one-successor parents carry 25.33% of measured canonical parent-expansion work across the frozen current-residual sample; advance to capture-fraction/safety economics, not production contraction.
+> **Remaining gate:** `WS2-FORCED-WORK-CAPTURE-ECONOMICS` must measure truly removable work, recognition/transition overhead, semantic parity, capability preservation, and overlap with existing pruning before any production consumer.
 > **Evidence role:** discovery
 > **Selection:** prespecified 64-parent current-residual sample frozen before forced-work telemetry is inspected.
 > **Inference scope:** oracle-ceiling and prevalence sizing only; no production behavior claim.
@@ -104,6 +104,23 @@ A work cap uses beam's existing phase-boundary continuation capture so the probe
 
 If the wall deadline binds before the work/phase boundary, treat the row as censored rather than a clean prevalence observation.
 
+
+## Census result
+
+The frozen 64-parent census completed successfully in GitHub Actions run `35657944874` (artifact `10666349433`).
+
+- expanded parents: **19,260,501**;
+- one-successor parents: **7,617,557** (**39.55%**);
+- measured canonical parent-expansion work: **90,572,067**;
+- work at one-successor parents: **22,944,663** (**25.33%** oracle ceiling);
+- all **64/64** independent sampled parents exceeded the preregistered 5% headroom threshold;
+- per-parent forced-work share: **11.68% min / 24.81% median / 46.65% max**;
+- observed forced chains: **5,813,731**, pooled mean length **1.31**, typical per-level p90 **2**, maximum length **14**.
+
+This is far above the preregistered **HEADROOM POSITIVE** gate. The opportunity is broad rather than a single-family spike, but the short-chain distribution changes the implementation hypothesis: do not build a long-chain compressor first. Measure whether frequent individual forced steps can bypass enough repeated generation/pruning/scoring/retention work to survive their own recognition and transition costs.
+
+The 25.33% figure remains an **upper bound**, not expected speedup. It includes work that a correct forced-step consumer may still need to perform.
+
 ## What this probe cannot establish
 
 It does not establish:
@@ -119,4 +136,4 @@ Those are descendants only if the oracle ceiling earns them.
 
 ## Next action
 
-Run the smallest representative current-residual census and record the oracle ceiling before writing any forced-chain production code.
+Advance only `WS2-FORCED-WORK-CAPTURE-ECONOMICS`: build the smallest production-inert semantics-preserving forced-step shadow/consumer needed to measure captured work and overhead. Keep production behavior unchanged until that gate passes.
