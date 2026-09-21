@@ -370,6 +370,37 @@ The Resource Contract's **audited-resource** tier already requires reconstructab
 - or a small catalogue field such as durability/reconstructability class.
 
 
+
+
+### IR-014 — analyzer reduction loss is localized, not systemic
+
+**Class:** investigation correction / R6 scope narrowing.
+
+A sample of maintained analyzers shows materially better row preservation than the initial concern implied:
+
+- `analyze-work-ladder-response.mjs` emits a `perLevel` result across budgets;
+- `analyze-technique-niches.mjs` emits its derived per-level `levels` table alongside action/routing aggregates;
+- `analyze-technique-census-temporal-stability.mjs` preserves changed-level identities and per-action gained/lost IDs, not only summary counts.
+
+By contrast, `analyze-solver-winning-attempts.mjs` constructs a useful normalized per-win table internally and emits only aggregates/config summaries.
+
+**Interpretation:** do not create a blanket rule that every analyzer must serialize all internal rows. The better audit question is whether an analyzer's aggregate output retains enough identity to explain tails/anomalies **or** binds to a durable source from which the normalized rows are cheaply and deterministically recoverable.
+
+### IR-015 — technique census already embodies a good compact-vs-full retention pattern
+
+**Class:** positive design precedent / bounded R2.
+
+`technique-census-cell.mjs` intentionally distinguishes:
+
+- `compactAttempts`: always retained using the shared compact failure-attempt projection;
+- full `attempts`: retained for successful cells, or for unsuccessful cells only when `collectAttemptTelemetry === true`;
+- `solution`: retained only for successful/referee-valid cells.
+
+This avoids paying full-attempt payload cost for the entire unsuccessful matrix while preserving cheap response semantics for every cell.
+
+**Audit implication:** this is closer to the desired model than “retain everything.” The remaining question is whether the compact projection preserves enough action identity, progress/reason composition, and censoring detail for recurring reconnaissance. Any implementation proposal should prefer improving the compact projection over broadly enabling full unsuccessful-cell attempts.
+
+
 ## 6. Positive findings / boundaries already working well
 
 The audit must record good boundaries as well as defects.
@@ -401,6 +432,12 @@ The newer failure/search-loss collectors prefer `null`/unknown to fabricated fal
 ### P-004 — solver sweep combining is increasingly fail-closed
 
 The current combiner refuses mismatched immutable revision/configuration and maintains intended-population integrity rather than merely concatenating files. This is a model for future retention adapters.
+
+
+### P-005 — several modern analyzers retain explanatory row identity
+
+Work-ladder response, technique-niche analysis, and technique-census temporal stability all preserve per-level or changed-ID detail in their generated JSON while also publishing aggregates. This is a useful precedent: derived reports can remain compact without making every later anomaly require source-artifact archaeology.
+
 
 ## 7. Investigation matrix
 
