@@ -10,6 +10,7 @@ const manifest = {
   experiment: {
     resolvedSha: 'a'.repeat(40),
     configurationHash: `sha256:${'b'.repeat(64)}`,
+    workflowRunId: '1',
     workflowRunAttempt: '1',
     workflowFamily: 'targeted-sweep',
     producer: 'solver-level-blind-targeted-sweep.yml',
@@ -40,6 +41,7 @@ const manifest = {
 };
 
 const secondManifest = clone(manifest);
+secondManifest.experiment.workflowRunId = '2';
 secondManifest.population.identityHash = `sha256:${'e'.repeat(64)}`;
 const result = validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: secondManifest }]);
 assert.equal(result.sources.length, 2);
@@ -85,6 +87,25 @@ legacyTopLevelConfiguration.configurationHash = `sha256:${'b'.repeat(64)}`;
 assert.throws(
   () => validateReconciliationSources([{ runId: 'legacy-config', manifest: legacyTopLevelConfiguration }]),
   /no declared experiment configuration hash/u,
+);
+
+const relabelledSource = clone(manifest);
+relabelledSource.experiment.workflowRunId = '999';
+assert.throws(
+  () => validateReconciliationSources([{ runId: '1', manifest: relabelledSource }]),
+  /staging directory 1 contains manifest for workflow run 999.*relabel acquisition provenance/u,
+);
+const missingDeclaredRunId = clone(manifest);
+delete missingDeclaredRunId.experiment.workflowRunId;
+assert.throws(
+  () => validateReconciliationSources([{ runId: '1', manifest: missingDeclaredRunId }]),
+  /no declared experiment workflow run ID/u,
+);
+const missingDeclaredAttempt = clone(manifest);
+delete missingDeclaredAttempt.experiment.workflowRunAttempt;
+assert.throws(
+  () => validateReconciliationSources([{ runId: '1', manifest: missingDeclaredAttempt }]),
+  /no declared experiment workflow run attempt/u,
 );
 assert.throws(
   () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: secondManifest }]),
