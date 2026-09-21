@@ -20,7 +20,7 @@ Use four dispositions:
 
 ### N1 — `paired-beam-width-frontier-oracle` is not an oracle
 
-**Disposition:** misleading durable name; implementation prepared in PR #1943.
+**Disposition:** misleading durable name; implementation prepared in PR #1945.
 
 Current surfaced identities include `scripts/stress/paired-beam-width-frontier-oracle.mjs`, its node test, and package/current-doc references.
 
@@ -34,7 +34,7 @@ Also inspect nearby prose such as “consumer oracle” and use **reference uppe
 
 ### N2 — `solver-capability-memory` conflates offline evidence with solver memory
 
-**Disposition:** misleading durable name after consumer census; bounded current-surface rename prepared in PR #1943.
+**Disposition:** misleading durable name after consumer census; bounded current-surface rename prepared in PR #1945.
 
 The concept is durable across `docs/solver-capability-memory.md`, `scripts/solver-capability-memory.mjs` and library/test surfaces, plus level-blindness, reasoning-capability, workstream, research-system and experiment-closeout documentation.
 
@@ -109,5 +109,5 @@ If executable runtime policy ever adopts “response-guided,” qualify the rese
 
 - Added a recurring semantic naming-regression subsection to `docs/periodic-repository-hygiene.md`.
 - Hardened `docs/naming-and-vocabulary.md` so metaphors/conversational labels are provisional, repeated disclaimers are a naming signal, and reuse of retired vocabulary must not imply false relationships.
-- N1 is implemented in PR #1943 as an operation-first frontier comparison with no legacy executable alias.
-- N2 is implemented in PR #1943 as **solver capability evidence** across current docs/tooling/registry identities; the old doc path remains only as a historical-link pointer and frozen report names remain unchanged.
+- N1 is implemented in PR #1945 as an operation-first frontier comparison with no legacy executable alias.
+- N2 is implemented in PR #1945 as **solver capability evidence** across current docs/tooling/registry identities; the old doc path remains only as a historical-link pointer and frozen report names remain unchanged.
