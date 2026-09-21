@@ -7,6 +7,8 @@
 > **Parent plan:** [solver computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).
 > **Parent audit:** [batch-digestion closeout](2026-09-21-solver-batch-digestion-audit-recovered-evidence-closeout-001.md).
 
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-negative","lastEvidenceDate":"2026-09-21","decision":"Close the computational-work-elimination successor audit as a separate program; generic proof-store/shared-search/cache architecture is not earned, while BC1 removable-work economics remains owned by its existing WS2 question.","remainingGate":"none for this audit; reopen only through a concrete survivor's canonical authority when its stated condition is met","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":null,"selection":"theorem-to-recurrence-to-consumer-economics successor audit","inferenceScope":"computational-work-elimination architecture under the tested proof families and current solver"},"claimRefs":[],"sourceArtifacts":["docs/solver-computational-work-elimination-audit-plan.md","scripts/connectivity-certificate-shadow-audit.mjs","scripts/stress/compare-paired-beam-width-frontiers.mjs"],"prospective":{"expectation":"reusable exact implications would earn architecture only if recurrence and removable-work economics both survive","surprise":"connectivity-cut recurrence and early applicability were real but downstream removable work collapsed to a negligible numerator","anomaly":null}} -->
+
 ## Executive result
 
 The audit asked:
