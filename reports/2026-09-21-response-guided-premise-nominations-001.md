@@ -1,9 +1,9 @@
 # Response-guided premise nominations from existing technique discordance
 
-> **Status:** active
-> **Last evidence:** 2026-09-21 — frozen parity/orientation contrasts plus paired 2K/5K frontier oracle on the prespecified discordance cohorts
-> **Decision:** close richer parity decomposition as an explanation beyond raw portal count; close the tested static orientation basis and move to operational traces; advance non-nested beam survivor composition to the smallest retention/dominance explanation study
-> **Remaining gate:** freeze bounded exclusive 2K/5K prefixes for viability/dominance tracing and define a selected operational-trace discriminator for CW/CCW; no routing or production change is licensed
+> **Status:** concluded-positive nominations; successors handed off
+> **Last evidence:** 2026-09-21 — frozen parity/orientation contrasts plus paired 2K/5K frontier comparison on the prespecified discordance cohorts
+> **Decision:** close richer parity decomposition beyond raw portal count and the tested static orientation basis; hand non-nested width composition and CW/CCW operational-trace descendants to the canonical WS2 queue.
+> **Remaining gate:** none for this nomination report; bounded exclusive-prefix viability/dominance and selected CW/CCW operational traces remain active under `solver-optimization-workstreams.md`; no routing or production change is licensed
 > **Evidence role:** discovery
 > **Selection:** observational; A-only/B-only cohorts are selected on technique outcomes within prespecified technique pairs
 > **Population identity:** original nomination evidence: `reports/stress/technique-niches/2026-09-01/level-capability.json`; executable replay population: freeze the tracked `reports/stress/technique-niches/2026-09-03/level-capability.json` by SHA-256 before analysis
