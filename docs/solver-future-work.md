@@ -37,7 +37,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 |---|---|
 | Bidirectional / backward abstraction | A compact sound residual/interface signature emerges from decomposition, topology, or relational-feasibility work; do not reopen full MITM from scratch |
 | Choice-bearing macro-actions | A mechanism-specific observer shows repeated non-trivial route structure beyond one-successor chains and a macro can preserve exact transition semantics/work accounting |
-| Mechanics-derived canonicalization / symmetry / transposition | A sound current-input equivalence is identifiable and telemetry shows material repeated equivalent work inside one solve; naive exact transposition remains weak |
+| Mechanics-derived canonicalization / symmetry / transposition | Reopen only for **within-solve/current-input** equivalence when telemetry shows material repeated equivalent work. Cross-level exact/symmetry solve elimination is currently closed by the 2026-09-21 complete 1,962-level census (0 exact duplicate groups, 0 strict 8-way symmetry groups); generated family symmetries should use explicit provenance instead. Naive exact transposition remains weak. |
 | Structural graph preprocessing | An active separator/topology/relational premise exposes a sound graph property with enough reuse to repay construction |
 | Cooperative multi-engine search | Two solver families expose complementary typed artifacts that the other cannot cheaply derive; start from one handoff rather than a framework |
 | Declarative mechanic automata | Repeated active descendants need a shared mechanic-state contract enough to justify migration-scale complexity |
