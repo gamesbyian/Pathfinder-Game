@@ -62,6 +62,10 @@ Broad asset/feature mining creates selection pressure; discovered relationships 
 | Search-loss evidence | run × parent × selected event | Where did search lose or retain material, including solved-run controls? |
 | Capability-invention demand | parent × first-loss diagnosis | Is this miss HARVEST, EXTENSION/INVENTION, or still unresolved? |
 
+### Exact/reference evidence graduation
+
+Generic exact/reference workflows are acquisition surfaces, not universal archives. When selected exact/reference labels become a reusable research input rather than a one-off diagnostic, preserve the smallest purpose-specific labelled dataset/report needed for that use. Keep case/source identity, model/probe identity, non-collapsed LIVE/DEAD/UNKNOWN/UNSUPPORTED or timeout/abstention semantics, source population/provenance, and witness/referee information where emitted. Existing tracked explicit-prefix datasets are the precedent. Do not infer that every output of the generic CP-SAT/reference workflow is durably retained merely because the `exact-reference-labels` interface is listed here.
+
 ## High-value joins
 
 Use the smallest useful join. High-value examples include failure response × census/benchmarks, provenance × profiles/census, hint discovery process × failure response/manifests, hint harvest selection × provenance/manifests, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units.
