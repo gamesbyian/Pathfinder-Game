@@ -254,8 +254,9 @@
       "id": "PSC-011",
       "concept": "research status-like fields",
       "owners": [
-        "scripts/research-relations-lib.mjs",
-        "scripts/research-status-index-lib.mjs"
+        "scripts/research-status-index-lib.mjs",
+        "scripts/research-status-index-check.mjs",
+        "scripts/research-relations-lib.mjs"
       ],
       "forms": [
         "status",
@@ -263,13 +264,14 @@
         "reliability",
         "legacy prose normalization"
       ],
-      "currentWritesMultipleForms": true,
-      "currentInputsMultipleForms": true,
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "structured current state is explicit; prose/legacy state decoding is historical ingress only"
+      "status": "in-progress",
+      "retirementGate": "Audit remaining status/state/reliability consumers and ensure any prose/status-block normalization is evidence-history ingress only. Current control-plane workstream/experiment state is already explicit and structured.",
+      "progress": "Current workstream authority now requires the structured ## Workstream state table; buildResearchStatusIndex() fails closed if it is absent. Reconstruction from the historical ## Active workstreams table requires explicit allowHistoricalWorkstreamTable:true. Legacy status-block/prose parsing remains available only for dated evidence discovery, while structured closeout metadata wins and structured/prose disagreement fails."
     },
     {
       "id": "PSC-012",
