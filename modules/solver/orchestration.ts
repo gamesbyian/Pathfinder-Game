@@ -70,11 +70,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     }
     const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
-    const schedulerMode = opts.schedulerMode === 'portfolio-experiment'
-        ? 'legacy-latency-portfolio-experiment'
-        : opts.schedulerMode === 'legacy' || opts.schedulerMode === undefined
-            ? 'production'
-            : opts.schedulerMode;
+    const schedulerMode = opts.schedulerMode ?? 'production';
+    if (!['production', 'legacy-latency-portfolio-experiment', 'static-portfolio'].includes(schedulerMode)) {
+        throw new Error(`solveLevel: unsupported schedulerMode ${JSON.stringify(schedulerMode)}; use a canonical scheduler mode`);
+    }
     if (schedulerMode === 'legacy-latency-portfolio-experiment') {
         return runLegacyLatencyPortfolioExperiment(level, opts, timeBudgetMs, yieldFn, solveLevel);
     }
