@@ -56,6 +56,8 @@ const closeoutInput = {
   inferenceScope: 'fixture parents under the recorded protocol',
   claimRefs: ['claim:fixture-1'],
   sourceArtifacts: ['reports/fixture-analysis.json'],
+  successorQuestions: ['WS2-FIXTURE-NEXT'],
+  successorArtifacts: ['reports/fixture-next.md'],
   expectation: 'the tested form should separate the fixture arms',
   surprise: 'none',
   anomaly: 'none',
@@ -74,6 +76,10 @@ assert.deepEqual(closeout.scope, {
 });
 assert.deepEqual(closeout.claimRefs, ['claim:fixture-1']);
 assert.deepEqual(closeout.sourceArtifacts, ['reports/fixture-analysis.json']);
+assert.deepEqual(closeout.successors, {
+  questions: ['WS2-FIXTURE-NEXT'],
+  artifacts: ['reports/fixture-next.md'],
+});
 assert.deepEqual(closeout.prospective, {
   expectation: 'the tested form should separate the fixture arms',
   surprise: 'none',
@@ -100,6 +106,14 @@ assert.throws(() => createResearchCloseoutCapsule({
   ...closeoutInput,
   sourceArtifacts: ['../reports/fixture.json'],
 }), /sourceArtifacts\[0\]/u);
+assert.throws(() => createResearchCloseoutCapsule({
+  ...closeoutInput,
+  successorArtifacts: ['reports/fixture-next.md plus prose'],
+}), /successorArtifacts\[0\].*exact path/u);
+assert.throws(() => createResearchCloseoutCapsule({
+  ...closeoutInput,
+  successorQuestions: 'WS2-FIXTURE-NEXT',
+}), /successorQuestions must be an array/u);
 assert.throws(() => createResearchCloseoutCapsule({
   ...closeoutInput,
   inferenceScope: 'line one\nline two',
