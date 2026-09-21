@@ -151,7 +151,7 @@ test('two processes reading the same corpus and each writing back only their own
         const levelsJsonPath = path.join(dir, 'levels.json');
         const a = withHintPaths({ id: 'P00001', ...makeLevel() }, [[0, 1]]);
         const b = withHintPaths({ id: 'P00002', ...makeLevel() }, [[2, 3]]);
-        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [a, b], metadata: {}, storageShape: 'array' });
+        writeLevelCorpusDocumentWithHints(levelsJsonPath, { levels: [a, b], metadata: {}, storageShape: 'array' }, { changedHintLevels: [a, b] });
 
         // "Process 1" reads the corpus and updates only level a.
         const process1Levels = readLevelCorpusDocumentWithHints(levelsJsonPath).levels;
