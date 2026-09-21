@@ -1,6 +1,6 @@
 # Solver research-system cross-integration audit 001
 
-> **Status:** concluded-positive; implementation completed
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-21 — PR #1951 implemented the highest-confidence cross-system repairs from this audit and later reconciliation work preserved them on current main.
 > **Decision:** the identified adoption-lag defects were repaired through existing shared primitives: question authority, capability-demand relations, shared resolution semantics, successor lifecycle refs, proposal provenance, and first bespoke-probe composition. Deliberately unearned broad abstractions remain deferred.
 > **Remaining gate:** none for this audit. Question-scoped response-guided block lineage and a generic probe wrapper remain conditional future work, not unfinished implementation.
