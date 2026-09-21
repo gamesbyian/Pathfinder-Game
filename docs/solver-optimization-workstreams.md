@@ -74,6 +74,10 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 **PARALLEL PREMISE OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` together; advance only after resolution-ready incidence and soundness. [preflight](solver-parity-phase-capacity-preflight.md)
 
+#### Lane I — small exact projections
+
+**PREMISE GENERATION; no consumer authorized.** Audit `WS2-CUT-BALANCE-PROJECTION` first: derive exact crossing-balance laws and incremental opportunity distinct from connectivity and Lane-A C0-C2. Other projection families stay unqueued until earned. [program](solver-small-exact-projections-program.md)
+
 ### Post-mining premise-map handoff closeout
 
 Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: A closes at C2, D1's ranking consumer is negative, and F3 has no compact decision-bearing consumer. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
@@ -92,6 +96,7 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
 | 2R | Parity response signature | `supporting` | **OFFLINE FIRST** | Census discordance; independent transfer before routing | `WS2-PARITY-RESPONSE-SIGNATURE` |
+| 2X | Small exact projections | `supporting` | **PREMISE GENERATION** | Cut/boundary-balance concept audit before code | `WS2-CUT-BALANCE-PROJECTION` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
