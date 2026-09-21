@@ -240,6 +240,45 @@ Before wiring it into portfolio/paired runners, census recent completed experime
 
 If historical completion order is absent, report only theoretical row savings under population order or best/worst bounds.
 
+
+## 13A. Historical artifact audit: general wall-savings reconstruction is not currently sound
+
+A spot audit of durable decision-bearing experiment evidence under
+`reports/stress/experiment-evidence/**` found that current manifests preserve strong final-state
+facts:
+
+- exact intended/observed population identity;
+- coverage completeness and decision-valid completeness;
+- aggregate outcome counts;
+- run/workflow identity and resource ceilings;
+- per-level result rows with solve work/time.
+
+They do **not** generally preserve both pieces required for a truthful retrospective adaptive-stop
+wall-clock replay:
+
+1. the frozen promotion/stop gate in a machine-readable generic form; and
+2. actual per-independent-unit completion order/timestamps across parallel shards/workers.
+
+Result-array order is not a substitute for completion order, especially for heterogeneous long-running
+solver rows. Likewise, prose saying a treatment later closed on a loss is not a frozen generic
+`maxLosses` contract.
+
+Therefore this audit will not publish synthetic "hours saved" numbers by replaying file order.
+
+This is itself a useful architectural finding: prospective decision-lock support should record the
+small terminal certificate at execution time instead of requiring forensic reconstruction later.
+The required additional evidence is tiny compared with storing full scheduling traces:
+
+- frozen decision gate relevant to the lock;
+- independent-unit identity;
+- observed gains/losses at lock time;
+- remaining unit count;
+- lock reason;
+- wall timestamp / elapsed wall at lock;
+- optional in-flight task count.
+
+Do not add broad completion tracing solely for this question.
+
 ## 14. Broader sequential stopping
 
 Only after the narrow negative stopper proves useful should the audit consider:
