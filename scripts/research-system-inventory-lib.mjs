@@ -201,7 +201,7 @@ function sharedDependencies(root, commands) {
 }
 
 const WORKFLOW_ROLES = new Set(['operational', 'evidence-producing']);
-const WORKFLOW_STATUSES = new Set(['maintained']);
+const WORKFLOW_STATUSES = new Set(['maintained', 'retiring']);
 
 function workflowInventory(root) {
     const lifecyclePath = path.join(root, 'docs/solver-workflow-lifecycle.json');
