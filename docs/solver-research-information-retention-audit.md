@@ -817,6 +817,31 @@ Combined with IR-021's cross-family badness semantics, blindly adding one global
 **Disposition:** investigation/query ergonomics candidate, not a storage gap.
 
 
+
+### PR #1940 reconciliation — cache/reuse questions have an existing owner
+
+Main advanced during this audit when PR #1940 merged the batch-digestion architecture audit.
+
+That work already owns:
+
+- same-level compilation reuse;
+- family/partial compilation opportunity sizing;
+- cross-process/cross-run reuse economics;
+- persistent-cache invalidation/memory questions;
+- cross-solve lower-bound memoization as a distinct gated question;
+- repeated-work / "solve less" architecture.
+
+Therefore this retention audit must **not** promote lower-bound-cache or nogood-cache telemetry into a parallel workstream merely because those facts are transient.
+
+Use this split:
+
+- **retention audit:** does useful already-produced evidence survive/reconstruct cleanly?
+- **batch-digestion audit:** is repeated computation large enough to justify new reuse/cache instrumentation or architecture?
+- **search-loss/failure program:** does state/event identity need selective capture to explain failure mechanism?
+
+IR- transient-cache candidates remain observations only unless one of those owning programs earns measurement.
+
+
 ## 6. Positive findings / boundaries already working well
 
 The audit must record good boundaries as well as defects.
@@ -865,6 +890,25 @@ The 2026-09-19 compact diagnostic and recurring-rich producer audits are strong 
 Several solver workflows write rows incrementally and upload artifacts before deliberately failing the job. This means the acquisition side is often much more recoverable than a red Actions badge suggests. The open problem is selective long-horizon persistence, not failure-time byte survival.
 
 
+
+## 6A. Reconstructability scenarios
+
+These scenarios test the expanded model end-to-end.
+
+| Scenario | What survives indefinitely today? | What becomes difficult/impossible after artifact expiry? | Current assessment |
+|---|---|---|---|
+| normal non-deterministic stress refresh | full latest reports enter git history; per-run summaries/maps; hints/provenance | mostly raw shard/log detail | strong durability |
+| deterministic stress refresh | per-run projected rows, summary, health timeline, lifecycle map when enabled | full attempts, exact winning action identity, full lifecycle/process fields | real mode-specific gap (IR-024) |
+| targeted level-blind sweep, default persistence | valid solved paths may be harvested; manifest/compact only if separately persisted | full primary rows and ordinary compact response after 90d | intentional exploratory rail with late-promotion risk (IR-025) |
+| targeted sweep with `persist_failure_response=true` | compact failure response + manifest on main; solved hints where applicable | full primary rows / rich diagnostic fields | useful bounded durable reconnaissance, not full reconstruction |
+| work-budget method probe with complete population + declared completed outcome | eligible v3 bundle can retain exact published primary + compact response | raw shard console detail | strong when it truly qualifies as decision-bearing |
+| legacy/time-bounded or incomplete method probe | solved hints may persist; artifact remains temporarily | negative/process primary rows after retention | R1 risk if later reused |
+| CP-SAT explicit-prefix reference | any investigation-specific committed labels/reports; standard artifact temporarily | generic case-level primary result after 90d unless separately retained | intentional artifact-only exact/reference role; resource durability question (IR-018) |
+| failed/cancelled ordinary solver workflow | valid discoveries/hints; any separately qualifying completed evidence | partial unsolved/process rows | success-asymmetric salvage (IR-017) |
+| one-shot diagnostic with dated report | durable conclusion/method/selected examples; reusable script if retained | exact primary row set when report points only to Actions artifact | historical reconstructability debt (IR-020) |
+| generated hint-discovery-process view | durable only when its source solver report is durable | preceding failed-attempt sequence for a durable Hint | source-retention dependency (IR-022) |
+
+
 ## 7. Investigation matrix
 
 Every inspected boundary should eventually produce one row with:
@@ -887,6 +931,66 @@ Every inspected boundary should eventually produce one row with:
 | current authority | owning doc/resource |
 | disposition | benign / document / query-improve / producer-gap / implementation-candidate |
 | implementation gate | evidence required before changing code |
+
+
+## 7A. Preliminary disposition matrix
+
+The audit is now mature enough to separate action classes.
+
+### A. Closed / benign / already adjudicated
+
+No implementation should be generated from these findings alone:
+
+- broad default persistence of prune/beam-flow/progress diagnostics (IR-001 revised by IR-019);
+- universal rich search-loss capture (IR-011 under existing recurring-producer negative);
+- operational EMA history compression (IR-006) where source sweeps remain reconstructable;
+- lifecycle failure-map reduction (IR-008) when primary rows remain durable;
+- bounded selector truncation itself (IR-009); denominator honesty is already correct;
+- broad analyzer-row retention mandate (IR-014);
+- full unsuccessful-cell attempt telemetry in technique census (IR-015).
+
+### B. High-confidence narrow correctness/identity candidate
+
+- **IR-002 / IR-023:** row-level compact `actionKey` should be audited against `winningActionKey` semantics. This has a real downstream phenotype/join blast radius and source information already exists.
+
+This is the clearest eventual code fix, but implementation remains intentionally deferred until the documentation-first audit closes.
+
+### C. Durability/reconstructability design candidates
+
+These deserve a small design pass, not immediate persistence machinery:
+
+- **IR-024:** deterministic stress-refresh immutable per-run primary/attempt retention;
+- **IR-025:** closeout convention for targeted acquisition that becomes decision-relevant;
+- **IR-018:** durable-instance convention for recurring exact/reference labels outside the binary experiment-verdict rail;
+- **IR-020:** one-shot retirement criterion should distinguish "answer recorded" from "primary evidence reconstructable";
+- **IR-013 / IR-016 / IR-026:** make survival destination/layer coverage discoverable without overloading workflow-level `automatic-harvest`.
+
+Prefer extending existing manifests/resource conventions before any new store.
+
+### D. Query/discovery ergonomics candidates
+
+- **IR-027:** expose attempt-level badness by action/stage only if a real consumer needs it, with family-specific semantics;
+- **IR-005:** winner-analysis normalized rows only if tail attribution recurs enough to justify an output extension;
+- generated-interface survival horizon (IR-013) may be solved by discovery metadata rather than storage.
+
+### E. Measurement-gated future questions
+
+Do not implement without demonstrated consumer/value:
+
+- partial negative/process salvage from failed/cancelled workflows (IR-017);
+- long-horizon hint discovery-process retention (IR-022);
+- DFS subtree/backtrack compact telemetry;
+- nogood/lower-bound cache recurrence counters, which are already owned by batch-digestion/search-loss questions.
+
+### F. Existing-good patterns to reuse
+
+- compact-vs-full census retention;
+- decision-bearing immutable evidence bundles;
+- fail-closed combine identity validation;
+- explicit truncation/missingness;
+- row-preserving modern analyzers;
+- branch-independent Hint salvage.
+
 
 ## 8. Investigation phases
 
