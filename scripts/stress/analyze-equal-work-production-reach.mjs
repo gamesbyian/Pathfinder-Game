@@ -22,6 +22,7 @@ import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 
 import { normalizeAttemptActionKey, normalizeAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
+import { normalizeHistoricalPersistedAttempt } from '../../modules/solver/historical-attempt-normalization.mjs';
 import { normalizeHistoricalSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
 import { attemptActionKey, canonicalAttemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 
@@ -144,7 +145,8 @@ function summarizeProduction(documents, equalWorkTechniques) {
                 attempts: [],
             };
             levelRows.set(levelKey, levelDetail);
-            for (const attempt of Array.isArray(row?.attempts) ? row.attempts : []) {
+            for (const persistedAttempt of Array.isArray(row?.attempts) ? row.attempts : []) {
+                const attempt = normalizeHistoricalPersistedAttempt(persistedAttempt);
                 const config = canonicalConfigOf(attempt);
                 if (!config) {
                     unmatchedAttemptIdentity++;
