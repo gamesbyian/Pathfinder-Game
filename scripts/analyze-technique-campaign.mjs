@@ -3,16 +3,16 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
+import { normalizeHistoricalSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 
 const directory = process.argv[2] ?? 'reports/experiments/2026-08-13-technique-tuning';
 const output = process.argv[3] ?? path.join(directory, 'aggregate.json');
 const root = process.cwd();
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 // Normalizes a persisted stageId through the canonical stage-id map; artifacts that predate
-// stageId (or record a name normalizeSolverStageId doesn't recognize) fall through to the raw
+// stageId (or record a name normalizeHistoricalSolverStageId doesn't recognize) fall through to the raw
 // value rather than throwing, since this is read-only cross-artifact analysis, not a writer.
-const normalizedStageId = id => { try { return normalizeSolverStageId(id); } catch { return id; } };
+const normalizedStageId = id => { try { return normalizeHistoricalSolverStageId(id); } catch { return id; } };
 const technique = attempt => (attempt.stageId ? normalizedStageId(attempt.stageId) : null)
     ?? (attempt.admissibleOrder ? 'admissible-order-fallback'
         : (attempt.earlyRepairSearch ?? attempt.repairProbe) ? 'early-repair-search'
