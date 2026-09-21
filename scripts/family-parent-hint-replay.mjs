@@ -52,7 +52,7 @@ if (result.accepted && save) {
         levelRevision,
         foundAt: discoveryFoundAt,
     }));
-    const changed = writeLevelCorpusDocumentWithHints(levelsFile, levelDocument);
+    const changed = writeLevelCorpusDocumentWithHints(levelsFile, levelDocument, { changedHintLevels: [parent] });
     persistence = { requested: true, written: changed.hintFilesChanged > 0, ...changed };
 }
 
