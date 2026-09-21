@@ -30,11 +30,29 @@ if (expectedOuterShards != null && (!Number.isSafeInteger(expectedOuterShards) |
 const TIMEOUT_EXIT_CODES = new Set([124, 143]);
 
 const dirs = resolveMethodProbeShardDirs(STAGING_DIR);
-const observedOuterShards = dirs.length;
-if (expectedOuterShards != null && observedOuterShards > expectedOuterShards) {
-    throw new Error(`observed ${observedOuterShards} outer shard artifact(s), expected only ${expectedOuterShards}`);
+const observedOuterShardIndexes = new Set();
+function outerShardIndex(dir) {
+    if (dir === '.') return 1;
+    const match = /^method-probe-shard-(\d+)$/u.exec(dir);
+    if (!match) throw new Error(`unrecognized method-probe outer shard artifact directory ${dir}`);
+    return Number(match[1]);
 }
-const missingOuterShardCount = expectedOuterShards == null ? 0 : expectedOuterShards - observedOuterShards;
+for (const dir of dirs) {
+    const index = outerShardIndex(dir);
+    if (!Number.isSafeInteger(index) || index < 1) throw new Error(`invalid outer shard index in ${dir}`);
+    if (expectedOuterShards != null && index > expectedOuterShards) {
+        throw new Error(`outer shard ${index} exceeds authored shard count ${expectedOuterShards}`);
+    }
+    if (observedOuterShardIndexes.has(index)) {
+        throw new Error(`duplicate outer shard identity ${index}; artifact directory spelling/order cannot create a second scientific shard`);
+    }
+    observedOuterShardIndexes.add(index);
+}
+const observedOuterShards = observedOuterShardIndexes.size;
+const missingOuterShardIds = expectedOuterShards == null
+    ? []
+    : Array.from({ length: expectedOuterShards }, (_, i) => i + 1).filter(index => !observedOuterShardIndexes.has(index));
+const missingOuterShardCount = missingOuterShardIds.length;
 let allLevels = [];
 let meta = null;
 const missing = [];
@@ -42,9 +60,16 @@ const timedOutWithoutResult = [];
 
 for (const d of dirs.sort()) {
     const shardPath = path.join(STAGING_DIR, d);
+    const outerIndex = outerShardIndex(d);
     const names = readdirSync(shardPath);
-    const files = names.filter(f => f.endsWith('.json') && !f.includes('summary')).sort();
-    const logs = names.filter(f => f.endsWith('.console.log'));
+    const files = names.filter(f => /^shard-\d+-w\d+\.json$/u.test(f)).sort();
+    const logs = names.filter(f => /^shard-\d+-w\d+\.console\.log$/u.test(f));
+    for (const name of [...files, ...logs]) {
+        const fileOuterIndex = Number(/^shard-(\d+)-w\d+\./u.exec(name)?.[1]);
+        if (fileOuterIndex !== outerIndex) {
+            throw new Error(`outer shard identity mismatch: artifact ${d} contains ${name}`);
+        }
+    }
     if (files.length === 0 && logs.length === 0) { missing.push(d); continue; }
 
     // Every launched worker writes a console log immediately, while its JSON appears only if the
@@ -108,6 +133,7 @@ const combined = {
     expectedOuterShards,
     observedOuterShards,
     missingOuterShardCount,
+    missingOuterShardIds,
     levels: allLevels,
 };
 
