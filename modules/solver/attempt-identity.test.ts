@@ -62,7 +62,7 @@ test('historical attempt identities normalize to exactly one canonical identity'
 
 test('policy-aware current attempt parser rejects compact historical IDs', () => {
     const parser = makeAttemptConfigKeyParser({
-        STRUCTURAL_ORDERING_BIASES: [{ id: 'cornerHarvest' }],
+        STRUCTURAL_ORDERING_BIASES: { cornerHarvest: { id: 'cornerHarvest' } },
         SCORING_PROFILES: { default: {} },
         attemptConfigKey: (config: any) => formatAttemptIdentityKey({
             scoringProfileId: config.scoringProfileId,
