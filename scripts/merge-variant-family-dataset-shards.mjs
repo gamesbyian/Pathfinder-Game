@@ -55,15 +55,17 @@ function uniqueCorpusForId(id) {
     return corpora?.size === 1 ? [...corpora][0] : null;
 }
 
-// Deduped by (id, mode), keeping the LAST occurrence: collect-variant-family-dataset-shard.mjs's
-// progress files are append-only (appendFileSync), and a re-dispatch of an already-committed shard re-checks
+// Deduped by namespaced task identity. collect-variant-family-dataset-shard.mjs's progress files
+// are append-only (appendFileSync), and a re-dispatch of an already-committed shard re-checks
 // out that shard's summary file WITH its prior committed lines already in it -- every task the
 // shard re-visits (even ones its own idempotency check skips regenerating) gets logged a second
 // time. Confirmed 2026-08-07: shard 1's summary file, re-touched by the shard-8/enrich-existing
 // backfill dispatch, had exactly 2x lines for every one of its 128 tasks. Without deduping here,
 // re-dispatching a partially-complete run silently inflates every solve-rate number in the report
 // (a task counted N times for N dispatches that ever touched its shard), even though the underlying
-// data files themselves stay correctly deduplicated by the idempotency check.
+// data files themselves stay correctly deduplicated by the idempotency check. Identical repeats
+// are harmless transport duplication; conflicting repeats are an integrity failure rather than a
+// filesystem/line-order choice of which scientific outcome becomes canonical.
 const rowByKey = new Map();
 const ambiguousLegacySummaryRows = [];
 const inDirAbs = path.resolve(process.cwd(), IN_DIR);
@@ -87,7 +89,17 @@ if (existsSync(inDirAbs)) {
                 if (!manifestTaskKeys.has(key)) {
                     throw new Error(`summary row is not an authored manifest task: ${key}`);
                 }
-                rowByKey.set(key, { ...parsed, corpus });
+                const normalized = { ...parsed, corpus };
+                const prior = rowByKey.get(key);
+                if (prior) {
+                    const priorOutcome = JSON.stringify({ solved: prior.solved, total: prior.total });
+                    const nextOutcome = JSON.stringify({ solved: normalized.solved, total: normalized.total });
+                    if (priorOutcome !== nextOutcome) {
+                        throw new Error(`conflicting repeated summary row for ${key}: ${priorOutcome} vs ${nextOutcome}; append/re-dispatch order cannot choose scientific outcome identity`);
+                    }
+                    continue;
+                }
+                rowByKey.set(key, normalized);
             } catch (err) {
                 if (err instanceof SyntaxError) continue; // partial last line from a killed shard
                 throw err;
