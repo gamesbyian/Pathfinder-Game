@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
     const i = arg.indexOf('='); return [arg.slice(2, i), arg.slice(i + 1)];
@@ -7,21 +8,24 @@ const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') &&
 if (!args.get('in')) throw new Error('--in= is required');
 const docs = args.get('in').split(',').map(file => JSON.parse(fs.readFileSync(file, 'utf8')));
 const annotations = new Map(docs.flatMap(doc => doc.annotations ?? []).map(row => [row.capsuleId, row]));
-let rows = docs.flatMap(doc => (doc.records ?? doc.capsules ?? []).map(row => {
-    const selectorId = row.selection?.selectorId ?? null;
-    const selectorSummary = selectorId ? doc.capture?.selectorSummaries?.[selectorId] ?? null : null;
-    return {
+let rows = docs.flatMap(doc => {
+    const envelope = extractResearchArtifactEnvelope(doc);
+    return (doc.records ?? doc.capsules ?? []).map(row => {
+        const selectorId = row.selection?.selectorId ?? null;
+        const selectorSummary = selectorId ? doc.capture?.selectorSummaries?.[selectorId] ?? null : null;
+        return {
         ...row,
         runId: row.runId ?? doc.run?.runId ?? null,
         protocolHash: row.protocolHash ?? doc.run?.protocolHash ?? null,
-        questionId: doc.population?.researchBlock?.questionId ?? doc.researchBlock?.questionId ?? null,
+        questionId: envelope.researchBlock?.questionId ?? null,
         exactAnnotation: annotations.get(row.capsuleId) ?? null,
         selectorId,
         selectorObserved: row.selection?.observedAtSelection ?? selectorSummary?.observed ?? null,
         selectorRetained: row.selection?.retainedAtSelection ?? selectorSummary?.retained ?? null,
         selectorTruncated: row.selection?.truncated ?? selectorSummary?.truncated ?? null,
-    };
-}));
+        };
+    });
+});
 const filters = {
     parent: row => String(row.parentId ?? row.identity) === args.get('parent'),
     outcome: row => row.outcome === args.get('outcome'),
