@@ -9,6 +9,7 @@
  */
 import { isImmutableCommitSha, stableHash } from './solver-experiment-contract.mjs';
 import { validateDecisionObservation } from './solver-decision-observation-lib.mjs';
+import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 
@@ -177,12 +178,14 @@ export function validateSearchLossCapture(document) {
         if (typeof run.levelBlind !== 'boolean') issues.push('run.levelBlind');
     }
 
+    const envelope = extractResearchArtifactEnvelope(document);
+    if (!SHA256_RE.test(String(envelope.populationIdentity ?? ''))) issues.push('populationIdentity');
+
     const population = document.population;
     if (!population || typeof population !== 'object' || Array.isArray(population)) {
         issues.push('population');
     } else {
         if (!nonEmpty(population.source)) issues.push('population.source');
-        if (!SHA256_RE.test(String(population.populationIdentity ?? ''))) issues.push('population.populationIdentity');
         if (!(Number.isSafeInteger(population.parentCount) && population.parentCount > 0)) issues.push('population.parentCount');
     }
 
@@ -239,7 +242,7 @@ export function validateSearchLossAnnotation(document, { capture = null } = {}) 
         if (!['LIVE', 'DEAD', 'UNKNOWN', 'UNSUPPORTED'].includes(row?.value)) issues.push(`${base}.value`);
         if (!nonEmpty(row?.producer)) issues.push(`${base}.producer`);
     }
-    if (capture && document.populationIdentity !== capture.population.populationIdentity) issues.push('populationIdentity(mismatch)');
+    if (capture && document.populationIdentity !== extractResearchArtifactEnvelope(capture).populationIdentity) issues.push('populationIdentity(mismatch)');
     if (issues.length) throw new Error(`invalid search-loss annotation: ${[...new Set(issues)].join(', ')}`);
     return document;
 }
