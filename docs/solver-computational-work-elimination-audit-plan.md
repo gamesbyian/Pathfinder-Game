@@ -28,6 +28,19 @@ The completed batch-digestion audit supplies hard constraints:
 
 Those forms stay closed unless this audit identifies a materially different computational unit and a live consumer.
 
+## Current checkpoint — 2026-09-21
+
+Architecture/source work is complete enough to support the first empirical probes:
+
+- **W0 seam map:** complete in [reasoning-seam map 001](../reports/2026-09-21-computational-work-elimination-reasoning-seam-map-001.md).
+- **W1 first candidate:** narrowed from generic reason recurrence to one proved portal-free connectivity cut implication. Source proof and gates: [connectivity certificate source audit 001](../reports/2026-09-21-connectivity-certificate-source-audit-001.md). A bounded production-inert scheduled-call shadow now exists; runtime opportunity sizing remains.
+- **W2 preflight:** complete for current retained evidence in [multi-query preflight 001](../reports/2026-09-21-computational-work-elimination-multi-query-preflight-001.md). No shared-search architecture is earned; first enriched workload, if needed, is paired beam width with isolated searches plus offline proof-overlap accounting.
+- **W3 BC1:** routed to the existing `WS2-CUT-BALANCE-PROJECTION` owner. Its next gate now requires construction cost, later-disposition overlap, and actual removable downstream work rather than incidence alone.
+- **W5 wait less:** routed/closed as a new architecture project in [wait-less disposition 001](../reports/2026-09-21-computational-work-elimination-wait-less-disposition-001.md). Existing completion-order `stopAfter` plus the operating model's irreversible-lock rule are sufficient until a live expensive experiment earns bespoke wiring.
+- **W4 reusable failed-search output:** remains open, but no storage/database work is authorized without recurrence and a proved consumer.
+
+The next decision-bearing evidence is empirical, not another abstraction pass: run/validate the connectivity shadow on an independently chosen hard-search development population, then either close that certificate form or price a smallest behavioral consumer. In parallel, BC1 economics remains owned by its existing program.
+
 ## Scope
 
 Four questions organize the audit.
