@@ -54,6 +54,8 @@ jobs:
             /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
             /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
             /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
+            /reports/stress/solver-corpus1-latest.json
+            /reports/stress/solver-corpus2-latest.json
             !/data/
           sparse-checkout-cone-mode: false
       - name: Derive runtime-data cache key
@@ -114,6 +116,8 @@ jobs:
           /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
           /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
           /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
+            /reports/stress/solver-corpus1-latest.json
+            /reports/stress/solver-corpus2-latest.json
           !/data/*
           /data/levels.json
           /data/level-heatmaps.json
