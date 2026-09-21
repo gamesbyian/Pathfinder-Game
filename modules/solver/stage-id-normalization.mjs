@@ -43,7 +43,8 @@ const LEGACY_SOLVER_STAGE_ID_MAP = Object.freeze({
  * @returns {typeof SOLVER_STAGE_IDS[number]}
  */
 export function normalizeSolverStageId(id) {
-    if (SOLVER_STAGE_IDS.includes(id)) return id;
+    const canonical = SOLVER_STAGE_IDS.find(stageId => stageId === id);
+    if (canonical) return canonical;
     throw new Error(`Unknown canonical solver stage: ${String(id)}`);
 }
 
