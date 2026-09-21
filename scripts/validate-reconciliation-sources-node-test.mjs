@@ -134,7 +134,7 @@ nestedReconciliation.experiment.reconciliationRun = {
   sourceRuns: ['leaf-a', 'leaf-b'],
 };
 assert.throws(
-  () => validateReconciliationSources([{ runId: 'nested', manifest: nestedReconciliation }]),
+  () => validateReconciliationSources([{ runId: '1', manifest: nestedReconciliation }]),
   /already a reconciliation result.*leaf acquisition runs/u,
 );
 
