@@ -35,9 +35,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "single-mutable-authority",
-      "status": "in-progress",
-      "retirementGate": "Closeout verification: no maintained writer, shared capture helper, or exercised test mutates .hints independently of canonical hintRecords; B3 write-set mechanics are tracked separately.",
-      "progress": "Re-opened for closeout verification after CI exposed scripts/hint-capture-lib.mjs as a live shared writer still assigning both hintRecords and hints. The shared capture path now mutates only through setLevelHintRecords(), family-parent replay was migrated to the same authority, and explicit corpus-document persistence is required. Keep this seam in progress until the exercised-tool caller census/CI confirms no remaining current dual writer."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: setLevelHintRecords() is the sole current hint mutation boundary; .hints is derived only. Hint persistence now takes an explicit changedHintLevels write set, so concurrent shard safety no longer depends on read-time object/array reference identity.",
+      "progress": "Closed after the exercised-writer census and B3 implementation. Shared hint capture, family replay/generation, complete enumeration, corpus expansion, diversification, workbench, published import, and portfolio sweep all mutate canonical hintRecords only. writeLevelCorpusDocumentWithHints() persists only caller-declared changedHintLevels; UNTOUCHED_HINTS_STATE is removed. The concurrency regression fixture proves two stale full-corpus snapshots can write disjoint levels without clobbering each other."
     },
     {
       "id": "PSC-002",
@@ -60,9 +60,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "in-progress",
-      "retirementGate": "Closeout verification: no maintained script/test caller uses removed readLevelsWithHints()/writeLevelsWithHints() array facades; all current callers carry explicit corpus documents through persistence.",
-      "progress": "Re-opened for closeout verification after deleting the central facade exposed a long tail of maintained script/test callers. Level-blind sweep, technique census combine, prefix-survival collection, offline replay, evidence harvest, family generation/replay, shared hint capture, and affected hint tests have now migrated to explicit {levels, metadata, storageShape} documents. Closure now requires a no-current-consumer proof across exercised tooling, not merely deletion of LEVEL_WRAPPERS/the facade."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: maintained scripts/tests carry explicit {levels, metadata, storageShape} corpus documents; removed array facades/hidden wrapper state have no current caller, and persistence has explicit write intent rather than hidden read-time identity.",
+      "progress": "Closed after CI-driven caller migration plus B3. Level-blind sweep, technique census combine, prefix survival, offline replay, evidence harvest, family generation/replay, hint discovery tools, portfolio sweep, shared hint capture, and affected tests use explicit corpus documents. LEVEL_WRAPPERS/readLevelsWithHints()/writeLevelsWithHints() are gone, and hint write ownership is explicit at persistence."
     },
     {
       "id": "PSC-003",
