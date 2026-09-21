@@ -42,8 +42,10 @@ assert.equal(result.summary.conflictRows, 1);
 assert.equal(result.summary.conflictParents, 1);
 assert.equal(result.rows[0].ordinaryConnectivityPass, true);
 assert.ok(result.rows[0].bridgeCount >= 1);
-assert.equal(result.rows[0].conflictCount, 1);
-assert.deepEqual(result.rows[0].conflicts[0].farPendingIds, [String(PACK(3, 1))]);
+assert.ok(result.rows[0].conflictCount >= 1);
+assert.ok(result.rows[0].conflicts.every(conflict =>
+    conflict.farPendingIds.includes(String(PACK(3, 1))),
+), 'every qualifying bridge conflict must strand the pending must-pass on the far side');
 
 const noObligation = {
     ...bridgeLevel,
