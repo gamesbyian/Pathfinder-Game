@@ -151,7 +151,7 @@ const unwrap = document => Array.isArray(document) ? document : document.levels;
 
 async function main() {
     const args = new Map(process.argv.slice(2).map(arg => arg.split('=', 2)));
-    const basePath = args.get('--base') ?? 'reports/stress/technique-niches/2026-09-01/level-capability.json';
+    const basePath = args.get('--base') ?? 'reports/stress/technique-niches/2026-09-03/level-capability.json';
     const randomPath = args.get('--random') ?? 'data/stress/stress-levels-random.json';
     const stressPath = args.get('--stress') ?? 'data/stress/stress-levels.json';
     const publishedPath = args.get('--published') ?? 'data/levels.json';
