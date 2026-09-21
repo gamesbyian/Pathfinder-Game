@@ -26,9 +26,9 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 - **Classes 1-3:** class 1 has no menu headroom. **Class 3 dose RESOLVED:** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative; repair-family deadline censoring and admissible-order reserve starvation route to separate follow-ups. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
-- **Class 5:** topology remains research-only; F3 population 14 pairs/7 parents. No raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
+- **Class 5:** topology remains research-only; F3 has 14 pairs/7 parents. No raw-phase routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 - **Card-E:** 17/156 reconstructable-unexposed; both tested descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
-- **Post-topology:** H1 vocabulary and DEAD-core size-1 are closed; H3/H2 are negative; behavioral quotient remains research-only. H3 allocation-value is positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md)
+- **Post-topology:** H1 and DEAD-core size-1 are closed; H3/H2 are negative; behavioral quotient stays research-only. H3 allocation-value is positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md)
 
 ### Premise-acquisition lanes
 
@@ -78,9 +78,9 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 **BC1 INCIDENCE POSITIVE; production unchanged.** `WS2-CUT-BALANCE-PROJECTION` Stage A is sound and the preregistered Stage-B screen finds BC1 conflicts on 22/24 eligible parents (105/263 connectivity-passing states). Next is the smallest production-inert safety/economics consumer with prospective later-disposition overlap; general k-cut/flow and sibling projection families stay unqueued. [program](solver-small-exact-projections-program.md) · [result](../reports/2026-09-21-cut-region-flow-stage0-audit-001.md)
 
-### Post-mining premise-map handoff closeout
+### Post-mining handoff
 
-Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: A closes at C2, D1's ranking consumer is negative, and F3 has no compact decision-bearing consumer. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
+A/D1/F3 did not earn a shared runtime substrate; dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
 **Current WS2 gate:** HARVEST adds the repair node-cap seam and matched-work A/B; reserve repricing is separately nominated. ACQUISITION runs the 3-row beam freshness gate, expands first-loss sampling, then the earned 2K/5K exclusive-prefix and CW/CCW trace follow-ups. BC1 advances to its production-inert safety/economics consumer. Separately, run the bounded forced-work prevalence census before any chain-contraction implementation. [`invention`](solver-capability-invention-program.md) · [`forced-work preflight`](../reports/2026-09-21-forced-work-prevalence-preflight-001.md)
 ### 2. Workstream 1: automatic solver action selection
