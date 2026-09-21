@@ -5,7 +5,7 @@
 > **Decision:** the research system is locally much stronger than it was several days ago, but several newest layers sit beside rather than fully on top of the shared semantic spine. Repair a small number of cross-system joins and lifecycle edges before adding another broad research abstraction.
 > **Remaining gate:** reconcile the stale question transitions, then implement the smallest read-only/metadata bridges in the order recommended below; do not create a warehouse, universal study object, or generic transition engine.
 >
-> **Evidence role:** forensic / architecture
+> **Evidence role:** forensic
 > **Inference scope:** solver-research control plane, evidence plumbing, research metadata and recent development-only experiment surfaces; no solver-efficacy claim
 > **Proposal provenance:** cross-system integration audit prompted by recent rapid expansion of solver research infrastructure
 
