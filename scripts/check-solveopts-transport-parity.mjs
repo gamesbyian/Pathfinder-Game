@@ -45,11 +45,6 @@ const SELF = path.join('scripts', 'check-solveopts-transport-parity.mjs');
 // this list is short and reviewed by hand whenever a new override-field rename lands.
 const OVERRIDE_FIELD_PAIRS = [
     ['goalAttractionDisabledRetryNodeReserveFractionOverride', 'attractionDiversityNodeReserveFractionOverride'],
-    ['mainSearchLateReserveFractionOverride', 'mainLoopLateReserveFractionOverride'],
-    ['mainSearchLateReserveConfigCountOverride', 'mainLoopLateReserveConfigCountOverride'],
-    ['earlyRepairSearchAdaptiveBiasedBadnessGateOverride', 'repairProbeAdaptiveBiasedBadnessGateOverride'],
-    ['earlyRepairSearchAdaptiveBiasedMinScaleOverride', 'repairProbeAdaptiveBiasedMinScaleOverride'],
-    ['repairShrinkRecoveryNodeReserveFractionOverride', 'repairProbeShrinkRecoveryNodeReserveFractionOverride'],
 ];
 
 // file::legacyFieldName pairs with a genuine, reviewed reason to mention only the legacy name.
