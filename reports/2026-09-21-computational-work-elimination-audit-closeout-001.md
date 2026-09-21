@@ -1,6 +1,6 @@
 # Computational work elimination audit closeout 001
 
-> **Status:** concluded
+> **Status:** concluded-negative
 > **Last evidence:** 2026-09-21 — connectivity cut reuse failed its non-overlapping downstream-work economics gate after clearing theorem, recurrence, selector, early-applicability and caller-attribution gates.
 > **Decision:** close the successor audit as a separate program. Route BC1 removable-work economics to its existing WS2 owner; keep all generic proof-store/shared-search/cache architecture closed.
 > **Remaining gate:** none for the audit itself. Reopen only through a concrete survivor's canonical authority when its stated reopen condition is met.
