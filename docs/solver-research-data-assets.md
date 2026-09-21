@@ -124,4 +124,4 @@ When a focused resource audit changes scientific semantics, update its audit-gra
 
 Capability evidence is derived, not an outcome authority. Keep source provenance and rebuild against the baseline relevant to the question.
 
-Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry or resource contract.
+Add prose only for cross-asset rules not clear in the registry or resource contract.
