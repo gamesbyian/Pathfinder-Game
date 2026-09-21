@@ -40,13 +40,16 @@ Boundary: callers still prove corpus/identity-basis compatibility. The helper de
 
 Do not collapse this to spent/unspent or order evidence roles. A pure consumption summary is now exposed through the relation model (question/role/scope counts, opened outcomes, decision refs, time span). Next: audit `research:record-consumption` call sites for duplicate freshness logic or artifact-copy loopholes before adding anything stronger.
 
-## D. Observability envelopes — **DIAGNOSTIC COMPOSITION IMPLEMENTED**
+## D. Observability envelopes — **COMPOSITION CENSUS NEGATIVE; KEEP SINGLE-ENVELOPE OWNER**
 
-The eight axes already form a product space. `research:resolution-view` now reports multi-source axis coverage and interpretation-contract compatibility, but explicitly grants **no combined readiness entitlement**.
+The eight axes form an explicit product space, but current producers do not expose a real same-question multi-envelope composition problem:
+- WS2 may read multiple raw evidence documents, then reconciles them before emitting one envelope;
+- reserve-starvation emits one envelope under one frozen sample/interpretation contract;
+- the parity shadow emits separate envelopes for separate questions.
 
-This is deliberate: satisfied/blocked/unknown across artifacts cannot safely use a generic max/min because blockers may be instrument-local and fidelity/coverage often require joint identity proof.
+Therefore the exploratory multi-envelope composition helper was removed before merge. A generic axis max/min remains unsafe because blockers can be instrument-local and fidelity/coverage require joint identity proof.
 
-Next: use the diagnostic to find real repeated manual composition. Only then define a typed bundle contract.
+Reopen only when at least two independent artifacts for the same question/interpretation contract must jointly establish resolution. Then define a typed bundle contract with explicit compatibility proof rather than composing statuses by rank.
 
 ## E. Independence vectors — **PARETO IDEA REAL; ORDER ABSENT**
 
@@ -84,8 +87,8 @@ The standard is prevention of real research errors, not mathematical elegance.
 
 ## Priority after first audit
 
-- **Done:** applicability meet; population set relation; observability composition diagnostic; block-consumption summary view.
-- **Next:** envelope-composition census and block-consumption call-site audit; capability-memory is the first known migration candidate for shared population set relations.
+- **Done:** applicability meet; population set relation; block-consumption summary view.
+- **Next:** block-consumption call-site audit; capability-memory is the first known migration candidate for shared population set relations. Envelope composition is deferred until a real same-question multi-envelope consumer appears.
 - **Then:** claim-chain persistence, independence-axis categories, unit-partition recurrence.
 - **Guarded:** typed relation laws.
 - **Never implied:** evidence-role ordering or a generic algebra framework.
