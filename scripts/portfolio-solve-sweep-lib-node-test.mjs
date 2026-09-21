@@ -10,7 +10,7 @@
  */
 import assert from 'node:assert/strict';
 import { buildRow, tallyPass, attemptActionKey, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
-import { normalizeHistoricalPersistedAttempt } from './historical-attempt-normalization.mjs';
+import { normalizeHistoricalPersistedAttempt } from '../modules/solver/historical-attempt-normalization.mjs';
 import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from '../modules/solver/testing-fixtures.js';
 import { buildSolveWorkerResult } from '../modules/solver/worker-result-serialization.mjs';
 
