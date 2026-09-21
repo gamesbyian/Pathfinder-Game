@@ -49,7 +49,7 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
         };
     }
 
-    const { provenanceFromSolveResult } = await import('../modules/solver/hint-provenance.js');
+    const { provenanceFromSolveResult, provenanceFromHistoricalSolveResult } = await import('../modules/solver/hint-provenance.js');
     const { toHint, mergeHints, setLevelHintRecords } = await import('../modules/domain/hint-types.js');
     const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.js');
     const { writeLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
@@ -78,8 +78,27 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
          * measurement at this commit).
          */
         record(level, result) {
+            return recordWithProvenance(level, result, provenanceFromSolveResult);
+        },
+
+        /** Historical persisted result ingress. Current producers must call record(). */
+        recordHistorical(level, result) {
+            return recordWithProvenance(level, result, provenanceFromHistoricalSolveResult);
+        },
+
+        flush(levelsJsonPath, document) {
+            if (touched.size === 0) return { levelsTouched: 0, hintFilesChanged: 0, newPaths, rediscoveries };
+            if (!document || typeof document !== 'object' || Array.isArray(document) || !Array.isArray(document.levels)) {
+                throw new Error('hint capture flush requires an explicit corpus document');
+            }
+            const { hintFilesChanged } = writeLevelCorpusDocumentWithHints(levelsJsonPath, document);
+            return { levelsTouched: touched.size, hintFilesChanged, newPaths, rediscoveries };
+        },
+    };
+
+    function recordWithProvenance(level, result, provenanceBuilder) {
             if (!level || !result?.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
-            const provenance = provenanceFromSolveResult(result, {
+            const provenance = provenanceBuilder(result, {
                 solverVersion,
                 budgetMs,
                 usedExistingHints: false,
@@ -107,15 +126,5 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
             if (level.hintRecords.length !== beforeCount) { newPaths++; touched.add(level); return true; }
             if (afterEntries > beforeEntries) { rediscoveries++; touched.add(level); return true; }
             return false;
-        },
-
-        flush(levelsJsonPath, document) {
-            if (touched.size === 0) return { levelsTouched: 0, hintFilesChanged: 0, newPaths, rediscoveries };
-            if (!document || typeof document !== 'object' || Array.isArray(document) || !Array.isArray(document.levels)) {
-                throw new Error('hint capture flush requires an explicit corpus document');
-            }
-            const { hintFilesChanged } = writeLevelCorpusDocumentWithHints(levelsJsonPath, document);
-            return { levelsTouched: touched.size, hintFilesChanged, newPaths, rediscoveries };
-        },
-    };
+    }
 }
