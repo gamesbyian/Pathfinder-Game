@@ -484,8 +484,6 @@ export interface SolveOpts {
      *  the pre-reserve behavior (the diversity pass shares its ceiling with the repair fallback loop
      *  undivided). Undefined (production default) preserves the constant exactly. */
     goalAttractionDisabledRetryNodeReserveFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    attractionDiversityNodeReserveFractionOverride?: number;
     /** Override for the ordinary main-search late-suffix reserve fraction (production default-ON,
      *  see MAIN_SEARCH_LATE_RESERVE_FRACTION). Only takes effect when a finite `nodeBudget` is set
      *  (offline batch tooling) — never affects interactive Play/Editor/Review solves. The fraction
