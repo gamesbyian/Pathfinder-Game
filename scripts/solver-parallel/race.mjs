@@ -76,6 +76,7 @@ import { mkdirSync } from 'node:fs';
 import { buildSync } from 'esbuild';
 import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 import { withSolverStage } from '../../modules/solver/stage-policy.js';
+import { assertRaceLevelOpts } from './race-opts.mjs';
 
 // The policy-level stage IDs (stage-policy.ts's SOLVER_STAGE_IDS) this raced engine actually
 // implements: main-search + repair-fallback racing concurrently (phase 1), then goal-attraction-disabled-retry
@@ -650,6 +651,7 @@ export function createRacePool(opts = {}) {
     }
 
     function solveLevel(rawLevel, levelOpts = {}) {
+        assertRaceLevelOpts(levelOpts);
         const run = queue.then(() => runOneLevel(rawLevel, levelOpts));
         // Keep the chain alive even if this level's race rejects (it shouldn't — runOneLevel only
         // resolves — but a broken worker's bundle/import error would otherwise wedge every
@@ -694,9 +696,11 @@ export function createRacePool(opts = {}) {
  * @returns {Promise<{ok: boolean, status: string, solution: number[]|null, solutions: number[][], attempts: object[], totalMs: number, nodesExpanded: number}>}
  */
 export async function solveLevelRaced(rawLevel, opts = {}) {
-    const pool = createRacePool(opts);
+    const { poolSize, ...levelOpts } = opts;
+    assertRaceLevelOpts(levelOpts);
+    const pool = createRacePool({ poolSize });
     try {
-        return await pool.solveLevel(rawLevel, opts);
+        return await pool.solveLevel(rawLevel, levelOpts);
     } finally {
         await pool.shutdown();
     }
