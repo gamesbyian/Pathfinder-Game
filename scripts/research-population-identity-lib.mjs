@@ -50,3 +50,42 @@ export function hashResearchPopulation({
     identityHash: researchSemanticHash(hashInput),
   };
 }
+
+/**
+ * Compare two identity sets after canonicalization.
+ *
+ * This function is deliberately domain-agnostic: callers must first establish
+ * that both sets use the same semantic identity basis/corpus scope.
+ */
+export function compareResearchIdentitySets(leftIds, rightIds) {
+  const left = canonicalizeResearchIdentities(leftIds).identities;
+  const right = canonicalizeResearchIdentities(rightIds).identities;
+  const leftSet = new Set(left);
+  const rightSet = new Set(right);
+  const intersection = left.filter(id => rightSet.has(id));
+  const leftOnly = left.filter(id => !rightSet.has(id));
+  const rightOnly = right.filter(id => !leftSet.has(id));
+
+  let relation = 'overlap';
+  if (leftOnly.length === 0 && rightOnly.length === 0) relation = 'equal';
+  else if (leftOnly.length === 0) relation = 'left-proper-subset';
+  else if (rightOnly.length === 0) relation = 'left-proper-superset';
+  else if (intersection.length === 0) relation = 'disjoint';
+
+  return {
+    relation,
+    left,
+    right,
+    intersection,
+    leftOnly,
+    rightOnly,
+    counts: {
+      left: left.length,
+      right: right.length,
+      intersection: intersection.length,
+      leftOnly: leftOnly.length,
+      rightOnly: rightOnly.length,
+      union: left.length + rightOnly.length,
+    },
+  };
+}

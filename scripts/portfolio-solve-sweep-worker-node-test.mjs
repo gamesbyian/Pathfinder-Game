@@ -99,20 +99,27 @@ await test('both raced call sites use the shared toRaceLevelOpts transport bound
     assert.match(raceSource,
         /Number\(levelOpts\.repairAdditiveBudgetMultiplierOverride\)/,
         'the race pool must consume the same override field forwarded by both call sites');
+    assert.match(raceSource, /assertRaceLevelOpts\(levelOpts\)/,
+        'the race pool itself must enforce the narrow request contract, not only trust callers to project first');
+    assert.match(raceSource, /const \{ poolSize, \.\.\.levelOpts \} = opts/,
+        'the one-shot raced wrapper must split pool construction options from per-level solve options');
 });
 
 await test('toRaceLevelOpts rejects a SolveOpts field the raced engine cannot honor instead of silently dropping it', async () => {
-    const { toRaceLevelOpts } = await import('./solver-parallel/race-opts.mjs');
-    assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, workBudget: 1_000_000 }),
-        /workBudget/, 'workBudget is not in race.mjs\'s supported field set and must fail loudly, not be dropped');
+    const { assertRaceLevelOpts, toRaceLevelOpts } = await import('./solver-parallel/race-opts.mjs');
+    assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, baseWorkBudget: 1_000_000 }),
+        /baseWorkBudget/, 'baseWorkBudget is not in race.mjs\'s supported field set and must fail loudly, not be dropped');
     assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, nodeBudget: 1_000_000 }),
         /nodeBudget/, 'nodeBudget is not in race.mjs\'s supported field set and must fail loudly, not be dropped');
     assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, schedulerMode: 'legacy-latency-portfolio-experiment' }),
         /schedulerMode/, 'a non-production schedulerMode must fail loudly rather than silently racing the production ladder anyway');
     assert.deepEqual(
-        toRaceLevelOpts({ timeBudgetMs: 500, schedulerMode: 'production', repairAdditiveBudgetMultiplierOverride: 2, ablation: { STRATEGY_X: true } }),
-        { timeBudgetMs: 500, repairAdditiveBudgetMultiplierOverride: 2, ablation: { STRATEGY_X: true } },
+        toRaceLevelOpts({ timeBudgetMs: 500, overallBudgetMs: 1200, schedulerMode: 'production', repairAdditiveBudgetMultiplierOverride: 2, ablation: { STRATEGY_X: true } }),
+        { timeBudgetMs: 500, overallBudgetMs: 1200, repairAdditiveBudgetMultiplierOverride: 2, ablation: { STRATEGY_X: true } },
         'supported fields pass through unchanged and schedulerMode:"production" is silently dropped (implied, not silently ignored)');
+    assert.deepEqual(assertRaceLevelOpts({ timeBudgetMs: 500, overallBudgetMs: 1200 }), { timeBudgetMs: 500, overallBudgetMs: 1200 });
+    assert.throws(() => assertRaceLevelOpts({ timeBudgetMs: 500, nodeBudget: 10 }), /unsupported field\(s\): nodeBudget/,
+        'the raced backend request validator must reject unsupported fields even if a caller bypasses the full-SolveOpts projector');
 });
 
 await test('an explicit repair override controls the real worker-race repair allocation without sibling substitution', async () => {

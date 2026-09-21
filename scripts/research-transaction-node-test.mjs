@@ -39,15 +39,16 @@ const interrupted = combinePopulationIntegrity([
 
 assert.equal(interrupted.coverageComplete, false);
 assert.equal(interrupted.decisionValidComplete, false);
-assert.deepEqual(interrupted.missingIds, ['cut,beta:case:3']);
+assert.deepEqual(interrupted.missingIds, ['["cut,beta","case:3"]']);
 assert.equal(interrupted.outcomes.deadlineTruncated, 1);
 assert.equal(interrupted.identityCodec, 'json-tuple-v1');
-assert.deepEqual(interrupted.canonicalExpectedIds, [
+assert.deepEqual(interrupted.expectedIds, [
     '["cut:alpha","case,1"]',
     '["cut:alpha","case:2"]',
     '["cut,beta","case,1"]',
     '["cut,beta","case:3"]',
 ]);
+assert.equal('canonicalExpectedIds' in interrupted, false);
 
 // Indeterminate execution outcomes remain indeterminate scientific evidence.
 const indeterminate = buildPopulationIntegrity(['timeout', 'harness', 'unknown'], [
@@ -386,6 +387,6 @@ const recoveredReordered = combinePopulationIntegrity([
 assert.equal(recovered.populationIdentityHash, recoveredReordered.populationIdentityHash);
 
 // Repeated local IDs under distinct semantic scopes remain distinct scientific subjects.
-assert.equal(new Set(recovered.canonicalExpectedIds).size, 4);
+assert.equal(new Set(recovered.expectedIds).size, 4);
 
 console.log('research transaction recovery/identity fixture passed');

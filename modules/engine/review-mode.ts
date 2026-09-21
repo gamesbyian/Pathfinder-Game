@@ -6,7 +6,7 @@ import { clearEditorUndoStack, clearEditorTriggerableFalseGoalCells, clearNaviga
          setEditorWorkingLevel, setRevealedGeese, setReviewIndex,
          setReviewSubmissions as setReviewSubmissionsState } from '../state-actions.js';
 import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
-import { hintPaths, upgradeLegacyHints } from '../domain/hint-types.js';
+import { setLevelHintRecords, upgradeLegacyHints } from '../domain/hint-types.js';
 import { parseRawLevel } from '../domain/level-codec.js';
 
 /**
@@ -63,13 +63,10 @@ export function createReviewModeController({ state, ui, editor, PathNavigator, r
             ui.showMessage('Could not load submission.', 'error');
             return;
         }
-        // A submission's levelData.hints is the canonical Hint[] (path + provenance) — split it
-        // into the working level's dual fields, same as the editor's own load path: .hints stays
-        // plain paths (every existing dedup/novelty/UI-cycling call site expects that), .hintRecords
-        // carries the provenance through so it survives approve/publish.
-        const hintRecords = upgradeLegacyHints(normalized.hints);
-        normalized.hints = hintPaths(hintRecords);
-        normalized.hintRecords = hintRecords;
+        // A submission's levelData.hints carries canonical Hint records on the wire. Normalize
+        // once at this ingress, then derive the editor's plain-path view from the authoritative
+        // records through the shared mutation boundary.
+        setLevelHintRecords(normalized, upgradeLegacyHints(normalized.hints));
         setEditorWorkingLevel(state, normalized);
         clearEditorUndoStack(state);
         setEditorModified(state, false);

@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { classifyScoreWidthExtinction } from './research-analysis-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
@@ -32,7 +32,7 @@ if (new Set(requestedLevelIds).size !== requestedLevelIds.length) throw new Erro
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
-const rawLevels = readLevelsWithHints(levelsFile);
+const rawLevels = readLevelCorpusDocumentWithHints(levelsFile).levels;
 const solutionBearing = rawLevels.filter(level => level.hints?.length > 0);
 let selected;
 let selection = 'first levels with stored hints; densest-label gate';

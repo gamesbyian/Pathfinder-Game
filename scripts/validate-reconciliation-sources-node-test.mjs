@@ -82,14 +82,14 @@ const orchestrationOnlySha = clone(manifest);
 delete orchestrationOnlySha.experiment.resolvedSha;
 orchestrationOnlySha.sha = 'a'.repeat(40);
 assert.throws(
-  () => validateReconciliationSources([{ runId: 'legacy', manifest: orchestrationOnlySha }]),
+  () => validateReconciliationSources([{ runId: '1', manifest: orchestrationOnlySha }]),
   /no declared experiment resolved SHA/u,
 );
 const legacyTopLevelConfiguration = clone(manifest);
 delete legacyTopLevelConfiguration.experiment.configurationHash;
 legacyTopLevelConfiguration.configurationHash = `sha256:${'b'.repeat(64)}`;
 assert.throws(
-  () => validateReconciliationSources([{ runId: 'legacy-config', manifest: legacyTopLevelConfiguration }]),
+  () => validateReconciliationSources([{ runId: '1', manifest: legacyTopLevelConfiguration }]),
   /no declared experiment configuration hash/u,
 );
 
@@ -112,7 +112,7 @@ assert.throws(
   /no declared experiment workflow run attempt/u,
 );
 assert.throws(
-  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: secondManifest }]),
+  () => validateReconciliationSources([{ runId: '1', manifest }, { runId: '1', manifest: clone(manifest) }]),
   /source run IDs must be unique/u,
 );
 const mismatchedConfiguration = clone(secondManifest);
@@ -125,6 +125,7 @@ assert.throws(
   /resolved SHA .* differs .* recombine-only result cannot claim one preserved experiment identity/u,
 );
 const nestedReconciliation = clone(manifest);
+nestedReconciliation.experiment.workflowRunId = 'nested';
 nestedReconciliation.experiment.reconciliationRun = {
   kind: 'recombine-only',
   preservesExperimentIdentity: true,

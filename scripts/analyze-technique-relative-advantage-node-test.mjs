@@ -23,6 +23,13 @@ assert.equal(result.pairs[0].rightOnly, 1);
 assert.equal(result.pairs[0].both, 1);
 assert.equal(result.pairs[0].neither, 1);
 assert.equal(result.pairs[0].evidenceRole, 'outcome-selected-development');
+assert.equal(result.pairs[0].premiseUse, 'offline-premise-nomination-only');
+assert.deepEqual(result.pairs[0].contrastPopulation, {
+    identityBasis: 'levelId',
+    leftOnlyIds: ['A', 'B'],
+    rightOnlyIds: ['C'],
+    bothIds: ['D'],
+});
 const requiredLengthEffect = result.pairs[0].topEffects.find((effect) => effect.feature === 'requiredPathLength');
 const portalEffect = result.pairs[0].topEffects.find((effect) => effect.feature === 'portals');
 assert.ok(requiredLengthEffect);

@@ -21,6 +21,7 @@ const { prepLevel } = await import('../modules/solver/prep.js');
 
 // Minimal raw level fixture (1-indexed coords, always solvable).
 const SIMPLE_RAW = makeRawLevel({ grid: { w: 5, h: 5 } });
+const SIMPLE_LEVEL = normalizeRawLevel(SIMPLE_RAW);
 
 // ─── handleWorkerMessage: unknown type ───────────────────────────────────────
 
@@ -45,7 +46,7 @@ test('SOLVE posts a RESULT message', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 1, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { type: 'SOLVE', id: 1, level: SIMPLE_LEVEL, budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.equal(posts.length, 1);
@@ -57,7 +58,7 @@ test('SOLVE result has expected ok and solution fields', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 2, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { type: 'SOLVE', id: 2, level: SIMPLE_LEVEL, budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     const result = posts[0];
@@ -71,7 +72,7 @@ test('SOLVE result has numeric elapsedMs and nodesExpanded', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 3, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { type: 'SOLVE', id: 3, level: SIMPLE_LEVEL, budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     const result = posts[0];
@@ -85,7 +86,7 @@ test('SOLVE result has attempts array', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 4, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { type: 'SOLVE', id: 4, level: SIMPLE_LEVEL, budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.ok(Array.isArray(posts[0].attempts));
@@ -100,7 +101,7 @@ test('SOLVE result carries the full SolveResult shape, not a fixed subset (regre
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 42, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { type: 'SOLVE', id: 42, level: SIMPLE_LEVEL, budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     const result = posts[0];
@@ -120,7 +121,7 @@ test('SOLVE with pre-cancelled id posts RESULT with cancelled:true', async () =>
     const posts = [];
     const cancelledIds = new Set([10]);
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 10, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { type: 'SOLVE', id: 10, level: SIMPLE_LEVEL, budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.equal(posts.length, 1);
@@ -129,11 +130,11 @@ test('SOLVE with pre-cancelled id posts RESULT with cancelled:true', async () =>
     assert.equal(posts[0].cancelled, true);
 });
 
-test('SOLVE with invalid raw level posts ERROR message', async () => {
+test('SOLVE with a non-normalized level posts ERROR message', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 5, levelRaw: null, budgetMs: 5000 },
+        { type: 'SOLVE', id: 5, level: null, budgetMs: 5000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.equal(posts.length, 1);
@@ -151,7 +152,7 @@ test('SOLVE threads solveOpts through to the real solveLevel() call (regression,
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 40, levelRaw: SIMPLE_RAW, budgetMs: 10000, solveOpts: { lifecycleTelemetry: true } },
+        { type: 'SOLVE', id: 40, level: SIMPLE_LEVEL, budgetMs: 10000, solveOpts: { lifecycleTelemetry: true } },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.equal(posts[0].type, 'RESULT');
@@ -164,7 +165,7 @@ test('SOLVE omitting solveOpts entirely still works (backward compatible)', asyn
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 41, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { type: 'SOLVE', id: 41, level: SIMPLE_LEVEL, budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.equal(posts[0].type, 'RESULT');
@@ -175,7 +176,7 @@ test('cancelled id is cleaned up after SOLVE completes', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'SOLVE', id: 6, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { type: 'SOLVE', id: 6, level: SIMPLE_LEVEL, budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.ok(!cancelledIds.has(6), 'id should be removed from cancelledIds after solve');
@@ -330,7 +331,8 @@ test('createSolverWorkerClient with mock Worker returns object with solve and te
     globalThis.Worker = class { constructor() { Object.assign(this, fakeWorker); } };
     try {
         const client = createSolverWorkerClient(new URL('file:///mock-worker.js'));
-        assert.equal(typeof client.solve, 'function', 'client should have solve()');
+        assert.equal(typeof client.solveLevel, 'function', 'client should have canonical solveLevel()');
+        assert.equal(typeof client.solve, 'function', 'client should retain raw solve() adapter');
         assert.equal(typeof client.findTriggerableFalseGoalCells, 'function', 'client should have findTriggerableFalseGoalCells()');
         assert.equal(typeof client.terminate, 'function', 'client should have terminate()');
     } finally {
@@ -339,35 +341,36 @@ test('createSolverWorkerClient with mock Worker returns object with solve and te
     }
 });
 
-test('client.solve() forwards the full SolveOpts as solveOpts, minus timeBudgetMs/yieldFn/functions (regression, fixed 2026-08-20)', () => {
-    // Before the fix, only { timeBudgetMs, yieldFn } ever reached postMessage -- ablation,
-    // nodeBudget, workBudget, disableExtraBudgetPasses, and every other SolveOpts field were
-    // silently dropped, breaking the "drop-in swap for on-thread solving" promise for any caller
-    // relying on them.
+test('client.solve() normalizes raw input and forwards serializable SolveOpts through the canonical worker request', () => {
     const sent = [];
     const fakeWorker = { onmessage: null, onerror: null, postMessage: (m) => sent.push(m), terminate() {} };
     const client = createSolverWorkerClient(fakeWorker);
     const ablation = { STRATEGY_EARLY_REPAIR_SEARCH: false };
-    const attemptSearchForTesting = () => null;
-    client.solve({ fake: 'level' }, {
+    client.solve(SIMPLE_RAW, {
         timeBudgetMs: 5000,
-        yieldFn: async () => {},
         ablation,
         nodeBudget: 12345,
         disableExtraBudgetPasses: true,
         lifecycleTelemetry: true,
-        attemptSearchForTesting,
     });
     assert.equal(sent.length, 1);
     assert.equal(sent[0].type, 'SOLVE');
-    assert.equal(sent[0].budgetMs, 5000, 'timeBudgetMs still reaches the dedicated budgetMs field');
+    assert.equal(sent[0].budgetMs, 5000, 'timeBudgetMs reaches the dedicated budgetMs field');
+    assert.ok(Array.isArray(sent[0].level.gateKeys), 'raw adapter must normalize before worker transport');
+    assert.equal(Object.hasOwn(sent[0], 'levelRaw'), false);
     assert.deepEqual(sent[0].solveOpts.ablation, ablation);
     assert.equal(sent[0].solveOpts.nodeBudget, 12345);
     assert.equal(sent[0].solveOpts.disableExtraBudgetPasses, true);
     assert.equal(sent[0].solveOpts.lifecycleTelemetry, true);
     assert.ok(!('timeBudgetMs' in sent[0].solveOpts), 'timeBudgetMs must not be duplicated into solveOpts');
-    assert.ok(!('yieldFn' in sent[0].solveOpts), 'yieldFn cannot cross structured-clone and must be stripped');
-    assert.ok(!('attemptSearchForTesting' in sent[0].solveOpts), 'function-valued options must be stripped, not just yieldFn specifically');
+});
+
+test('client solve request rejects direct-only callback options instead of silently stripping them', () => {
+    const fakeWorker = { onmessage: null, onerror: null, postMessage() {}, terminate() {} };
+    const client = createSolverWorkerClient(fakeWorker);
+    assert.throws(() => client.solveLevel(SIMPLE_LEVEL, {
+        attemptSearchForTesting: (() => null),
+    }), /attemptSearchForTesting/);
 });
 
 test('createSolverWorkerClient accepts an already-constructed Worker instance', async () => {

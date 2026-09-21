@@ -17,7 +17,8 @@ try {
     const hash = char => `sha256:${char.repeat(64)}`;
     fs.writeFileSync(metadata, JSON.stringify({
         run: { runId: 'run-1', solverRef: 'beam-v3', resolvedSha: 'a'.repeat(40), producer: 'fixture', protocolHash: hash('b'), configurationHash: hash('c'), levelBlind: true },
-        population: { source: 'fixture-population', populationIdentity: hash('d') },
+        populationIdentity: hash('d'),
+        population: { source: 'fixture-population' },
         captureProfileId: 'bounded-cull-v1', observerParityVerified: true,
         levelRevisions: { A: 'v1:A', B: 'v1:B' },
         parentOutcomes: { A: false, B: true },
@@ -28,6 +29,8 @@ try {
     assert.equal(capture.capture.selectorSummaries['score-width-cull'].retained, 2);
     assert.equal(capture.capture.selectorSummaries['score-width-cull'].truncated, true);
     assert.equal(capture.capsules.length, 2);
+    assert.equal(capture.populationIdentity, hash('d'));
+    assert.equal(capture.population.populationIdentity, undefined, 'current capture must not duplicate shared identity inside specialist population metadata');
     assert.ok(capture.capsules.every(row => row.replayBasis === 'replayable'));
     const auditPreflight = JSON.parse(execFileSync('node', [
         'scripts/search-loss-resource-audit-preflight.mjs',
@@ -49,7 +52,7 @@ try {
     execFileSync('node', ['scripts/annotate-search-loss-exact.mjs', `--capture=${captureFile}`, `--results=${exact}`, '--model=fixture-exact', `--out=${annotation}`]);
     const annotated = JSON.parse(fs.readFileSync(annotation));
     assert.deepEqual(annotated.annotations.map(row => row.value).sort(), ['LIVE', 'UNKNOWN']);
-    assert.equal(annotated.populationIdentity, capture.population.populationIdentity);
+    assert.equal(annotated.populationIdentity, capture.populationIdentity);
     const queried = JSON.parse(execFileSync('node', ['scripts/search-loss-query.mjs', `--in=${captureFile},${annotation}`, '--exact=LIVE'], { encoding: 'utf8' }));
     assert.equal(queried.rows.length, 1);
     assert.equal(queried.summary.independentParents, 1, 'prevalence denominator is parents, not raw capsule count');

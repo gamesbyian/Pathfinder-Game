@@ -32,7 +32,7 @@ function isolateRepairFallbackOpts(overrides: Record<string, unknown> = {}) {
 
 test('repair-fallback work dose no longer resizes with a non-binding deadline change', async () => {
     const level = makeRepairGatedInfeasibleLevel();
-    const run = (timeBudgetMs: number) => solveLevel(level, isolateRepairFallbackOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateRepairFallbackOpts({ timeBudgetMs, baseWorkBudget: 200_000 }));
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
@@ -66,7 +66,7 @@ test('repair-fallback reserve is a no-op when mainSearchLateReserve is 0 (accept
     // dangerous.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_MAIN_SEARCH_LATE_RESERVE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
@@ -95,7 +95,7 @@ test('goal-attraction-disabled-retry reserve is active by default (cfg leaves it
     // STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE: true arm below already validates.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
@@ -120,7 +120,7 @@ test('goal-attraction-disabled-retry reserve is active by default (cfg leaves it
 test('goal-attraction-disabled-retry reserve gives the diversity pass room without touching the probe/main-search/repair-fallback-reserve slice', async () => {
     const level = makeRepairGatedInfeasibleLevel();
     const opts = {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         admissibleOrderBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -179,7 +179,7 @@ test('goal-attraction-disabled-retry reserve is a no-op when repairFallbackNodeR
     // the whole pool). Confirms this degrades safely rather than stranding nodes or double-spending.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
@@ -220,7 +220,7 @@ test('goal-attraction-disabled-retry fresh work pool gives the pass real room ev
     const opts = {
         timeBudgetMs: 1000,
         nodeBudget: 1_000_000, // generous -- the node dimension must never be what this test exercises
-        workBudget: 50_000, // a single mocked attempt (100,000) overshoots this 2x, so main-search
+        baseWorkBudget: 50_000, // a single mocked attempt (100,000) overshoots this 2x, so main-search
         // alone leaves the shared pool decisively (not just marginally) over budget by the time
         // diversity's own gate is reached -- avoids an exact-equality boundary race with the
         // `workSpent >= workBudget` check's own before-dispatch timing.
@@ -270,7 +270,7 @@ test('admissible-order-fallback profile reserve is inert by default (cfg=null) e
     // resolve it to false regardless of what else is set.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false },
         repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
@@ -292,7 +292,7 @@ test('admissible-order-fallback profile reserve is inert by default (cfg=null) e
 test('admissible-order-fallback profile reserve gives non-default profiles room without shrinking default\'s guaranteed floor', async () => {
     const level = makeRepairGatedInfeasibleLevel();
     const opts = {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
@@ -339,7 +339,7 @@ test('admissible-order-fallback profile reserve is a no-op when admissibleOrderN
     // fraction is 0, or the tier has only one profile, or no external nodeBudget is set.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
-        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        timeBudgetMs: 1000, baseWorkBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,

@@ -38,6 +38,7 @@
     "modules/solver/repair-search.test.ts",
     "modules/solver/representation-contracts.test.ts",
     "modules/solver/restart-continuation-harness.test.ts",
+    "modules/solver/solver-worker-client.test.ts",
     "modules/solver/testing-api.test.ts",
     "modules/solver/topology.test.ts",
     "modules/solver/variety-search.test.ts",
@@ -100,7 +101,10 @@
     "scripts/stress/select-routing-regime-sample-cli-node-test.mjs",
     "scripts/stress/witness-adapter.mjs",
     "scripts/stress/witness.mjs",
-    "scripts/test-lib/fixtures.mjs"
+    "scripts/test-lib/fixtures.mjs",
+    "scripts/analyze-response-guided-orientation-contrast-node-test.mjs",
+    "scripts/analyze-response-guided-parity-contrast-node-test.mjs",
+    "scripts/stress/cut-bridge-incidence-node-test.mjs"
   ],
   "normalizedRuntimeConsumer": [],
   "ambiguousUnclassified": [],
@@ -126,7 +130,8 @@
     "scripts/stress/near-twin-response-comparison.mjs",
     "scripts/stress/nearest-solved-neighbor.mjs",
     "scripts/stress/query-mustcross-flipper-eligibility.mjs",
-    "scripts/stress/repair-retreat-binary-search.mjs"
+    "scripts/stress/repair-retreat-binary-search.mjs",
+    "docs/solver-parity-response-signature-preflight.md"
   ],
   "notes": "Normalized/runtime code uses requiredLength/requiredIntersections. rawWireBoundary is the reviewed reqLen/reqInt compatibility surface for raw fixtures, corpus, and wire data; retainedNonNormalizedUse contains independent report/result schemas and current vocabulary/reference surfaces whose labels are not NormalizedLevel properties. Completed naming-program records and closeout scripts are frozen history and intentionally excluded from this live inventory.",
   "normalizedMigrationComplete": true

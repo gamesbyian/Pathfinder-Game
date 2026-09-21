@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { buildResearchStatusIndex, compactResearchStatusIndex, queryResearchStatusIndex } from './research-status-index-lib.mjs';
@@ -210,6 +210,26 @@ assert.equal(compact.count, 1);
 assert.equal(compact.entries[0].kind, 'queue');
 assert.equal(compact.entries[0].authority, 'docs/solver-optimization-workstreams.md');
 assert.equal(compact.entries[0].workstreamId, 2, 'workstream ID is identity, not a priority rank');
+
+{
+    const workstreamPath = path.join(root, 'docs/solver-optimization-workstreams.md');
+    const structuredWorkstreams = readFileSync(workstreamPath, 'utf8');
+    writeFileSync(workstreamPath, `# Historical workstreams
+## Active workstreams
+| ID | Workstream | State / context | Next gate | Stable question ref |
+|---:|---|---|---|---|
+| 2 | Historical question | **ACTIVE** | Historical gate. | \`WS2-CURRENT\` |
+`);
+    assert.throws(
+        () => buildResearchStatusIndex(root),
+        /current authority requires structured ## Workstream state table/,
+        'current status indexing must not silently demote legacy prose/table state into authority',
+    );
+    const historicalIndex = buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable: true });
+    assert.equal(historicalIndex.queue[0].executionState, null);
+    assert.equal(historicalIndex.queue[0].status, 'active');
+    writeFileSync(workstreamPath, structuredWorkstreams);
+}
 
 const questionRegistry = loadResearchQuestionRegistry(root);
 assert.deepEqual(validateResearchQuestionRegistry(questionRegistry), []);

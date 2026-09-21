@@ -1,11 +1,10 @@
 /**
- * Policy-aware AttemptConfig parser. Syntax and legacy compatibility belong to the shared
+ * Policy-aware current AttemptConfig parser. Canonical syntax belongs to the shared
  * attempt-identity module; this adapter validates vocabulary and materializes the actual
  * structural-bias object used by solver execution.
  */
 import {
     formatAttemptIdentityKey,
-    normalizeAttemptIdentityKey,
     parseAttemptIdentityKey,
 } from '../modules/solver/attempt-identity.mjs';
 
@@ -33,9 +32,9 @@ export function makeAttemptConfigKeyParser({ STRUCTURAL_ORDERING_BIASES, SCORING
             ...(fields.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
         };
 
-        const canonical = normalizeAttemptIdentityKey(key);
+        const canonical = formatAttemptIdentityKey(fields);
         const roundTrip = attemptConfigKey(config);
-        if (roundTrip !== canonical || formatAttemptIdentityKey(fields) !== canonical)
+        if (roundTrip !== canonical)
             throw new Error('"' + key + '" parsed to a config that canonicalizes as "' + roundTrip
                 + '" instead of "' + canonical + '" — parser/format mismatch.');
         return config;

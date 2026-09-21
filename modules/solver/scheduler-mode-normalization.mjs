@@ -1,32 +1,44 @@
 /**
- * Canonical solver scheduler-mode values and the single legacy-to-canonical normalizer for CLI
- * flag parsing. Plain JS (not `.ts`), mirroring stage-id-normalization.mjs's pattern, so both
- * plain-`node`- and bundler-invoked research tooling can share one mapping instead of
- * reimplementing it independently.
+ * Canonical solver scheduler-mode parsing plus an explicitly historical alias decoder.
  *
- * This does not decide solveLevel()'s own runtime default when `schedulerMode` is entirely
- * omitted from SolveOpts (orchestration.ts resolves that itself); it only validates and
- * normalizes an explicit `--scheduler-mode` CLI value a caller already decided to pass through
- * (or a caller-supplied fallback string), so each script keeps its own omission policy.
+ * Current CLI/API input must use canonical values. Historical artifacts/replay readers that
+ * genuinely need pre-cleanup spellings must opt into normalizeHistoricalSchedulerMode().
  */
 
-/** @type {Readonly<Record<string, 'production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio'>>} */
-const SCHEDULER_MODE_ALIASES = Object.freeze({
+/** @type {readonly ('production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio')[]} */
+export const CANONICAL_SCHEDULER_MODES = Object.freeze([
+    'production',
+    'legacy-latency-portfolio-experiment',
+    'static-portfolio',
+]);
+
+/** @type {Readonly<Record<string, typeof CANONICAL_SCHEDULER_MODES[number]>>} */
+const HISTORICAL_SCHEDULER_MODE_ALIASES = Object.freeze({
     legacy: 'production',
-    production: 'production',
     'portfolio-experiment': 'legacy-latency-portfolio-experiment',
-    'legacy-latency-portfolio-experiment': 'legacy-latency-portfolio-experiment',
-    'static-portfolio': 'static-portfolio',
 });
 
 /**
+ * Parse one current scheduler-mode value. Retired spellings are rejected.
  * @param {string} [rawSchedulerMode]
  * @returns {'production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio'}
  */
 export function normalizeSchedulerMode(rawSchedulerMode) {
-    const canonical = rawSchedulerMode === undefined ? undefined : SCHEDULER_MODE_ALIASES[rawSchedulerMode];
-    if (canonical === undefined) {
-        throw new Error(`--scheduler-mode must be one of: production, legacy-latency-portfolio-experiment, static-portfolio (legacy aliases: legacy, portfolio-experiment); got ${JSON.stringify(rawSchedulerMode)}`);
+    const canonical = CANONICAL_SCHEDULER_MODES.find(mode => mode === rawSchedulerMode);
+    if (!canonical) {
+        throw new Error(`--scheduler-mode must be one of: ${CANONICAL_SCHEDULER_MODES.join(', ')}; got ${JSON.stringify(rawSchedulerMode)}`);
     }
     return canonical;
+}
+
+/**
+ * Decode a scheduler mode found in historical persisted input, then emit the canonical value.
+ * New callers should not use this function for fresh CLI/API input.
+ *
+ * @param {string} rawSchedulerMode
+ * @returns {'production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio'}
+ */
+export function normalizeHistoricalSchedulerMode(rawSchedulerMode) {
+    const historical = HISTORICAL_SCHEDULER_MODE_ALIASES[rawSchedulerMode];
+    return normalizeSchedulerMode(historical ?? rawSchedulerMode);
 }

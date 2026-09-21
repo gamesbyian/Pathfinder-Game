@@ -76,6 +76,7 @@ test('normalizeLevel fills designerName/description/difficulty/hints defaults', 
   assert.equal(n.description, '');
   assert.equal(n.difficulty, null);
   assert.deepEqual(n.hints, []);
+  assert.deepEqual(n.hintRecords, []);
 });
 
 test('normalizeLevel decodes stringified hint paths', () => {
@@ -116,6 +117,8 @@ test('mergeNewHints appends only hints not already present, deduped by path sign
   const added = mergeNewHints(target, { hints: [[3, 4], [5, 6]] });
   assert.equal(added, 1);
   assert.deepEqual(target.hints, [[1, 2], [3, 4], [5, 6]]);
+  assert.deepEqual(target.hintRecords.map(rec => rec.path), [[1, 2], [3, 4], [5, 6]],
+    'bare-path input is upgraded once and canonical records become the mutation authority');
 });
 
 test('mergeNewHints is uncapped for scripts — a level past 1000 hints still gains new unique paths', () => {

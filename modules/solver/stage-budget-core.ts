@@ -884,9 +884,9 @@ import type { SolveOpts } from './orchestration.js';
 export interface StageBudgetPlanInput {
     opts: Pick<SolveOpts,
         | 'repairAdditiveBudgetMultiplierOverride' | 'disableExtraBudgetPasses'
-        | 'goalAttractionDisabledRetryBudgetFractionOverride' | 'attractionDiversityBudgetFractionOverride'
+        | 'goalAttractionDisabledRetryBudgetFractionOverride'
         | 'coarseStateNearTieRetentionRetryBudgetFractionOverride' | 'coarseStateNearTieRetentionRetryNodeReserveFractionOverride'
-        | 'dedupNearTieRetryBudgetFractionOverride' | 'dedupNearTieRetryNodeReserveFractionOverride'
+       
         | 'admissibleOrderNonDefaultRetryBudgetFractionOverride' | 'admissibleOrderNonDefaultRetryNodeReserveFractionOverride'
         | 'connectivityAxisExhaustedRetryBudgetFractionOverride' | 'connectivityAxisExhaustedRetryNodeReserveFractionOverride'
         | 'repairElitePrefixDfsRetryBudgetFractionOverride' | 'repairElitePrefixDfsRetryNodeReserveFractionOverride'
@@ -894,10 +894,10 @@ export interface StageBudgetPlanInput {
         | 'admissibleOrderBudgetFractionOverride' | 'admissibleOrderNodeReserveFractionOverride'
         | 'repairLateProbeNodeBudgetOverride' | 'admissibleOrderProfileNodeReserveFractionOverride'
         | 'repairLateProbeMultiSeedRetrySeedCountOverride'
-        | 'mainSearchLateReserveFractionOverride' | 'mainLoopLateReserveFractionOverride'
-        | 'mainSearchLateReserveConfigCountOverride' | 'mainLoopLateReserveConfigCountOverride'
+        | 'mainSearchLateReserveFractionOverride'
+        | 'mainSearchLateReserveConfigCountOverride'
         | 'repairFallbackNodeReserveFractionOverride' | 'repairShrinkRecoveryNodeReserveFractionOverride'
-        | 'goalAttractionDisabledRetryNodeReserveFractionOverride' | 'attractionDiversityNodeReserveFractionOverride'
+        | 'goalAttractionDisabledRetryNodeReserveFractionOverride'
     >;
     cfg: AblationConfig | null;
     nodeBudget: number;
@@ -934,7 +934,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's own eligibility check, below, needs to know whether
     // the diversity pass would run at all before deciding whether reserving nodes for it is real or a
     // strand.
-    const diversityFractionOverride = Number(opts.goalAttractionDisabledRetryBudgetFractionOverride ?? opts.attractionDiversityBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const diversityFractionOverride = Number(opts.goalAttractionDisabledRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
         ? diversityFractionOverride
         : GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION;
@@ -943,11 +943,11 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // diversityBudgetFraction just above. STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY is default-ON as of the
     // PROMOTION (see that flag's own comment) — `disableExtraBudgetPasses: true` (both interactive
     // solve UIs) still zeroes this fraction, same as every other extra-budget tier.
-    const coarseStateNearTieRetentionRetryFractionOverride = Number(opts.coarseStateNearTieRetentionRetryBudgetFractionOverride ?? opts.dedupNearTieRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const coarseStateNearTieRetentionRetryFractionOverride = Number(opts.coarseStateNearTieRetentionRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const coarseStateNearTieRetentionRetryBudgetFraction = Number.isFinite(coarseStateNearTieRetentionRetryFractionOverride) && coarseStateNearTieRetentionRetryFractionOverride >= 0
         ? coarseStateNearTieRetentionRetryFractionOverride
         : COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION;
-    const coarseStateNearTieRetentionRetryNodeReserveFractionRaw = Number(opts.coarseStateNearTieRetentionRetryNodeReserveFractionOverride ?? opts.dedupNearTieRetryNodeReserveFractionOverride);
+    const coarseStateNearTieRetentionRetryNodeReserveFractionRaw = Number(opts.coarseStateNearTieRetentionRetryNodeReserveFractionOverride);
     const coarseStateNearTieRetentionRetryNodeReserveFraction = Number.isFinite(coarseStateNearTieRetentionRetryNodeReserveFractionRaw) && coarseStateNearTieRetentionRetryNodeReserveFractionRaw >= 0
         ? Math.min(1, coarseStateNearTieRetentionRetryNodeReserveFractionRaw)
         : COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION;
@@ -1342,7 +1342,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // without a finite `nodeBudget` (see `mainSearchLateReserveEligible` below), so this only affects
     // offline batch tooling, never interactive Play/Editor/Review solves.
     const mainSearchLateReserveEnabled = !!(!cfg || cfg.STRATEGY_MAIN_SEARCH_LATE_RESERVE);
-    const mainSearchLateReserveFractionRaw = Number(opts.mainSearchLateReserveFractionOverride ?? opts.mainLoopLateReserveFractionOverride);
+    const mainSearchLateReserveFractionRaw = Number(opts.mainSearchLateReserveFractionOverride);
     const mainSearchLateReserveFraction = Number.isFinite(mainSearchLateReserveFractionRaw) && mainSearchLateReserveFractionRaw >= 0
         ? Math.min(1, mainSearchLateReserveFractionRaw)
         : MAIN_SEARCH_LATE_RESERVE_FRACTION;
@@ -1356,7 +1356,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     const mainSearchLateReserveConfigCountDefault = (cfg && cfg.STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE === true)
         ? MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT + 1
         : MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT;
-    const mainSearchLateReserveCountRaw = Number(opts.mainSearchLateReserveConfigCountOverride ?? opts.mainLoopLateReserveConfigCountOverride);
+    const mainSearchLateReserveCountRaw = Number(opts.mainSearchLateReserveConfigCountOverride);
     const mainSearchLateReserveConfigCount = Number.isFinite(mainSearchLateReserveCountRaw) && mainSearchLateReserveCountRaw >= 0
         ? Math.min(mainConfigsCount, Math.floor(mainSearchLateReserveCountRaw))
         : Math.min(mainConfigsCount, mainSearchLateReserveConfigCountDefault);
@@ -1470,7 +1470,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // repairAdditiveBudgetMultiplier!==0 above) so a level where the diversity pass would never run doesn't
     // strand nodes reserving for it.
     const goalAttractionDisabledRetryNodeReserveEnabled = !!(cfg && cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE === true);
-    const goalAttractionDisabledRetryNodeReserveFractionRaw = Number(opts.goalAttractionDisabledRetryNodeReserveFractionOverride ?? opts.attractionDiversityNodeReserveFractionOverride);
+    const goalAttractionDisabledRetryNodeReserveFractionRaw = Number(opts.goalAttractionDisabledRetryNodeReserveFractionOverride);
     const goalAttractionDisabledRetryNodeReserveFraction = Number.isFinite(goalAttractionDisabledRetryNodeReserveFractionRaw) && goalAttractionDisabledRetryNodeReserveFractionRaw >= 0
         ? Math.min(1, goalAttractionDisabledRetryNodeReserveFractionRaw)
         : GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION;

@@ -1,9 +1,10 @@
 # Solver protocol/schema contraction plan
 
-> **Status:** active implementation plan
+> **Status:** implementation complete; awaiting final CI confirmation
 > **Opened:** 2026-09-20
 > **Audit basis:** [protocol/schema contraction audit 001](../reports/2026-09-20-protocol-schema-contraction-audit-001.md)
 > **Purpose:** reduce live solver/research polymorphism without rewriting historical evidence or losing durable compatibility.
+> **Progress (2026-09-21, PR #1937):** all 23 registered seams are now closed in the machine-readable registry. The final implementation wave replaced implicit hint mutation tracking with explicit `changedHintLevels` write sets, re-closed PSC-001/002, finished durable level-addressing census (PSC-004), closed the canonical sweep envelope (PSC-007), completed historical Attempt/provenance isolation (PSC-015/017), and removed the last current phase-6/work-budget aliases (PSC-022/023). Current producers and APIs are canonical-only; historical normalization is named and centralized; frozen evidence is unchanged. The latest red CI was reduced to two stale tests and both fixes are committed. No architectural or caller-migration work is known to remain; only final CI confirmation on the reconciled head is pending.
 
 ## Goal
 
@@ -203,13 +204,7 @@ Define one shared extractor/validator for common research metadata:
 
 Choose one canonical current location and migrate current producers.
 
-Historical alternatives:
-- top-level `populationIdentity`;
-- `population.corpusIdentity`;
-- `population.populationIdentity`;
-- top-level versus nested `researchBlock`;
-
-should normalize only through the shared ingress adapter.
+Historical alternatives such as nested `population.corpusIdentity`, `population.populationIdentity`, and `population.researchBlock` normalize only through the shared ingress adapter. Current writers use top-level `populationIdentity` and, when the artifact genuinely carries research-block lineage, top-level `researchBlock`. A producer without block lineage must not manufacture a block merely to satisfy envelope uniformity.
 
 Remove duplicated fallback chains from `research-relations-lib.mjs`, `research-consumption-link.mjs`, and later consumers.
 
@@ -455,6 +450,8 @@ Every contraction needs one of these proofs before deletion:
 4. **Parity proof:** old and new execution paths produce the same canonical request/effective configuration/results where equivalence is claimed.
 5. **Archive preservation proof:** frozen artifacts remain byte-unchanged and queryable through the retained adapter.
 
+**Closeout interpretation:** a seam is not closed merely because its central alias/facade has been deleted. The no-current-consumer proof covers maintained entrypoints, shared libraries, workflow-facing scripts, and exercised tests. CI failures caused by a deleted contract are evidence of an incomplete caller migration and should be fixed at the caller, not by restoring the retired compatibility surface.
+
 For scientific evidence, semantic parity matters more than byte parity. Preserve:
 - population identity;
 - configuration/effective protocol;
@@ -485,6 +482,29 @@ For scientific evidence, semantic parity matters more than byte parity. Preserve
 - `docs/architecture-unification-debt.md` should receive only surviving architectural debt after concrete packages close, not duplicate live task state.
 - `docs/solver-future-work.md` should carry only deferred/reopen descendants that survive this program.
 - Solver research priority remains owned by `solver-optimization-workstreams.md`; this plan is infrastructure/correctness work and must not masquerade as a solver capability experiment.
+
+
+## 2026-09-21 implementation checkpoint
+
+The live finish-line interpretation is now concrete:
+
+- **Closed current hint duality:** setLevelHintRecords() is the mutation boundary for batch, import, editor, async-load, and review paths. writeLevelCorpusDocumentWithHints() persists hintRecords directly and never reconciles a sibling .hints write back into canonical state. Historical bare paths are upgraded only on ingress.
+- **Closed hidden corpus container state:** production callers carry the explicit corpus document. The LEVEL_WRAPPERS WeakMap plus readLevelsWithHints() / writeLevelsWithHints() compatibility facade are gone; array/object on-disk shapes remain explicit storage metadata.
+- **Closed current work-budget alias:** SolveOpts.workBudget and solve-time dual-read logic are gone. baseWorkBudget is the sole current solver input; report/result workBudget remains valid descriptive data.
+- **Closed candidate-path polymorphism:** internal packed-key producers validate with validateCanonicalPath(); alternate coordinate encodings survive only at the named external/import adapter.
+- **Closed research-envelope locations:** current producers place populationIdentity and any researchBlock lineage at top level; the shared envelope decoder alone owns historical nested locations. Producers with no block lineage do not synthesize a fake researchBlock.
+- **Closed research status authority:** current workstream/experiment authority is structured and fail-closed; prose/table recovery is an explicit historical-reader mode, while generic relation queries may still expose a cross-relation searchable status dimension.
+- **Closed PSC-022:** retired phase-6 SolveOpts and CLI aliases are removed from current surfaces. The final owner census also removed the leftover public `attractionDiversityBudgetFractionOverride` declaration; historical telemetry spellings remain only in explicitly historical Attempt/provenance normalization.
+- **Closed PSC-001/002 after B3:** the CI-exposed dual writer and corpus-array callers were migrated, and B3 then removed the remaining implicit mutation heuristic. `writeLevelCorpusDocumentWithHints()` now accepts an explicit `changedHintLevels` write set; shared capture, portfolio sweep, family generation/replay, complete enumeration, corpus expansion, diversification, workbench, and published import declare hint ownership directly. `UNTOUCHED_HINTS_STATE` is deleted, while the stale-snapshot concurrency regression remains protected.
+- **Closed PSC-023:** `SolveOpts.baseWorkBudget` is the only current solver input. Solver bench, search-loss canary, portfolio, benchmark, and level-blind callers map their CLI work-budget values to that field; descriptive result/report/static-portfolio `workBudget` remains a distinct legitimate concept.
+- **Further contracted PSC-018:** the sweep combiner no longer emits the retired population-integrity `complete` mirror, and tests now distinguish `coverageComplete` from `decisionValidComplete`. The remaining PSC-018 decision is the legacy display-identity arrays versus canonical scoped JSON-tuple identities.
+- **Closed PSC-015/017:** `modules/solver/historical-attempt-normalization.mjs` owns retired persisted Attempt field/stage/config spellings. Current projection, tier classification, and provenance construction are canonical-only; maintained historical readers normalize at named ingress first.
+- **Package B closed:** concurrency safety now uses caller-declared `changedHintLevels` write sets rather than read-time object/array identity. This preserves disjoint-shard safety while making write intent explicit and auditable.
+- **Closeout method revised by implementation evidence:** a seam can move from complete back to in-progress when exercised callers reveal residue. This is intentional, not regression in the plan: completion now requires the central owner to be canonical *and* maintained entrypoints/shared helpers/tests to prove there is no current consumer of the retired contract.
+
+## Final closeout checkpoint
+
+As of PR #1937 head, the registry records 23/23 seams complete. The remaining operational gate is a clean CI run on the reconciled head. A red run should still be treated as migration evidence and fixed without restoring retired compatibility; absent such fallout, this plan is complete.
 
 ## Completion criteria
 

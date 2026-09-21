@@ -1,12 +1,12 @@
 <!-- agent-context-budget: warn=7000 max=9500 -->
-# Solver parity-phase and checkerboard-capacity preflight
+# Solver parity-phase, capacity, and response-signature preflight
 
-> **Status:** ACTIVE CHEAP PREMISE TESTS; the phase-distance and checkerboard-capacity premises shadow observers implemented, corpus evidence pending. Production decisions unchanged.
+> **Status:** ACTIVE CHEAP PREMISE TESTS; phase-distance and checkerboard-capacity observers are implemented, and a static response-signature analysis is queued. Production decisions unchanged.
 > **Owner:** `docs/solver-optimization-workstreams.md` Lane H.
 > **Origin:** [parity invariant audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
-> **Question:** can exact checkerboard/twist-phase structure prove enough additional dead search states, or explain enough decision-bearing ordering/repair failures, to justify a production consumer?
+> **Question:** can exact checkerboard/twist-phase structure prove additional dead states or explain differentiated solver response strongly enough to justify a production consumer?
 
-This preflight turns the parity audit into two bounded premise tests. It does **not** authorize a new prune, scorer, repair term, routing feature, or retry.
+This preflight turns the parity audit into three bounded premise tests. It does **not** authorize a new prune, scorer, repair term, routing feature, retry, or level classifier.
 
 ## 1. Canonical invariant
 
@@ -58,35 +58,15 @@ This is a relaxation. It may ignore dynamic visited/edge walls, consumed portal 
 
 ### First falsifier
 
-Instrument or probe **without changing decisions**.
-
-Required output, by opportunity population:
-- evaluated states/candidates;
-- incremental phase-distance deaths not already rejected by current scalar distance/parity before the same decision;
-- depth / remaining-length distribution;
-- portal pair count and twist-pair count;
-- whether the death occurred at a candidate-ranking seam, hard-prune seam, or only after another existing reject would already fire;
-- work/overhead of obtaining the label.
-
-Prefer one shared helper/map producer if it can serve multiple observational consumers. Do not separately implement a scorer-only and prune-only derivation.
+Shadow without changing decisions. Record evaluated candidates, incremental deaths beyond scalar distance/parity, depth/remaining length, portal/twist counts, decision seam, overlap with existing rejects and observer overhead. Reuse one shared phase-distance producer.
 
 ### Stop / advance
 
 **Stop the phase-distance premise** if incremental decision-bearing incidence is negligible at the cheapest representative pilot or construction/runtime overhead is plainly disproportionate.
 
-**Advance the phase-distance premise** only if there is non-trivial incremental opportunity. Then:
-1. build minimal synthetic witnesses;
-2. replay stored valid solution prefixes / known referee-valid paths and require zero false rejects;
-3. run differential/reference checking as appropriate;
-4. only then nominate the smallest consumer.
+**Advance** only on non-trivial opportunity, then require synthetic witnesses, stored/referee-valid prefix replay with zero false rejects, differential/reference checking, and the smallest consumer. Prefer ordering before hard prune when the fact changes rank more often than it proves death; routing waits for differentiated-response evidence.
 
-Consumer preference:
-1. admissible-order ranking if the fact changes ordering often but hard-prune economics are weak;
-2. hard prune if sound incremental deadness is frequent enough to repay cost;
-3. portal guidance only after the exact phase representation exists and matched-work evidence is needed;
-4. routing/attempt selection only after current-input phase features predict differentiated response.
-
-The 2026-08-08 existence-only portal envelope remains closed. `WS2-PARITY-PHASE-DISTANCE` is a materially different conditioned-distance predicate, not a rerun of “some twist remains / all twists consumed.”
+The closed 2026-08-08 existence-only portal envelope is distinct from this conditioned-distance predicate.
 
 ## 3. Premise `WS2-CHECKERBOARD-CAPACITY`: checkerboard-split connectivity capacity
 
@@ -114,29 +94,23 @@ Twist-bearing levels require an explicit phase-layer extension before using a fi
 
 ### First falsifier
 
-Add a research-only shadow count to the existing connectivity reached-set consumer, avoiding a second flood fill.
-
-Report:
-- connectivity evaluations;
-- current total-volume rejects;
-- incremental color-capacity rejects where total volume passes;
-- remaining steps, `intNeeded`, reached fresh counts by color;
-- search depth / routing regime / coverage ratio;
-- incremental work overhead.
+Reuse the existing connectivity reached set; do not run a second flood fill. Record evaluations, scalar-volume rejects, incremental color-capacity rejects, remaining steps/intersections, fresh cells by color, depth/regime/coverage and overhead.
 
 ### Stop / advance
 
 **Stop the checkerboard-capacity premise** if incremental rejects are negligible or concentrated only where another same-cost reject fires immediately.
 
-**Advance the checkerboard-capacity premise** on non-trivial incremental opportunity, then require:
-1. synthetic witnesses where total volume passes but one color is provably short;
-2. stored-solution/referee-valid prefix replay with zero false rejects;
-3. differential checking of the reached-set color counts;
-4. matched-work production A/B before default-on promotion.
+**Advance** on non-trivial incremental opportunity, then require synthetic witnesses, stored/referee-valid prefix replay with zero false rejects, differential checking of color counts, and matched-work A/B before promotion.
 
-## 4. Secondary observational seams
+## 4. Premise `WS2-PARITY-RESPONSE-SIGNATURE`: parity as a capability-response axis
 
-These do not outrank the phase-distance and checkerboard-capacity premises and should reuse their representation rather than creating parallel parity machinery.
+Reuse existing evidence before new compute: test a compact current-input parity feature basis against technique-census pairwise discordance, then use saved hint/provenance only for within-success path mechanism evidence. Do not predeclare level classes; derive categories only if stable response regions emerge. Any routing descendant requires independent shared-budget transfer.
+
+Full feature basis, evidence semantics and stop/advance rules: [parity response-signature preflight](solver-parity-response-signature-preflight.md).
+
+## 5. Secondary observational seams
+
+Reuse the same parity representation; do not create parallel machinery.
 
 ### Admissible-order propagation
 
@@ -162,13 +136,13 @@ Before changing behavior:
 - measure actual wasted work after first-step prune;
 - prefer one explicit solve-level infeasibility result to an accidental empty-loop behavior.
 
-Likely low solve-value; treat as correctness/representation cleanup unless measurement shows otherwise.
+Treat as representation cleanup unless measurement shows real work savings.
 
 ### Complete/random hint enumeration
 
-Sound ordinary parity rejection can reduce complete enumeration on no-twist levels without changing completeness. Keep this outside the production solve priority unless hint-enumeration cost makes it independently worthwhile.
+Ordinary no-twist parity may reduce complete enumeration; keep it outside production priority unless hint cost justifies it.
 
-## 5. Derivations that are not premises
+## 6. Derivations that are not premises
 
 Do not create experiments from these without a new constraint:
 
@@ -179,74 +153,19 @@ Do not create experiments from these without a new constraint:
 - `portalJumps & 1` as twist phase;
 - “twist portal exists” as proof that both suffix phases remain reachable from the current state.
 
-## 6. Evidence and promotion discipline
+## 7. Evidence and promotion discipline
 
-Any hard consumer follows [solver correctness hardening](solver-correctness-hardening.md):
-- approximation direction stated explicitly;
-- smallest counterexamples;
-- stored valid-path replay;
-- referee/reference differential where available;
-- no production promotion from observer incidence alone.
+Hard consumers follow [solver correctness hardening](solver-correctness-hardening.md): explicit approximation direction, counterexamples, valid-path replay and referee/reference differential. Soft consumers require matched work, measured participation, gains/losses and current-input-only features. Observer incidence or historical identity never licenses production.
 
-Any soft consumer follows the ordinary matched-work research rules:
-- same work envelope;
-- participation measured;
-- gains/losses enumerated;
-- current-input-only features;
-- no per-level historical outcome leakage.
+## 8. Queue boundary
 
-## 7. Queue boundary
+Lane H runs in parallel with the current WS2 failure-response gate and does not reorder it.
 
-Lane H is a cheap premise-acquisition lane and may run in parallel with the current Workstream-2 failure-response gate. It does not replace or reorder that gate.
-
-Only `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` are active premise tests. The remaining seams are downstream or secondary measurements. Contingent architectures/treatments belong in `solver-future-work.md`, not here or in the audit report as a second queue.
+The three named WS2 parity questions are active premises. Other seams are downstream; contingent treatments belong in `solver-future-work.md`.
 
 
-## 8. Implemented observational seam
+## 9. Implemented observational seam
 
-The first falsifier machinery is now implemented on this branch.
+The phase-distance and checkerboard-capacity observers are production-inert and share the real production solve path. `solver:parity-invariant-shadow` runs both under a strict whole-solve work envelope and emits the canonical research-resolution envelope. Synthetic witnesses cover incremental phase-distance and color-capacity cases; no production prune, ordering, scoring, routing or repair change is authorized.
 
-### Phase-conditioned distance
-
-- `distance.ts` owns a static two-layer 0-1 relaxation keyed by future twist-jump parity.
-- `prepLevel()` builds the two goal-distance layers only on twist-bearing levels.
-- `evaluatePrunedMove()` compares the required phase layer with the existing scalar goal distance at the same distance-prune seam.
-- `ParityPhaseDistanceObserver` is research-only and cannot affect the returned prune verdict.
-- A synthetic regression witness proves an incremental H1 case: scalar goal distance fits while the required twist phase cannot fit.
-
-### Checkerboard capacity
-
-- `isConnected()` reuses the exact reached set from its existing flood fill.
-- The observer performs only a bounded grid scan; it never launches a second fill.
-- It records the existing scalar-volume result and the over-generous checkerboard-capacity result at the same decision seam.
-- `ParityCapacityObserver` is research-only and cannot affect the connectivity verdict.
-- A synthetic regression witness has compatible endpoint parity and enough total volume, but insufficient fresh capacity on one checkerboard color.
-
-### Synchronous corpus probe
-
-Run:
-
-```bash
-npm run solver:parity-invariant-shadow -- \
-  --corpus=data/stress/stress-levels.json \
-  --work-budget=<fixed-whole-solve-work> \
-  --budget-ms=<generous-wall-safety-deadline> \
-  --out=reports/stress/parity-invariant-shadow/<run>.json
-```
-
-The probe:
-
-- uses the real sequential production `solveLevel` ladder;
-- changes no ablation/profile or solver decision;
-- uses `strictTotalWorkBudget=true` so the scientific work envelope is deterministic;
-- leaves ordinary additive-tier policy intact inside that cap;
-- records both parity-premise participation/opportunity in the same solve;
-- reports observer reach, measurement support, fidelity, coverage, deadline truncation and errors separately;
-- treats no observer reach / deadline truncation / ineligible mechanic regime as indeterminate, never as a clean negative;
-- keeps only bounded example records while aggregating all observer calls.
-
-This is deliberately compatible in spirit with PR #1923's resolution-envelope discipline without duplicating that shared library on this branch. Once #1923 is in the base, the raw `resolutionInputs` should be adapted through the canonical resolution-envelope owner rather than growing a second validator here.
-
-### Decision boundary
-
-The new code is still **observer machinery**, not an earned treatment. No the phase-distance and checkerboard-capacity premises result may change pruning, ordering, scoring, routing or repair until the preflight's stated witness/replay/differential/economic gates are met.
+The response-signature premise is analysis-first and has no new runtime instrumentation yet. See [its preflight](solver-parity-response-signature-preflight.md).

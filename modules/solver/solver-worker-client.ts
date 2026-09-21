@@ -2,29 +2,23 @@
 // Exposes solve()/findTriggerableFalseGoalCells() methods that run the same search as
 // Solver.solve()/Solver.findTriggerableFalseGoalCells(), but this is NOT a drop-in swap: it
 // implements only these two methods (not the full SolverApi surface), and
-// its solve() takes a differently-shaped level than Solver.solve() does —
-// see the input-format note below. A caller switching between the on-thread
-// solverApi and this client must adapt the level it passes, not just the
-// call site.
+// its canonical solveLevel() consumes the same normalized level shape as direct solveLevel().
+// The public solve() method remains a raw-level convenience adapter that validates/normalizes
+// before delegating to solveLevel(); the worker transport itself is normalized-only.
 //
 // Usage:
 //   import { createSolverWorkerClient } from './modules/solver/solver-worker-client.js';
 //   // Pass a constructed Worker so Vite statically bundles the worker module:
 //   const client = createSolverWorkerClient(new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }));
 //   const result = await client.solve(rawLevel, { timeBudgetMs: 30000, yieldFn });
-//   // result: the full SolveResult shape (orchestration.ts) plus `type`/`id` — ok, status,
-//   // solution, solutions, elapsedMs, nodesExpanded, attempts, deadlineTruncated,
-//   // nodeBudgetReached, workSpent, workBudget, solvedByPrime, stageLifecycle,
-//   // schedulerMode, legacyLatencyPortfolioExperiment. See worker-result-serialization.mjs's buildSolveWorkerResult.
+//   // result: the same public SolveResult shape as direct solveLevel(). Worker-only `type`/`id`
+//   // exist on the postMessage transport envelope but are stripped by this client before resolve.
 //   (A URL argument is also accepted and constructed here — used by tests.)
 //
-// Input-format note: this solve()'s levelRaw must be RAW wire format (1-indexed coords) —
-// normalization happens inside the worker. Solver.solve() (createSolver() in Solver.ts), by
-// contrast, expects an ALREADY-NORMALIZED level and does no raw normalization itself (that's a
-// separate prepareLevelForSolver() call on that facade) — so a raw level that's correct for
-// THIS client's solve() is the wrong shape for the on-thread solverApi.solve(), and vice versa.
-// findTriggerableFalseGoalCells() here takes a NORMALIZED level either way — postMessage's structured clone
-// carries its Sets/Maps intact.
+// Input-format note: solveLevel() is the canonical normalized-level method. solve() accepts RAW
+// wire format (1-indexed coords) for convenience, validates + normalizes locally, then delegates.
+// The worker SOLVE branch and direct solveLevel() therefore share one internal/public canonical
+// level contract. findTriggerableFalseGoalCells() likewise transports a normalized level.
 //
 // solve() accepts the FULL SolveOpts the direct/on-thread solver does (fixed 2026-08-20 — it used
 // to silently forward only timeBudgetMs/yieldFn, dropping ablation/nodeBudget/baseWorkBudget/workBudget/
@@ -34,9 +28,75 @@
 // neither can cross structured-clone as-is; every other option is forwarded verbatim. Function-
 // valued options besides yieldFn (e.g. attemptSearchForTesting — explicitly test-only/internal per
 // its own doc comment in orchestration.ts, never meant to cross a real worker boundary) are
-// stripped before postMessage rather than left to throw a DataCloneError.
+// rejected before postMessage rather than silently stripped or left to throw a DataCloneError.
 
-import type { SolveOpts } from './orchestration.js';
+import type { SolveOpts, SolveResult } from './orchestration-contracts.js';
+import { validateRawLevel } from '../domain/level-schema.js';
+import { normalizeRawLevel } from './normalization.js';
+
+function firstFunctionPath(value: unknown, path: string, seen = new Set<unknown>()): string | null {
+    if (typeof value === 'function') return path;
+    if (!value || typeof value !== 'object') return null;
+    if (seen.has(value)) return null;
+    seen.add(value);
+    if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+            const nested = firstFunctionPath(value[i], `${path}[${i}]`, seen);
+            if (nested) return nested;
+        }
+        return null;
+    }
+    for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+        const nested = firstFunctionPath(nestedValue, `${path}.${key}`, seen);
+        if (nested) return nested;
+    }
+    return null;
+}
+
+/**
+ * Build the serializable portion of a worker solve request.
+ * timeBudgetMs has its dedicated budgetMs transport and yieldFn has its cancellation bridge.
+ * Any other function anywhere in SolveOpts is direct/on-thread-only and is rejected explicitly.
+ */
+export function buildWorkerSolveOpts(opts: SolveOpts = {}): Record<string, unknown> {
+    const solveOpts: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(opts)) {
+        if (key === 'timeBudgetMs' || key === 'yieldFn') continue;
+        const functionPath = firstFunctionPath(value, key);
+        if (functionPath) {
+            throw new Error(
+                `Solver worker cannot transport function-valued SolveOpts at ${functionPath}; use direct solveLevel() for observer/test callback options`,
+            );
+        }
+        solveOpts[key] = value;
+    }
+    return solveOpts;
+}
+
+/** Convert the SOLVE postMessage envelope back into the direct SolveResult public shape. */
+export function normalizeSolveWorkerResult(message: Record<string, any>): SolveResult {
+    const {
+        type: _transportType,
+        id: _transportId,
+        elapsedMs,
+        ...transported
+    } = message;
+    const result: Record<string, any> = {
+        ...transported,
+        totalMs: transported.totalMs ?? elapsedMs,
+    };
+    for (const key of Object.keys(result)) {
+        if (result[key] === undefined) delete result[key];
+    }
+    return result as SolveResult;
+}
+
+function assertNormalizedSolveLevel(level: any) {
+    if (!level || !level.grid || !Array.isArray(level.gateKeys) || !(level.portalMap instanceof Map)) {
+        throw new Error('Solver worker solveLevel requires a normalized level');
+    }
+    return level;
+}
 
 interface FalseGoalTriggerWorkerOpts {
     timeLimitMs?: number;
@@ -57,12 +117,8 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
     worker.onmessage = ({ data }: MessageEvent) => {
         const handlers = _pending.get(data.id);
         if (!handlers) return;
-        if (data.type === 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS' || data.type === 'TRAP_PROGRESS') {
-            const progress = data.type === 'TRAP_PROGRESS'
-                ? { ...data, type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS',
-                    newTriggerableCells: data.newTriggerableCells ?? data.newSpots ?? [] }
-                : data;
-            if (handlers.onProgress) handlers.onProgress(progress);
+        if (data.type === 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS') {
+            if (handlers.onProgress) handlers.onProgress(data);
             return;
         }
         _pending.delete(data.id);
@@ -82,51 +138,57 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
         _pending.clear();
     };
 
-    return {
-        solve(levelRaw: any, opts: SolveOpts = {}) {
-            const id = _nextId++;
-            const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
-            // Forward everything EXCEPT timeBudgetMs/yieldFn (specially handled below) and any
-            // other function-valued option — structured clone throws a DataCloneError on a
-            // function rather than silently dropping it, and a function-shaped option (like the
-            // test-only attemptSearchForTesting) wouldn't mean anything across a real worker
-            // boundary anyway. Everything else (ablation, nodeBudget, baseWorkBudget/workBudget,
-            // disableExtraBudgetPasses, lifecycleTelemetry, every *BudgetFractionOverride field,
-            // primeAttempt, legacyLatencyPortfolioExperiment, schedulerMode, ...) is plain data and forwarded
-            // as-is — see this file's own header comment for why this exists.
-            const solveOpts: Record<string, unknown> = {};
-            for (const [key, value] of Object.entries(opts)) {
-                if (key === 'timeBudgetMs' || key === 'yieldFn') continue;
-                if (typeof value === 'function') continue;
-                solveOpts[key] = value;
+    const solveLevel = (level: any, opts: SolveOpts = {}): Promise<SolveResult> => {
+        assertNormalizedSolveLevel(level);
+        const id = _nextId++;
+        const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
+        // Build the canonical serializable option payload. Direct/on-thread-only callback
+        // options fail loudly rather than being silently stripped or left for postMessage to
+        // discover as a DataCloneError.
+        const solveOpts = buildWorkerSolveOpts(opts);
+
+        return new Promise((resolve, reject) => {
+            let pollTimer: any = null;
+
+            if (typeof opts.yieldFn === 'function') {
+                // Poll the caller's yieldFn; if it throws (or its returned promise rejects —
+                // SolveOpts.yieldFn is typed `() => Promise<void>`, so a real caller's yieldFn
+                // may do either), send CANCEL to the worker. The async IIFE + await is required
+                // for correctness, not just to satisfy the linter: the previous plain
+                // `try { opts.yieldFn!(); } catch {}` never actually caught anything from a
+                // genuinely async yieldFn, since an async function's internal throw becomes a
+                // rejected promise, not a synchronous exception to the caller.
+                pollTimer = setInterval(() => {
+                    void (async () => {
+                        try { await opts.yieldFn!(); }
+                        catch (_) {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                            worker.postMessage({ type: 'CANCEL', id });
+                        }
+                    })();
+                }, 50);
             }
 
-            return new Promise((resolve, reject) => {
-                let pollTimer: any = null;
-
-                if (typeof opts.yieldFn === 'function') {
-                    // Poll the caller's yieldFn; if it throws (or its returned promise rejects —
-                    // SolveOpts.yieldFn is typed `() => Promise<void>`, so a real caller's yieldFn
-                    // may do either), send CANCEL to the worker. The async IIFE + await is required
-                    // for correctness, not just to satisfy the linter: the previous plain
-                    // `try { opts.yieldFn!(); } catch {}` never actually caught anything from a
-                    // genuinely async yieldFn, since an async function's internal throw becomes a
-                    // rejected promise, not a synchronous exception to the caller.
-                    pollTimer = setInterval(() => {
-                        void (async () => {
-                            try { await opts.yieldFn!(); }
-                            catch (_) {
-                                clearInterval(pollTimer);
-                                pollTimer = null;
-                                worker.postMessage({ type: 'CANCEL', id });
-                            }
-                        })();
-                    }, 50);
-                }
-
-                _pending.set(id, { resolve, reject, pollTimer });
-                worker.postMessage({ type: 'SOLVE', id, levelRaw, budgetMs, solveOpts });
+            _pending.set(id, {
+                resolve: (msg: any) => resolve(normalizeSolveWorkerResult(msg)),
+                reject,
+                pollTimer,
             });
+            worker.postMessage({ type: 'SOLVE', id, level, budgetMs, solveOpts });
+        });
+    };
+
+    return {
+        solveLevel,
+
+        solve(levelRaw: any, opts: SolveOpts = {}) {
+            const validation = validateRawLevel(levelRaw);
+            const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
+            if (solverBoundaryErrors.length > 0) {
+                throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
+            }
+            return solveLevel(normalizeRawLevel(levelRaw), opts);
         },
 
         // False-goal triggerability search on a normalized level. opts:
@@ -153,18 +215,16 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
 
                 _pending.set(id, {
                     resolve: (msg: any) => {
-                        const status = msg.status === 'done' ? 'complete' : msg.status === 'timeout' ? 'partial' : msg.status;
-                        const triggerableCells = msg.triggerableCells ?? msg.spots ?? [];
                         resolve({
                             type: 'FALSE_GOAL_TRIGGER_SEARCH_RESULT',
                             id: msg.id,
-                            status,
-                            triggerableCells: new Set(triggerableCells),
+                            status: msg.status,
+                            triggerableCells: new Set(msg.triggerableCells ?? []),
                             gatesProcessed: msg.gatesProcessed,
                             gatesCompleted: msg.gatesCompleted,
                             totalGates: msg.totalGates,
                             elapsedMs: msg.elapsedMs,
-                            timeLimitMs: msg.timeLimitMs ?? msg.timeLimit,
+                            timeLimitMs: msg.timeLimitMs,
                         });
                     },
                     reject,
@@ -201,7 +261,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
 import { getRequiredPathCoverageRatio } from './routing-regime.js';
-import { validateCandidatePath } from '../domain/path-validator.js';
+import { validateCanonicalPath } from '../domain/path-validator.js';
 import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';
 
@@ -271,7 +331,7 @@ export function createEnumerationPoolClient(workerFactory: () => Worker, poolSiz
             for (const { path: candidate, nodes, elapsedMs } of found) {
                 if (capped) break;
                 if (sigs.has(pathSignature(candidate))) continue;
-                const v = validateCandidatePath(level, candidate);
+                const v = validateCanonicalPath(level, candidate);
                 if (!v.ok) continue;
                 const sig = pathSignature(v.path);
                 if (sigs.has(sig)) continue;

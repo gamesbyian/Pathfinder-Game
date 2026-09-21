@@ -42,7 +42,7 @@ import { createHash } from 'node:crypto';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from '../modules/solver/legacy-latency-portfolio-experiment.js';
 import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
-import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
@@ -67,7 +67,7 @@ const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.jso
 const saveHints = flags.has('--save-hints');
 // No silent default: this is the historical experiment scheduler's opt-in flag, and defaulting an
 // unrecognized/omitted value into that path is the wrong failure mode for a behavior-preserving
-// migration. Every live workflow already passes --scheduler-mode explicitly (currently `legacy`).
+// migration. Every live workflow must pass one canonical --scheduler-mode value explicitly.
 const rawSchedulerMode = argMap.get('--scheduler-mode');
 const schedulerMode = normalizeSchedulerMode(rawSchedulerMode);
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
@@ -97,19 +97,25 @@ if (schedulerMode === 'static-portfolio') {
     }
 }
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
-// Canonical flag names below accept their pre-phase-6-derived-vocabulary legacy spelling as an
-// alias for one migration window (naming-cleanup-ledger.json), same shape as --scheduler-mode above.
+const retiredBudgetFlags = new Map([
+    ['--attraction-diversity-budget-fraction', '--goal-attraction-disabled-retry-budget-fraction'],
+    ['--main-loop-late-reserve-fraction', '--main-search-late-reserve-fraction'],
+    ['--main-loop-late-reserve-config-count', '--main-search-late-reserve-config-count'],
+]);
+for (const [retired, canonical] of retiredBudgetFlags) {
+    if (argMap.has(retired)) {
+        console.error(`${retired} is retired; use ${canonical}`);
+        process.exit(2);
+    }
+}
 const goalAttractionDisabledRetryBudgetFraction = argMap.has('--goal-attraction-disabled-retry-budget-fraction')
-    ? Number(argMap.get('--goal-attraction-disabled-retry-budget-fraction'))
-    : argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
+    ? Number(argMap.get('--goal-attraction-disabled-retry-budget-fraction')) : undefined;
 const admissibleOrderBudgetFraction = argMap.has('--admissible-order-budget-fraction') ? Number(argMap.get('--admissible-order-budget-fraction')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction') ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 const mainSearchLateReserveFraction = argMap.has('--main-search-late-reserve-fraction')
-    ? Number(argMap.get('--main-search-late-reserve-fraction'))
-    : argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
+    ? Number(argMap.get('--main-search-late-reserve-fraction')) : undefined;
 const mainSearchLateReserveConfigCount = argMap.has('--main-search-late-reserve-config-count')
-    ? Number(argMap.get('--main-search-late-reserve-config-count'))
-    : argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+    ? Number(argMap.get('--main-search-late-reserve-config-count')) : undefined;
 const disableExtraBudgetPasses = flags.has('--disable-extra-budget-passes');
 // DEPRECATED --baseline-budget: per-level adaptive node budgets scaled off recorded per-level
 // nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
@@ -340,9 +346,9 @@ if (schedulerMode === 'static-portfolio') {
         ...(staticPortfolioResumableResidualPass ? { resumableResidualPass: true } : {}),
     };
 }
-// readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
-// (harmless when --save-hints is unset — we just don't write anything back).
-const rawLevels = readLevelsWithHints(corpusPath);
+// Read one explicit corpus document so wrapper/storage metadata survives any hint-writing pass.
+const corpusDocument = readLevelCorpusDocumentWithHints(corpusPath);
+const rawLevels = corpusDocument.levels;
 const levelFilter = parseLevelPositions(argMap.get('--levels'));
 let targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
@@ -375,7 +381,7 @@ const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
 if (schedulerMode === 'legacy-latency-portfolio-experiment') solveOpts.legacyLatencyPortfolioExperiment = legacyLatencyPortfolioExperiment;
 if (schedulerMode === 'static-portfolio') solveOpts.staticPortfolio = staticPortfolioConfig;
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
-if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
+if (Number.isFinite(workBudget)) solveOpts.baseWorkBudget = workBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairAdditiveBudgetMultiplierOverride = repairBudgetFraction;
 if (Number.isFinite(goalAttractionDisabledRetryBudgetFraction)) solveOpts.goalAttractionDisabledRetryBudgetFractionOverride = goalAttractionDisabledRetryBudgetFraction;
 if (Number.isFinite(admissibleOrderBudgetFraction)) solveOpts.admissibleOrderBudgetFractionOverride = admissibleOrderBudgetFraction;
@@ -692,15 +698,12 @@ function logProgress(row) {
     console.log(`  [${processedForConsole}/${toActuallyRun.length}] L${row.level}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${row.phaseLabel ? ` ${row.phaseLabel}` : ''}${row.solvedByPrime ? ' [primed]' : ''}${row.solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${row.hintAppended ? ' [hint saved]' : ''}`);
 }
 
-// Persist hints to disk after EVERY level, not just once at the very end -- a long-running sweep
-// (hours, e.g. under a CI job with a hard wall-clock cutoff) that gets killed mid-run must not
-// lose every solve found before the kill. writeLevelsWithHints only rewrites a level's hint file
-// when its content actually changed (see level-data-io.mjs), so calling it after a level that
-// found nothing new is a cheap no-op, not a redundant full-corpus rewrite -- safe to call
-// unconditionally rather than only when this specific row appended a hint.
+// Persist hint-capture's explicit write set after EVERY level, not just once at the very end.
+// flush() clears that set after a successful write, so a later shard/process update to an earlier
+// level cannot be overwritten by this process's stale full-corpus snapshot.
 function persistHintsIfEnabled() {
     if (!saveHints) return;
-    totalHintFilesChanged += writeLevelsWithHints(corpusPath, rawLevels).hintFilesChanged;
+    totalHintFilesChanged += hintCapture.flush(corpusPath, corpusDocument).hintFilesChanged;
 }
 
 // Writes the --out/--summary-out report from CURRENT levelRows/counters, not just once at the

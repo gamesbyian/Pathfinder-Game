@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { decisionBearingExperimentResultIssues } from './solver-experiment-contract.mjs';
+import { DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION } from './durable-evidence-bundle-lib.mjs';
 
 const args = process.argv.slice(2);
 const values = new Map();
@@ -205,7 +206,7 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
     }
 
     const bundle = {
-      schemaVersion: 1,
+      schemaVersion: DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION,
       kind: 'pathfinder-durable-experiment-evidence-bundle',
       experimentId: manifest?.experiment?.experimentId ?? null,
       workflowFamily: manifest?.experiment?.workflowFamily ?? null,
@@ -331,6 +332,7 @@ function selfTest() {
     assert.equal(bundle.researchQuestion.measurementOpportunity, 'MO-002');
     assert.equal(bundle.researchBlock.blockId, 'BLOCK-001');
     assert.equal(bundle.researchBlock.evidenceRole, 'development');
+    assert.equal(bundle.schemaVersion, DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION);
     assert.equal(bundle.manifestStoredPath, 'manifest.json');
     assert.equal(bundle.files.length, 3);
     const manifestRecord = bundle.files.find(file => file.source === 'manifest.json');
@@ -418,11 +420,19 @@ function selfTest() {
     assert.equal(reharvested[0].disposition, 'unchanged', 'same immutable run/attempt reharvest is idempotent');
     assert.deepEqual(fs.readFileSync(path.join(destination, 'bundle.json')), bundleBeforeReharvest);
 
-    fs.writeFileSync(path.join(artifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 13 }] }));
+    const changedSource = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 13 }] }));
+    fs.writeFileSync(path.join(artifact, 'result.json'), changedSource);
+    const changedManifest = JSON.parse(fs.readFileSync(path.join(artifact, 'manifest.json'), 'utf8'));
+    changedManifest.entries = changedManifest.entries.map(entry =>
+      entry.published === 'result.json' ? { ...entry, sha256: sha256(changedSource) } : entry);
+    if (Array.isArray(changedManifest?.researchOutcome?.binding?.resultContentHashes)) {
+      changedManifest.researchOutcome.binding.resultContentHashes = [sha256(changedSource)];
+    }
+    fs.writeFileSync(path.join(artifact, 'manifest.json'), `${JSON.stringify(changedManifest, null, 2)}\n`);
     assert.throws(
       () => persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 }),
-      /durable evidence identity collision.*immutable source run\/attempt bytes differ/u,
-      'same run/attempt identity with changed source bytes must fail rather than overwrite retained science',
+      /(?:retained scientific binding is stale.*bytes no longer match manifest sha256|durable evidence identity collision.*immutable source run\/attempt bytes differ)/u,
+      'same run/attempt identity with changed source bytes must fail before any retained science can be overwritten',
     );
 
     const forgedStaging = path.join(temp, 'forged-staging');

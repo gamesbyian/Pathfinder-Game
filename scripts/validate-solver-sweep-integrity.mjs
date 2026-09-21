@@ -85,7 +85,6 @@ export function validateSweepIntegrity({ expectedIds, levels, requiredStage = nu
   const normalized = buildPopulationIntegrity(expectedIds, levels);
   const population = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: expectedIds });
   return {
-    complete: normalized.coverageComplete,
     coverageComplete: normalized.coverageComplete,
     decisionValidComplete: normalized.decisionValidComplete,
     expectedLevels: expectedIds.length,

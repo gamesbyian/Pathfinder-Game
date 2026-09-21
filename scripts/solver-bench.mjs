@@ -101,7 +101,7 @@ for (const [i, n] of targets.entries()) {
     let ok = false;
     try {
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
-        const res = await Solver.solveLevel(level, { timeBudgetMs: deadlineMs, workBudget, ablation });
+        const res = await Solver.solveLevel(level, { timeBudgetMs: deadlineMs, baseWorkBudget: workBudget, ablation });
         if (res?.deadlineTruncated) {
             // Indeterminate, not a negative — the deadline should never fire here (see the header).
             console.log(`  [!] L${n}: DEADLINE-TRUNCATED with work budget remaining; result is not reproducible`);

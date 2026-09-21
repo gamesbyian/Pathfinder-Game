@@ -10,6 +10,7 @@
  */
 import assert from 'node:assert/strict';
 import { buildRow, tallyPass, attemptActionKey, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
+import { normalizeHistoricalPersistedAttempt } from '../modules/solver/historical-attempt-normalization.mjs';
 import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from '../modules/solver/testing-fixtures.js';
 import { buildSolveWorkerResult } from '../modules/solver/worker-result-serialization.mjs';
 
@@ -48,8 +49,8 @@ test('buildRow records per-attempt badness/timing telemetry', () => {
         solution: [1, 2, 3],
         refereeValid: true,
         attempts: [
-            { gateKey: 'g1', profile: 'perimeterSweep', template: 'perimeterCW', ok: false, elapsedMs: 100, nodesExpanded: 200, timedOut: true, finalBadness: 4 },
-            { gateKey: 'g1', profile: 'objectiveFirst', ok: true, elapsedMs: 300, nodesExpanded: 300, beamWidth: 5000, diverseBeam: true },
+            { gateKey: 'g1', scoringProfileId: 'perimeterSweep', orderingBiasId: 'perimeterCW', ok: false, elapsedMs: 100, nodesExpanded: 200, timedOut: true, finalBadness: 4 },
+            { gateKey: 'g1', scoringProfileId: 'objectiveFirst', ok: true, elapsedMs: 300, nodesExpanded: 300, beamWidth: 5000, mechanicBucketRetention: true },
         ],
     };
     const row = buildRow(7, 'R00042', result, 'legacy');
@@ -87,9 +88,9 @@ test('failedStrategies only lists non-winning attempts, using the same key as wi
         totalMs: 10,
         solution: [1, 2],
         attempts: [
-            { gateKey: 'g1', profile: 'a', ok: false, bestBadness: 9 },
-            { gateKey: 'g1', profile: 'b', ok: false, bestBadness: 2, repair: true },
-            { gateKey: 'g1', profile: 'c', ok: true },
+            { gateKey: 'g1', scoringProfileId: 'a', ok: false, bestBadness: 9 },
+            { gateKey: 'g1', scoringProfileId: 'b', ok: false, bestBadness: 2, repair: true },
+            { gateKey: 'g1', scoringProfileId: 'c', ok: true },
         ],
     };
     const row = buildRow(1, 'R00001', result, 'legacy');
@@ -98,7 +99,7 @@ test('failedStrategies only lists non-winning attempts, using the same key as wi
 });
 
 test('action identity separates stage and repair seed while config identity remains compatible', () => {
-    const salt0 = { stageId: 'early-repair-search', gateKey: 10, profile: 'repair', template: null, beamWidth: null, repair: true, ok: false, elapsedMs: 1 };
+    const salt0 = { stageId: 'early-repair-search', gateKey: 10, scoringProfileId: 'repair', orderingBiasId: null, beamWidth: null, repair: true, ok: false, elapsedMs: 1 };
     const salt1 = { ...salt0, seedSalt: 1, ok: true };
     assert.equal(attemptConfigKey(salt0), 'repair|score=repair|guidance=standard');
     assert.equal(attemptConfigKey(salt1), 'repair|score=repair|guidance=standard');
@@ -113,29 +114,29 @@ test('action identity separates stage and repair seed while config identity rema
     assert.equal(row.attempts[1].actionKey, 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=1');
 });
 
-test('attemptActionKey normalizes a legacy stage id to its canonical form', () => {
+test('historical Attempt ingress normalizes a legacy stage id before canonical action projection', () => {
     const legacyStage = { stageId: 'repair-probe', gateKey: 10, profile: 'repair', template: null, beamWidth: null, repair: true, ok: true, elapsedMs: 1, seedSalt: 0 };
-    assert.equal(attemptActionKey(legacyStage), 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0',
-        'a persisted attempt carrying the historical repair-probe stage id must collapse onto the canonical early-repair-search action key');
+    const normalized = normalizeHistoricalPersistedAttempt(legacyStage);
+    assert.equal(attemptActionKey(normalized), 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0',
+        'persisted repair-probe evidence must normalize before entering canonical action projection');
 });
 
-test('attemptRecord dual-reads the legacy attractionDiversity/mainLoopLateReserve/repairProbe(ShrinkRecovery) telemetry fields into their canonical names', () => {
+test('historical Attempt ingress owns retired telemetry names; attemptRecord stays canonical-only', () => {
     const legacy = { gateKey: 1, profile: 'default', ok: true, elapsedMs: 1, attractionDiversity: true, mainLoopLateReserve: true, repairProbe: true, repairProbeShrinkRecovery: true };
-    const canonical = { gateKey: 1, profile: 'default', ok: true, elapsedMs: 1, goalAttractionDisabledRetry: true, mainSearchLateReserve: true, earlyRepairSearch: true, repairShrinkRecovery: true };
-    const legacyRec = attemptRecord(legacy);
+    const canonical = { gateKey: 1, scoringProfileId: 'default', ok: true, elapsedMs: 1, goalAttractionDisabledRetry: true, mainSearchLateReserve: true, earlyRepairSearch: true, repairShrinkRecovery: true };
+    const normalized = normalizeHistoricalPersistedAttempt(legacy);
+    const legacyRec = attemptRecord(normalized);
     const canonicalRec = attemptRecord(canonical);
-    assert.deepEqual(legacyRec, canonicalRec, 'a legacy-tagged attempt must project to the exact same canonical-only record as one already carrying the canonical fields');
-    for (const staleKey of ['attractionDiversity', 'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery']) {
+    assert.deepEqual(legacyRec, canonicalRec, 'historical normalization must produce the same canonical record without teaching the writer legacy names');
+    for (const staleKey of ['profile', 'template', 'diverseBeam', 'attractionDiversity', 'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery']) {
+        assert.equal(staleKey in normalized, false, `${staleKey} must be consumed at historical ingress`);
         assert.equal(staleKey in legacyRec, false, `${staleKey} must not appear in the canonical-write output`);
     }
-    assert.equal(legacyRec.goalAttractionDisabledRetry, true);
-    assert.equal(legacyRec.mainSearchLateReserve, true);
-    assert.equal(legacyRec.earlyRepairSearch, true);
-    assert.equal(legacyRec.repairShrinkRecovery, true);
 });
 
-test('historical attempts without stageId do not get a fabricated action identity', () => {
-    const legacy = { gateKey: 1, profile: 'repair', repair: true, ok: false, elapsedMs: 1, seedSalt: 2 };
+test('historical Attempt ingress does not fabricate stageId for pre-stage evidence', () => {
+    const legacy = normalizeHistoricalPersistedAttempt({ gateKey: 1, profile: 'repair', repair: true, ok: false, elapsedMs: 1, seedSalt: 2 });
+    assert.equal(legacy.stageId, undefined);
     assert.equal(attemptActionKey(legacy), null);
     const rec = attemptRecord(legacy);
     assert.ok(!('actionKey' in rec));
@@ -150,13 +151,13 @@ test('historical attempts without stageId do not get a fabricated action identit
 // a level whose baseline-recorded winningConfig silently omitted "(turnBiased)" made the prime
 // replay a different, non-turn-biased search, missing even with the exact right seed.
 test('attemptConfigKey emits turn-biased repair guidance for a repairTurnBiased winner', () => {
-    const key = attemptConfigKey({ profile: 'default', repair: true, repairTurnBiased: true });
+    const key = attemptConfigKey({ scoringProfileId: 'default', repair: true, repairTurnBiased: true });
     assert.equal(key, 'repair|score=repair|guidance=turn-biased');
 });
 
 test('attemptConfigKey rejects a hybrid repair guidance identity', () => {
     assert.throws(
-        () => attemptConfigKey({ profile: 'default', repair: true, repairMustTurnBiased: true, repairTurnBiased: true }),
+        () => attemptConfigKey({ scoringProfileId: 'default', repair: true, repairMustTurnBiased: true, repairTurnBiased: true }),
         /cannot represent both must-turn-biased and turn-biased guidance at once/i,
     );
 });
@@ -169,22 +170,22 @@ test('attemptConfigKey rejects a hybrid repair guidance identity', () => {
 // sweep demonstrably reaching the tier -- every one of its wins was silently attributed to DFS.
 
 test('attemptConfigKey emits the admissible-order family', () => {
-    assert.equal(attemptConfigKey({ profile: 'mustCrossFirst', admissibleOrder: true }), 'admissible-order|tieBreak=mustCrossFirst|lds=off');
+    assert.equal(attemptConfigKey({ scoringProfileId: 'mustCrossFirst', admissibleOrder: true }), 'admissible-order|tieBreak=mustCrossFirst|lds=off');
 });
 
 test('attemptConfigKey maps the no-tie-break entry to admissible-order|tieBreak=none|lds=off', () => {
     // 'none' is not a real policy profile -- it is this tier's own no-tie-break marker, which is the
     // ONLY reason the gap was detectable at all before this fix (a `dfs:none` key in a report).
-    assert.equal(attemptConfigKey({ profile: 'none', admissibleOrder: true, admissibleOrderNoTieBreak: true }), 'admissible-order|tieBreak=none|lds=off');
+    assert.equal(attemptConfigKey({ scoringProfileId: 'none', admissibleOrder: true, admissibleOrderNoTieBreak: true }), 'admissible-order|tieBreak=none|lds=off');
 });
 
 test('attemptConfigKey emits lds=on for the discrepancy-limited variant', () => {
-    assert.equal(attemptConfigKey({ profile: 'default', admissibleOrder: true, admissibleOrderLds: true }), 'admissible-order|tieBreak=default|lds=on');
+    assert.equal(attemptConfigKey({ scoringProfileId: 'default', admissibleOrder: true, admissibleOrderLds: true }), 'admissible-order|tieBreak=default|lds=on');
 });
 
 test('attemptRecord preserves the admissible-order dispatch flags', () => {
     const rec = attemptRecord({
-        gateKey: 1, profile: 'none', template: null, beamWidth: null, ok: true, elapsedMs: 5,
+        gateKey: 1, scoringProfileId: 'none', orderingBiasId: null, beamWidth: null, ok: true, elapsedMs: 5,
         admissibleOrder: true, admissibleOrderNoTieBreak: true,
     });
     assert.equal(rec.admissibleOrder, true);
@@ -197,7 +198,7 @@ test('attemptRecord preserves allocatedBudgetMs, randomSeed and seedSalt', () =>
     // dropped by both copies, which is what made "did this attempt get any room to run?"
     // unanswerable from a persisted report.
     const rec = attemptRecord({
-        gateKey: 1, profile: 'repair', template: null, beamWidth: null, ok: true, elapsedMs: 5,
+        gateKey: 1, scoringProfileId: 'repair', orderingBiasId: null, beamWidth: null, ok: true, elapsedMs: 5,
         allocatedBudgetMs: 8000, repair: true, randomSeed: 4272716209, seedSalt: 3,
     });
     assert.equal(rec.allocatedBudgetMs, 8000);
@@ -207,7 +208,7 @@ test('attemptRecord preserves allocatedBudgetMs, randomSeed and seedSalt', () =>
 
 test('attemptRecord preserves the resumable residual-tranche marker', () => {
     const rec = attemptRecord({
-        stageId: 'static-portfolio', gateKey: 1, profile: 'default', beamWidth: 2000,
+        stageId: 'static-portfolio', gateKey: 1, scoringProfileId: 'default', beamWidth: 2000,
         ok: false, elapsedMs: 5, resumableResidualTranche: true,
     });
     assert.equal(rec.resumableResidualTranche, true);
@@ -227,7 +228,7 @@ test('buildRow preserves resumable residual-pass accounting', () => {
 });
 
 test('attemptRecord omits absent optional fields rather than emitting undefined', () => {
-    const rec = attemptRecord({ gateKey: 1, profile: 'default', template: null, beamWidth: null, ok: true, elapsedMs: 5 });
+    const rec = attemptRecord({ gateKey: 1, scoringProfileId: 'default', orderingBiasId: null, beamWidth: null, ok: true, elapsedMs: 5 });
     for (const k of ['stageId', 'actionKey', 'allocatedBudgetMs', 'admissibleOrder', 'randomSeed', 'seedSalt', 'repair', 'timedOut', 'resumableResidualTranche']) {
         assert.ok(!(k in rec), `${k} should be absent, not undefined`);
     }
@@ -237,7 +238,7 @@ test('attempt errors and their aggregate signal survive report projection', () =
     const error = { name: 'TypeError', message: 'dispatch failed', gateKey: 9, configKey: 'dfs|score=x|bias=none', scoringProfileId: 'x', orderingBiasId: null, stack: 'must not persist' };
     const row = buildRow(4, 'R00004', {
         ok: false, status: 'attempt-error', attempts: [{
-            gateKey: 9, profile: 'x', template: null, beamWidth: null, ok: false,
+            gateKey: 9, scoringProfileId: 'x', orderingBiasId: null, beamWidth: null, ok: false,
             outcome: 'error', error, elapsedMs: 2, allocatedBudgetMs: 10,
         }],
     }, 'legacy');

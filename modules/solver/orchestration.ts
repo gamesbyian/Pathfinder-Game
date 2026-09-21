@@ -22,8 +22,8 @@ import { EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, EARLY_REPAIR_SEARCH_A
 import type { Attempt, ShrunkBiasedTier, SolveOpts, SolveResult } from './orchestration-contracts.js';
 
 // Re-exported for compatibility with every existing './orchestration.js' import path.
-export type { Attempt, AttemptTierFlags, SolveOpts, AttemptResult, SearchResult } from './orchestration-contracts.js';
-export { classifyAttemptTier, attemptConfigKey, normalizeAblationConfig, getActiveGates, getFalseGoalTriggerSearchBudgetMs } from './orchestration-contracts.js';
+export type { Attempt, HistoricalAttemptTierFlags, SolveOpts, AttemptResult, SearchResult } from './orchestration-contracts.js';
+export { classifyAttemptTier, classifyHistoricalAttemptTier, attemptConfigKey, normalizeAblationConfig, normalizeHistoricalAblationConfig, getActiveGates, getFalseGoalTriggerSearchBudgetMs } from './orchestration-contracts.js';
 export { runAttempt } from './orchestration-run-attempt.js';
 export { attemptBudgetShare } from './orchestration-main-search.js';
 export {
@@ -58,23 +58,21 @@ import { computeStageBudgetPlan, computeShrinkRecoveryBudget, buildStageBudgetEn
 // Override) cannot drift between the additive reserve and the actual execution loop.
 
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
+    if (Object.prototype.hasOwnProperty.call(opts, 'workBudget')) {
+        throw new Error('solveLevel: retired SolveOpts.workBudget input; use baseWorkBudget');
+    }
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const nodeBudget = Number(opts.nodeBudget) > 0 ? Number(opts.nodeBudget) : Infinity;
     // The ladder always divides WORK, never wall clock. `timeBudgetMs` survives only as an outer
     // deadline that can truncate a solve, never as an input to an allocation or escalation
     // decision, so a solve is a function of (level, workBudget). See work-meter.ts.
     const explicitBaseWorkBudget = Number(opts.baseWorkBudget) > 0 ? Number(opts.baseWorkBudget) : null;
-    const legacyWorkBudget = Number(opts.workBudget) > 0 ? Number(opts.workBudget) : null;
-    if (explicitBaseWorkBudget !== null && legacyWorkBudget !== null && explicitBaseWorkBudget !== legacyWorkBudget) {
-        throw new Error(`baseWorkBudget (${explicitBaseWorkBudget}) and legacy workBudget (${legacyWorkBudget}) disagree`);
-    }
-    const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
+    const workBudget = explicitBaseWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
-    const schedulerMode = opts.schedulerMode === 'portfolio-experiment'
-        ? 'legacy-latency-portfolio-experiment'
-        : opts.schedulerMode === 'legacy' || opts.schedulerMode === undefined
-            ? 'production'
-            : opts.schedulerMode;
+    const schedulerMode = opts.schedulerMode ?? 'production';
+    if (!['production', 'legacy-latency-portfolio-experiment', 'static-portfolio'].includes(schedulerMode)) {
+        throw new Error(`solveLevel: unsupported schedulerMode ${JSON.stringify(schedulerMode)}; use a canonical scheduler mode`);
+    }
     if (schedulerMode === 'legacy-latency-portfolio-experiment') {
         return runLegacyLatencyPortfolioExperiment(level, opts, timeBudgetMs, yieldFn, solveLevel);
     }
@@ -361,8 +359,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // (non-strict) mode; pinned by orchestration.test.ts's own
         // 'strictTotalWorkBudget installs one remaining-work cap across every additive path' test.
         const probe = await runEarlyRepairSearch(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainSearchEarlyNodeBudget,
-            opts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride ?? opts.repairProbeAdaptiveBiasedBadnessGateOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
-            opts.earlyRepairSearchAdaptiveBiasedMinScaleOverride ?? opts.repairProbeAdaptiveBiasedMinScaleOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
+            opts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
+            opts.earlyRepairSearchAdaptiveBiasedMinScaleOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
         probeAttempts.push(...probe.attempts);
         shrunkBiasedTiers = probe.shrunkBiased ?? [];
         if (probe.solution) {

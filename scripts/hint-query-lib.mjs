@@ -7,7 +7,7 @@ import {
     originsForHint as sourcesForHint,
     provenanceDependencyStratum,
 } from './stress/provenance-source-taxonomy.mjs';
-import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
+import { normalizeHistoricalSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 import {
     HINT_DISCOVERY_REPLAY_BASES,
     classifyHintDiscoveryReplayability,
@@ -27,7 +27,7 @@ const sortedCounts = values => Object.fromEntries([...values.entries()]
 // stage id is still grouped/matched under its canonical form rather than as a separate value.
 function normalizeRetryTier(value) {
     if (value === null || value === undefined || value === '') return value;
-    try { return normalizeSolverStageId(value); } catch { return value; }
+    try { return normalizeHistoricalSolverStageId(value); } catch { return value; }
 }
 
 function addCount(map, value) {

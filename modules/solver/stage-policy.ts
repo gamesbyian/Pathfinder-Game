@@ -3,7 +3,7 @@
  * JS) so plain-`node`-invoked research tooling can import the single source of truth without a
  * TypeScript resolution step; re-exported here for every TypeScript consumer. */
 import { SOLVER_STAGE_IDS, normalizeSolverStageId } from './stage-id-normalization.mjs';
-export { SOLVER_STAGE_IDS, normalizeSolverStageId };
+export { SOLVER_STAGE_IDS, normalizeSolverStageId, normalizeHistoricalSolverStageId } from './stage-id-normalization.mjs';
 export type SolverStageId = typeof SOLVER_STAGE_IDS[number];
 export type SolverStagePolicyStatus = 'production-default' | 'opt-in' | 'experiment-only';
 export type SolverSchedulerPhase = 'prime' | 'probe' | 'main' | 'fallback' | 'retry' | 'legacy-latency-portfolio' | 'static-portfolio';

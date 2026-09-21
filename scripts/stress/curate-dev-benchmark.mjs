@@ -66,6 +66,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { levelBadness } from './rank-levels.mjs';
+import { normalizeSolverSweepReportInput } from '../solver-sweep-report-input.mjs';
 import { classifyOne } from './classify-stability.mjs';
 import { levelFeatures, levelDistance } from './features.mjs';
 
@@ -85,7 +86,7 @@ const OUT_FILE = args.get('--out') || 'reports/stress/dev-benchmark-corpus2.json
 
 const readJson = (p) => JSON.parse(readFileSync(path.resolve(ROOT, p), 'utf8'));
 
-const benchmark = readJson(BENCHMARK_FILE);
+const benchmark = normalizeSolverSweepReportInput(readJson(BENCHMARK_FILE), BENCHMARK_FILE);
 const witnessDivergence = readJson(WITNESS_DIVERGENCE_FILE);
 const corpus = readJson(CORPUS_FILE);
 
@@ -94,7 +95,7 @@ const witnessDivergenceById = new Map(witnessDivergence.results.map(r => [r.id, 
 
 // ─── Build per-level candidate records ───────────────────────────────────────
 
-const stabilityOf = (lv) => classifyOne(lv, benchmark.budgetMs);
+const stabilityOf = (lv) => classifyOne(lv, benchmark.summary.budgetMs);
 
 function witnessPairsOf(raw) {
     const pairs = raw?.stressMeta?.witnessSolution;

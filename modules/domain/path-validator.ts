@@ -5,34 +5,55 @@ import { MoveContext }      from './move-context.js';
 import { turnDirection }    from './geometry.js';
 import type { NormalizedLevel } from './types.js';
 
-// Validates a candidate path against a level, normalising coordinates as needed.
-// Returns { ok: true, path: [...keys] } or { ok: false, reason: '...' }.
-/** @param pathCoordsOrKeys raw nodes (keys, [x,y], or {x,y}) */
-export function validateCandidatePath(
-    level: NormalizedLevel,
-    pathCoordsOrKeys: any[],
-): { ok: true; path: number[] } | { ok: false; reason: string } {
-    if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2)
-        return { ok: false, reason: 'Path must contain at least 2 nodes.' };
+export type CandidatePathValidation =
+    { ok: true; path: number[] } | { ok: false; reason: string };
 
+/**
+ * Wire/import decoder only. Packed numeric keys pass through; [x,y] pairs are the historical
+ * 1-indexed wire form; {x,y} objects are already-normalized 0-indexed coordinates.
+ *
+ * Core referee logic must not infer or branch on these encodings. New internal callers should
+ * supply packed keys directly to validateCanonicalPath().
+ */
+export function decodeCandidatePath(pathCoordsOrKeys: any[]): number[] | null {
+    if (!Array.isArray(pathCoordsOrKeys)) return null;
     const toKey = (node: any): number => {
         if (typeof node === 'number') return node;
         if (Array.isArray(node) && node.length >= 2)
             return PACK(Number(node[0]) - 1, Number(node[1]) - 1);
-        // {x,y} objects are always already 0-indexed — unlike [x,y] pairs (1-indexed wire
-        // format), there is no ambiguous convention to guess here. A bounds-based heuristic
-        // previously tried to infer 1- vs 0-indexing from whether the coordinate overflowed the
-        // grid, but that guess is wrong exactly at the boundary: on an 8x8 grid, {x:8,y:8} is a
-        // valid 1-indexed corner, yet 8 is not `> w`, so the heuristic left it un-shifted and
-        // rejected a legitimate path. Representation determines indexing; it is never inferred.
+        // Representation determines indexing; never infer 0- vs 1-indexing from bounds.
         if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y))
             return PACK(Number(node.x), Number(node.y));
         return NaN;
     };
-
     const path = pathCoordsOrKeys.map(toKey);
-    if (path.some(k => !Number.isFinite(k)))
-        return { ok: false, reason: 'Invalid path coordinate format.' };
+    return path.some(k => !Number.isFinite(k)) ? null : path;
+}
+
+/**
+ * Compatibility/import adapter for raw candidate encodings. Historical/external path forms stop
+ * here; all game-rule validation runs through the packed-key-only canonical referee below.
+ */
+export function validateCandidatePath(
+    level: NormalizedLevel,
+    pathCoordsOrKeys: any[],
+): CandidatePathValidation {
+    if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2)
+        return { ok: false, reason: 'Path must contain at least 2 nodes.' };
+    const path = decodeCandidatePath(pathCoordsOrKeys);
+    if (!path) return { ok: false, reason: 'Invalid path coordinate format.' };
+    return validateCanonicalPath(level, path);
+}
+
+/** Validate one already-canonical packed-key path. No wire-coordinate decoding occurs here. */
+export function validateCanonicalPath(
+    level: NormalizedLevel,
+    path: number[],
+): CandidatePathValidation {
+    if (!Array.isArray(path) || path.length < 2)
+        return { ok: false, reason: 'Path must contain at least 2 nodes.' };
+    if (path.some(k => typeof k !== 'number' || !Number.isFinite(k)))
+        return { ok: false, reason: 'Invalid canonical path key.' };
     if (!level.gateKeys.includes(path[0]))
         return { ok: false, reason: 'Path must start on a gate.' };
 

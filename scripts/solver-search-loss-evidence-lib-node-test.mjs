@@ -61,7 +61,8 @@ function buildCapture(capsules) {
             configurationHash: CONFIG_HASH,
             levelBlind: true,
         },
-        population: { source: 'frozen-population.json', populationIdentity: POPULATION_IDENTITY, parentCount: 20 },
+        populationIdentity: POPULATION_IDENTITY,
+        population: { source: 'frozen-population.json', parentCount: 20 },
         capture: {
             captureProfileId: 'search-loss-v1',
             observerParityVerified: true,
@@ -79,6 +80,13 @@ assert.match(capsule.capsuleId, /^sha256:[0-9a-f]{64}$/u);
 
 const capture = buildCapture([capsule]);
 assert.equal(validateSearchLossCapture(capture), capture, 'valid minimal capture accepted');
+const legacyNestedCapture = {
+    ...capture,
+    populationIdentity: undefined,
+    population: { ...capture.population, populationIdentity: POPULATION_IDENTITY },
+};
+assert.equal(validateSearchLossCapture(legacyNestedCapture), legacyNestedCapture,
+    'historical nested population identity remains readable through the shared envelope decoder');
 
 assert.throws(() => validateSearchLossCapsule({ ...capsule, parentId: '' }), /parentId/, 'rejects malformed required identity');
 assert.throws(() => validateSearchLossCapsule({ ...capsule, workSpent: -1 }), /workSpent/, 'rejects invalid work');

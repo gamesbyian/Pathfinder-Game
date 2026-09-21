@@ -7,7 +7,7 @@
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, JointObligationObserver, BeamResearchObserver, ParityCapacityObserver, ParityPhaseDistanceObserver } from './types.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
-import { canonicalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
+import { canonicalAblationFeatureName, normalizeHistoricalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
 import { normalizeSolverStageId } from './stage-policy.js';
 import type { SolverStageId } from './stage-policy.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -157,21 +157,14 @@ export interface Attempt {
      *  consume the experimental reserved node slice. Never set when the experiment is disabled. */
     mainSearchLateReserve?: boolean;
 }
-/** The subset of Attempt's fields classifyAttemptTier actually reads — kept as its own minimal
- *  structural type (rather than requiring the full Attempt interface) so a duck-typed caller like
- *  hint-provenance.ts's AttemptLike can pass its own attempt objects straight through without
- *  needing every one of Attempt's required fields (gateKey/elapsedMs/allocatedBudgetMs/outcome).
- *  `stageId` is the canonical field classifyAttemptTier now reads first; every OTHER field here is
- *  a COMPATIBILITY-ONLY fallback for an attempt object that predates `stageId` (historical/
- *  persisted records, or a duck-typed test fixture) — see classifyAttemptTier's own doc. */
-export interface AttemptTierFlags {
+/** Minimal historical attempt shape accepted only by compatibility readers. */
+export interface HistoricalAttemptTierFlags {
     stageId?: SolverStageId | string;
     repairLateProbe?: boolean;
     repairElitePrefixDfsRetry?: boolean;
     mcNeighborBudgetRetry?: boolean;
     connectivityAxisExhaustedRetry?: boolean;
     coarseStateNearTieRetentionRetry?: boolean;
-    /** @deprecated Historical attempt telemetry field accepted on read only. */
     dedupNearTieRetry?: boolean;
     admissibleOrderNonDefaultRetry?: boolean;
     admissibleOrder?: boolean;
@@ -180,39 +173,25 @@ export interface AttemptTierFlags {
     goalAttractionDisabledRetry?: boolean;
 }
 
-/** Maps a canonical `stageId` to classifyAttemptTier's own (pre-existing, string-literal) label
- *  vocabulary, for the two stages where they differ: `main-search` was always labeled 'main-ladder'
- *  here, and a repair-shrink-recovery attempt was always grouped under the broader
- *  'early-repair-search' label. Every other stageId already equals its own label. Kept as its own lookup
- *  rather than changing the label vocabulary itself, since hint-provenance.ts's `forcing.retryTier`
- *  and this file's own lifecycle telemetry both persist these exact strings. */
+/** Maps canonical stage identity onto the persisted provenance/lifecycle tier-label vocabulary. */
 const STAGE_ID_TO_TIER_LABEL: Partial<Record<SolverStageId, string>> = {
     'main-search': 'main-ladder',
     'repair-shrink-recovery': 'early-repair-search',
 };
 
-/** Which ladder tier an attempt actually belongs to. Canonical policy identity first: an attempt
- *  carrying `stageId` (every attempt produced by the CURRENT solver — Attempt.stageId is a
- *  required field) is classified from that alone via STAGE_ID_TO_TIER_LABEL, one canonical read,
- *  no branching on internal policy state. The legacy boolean chain below only ever runs for an
- *  attempt WITHOUT `stageId` — compatibility only (historical/persisted records predating it, or a
- *  duck-typed fixture) — most-specific-first, because several retry tiers ALSO set `repair`/
- *  `admissibleOrder` on their attempts (they rerun repairConfigs/admissibleOrderConfigs), so their
- *  own distinguishing field must be checked before the broader bucket it would otherwise fall
- *  into. Do not add a new tier's policy decision to this fallback chain — give it a stageId
- *  instead (stage-policy.ts) and let this function read that.
- *
- *  The single shared source of truth for "which tier won" — used both for lifecycle-telemetry
- *  labeling (this file's own `finish()`) and for hint provenance
- *  (hint-provenance.ts's `deriveSolveAttemptInfo`, which stores this as `forcing.retryTier` so a
- *  persisted hint can be told apart from an ordinary main-ladder/repair-fallback/admissible-order-fallback
- *  find — see docs/solver-optimization-workstreams.md's Priority 0). */
-export function classifyAttemptTier(attempt: AttemptTierFlags): string {
-    if (attempt.stageId) {
-        const stageId = normalizeSolverStageId(attempt.stageId);
-        return STAGE_ID_TO_TIER_LABEL[stageId] ?? stageId;
-    }
-    // Compatibility-only fallback — see this function's own doc comment.
+/** Current solver classification. Current attempts must carry canonical stageId. */
+export function classifyAttemptTier(attempt: Pick<Attempt, 'stageId'> | { stageId: SolverStageId | string }): string {
+    if (!attempt?.stageId) throw new Error('classifyAttemptTier requires canonical stageId');
+    const stageId = normalizeSolverStageId(attempt.stageId);
+    return STAGE_ID_TO_TIER_LABEL[stageId] ?? stageId;
+}
+
+/**
+ * Historical attempt-record normalizer. This is the ONLY owner of pre-stageId boolean fallbacks.
+ * New solver logic must call classifyAttemptTier() and must not add policy decisions here.
+ */
+export function classifyHistoricalAttemptTier(attempt: HistoricalAttemptTierFlags): string {
+    if (attempt?.stageId) return classifyAttemptTier({ stageId: attempt.stageId });
     return attempt.repairLateProbe ? 'late-repair-search'
         : attempt.repairElitePrefixDfsRetry ? 'repair-elite-prefix-dfs-retry'
             : attempt.mcNeighborBudgetRetry ? 'must-cross-neighbor-prune-disabled-retry'
@@ -265,18 +244,14 @@ export interface SolveOpts {
      *  Under historical production semantics this is NOT necessarily a whole-solve cap: additive
      *  fallback/retry stages may receive fresh work beyond it. */
     baseWorkBudget?: number;
-    /** @deprecated Compatibility name for baseWorkBudget. If both are supplied they must match.
-     *  Kept because existing workflows/artifacts use this public field extensively. If neither is
-     *  supplied, legacy ms-shaped callers normalize once through budget-units.ts. */
-    workBudget?: number;
-    /** Experiment-only whole-solve enforcement: turns `workBudget` from the legacy scheduler's base
+    /** Experiment-only whole-solve enforcement: turns `baseWorkBudget` from the production scheduler's base
      * allocation into an immutable total work cap. Omitted/false preserves production additive tiers. */
     strictTotalWorkBudget?: boolean;
     /** Opt-in diagnostic attempt-ceiling fields. Omitted keeps ordinary result objects unchanged. */
     attemptBudgetTelemetry?: boolean;
     /** Opt-in per-technique lifecycle/progress summary for experiment artifacts. */
     lifecycleTelemetry?: boolean;
-    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'legacy' | 'portfolio-experiment' | 'static-portfolio';
+    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio';
     /** Only read when schedulerMode === 'static-portfolio'. An ordered technique list sharing one
      *  cumulative work budget, each technique's own share additionally boundable by a flat or
      *  per-key cap — see runStaticPortfolio's own header comment and `2026-09-03-fixed-cap-
@@ -330,8 +305,6 @@ export interface SolveOpts {
      *  persisted or exposed by Solver's facade; absent in every production caller. */
     jointObligationObserver?: JointObligationObserver;
     legacyLatencyPortfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
-    /** @deprecated Historical option name; read for compatibility, never emitted. */
-    portfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
     /** Overrides REPAIR_ADDITIVE_BUDGET_MULTIPLIER for this solve only — offline batch tooling's cost
      *  control (see docs/solver-architecture.md's cost-gotcha note). A DEDICATED top-level option,
      *  deliberately NOT an ablation flag: every existing ablation-gated strategy toggle in this
@@ -363,16 +336,12 @@ export interface SolveOpts {
      *  review-controller.ts's interactive call sites) preserves GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_
      *  FRACTION exactly. */
     goalAttractionDisabledRetryBudgetFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    attractionDiversityBudgetFractionOverride?: number;
     /** Overrides COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as goalAttractionDisabledRetryBudgetFractionOverride above (NOT
      *  an ablation flag; a batch-tooling caller may want to isolate this pass's own cost). Undefined
      *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
      *  preserves COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION exactly. */
     coarseStateNearTieRetentionRetryBudgetFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    dedupNearTieRetryBudgetFractionOverride?: number;
     /** Overrides COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION for this solve only — same dedicated
      *  top-level-option shape as admissibleOrderNodeReserveFractionOverride above, but NOT the same
      *  mechanism as of REVISION 2 (see the constant's own comment): this fraction is ADDITIVE headroom
@@ -380,8 +349,6 @@ export interface SolveOpts {
      *  ceiling to plain `nodeBudget` (no extra headroom at all). Undefined (production default)
      *  preserves the constant exactly. */
     coarseStateNearTieRetentionRetryNodeReserveFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    dedupNearTieRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION for this solve only — same
      *  dedicated top-level-option shape as coarseStateNearTieRetentionRetryBudgetFractionOverride above (NOT an
      *  ablation flag). Undefined (production default, and solver-controller.ts/review-controller.ts's
@@ -490,21 +457,15 @@ export interface SolveOpts {
      *  the pre-reserve behavior (the diversity pass shares its ceiling with the repair fallback loop
      *  undivided). Undefined (production default) preserves the constant exactly. */
     goalAttractionDisabledRetryNodeReserveFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    attractionDiversityNodeReserveFractionOverride?: number;
     /** Override for the ordinary main-search late-suffix reserve fraction (production default-ON,
      *  see MAIN_SEARCH_LATE_RESERVE_FRACTION). Only takes effect when a finite `nodeBudget` is set
      *  (offline batch tooling) — never affects interactive Play/Editor/Review solves. The fraction
      *  is withheld from the repair probe and the main loop's early config prefix, then becomes
      *  available to the final N ordinary configs without reordering them. */
     mainSearchLateReserveFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    mainLoopLateReserveFractionOverride?: number;
     /** Number of final ordinary configs eligible for the experimental reserve. See the fraction
      *  override above. Values are clamped to the main config count; 0 disables the reserve. */
     mainSearchLateReserveConfigCountOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    mainLoopLateReserveConfigCountOverride?: number;
     /** Override for EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE for this solve only — same
      *  dedicated-override shape as the reserve-fraction overrides above (NOT an ablation flag: the
      *  gate is read unconditionally inside the STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET branch,
@@ -516,16 +477,12 @@ export interface SolveOpts {
      *  (every production/interactive caller) preserves EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE
      *  exactly. */
     earlyRepairSearchAdaptiveBiasedBadnessGateOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    repairProbeAdaptiveBiasedBadnessGateOverride?: number;
     /** Override for EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE for this solve only — same shape and
      *  rationale as earlyRepairSearchAdaptiveBiasedBadnessGateOverride above; kept as a separate field
      *  (not folded into one object) to match every other override in this file being a single
      *  scalar. Undefined (every production/interactive caller) preserves
      *  EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE exactly. */
     earlyRepairSearchAdaptiveBiasedMinScaleOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairAdditiveBudgetMultiplierOverride,
      *  goalAttractionDisabledRetryBudgetFractionOverride, coarseStateNearTieRetentionRetryBudgetFractionOverride,
      *  admissibleOrderBudgetFractionOverride, admissibleOrderNonDefaultRetryBudgetFractionOverride,
@@ -720,17 +677,16 @@ const ABLATION_NON_FLAG_KEYS = new Set(['ATTEMPT_ORDER', '_randomSeed']);
 // the real culprit was `enable_flags=STRATEGY_REPAIR_TURN_BIAS` silently also enabling
 // STRATEGY_REPAIR_ELITE_PREFIX_DFS (independently validated net-negative) via exactly this gap.
 // See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md.
-export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
+function normalizeAblationConfigWith(
+    raw: AblationConfig | null | undefined,
+    normalizeFeatureName: (featureName: string) => string,
+): AblationConfig | null {
     if (raw == null) return null;
 
-    // Canonicalize historical feature aliases once at the boundary. This is the solver-wide
-    // dual-read/single-write seam: old persisted configs remain readable, while enumeration/spread
-    // of the normalized config exposes only canonical names. Conflicting old+new spellings fail
-    // loudly rather than making precedence depend on object key order.
     const canonicalRaw: AblationConfig = {};
     for (const [rawKey, value] of Object.entries(raw)) {
         if (value === undefined) continue;
-        const key = canonicalAblationFeatureName(rawKey);
+        const key = ABLATION_NON_FLAG_KEYS.has(rawKey) ? rawKey : normalizeFeatureName(rawKey);
         if (Object.prototype.hasOwnProperty.call(canonicalRaw, key) && canonicalRaw[key] !== value)
             throw new Error(`Conflicting ablation values for canonical feature ${key}`);
         canonicalRaw[key] = value;
@@ -755,4 +711,14 @@ export function normalizeAblationConfig(raw: AblationConfig | null | undefined):
             return Reflect.ownKeys(canonicalRaw);
         },
     });
+}
+
+/** Current solver/config boundary: only canonical feature names are accepted. */
+export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
+    return normalizeAblationConfigWith(raw, canonicalAblationFeatureName);
+}
+
+/** Historical/persisted config decoder. Retired feature names normalize once at artifact ingress. */
+export function normalizeHistoricalAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
+    return normalizeAblationConfigWith(raw, normalizeHistoricalAblationFeatureName);
 }

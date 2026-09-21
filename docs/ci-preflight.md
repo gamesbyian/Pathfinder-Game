@@ -60,6 +60,14 @@ When touching these surfaces, follow the authoring rule before relying on the co
 
 This table is deliberately a router, not a second source of truth. The linked authority and executable validator own the detailed rule.
 
+## Validator fixture discipline
+
+When testing layered validators, start from one known-valid canonical fixture and mutate **one semantic fault at a time**. The fixture should satisfy every earlier validation layer so the test reaches the invariant it claims to exercise.
+
+Prefer stable machine paths/codes or the narrow semantic phrase owned by that invariant over incidental full first-error prose. If strengthening an earlier validator changes which unrelated error fires first, repair the fixture rather than weakening either validator.
+
+This applies especially to provenance, manifest, reconciliation, schema, and evidence-integrity tests where several independent invariants are checked in sequence.
+
 ## Deterministic failure triage
 
 When Actions fails, first classify the failure:

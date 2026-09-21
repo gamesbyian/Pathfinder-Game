@@ -1,9 +1,9 @@
-import { normalizeSolverStageId, solverStageIdentityTerms } from './stage-id-normalization.mjs';
+import { normalizeHistoricalSolverStageId, solverStageIdentityTerms } from './stage-id-normalization.mjs';
 
 /**
  * Canonical solver attempt-identity parser/formatters shared by live AttemptConfig and persisted
- * Attempt consumers. New writers emit structured keys; historical compact keys remain accepted
- * input syntax so frozen evidence stays readable without rewriting it.
+ * Attempt consumers. New/current input uses structured keys only. Historical compact keys remain
+ * readable through the explicitly historical decoder so frozen evidence need not be rewritten.
  *
  * Canonical grammar:
  *   dfs|score=<profile>|bias=<bias-or-none>
@@ -38,7 +38,8 @@ const legacySearch = new RegExp('^(dfs|beam):(' + ID + ')(?:\\/(' + ID + '))?(?:
 const nullableBias = value => value === 'none' ? null : value;
 
 /**
- * Syntax-only dual-read parser. Vocabulary existence is checked by the policy-aware adapter.
+ * Canonical current parser. Vocabulary existence is checked by the policy-aware adapter.
+ * Historical compact spellings are intentionally rejected here.
  * @param {string} key
  * @returns {AttemptIdentityFields}
  */
@@ -77,7 +78,24 @@ export function parseAttemptIdentityKey(key) {
         };
     }
 
-    m = legacyAdmissible.exec(key);
+    throw new Error('"' + key + '" is not a valid canonical attempt identity.');
+}
+
+/**
+ * Historical/persisted decoder. Accepts canonical input too, but owns every compact legacy grammar.
+ * New CLI/config input must call parseAttemptIdentityKey() instead.
+ *
+ * @param {string} key
+ * @returns {AttemptIdentityFields}
+ */
+export function parseHistoricalAttemptIdentityKey(key) {
+    try {
+        return parseAttemptIdentityKey(key);
+    } catch (canonicalError) {
+        if (typeof key !== 'string' || key.length === 0) throw canonicalError;
+    }
+
+    let m = legacyAdmissible.exec(key);
     if (m) {
         const noTieBreak = m[1] === 'none';
         return {
@@ -109,7 +127,7 @@ export function parseAttemptIdentityKey(key) {
         };
     }
 
-    throw new Error('"' + key + '" is not a valid canonical or legacy attempt identity.');
+    throw new Error('"' + key + '" is not a valid canonical or historical attempt identity.');
 }
 
 /** @param {AttemptIdentityFields} fields @returns {string} */
@@ -140,7 +158,7 @@ export function formatAttemptIdentityKey(fields) {
 
 /** @param {string} key @returns {string} */
 export function normalizeAttemptIdentityKey(key) {
-    return formatAttemptIdentityKey(parseAttemptIdentityKey(key));
+    return formatAttemptIdentityKey(parseHistoricalAttemptIdentityKey(key));
 }
 /** @param {AttemptIdentityFields} fields @returns {string} */
 function formatLegacyAttemptIdentityKey(fields) {
@@ -169,7 +187,7 @@ function formatLegacyAttemptIdentityKey(fields) {
  * @returns {readonly string[]}
  */
 export function attemptIdentityTerms(key) {
-    const fields = parseAttemptIdentityKey(key);
+    const fields = parseHistoricalAttemptIdentityKey(key);
     return Object.freeze([...new Set([
         formatAttemptIdentityKey(fields),
         formatLegacyAttemptIdentityKey(fields),
@@ -203,7 +221,7 @@ export function normalizeAttemptActionKey(key) {
         throw new Error('Attempt action identity must be a non-empty string.');
     const separator = key.indexOf('|');
     if (separator <= 0) throw new Error('Attempt action identity must contain a stage and config identity.');
-    const stageId = normalizeSolverStageId(key.slice(0, separator));
+    const stageId = normalizeHistoricalSolverStageId(key.slice(0, separator));
     let configKey = key.slice(separator + 1);
     let seedSalt;
     const seedMatch = /\|seedSalt=(-?\d+)$/.exec(configKey);
@@ -211,7 +229,7 @@ export function normalizeAttemptActionKey(key) {
         seedSalt = Number(seedMatch[1]);
         configKey = configKey.slice(0, seedMatch.index);
     }
-    const fields = parseAttemptIdentityKey(configKey);
+    const fields = parseHistoricalAttemptIdentityKey(configKey);
     if (seedMatch && !fields.repair)
         throw new Error('seedSalt is only valid on repair attempt action identities.');
     return formatAttemptActionKey({ ...fields, stageId, ...(seedSalt === undefined ? {} : { seedSalt }) });

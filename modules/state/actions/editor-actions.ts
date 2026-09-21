@@ -3,6 +3,7 @@
 import { resolveEngineState } from './shared.js';
 import type { StateOrEngine } from './shared.js';
 import type { EditorState, FalseGoalTriggerScanState } from '../../editor/editor-model.js';
+import { setLevelHintRecords, upgradeLegacyHints } from '../../domain/hint-types.js';
 
 // The editor working level and dragged object are the editor boundary's deliberately-loose
 // shapes; reference the EditorState contract's field types rather than re-declaring them, so
@@ -63,20 +64,17 @@ export function setEditorWorkingHints(stateOrEngine: StateOrEngine, hints: numbe
     const engineState = resolveEngineState(stateOrEngine);
     const workingLevel = engineState?.editor?.workingLevel;
     if (!workingLevel) return null;
-    workingLevel.hints = hints;
+    setLevelHintRecords(workingLevel, upgradeLegacyHints(hints));
     return workingLevel.hints;
 }
 
-/** Canonical Hint[] (path + provenance) mirror of setEditorWorkingHints's plain-path array — see
- *  domain/hint-types.ts. Kept as a parallel field (not folded into .hints itself) so every
- *  existing consumer that treats workingLevel.hints as plain paths (dedup/novelty/UI cycling)
- *  keeps working unchanged; only submission reconciles the two via reconcileHints(). */
+/** Canonical editor hint mutation boundary. Hint records are authoritative; the plain-path
+ * projection is derived atomically so editor state cannot carry two independently-written views. */
 export function setEditorWorkingHintRecords(stateOrEngine: StateOrEngine, hintRecords: import('../../domain/hint-types.js').Hint[] = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const workingLevel = engineState?.editor?.workingLevel;
     if (!workingLevel) return null;
-    workingLevel.hintRecords = hintRecords;
-    return workingLevel.hintRecords;
+    return setLevelHintRecords(workingLevel, hintRecords);
 }
 
 export function resetEditorWorkingGrid(stateOrEngine: StateOrEngine) {
@@ -95,8 +93,8 @@ export function resetEditorWorkingGrid(stateOrEngine: StateOrEngine) {
         flippingFilterMap: new Map(),
         portalMap: new Map(),
         portalVisuals: [],
-        hints: []
     });
+    setLevelHintRecords(workingLevel, []);
     return workingLevel;
 }
 

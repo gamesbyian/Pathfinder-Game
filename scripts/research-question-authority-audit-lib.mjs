@@ -16,6 +16,34 @@ const LIVE_AUTHORITY_PATHS = [
 const PATH_FIELDS = ['answeredBy', 'constrainedBy'];
 const pathLike = value => typeof value === 'string' && /^(?:docs|reports|scripts)\//u.test(value);
 
+
+export function summarizeQuestionGenealogyVsImplication(registry) {
+    const implies = new Set();
+    const triggered = new Set();
+    for (const question of registry?.questions ?? []) {
+        for (const target of question.implies ?? []) {
+            implies.add(`${question.id}->${target}`);
+        }
+        for (const source of question.triggeredBy ?? []) {
+            triggered.add(`${source}->${question.id}`);
+        }
+    }
+    const mirrored = [...implies].filter(edge => triggered.has(edge)).sort();
+    const implicationOnly = [...implies].filter(edge => !triggered.has(edge)).sort();
+    const triggerOnly = [...triggered].filter(edge => !implies.has(edge)).sort();
+    return {
+        implicationEdges: implies.size,
+        triggerEdges: triggered.size,
+        mirroredEdges: mirrored,
+        implicationOnlyEdges: implicationOnly,
+        triggerOnlyEdges: triggerOnly,
+        interpretation: {
+            implication: 'authored scientific/logical bearing',
+            triggeredBy: 'authored research genealogy; not an inverse of implication',
+        },
+    };
+}
+
 export function auditResearchQuestionAuthorities(root = process.cwd()) {
     const registry = loadResearchQuestionRegistry(root);
     const errors = validateResearchQuestionRegistry(registry);
@@ -103,6 +131,7 @@ export function auditResearchQuestionAuthorities(root = process.cwd()) {
     return {
         schemaVersion: 1,
         questionCount: registry.questions.length,
+        relationTopology: summarizeQuestionGenealogyVsImplication(registry),
         errorCount: errors.length,
         warningCount: warnings.length,
         errors,

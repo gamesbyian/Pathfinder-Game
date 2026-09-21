@@ -2,231 +2,169 @@
 # Solver capability invention program
 
 > **Status:** active portfolio authority for acquiring solver capabilities that do not already exist.
-> **Priority owner:** [solver optimization workstreams](solver-optimization-workstreams.md).
-> **Semantic map:** [reasoning-capability atlas](solver-reasoning-capability-atlas.md).
+> **Priority:** [solver optimization workstreams](solver-optimization-workstreams.md).
+> **Semantic map:** [reasoning capability atlas](solver-reasoning-capability-atlas.md).
 > **Failure diagnosis:** [first-loss causal taxonomy](solver-first-loss-causal-taxonomy.md).
 > **Deferred descendants:** [solver future work](solver-future-work.md).
 
 ## Purpose
 
-The solver has mature machinery for exploiting capabilities it already owns: routing, staged budgets, retries, beam/DFS/repair composition, exposure, and matched-work evaluation. As that harvest queue contracts, solve growth must not depend on inventing ever-finer ways to redeploy the same reasoning.
+As harvest opportunities shrink, solve growth must also come from new semantic operations: new facts, inferences, composition, revision, search objects, or useful fact transport.
 
-This program makes **capability acquisition** an explicit research objective.
-
-A capability is not a strategy flag, scorer profile, stage, or retry shell. It is a semantic operation the solver can perform: represent a completion-relevant fact, derive a new conclusion, preserve knowledge, compose facts, revise a causal commitment, manipulate a new search object, communicate a fact between search processes, or convert knowledge into a decision.
-
-The goal is still the repository's ordinary goal: **new cold level-blind solves at acceptable machine-independent work**. Invention is not exempt from economics.
+The goal remains **new cold level-blind solves at acceptable machine-independent work**. Invention is not exempt from economics.
 
 ## Work classification
 
-Every new solver proposal should be classified before implementation.
+Classify proposals before implementation.
 
-### HARVEST
+- **HARVEST:** same reasoning, different exposure/allocation/order/dose/retry/retention.
+- **EXTENSION:** an existing semantic primitive gains genuinely new scope or consequences.
+- **INVENTION:** the solver gains a reasoning operation it previously lacked.
 
-The solver already possesses the relevant reasoning operation; the proposal changes exposure, placement, allocation, scheduling, dose, restart, retention policy, or composition.
-
-Examples: protecting an existing late action from starvation; exposing an existing beam family to a missing archetype; dead-last retry of an existing treatment.
-
-Harvest work remains valuable when evidence nominates recoverable latent capability. It should not automatically expand merely because an additional tuning axis exists.
-
-### EXTENSION
-
-An existing semantic primitive gains genuinely new scope, inputs, or consequences.
-
-Examples: extending a sound propagation rule across a mechanic interaction it previously could not reason about; deriving a new actionable consequence from an existing graph invariant.
-
-Extension enlarges reasoning coverage even when the underlying family already exists.
-
-### INVENTION
-
-The solver gains a semantic operation it previously lacked.
-
-Examples include:
-- representing mutually exclusive completion regimes;
-- bounded per-instance joint-feasibility queries;
-- reusable causal failure explanations;
-- selective revision/backjumping from a causal explanation;
-- backward or region-interface reasoning;
-- preserving complete global structure while locally repairing it;
-- solve-local typed fact handoff between search processes;
-- an information-gathering action whose value is knowledge rather than immediate path progress.
-
-New orchestration around unchanged intelligence is HARVEST, not INVENTION.
+A stage, scorer, threshold, width, or retry shell is not invention unless the semantic operation changes.
 
 ## Portfolio rule
 
-A shrinking optimization queue is not evidence that solver idea-space is exhausted. It is evidence that the currently named harvest opportunities are being consumed.
+Maintain two fronts:
+1. **harvest:** cheap strongly nominated recovery of known capability;
+2. **acquisition:** diagnose misses and obtain missing semantic operations.
 
-Active solver research therefore maintains two concurrent fronts:
-
-1. **Harvest front:** run cheap, strongly nominated experiments that may recover already-demonstrated capability.
-2. **Acquisition front:** diagnose current misses and acquire missing semantic operations.
-
-Harvest descendants do not inherit priority merely because they are implementation-ready. A weakly nominated tuning experiment competes with a well-grounded acquisition probe.
-
-As harvest experiments become null, displacement-only, or pure repricing, capacity should move toward acquisition rather than manufacturing new tuning descendants.
+Do not manufacture tuning descendants merely to keep an execution queue full. A well-supported acquisition probe can outrank a weak harvest tweak.
 
 ## Demand before architecture
 
-Do not begin capability acquisition by choosing an algorithm.
+Start from a current miss or contrast, not an algorithm name. Ask which capability is absent:
 
-Begin with a current residual miss and ask:
+- **representation:** missing completion-relevant distinction;
+- **inference:** useful conclusion cannot be derived;
+- **composition:** facts exist individually but not jointly;
+- **persistence:** useful knowledge is repeatedly forgotten;
+- **action:** a known distinction lacks a consumer;
+- **revision:** failure cannot identify the responsible earlier commitment;
+- **communication:** another search process must rediscover a known fact;
+- **search object:** forward prefix is the wrong intermediate object;
+- **information:** bounded work could buy knowledge rather than path extension.
 
-1. **Representation:** what completion-relevant distinction is absent from solver state or preprocessing?
-2. **Inference:** what conclusion would materially help here that the solver cannot derive?
-3. **Composition:** what facts exist individually but cannot be reasoned about jointly?
-4. **Persistence:** what useful knowledge is derived and then forgotten?
-5. **Action:** what known distinction has no pruning/ranking/retention/allocation/revision consumer?
-6. **Revision:** can the solver identify which earlier commitment caused failure?
-7. **Communication:** can another search process reuse the fact without rediscovery?
-8. **Search object:** is a valid forward prefix the wrong intermediate object for this miss?
-9. **Information:** could bounded work profitably buy knowledge instead of blindly extending search?
+Record a capability demand without forcing a favored implementation.
 
-Record the answer as a **capability demand**, not as an algorithm recommendation.
+## Acquisition instruments
 
-## Primary acquisition instrument: first-loss demand sampling
+### First-loss demand sampling
 
-[The first-loss causal taxonomy](solver-first-loss-causal-taxonomy.md) already defines the causal classes F0-F14. What is missing is prevalence and conversion from diagnosed loss to capability demand.
+Use [the first-loss taxonomy](solver-first-loss-causal-taxonomy.md) and existing traces, failure response, exact/reference labels, support extinction, continuation and counterfactual evidence.
 
-Run a stratified sample of current unsolved parents through the taxonomy using existing evidence wherever possible: production traces, compact failure response, exact/reference labels, sibling assets, known-support extinction, treatment participation, continuation evidence, counterfactual replay, and canonical validation.
+For each sampled parent record:
+- population/provenance and independent unit;
+- earliest supported first-loss class or unresolved earlier class;
+- evidence strength;
+- minimal counterfactual intervention when known;
+- HARVEST vs EXTENSION/INVENTION;
+- missing semantic operation;
+- smallest probe;
+- whether demand recurs across independent parents.
 
-For each parent, record:
+Do not assign an invention when causality is unresolved.
 
-- population and provenance;
-- earliest resolved first-loss class, or `UNRESOLVED_EARLIER_CLASS`;
-- evidence strength and unresolved earlier alternatives;
-- minimal counterfactual intervention when established;
-- work/allocation explanation if HARVEST suffices;
-- otherwise the missing semantic operation in atlas dimensions;
-- smallest probe that could test whether that operation matters;
-- whether the demand is parent-specific, mechanism-family-specific, or recurrent across independent parents.
+Machine register: `data/stress/capability-invention-demand.json`.
 
-Do not force a capability label when causality is unresolved.
+### Response-guided invention
 
-The durable machine-readable register is `data/stress/capability-invention-demand.json`, validated against `docs/solver-capability-invention-demand.schema.json`.
+Use [response-guided capability invention](solver-response-guided-capability-invention.md) when techniques or decisions disagree on the same population.
+
+Freeze contrast identities, describe them with legal current-input facts, seek the smallest exact explanation, then estimate consumer value from retained decisions before live implementation.
+
+First-loss asks **what operation is missing at a causal failure boundary?** Response-guided invention asks **what exact distinction explains why existing capabilities behave differently?**
+
+Both feed the same ladder.
 
 ## Acquisition ladder
 
-A candidate capability climbs this ladder:
+### 0. FORMALIZATION / REDUNDANCY
+State the claim, mechanic scope and smallest novelty witness against current reasoning. Exact premises use [small exact projections](solver-small-exact-projections-program.md).
 
 ### 1. EXISTENCE
-
-Show that the proposed fact/relation/failure phenomenon occurs on real hard states.
-
-A forensic anecdote may nominate the premise. It does not earn production work.
+Show the fact/relation/failure occurs on real hard states.
 
 ### 2. DISTINCTION
+Show it distinguishes states or decisions current production reasoning treats equivalently or inadequately.
 
-Show that the capability distinguishes states or decisions that existing production machinery treats equivalently or inadequately.
+### 3. CONSUMER ORACLE
+Before behavior-changing code, use retained decisions/candidate sets where possible:
 
-If production already makes the same decision, the tested consumer stops even when the semantic fact is real.
+> If the fact were free at this seam, how many real decisions could it possibly change?
 
-### 3. ACTION
+A zero-change upper bound stops that consumer without killing the semantic premise.
 
-Identify the smallest decision seam that could use the distinction: prune, retain, order, query, revise, decompose, hand off, route, or allocate.
+### 4. ACTION
+Choose the smallest consumer: prune, retain, order, query, revise, decompose, hand off, route, or allocate. Prefer production-inert observation first.
 
-Prefer a production-inert observer before a broad subsystem.
+### 5. SOLVES
+Test the smallest consumer on a frozen population with confirmation proportional to selection pressure.
 
-### 4. SOLVES
+### 6. ECONOMICS
+Compare at matched machine-independent work.
 
-Test the smallest consumer on a frozen population with independent confirmation appropriate to selection pressure.
-
-### 5. ECONOMICS
-
-Compare at matched machine-independent work. A real semantic capability can still be uneconomic in a particular placement or implementation.
-
-A negative at stages 2-5 closes only the tested form/consumer/economics contract. Preserve the parent semantic premise unless the evidence actually falsifies it.
+A negative at stages 2-6 closes only the tested form/consumer/economics contract unless the premise itself was falsified. Apply the operating model's sibling-form checkpoint before implementation so the first positive or negative does not define the whole family.
 
 ## Capability probe contract
 
-When practical, new reasoning probes should expose a small bounded interface conceptually equivalent to:
+Where practical expose:
 
-```text
-current state -> YES | NO | UNKNOWN
-             + optional witness/certificate
-             + work spent
-             + dependency/support metadata
-```
+`current state -> YES | NO | UNKNOWN + witness/certificate + work + support metadata`
 
-This is not a mandate for one generic implementation. It is a research contract that makes unlike inventions comparable and allows bounded exact or conservative procedures to fail safely with `UNKNOWN`.
+This is a research contract, not one universal implementation. Only sound `NO` may hard-prune unless a weaker consumer is explicitly declared.
 
-Natural users include:
-
-- joint-obligation feasibility;
-- future-intersection realizability;
-- topology consequences;
-- separator-side feasibility;
-- excursion/order commutativity;
-- causal conflict/core derivation;
-- bounded backward/interface reachability.
-
-Only sound `NO` may justify hard pruning unless a weaker consumer is explicitly declared.
+Natural users include joint-obligation feasibility, topology/separator consequences, future-intersection realizability, commutativity, conflict/core derivation and bounded backward/interface reachability.
 
 ## Initial acquisition themes
 
-These are semantic demand families, not preauthorized architectures.
+These are semantic families, not authorized architectures.
 
-### Joint future feasibility
+- **Joint future feasibility:** move beyond individually feasible obligations toward bounded joint consequences.
+- **Failure explanation / selective revision:** retain compact causes that prevent repeated dead work or identify a smaller revision locus.
+- **Completion regimes / regime-aware retention:** preserve strategically distinct viable futures rather than generic diversity.
+- **Alternative search objects:** relaxed complete candidates, region/interface plans, backward abstractions or other earned representations.
+- **Topology/parity/invariants:** advance only from exact consequence to decision-bearing distinction.
+- **Small exact projections:** use [the projection program](solver-small-exact-projections-program.md); parity is the worked example, cut/region flow the first successor.
+- **Solve-local knowledge:** measure repeated derivation before building persistence/transport.
 
-Production has strong individual necessary conditions and narrow joint propagators, but weak general reasoning about whether several individually feasible obligations can coexist.
+## Rebirth after a negative
 
-Seek per-instance bounded consequences rather than another universal low-dimensional descriptor.
+Before archival, explicitly consider:
+1. a different consumer;
+2. a materially different representation;
+3. a different response contrast or decision seam.
 
-### Failure explanation and selective revision
-
-Search often discovers eventual failure without retaining a causal explanation. Look for compact current-instance causes that can prevent rediscovery or identify a smaller revision locus than ordinary backtracking/restart.
-
-Do not build a generic blackboard, clause learner, or backjumper before recurring useful facts exist.
-
-### Completion regimes and regime-aware retention
-
-Test whether strategically distinct completion futures are being conflated by scalar ranking or state retention. The object of interest is coverage of viable completion regimes, not generic feature diversity.
-
-### Alternative search objects
-
-Continue cheap falsifiers for objects other than valid forward prefixes: relaxed complete candidates, region/interface plans, backward abstractions, or other representations. Earn each architecture from a changed search geometry, not from conceptual attractiveness.
-
-### Topology, parity, and other invariants
-
-Observers matter only if they expose a decision-bearing distinction. Advance from invariant -> consequence -> smallest consumer. Avoid decorative descriptors.
-
-### Solve-local knowledge
-
-Measure repeated derivation before building persistence. A capability demand exists when the same sound fact or stronger equivalent is repeatedly paid for and could be reused across branches, attempts, stages, or search paradigms.
+This does not reopen the tested form. Any rebirth needs a new explicit contract.
 
 ## What not to do
 
-- Do not rename a new stage or retry as a new capability.
-- Do not generate broad algorithm wishlists detached from current misses.
-- Do not escalate from one forensic positive directly to architecture.
-- Do not require cross-level recurrence of the *output* of a generic current-input procedure; require procedure generalization, soundness, decision value, and economics.
-- Do not treat a shrinking active queue as a stop condition for premise generation.
-- Do not reopen closed scorer/width/retry forms merely to keep an execution queue populated.
-- Do not use known identities, answers, hints, or historical outcomes as cold production routing inputs.
+- Do not rename orchestration as intelligence.
+- Do not build architecture from one forensic positive.
+- Do not require identical cross-level outputs from a generic per-instance proof procedure.
+- Do not reopen closed scorer/width/retry forms merely to populate the queue.
+- Do not use known identities, hints, winners, historical per-level outcomes/cost, or capability membership as cold policy inputs.
+- Do not build a generic blackboard, learner, backjumper, exact subsystem, or framework before repeated decision-bearing demand exists.
 
 ## Promotion into the live queue
 
-A capability-demand row may nominate a live research question when all are true:
+A demand may nominate a live question only when:
+1. earlier cheaper explanations are sufficiently ruled out;
+2. the missing operation is stated independently of an algorithm;
+3. a bounded discriminator has a declared decision-changing outcome;
+4. population and independent unit are explicit;
+5. closed forms are reconciled narrowly;
+6. the next step is smaller than full architecture.
 
-1. the failure/demand is causally supported enough to rule out cheaper earlier explanations;
-2. the missing operation is stated independently of a favored algorithm;
-3. there is a bounded discriminator/probe with a declared decision-changing outcome;
-4. the population and independence unit are explicit;
-5. existing closed forms have been reconciled narrowly;
-6. the cheapest useful next action is smaller than building the full architecture.
-
-At promotion, register the research question in the ordinary question authority and let [solver optimization workstreams](solver-optimization-workstreams.md) own priority. This document is not a second execution queue.
+Register promoted questions in the ordinary question authority. Workstreams owns priority; this file is not a second queue.
 
 ## Near-term execution
 
-The first program increment is deliberately modest:
+1. continue first-loss demand sampling from existing evidence;
+2. use preserved technique/decision contrasts for response-guided premise discovery;
+3. run the earned BC1 production-inert safety/economics consumer; separately test bounded 2K/5K exclusive-prefix viability/dominance and a selected CW/CCW operational-trace seam;
+4. promote only recurring, decision-bearing semantic gaps with cheap falsifiers.
 
-1. establish the machine-readable demand register and validator;
-2. populate a stratified seed sample from current residual evidence without launching expensive new sweeps;
-3. measure how many rows resolve to HARVEST versus EXTENSION/INVENTION demand;
-4. identify recurrent acquisition demands across independent parents;
-5. promote only the smallest probe(s) that have both causal support and plausible solve leverage.
-
-The important output is not a grand architecture plan. It is an empirical answer to:
+The output sought is empirical:
 
 > **What capabilities does the current residual actually demand?**

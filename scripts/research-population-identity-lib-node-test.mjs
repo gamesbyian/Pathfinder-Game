@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
   canonicalizeResearchIdentities,
+  compareResearchIdentitySets,
   encodeResearchScopedIdentity,
   hashResearchPopulation,
   parseResearchIdentityLines,
@@ -49,5 +50,32 @@ const coded = hashResearchPopulation({
   identityCodec: 'json-tuple-v1',
 });
 assert.notEqual(coded.identityHash, a.identityHash);
+
+const equalSets = compareResearchIdentitySets(['b', 'a'], ['a', 'b']);
+assert.equal(equalSets.relation, 'equal');
+assert.deepEqual(equalSets.intersection, ['a', 'b']);
+assert.equal(equalSets.counts.union, 2);
+
+const subset = compareResearchIdentitySets(['a'], ['a', 'b']);
+assert.equal(subset.relation, 'left-proper-subset');
+assert.deepEqual(subset.rightOnly, ['b']);
+
+const superset = compareResearchIdentitySets(['a', 'b'], ['a']);
+assert.equal(superset.relation, 'left-proper-superset');
+assert.deepEqual(superset.leftOnly, ['b']);
+
+const overlap = compareResearchIdentitySets(['a', 'b'], ['b', 'c']);
+assert.equal(overlap.relation, 'overlap');
+assert.deepEqual(overlap.intersection, ['b']);
+assert.equal(overlap.counts.union, 3);
+
+const disjoint = compareResearchIdentitySets(['a'], ['b']);
+assert.equal(disjoint.relation, 'disjoint');
+assert.deepEqual(disjoint.intersection, []);
+
+assert.throws(
+  () => compareResearchIdentitySets(['a', 'a'], ['a']),
+  /duplicate population identities/u,
+);
 
 console.log('research population identity tests passed');

@@ -56,7 +56,7 @@ export async function runLegacyLatencyPortfolioExperiment(
     level: NormalizedLevel, opts: SolveOpts, timeBudgetMs: number, yieldFn: YieldFn,
     productionSolve: ProductionFallbackSolve,
 ): Promise<SolveResult> {
-    const experiment = opts.legacyLatencyPortfolioExperiment ?? opts.portfolioExperiment ?? LEGACY_LATENCY_PORTFOLIO_EXPERIMENT;
+    const experiment = opts.legacyLatencyPortfolioExperiment ?? LEGACY_LATENCY_PORTFOLIO_EXPERIMENT;
     const portfolioStart = Date.now();
     const prepStart = Date.now();
     const prep = prepLevel(level);
