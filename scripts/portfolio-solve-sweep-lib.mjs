@@ -1,7 +1,7 @@
 /** Shared pure helpers for sequential and worker portfolio-sweep paths. */
 
 import { formatAttemptActionKey, formatAttemptIdentityKey, normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
-import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
+import { normalizeHistoricalSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 
 /** Reconstruct canonical config identity from a persisted Attempt shape. */
 export function attemptConfigKey(attempt) {
@@ -30,7 +30,7 @@ export function canonicalAttemptConfigKey(attempt) {
 export function attemptActionKey(attempt) {
     if (!attempt?.stageId) return null;
     return formatAttemptActionKey({
-        stageId: normalizeSolverStageId(attempt.stageId),
+        stageId: normalizeHistoricalSolverStageId(attempt.stageId),
         scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? 'unknown',
         orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
         beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention ?? attempt?.diverseBeam, repair: attempt?.repair,
