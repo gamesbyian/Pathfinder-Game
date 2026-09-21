@@ -106,6 +106,29 @@ try {
     assert.equal(validPrevalence.summary.applicabilityCounts.admissible, 2);
     assert.equal(validPrevalence.summary.independentAdmissibleSupportStrata, 2);
 
+
+    const legacyFile = path.join(temp, 'legacy-failure-response.json');
+    const configOnly = 'dfs|score=objectiveFirst|bias=none';
+    fs.writeFileSync(legacyFile, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'pathfinder-compact-failure-response',
+        records: [{
+            identity: 'L1', parentId: 'L', runId: 'legacy', outcome: 'exhaustedNegative',
+            actionKey: configOnly, configurationKey: null, protocolHash: 'proto', solverRef: 'solver', attempts: [],
+        }],
+        summary: { observed: 1 },
+        populationIntegrity: { coverageComplete: true, decisionValidComplete: true },
+        protocolHash: 'proto', solverRef: 'solver',
+        sourceFiles: [], missingSourceFiles: [], invalidSourceFiles: [],
+    }));
+    const legacy = JSON.parse(execFileSync('node', [
+        'scripts/failure-evidence-purpose-query.mjs',
+        '--in=' + legacyFile,
+        '--purpose=forensic',
+    ], { cwd: process.cwd(), encoding: 'utf8' }));
+    assert.equal(legacy.rows[0].configurationKey, configOnly);
+    assert.equal(legacy.rows[0].actionKey, null);
+
     console.log('failure-evidence-purpose-query-node-test: ok');
 } finally {
     fs.rmSync(temp, { recursive: true, force: true });
