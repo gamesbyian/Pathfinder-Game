@@ -65,18 +65,10 @@ Dormant unless an active lane changes the premise.
 
 Do not reopen unchanged:
 
-- broad retries, seed fan-out, threshold widening, scorer/profile proliferation, universal beam widening;
-- global portal coarse-state merge;
-- late must-turn-biased repair and repair late-probe `7->6`;
-- August low-cardinality categorical quota projection;
-- fixed-endpoint homotopy as a substitute for open-path topology;
-- **cross-level** learned-connectivity reason checker from the August boundary-sketch experiment;
-- generic detour-gadget libraries;
-- historical blueprint production implementation / synthetic-must-cross formulation;
-- H1's frozen `cross-via` / `pass-via` / `flip-order` / `portal-pair` vocabulary as a universal descriptor;
-- naive exact transposition and full MITM without a materially new compact identity/interface premise;
-- broad alternative-search frameworks before their active cheap falsifier;
-- hazard/bandit/ML scheduling before a fixed-work marginal-value premise;
+- broad retries/seed fan-out/threshold widening/scorer proliferation/universal beam widening; global portal coarse-state merge;
+- late must-turn repair forms, August quota projection, fixed-endpoint homotopy, cross-level learned-connectivity reason checker;
+- generic detour gadgets, blueprint/synthetic-must-cross production, H1's frozen descriptor vocabulary;
+- naive exact transposition/full MITM without a new compact identity; broad alternative-search or hazard/bandit/ML scheduling before cheap premises;
 - bulk variant generation without a frozen causal question.
 - richer twist/same-parity portal-count decomposition as an explanation of the frozen 5K plain-vs-mechanic-buckets response contrast; raw portal count remained stronger in both scoring families;
 - the tested static CW/CCW side-balance / signed-moment / absolute-moment descriptor basis as a sufficient explanation of perimeter direction disagreement; next sibling must use operational traces or a materially different exact representation.
