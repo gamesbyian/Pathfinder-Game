@@ -17,9 +17,47 @@ import { analyzeOpportunity, opportunitySampleSizeForAtLeastOne } from './experi
 import { simulateMakespan, packByMakespan, classifyTelemetry } from './plan-highbudget-shards.mjs';
 import { calibrateMultipliers } from './backtest-shard-runtime-policy.mjs';
 import { hashConfiguration } from './solver-experiment-contract.mjs';
+import { normalizeSolverSweepReportInput } from './solver-sweep-report-input.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+{
+    const shard = {
+        summary: { commit: 'abc123', corpus: 'c.json', schedulerMode: 'production', budgetMs: 8000 },
+        levels: [{ id: 'R1' }],
+    };
+    const normalizedShard = normalizeSolverSweepReportInput(shard, 'shard.json');
+    assert.equal(normalizedShard.inputShape, 'shard-envelope');
+    assert.deepEqual(normalizedShard.summary, shard.summary);
+    assert.equal(shard.inputShape, undefined);
+
+    const flat = {
+        commitSha: 'a'.repeat(40),
+        corpus: 'c.json',
+        budgetMs: 8000,
+        nodeBudget: 123,
+        execution: { schedulerMode: 'production', levelBlind: true, historyAware: false },
+        producer: 'fixture-producer',
+        workflowFamily: 'fixture-workflow',
+        levels: [{ id: 'R2' }],
+    };
+    const flatBefore = JSON.stringify(flat);
+    const normalizedFlat = normalizeSolverSweepReportInput(flat, 'flat.json');
+    assert.equal(normalizedFlat.inputShape, 'flattened-combined');
+    assert.equal(normalizedFlat.summary.commit, flat.commitSha);
+    assert.equal(normalizedFlat.summary.schedulerMode, 'production');
+    assert.equal(normalizedFlat.summary.levelBlind, true);
+    assert.equal(normalizedFlat.summary.historyAware, false);
+    assert.equal(normalizedFlat.summary.producer, 'fixture-producer');
+    assert.equal(normalizedFlat.summary.workflowFamily, 'fixture-workflow');
+    assert.equal(JSON.stringify(flat), flatBefore, 'normalization must not mutate source documents');
+
+    assert.throws(
+        () => normalizeSolverSweepReportInput({ levels: [] }, 'bad.json'),
+        /portfolio-solve-sweep report/,
+    );
+}
 
 function run(args) {
     return execFile('node', ['scripts/combine-solver-sweep-reports.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
@@ -31,7 +69,7 @@ function runPlanner(args) {
 
 function batchReport(overrides = {}) {
     return {
-        summary: { commit: 'abc123', corpus: 'data/stress/stress-levels-random.json', schedulerMode: 'legacy', budgetMs: 8000, ...overrides.summary },
+        summary: { commit: 'abc123', corpus: 'data/stress/stress-levels-random.json', schedulerMode: 'production', budgetMs: 8000, ...overrides.summary },
         levels: overrides.levels ?? [],
     };
 }
