@@ -1,6 +1,6 @@
 # Paired beam connectivity-proof overlap disposition 002
 
-> **Status:** concluded-without-execution
+> **Status:** cancelled
 > **Last evidence:** 2026-09-21 — the connectivity-cut proof family failed its downstream-work economics gate in [DFS dominated-work result 006](2026-09-21-connectivity-cut-dfs-dominated-work-result-006.md).
 > **Decision:** do not execute the preregistered 2K/5K connectivity-cut proof-overlap studies. Their result can no longer change a reuse decision.
 > **Remaining gate:** reopen W2 with a proof family only after that family independently clears solve-local recurrence, consumer soundness, and removable-work economics.
