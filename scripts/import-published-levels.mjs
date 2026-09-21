@@ -96,8 +96,10 @@ export function levelFingerprint(level) {
   return getLevelFingerprintSource(level);
 }
 
-function writeLevels(document, levels) {
-  writeLevelCorpusDocumentWithHints(levelsJsonPath, { ...document, levels: levels.map(normalizeLevel) });
+function writeLevels(document, levels, changedLevelIds) {
+  const normalizedLevels = levels.map(normalizeLevel);
+  const changedHintLevels = normalizedLevels.filter(level => changedLevelIds.has(level.id));
+  writeLevelCorpusDocumentWithHints(levelsJsonPath, { ...document, levels: normalizedLevels }, { changedHintLevels });
 }
 
 // Uncapped: the 1000-hint cap was a UI-latency guard for player-initiated searches, not a data
@@ -197,12 +199,13 @@ export async function main() {
   const mintId = makeLevelIdMinter(levels);
 
   let newLevels = 0, hintsAdded = 0, levelsUpdated = 0;
+  const changedLevelIds = new Set();
   for (const level of await fetchPublishedLevels()) {
     const fp = levelFingerprint(level);
     const match = byFingerprint.get(fp);
     if (match) {
       const added = mergeNewHints(match, level);
-      if (added > 0) { hintsAdded += added; levelsUpdated++; }
+      if (added > 0) { hintsAdded += added; levelsUpdated++; changedLevelIds.add(match.id); }
     } else {
       // `id` first, matching the established field order (see backfill-level-ids.mjs) --
       // the Firestore staging doc itself never carries one (see makeLevelIdMinter's doc
@@ -210,10 +213,11 @@ export async function main() {
       const withId = ensureProvenance(typeof level.id === 'string' && level.id ? level : { id: mintId(), ...level });
       byFingerprint.set(fp, withId);
       levels.push(withId);
+      changedLevelIds.add(withId.id);
       newLevels++;
     }
   }
-  writeLevels(corpusDocument, levels);
+  writeLevels(corpusDocument, levels, changedLevelIds);
   console.log(`Imported ${newLevels} new published level(s); appended ${hintsAdded} new hint(s) to ${levelsUpdated} existing level(s).`);
 
   if (newLevels > 0 || hintsAdded > 0) {
