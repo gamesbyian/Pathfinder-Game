@@ -414,9 +414,9 @@ Decision: retain conceptual split only, or implement reusable immutable compilat
 
 ### Phase 3 - solve-less opportunity census
 
-- [ ] corpus exact-symmetry/equivalence duplicate census;
-- [ ] prior-solution transform/direct-validation hit rate;
-- [ ] family shared-structure/incremental-compile opportunity sizing;
+- [ ] corpus exact-symmetry/equivalence duplicate census; instrumentation committed (`solver:audit-equivalence`) and evidence run pending;
+- [ ] prior-solution transform/direct-validation hit rate; generated-family constructive-witness census committed (`solver:audit-family-constructive-reuse`), with scientific-consumption restrictions explicit;
+- [ ] family shared-structure/incremental-compile opportunity sizing; broad dependency-class invariance census committed (`solver:audit-family-compile-reuse`), field-level invalidation proof still required for any implementation;
 - [ ] multi-query overlap/divergence sizing;
 - [ ] historical-computation index hit-rate pilot.
 
@@ -424,18 +424,18 @@ Decision: nominate at most the best-supported reuse/elimination treatments.
 
 ### Phase 4 - search-less opportunity census
 
-- [ ] map existing parity/separator/residual/algebraic assets to presolve;
+- [x] map existing parity/separator/residual/algebraic assets to presolve; bounded candidates P1 all-gates parity, P3 initial-state BC1, and conditional P2 checkerboard capacity are recorded in `../reports/2026-09-20-solver-presolve-opportunity-audit-001.md`;
 - [ ] measure static propagation/decomposition opportunities on real levels;
-- [ ] identify compact proof-producing candidates;
+- [x] identify compact proof-producing candidates; broad separator decomposition remains closed/representation-explosive, while local exact/safe consumers remain distinct;
 - [ ] estimate work removable before implementation.
 
 Decision: promote concrete presolve/decomposition experiments through canonical queue.
 
 ### Phase 5 - wait-less research audit
 
-- [ ] replay historical batches for decision-time curves;
+- [ ] replay/census historical batches for decision-time curves; architecture audit found an existing completion-order `stopAfter` worker primitive and a safe first target: irreversible negative decision locks. See `../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md`;
 - [ ] separate compute completion time from decision time;
-- [ ] design candidate prospective stopping contract;
+- [x] design candidate prospective stopping contract at architecture level: start with loss-ceiling/futility locks only, keep partial coverage explicit, and separate decision acquisition from optional characterization;
 - [ ] validate on untouched/fresh experiment if earned.
 
 Decision: integrate sequential stopping into research operating model only with prospective support.
@@ -491,6 +491,50 @@ Every lane/candidate should eventually record:
 7. update this plan and the PR after each material finding.
 
 ## 10. Progress log
+
+### 2026-09-20 - solve-less census instrumentation
+
+- Added `scripts/solver-equivalence-opportunity-census.mjs` for exact semantic duplicate and exact 8-way symmetry-class opportunity across the committed published/stress corpora. Generated symmetry families are excluded by default so known constructed siblings cannot inflate the corpus opportunity.
+- Added `scripts/family-constructive-reuse-census.mjs` to count generated variants whose accepted generation contract already carries an exact-coordinate or transformed constructive witness. This is operational reuse evidence only; consuming those witnesses inside blind solver-capability experiments would invalidate the experiment and is not authorized.
+- Added `scripts/family-compile-reuse-census.mjs` to measure broad parent->variant invariance classes (grid, challenge metrics, endpoints, static occupancy, obligations, mechanics, landmarks) by family mode. This sizes partial-compilation opportunity but does not prove field-level cache-key sufficiency.
+- All three censuses are wired into the temporary one-shot audit evidence workflow. The family and equivalence questions remain measurement-gated; no canonicalizer, solution index, or incremental compiler is authorized yet.
+
+
+### 2026-09-20 - initial presolve census implementation
+
+- Added `scripts/initial-presolve-opportunity-census.mjs`, exposed as `npm run solver:audit-initial-presolve -- ...`.
+- The census is production-inert and evaluates two already-established exact initial-state consequences: zero ordinary-parity-feasible gates on no-twist levels, and BC1 bridge-excursion conflicts after ordinary connectivity passes.
+- BC1 reporting distinguishes any conflicted gate from the stronger whole-level opportunity where every connectivity-passing gate is conflicted.
+- The one-shot audit workflow now runs the census over published, Corpus 1, and Corpus 2 alongside the solve-relative fixed-cost measurement.
+- Checkerboard capacity remains deferred from this first census so the cheapest exact facts are screened before adding observer-specific plumbing.
+
+
+### 2026-09-20 - research decision-latency audit
+
+- Added [`../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md`](../reports/2026-09-20-solver-research-batch-decision-latency-audit-001.md).
+- Existing `runWorkerPool` already has completion-order `stopAfter` cancellation; scheduler plumbing is not the missing capability.
+- The safest first adaptive-stop form is an irreversible negative lock, especially a first loss under a frozen zero-loss gate. Positive locks are usually much later because unseen regressions remain possible.
+- Early-stopped artifacts must remain coverage-incomplete and may only claim the narrow cannot-promote decision they prove.
+- Separate required decision acquisition from optional characterization so mechanism/capability follow-up need not delay the decision report.
+
+
+### 2026-09-20 - presolve reconciliation
+
+- Added [`../reports/2026-09-20-solver-presolve-opportunity-audit-001.md`](../reports/2026-09-20-solver-presolve-opportunity-audit-001.md).
+- Presolve is narrowed to cheap exact/safe consumers, not a generic decomposition subsystem.
+- First opportunity census order: exact all-gates parity -> initial-state BC1 -> checkerboard capacity only if the existing reached-set substrate keeps it cheap.
+- The broad compact separator-interface architecture remains constrained by the C2 representation-explosive negative; this audit does not reopen it.
+- A general propagation-to-fixed-point engine is not earned until multiple cheap propagators demonstrably compose.
+
+
+### 2026-09-20 - same-process reuse customer census
+
+- Added [`../reports/2026-09-20-solver-batch-reuse-opportunity-census-001.md`](../reports/2026-09-20-solver-batch-reuse-opportunity-census-001.md).
+- `run-ablation.mjs` is the cleanest exact compile-reuse customer: experiment-outer / level-inner nesting re-normalizes and re-prepares the same level once per experiment while ablation config is not a prep input.
+- `req-length-sweep.mjs` supplies two distinct reuse cases: exact same-level reuse across repeats and partial invalidation across reqLen points.
+- Reuse is now explicitly tiered: same object/process -> same semantics/process -> controlled delta -> family/topology -> cross-process persistence. Do not jump directly to persisted compiled artifacts.
+- First compile-reuse implementation remains gated on current-head fixed-cost evidence and memory economics.
+
 
 ### 2026-09-20 - branch reconciliation staging
 

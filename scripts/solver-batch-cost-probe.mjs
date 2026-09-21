@@ -149,7 +149,7 @@ for (const { position, raw } of selected) {
             lastSolve = await solveLevel(level, {
                 timeBudgetMs: budgetMs,
                 nodeBudget,
-                ...(workBudget !== undefined ? { workBudget } : {}),
+                ...(workBudget !== undefined ? { baseWorkBudget: workBudget } : {}),
                 disableExtraBudgetPasses: true,
             });
             solveMs.push(elapsedMs(t0));

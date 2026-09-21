@@ -354,7 +354,6 @@
     "test:build-variant-family-dataset-manifest": "node scripts/build-variant-family-dataset-manifest-node-test.mjs",
     "test:combine-technique-census-shards": "node scripts/combine-technique-census-shards-node-test.mjs",
     "test:attempt-config-key": "node scripts/attempt-config-key-node-test.mjs",
-    "check:solveopts-transport-parity": "node scripts/check-solveopts-transport-parity.mjs",
     "test:solver-capability-memory": "node scripts/solver-capability-memory-lib-node-test.mjs",
     "research:response-guided-parity": "node scripts/run-bundled.mjs scripts/analyze-response-guided-parity-contrast.mjs",
     "test:response-guided-parity-contrast": "node scripts/run-bundled.mjs scripts/analyze-response-guided-parity-contrast-node-test.mjs",
@@ -367,7 +366,11 @@
     "test:cut-bridge-incidence": "node scripts/run-bundled.mjs scripts/stress/cut-bridge-incidence-node-test.mjs",
     "research:freeze-response-guided-contrasts": "node scripts/freeze-response-guided-contrasts.mjs",
     "test:freeze-response-guided-contrasts": "node scripts/freeze-response-guided-contrasts-node-test.mjs",
-    "solver:audit-batch-cost": "node scripts/run-bundled.mjs scripts/solver-batch-cost-probe.mjs"
+    "solver:audit-batch-cost": "node scripts/run-bundled.mjs scripts/solver-batch-cost-probe.mjs",
+    "solver:audit-initial-presolve": "node scripts/run-bundled.mjs scripts/initial-presolve-opportunity-census.mjs",
+    "solver:audit-equivalence": "node scripts/run-bundled.mjs scripts/solver-equivalence-opportunity-census.mjs",
+    "solver:audit-family-constructive-reuse": "node scripts/family-constructive-reuse-census.mjs",
+    "solver:audit-family-compile-reuse": "node scripts/family-compile-reuse-census.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

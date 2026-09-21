@@ -47,6 +47,8 @@
     "scripts/analyze-known-solution-prefix-survival.mjs",
     "scripts/analyze-repair-reconstruction-static-features-node-test.mjs",
     "scripts/analyze-repair-reconstruction-static-features.mjs",
+    "scripts/analyze-response-guided-orientation-contrast-node-test.mjs",
+    "scripts/analyze-response-guided-parity-contrast-node-test.mjs",
     "scripts/analyze-technique-niches-node-test.mjs",
     "scripts/analyze-technique-niches.mjs",
     "scripts/audit-false-goal-triggerability.mjs",
@@ -56,6 +58,7 @@
     "scripts/data-asset-runtime-smoke-test.mjs",
     "scripts/family-boundary-cli-node-test.mjs",
     "scripts/family-boundary-report.mjs",
+    "scripts/family-compile-reuse-census.mjs",
     "scripts/family-generate-node-test.mjs",
     "scripts/family-generate.mjs",
     "scripts/family-parent-hint-replay-node-test.mjs",
@@ -86,6 +89,7 @@
     "scripts/stress/collect-known-solution-prefix-survival-cli-node-test.mjs",
     "scripts/stress/compare-repair-restart-continuation-population-cli-node-test.mjs",
     "scripts/stress/compare.mjs",
+    "scripts/stress/cut-bridge-incidence-node-test.mjs",
     "scripts/stress/features.mjs",
     "scripts/stress/generate-random.mjs",
     "scripts/stress/generate-topology-node-test.mjs",
@@ -101,16 +105,15 @@
     "scripts/stress/select-routing-regime-sample-cli-node-test.mjs",
     "scripts/stress/witness-adapter.mjs",
     "scripts/stress/witness.mjs",
-    "scripts/test-lib/fixtures.mjs",
-    "scripts/analyze-response-guided-orientation-contrast-node-test.mjs",
-    "scripts/analyze-response-guided-parity-contrast-node-test.mjs",
-    "scripts/stress/cut-bridge-incidence-node-test.mjs"
+    "scripts/test-lib/fixtures.mjs"
   ],
   "normalizedRuntimeConsumer": [],
   "ambiguousUnclassified": [],
   "mixedRawAndNormalized": [],
   "retainedNonNormalizedUse": [
     "docs/naming-and-vocabulary.md",
+    "docs/solver-batch-digestion-architecture-audit-plan.md",
+    "docs/solver-parity-response-signature-preflight.md",
     "docs/solver-required-length-sweep.md",
     "scripts/analyze-technique-census.mjs",
     "scripts/family-analyze.mjs",
@@ -130,8 +133,7 @@
     "scripts/stress/near-twin-response-comparison.mjs",
     "scripts/stress/nearest-solved-neighbor.mjs",
     "scripts/stress/query-mustcross-flipper-eligibility.mjs",
-    "scripts/stress/repair-retreat-binary-search.mjs",
-    "docs/solver-parity-response-signature-preflight.md"
+    "scripts/stress/repair-retreat-binary-search.mjs"
   ],
   "notes": "Normalized/runtime code uses requiredLength/requiredIntersections. rawWireBoundary is the reviewed reqLen/reqInt compatibility surface for raw fixtures, corpus, and wire data; retainedNonNormalizedUse contains independent report/result schemas and current vocabulary/reference surfaces whose labels are not NormalizedLevel properties. Completed naming-program records and closeout scripts are frozen history and intentionally excluded from this live inventory.",
   "normalizedMigrationComplete": true

@@ -1,11 +1,9 @@
 # Solver batch digestion architecture audit — Phase 0 evidence map
 
-> **Status:** active / Phase 0 substantially complete
-> **Date:** 2026-09-20
-> **Plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Evidence role:** architecture reconnaissance and opportunity sizing; no production treatment result yet.
-> **Selection:** current `main` source plus existing performance/research reports named below.
-
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — Phase-0 execution/evidence mapping identified real repeated preparation and narrowed several speculative batch ideas.
+> **Decision:** Continue with measured compile reuse, bounded presolve, equivalence, family reuse, and decision-latency lanes; do not rebuild already-amortized worker infrastructure.
+> **Remaining gate:** Complete the bounded empirical censuses and use their measured ceilings to promote or close each implementation lane.
 ## Executive findings
 
 The motivating premise survives contact with the current repository, but several brainstormed forms narrow immediately.
