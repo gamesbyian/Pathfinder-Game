@@ -52,15 +52,15 @@ This strengthens the qualitative conclusion: the reservoir is dominated by extre
 
 ## What the result means
 
-The original question was deliberately an oracle-ceiling test:
+The prevalence result establishes a broad **gross forced-work reservoir**: **25.33%** of measured parent-expansion work occurs at parents that end ordinary hard pruning with one survivor.
 
-> If recognition/contraction were perfect and free, how much current measured parent-expansion work could disappear?
+A later seam audit tightened the economics interpretation. At this observer seam, the charged parent expansion includes the candidate generation and hard-prune work required to discover that there is one survivor. A consumer inserted only after ordinary hard pruning cannot retroactively remove that already-spent work.
 
-For this population the answer is at most **25.33%** of the measured parent-expansion work.
+Therefore 25.33% is **not a directly removable post-prune work ceiling**. It would be an upper bound only under a stronger hypothetical perfect earlier recognizer that can identify the unique viable continuation before paying ordinary expansion/pruning cost. No such recognizer has been demonstrated.
 
-That is large enough to justify the next investigation.
+The result remains important because forcedness is ubiquitous and broad across parents. It earns consequence economics: measure what replay, retention/frontier bookkeeping, and downstream work become avoidable once forcedness is actually known, and separately ask whether cheaper earlier recognition exists.
 
-It is **not** a claim that 25.33% of whole-solve work is removable. The denominator excludes work outside the measured parent-expansion seam, and a real consumer must still execute any semantics required to advance the state safely.
+See [capture-economics seam audit 001](2026-09-21-forced-work-capture-economics-seam-audit-001.md).
 
 ## Next gate: capture fraction, not implementation
 
@@ -74,9 +74,9 @@ The next investigation should decompose one-successor expansion work into:
 
 The decisive quantity is:
 
-> Of the 25.33% oracle ceiling, what fraction is plausibly removable by a sound bounded mechanism?
+> Once forcedness is knowable at a sound seam, what downstream canonical work and non-canonical replay/retention/bookkeeping cost is actually removable without changing search semantics?
 
-A first capture-fraction study should remain production-inert. Instrument representative one-successor expansions and compare the work decomposition against branching controls. Only after a material removable numerator exists should a forced-future consumer be implemented.
+The first follow-up remains production-inert. It now starts with phase-level global singleton and singleton->singleton prevalence using existing observer stages, because per-parent forcedness inside a still-branching global beam does not by itself authorize contraction. Only after a material post-recognition numerator exists should a behavior-changing forced-step consumer be implemented.
 
 ## Safety questions
 
