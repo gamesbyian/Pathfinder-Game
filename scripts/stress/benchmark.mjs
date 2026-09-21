@@ -153,7 +153,7 @@ const attemptLabel = a => formatAttemptIdentityKey({
 
 const solveSequential = (raw, level) => Solver.solveLevel(level, {
     timeBudgetMs: cfg.budgetMs,
-    ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
+    ...(cfg.workBudget !== undefined ? { baseWorkBudget: cfg.workBudget } : {}),
     ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairAdditiveBudgetMultiplierOverride: cfg.repairBudgetFraction } : {}),
     ...(Number.isFinite(cfg.goalAttractionDisabledRetryBudgetFraction) ? { goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction } : {}),
 });
@@ -268,7 +268,7 @@ async function main() {
             try {
                 return toRaceLevelOpts({
                     timeBudgetMs: cfg.budgetMs,
-                    workBudget: cfg.workBudget,
+                    baseWorkBudget: cfg.workBudget,
                     repairAdditiveBudgetMultiplierOverride: cfg.repairBudgetFraction,
                     goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction,
                 });
