@@ -1,8 +1,8 @@
 /**
  * Normalize supported solver sweep report input shapes at one ingress boundary.
  *
- * Current shard producers write {summary, levels}. Historical/prior combined reports are flattened
- * for downstream benchmark consumers, so recombination may still ingest that shape. The combiner
+ * Current shard and combined producers write {summary, levels}. Historical combined reports used
+ * a benchmark-flat wrapper, so archive/reconciliation reads may still ingest that shape. The combiner
  * itself should never care which shape arrived.
  */
 export function normalizeSolverSweepReportInput(document, source = '<input>') {
@@ -18,7 +18,7 @@ export function normalizeSolverSweepReportInput(document, source = '<input>') {
             ...document,
             summary: { ...document.summary },
             levels: document.levels,
-            inputShape: 'shard-envelope',
+            inputShape: 'summary-envelope',
         };
     }
 
