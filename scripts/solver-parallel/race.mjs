@@ -51,7 +51,7 @@
 // Determinism Report referenced in docs/solver-architecture.md) — not just WHEN a level solves,
 // but sometimes WHICH mechanism gets credit. A level whose phase-1 win is itself timing-sensitive
 // (some runs solve via ordinary main-search scheduling, others need phase 2's flag-disabled rerun)
-// can report a different winningStrategy/attractionDiversity flag across repeated raced runs of
+// can report a different winningStrategy/goalAttractionDisabledRetry flag across repeated raced runs of
 // the exact identical level — confirmed directly during this session's own verification (the same
 // real corpus-2 level solved via a plain main-search attempt in one run and via this phase in
 // another). Not a correctness concern (every returned path is still independently referee-valid),
