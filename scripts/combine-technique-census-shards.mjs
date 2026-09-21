@@ -15,6 +15,7 @@ import {
     dedupeTechniqueCensusResults,
     inferredVariantLabel,
     techniqueCensusIdentityKey,
+    validateTechniqueCensusPlanJoin,
 } from './technique-census-result-lib.mjs';
 
 const argv = process.argv.slice(2);
@@ -31,6 +32,11 @@ const COMBINED_FILE = args.get('--combined-file');
 const SAVE_HINTS = flags.has('--save-hints');
 const DERIVED_ONLY = flags.has('--derived-only');
 const SOLVER_VERSION = args.get('--solver-version') || null;
+const EXPECTED_SHARDS_ARG = args.get('--expected-shards');
+const EXPECTED_SHARDS = EXPECTED_SHARDS_ARG == null ? null : Number(EXPECTED_SHARDS_ARG);
+if (EXPECTED_SHARDS != null && (!Number.isSafeInteger(EXPECTED_SHARDS) || EXPECTED_SHARDS < 1)) {
+    throw new Error('--expected-shards must be a positive integer when supplied');
+}
 
 installBrowserStubs();
 const CORPUS_FILES = {
@@ -46,10 +52,15 @@ const CORPUS_FILES = {
 // reference population by contract; stress rows require the frozen baseline supplied by --plan.
 let wasSolvedBaseline = corpus => corpus === 'published' ? true : null;
 let baselineStatus = PLAN_FILE ? 'unavailable' : 'not-provided';
+let planDocument = null;
 if (PLAN_FILE) {
     try {
-        const plan = JSON.parse(readFileSync(path.resolve(PLAN_FILE), 'utf8'));
-        const baseline = JSON.parse(readFileSync(path.resolve(plan.baselineFile), 'utf8'));
+        planDocument = JSON.parse(readFileSync(path.resolve(PLAN_FILE), 'utf8'));
+    } catch (err) {
+        throw new Error(`combine: could not read authored plan ${PLAN_FILE}: ${err?.message ?? err}`);
+    }
+    try {
+        const baseline = JSON.parse(readFileSync(path.resolve(planDocument.baselineFile), 'utf8'));
         const solvedIds = {
             corpus1: new Set(baseline.corpus1?.solvedIds ?? []),
             corpus2: new Set(baseline.corpus2?.solvedIds ?? []),
@@ -64,22 +75,69 @@ if (PLAN_FILE) {
 let rawResults = [];
 let missing = [];
 let partial = [];
+let executionCommit = null;
+let sawRevisionMetadata = false;
+let sawMissingRevisionMetadata = false;
 if (COMBINED_FILE) {
     const existing = JSON.parse(readFileSync(path.resolve(COMBINED_FILE), 'utf8'));
     rawResults = existing.results ?? [];
     missing = existing.missingShards ?? [];
     partial = existing.partialShards ?? [];
+    executionCommit = existing.commit ?? null;
 } else {
     const dirs = readdirSync(STAGING_DIR).filter(d =>
         statSync(path.join(STAGING_DIR, d)).isDirectory() && d.startsWith('technique-census-shard-'));
+    const observedShardIndexes = new Set();
+    let declaredShardCount = EXPECTED_SHARDS;
     for (const d of dirs.sort()) {
         const shardPath = path.join(STAGING_DIR, d);
-        const files = readdirSync(shardPath).filter(f => /^shard-\d+\.json$/.test(f));
-        if (files.length === 0) { missing.push(d); continue; }
-        const data = JSON.parse(readFileSync(path.join(shardPath, files[0]), 'utf8'));
+        const files = readdirSync(shardPath).filter(f => /^shard-\d+\.json$/.test(f)).sort();
+        if (files.length === 0) { if (EXPECTED_SHARDS == null) missing.push(d); continue; }
+        if (files.length !== 1) {
+            throw new Error(`combine: artifact ${d} contains ${files.length} shard result files; expected exactly one`);
+        }
+        const file = files[0];
+        const fileShard = Number(file.match(/^shard-(\d+)\.json$/u)?.[1]);
+        const dirShard = Number(d.match(/^technique-census-shard-(\d+)$/u)?.[1]);
+        const data = JSON.parse(readFileSync(path.join(shardPath, file), 'utf8'));
+        if (!Number.isSafeInteger(data.shard) || !Number.isSafeInteger(data.shards) || data.shard < 1 || data.shard > data.shards) {
+            throw new Error(`combine: ${d}/${file} lacks valid shard/shards identity`);
+        }
+        if (fileShard !== data.shard || dirShard !== data.shard) {
+            throw new Error(`combine: shard identity mismatch for ${d}/${file}: artifact=${dirShard}, filename=${fileShard}, document=${data.shard}`);
+        }
+        if (observedShardIndexes.has(data.shard)) {
+            throw new Error(`combine: duplicate outer shard index ${data.shard}`);
+        }
+        observedShardIndexes.add(data.shard);
+        if (declaredShardCount == null) declaredShardCount = data.shards;
+        if (data.shards !== declaredShardCount) {
+            throw new Error(`combine: shard ${data.shard} declares ${data.shards} total shards; expected ${declaredShardCount}`);
+        }
+        if (data.commit) {
+            sawRevisionMetadata = true;
+            if (executionCommit && executionCommit !== data.commit) {
+                throw new Error(`combine: shard execution revisions disagree: ${executionCommit} != ${data.commit}`);
+            }
+            executionCommit = data.commit;
+        } else {
+            sawMissingRevisionMetadata = true;
+        }
         if (data.partial) partial.push(d);
         rawResults.push(...(data.results || []));
     }
+    if (declaredShardCount != null) {
+        for (let shard = 1; shard <= declaredShardCount; shard++) {
+            if (!observedShardIndexes.has(shard)) missing.push(`technique-census-shard-${shard}`);
+        }
+        missing = [...new Set(missing)].sort();
+    }
+    if (sawRevisionMetadata && sawMissingRevisionMetadata) {
+        throw new Error('combine: mixed fresh/legacy shard revision metadata; cannot claim one execution identity');
+    }
+}
+if (SOLVER_VERSION && executionCommit && executionCommit !== 'local' && SOLVER_VERSION !== executionCommit) {
+    throw new Error(`combine: shard execution revision ${executionCommit} disagrees with --solver-version ${SOLVER_VERSION}`);
 }
 
 const deduped = dedupeTechniqueCensusResults(rawResults);
@@ -88,21 +146,39 @@ const allResults = deduped.results.map(r => {
     return variantLabel && !r.variantLabel ? { ...r, variantLabel } : r;
 });
 const hasEqualWork = allResults.some(r => r.tier === 'EW1');
-console.log(`technique-census combine: ${rawResults.length} raw cell result(s), ${allResults.length} unique (${deduped.duplicatesRemoved} duplicate(s) removed; ${missing.length} missing shard(s), ${partial.length} partial marker(s))`);
+const planJoin = planDocument
+    ? validateTechniqueCensusPlanJoin(planDocument, allResults, {
+        requireComplete: false,
+        allowLegacyOmissions: Boolean(COMBINED_FILE),
+    })
+    : null;
+console.log(`technique-census combine: ${rawResults.length} raw cell result(s), ${allResults.length} unique (${deduped.duplicatesRemoved} duplicate(s) removed; ${missing.length} missing shard(s), ${partial.length} partial marker(s)${planJoin ? `; ${planJoin.missing.length} planned cell(s) not observed` : ''})`);
+if (planJoin && !planJoin.identityFullyVerified) {
+    console.log(`technique-census plan join: legacy-partial identity (${planJoin.unverifiedJoinFields.length} echoed field(s) unavailable in the historical matrix)`);
+}
 
 mkdirSync(OUT_DIR, { recursive: true });
 if (!DERIVED_ONLY) {
     writeFileSync(path.join(OUT_DIR, 'combined-cells.json'), JSON.stringify({
         generatedAt: new Date().toISOString(),
+        ...(executionCommit ? { commit: executionCommit } : {}),
         missingShards: missing,
         partialShards: partial,
         duplicateCellsRemoved: deduped.duplicatesRemoved,
+        ...(planJoin ? { planJoin } : {}),
         budgetProtocol: hasEqualWork ? 'mixed-node-depth-and-equal-work' : 'technique-local-node-depth',
         equalCostAcrossTechniques: false,
         costSemantics: hasEqualWork
             ? 'T1/T3/T4 are node-depth evidence; EW1 rows use equal canonical work budgets for cross-technique pricing'
             : 'isolated nodesExpanded is within-technique depth; use canonical workSpent for cross-technique allocation',
         totalCells: allResults.length,
+        ...(planJoin ? {
+            planCoverage: {
+                expectedCount: planJoin.expectedIds.length,
+                observedCount: allResults.length,
+                missingCount: planJoin.missing.length,
+            },
+        } : {}),
         results: allResults,
     }));
 }

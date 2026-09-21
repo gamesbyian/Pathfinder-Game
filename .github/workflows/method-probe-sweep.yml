@@ -245,7 +245,7 @@ jobs:
 
       - name: Combine every worker result + write job summary
         id: combine
-        run: node scripts/combine-method-probe-shards.mjs --staging-dir=artifact-staging --out-dir=logs/method-probe-shards --outcome-out=logs/method-probe-shards/outcome.json --deterministic-work-mode=${{ inputs.work_budget != '' }}
+        run: node scripts/combine-method-probe-shards.mjs --staging-dir=artifact-staging --out-dir=logs/method-probe-shards --outcome-out=logs/method-probe-shards/outcome.json --deterministic-work-mode=${{ inputs.work_budget != '' }} --expected-shards=${{ needs.plan.outputs.shard_count }}
 
       - name: Upload combined result
         uses: actions/upload-artifact@v7

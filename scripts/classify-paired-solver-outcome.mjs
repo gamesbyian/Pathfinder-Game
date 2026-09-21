@@ -1,11 +1,41 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 
-export function classifyPairedSolverOutcome(control, treatment, gate) {
-  const idOf = row => row?.id ?? String(row?.level);
-  const controlSolved = new Set(control.filter(row => row?.ok).map(idOf));
-  const treatmentSolved = new Set(treatment.filter(row => row?.ok).map(idOf));
+function rowId(row) {
+  const value = row?.id ?? row?.levelId ?? row?.level ?? null;
+  return value == null ? null : String(value);
+}
+
+function assertExactPairedPopulation(control, treatment, integrity) {
+  if (!integrity || integrity.coverageComplete !== true || integrity.decisionValidComplete !== true) {
+    throw new Error('paired integrity must be coverage-complete and decision-valid before classification');
+  }
+  if (!Array.isArray(integrity.expectedIds) || !integrity.populationIdentityHash) {
+    throw new Error('paired integrity must carry expectedIds and populationIdentityHash');
+  }
+  if (integrity.expectedCount !== integrity.expectedIds.length
+      || integrity.observedCount !== integrity.expectedIds.length) {
+    throw new Error('paired integrity counts do not match its exact expectedIds');
+  }
+
+  const expected = [...integrity.expectedIds].map(String).sort();
+  for (const [label, rows] of [['control', control], ['treatment', treatment]]) {
+    const ids = rows.map(rowId);
+    if (ids.some(id => id == null)) throw new Error(`${label} result contains a row without an identity`);
+    if (new Set(ids).size !== ids.length) throw new Error(`${label} result contains duplicate row identities`);
+    const actual = [...ids].sort();
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      throw new Error(`${label} result does not match paired integrity expectedIds`);
+    }
+  }
+}
+
+export function classifyPairedSolverOutcome(control, treatment, gate, integrity) {
+  assertExactPairedPopulation(control, treatment, integrity);
+  const controlSolved = new Set(control.filter(row => row?.ok).map(rowId));
+  const treatmentSolved = new Set(treatment.filter(row => row?.ok).map(rowId));
   const gained = [...treatmentSolved].filter(id => !controlSolved.has(id)).sort();
   const lost = [...controlSolved].filter(id => !treatmentSolved.has(id)).sort();
   const workOf = rows => rows.reduce((total, row) => total + (Number(row?.workSpent) || 0), 0);
@@ -41,22 +71,47 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('='))
     .map(arg => { const [key, ...parts] = arg.slice(2).split('='); return [key, parts.join('=')]; }));
   try {
-    const controlFile = args.get('--control');
-    const treatmentFile = args.get('--treatment');
-    const out = args.get('--outcome-out');
-    if (!controlFile || !treatmentFile || !out) throw new Error('--control, --treatment, and --outcome-out are required');
-    const maxWorkText = args.get('--max-work-delta-pct') ?? '';
+    const controlFile = args.get('control');
+    const treatmentFile = args.get('treatment');
+    const integrityFile = args.get('integrity');
+    const out = args.get('outcome-out');
+    if (!controlFile || !treatmentFile || !integrityFile || !out) {
+      throw new Error('--control, --treatment, --integrity, and --outcome-out are required');
+    }
+    const maxWorkText = args.get('max-work-delta-pct') ?? '';
     const maxWorkDeltaPct = maxWorkText === '' ? null : Number(maxWorkText);
     if (maxWorkDeltaPct !== null && !Number.isFinite(maxWorkDeltaPct)) throw new Error('max-work-delta-pct must be finite or blank');
     const gate = {
-      minGains: nonnegativeInteger(args.get('--min-gains'), 'min-gains'),
-      maxLosses: nonnegativeInteger(args.get('--max-losses'), 'max-losses'),
+      minGains: nonnegativeInteger(args.get('min-gains'), 'min-gains'),
+      maxLosses: nonnegativeInteger(args.get('max-losses'), 'max-losses'),
       maxWorkDeltaPct,
     };
-    const control = JSON.parse(fs.readFileSync(controlFile, 'utf8')).levels ?? [];
-    const treatment = JSON.parse(fs.readFileSync(treatmentFile, 'utf8')).levels ?? [];
-    const result = classifyPairedSolverOutcome(control, treatment, gate);
-    writeResearchWorkflowOutcome(out, result.researchOutcome);
+    const controlDocument = JSON.parse(fs.readFileSync(controlFile, 'utf8'));
+    const treatmentDocument = JSON.parse(fs.readFileSync(treatmentFile, 'utf8'));
+    const control = controlDocument.levels ?? [];
+    const treatment = treatmentDocument.levels ?? [];
+    const integrity = JSON.parse(fs.readFileSync(integrityFile, 'utf8'));
+    const result = classifyPairedSolverOutcome(control, treatment, gate, integrity);
+    const resultConfigurationHashes = [controlDocument.configurationHash, treatmentDocument.configurationHash];
+    if (resultConfigurationHashes.some(value => typeof value !== 'string' || !/^sha256:[0-9a-f]{64}$/u.test(value))) {
+      throw new Error('paired control/treatment results must carry sha256 configurationHash values');
+    }
+    const resultResolvedShas = [controlDocument.commitSha ?? controlDocument.commit ?? controlDocument.solverRef,
+      treatmentDocument.commitSha ?? treatmentDocument.commit ?? treatmentDocument.solverRef];
+    if (resultResolvedShas.some(value => typeof value !== 'string' || !/^[0-9a-f]{40}$/u.test(value))) {
+      throw new Error('paired control/treatment results must carry immutable execution commit SHAs');
+    }
+    const resultContentHashes = [controlFile, treatmentFile]
+      .map(file => `sha256:${createHash('sha256').update(fs.readFileSync(file)).digest('hex')}`);
+    writeResearchWorkflowOutcome(out, {
+      ...result.researchOutcome,
+      binding: {
+        populationIdentityHash: integrity.populationIdentityHash,
+        resultConfigurationHashes,
+        resultResolvedShas,
+        resultContentHashes,
+      },
+    });
     console.log(`control solved: ${result.controlSolved}/${control.length}, work=${result.controlWork}`);
     console.log(`treatment solved: ${result.treatmentSolved}/${treatment.length}, work=${result.treatmentWork} (${Number.isFinite(result.workDeltaPct) ? result.workDeltaPct.toFixed(2) : result.workDeltaPct}% vs control)`);
     console.log(`gained (${result.gained.length}): ${result.gained.join(',')}`);

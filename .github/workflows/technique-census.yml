@@ -262,6 +262,7 @@ jobs:
             --out-dir="reports/stress/technique-census/${{ github.run_id }}" \
             --plan=plan/technique-census-plan.json \
             --solver-version="${{ github.sha }}" \
+            --expected-shards=120 \
             --save-hints
 
       - name: Upload the combined result
@@ -282,16 +283,21 @@ jobs:
           NODE
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
           const plan = JSON.parse(fs.readFileSync('plan/technique-census-plan.json'));
-          fs.writeFileSync('plan/experiment-contract.json', `${JSON.stringify({
-            experiment: { workflowFamily: 'isolated-technique-census', producer: 'technique-census.yml', entrypoint: 'scripts/technique-census.mjs', configurationHash: hashConfiguration(plan) },
+          fs.writeFileSync('plan/experiment-contract-spec.json', `${JSON.stringify({
+            configuration: plan,
+            workflowFamily: 'isolated-technique-census',
+            producer: 'technique-census.yml',
+            entrypoint: 'scripts/technique-census.mjs',
             population: { kind: 'technique-census-cells', identityBasis: 'sealed-plan-cell-id' },
             execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'technique-census', schedulerMode: 'isolated-techniques' },
             limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: false },
             sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=plan/experiment-contract-spec.json \
+            --out=plan/experiment-contract.json
           if [ -f "reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" ]; then
             node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --rows-field=results \
               --expected-ids=plan/expected-cell-ids.txt \

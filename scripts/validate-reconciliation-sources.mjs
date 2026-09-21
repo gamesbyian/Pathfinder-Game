@@ -2,13 +2,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { assertCompatibleExperiments, decisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
+import { assertCompatibleExperiments, decisionContractIssues, declaredDecisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
 
 function sourceContract(manifest, runId) {
-  const resolvedSha = manifest?.experiment?.resolvedSha ?? manifest?.sha ?? null;
-  const configurationHash = manifest?.experiment?.configurationHash ?? manifest?.configurationHash ?? null;
-  if (!resolvedSha) throw new Error(`source run ${runId} has no actual resolved SHA`);
-  if (!configurationHash) throw new Error(`source run ${runId} has no configuration hash`);
+  if (manifest?.experiment?.reconciliationRun) {
+    throw new Error(
+      `source run ${runId} is already a reconciliation result; supply its leaf acquisition runs instead of nesting reconciliation and losing source ancestry`,
+    );
+  }
+  const resolvedSha = manifest?.experiment?.resolvedSha ?? null;
+  const configurationHash = manifest?.experiment?.configurationHash ?? null;
+  if (!resolvedSha) throw new Error(`source run ${runId} has no declared experiment resolved SHA`);
+  if (!configurationHash) throw new Error(`source run ${runId} has no declared experiment configuration hash`);
 
   const contract = {
     experiment: {
@@ -50,19 +55,54 @@ function sourceContract(manifest, runId) {
 export function validateReconciliationSources(sources) {
   if (!sources.length) throw new Error('no source manifests supplied');
   const normalized = sources.map(({ runId, manifest }) => {
-    const contract = sourceContract(manifest, runId);
+    const stagedRunId = String(runId);
+    const declaredRunId = manifest?.experiment?.workflowRunId ?? null;
+    if (declaredRunId == null) {
+      throw new Error(`source run ${stagedRunId} has no declared experiment workflow run ID; staging-directory identity is not scientific provenance`);
+    }
+    if (String(declaredRunId) !== stagedRunId) {
+      throw new Error(
+        `source staging directory ${stagedRunId} contains manifest for workflow run ${declaredRunId}; refusing to relabel acquisition provenance by directory name`,
+      );
+    }
+    if (manifest?.runId != null && String(manifest.runId) !== String(declaredRunId)) {
+      throw new Error(
+        `source run ${stagedRunId} has inconsistent manifest run identity: top-level ${manifest.runId} vs experiment ${declaredRunId}`,
+      );
+    }
+    const runAttempt = manifest?.experiment?.workflowRunAttempt ?? null;
+    if (runAttempt == null || String(runAttempt).trim() === '') {
+      throw new Error(`source run ${stagedRunId} has no declared experiment workflow run attempt`);
+    }
+    if (manifest?.runAttempt != null && String(manifest.runAttempt) !== String(runAttempt)) {
+      throw new Error(
+        `source run ${stagedRunId} has inconsistent manifest run attempt: top-level ${manifest.runAttempt} vs experiment ${runAttempt}`,
+      );
+    }
+    const contract = sourceContract(manifest, stagedRunId);
     return {
-      runId: String(runId),
-      runAttempt: manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt ?? null,
+      runId: stagedRunId,
+      runAttempt: String(runAttempt),
       resolvedSha: contract.experiment.resolvedSha,
       configurationHash: contract.experiment.configurationHash,
       populationIdentityHash: contract.population.identityHash,
       contract,
     };
   });
+  const runIds = normalized.map(source => source.runId);
+  if (new Set(runIds).size !== runIds.length) {
+    throw new Error('source run IDs must be unique for reconciliation');
+  }
 
   const reference = normalized[0].contract;
   for (const source of normalized.slice(1)) {
+    if (source.contract.experiment.resolvedSha !== reference.experiment.resolvedSha) {
+      throw new Error(
+        `source run ${source.runId} resolved SHA ${source.contract.experiment.resolvedSha} differs from `
+        + `source run ${normalized[0].runId} resolved SHA ${reference.experiment.resolvedSha}; `
+        + 'a recombine-only result cannot claim one preserved experiment identity across different solver revisions',
+      );
+    }
     try {
       assertCompatibleExperiments(reference, source.contract);
     } catch (error) {
@@ -70,7 +110,9 @@ export function validateReconciliationSources(sources) {
     }
   }
 
-  const sourcesForProvenance = normalized.map(({ contract: _contract, ...source }) => source);
+  const sourcesForProvenance = normalized
+    .map(({ contract: _contract, ...source }) => source)
+    .sort((left, right) => left.runId.localeCompare(right.runId));
   const sourceExperiment = {
     workflowFamily: reference.experiment.workflowFamily,
     producer: reference.experiment.producer,
@@ -102,10 +144,53 @@ export function validateReconciliationSources(sources) {
   };
 }
 
+
+export function buildReconciliationContract(provenance, {
+  runId = null,
+  runAttempt = null,
+  reconciliationSha = null,
+} = {}) {
+  const sourceRuns = (provenance?.sources ?? []).map(source => String(source?.runId ?? '').trim()).filter(Boolean);
+  const contract = {
+    experiment: {
+      ...(provenance?.sourceExperiment ?? {}),
+      resolvedSha: provenance?.resolvedSha ?? null,
+      configurationHash: provenance?.configurationHash ?? null,
+      sourceRuns,
+      sourceProtocolHash: provenance?.protocolHash ?? null,
+      sourceSetHash: provenance?.sourceSetHash ?? null,
+      reconciliationRun: {
+        kind: 'recombine-only',
+        preservesExperimentIdentity: true,
+        acquisitionRecomputed: false,
+        sourceRuns,
+        sourceProtocolHash: provenance?.protocolHash ?? null,
+        sourceSetHash: provenance?.sourceSetHash ?? null,
+        runId,
+        runAttempt,
+        resolvedSha: reconciliationSha,
+        producer: 'solver-combine-sweep-runs.yml',
+        entrypoint: 'scripts/combine-solver-sweep-reports.mjs',
+      },
+    },
+    population: {
+      kind: 'explicit-reconciled-population',
+      identityBasis: provenance?.population?.identityBasis ?? null,
+      corpusIdentity: provenance?.population?.corpusIdentity ?? null,
+    },
+    execution: provenance?.execution ?? null,
+    limits: provenance?.limits ?? null,
+    sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only' },
+  };
+  const issues = declaredDecisionContractIssues(contract);
+  if (issues.length) throw new Error(`invalid reconciliation experiment contract: ${issues.join(', ')}`);
+  return contract;
+}
+
 function main() {
   const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--') && arg.includes('='))
     .map(arg => { const [key, ...rest] = arg.slice(2).split('='); return [key, rest.join('=')]; }));
-  const root = args.get('sources-dir'); const out = args.get('out');
+  const root = args.get('sources-dir'); const out = args.get('out'); const contractOut = args.get('contract-out') || null;
   if (!root || !out) throw new Error('--sources-dir=<dir> and --out=<file> are required');
   const sources = fs.readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => {
     const manifestPath = path.join(root, entry.name, 'manifest.json');
@@ -114,6 +199,15 @@ function main() {
   });
   const result = validateReconciliationSources(sources);
   fs.writeFileSync(out, `${JSON.stringify(result, null, 2)}\n`);
+  if (contractOut) {
+    const contract = buildReconciliationContract(result, {
+      runId: process.env.GITHUB_RUN_ID ?? null,
+      runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
+      reconciliationSha: process.env.GITHUB_SHA ?? null,
+    });
+    fs.mkdirSync(path.dirname(contractOut), { recursive: true });
+    fs.writeFileSync(contractOut, `${JSON.stringify(contract, null, 2)}\n`);
+  }
   console.log(`Validated ${sources.length} compatible source run manifests (${result.sourceSetHash}; protocol ${result.protocolHash}).`);
 }
 

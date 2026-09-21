@@ -16,6 +16,7 @@ import { validateSweepIntegrity, diffPopulation } from './validate-solver-sweep-
 import { analyzeOpportunity, opportunitySampleSizeForAtLeastOne } from './experiment-opportunity-audit.mjs';
 import { simulateMakespan, packByMakespan, classifyTelemetry } from './plan-highbudget-shards.mjs';
 import { calibrateMultipliers } from './backtest-shard-runtime-policy.mjs';
+import { hashConfiguration } from './solver-experiment-contract.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -108,6 +109,23 @@ async function main() {
             '["scope:a","b"]',
         ]);
         console.log('  ✓ mixed-corpus identities cannot alias across colon placement');
+
+        const mixedConfigA = path.join(tempDir, 'mixed-config-a.json');
+        const mixedConfigB = path.join(tempDir, 'mixed-config-b.json');
+        const mixedConfigOut = path.join(tempDir, 'mixed-config-out.json');
+        await writeFile(mixedConfigA, JSON.stringify(batchReport({
+            summary: { corpus: 'corpus-a', effectiveConfig: { corpusSha256: 'aaa', timeBudgetMs: 100, schedulerMode: 'production' } },
+            levels: [{ level: 1, id: 'A1', ok: false }],
+        })));
+        await writeFile(mixedConfigB, JSON.stringify(batchReport({
+            summary: { corpus: 'corpus-b', effectiveConfig: { corpusSha256: 'bbb', timeBudgetMs: 100, schedulerMode: 'production' } },
+            levels: [{ level: 1, id: 'B1', ok: false }],
+        })));
+        await run([`--in=${mixedConfigA},${mixedConfigB}`, `--out=${mixedConfigOut}`, '--allow-mixed-corpora']);
+        const mixedConfigCombined = JSON.parse(await readFile(mixedConfigOut, 'utf8'));
+        assert.equal(Object.keys(mixedConfigCombined.effectiveConfig.byCorpus).length, 2);
+        assert.equal(mixedConfigCombined.configurationHash, hashConfiguration(mixedConfigCombined.effectiveConfig));
+        console.log('  ✓ mixed-corpus observed execution identity composes per-corpus configs instead of requiring false equality');
 
         const mixedExpectedLegacy = path.join(tempDir, 'mixed-expected-legacy.txt');
         await writeFile(mixedExpectedLegacy, 'scope:a:b\n');
@@ -312,6 +330,58 @@ async function main() {
         );
         console.log('  ✓ combiner rejects shards that disagree on decision-bearing execution configuration');
 
+        const observedConfig1 = path.join(tempDir, 'observed-config-01.json');
+        const observedConfig2 = path.join(tempDir, 'observed-config-02.json');
+        const observedConfigOut = path.join(tempDir, 'observed-config-combined.json');
+        const observedEffectiveConfig = {
+            corpusSha256: 'corpus-a',
+            levelBlind: true,
+            timeBudgetMs: 8000,
+            schedulerMode: 'production',
+            repairLateProbeMultiSeedRetrySeedCountOverride: 6,
+        };
+        await writeFile(observedConfig1, JSON.stringify(batchReport({
+            summary: { effectiveConfig: observedEffectiveConfig },
+            levels: [{ level: 21, id: 'R00221', ok: false }],
+        })));
+        await writeFile(observedConfig2, JSON.stringify(batchReport({
+            summary: { effectiveConfig: observedEffectiveConfig },
+            levels: [{ level: 22, id: 'R00222', ok: false }],
+        })));
+        await run([`--in=${observedConfig1},${observedConfig2}`, `--out=${observedConfigOut}`]);
+        const observedCombined = JSON.parse(await readFile(observedConfigOut, 'utf8'));
+        assert.deepEqual(observedCombined.effectiveConfig, observedEffectiveConfig);
+        assert.match(observedCombined.effectiveConfigDigest, /^[0-9a-f]{64}$/u);
+        assert.equal(observedCombined.configurationHash, hashConfiguration(observedEffectiveConfig),
+            'standard configuration identity must be derived from observed solver execution when available');
+
+        const observedConfigMismatch = path.join(tempDir, 'observed-config-mismatch.json');
+        await writeFile(observedConfigMismatch, JSON.stringify(batchReport({
+            summary: { effectiveConfig: { ...observedEffectiveConfig, repairLateProbeMultiSeedRetrySeedCountOverride: 7 } },
+            levels: [{ level: 23, id: 'R00223', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${observedConfig1},${observedConfigMismatch}`, `--out=${path.join(tempDir, 'observed-config-mismatch-out.json')}`]),
+            /Mismatched effectiveConfig/u,
+        );
+        console.log('  ✓ observed solver execution identity detects treatment drift omitted by legacy workflow mirrors');
+
+        const observedConfigMissing = path.join(tempDir, 'observed-config-missing.json');
+        await writeFile(observedConfigMissing, JSON.stringify(batchReport({
+            levels: [{ level: 24, id: 'R00224', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${observedConfig1},${observedConfigMissing}`, `--out=${path.join(tempDir, 'observed-config-partial-out.json')}`]),
+            /some source reports record observed solver execution identity and others omit it/u,
+        );
+        console.log('  ✓ combiner rejects silent downgrade from mixed modern/legacy execution identity');
+
+        const portfolioSource = await readFile(path.join(ROOT, 'scripts/portfolio-solve-sweep.mjs'), 'utf8');
+        assert.match(portfolioSource, /effectiveConfigDigest/u);
+        assert.match(portfolioSource, /primeWinner: \{/u);
+        assert.match(portfolioSource, /adaptiveBudget: \{/u);
+        console.log('  ✓ portfolio sweeps publish history-aware effective execution identity');
+
         const batch3 = path.join(tempDir, 'batch-03-mismatch.json');
         await writeFile(batch3, JSON.stringify(batchReport({ summary: { budgetMs: 20000 }, levels: [{ level: 3, id: 'R00003', ok: true }] })));
         await assert.rejects(() => run([`--in=${batch1},${batch3}`, `--out=${outFile}`]), /Mismatched budgetMs/);
@@ -326,6 +396,23 @@ async function main() {
         await writeFile(batchLocalCommit, JSON.stringify(batchReport({ summary: { commit: 'local' }, levels: [{ level: 5, id: 'R00005', ok: true }] })));
         await run([`--in=${batch1},${batchLocalCommit}`, `--out=${outFile}`]);
         console.log('  ✓ exempts local/unknown commit provenance from the wrong-ref check');
+
+        const immutableCommit = 'a'.repeat(40);
+        const batchImmutableCommit = path.join(tempDir, 'batch-immutable-commit.json');
+        const batchUnknownCommit = path.join(tempDir, 'batch-unknown-commit.json');
+        await writeFile(batchImmutableCommit, JSON.stringify(batchReport({
+            summary: { commit: immutableCommit },
+            levels: [{ level: 6, id: 'R00006', ok: true }],
+        })));
+        await writeFile(batchUnknownCommit, JSON.stringify(batchReport({
+            summary: { commit: 'unknown' },
+            levels: [{ level: 7, id: 'R00007', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${batchImmutableCommit},${batchUnknownCommit}`, `--out=${outFile}`]),
+            /some source reports carry an immutable execution revision and others omit or weaken it/u,
+        );
+        console.log('  ✓ rejects mixed modern/legacy execution revision provenance before combine can upgrade unknown rows');
 
         const batch1Again = path.join(tempDir, 'batch-01-again.json');
         await writeFile(batch1Again, JSON.stringify(batchReport({

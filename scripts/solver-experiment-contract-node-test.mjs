@@ -3,10 +3,12 @@ import {
   assertCompatibleExperiments,
   buildPopulationIntegrity,
   classifyRow,
+  decisionBearingExperimentResultIssues,
   decisionContractIssues,
   declaredDecisionContractIssues,
   hashConfiguration,
   hashPopulation,
+  isDecisionBearingExperimentResult,
   isImmutableCommitSha,
   parseIdentityLines,
 } from './solver-experiment-contract.mjs';
@@ -125,6 +127,46 @@ const withResearchQuestion = {
   },
 };
 assert.deepEqual(decisionContractIssues(withResearchQuestion), []);
+const decisionBearingManifest = {
+  ...clone(withResearchQuestion),
+  schemaVersion: 3,
+  kind: 'pathfinder-solver-experiment-result',
+  status: 'published',
+  decisionContractIssues: [],
+  populationIdentityHash: a.identityHash,
+  populationIntegrity: {
+    complete: true, coverageComplete: true, decisionValidComplete: true,
+    inferredExpectedPopulation: false, populationIdentityHash: a.identityHash,
+    outcomes: { deadlineTruncated: 0, harnessError: 0, malformed: 0, missing: 0, unknown: 0 },
+  },
+  researchOutcome: { outcome: 'completed-positive' },
+};
+assert.deepEqual(decisionBearingExperimentResultIssues(decisionBearingManifest), []);
+assert.equal(isDecisionBearingExperimentResult(decisionBearingManifest), true);
+assert.ok(decisionBearingExperimentResultIssues({ ...decisionBearingManifest, status: 'missing-primary' }).includes('status'));
+assert.ok(decisionBearingExperimentResultIssues({
+  ...decisionBearingManifest,
+  decisionContractIssues: ['experiment.configurationHash'],
+}).includes('decisionContractIssues(non-empty)'));
+assert.ok(decisionBearingExperimentResultIssues({
+  ...decisionBearingManifest,
+  populationIntegrity: { ...decisionBearingManifest.populationIntegrity, decisionValidComplete: false },
+}).includes('populationIntegrity.decisionValidComplete'));
+const legacyDecisionValidity = { ...decisionBearingManifest.populationIntegrity };
+delete legacyDecisionValidity.decisionValidComplete;
+assert.ok(decisionBearingExperimentResultIssues({
+  ...decisionBearingManifest,
+  populationIntegrity: legacyDecisionValidity,
+}).includes('populationIntegrity.decisionValidComplete'),
+'legacy structural completeness must not substitute for an explicit decision-valid integrity verdict');
+assert.ok(decisionBearingExperimentResultIssues({
+  ...decisionBearingManifest,
+  researchOutcome: { outcome: 'invariant-violation' },
+}).includes('researchOutcome.outcome'));
+assert.ok(decisionBearingExperimentResultIssues({
+  ...decisionBearingManifest,
+  populationIdentityHash: `sha256:${'9'.repeat(64)}`,
+}).includes('populationIdentityHash(population-mismatch)'));
 assert.ok(decisionContractIssues({
   ...clone(common), researchQuestion: { ...withResearchQuestion.researchQuestion, questionId: '' },
 }).includes('researchQuestion.questionId'));

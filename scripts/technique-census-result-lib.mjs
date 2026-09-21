@@ -95,6 +95,85 @@ function comparablePayload(result) {
     };
 }
 
+function stableValue(value) {
+    if (value === undefined) return undefined;
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(item => stableValue(item) ?? 'null').join(',')}]`;
+    const keys = Object.keys(value).filter(key => value[key] !== undefined).sort();
+    return `{${keys.map(key => `${JSON.stringify(key)}:${stableValue(value[key])}`).join(',')}}`;
+}
+
+function canonicalPlanJoinValue(field, value) {
+    if (field === 'techniqueKeys' && Array.isArray(value)) return value.map(normalizeAttemptIdentityKey);
+    if (field === 'variantLabel' && value != null) return normalizeTechniqueCensusIdentityLabel(value);
+    return value;
+}
+
+const PLAN_RESULT_JOIN_FIELDS = Object.freeze([
+    'tier', 'corpus', 'levelPos', 'levelId', 'variantLabel', 'pairLabel', 'flagExperiment',
+    'techniqueKeys', 'nodeBudget', 'workBudget', 'budgetMs', 'perTechniqueWorkCap',
+    'perTechniqueWorkCapByKey', 'ablation',
+]);
+
+export function validateTechniqueCensusPlanJoin(
+    plan,
+    results,
+    { requireComplete = false, allowLegacyOmissions = false } = {},
+) {
+    if (!plan || !Array.isArray(plan.cells)) throw new Error('technique-census plan must carry cells[]');
+    const planById = new Map();
+    for (const rawCell of plan.cells) {
+        if (!rawCell?.cellId) throw new Error('technique-census plan cell is missing cellId');
+        if (planById.has(rawCell.cellId)) throw new Error(`duplicate cellId in authored plan: ${rawCell.cellId}`);
+        planById.set(rawCell.cellId, rawCell);
+    }
+
+    const seen = new Map();
+    const unverifiedJoinFields = [];
+    for (const rawResult of results) {
+        const result = canonicalizeTechniqueCensusResult(rawResult);
+        if (!result?.cellId) throw new Error('Technique census result is missing cellId');
+        const cell = planById.get(result.cellId);
+        if (!cell) throw new Error(`unexpected result cellId absent from authored plan: ${result.cellId}`);
+        seen.set(result.cellId, (seen.get(result.cellId) ?? 0) + 1);
+
+        for (const field of PLAN_RESULT_JOIN_FIELDS) {
+            if (!Object.prototype.hasOwnProperty.call(cell, field)) continue;
+            if (allowLegacyOmissions
+                && !Object.prototype.hasOwnProperty.call(result, field)
+                && (field === 'budgetMs' || field === 'levelId')) {
+                unverifiedJoinFields.push({ cellId: result.cellId, field });
+                continue;
+            }
+            const planned = canonicalPlanJoinValue(field, cell[field]);
+            const observed = canonicalPlanJoinValue(field, result[field]);
+            if (stableValue(observed) !== stableValue(planned)) {
+                throw new Error(
+                    `result ${result.cellId} disagrees with authored plan on ${field}: `
+                    + `observed=${stableValue(observed)} planned=${stableValue(planned)}`,
+                );
+            }
+        }
+    }
+
+    const expectedIds = [...planById.keys()];
+    const missing = expectedIds.filter(id => !seen.has(id));
+    const duplicated = [...seen.entries()].filter(([, count]) => count > 1).map(([id]) => id);
+    if (requireComplete && (missing.length || duplicated.length)) {
+        throw new Error(
+            `incomplete/inconsistent coverage against authored plan: ${missing.length} missing, `
+            + `${duplicated.length} duplicated. First few missing: ${missing.slice(0, 5).join(', ')}`,
+        );
+    }
+    return {
+        expectedIds,
+        missing,
+        duplicated,
+        identityFullyVerified: unverifiedJoinFields.length === 0,
+        unverifiedJoinFields,
+    };
+}
+
 export function dedupeTechniqueCensusResults(results) {
     const byCellId = new Map();
     let duplicatesRemoved = 0;

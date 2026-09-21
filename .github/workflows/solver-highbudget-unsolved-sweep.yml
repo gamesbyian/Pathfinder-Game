@@ -480,19 +480,25 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
-          const configuration = { nodeBudget: Number(process.env.NODE_BUDGET), budgetMs: Number(process.env.BUDGET_MS), schedulerMode: 'production' };
-          const gapFill = Boolean(process.env.GAP_FILL_C1 || process.env.GAP_FILL_C2);
-          fs.writeFileSync('logs/solver-highbudget-sweep/experiment-contract.json', `${JSON.stringify({
-            experiment: { workflowFamily: 'history-aware-highbudget', producer: 'solver-highbudget-unsolved-sweep.yml', entrypoint: 'scripts/portfolio-solve-sweep.mjs', configurationHash: hashConfiguration(configuration) },
-            population: { kind: gapFill ? 'explicit-frozen-multi-corpus-cohort-gap-fill-subset' : 'explicit-frozen-multi-corpus-cohort', identityBasis: 'corpus-and-stable-level-id' },
+          const observedExecution = {};
+          for (const [name, file] of [['corpus1', 'reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json'], ['corpus2', 'reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json']]) {
+            if (fs.existsSync(file)) observedExecution[name] = JSON.parse(fs.readFileSync(file, 'utf8')).configurationHash ?? null;
+          }
+          const configuration = { nodeBudget: Number(process.env.NODE_BUDGET), budgetMs: Number(process.env.BUDGET_MS), schedulerMode: 'production', observedExecution };
+          fs.writeFileSync('logs/solver-highbudget-sweep/contract-spec.json', `${JSON.stringify({
+            configuration,
+            workflowFamily: 'history-aware-highbudget',
+            producer: 'solver-highbudget-unsolved-sweep.yml',
+            entrypoint: 'scripts/portfolio-solve-sweep.mjs',
+            population: { kind: (process.env.GAP_FILL_C1 || process.env.GAP_FILL_C2) ? 'explicit-frozen-multi-corpus-cohort-gap-fill-subset' : 'explicit-frozen-multi-corpus-cohort', identityBasis: 'corpus-and-stable-level-id' },
             execution: { levelBlind: false, historyAware: true, historicalInputs: ['frozen prior-unsolved IDs', 'saved hints', 'production baseline'], reproducibilityExpected: false, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
-            limits: { cumulativeNodeCeiling: configuration.nodeBudget, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: configuration.budgetMs, wallDeadlineBinding: null },
-            sideEffects: gapFill
+            limits: { cumulativeNodeCeiling: configuration.nodeBudget, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: configuration.budgetMs, wallDeadlineBinding: true },
+            sideEffects: (process.env.GAP_FILL_C1 || process.env.GAP_FILL_C2)
               ? { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'artifact-only-pending-reconciliation' }
               : { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
+          node scripts/write-solver-experiment-contract.mjs --spec=logs/solver-highbudget-sweep/contract-spec.json --out=logs/solver-highbudget-sweep/experiment-contract.json
           node scripts/summarize-solver-failure-response.mjs \
             --in="reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json,reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json" \
             --rows-key=levels \

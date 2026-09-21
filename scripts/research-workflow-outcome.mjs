@@ -10,6 +10,46 @@ export const RESEARCH_WORKFLOW_OUTCOMES = Object.freeze([
   'timeout',
 ]);
 
+const SHA256_RE = /^sha256:[0-9a-f]{64}$/u;
+const COMMIT_SHA_RE = /^[0-9a-f]{40}$/u;
+
+function validateOutcomeBinding(binding) {
+  if (binding == null) return null;
+  if (!binding || typeof binding !== 'object' || Array.isArray(binding)) {
+    throw new Error('research outcome binding must be an object');
+  }
+  const result = {};
+  if (binding.populationIdentityHash != null) {
+    if (!SHA256_RE.test(String(binding.populationIdentityHash))) {
+      throw new Error('research outcome binding populationIdentityHash must be sha256:<64 hex>');
+    }
+    result.populationIdentityHash = String(binding.populationIdentityHash);
+  }
+  if (binding.resultConfigurationHashes != null) {
+    if (!Array.isArray(binding.resultConfigurationHashes) || binding.resultConfigurationHashes.length === 0
+        || binding.resultConfigurationHashes.some(value => !SHA256_RE.test(String(value)))) {
+      throw new Error('research outcome binding resultConfigurationHashes must be a non-empty sha256 array');
+    }
+    result.resultConfigurationHashes = binding.resultConfigurationHashes.map(String).sort();
+  }
+  if (binding.resultResolvedShas != null) {
+    if (!Array.isArray(binding.resultResolvedShas) || binding.resultResolvedShas.length === 0
+        || binding.resultResolvedShas.some(value => !COMMIT_SHA_RE.test(String(value)))) {
+      throw new Error('research outcome binding resultResolvedShas must be a non-empty 40-hex commit array');
+    }
+    result.resultResolvedShas = binding.resultResolvedShas.map(String).sort();
+  }
+  if (binding.resultContentHashes != null) {
+    if (!Array.isArray(binding.resultContentHashes) || binding.resultContentHashes.length === 0
+        || binding.resultContentHashes.some(value => !SHA256_RE.test(String(value)))) {
+      throw new Error('research outcome binding resultContentHashes must be a non-empty sha256 array');
+    }
+    result.resultContentHashes = binding.resultContentHashes.map(String).sort();
+  }
+  if (Object.keys(result).length === 0) throw new Error('research outcome binding must declare at least one identity');
+  return result;
+}
+
 export function validateResearchWorkflowOutcome(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('research outcome must be an object');
@@ -26,7 +66,10 @@ export function validateResearchWorkflowOutcome(value) {
   if (/\r|\n/u.test(value.reason)) {
     throw new Error('research outcome reason must be a single line');
   }
-  return { schemaVersion: 1, outcome: value.outcome, reason: value.reason.trim() };
+  const result = { schemaVersion: 1, outcome: value.outcome, reason: value.reason.trim() };
+  const binding = validateOutcomeBinding(value.binding);
+  if (binding) result.binding = binding;
+  return result;
 }
 
 export function writeResearchWorkflowOutcome(file, value) {

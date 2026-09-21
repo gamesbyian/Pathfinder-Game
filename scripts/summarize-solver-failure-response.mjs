@@ -55,15 +55,16 @@ function sharedMetadataValue(values) {
 }
 
 const contract = contractFile && existsSync(contractFile) ? JSON.parse(readFileSync(contractFile, 'utf8')) : null;
-const protocolHash = contract?.experiment?.configurationHash
-    ?? sharedMetadataValue(documents.map(({ document }) =>
+// A supplied experiment contract is the identity authority. Do not combine a strong protocol
+// hash from that contract with a weaker solver ref inferred from source/orchestration metadata.
+const protocolHash = contract
+    ? (contract?.experiment?.configurationHash ?? null)
+    : sharedMetadataValue(documents.map(({ document }) =>
         document.protocolHash ?? document.configurationHash ?? document.experiment?.configurationHash ?? null));
-const solverRef = contract?.experiment?.resolvedSha
-    ?? contract?.solverRef
-    ?? sharedMetadataValue(documents.map(({ document }) =>
-        document.solverRef ?? document.commitSha ?? document.experiment?.resolvedSha ?? null))
-    ?? process.env.GITHUB_SHA
-    ?? null;
+const solverRef = contract
+    ? (contract?.experiment?.resolvedSha ?? null)
+    : sharedMetadataValue(documents.map(({ document }) =>
+        document.experiment?.resolvedSha ?? document.solverRef ?? document.commitSha ?? null));
 
 // A caller-verified populationIntegrity is only reusable as-is from exactly one source document --
 // merging two independently computed coverage claims correctly is out of scope here, and silently

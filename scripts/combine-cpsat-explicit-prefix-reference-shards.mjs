@@ -26,10 +26,26 @@ if (files.length !== expectedShards) {
   throw new Error(`missing shard artifacts: found ${files.length}/${expectedShards}`);
 }
 
-const docs = files.map(name => JSON.parse(readFileSync(path.join(dir, name), 'utf8')));
-const first = docs[0];
+const docs = files.map(name => ({
+  name,
+  document: JSON.parse(readFileSync(path.join(dir, name), 'utf8')),
+}));
+const first = docs[0].document;
 const legacyLabelKey = ['oracle', 'Label'].join('');
-for (const doc of docs) {
+const shardIndices = new Set();
+for (const { name, document: doc } of docs) {
+  const fileIndex = Number(name.match(/-(\d+)\.json$/u)?.[1]);
+  if (doc.shardCount !== expectedShards) {
+    throw new Error(`shard ${doc.shardIndex} declares shardCount=${doc.shardCount}; expected ${expectedShards}`);
+  }
+  if (!Number.isInteger(doc.shardIndex) || doc.shardIndex < 1 || doc.shardIndex > expectedShards) {
+    throw new Error(`invalid shardIndex ${JSON.stringify(doc.shardIndex)}`);
+  }
+  if (doc.shardIndex !== fileIndex) {
+    throw new Error(`shard filename/index mismatch: ${name} contains shardIndex=${doc.shardIndex}`);
+  }
+  if (shardIndices.has(doc.shardIndex)) throw new Error(`duplicate shardIndex ${doc.shardIndex}`);
+  shardIndices.add(doc.shardIndex);
   if (doc.schemaVersion !== 2) {
     throw new Error(`unexpected explicit-prefix shard schemaVersion ${doc.schemaVersion}`);
   }
@@ -40,15 +56,30 @@ for (const doc of docs) {
   }
   if (
     doc.solverRef !== first.solverRef ||
+    doc.technique !== first.technique ||
     doc.sourceCases !== first.sourceCases ||
     doc.sourceFormat !== first.sourceFormat ||
-    doc.requestedTimeLimitSec !== first.requestedTimeLimitSec
+    doc.coordinateConvention !== first.coordinateConvention ||
+    doc.requestedTimeLimitSec !== first.requestedTimeLimitSec ||
+    doc.selectedCaseCount !== first.selectedCaseCount
   ) {
     throw new Error(`metadata mismatch in shard ${doc.shardIndex}`);
   }
+  const expectedRows = doc.selectedCaseCount < doc.shardIndex
+    ? 0
+    : Math.floor((doc.selectedCaseCount - doc.shardIndex) / expectedShards) + 1;
+  if ((doc.rows?.length ?? 0) !== expectedRows) {
+    throw new Error(
+      `incomplete shard ${doc.shardIndex}: found ${doc.rows?.length ?? 0}/${expectedRows} round-robin case rows`,
+    );
+  }
+}
+const expectedIndexList = Array.from({ length: expectedShards }, (_, index) => index + 1);
+if (JSON.stringify([...shardIndices].sort((a, b) => a - b)) !== JSON.stringify(expectedIndexList)) {
+  throw new Error(`incomplete shard-index coverage: observed ${[...shardIndices].sort((a, b) => a - b).join(',')}`);
 }
 
-const rows = docs.flatMap(doc => doc.rows ?? []);
+const rows = docs.flatMap(({ document }) => document.rows ?? []);
 const seen = new Set();
 for (const row of rows) {
   if (seen.has(row.caseId)) throw new Error(`duplicate case across shards: ${row.caseId}`);

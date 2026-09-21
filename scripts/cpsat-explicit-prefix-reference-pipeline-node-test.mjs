@@ -98,6 +98,74 @@ try {
     'structured case source metadata must survive shard recombination');
   assert.equal('oracleLabel' in combined.rows[0], false);
 
+  const partitionStaging = path.join(dir, 'partition-staging');
+  mkdirSync(partitionStaging, { recursive: true });
+  const basePartition = {
+    schemaVersion: 2,
+    solverRef: 'a'.repeat(40),
+    technique: 'cpsat-reference-probe-explicit-prefix',
+    sourceCases: 'cases.json',
+    sourceFormat: 'cases',
+    coordinateConvention: 'raw-level-1-based',
+    requestedTimeLimitSec: 1,
+    shardCount: 2,
+    selectedCaseCount: 3,
+    caution: 'fixture',
+  };
+  const row = (caseId) => ({
+    schemaVersion: 2,
+    caseId,
+    referenceLabel: 'timeout/abstain',
+    referenceReason: 'reference-unknown',
+    correctnessAlarm: false,
+    inputAlarm: false,
+  });
+  const writePartitionShard = (index, rows, overrides = {}) => {
+    const doc = {
+      ...basePartition,
+      shardIndex: index,
+      rows,
+      summary: { cases: rows.length, live: 0, dead: 0, abstain: rows.length, correctnessAlarms: 0, inputAlarms: 0 },
+      ...overrides,
+    };
+    writeFileSync(
+      path.join(partitionStaging, `cpsat-explicit-prefix-reference-shard-${String(index).padStart(3, '0')}.json`),
+      JSON.stringify(doc),
+    );
+  };
+  writePartitionShard(1, [row('A'), row('C')]);
+  writePartitionShard(2, [row('B')]);
+  const partitionOut = path.join(dir, 'partition-combined.json');
+  await run(process.execPath, [
+    path.join(process.cwd(), 'scripts/combine-cpsat-explicit-prefix-reference-shards.mjs'),
+    `--in-dir=${partitionStaging}`,
+    '--shards=2',
+    `--out=${partitionOut}`,
+  ], { cwd: dir, maxBuffer: 16 * 1024 * 1024 });
+  assert.equal(JSON.parse(readFileSync(partitionOut, 'utf8')).summary.cases, 3);
+
+  writePartitionShard(2, [row('B')], { shardCount: 3 });
+  await assert.rejects(
+    () => run(process.execPath, [
+      path.join(process.cwd(), 'scripts/combine-cpsat-explicit-prefix-reference-shards.mjs'),
+      `--in-dir=${partitionStaging}`,
+      '--shards=2',
+      `--out=${partitionOut}`,
+    ], { cwd: dir, maxBuffer: 16 * 1024 * 1024 }),
+    /declares shardCount=3; expected 2/u,
+  );
+  writePartitionShard(2, [row('B')]);
+  writePartitionShard(1, [row('A')]);
+  await assert.rejects(
+    () => run(process.execPath, [
+      path.join(process.cwd(), 'scripts/combine-cpsat-explicit-prefix-reference-shards.mjs'),
+      `--in-dir=${partitionStaging}`,
+      '--shards=2',
+      `--out=${partitionOut}`,
+    ], { cwd: dir, maxBuffer: 16 * 1024 * 1024 }),
+    /incomplete shard 1: found 1\/2/u,
+  );
+
   await run(process.execPath, [
     path.join(process.cwd(), 'scripts/publish-solver-sweep-result.mjs'),
     `--primary=${combinedFile}`,

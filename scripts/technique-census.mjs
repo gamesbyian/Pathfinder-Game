@@ -7,12 +7,17 @@
 // New referee-valid solves stay in shard output; combine-technique-census-shards.mjs is the sole
 // post-run writer. Results are persisted between cells and on termination signals.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 
 import { createCellRunner } from './technique-census-cell.mjs';
 import { runWorkerPool } from './solver-worker-pool.mjs';
 
+const commit = (() => {
+    try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); }
+    catch { return 'local'; }
+})();
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
     const [k, ...v] = a.split('=');
@@ -55,7 +60,7 @@ if (OUT_FILE) mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true 
 function writeReport(partial) {
     if (!OUT_FILE) return;
     writeFileSync(path.resolve(OUT_FILE), JSON.stringify({
-        shard: SHARD, shards: SHARDS, planFile: PLAN_FILE, workers: WORKERS, partial,
+        commit, shard: SHARD, shards: SHARDS, planFile: PLAN_FILE, workers: WORKERS, partial,
         budgetProtocol: plan.budgetProtocol ?? 'technique-local-node-depth',
         equalCostAcrossTechniques: plan.equalCostAcrossTechniques ?? false,
         results,

@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { combinePopulationIntegrity, encodeScopedPopulationIdentity } from './combine-population-integrity.mjs';
 
 const base = {
@@ -61,5 +65,51 @@ const fullyValid = combinePopulationIntegrity([
 assert.equal(fullyValid.coverageComplete, true);
 assert.equal(fullyValid.decisionValidComplete, true);
 
+const legacyClean = {
+  ...base,
+  complete: true,
+  coverageComplete: true,
+  expectedCount: 2,
+  observedCount: 2,
+  outcomes: { solved: 2 },
+};
+delete legacyClean.decisionValidComplete;
+const mixedModernLegacy = combinePopulationIntegrity([
+  { label: 'modern', integrity: { ...legacyClean, decisionValidComplete: true } },
+  { label: 'legacy', integrity: legacyClean },
+]);
+assert.equal(
+  mixedModernLegacy.decisionValidComplete,
+  false,
+  'a clean legacy component must remain readable but cannot be upgraded into fresh decision authority by combination',
+);
+assert.equal(mixedModernLegacy.coverageComplete, true);
+
 assert.throws(() => combinePopulationIntegrity([{ label: 'x', integrity: base }, { label: 'x', integrity: base }]), /unique/);
+
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'combine-population-integrity-cli-'));
+try {
+  const left = path.join(temp, 'left.json');
+  const right = path.join(temp, 'right.json');
+  const out = path.join(temp, 'combined.json');
+  fs.writeFileSync(left, JSON.stringify(base));
+  fs.writeFileSync(right, JSON.stringify({ ...base, outcomes: { solved: 2 } }));
+  const cli = spawnSync(process.execPath, [
+    'scripts/combine-population-integrity.mjs',
+    `--input=left:${left}`,
+    `--input=right:${right}`,
+    '--kind=fixture-multi-population',
+    '--identity-basis=fixture-label-and-id',
+    `--out=${out}`,
+  ], { cwd: process.cwd(), encoding: 'utf8' });
+  assert.equal(cli.status, 0, cli.stderr);
+  const written = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert.equal(written.expectedCount, 4);
+  assert.equal(written.components.length, 2);
+  assert.equal(written.coverageComplete, true);
+  assert.match(written.populationIdentityHash, /^sha256:[0-9a-f]{64}$/u);
+} finally {
+  fs.rmSync(temp, { recursive: true, force: true });
+}
+
 console.log('combine population integrity tests passed');

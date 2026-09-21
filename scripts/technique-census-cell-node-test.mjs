@@ -55,6 +55,7 @@ test('node-budget cell (no workBudget) is unaffected by the equal-work addition'
     assert.equal(result.status, 'node-budget-reached');
     assert.equal(result.nodesExpanded, 10);
     assert.equal(result.nodeBudget, 5);
+    assert.equal(result.budgetMs, 8000, 'result identity retains the authored per-attempt deadline');
     // No work-mode fields leak into a node-budget-only result.
     assert.equal(Object.hasOwn(result, 'workBudget'), false);
     assert.equal(Object.hasOwn(result, 'workSpent'), false);
@@ -425,13 +426,15 @@ test('real admissible-order/IDA cell obeys the equal-work cap instead of oversho
         `IDA workSpent (${result.workSpent}) escaped far beyond the ${budget} equal-work cap`);
 });
 
-test('runCellSafe echoes workBudget on a thrown error, same as the success/failure paths', async () => {
+test('runCellSafe retains treatment and level identity on a thrown error', async () => {
     const { runAttemptForTesting } = stubRunner(() => { throw new Error('boom'); });
     const { runCellSafe } = await createCellRunner({ runAttemptForTesting });
-    const result = await runCellSafe({ ...baseCell, workBudget: 999 });
+    const result = await runCellSafe({ ...baseCell, levelId: 'fixture-level', workBudget: 999 });
 
     assert.equal(result.ok, false);
     assert.equal(result.status, 'error');
+    assert.equal(result.levelId, 'fixture-level');
     assert.equal(result.workBudget, 999);
+    assert.equal(result.budgetMs, 8000);
     assert.match(result.error, /boom/);
 });

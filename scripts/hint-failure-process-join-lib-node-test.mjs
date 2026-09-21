@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { joinHintDiscoveryAndFailureProcesses } from './hint-failure-process-join-lib.mjs';
 
 const discovery = [{
-    run: { runId: 'success-run', protocolHash: 'proto', solverRef: 'solver' },
+    run: { runId: 'success-run', protocolHash: 'proto', solverRef: 'solver', populationIdentity: 'population-a' },
     records: [
         {
             evidenceId: 'e1', parentId: 'P1', solutionSignature: '1,2,3',
@@ -23,6 +23,7 @@ const discovery = [{
 const failures = [{
     protocolHash: 'proto',
     solverRef: 'solver',
+    populationIntegrity: { populationIdentityHash: 'population-a' },
     records: [
         { identity: 'f1', parentId: 'P1', runId: 'failure-run-1', outcome: 'workLimited', actionKey: 'repair' },
         { identity: 'f2', parentId: 'P1', runId: 'failure-run-2', outcome: 'exhaustedNegative', actionKey: 'dfs' },
@@ -38,6 +39,25 @@ assert.equal(joined.summary.discoveryRecordsWithoutComparableFailure, 1);
 assert.equal(joined.summary.independentMatchedParents, 1);
 assert.equal(joined.rows[0].parentId, 'P1');
 assert.equal(joined.rows[0].precedingAttemptCount, 1);
+assert.equal(joined.rows[0].populationIdentity, 'population-a');
+
+const otherPopulation = JSON.parse(JSON.stringify(failures[0]));
+otherPopulation.populationIntegrity.populationIdentityHash = 'population-b';
+assert.equal(
+    joinHintDiscoveryAndFailureProcesses(discovery, [otherPopulation]).summary.joinedDiscoveryRecords,
+    0,
+    'same parent/protocol/solver in a different population must not join',
+);
+
+const ambiguousPopulation = JSON.parse(JSON.stringify(failures[0]));
+ambiguousPopulation.populationIntegrity.canonicalExpectedIds = [
+    JSON.stringify(['corpus-1', 'P1']),
+    JSON.stringify(['corpus-2', 'P1']),
+];
+const ambiguousJoin = joinHintDiscoveryAndFailureProcesses(discovery, [ambiguousPopulation]);
+assert.equal(ambiguousJoin.summary.joinedDiscoveryRecords, 0);
+assert.equal(ambiguousJoin.summary.ambiguousFailureRecords, 2,
+    'raw parent ids duplicated across population scopes must abstain rather than cross-wire');
 assert.equal(joined.rows[0].comparableFailureRecords.length, 2);
 assert.deepEqual(joined.rows[0].comparableFailureRecords.map(row => row.runId),
     ['failure-run-1', 'failure-run-2']);

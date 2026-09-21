@@ -32,9 +32,10 @@
  * combining is idempotent and works uniformly on raw shard batches, flattened reports, or a mix.
  */
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import process from 'node:process';
-import { buildPopulationIntegrity, hashConfiguration, hashPopulation, parseIdentityLines } from './solver-experiment-contract.mjs';
+import { buildPopulationIntegrity, hashConfiguration, hashPopulation, isImmutableCommitSha, parseIdentityLines } from './solver-experiment-contract.mjs';
 import { encodeResearchScopedIdentity } from './research-population-identity-lib.mjs';
 
 const EXECUTION_CONFIG_FIELDS = [
@@ -54,11 +55,70 @@ const EXECUTION_CONFIG_FIELDS = [
     'earlyRepairSearchAdaptiveBadnessGate',
     'earlyRepairSearchAdaptiveMinScale',
     'repairLateProbeNodeBudget',
+    'repairLateProbeMultiSeedRetrySeedCount',
 ];
 
 function canonicalConfigValue(field, value) {
     if ((field === 'enableFlags' || field === 'disableFlags') && Array.isArray(value)) return [...value].sort();
     return value;
+}
+
+function stableStringify(value) {
+    if (value === undefined) return undefined;
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(item => stableStringify(item) ?? 'null').join(',')}]`;
+    const keys = Object.keys(value).filter(key => value[key] !== undefined).sort();
+    return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+}
+
+function rawEffectiveConfigDigest(value) {
+    return createHash('sha256').update(stableStringify(value)).digest('hex');
+}
+
+function validatedEffectiveConfig(reports) {
+    const firstConfig = reports[0].summary.effectiveConfig;
+    const firstCanonical = stableStringify(firstConfig);
+    for (const report of reports) {
+        const canonical = stableStringify(report.summary.effectiveConfig);
+        if (canonical !== firstCanonical) {
+            throw new Error(`Mismatched effectiveConfig: ${reports[0].path} and ${report.path} did not execute the same solver configuration.`);
+        }
+        const recorded = report.summary.effectiveConfigDigest;
+        if (recorded != null && recorded !== rawEffectiveConfigDigest(report.summary.effectiveConfig)) {
+            throw new Error(`${report.path}: effectiveConfigDigest does not match effectiveConfig.`);
+        }
+    }
+    return firstConfig;
+}
+
+function collectEffectiveConfig(reports, { allowMixedCorpora = false } = {}) {
+    const withConfig = reports.filter(report => report.summary?.effectiveConfig && typeof report.summary.effectiveConfig === 'object');
+    if (withConfig.length === 0) return null;
+    if (withConfig.length !== reports.length) {
+        throw new Error('Mismatched effectiveConfig: some source reports record observed solver execution identity and others omit it.');
+    }
+
+    let value;
+    if (!allowMixedCorpora) {
+        value = validatedEffectiveConfig(withConfig);
+    } else {
+        const groups = new Map();
+        for (const report of withConfig) {
+            const corpusKey = stableStringify(report.summary.corpus);
+            if (!groups.has(corpusKey)) groups.set(corpusKey, []);
+            groups.get(corpusKey).push(report);
+        }
+        if (groups.size === 1) {
+            value = validatedEffectiveConfig(withConfig);
+        } else {
+            const byCorpus = {};
+            for (const corpusKey of [...groups.keys()].sort()) {
+                byCorpus[corpusKey] = validatedEffectiveConfig(groups.get(corpusKey));
+            }
+            value = { byCorpus };
+        }
+    }
+    return { value, digest: rawEffectiveConfigDigest(value) };
 }
 
 function collectExecutionConfig(reports) {
@@ -138,6 +198,10 @@ function main() {
                 repairBudgetFraction: parsed.repairBudgetFraction,
                 commit: parsed.commitSha,
                 ...(parsed.executionConfig || {}),
+                ...(parsed.effectiveConfig ? {
+                    effectiveConfig: parsed.effectiveConfig,
+                    effectiveConfigDigest: parsed.effectiveConfigDigest,
+                } : {}),
             };
         }
         if (!parsed?.summary || !Array.isArray(parsed?.levels)) {
@@ -145,6 +209,14 @@ function main() {
         }
         return { path: p, ...parsed };
     });
+
+    // An immutable revision is fresh scientific identity, not an optional decoration. If only
+    // some inputs carry one, the combine must not stamp their SHA onto legacy/unknown rows and
+    // thereby upgrade those rows into apparently same-revision evidence.
+    const immutableRevisionPresence = reports.map(report => isImmutableCommitSha(report.summary.commit));
+    if (immutableRevisionPresence.some(Boolean) && !immutableRevisionPresence.every(Boolean)) {
+        throw new Error('Mismatched commit provenance: some source reports carry an immutable execution revision and others omit or weaken it.');
+    }
 
     // budgetMs/corpus/schedulerMode must agree across all batches, or downstream badness/stability
     // ratios (which divide by a single budgetMs) would silently mix apples and oranges.
@@ -170,6 +242,7 @@ function main() {
         }
     }
     const executionConfig = collectExecutionConfig(reports);
+    const effectiveConfig = collectEffectiveConfig(reports, { allowMixedCorpora });
     const producerMetadata = consistentMetadata(reports, ['producer', 'entrypoint', 'workflowFamily', 'levelBlind', 'historyAware', 'schedulerMode']);
 
     const scopedIdentity = (corpus, subjectId) => allowMixedCorpora
@@ -260,6 +333,10 @@ function main() {
         ...(repairFractions.length ? { repairBudgetFraction: repairFractions.length === 1 ? repairFractions[0] : repairFractions } : {}),
         ...(adaptive.length ? { adaptiveBudget: adaptive[0], adaptiveBudgetShards: adaptive.length } : {}),
         ...(Object.keys(executionConfig).length ? { executionConfig } : {}),
+        ...(effectiveConfig ? {
+            effectiveConfig: effectiveConfig.value,
+            effectiveConfigDigest: effectiveConfig.digest,
+        } : {}),
         ...(producerMetadata.entrypoint ? { entrypoint: producerMetadata.entrypoint } : {}),
         ...(producerMetadata.producer ? { producer: producerMetadata.producer } : {}),
         ...(producerMetadata.workflowFamily ? { workflowFamily: producerMetadata.workflowFamily } : {}),
@@ -283,7 +360,9 @@ function main() {
             historyAware: producerMetadata.historyAware ?? null,
             schedulerMode: producerMetadata.schedulerMode ?? first.schedulerMode ?? null,
         },
-        configurationHash: hashConfiguration({ budgetMs: first.budgetMs, nodeBudget: nodeBudgets, workBudget: workBudgets, repairFractions, executionConfig }),
+        configurationHash: effectiveConfig
+            ? hashConfiguration(effectiveConfig.value)
+            : hashConfiguration({ budgetMs: first.budgetMs, nodeBudget: nodeBudgets, workBudget: workBudgets, repairFractions, executionConfig }),
         totalMs,
         levels,
     };

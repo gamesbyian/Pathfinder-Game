@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { combine } from './combine-static-portfolio-shards.mjs';
 
 const cell = (cellId, levelId, arm, ok, workSpent, status = 'work-budget-reached') => ({
@@ -89,15 +93,125 @@ assert.throws(() => combine([shard1], 'nonexistent-arm'), /control arm "nonexist
 
 // Plan completeness check: a plan naming a cellId no shard produced must fail loudly, not silently
 // report a partial population as complete.
-const incompletePlan = { cells: [{ cellId: 'SP-c2-1-full-menu' }, { cellId: 'SP-c2-1-portfolio-11' }, { cellId: 'SP-c2-99-full-menu' }] };
-assert.throws(() => combine([shard1, shard2], 'full-menu', incompletePlan), /missing/);
+const incompletePlan = {
+    cells: [...shard1.results, ...shard2.results]
+        .filter(row => row.cellId !== 'SP-c2-3-portfolio-11')
+        .map(({ cellId, levelId, variantLabel }) => ({ cellId, levelId, variantLabel })),
+};
+assert.throws(() => combine([shard1, shard2], 'full-menu', incompletePlan), /absent from authored plan|missing/u);
 
 // A duplicated cellId (two shards both produced the same cell) must also fail loudly.
 const dupedShard = { results: [cell('SP-c2-1-full-menu', 'L1', 'full-menu', true, 1, 'success')] };
-const planForDupeCheck = { cells: [{ cellId: 'SP-c2-1-full-menu' }] };
+const planForDupeCheck = {
+    cells: shard1.results.map(({ cellId, levelId, variantLabel }) => ({ cellId, levelId, variantLabel })),
+};
 assert.throws(() => combine([shard1, dupedShard], 'full-menu', planForDupeCheck), /duplicated/);
 
-const exactPlan = { cells: [...shard1.results, ...shard2.results].map(({ cellId }) => ({ cellId })) };
+const exactPlan = {
+    cells: [...shard1.results, ...shard2.results].map(({ cellId, levelId, variantLabel }) => ({
+        cellId, levelId, variantLabel,
+    })),
+};
 assert.equal(combine([shard1, shard2], 'full-menu', exactPlan).populationIntegrity.coverageComplete, true);
+
+const wrongArmPlan = JSON.parse(JSON.stringify(exactPlan));
+wrongArmPlan.cells[0].variantLabel = 'not-full-menu';
+assert.throws(
+    () => combine([shard1, shard2], 'full-menu', wrongArmPlan),
+    /disagrees with authored plan on variantLabel/u,
+);
+
+const keyedShard = { results: [{
+    ...cell('SP-c2-9-full-menu', 'L9', 'full-menu', true, 10, 'success'),
+    tier: 'STATIC-PORTFOLIO',
+    corpus: 'corpus2',
+    levelPos: 9,
+    techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=5000|retention=plain'],
+    workBudget: 1000,
+    ablation: null,
+}] };
+const keyedPlan = { cells: [{
+    cellId: 'SP-c2-9-full-menu',
+    tier: 'STATIC-PORTFOLIO',
+    corpus: 'corpus2',
+    levelPos: 9,
+    levelId: 'L9',
+    variantLabel: 'full-menu',
+    techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=5000|retention=plain'],
+    workBudget: 1000,
+    ablation: null,
+}] };
+assert.equal(combine([keyedShard], 'full-menu', keyedPlan).populationIntegrity.coverageComplete, true);
+const revisionBound = combine([
+    { ...keyedShard, commit: 'a'.repeat(40) },
+], 'full-menu', keyedPlan);
+assert.equal(revisionBound.commit, 'a'.repeat(40));
+assert.throws(
+    () => combine([
+        { ...keyedShard, commit: 'a'.repeat(40) },
+        { results: [], commit: 'b'.repeat(40) },
+    ], 'full-menu', keyedPlan),
+    /execution revisions disagree/u,
+);
+assert.throws(
+    () => combine([
+        { ...keyedShard, commit: 'a'.repeat(40) },
+        { results: [] },
+    ], 'full-menu', keyedPlan),
+    /mixed shard execution-revision metadata/u,
+);
+const wrongTechniquePlan = JSON.parse(JSON.stringify(keyedPlan));
+wrongTechniquePlan.cells[0].techniqueKeys = ['dfs|score=default|bias=none'];
+assert.throws(
+    () => combine([keyedShard], 'full-menu', wrongTechniquePlan),
+    /disagrees with authored plan on techniqueKeys/u,
+);
+
+assert.throws(
+    () => combine([keyedShard], 'full-menu', { cells: [keyedPlan.cells[0], keyedPlan.cells[0]] }),
+    /duplicate cellId in authored plan/u,
+);
+
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'static-portfolio-cli-'));
+try {
+    const staging = path.join(temp, 'staging');
+    fs.mkdirSync(staging, { recursive: true });
+    const cliShard = {
+        shard: 1,
+        shards: 1,
+        results: [
+            cell('CLI-L1-control', 'CLI-L1', 'control', false, 100),
+            cell('CLI-L1-candidate', 'CLI-L1', 'candidate', true, 100, 'success'),
+        ],
+    };
+    const cliPlan = {
+        cells: cliShard.results.map(({ cellId, levelId, variantLabel }) => ({
+            cellId, levelId, variantLabel,
+        })),
+    };
+    fs.writeFileSync(path.join(staging, 'shard-001.json'), JSON.stringify(cliShard));
+    const planFile = path.join(temp, 'plan.json');
+    const outFile = path.join(temp, 'combined.json');
+    const summaryFile = path.join(temp, 'summary.md');
+    const outcomeFile = path.join(temp, 'outcome.json');
+    fs.writeFileSync(planFile, JSON.stringify(cliPlan));
+    const cli = spawnSync(process.execPath, [
+        'scripts/combine-static-portfolio-shards.mjs',
+        `--staging-dir=${staging}`,
+        '--control-arm=control',
+        `--plan=${planFile}`,
+        `--out=${outFile}`,
+        `--summary-out=${summaryFile}`,
+        `--outcome-out=${outcomeFile}`,
+    ], { cwd: process.cwd(), encoding: 'utf8' });
+    assert.equal(cli.status, 0, cli.stderr);
+    const written = JSON.parse(fs.readFileSync(outFile, 'utf8'));
+    assert.equal(written.populationIntegrity.coverageComplete, true);
+    assert.equal(written.researchOutcome.outcome, 'completed-positive');
+    assert.equal(JSON.parse(fs.readFileSync(outcomeFile, 'utf8')).outcome, 'completed-positive');
+    assert.match(fs.readFileSync(summaryFile, 'utf8'), /candidate/);
+} finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+}
 
 console.log('combine-static-portfolio-shards tests passed');

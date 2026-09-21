@@ -29,8 +29,10 @@ export function resolveMethodProbeShardDirs(stagingDir) {
   const namedDirs = entries
     .filter(entry => entry.isDirectory() && entry.name.startsWith('method-probe-shard-'))
     .map(entry => entry.name);
-  if (namedDirs.length > 0) return namedDirs;
-
   const hasFlatShardFiles = entries.some(entry => entry.isFile() && SHARD_RESULT_FILE_PATTERN.test(entry.name));
+  if (namedDirs.length > 0 && hasFlatShardFiles) {
+    throw new Error('method-probe staging mixes flat shard files with named outer-shard directories');
+  }
+  if (namedDirs.length > 0) return namedDirs;
   return hasFlatShardFiles ? ['.'] : [];
 }

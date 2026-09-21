@@ -1,5 +1,4 @@
-# Produces a FRESH history-aware production replay baseline over BOTH stress corpora and diffs it against the
-# baseline currently on main, so a batch of solver changes can be judged corpus-wide in one run.
+# Produces a history-aware replay baseline over both stress corpora and diffs it against main.
 #
 # How this differs from the two workflows next to it:
 #   solver-stress-refresh.yml          20 shards, ms-budgeted, refreshes the official baselines.
@@ -34,12 +33,8 @@
 # allocation between attempts, the node budget stops the level — and note the node budget is just as
 # host-independent as the work budget, so determinism is not what was traded away here.
 #
-# THE ms DEADLINE DOES NOT BOUND PER-LEVEL WALL TIME. Also measured: R00001 ran 593s against a
-# 90,000ms `--budget-ms` and still came back deadlineTruncated: false, because timeBudgetMs sizes
-# attempt tiers rather than capping the level. Do not size a shard's runtime from it. The `timeout`
-# wrapper on each sweep step is the only real wall-clock bound in this workflow. The truncation check
-# in the combine job stays because a truncated level IS indeterminate rather than unsolved when it
-# does happen — it is just not the cost control it was originally written as.
+# budget-ms sizes attempt tiers, not total level wall time; the OS timeout is the shard safety net.
+# Any deadline-truncated row remains indeterminate rather than ordinary unsolved evidence.
 name: Solver history-aware production replay baseline (corpus-1 + corpus-2)
 run-name: "Production replay · flags=${{ inputs.enable_flags || 'control' }} · shards=${{ inputs.shards }}"
 
@@ -685,19 +680,25 @@ jobs:
           C2_NODE_BUDGET: ${{ inputs.corpus2_node_budget }}
           C1_WORK_BUDGET: ${{ inputs.corpus1_work_budget }}
           C2_WORK_BUDGET: ${{ inputs.corpus2_work_budget }}
+          DETERMINISTIC: ${{ inputs.deterministic }}
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
-          const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE_BUDGET), corpus2NodeBudget: Number(process.env.C2_NODE_BUDGET), corpus1WorkBudget: Number(process.env.C1_WORK_BUDGET), corpus2WorkBudget: Number(process.env.C2_WORK_BUDGET), schedulerMode: 'production' };
-          fs.writeFileSync('logs/production-replay-baseline/experiment-contract.json', `${JSON.stringify({
-            experiment: { workflowFamily: 'history-aware-production-replay', producer: 'solver-production-replay-baseline.yml', entrypoint: 'scripts/portfolio-solve-sweep.mjs', configurationHash: hashConfiguration(configuration) },
+          const observedExecution={};
+          for(const [name,file] of [['corpus1','reports/stress/typical-budget-corpus1.json'],['corpus2','reports/stress/typical-budget-corpus2.json']]) if(fs.existsSync(file)) observedExecution[name]=JSON.parse(fs.readFileSync(file,'utf8')).configurationHash??null;
+          const configuration={corpus1NodeBudget:Number(process.env.C1_NODE_BUDGET),corpus2NodeBudget:Number(process.env.C2_NODE_BUDGET),corpus1WorkBudget:Number(process.env.C1_WORK_BUDGET),corpus2WorkBudget:Number(process.env.C2_WORK_BUDGET),schedulerMode:'production',observedExecution};
+          fs.writeFileSync('logs/production-replay-baseline/contract-spec.json', `${JSON.stringify({
+            configuration,
+            workflowFamily: 'history-aware-production-replay',
+            producer: 'solver-production-replay-baseline.yml',
+            entrypoint: 'scripts/portfolio-solve-sweep.mjs',
             population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
-            execution: { levelBlind: false, historyAware: true, historicalInputs: ['continuity baseline', 'prime winner', 'saved hints'], reproducibilityExpected: null, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
-            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: true },
-            sideEffects: {hints:'harvest-permitted',canonicalBaseline:'none',telemetry: 'compact', reports: 'report-write'},
+            execution: { levelBlind: false, historyAware: true, historicalInputs: ['continuity baseline', 'prime winner', 'saved hints'], reproducibilityExpected: process.env.DETERMINISTIC === 'true', producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
+            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: process.env.DETERMINISTIC !== 'true' },
+            sideEffects:{hints:'harvest-permitted',canonicalBaseline:'none',telemetry:'compact',reports:'report-write'},
           }, null, 2)}\n`);
           NODE
+          node scripts/write-solver-experiment-contract.mjs --spec=logs/production-replay-baseline/contract-spec.json --out=logs/production-replay-baseline/experiment-contract.json
           node scripts/sweep-publish.mjs --failure-in=p,i \
             --primary="reports/stress/typical-budget-corpus1.json" \
             --include="reports/stress/typical-budget-corpus2.json" \
@@ -718,9 +719,6 @@ jobs:
           retention-days: 90
 
       - name: Commit the new baseline and diff to main
-        # Also gated on the ref: now that shards follow the dispatch, a branch run produces numbers
-        # from branch code, and committing those to main's continuity baseline would silently corrupt
-        # the series.
         if: ${{ inputs.commit_results == 'true' && inputs.deterministic != 'true' && github.ref == 'refs/heads/main' && steps.integrity.outputs.complete == 'true' }}
         shell: bash
         run: |

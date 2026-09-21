@@ -1,12 +1,20 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const root = new URL('..', import.meta.url);
 
-function runCase({ levels, workBudget = null, missing = false, missingExitCode = null, flat = false }) {
+function runCase({
+  levels,
+  workBudget = null,
+  missing = false,
+  missingExitCode = null,
+  flat = false,
+  expectedShards = 1,
+  commit = 'a'.repeat(40),
+}) {
   const temp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-outcome-'));
   const staging = path.join(temp, 'staging');
   const shard = flat ? staging : path.join(staging, 'method-probe-shard-001');
@@ -19,7 +27,7 @@ function runCase({ levels, workBudget = null, missing = false, missingExitCode =
   }
   if (!missing) {
     writeFileSync(path.join(shard, 'shard-001-w0.json'), JSON.stringify({
-      corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget, nodeBudget: 1000, levels,
+      commit, corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget, nodeBudget: 1000, levels,
     }));
   }
   const result = spawnSync(process.execPath, [
@@ -28,6 +36,7 @@ function runCase({ levels, workBudget = null, missing = false, missingExitCode =
     `--out-dir=${out}`,
     `--outcome-out=${outcome}`,
     `--deterministic-work-mode=${workBudget != null}`,
+    `--expected-shards=${expectedShards}`,
   ], { cwd: root, encoding: 'utf8' });
   return { result, outcome: JSON.parse(readFileSync(outcome, 'utf8')) };
 }
@@ -68,5 +77,86 @@ assert.equal(run.outcome.outcome, 'timeout');
 run = runCase({ levels: [{ id: 'R00044', ok: true, nodesExpanded: 219802423 }], flat: true });
 assert.equal(run.result.status, 0, run.result.stderr);
 assert.equal(run.outcome.outcome, 'completed-positive');
+
+// An entire outer artifact can disappear before there is any worker log/result pair to inspect.
+// The authored shard count must therefore participate in combine-time completeness, rather than
+// relying only on later population-integrity publication to discover the missing levels.
+run = runCase({ levels: [{ id: 'L1', ok: false }], expectedShards: 2 });
+assert.equal(run.result.status, 2, run.result.stderr);
+assert.equal(run.outcome.outcome, 'harness-error');
+assert.match(run.outcome.reason, /outer shard artifact/u);
+
+const duplicateIdentityTemp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-duplicate-outer-'));
+try {
+  const staging = path.join(duplicateIdentityTemp, 'staging');
+  for (const dirName of ['method-probe-shard-001', 'method-probe-shard-1']) {
+    const shard = path.join(staging, dirName);
+    mkdirSync(shard, { recursive: true });
+    writeFileSync(path.join(shard, 'shard-001-w0.console.log'), 'worker started\n');
+    writeFileSync(path.join(shard, 'shard-001-w0.json'), JSON.stringify({
+      commit: 'a'.repeat(40), corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget: 1000, nodeBudget: 1000,
+      levels: [{ id: dirName, ok: false }],
+    }));
+  }
+  const duplicateIdentity = spawnSync(process.execPath, [
+    'scripts/combine-method-probe-shards.mjs',
+    `--staging-dir=${staging}`,
+    `--out-dir=${path.join(duplicateIdentityTemp, 'out')}`,
+    '--expected-shards=2',
+  ], { cwd: root, encoding: 'utf8' });
+  assert.notEqual(duplicateIdentity.status, 0);
+  assert.match(duplicateIdentity.stderr, /duplicate outer shard identity 1/u);
+} finally {
+  rmSync(duplicateIdentityTemp, { recursive: true, force: true });
+}
+
+const mismatchedWorkerTemp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-worker-identity-'));
+try {
+  const staging = path.join(mismatchedWorkerTemp, 'staging');
+  const shard = path.join(staging, 'method-probe-shard-001');
+  mkdirSync(shard, { recursive: true });
+  writeFileSync(path.join(shard, 'shard-002-w0.console.log'), 'worker started\n');
+  writeFileSync(path.join(shard, 'shard-002-w0.json'), JSON.stringify({
+    commit: 'a'.repeat(40), corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget: 1000, nodeBudget: 1000,
+    levels: [{ id: 'L1', ok: false }],
+  }));
+  const mismatchedWorker = spawnSync(process.execPath, [
+    'scripts/combine-method-probe-shards.mjs',
+    `--staging-dir=${staging}`,
+    `--out-dir=${path.join(mismatchedWorkerTemp, 'out')}`,
+    '--expected-shards=1',
+  ], { cwd: root, encoding: 'utf8' });
+  assert.notEqual(mismatchedWorker.status, 0);
+  assert.match(mismatchedWorker.stderr, /outer shard identity mismatch/u);
+} finally {
+  rmSync(mismatchedWorkerTemp, { recursive: true, force: true });
+}
+
+// A combined probe must describe one solver revision. The production matrix normally checks out one
+// SHA, but the combiner owns the scientific invariant rather than trusting orchestration.
+const mismatchTemp = mkdtempSync(path.join(os.tmpdir(), 'method-probe-sha-mismatch-'));
+try {
+  const staging = path.join(mismatchTemp, 'staging');
+  for (const [index, commit] of [[1, 'a'.repeat(40)], [2, 'b'.repeat(40)]]) {
+    const shard = path.join(staging, `method-probe-shard-${String(index).padStart(3, '0')}`);
+    mkdirSync(shard, { recursive: true });
+    writeFileSync(path.join(shard, `shard-${String(index).padStart(3, '0')}-w0.console.log`), 'worker started\n');
+    writeFileSync(path.join(shard, `shard-${String(index).padStart(3, '0')}-w0.json`), JSON.stringify({
+      commit, corpus: 'stress2', only: 'dfs', budgetMs: 100, workBudget: 1000, nodeBudget: 1000,
+      levels: [{ id: `L${index}`, ok: false }],
+    }));
+  }
+  const mismatch = spawnSync(process.execPath, [
+    'scripts/combine-method-probe-shards.mjs',
+    `--staging-dir=${staging}`,
+    `--out-dir=${path.join(mismatchTemp, 'out')}`,
+    '--expected-shards=2',
+    '--deterministic-work-mode=true',
+  ], { cwd: root, encoding: 'utf8' });
+  assert.equal(mismatch.status, 1);
+  assert.match(mismatch.stderr, /metadata mismatch/u);
+} finally {
+  rmSync(mismatchTemp, { recursive: true, force: true });
+}
 
 console.log('combine method-probe shard outcome tests passed');

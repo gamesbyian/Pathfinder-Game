@@ -31,6 +31,19 @@ function tempDir() {
   assert.deepEqual(dirs, ['.']);
 }
 
+// Mixed flat/nested layout is not a third supported transport shape. If both are present,
+// silently preferring the named directories could ignore stale/extra shard evidence at the root.
+{
+  const staging = tempDir();
+  mkdirSync(path.join(staging, 'method-probe-shard-001'), { recursive: true });
+  writeFileSync(path.join(staging, 'method-probe-shard-001', 'shard-001-w1.json'), '{}');
+  writeFileSync(path.join(staging, 'shard-001-w1.json'), '{}');
+  assert.throws(
+    () => resolveMethodProbeShardDirs(staging),
+    /mixes flat shard files with named outer-shard directories/u,
+  );
+}
+
 // Empty/missing staging directory: no shard evidence at all.
 {
   const staging = tempDir();

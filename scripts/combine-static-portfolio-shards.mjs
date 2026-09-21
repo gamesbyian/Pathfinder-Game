@@ -25,6 +25,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'n
 import path from 'node:path';
 import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 import { buildPopulationIntegrity } from './solver-experiment-contract.mjs';
+import { validateTechniqueCensusPlanJoin } from './technique-census-result-lib.mjs';
 
 function findShardFiles(dir) {
     const out = [];
@@ -44,23 +45,23 @@ function findShardFiles(dir) {
  * @param {{ cells: object[] } | null} [plan]
  */
 export function combine(shardOutputs, controlArm, plan = null) {
+    const commitValues = shardOutputs.map(shard => shard?.commit ?? null);
+    const presentCommits = commitValues.filter(Boolean);
+    if (presentCommits.length > 0 && presentCommits.length !== commitValues.length) {
+        throw new Error('combine: mixed shard execution-revision metadata; fresh and legacy shard documents cannot share one authoritative combine');
+    }
+    const distinctCommits = new Set(presentCommits);
+    if (distinctCommits.size > 1) {
+        throw new Error(`combine: shard execution revisions disagree: ${[...distinctCommits].join(', ')}`);
+    }
+    const commit = presentCommits[0] ?? null;
     const results = shardOutputs.flatMap((s) => s.results ?? []);
     if (results.length === 0) throw new Error('combine: no results found across any shard output');
 
     let populationIntegrity;
     if (plan) {
-        const expected = new Set(plan.cells.map((c) => c.cellId));
-        const seen = new Map();
-        for (const r of results) seen.set(r.cellId, (seen.get(r.cellId) ?? 0) + 1);
-        const missing = [...expected].filter((id) => !seen.has(id));
-        const duplicated = [...seen.entries()].filter(([, count]) => count > 1).map(([id]) => id);
-        const unexpected = [...seen.keys()].filter((id) => !expected.has(id));
-        if (missing.length || duplicated.length || unexpected.length) {
-            throw new Error(`combine: incomplete/inconsistent coverage against the plan — `
-                + `${missing.length} missing, ${duplicated.length} duplicated, ${unexpected.length} unexpected cellIds. `
-                + `First few missing: ${missing.slice(0, 5).join(', ')}`);
-        }
-        populationIntegrity = buildPopulationIntegrity([...expected], results.map(row => ({ ...row, id: row.cellId })));
+        const { expectedIds } = validateTechniqueCensusPlanJoin(plan, results, { requireComplete: true });
+        populationIntegrity = buildPopulationIntegrity(expectedIds, results.map(row => ({ ...row, id: row.cellId })));
     } else {
         // Observed rows describe what arrived, never what was intended. Without the authored plan
         // there is no authority from which to claim complete coverage.
@@ -147,7 +148,17 @@ export function combine(shardOutputs, controlArm, plan = null) {
             ? 'At least one candidate preserved control coverage while gaining solves or reducing work.'
             : 'No candidate preserved control coverage while gaining solves or reducing work.',
     };
-    return { schemaVersion: 1, controlArm, totalCells: results.length, populationIntegrity, results, armSummaries, comparisons, researchOutcome };
+    return {
+        schemaVersion: 1,
+        ...(commit ? { commit } : {}),
+        controlArm,
+        totalCells: results.length,
+        populationIntegrity,
+        results,
+        armSummaries,
+        comparisons,
+        researchOutcome,
+    };
 }
 
 function toMarkdown(result) {

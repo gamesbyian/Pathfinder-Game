@@ -7,9 +7,34 @@
  * steering.
  */
 
-function key(parentId, protocolHash, solverRef) {
-    if (parentId == null || !protocolHash || !solverRef) return null;
-    return JSON.stringify([String(parentId), String(protocolHash), String(solverRef)]);
+function key(populationIdentity, parentId, protocolHash, solverRef) {
+    if (!populationIdentity || parentId == null || !protocolHash || !solverRef) return null;
+    return JSON.stringify([
+        String(populationIdentity), String(parentId), String(protocolHash), String(solverRef),
+    ]);
+}
+
+function failurePopulationIdentity(document) {
+    return document?.populationIntegrity?.populationIdentityHash
+        ?? document?.populationIdentityHash
+        ?? null;
+}
+
+function ambiguousScopedParentIds(document) {
+    const canonical = document?.populationIntegrity?.canonicalExpectedIds;
+    if (!Array.isArray(canonical)) return new Set();
+    const counts = new Map();
+    for (const encoded of canonical) {
+        try {
+            const tuple = JSON.parse(encoded);
+            if (!Array.isArray(tuple) || tuple.length !== 2) continue;
+            const parentId = String(tuple[1]);
+            counts.set(parentId, (counts.get(parentId) ?? 0) + 1);
+        } catch {
+            // Legacy/unscoped identity encoding cannot prove cross-scope ambiguity.
+        }
+    }
+    return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([id]) => id));
 }
 
 function failureProtocol(document, row) {
@@ -23,11 +48,19 @@ function failureSolverRef(document, row) {
 export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failureDocuments) {
     const failuresByKey = new Map();
     let failureRecordsObserved = 0;
+    let ambiguousFailureRecords = 0;
 
     for (const document of failureDocuments ?? []) {
+        const populationIdentity = failurePopulationIdentity(document);
+        const ambiguousParents = ambiguousScopedParentIds(document);
         for (const row of document?.records ?? []) {
             failureRecordsObserved += 1;
-            const joinKey = key(row?.parentId ?? row?.levelId ?? row?.identity,
+            const parentId = row?.parentId ?? row?.levelId ?? row?.identity;
+            if (parentId != null && ambiguousParents.has(String(parentId))) {
+                ambiguousFailureRecords += 1;
+                continue;
+            }
+            const joinKey = key(populationIdentity, parentId,
                 failureProtocol(document, row), failureSolverRef(document, row));
             if (!joinKey) continue;
             const list = failuresByKey.get(joinKey) ?? [];
@@ -51,13 +84,15 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
     const rows = [];
     let discoveryRecordsObserved = 0;
     let discoveryRecordsWithoutComparableFailure = 0;
+    let discoveryRecordsMissingPopulationIdentity = 0;
     const matchedParents = new Set();
 
     for (const document of discoveryDocuments ?? []) {
         const run = document?.run ?? {};
         for (const discovery of document?.records ?? []) {
             discoveryRecordsObserved += 1;
-            const joinKey = key(discovery?.parentId, run.protocolHash, run.solverRef);
+            if (!run.populationIdentity) discoveryRecordsMissingPopulationIdentity += 1;
+            const joinKey = key(run.populationIdentity, discovery?.parentId, run.protocolHash, run.solverRef);
             const failures = joinKey ? (failuresByKey.get(joinKey) ?? []) : [];
             if (!failures.length) {
                 discoveryRecordsWithoutComparableFailure += 1;
@@ -69,6 +104,7 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
                 solutionSignature: discovery.solutionSignature,
                 discoveryEvidenceId: discovery.evidenceId ?? null,
                 discoveryRunId: run.runId ?? null,
+                populationIdentity: run.populationIdentity ?? null,
                 protocolHash: run.protocolHash ?? null,
                 solverRef: run.solverRef ?? null,
                 winner: discovery?.process?.winner ?? null,
@@ -83,7 +119,7 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
         schemaVersion: 1,
         kind: 'pathfinder-hint-failure-process-join',
         semantics: {
-            join: 'parent identity + exact protocol/configuration hash + immutable solver ref',
+            join: 'exact population identity + parent identity + exact protocol/configuration hash + immutable solver ref',
             runs: 'run IDs may differ; repeated runs remain dependent observations within one parent',
             independentUnit: 'parent level unless the owning experiment declares a stronger grouping',
             productionBoundary: 'offline evidence only; exact historical parent/path outcomes may not steer cold production solving',
@@ -91,8 +127,10 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
         summary: {
             discoveryRecordsObserved,
             failureRecordsObserved,
+            ambiguousFailureRecords,
             joinedDiscoveryRecords: rows.length,
             discoveryRecordsWithoutComparableFailure,
+            discoveryRecordsMissingPopulationIdentity,
             independentMatchedParents: matchedParents.size,
         },
         rows,

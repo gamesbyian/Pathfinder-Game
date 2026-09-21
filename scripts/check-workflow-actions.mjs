@@ -14,6 +14,10 @@ const expected = new Map([
   ['actions/deploy-pages', 'v5'],
 ]);
 
+// Explicit debt escape hatch only. Keep empty unless a maintained workflow genuinely cannot use a
+// shared/native contract constructor yet; new direct writers are rejected below.
+const LEGACY_MANUAL_EXPERIMENT_CONTRACT_WORKFLOWS = new Set();
+
 const root = process.cwd();
 const workflowDir = path.join(root, '.github', 'workflows');
 const failures = [];
@@ -64,6 +68,40 @@ function extractDispatchInputNames(lines) {
   return names;
 }
 
+
+/**
+ * Artifact staging belongs after checkout. actions/checkout defaults to clean:true, so downloading
+ * into the worktree before a later checkout can silently delete the just-downloaded untracked files.
+ * Keep this deliberately structural: a job with download-artifact before any later checkout is
+ * rejected rather than trying to prove that one particular staging path happens to be safe.
+ */
+function artifactBeforeCheckoutHazards(lines) {
+  const hazards = [];
+  const jobsIdx = lines.findIndex(line => /^jobs:\s*$/u.test(line));
+  if (jobsIdx === -1) return hazards;
+
+  let job = null;
+  let sawDownload = false;
+  for (let i = jobsIdx + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim() && /^\S/u.test(line)) break;
+
+    const jobMatch = line.match(/^  ([A-Za-z0-9_-]+):\s*$/u);
+    if (jobMatch) {
+      job = jobMatch[1];
+      sawDownload = false;
+      continue;
+    }
+    if (!job) continue;
+
+    if (/uses:\s*actions\/download-artifact@/u.test(line)) sawDownload = true;
+    if (sawDownload && /uses:\s*actions\/checkout@/u.test(line)) {
+      hazards.push({ job, line: i + 1 });
+    }
+  }
+  return hazards;
+}
+
 for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name)).sort()) {
   const source = readFileSync(path.join(workflowDir, name), 'utf8');
 
@@ -87,6 +125,15 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
     }
   }
 
+  // YAML single-quoted scalars escape apostrophes by doubling them, never with a backslash.
+  // Catch the exact parser-killing typo that previously produced a zero-job Actions run.
+  for (const [index, line] of source.split('\n').entries()) {
+    const scalar = line.match(/^\s*[A-Za-z0-9_-]+:\s*'(.*)'\s*$/u);
+    if (scalar && /\\'/u.test(scalar[1])) {
+      failures.push(`${name}:${index + 1}: backslash-escaped apostrophe inside a YAML single-quoted scalar; use two apostrophes instead`);
+    }
+  }
+
   const dispatchInputNames = extractDispatchInputNames(source.split('\n'));
   // GitHub rejects workflow_dispatch definitions with more than 25 top-level inputs. Keep this
   // locally knowable platform limit out of the "push and discover it in Actions" feedback loop.
@@ -97,6 +144,25 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
   for (const inputName of dispatchInputNames) {
     const consumed = new RegExp(`\\binputs\\.${inputName}\\b|github\\.event\\.inputs\\.${inputName}\\b`).test(source);
     if (!consumed) failures.push(`${name}: workflow_dispatch input "${inputName}" is declared but never referenced as inputs.${inputName} anywhere in this file`);
+  }
+
+  for (const hazard of artifactBeforeCheckoutHazards(source.split('\n'))) {
+    failures.push(
+      `${name}: job "${hazard.job}" downloads an artifact before a later checkout (line ${hazard.line}); `
+      + 'checkout can clean untracked artifact staging. Check out first, then download.',
+    );
+  }
+
+  const manuallyWritesExperimentContract = /writeFileSync\([^\n]*experiment-contract\.json/iu.test(source);
+  if (manuallyWritesExperimentContract && !LEGACY_MANUAL_EXPERIMENT_CONTRACT_WORKFLOWS.has(name)) {
+    failures.push(`${name}: writes experiment-contract.json directly; use scripts/write-solver-experiment-contract.mjs so execution identity and shared v3 validation cannot drift`);
+  }
+
+  const consumesExperimentContract = /--contract-file=[^\n]*experiment-contract\.json/iu.test(source);
+  const hasExperimentContractOwner = /write-solver-experiment-contract\.mjs/iu.test(source)
+    || (/validate-reconciliation-sources\.mjs/iu.test(source) && /--contract-out=[^\n]*experiment-contract\.json/iu.test(source));
+  if (consumesExperimentContract && !hasExperimentContractOwner) {
+    failures.push(`${name}: publishes experiment-contract.json without a recognized contract constructor in this workflow`);
   }
 
   // Workflow shell steps are a live consumer surface. A renamed/deleted local script must not
