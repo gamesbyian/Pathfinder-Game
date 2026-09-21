@@ -105,7 +105,10 @@
       "owners": [
         "modules/solver/solver-worker-client.ts",
         "modules/Solver.ts",
-        "worker solve adapter"
+        "worker solve adapter",
+        "modules/solver/worker.js",
+        "modules/solver/solver-worker-client.test.ts",
+        "modules/solver/worker-validation.test.ts"
       ],
       "forms": [
         "worker solve on raw level",
@@ -116,8 +119,9 @@
       "historicalRequirement": false,
       "persistedExternalRequirement": false,
       "treatment": "execution-contract-split",
-      "status": "open",
-      "retirementGate": "direct and worker full solve share one canonical request/result meaning"
+      "status": "in-progress",
+      "retirementGate": "direct and worker full solve share one canonical request/result meaning",
+      "progress": "Public worker client still accepts raw wire levels, but now validates/normalizes before postMessage. SOLVE worker transport carries the same NormalizedLevel consumed by direct solveLevel(); worker rejects non-normalized SOLVE messages. SolveOpts/request envelope and result-contract unification remain."
     },
     {
       "id": "PSC-006",
@@ -393,6 +397,26 @@
       "treatment": "investigate",
       "status": "open",
       "retirementGate": "choose and document one canonical sidecar/event model before additional producer variants appear"
+    },
+    {
+      "id": "PSC-020",
+      "concept": "false-goal worker protocol vocabulary",
+      "owners": [
+        "modules/solver/solver-worker-client.ts",
+        "modules/solver/worker.js"
+      ],
+      "forms": [
+        "FALSE_GOAL_TRIGGER_SEARCH* canonical protocol",
+        "TRAP / TRAP_PROGRESS / TRAP_RESULT legacy protocol"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": false,
+      "historicalRequirement": false,
+      "persistedExternalRequirement": false,
+      "treatment": "remove-current-alias",
+      "status": "complete",
+      "progress": "Removed inbound TRAP alias and client dual-read of TRAP_PROGRESS/TRAP_RESULT/status/field aliases. Current client and worker now speak only FALSE_GOAL_TRIGGER_SEARCH_PROGRESS / FALSE_GOAL_TRIGGER_SEARCH_RESULT with canonical fields.",
+      "retirementGate": "closed: same-release client/worker protocol is canonical-only; historical docs remain unchanged"
     }
   ],
   "lastUpdated": "2026-09-20",
