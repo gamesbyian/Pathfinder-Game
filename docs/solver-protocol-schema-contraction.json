@@ -147,7 +147,8 @@
       "concept": "solver sweep report envelope",
       "owners": [
         "scripts/combine-solver-sweep-reports.mjs",
-        "portfolio sweep producers"
+        "portfolio sweep producers",
+        "scripts/solver-sweep-report-input.mjs"
       ],
       "forms": [
         "{summary,levels} shard report",
@@ -158,8 +159,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "one current report envelope; current output is valid current input without synthesized schema mutation"
+      "status": "in-progress",
+      "retirementGate": "one current report envelope; current output is valid current input without synthesized schema mutation",
+      "progress": "Added a pure ingress adapter for shard-envelope and flattened combined reports. combine-solver-sweep-reports no longer mutates flattened inputs to synthesize summary in place; both shapes normalize to one internal {summary, levels} contract before scientific validation. Tests cover source immutability and execution/provenance metadata preservation. Current output remains intentionally re-combinable; next question is whether a single current write envelope can replace the benchmark-flat publication shape without breaking downstream consumers."
     },
     {
       "id": "PSC-008",
