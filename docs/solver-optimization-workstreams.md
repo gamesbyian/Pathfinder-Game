@@ -118,4 +118,4 @@ A/D1/F3 did not earn a shared runtime substrate; dated reports own chronology. [
 
 ## Cheap evidence routing
 
-Prefer indexed/queryable retained evidence before bespoke work. Measurements belong in dated reports; deferred forms with precise reopen triggers belong in [`solver-future-work.md`](solver-future-work.md).
+Prefer indexed retained evidence before bespoke work. Measurements belong in dated reports; deferred forms with reopen triggers belong in [`solver-future-work.md`](solver-future-work.md).
