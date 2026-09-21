@@ -1,9 +1,9 @@
 # Cut / region-flow Stage-0 audit: bridge-excursion theorem
 
 > **Status:** active
-> **Last evidence:** 2026-09-21 — current connectivity semantics plus synthetic multigraph theorem tests
-> **Decision:** advance one narrow theorem, **bridge excursion impossibility**, to synthetic proof tests and sampled-state incidence; defer general k-cut/flow machinery
-> **Remaining gate:** execute the wired Stage-B incidence analyzer on a frozen production-frontier sample and measure parent-level recurrence before adding a solver observer or consumer
+> **Last evidence:** 2026-09-21 — preregistered 24-parent Stage-B frontier incidence: BC1 conflicts on 22/24 connectivity-passing parents
+> **Decision:** BC1 clears the incidence gate and earns a production-inert observer/consumer study; no production prune or general k-cut/flow machinery is authorized
+> **Remaining gate:** run reference/valid-path safety differential plus production-inert cost/work-saved measurement, preserving parent-level independence and capturing later disposition overlap
 > **Evidence role:** development
 > **Selection:** theorem audit nominated by the parity/exact-projection program; no solver outcomes used to select a threshold
 > **Inference scope:** soundness/novelty of one necessary condition only; no production prune is authorized
@@ -129,7 +129,7 @@ Do **not** build general min-cut/flow machinery yet. The bridge form is cheaper 
 - multiple pending objectives / multiple bridges;
 - edge-order invariance.
 
-### Stage B — sampled production-state incidence — **TOOLING IMPLEMENTED; EXECUTION NEXT**
+### Stage B — sampled production-state incidence — **EXECUTED; POSITIVE INCIDENCE**
 
 `scripts/stress/cut-bridge-incidence.mjs` now:
 1. replays already-frozen production-frontier prefixes through canonical solver state semantics;
@@ -139,7 +139,7 @@ Do **not** build general min-cut/flow machinery yet. The bridge form is cheaper 
 
 The bundled test covers the smallest connectivity-passing bridge-pocket witness and a no-obligation non-reject.
 
-Do not run Tarjan on every hot-path connectivity call yet. Execute this analyzer on a frozen development frontier population first. Only non-trivial parent-level recurrence earns a production-inert observer.
+Do not run Tarjan on every hot-path connectivity call yet. The frozen development screen below has now shown non-trivial recurrence, which earns a production-inert observer/consumer study but does not authorize hot-path evaluation.
 
 #### Prespecified first Stage-B population
 
@@ -155,7 +155,7 @@ Use a small outcome-blind Corpus 2 development screen:
 - picks: 12 distinct frontier states per sampled parent;
 - downstream BC1 denominator: only sampled states where existing connectivity passes.
 
-The sample size is a recurrence screen, not a prevalence estimate. Zero or near-zero parent recurrence closes BC1 as a near-term prune candidate on this population; material recurrence earns a larger development incidence pass before any observer.
+The sample size is a recurrence screen, not a prevalence estimate. Zero or near-zero parent recurrence would have closed BC1 as a near-term prune candidate on this population; material recurrence earns the next production-inert safety/economics study.
 
 Reproduction sequence:
 
@@ -180,6 +180,21 @@ npm run research:cut-bridge-incidence -- \
   --out=tmp/bc1-stageb-incidence.json
 ```
 
+#### Stage-B result
+
+The preregistered screen completed on the frozen population:
+
+- sampled rows: **288** across **24** parents;
+- existing connectivity/volume passed: **263** rows across **24** parents;
+- BC1 conflicts: **105** rows across **22** parents;
+- row incidence among connectivity-passing states: **39.9%**;
+- parent recurrence among connectivity-passing parents: **91.7%** (22/24);
+- only `R00786` and `R02902` had zero BC1 conflict among their sampled connectivity-passing states.
+
+This is far above the preregistered "non-trivial recurrence" gate. BC1 therefore survives as a hard-prune candidate and earns the smallest production-inert consumer study. It still has **no production authorization**: the theorem implementation must next be checked against valid/reference continuations and its construction cost must be charged against saved search work.
+
+The frozen frontier artifact contains sampled prefixes and connectivity/BC1 measurements, but no later solver-outcome or later-rejection labels. Therefore this screen cannot measure overlap with subsequent failure evidence without a new, explicitly outcome-joined observation contract. The earned observer study should capture that overlap prospectively; no after-the-fact outcome join is inferred here.
+
 ## 8. Consumer boundary
 
 If BC1 recurs:
@@ -193,13 +208,14 @@ If BC1 incidence is negligible, retain cut/flow **response value** as separately
 
 ## 9. Stage-0 disposition
 
-**Advance BC1 only. Stage A and Stage-B tooling are implemented; frozen-population Stage-B execution is next.**
+**Advance BC1 only. Stage A soundness and Stage-B incidence are positive; the next step is a production-inert safety/economics consumer, not a hot-path prune.**
 
 The audit found:
 - a precise theorem;
 - a smallest novelty witness against connectivity;
 - a critical multigraph counterexample to a naive implementation;
 - a mechanic-complete safe direction through over-approximation;
-- a bounded sampled-state incidence plan.
+- a bounded sampled-state incidence plan;
+- a strong positive Stage-B incidence result (22/24 parents, 105/263 eligible states).
 
 General cut capacity, Hall coupling and product projections remain sibling premises, not descendants automatically licensed by BC1.
