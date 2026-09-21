@@ -177,8 +177,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
             });
             worker.postMessage({ type: 'SOLVE', id, level, budgetMs, solveOpts });
         });
-        },
-
+    };
 
     return {
         solveLevel,
