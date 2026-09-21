@@ -7,9 +7,8 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { stringifyCorpusJson } from './level-json-format.mjs';
-import { reconcileHints, setLevelHintRecords, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-runtime.mjs';
+import { setLevelHintRecords, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-runtime.mjs';
 
-const LEVEL_WRAPPERS = new WeakMap();
 const HINT_SCHEMA_VERSION = 3;
 // Original read-time array refs let writes skip levels this process never mutated.
 const UNTOUCHED_HINTS_STATE = new WeakMap();
@@ -75,7 +74,7 @@ function hydrateLevelHints(levelsJsonPath, levels) {
             records = inlineRecords || [];
         }
         setLevelHintRecords(level, records);
-        UNTOUCHED_HINTS_STATE.set(level, { hints: level.hints, hintRecords: level.hintRecords });
+        UNTOUCHED_HINTS_STATE.set(level, { hintRecords: level.hintRecords });
     });
     return levels;
 }
@@ -99,16 +98,6 @@ export function readLevelCorpusDocumentWithHints(levelsJsonPath) {
         : {};
     hydrateLevelHints(levelsJsonPath, levels);
     return { levels, metadata, storageShape };
-}
-
-/**
- * Compatibility array facade. New mutation/persistence callers should carry the explicit corpus
- * document returned by readLevelCorpusDocumentWithHints instead of relying on this hidden map.
- */
-export function readLevelsWithHints(levelsJsonPath) {
-    const document = readLevelCorpusDocumentWithHints(levelsJsonPath);
-    LEVEL_WRAPPERS.set(document.levels, document);
-    return document.levels;
 }
 
 /** Serialize canonical hints one record per line. */
@@ -136,9 +125,12 @@ export function writeLevelCorpusDocumentWithHints(levelsJsonPath, document) {
         const filePath = hintFilePathFor(levelsJsonPath, hintKeyForLevel(level, i + 1));
         const fileExists = existsSync(filePath);
         const untouched = UNTOUCHED_HINTS_STATE.get(level);
-        if (fileExists && untouched && untouched.hints === level?.hints && untouched.hintRecords === level?.hintRecords) return;
+        if (fileExists && untouched && untouched.hintRecords === level?.hintRecords) return;
 
-        const records = reconcileHints(Array.isArray(level?.hints) ? level.hints : [], level?.hintRecords);
+        // Current mutation is single-authority: hintRecords is canonical persisted state and
+        // hints is only its derived in-memory view. Historical bare paths are upgraded during
+        // read/hydration, never reconciled back into a fresh write here.
+        const records = Array.isArray(level?.hintRecords) ? level.hintRecords : [];
         if (records.length === 0 && !fileExists) return;
         const next = stringifyHints(records);
         const prev = fileExists ? readFileSync(filePath, 'utf8') : null;
@@ -160,17 +152,6 @@ export function writeLevelCorpusDocumentWithHints(levelsJsonPath, document) {
     if (levelsChanged) writeFileSync(levelsJsonPath, nextLevels);
 
     return { levelsChanged, hintFilesChanged };
-}
-
-/**
- * Compatibility array writer. New callers should use writeLevelCorpusDocumentWithHints().
- * Array callers retain their historical storage shape only through the temporary WeakMap facade.
- */
-export function writeLevelsWithHints(levelsJsonPath, levels) {
-    if (!Array.isArray(levels)) throw new Error('levels must be an array');
-    const remembered = LEVEL_WRAPPERS.get(levels);
-    const document = remembered ?? { levels, metadata: {}, storageShape: 'array' };
-    return writeLevelCorpusDocumentWithHints(levelsJsonPath, { ...document, levels });
 }
 
 /** Sorted hint artifact filenames accepted by validators. */
