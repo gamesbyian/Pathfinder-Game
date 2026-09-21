@@ -43,6 +43,7 @@ const link = buildResearchEnrichmentLink({
 
 const absoluteOut = path.resolve(ROOT, out);
 mkdirSync(path.dirname(absoluteOut), { recursive: true });
+assertCanonicalResearchArtifactEnvelope(link);
 writeFileSync(absoluteOut, `${JSON.stringify(link, null, 2)}\n`);
 console.log(JSON.stringify({
     out,
