@@ -62,7 +62,9 @@
       "concept": "candidate path encoding",
       "owners": [
         "modules/domain/path-validator.ts",
-        "modules/domain/path-validator.test.ts"
+        "modules/domain/path-validator.test.ts",
+        "modules/solver/variety-search.ts",
+        "modules/solver/solver-worker-client.ts"
       ],
       "forms": [
         "packed numeric cell keys",
@@ -75,8 +77,8 @@
       "persistedExternalRequirement": true,
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
-      "retirementGate": "wire decoding is separate from canonical path validation; internal validation accepts one path representation",
-      "progress": "decodeCandidatePath now owns packed-key / 1-indexed tuple / 0-indexed object decoding; validateCanonicalPath is a packed-key-only referee; validateCandidatePath remains the compatibility/import adapter. Internal canonical callers still need census/migration before retirement."
+      "retirementGate": "Migrate remaining internal callers that already own packed-key paths; keep validateCandidatePath only on wire/import/public API surfaces that genuinely accept alternate coordinate encodings.",
+      "progress": "Split permissive decodeCandidatePath() from packed-key-only validateCanonicalPath(); validateCandidatePath() remains the import/API adapter. Hint acceptance decodes explicitly before canonical validation. Internal packed-key producers now use the strict referee in variety-search and pooled enumeration. Injected/public solverApi validation remains permissive at its intentional boundary."
     },
     {
       "id": "PSC-004",
