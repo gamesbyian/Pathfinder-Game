@@ -32,6 +32,11 @@ const COMBINED_FILE = args.get('--combined-file');
 const SAVE_HINTS = flags.has('--save-hints');
 const DERIVED_ONLY = flags.has('--derived-only');
 const SOLVER_VERSION = args.get('--solver-version') || null;
+const EXPECTED_SHARDS_ARG = args.get('--expected-shards');
+const EXPECTED_SHARDS = EXPECTED_SHARDS_ARG == null ? null : Number(EXPECTED_SHARDS_ARG);
+if (EXPECTED_SHARDS != null && (!Number.isSafeInteger(EXPECTED_SHARDS) || EXPECTED_SHARDS < 1)) {
+    throw new Error('--expected-shards must be a positive integer when supplied');
+}
 
 installBrowserStubs();
 const CORPUS_FILES = {
@@ -82,11 +87,33 @@ if (COMBINED_FILE) {
 } else {
     const dirs = readdirSync(STAGING_DIR).filter(d =>
         statSync(path.join(STAGING_DIR, d)).isDirectory() && d.startsWith('technique-census-shard-'));
+    const observedShardIndexes = new Set();
+    let declaredShardCount = EXPECTED_SHARDS;
     for (const d of dirs.sort()) {
         const shardPath = path.join(STAGING_DIR, d);
-        const files = readdirSync(shardPath).filter(f => /^shard-\d+\.json$/.test(f));
+        const files = readdirSync(shardPath).filter(f => /^shard-\d+\.json$/.test(f)).sort();
         if (files.length === 0) { missing.push(d); continue; }
-        const data = JSON.parse(readFileSync(path.join(shardPath, files[0]), 'utf8'));
+        if (files.length !== 1) {
+            throw new Error(`combine: artifact ${d} contains ${files.length} shard result files; expected exactly one`);
+        }
+        const file = files[0];
+        const fileShard = Number(file.match(/^shard-(\d+)\.json$/u)?.[1]);
+        const dirShard = Number(d.match(/^technique-census-shard-(\d+)$/u)?.[1]);
+        const data = JSON.parse(readFileSync(path.join(shardPath, file), 'utf8'));
+        if (!Number.isSafeInteger(data.shard) || !Number.isSafeInteger(data.shards) || data.shard < 1 || data.shard > data.shards) {
+            throw new Error(`combine: ${d}/${file} lacks valid shard/shards identity`);
+        }
+        if (fileShard !== data.shard || dirShard !== data.shard) {
+            throw new Error(`combine: shard identity mismatch for ${d}/${file}: artifact=${dirShard}, filename=${fileShard}, document=${data.shard}`);
+        }
+        if (observedShardIndexes.has(data.shard)) {
+            throw new Error(`combine: duplicate outer shard index ${data.shard}`);
+        }
+        observedShardIndexes.add(data.shard);
+        if (declaredShardCount == null) declaredShardCount = data.shards;
+        if (data.shards !== declaredShardCount) {
+            throw new Error(`combine: shard ${data.shard} declares ${data.shards} total shards; expected ${declaredShardCount}`);
+        }
         if (data.commit) {
             sawRevisionMetadata = true;
             if (executionCommit && executionCommit !== data.commit) {
@@ -98,6 +125,12 @@ if (COMBINED_FILE) {
         }
         if (data.partial) partial.push(d);
         rawResults.push(...(data.results || []));
+    }
+    if (declaredShardCount != null) {
+        for (let shard = 1; shard <= declaredShardCount; shard++) {
+            if (!observedShardIndexes.has(shard)) missing.push(`technique-census-shard-${shard}`);
+        }
+        missing = [...new Set(missing)].sort();
     }
     if (sawRevisionMetadata && sawMissingRevisionMetadata) {
         throw new Error('combine: mixed fresh/legacy shard revision metadata; cannot claim one execution identity');
