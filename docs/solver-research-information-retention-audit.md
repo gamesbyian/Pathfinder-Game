@@ -1,9 +1,10 @@
 <!-- agent-context-budget: warn=9000 max=12000 -->
 # Solver research information-retention audit
 
-> **Status:** active investigation; documentation-first.
+> **Status:** concluded-positive; documentation-first investigation complete.
 > **Started:** 2026-09-20.
 > **Branch:** `chatgpt/solver-research-information-retention-audit-2026-09-20`.
+> **Closeout:** [`../reports/2026-09-20-solver-research-information-retention-audit-001.md`](../reports/2026-09-20-solver-research-information-retention-audit-001.md).
 > **Primary question:** where do Pathfinder solving and analysis tools discard, downgrade, aggregate away, overwrite, or only ephemerally retain information that could plausibly support future solver research?
 > **Safety boundary:** this audit does **not** loosen production level-blindness, evidence-integrity rules, or workflow invariants. It investigates observation and retention outside the solver decision boundary.
 > **Authority relationship:** the durable-resource semantics remain owned by `solver-research-resource-contract.md` and `solver-research-data-assets.*`; search-loss/failure telemetry remains owned by `solver-search-loss-evidence-implementation-plan.md` and `solver-failure-evidence-research-integration-plan.md`; any solver experiment still enters the canonical queue through `solver-optimization-workstreams.md`.
@@ -1363,16 +1364,19 @@ A lost field deserves prospective retention only when most of the following are 
 
 Conversely, classify as benign when a lossy report is clearly derived, its primary source is durable and bound, and recomputation is straightforward.
 
-## 10. Immediate next investigation
+## 10. Next phase: bounded implementation planning
 
-1. build workflow retention/durability matrix;
-2. compare major solver-running row schemas against compact failure response;
-3. audit standard publisher include behavior for rich secondary evidence;
-4. inspect technique-census/method-probe cell schemas for fields lost at combine/publication;
-5. inspect high-value analyzers for normalized rows discarded after aggregation;
-6. cross-reference every confirmed issue against `solver-research-data-assets.json` and resource-contract audits;
-7. inspect the search-loss/failure integration plans to avoid reopening already-owned gaps;
-8. update this document with evidence and dispositions before proposing implementation.
+The broad investigation is complete. Do not reopen repository-wide telemetry discovery unless new evidence invalidates this audit.
+
+The next phase, when authorized, is limited to:
+
+1. implement and test the compact configuration/action identity correction with historical compatibility;
+2. measure compact failure-response size/value on representative full deterministic refreshes before changing retention;
+3. propagate the existing Resource Contract reconstructability check into the generic investigation closeout convention;
+4. make harvester participation versus evidence-layer durability clearer using existing documentation/disposition surfaces;
+5. update exact/reference and one-shot guidance only where the existing purpose-specific persistence practice needs to be stated explicitly.
+
+Any larger storage, telemetry, or observer proposal must independently earn itself under the existing framework/value-of-information rules.
 
 ## 11. Working hypothesis
 
@@ -1384,49 +1388,24 @@ The likely target architecture is not “save everything.” It is:
 
 > capture broadly enough to expose useful process distinctions; retain bounded, semantically stable projections; preserve truncation and missingness; enrich offline; escalate selected anomalies/questions into richer replay.
 
-This remains a hypothesis to test against the retention matrix and producer/consumer audit.
+The audit supports this direction, with one refinement: collection itself should remain earned and question-driven. The preferred architecture is bounded compact observation plus explicit evidence graduation when scientific use outlives the acquisition surface.
 
 
 ## 12. Investigation closeout status
 
-### Completed audit surfaces
+The documentation-first investigation is **complete**.
 
-The documentation-first investigation has now covered:
+All planned audit surfaces were covered, including solver/worker boundaries, row projection, shard/combine/publication, durable retention, failed/cancelled salvage, deterministic refreshes, targeted and reconciled acquisition, exact/reference evidence, one-shot retirement, branch-local persistence, generated interfaces, representative reducers, transient solver knowledge, and overlap with the merged batch-digestion authority.
 
-- level-blind worker -> parent result;
-- attempt/result -> sweep row;
-- shard -> combine;
-- combine -> standard publication;
-- publication -> harvester/durable experiment evidence;
-- failed/cancelled salvage;
-- deterministic versus ordinary stress-refresh persistence;
-- targeted acquisition and late scientific promotion;
-- gap-fill -> reconciliation;
-- technique census compact/full policy;
-- method-probe operational traces;
-- search-loss compact/rich disposition;
-- exact/reference acquisition;
-- one-shot workflow retirement;
-- branch-local persistence;
-- generated resource interfaces;
-- hint discovery-process derivation;
-- representative analyzer/reducer behavior;
-- transient solver knowledge;
-- cache/reuse overlap with the merged batch-digestion authority.
+The four synthesis questions that were previously open are now resolved:
 
-### Remaining investigation before implementation planning
+1. **Action/config semantics:** canonical configuration and action identities are distinct types; the compact row projection currently collapses them and should be corrected prospectively with historical compatibility.
+2. **Deterministic refresh minimum payload:** full-primary retention is economically unattractive (~61 MB for current Corpus 2). Existing per-run projection + lifecycle map + corrected compact failure response is the first bounded candidate to measure.
+3. **Late promotion:** one procedural reconstructability check can cover one-shot, targeted, and reconciled evidence; the underlying rule already exists in the Resource Contract and should be propagated rather than reinvented.
+4. **Survival discoverability:** no new registry schema is earned. Clarify survival/layer coverage through existing documentation/disposition surfaces unless repeated consumers later prove a machine field necessary.
 
-Only a small amount remains:
+Current main moved materially during the audit, including PR #1940 and naming/semantic cleanup. The audit has been reconciled conceptually against those changes; its only stale capability-memory wording was corrected to current capability-evidence vocabulary. Branch ancestry can be reconciled mechanically at merge time because the audit changes only new documentation paths.
 
-1. verify the intended canonical semantics of row-level `actionKey` across the main compact-response producer shapes before changing IR-002/IR-023;
-2. decide the minimum reconstructable payload actually needed for deterministic refreshes before proposing IR-024 storage;
-3. translate the late-promotion findings (IR-020/025/028) into one procedural closeout rule rather than three bespoke mechanisms;
-4. decide whether survival destination belongs in the asset catalogue, the workflow/evidence disposition, or only the Resource Contract / operating-model prose;
-5. reconcile this branch with current main before final closeout, since PR #1940 merged during the investigation.
+**Investigation completion: 100%.**
 
-### Estimated completion
-
-The investigation/documentation phase is approximately **85% complete**.
-
-The remaining 15% is synthesis and exact contract verification, not another broad repository survey. The audit has already ruled out the largest tempting overreactions: universal diagnostic telemetry, universal raw retention, a new warehouse, and reopening already-adjudicated rich search-loss capture.
-
+Implementation is intentionally not part of this phase.
