@@ -5,6 +5,7 @@
  * genuinely need pre-cleanup spellings must opt into normalizeHistoricalSchedulerMode().
  */
 
+/** @type {readonly ('production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio')[]} */
 export const CANONICAL_SCHEDULER_MODES = Object.freeze([
     'production',
     'legacy-latency-portfolio-experiment',
