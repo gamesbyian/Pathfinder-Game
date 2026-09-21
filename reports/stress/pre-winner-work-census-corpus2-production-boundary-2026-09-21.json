@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-pre-winner-canonical-work-census",
+  "evidenceRole": "opportunity-sizing",
+  "source": {
+    "workflowRunId": 35066677597,
+    "artifactId": 10439992643,
+    "artifactName": "solver-stress-refresh-combined",
+    "artifactDigest": "sha256:73ced0ff248c59abe11bddf88a9f9c11901b4421546ddff08c7b3b0fea90743e",
+    "sourceHeadSha": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "corpus": "data/stress/stress-levels-random.json"
+  },
+  "population": {
+    "rows": 1700,
+    "solvedRows": 1169,
+    "unsolvedRows": 531,
+    "canonicalWorkRows": 1169,
+    "unavailableSolvedRows": 0
+  },
+  "summary": {
+    "totalPreWinnerWork": 65657307264,
+    "totalSolvedRowWork": 69302968971,
+    "aggregateSolvedPreWinnerWorkShare": 0.9473953026669675,
+    "totalCorpusWork": 207030206477,
+    "preWinnerWorkShareOfFullCorpus": 0.3171387807667293,
+    "rowsWithAnyPreWinnerWork": 961,
+    "rowsWithAnyPreWinnerWorkRate": 0.8220701454234388,
+    "medianRowPreWinnerShare": 0.8903878346922692,
+    "p90RowPreWinnerShare": 0.9872775313550005,
+    "medianPreWinnerAttempts": 4,
+    "p90PreWinnerAttempts": 59
+  },
+  "concentration": {
+    "top5ShareOfPreWinnerWork": 0.026082110116309263,
+    "top10ShareOfPreWinnerWork": 0.05071336949003514,
+    "top20ShareOfPreWinnerWork": 0.09733222118452549,
+    "top50ShareOfPreWinnerWork": 0.22865919625113426,
+    "top100ShareOfPreWinnerWork": 0.41867474303309254
+  },
+  "conservativePrimaryLadder": {
+    "winnerStages": [
+      "early-repair-search",
+      "main-search",
+      "repair-fallback",
+      "admissible-order-fallback"
+    ],
+    "solvedRows": 874,
+    "preWinnerWork": 14070783830,
+    "denominatorWork": 16533435130,
+    "preWinnerShareWithinTheseSolvedRows": 0.851050233624378,
+    "preWinnerWorkShareOfFullCorpus": 0.0679648833348538,
+    "interpretation": "Excludes deliberately late treatment/retry winners. This is still an oracle ceiling, not achievable selector savings."
+  },
+  "mainSearchOnly": {
+    "solvedRows": 646,
+    "preWinnerWork": 11202006403,
+    "denominatorWork": 12867322422,
+    "preWinnerShareWithinMainSearchWinners": 0.8705778899149434,
+    "preWinnerWorkShareOfFullCorpus": 0.05410807723965868
+  },
+  "byWinnerStage": [
+    {
+      "winnerStageId": "portal-coarse-state-merge-dead-last-retry",
+      "rows": 121,
+      "preWinnerWork": 31151838906,
+      "denominatorWork": 31594581414,
+      "aggregatePreWinnerWorkShare": 0.9859867582292509
+    },
+    {
+      "winnerStageId": "main-search",
+      "rows": 646,
+      "preWinnerWork": 11202006403,
+      "denominatorWork": 12867322422,
+      "aggregatePreWinnerWorkShare": 0.8705778899149434
+    },
+    {
+      "winnerStageId": "late-repair-multiseed-retry",
+      "rows": 33,
+      "preWinnerWork": 6203674361,
+      "denominatorWork": 6389947901,
+      "aggregatePreWinnerWorkShare": 0.9708489735932199
+    },
+    {
+      "winnerStageId": "goal-attraction-disabled-retry",
+      "rows": 51,
+      "preWinnerWork": 3866796644,
+      "denominatorWork": 4051347308,
+      "aggregatePreWinnerWorkShare": 0.9544470888399085
+    },
+    {
+      "winnerStageId": "admissible-order-alternate-tiebreak-retry",
+      "rows": 30,
+      "preWinnerWork": 2309403721,
+      "denominatorWork": 2429226004,
+      "aggregatePreWinnerWorkShare": 0.9506747075806455
+    },
+    {
+      "winnerStageId": "guidance-goal-distance-retry",
+      "rows": 10,
+      "preWinnerWork": 1952839768,
+      "denominatorWork": 1994593569,
+      "aggregatePreWinnerWorkShare": 0.979066511770148
+    },
+    {
+      "winnerStageId": "coarse-state-near-tie-retention-disabled-retry",
+      "rows": 17,
+      "preWinnerWork": 1879236628,
+      "denominatorWork": 1950827637,
+      "aggregatePreWinnerWorkShare": 0.9633022376543254
+    },
+    {
+      "winnerStageId": "late-repair-search",
+      "rows": 17,
+      "preWinnerWork": 1846443681,
+      "denominatorWork": 1925042644,
+      "aggregatePreWinnerWorkShare": 0.9591702743599066
+    },
+    {
+      "winnerStageId": "must-cross-neighbor-prune-disabled-retry",
+      "rows": 12,
+      "preWinnerWork": 1807264850,
+      "denominatorWork": 1839183541,
+      "aggregatePreWinnerWorkShare": 0.9826451845134253
+    },
+    {
+      "winnerStageId": "admissible-order-fallback",
+      "rows": 43,
+      "preWinnerWork": 1735078140,
+      "denominatorWork": 1961861933,
+      "aggregatePreWinnerWorkShare": 0.8844037956059367
+    },
+    {
+      "winnerStageId": "early-repair-search",
+      "rows": 179,
+      "preWinnerWork": 781022241,
+      "denominatorWork": 1219432468,
+      "aggregatePreWinnerWorkShare": 0.6404801098013736
+    },
+    {
+      "winnerStageId": "connectivity-axis-prune-disabled-retry",
+      "rows": 4,
+      "preWinnerWork": 569024875,
+      "denominatorWork": 594783823,
+      "aggregatePreWinnerWorkShare": 0.9566919156104889
+    },
+    {
+      "winnerStageId": "repair-fallback",
+      "rows": 6,
+      "preWinnerWork": 352677046,
+      "denominatorWork": 484818307,
+      "aggregatePreWinnerWorkShare": 0.7274416846639415
+    }
+  ],
+  "leadingFailedPreWinnerActions": [
+    {
+      "actionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+      "preWinnerWork": 4048287408
+    },
+    {
+      "actionKey": "admissible-order-fallback|admissible-order|tieBreak=default|lds=off",
+      "preWinnerWork": 3973692888
+    },
+    {
+      "actionKey": "early-repair-search|repair|score=repair|guidance=standard|seedSalt=0",
+      "preWinnerWork": 3902799494
+    },
+    {
+      "actionKey": "early-repair-search|repair|score=repair|guidance=standard|seedSalt=1",
+      "preWinnerWork": 3625030018
+    },
+    {
+      "actionKey": "repair-fallback|repair|score=repair|guidance=standard|seedSalt=0",
+      "preWinnerWork": 3189428286
+    },
+    {
+      "actionKey": "admissible-order-alternate-tiebreak-retry|admissible-order|tieBreak=none|lds=off",
+      "preWinnerWork": 3186827681
+    },
+    {
+      "actionKey": "main-search|dfs|score=objectiveFirst|bias=none",
+      "preWinnerWork": 2832430356
+    },
+    {
+      "actionKey": "main-search|dfs|score=intersectionHarvest|bias=none",
+      "preWinnerWork": 2012568755
+    },
+    {
+      "actionKey": "guidance-goal-distance-retry|dfs|score=objectiveFirst|bias=none",
+      "preWinnerWork": 1589338961
+    },
+    {
+      "actionKey": "connectivity-axis-prune-disabled-retry|dfs|score=objectiveFirst|bias=none",
+      "preWinnerWork": 1570194610
+    },
+    {
+      "actionKey": "guidance-goal-distance-retry|dfs|score=intersectionHarvest|bias=none",
+      "preWinnerWork": 1462570270
+    },
+    {
+      "actionKey": "main-search|dfs|score=perimeterSweep|bias=perimeterCW",
+      "preWinnerWork": 1395984124
+    },
+    {
+      "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+      "preWinnerWork": 1324572393
+    },
+    {
+      "actionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "preWinnerWork": 1216345566
+    }
+  ],
+  "interpretation": {
+    "oracleCeilingBand": ">=10%",
+    "grossCeiling": "Very large but heavily includes deliberately protected late retries.",
+    "conservativeCeiling": "Primary-ladder winners alone leave 6.80% of full-corpus canonical work before the winner.",
+    "nextGate": "Test runtime-legal current-input/failure-response discrimination on ordinary main-search action ordering before any behavioral reorder."
+  }
+}
