@@ -2,9 +2,9 @@
 // Exposes solve()/findTriggerableFalseGoalCells() methods that run the same search as
 // Solver.solve()/Solver.findTriggerableFalseGoalCells(), but this is NOT a drop-in swap: it
 // implements only these two methods (not the full SolverApi surface), and
-// its public solve() is a raw-level convenience boundary, while the worker transport itself now
-// carries the same normalized level shape consumed by direct solveLevel(). A caller may keep
-// passing raw wire levels here; normalization happens before postMessage, not inside the worker.
+// its canonical solveLevel() consumes the same normalized level shape as direct solveLevel().
+// The public solve() method remains a raw-level convenience adapter that validates/normalizes
+// before delegating to solveLevel(); the worker transport itself is normalized-only.
 //
 // Usage:
 //   import { createSolverWorkerClient } from './modules/solver/solver-worker-client.js';
@@ -15,10 +15,10 @@
 //   // exist on the postMessage transport envelope but are stripped by this client before resolve.
 //   (A URL argument is also accepted and constructed here — used by tests.)
 //
-// Input-format note: this public solve() accepts RAW wire format (1-indexed coords) for convenience.
-// It validates + normalizes locally, then sends a NORMALIZED level to the worker. The worker SOLVE
-// branch and direct solveLevel() therefore share one internal level contract. findTriggerableFalseGoalCells()
-// likewise transports a normalized level; structured clone carries Sets/Maps intact.
+// Input-format note: solveLevel() is the canonical normalized-level method. solve() accepts RAW
+// wire format (1-indexed coords) for convenience, validates + normalizes locally, then delegates.
+// The worker SOLVE branch and direct solveLevel() therefore share one internal/public canonical
+// level contract. findTriggerableFalseGoalCells() likewise transports a normalized level.
 //
 // solve() accepts the FULL SolveOpts the direct/on-thread solver does (fixed 2026-08-20 — it used
 // to silently forward only timeBudgetMs/yieldFn, dropping ablation/nodeBudget/baseWorkBudget/workBudget/
@@ -91,6 +91,13 @@ export function normalizeSolveWorkerResult(message: Record<string, any>): Record
     return result;
 }
 
+function assertNormalizedSolveLevel(level: any) {
+    if (!level || !level.grid || !Array.isArray(level.gateKeys) || !(level.portalMap instanceof Map)) {
+        throw new Error('Solver worker solveLevel requires a normalized level');
+    }
+    return level;
+}
+
 interface FalseGoalTriggerWorkerOpts {
     timeLimitMs?: number;
     onProgress?: (p: any) => void;
@@ -132,13 +139,8 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
     };
 
     return {
-        solve(levelRaw: any, opts: SolveOpts = {}) {
-            const validation = validateRawLevel(levelRaw);
-            const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
-            if (solverBoundaryErrors.length > 0) {
-                throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
-            }
-            const level = normalizeRawLevel(levelRaw);
+        solveLevel(level: any, opts: SolveOpts = {}) {
+            assertNormalizedSolveLevel(level);
             const id = _nextId++;
             const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
             // Build the canonical serializable option payload. Direct/on-thread-only callback
@@ -177,6 +179,16 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
                 worker.postMessage({ type: 'SOLVE', id, level, budgetMs, solveOpts });
             });
         },
+
+
+        solve(levelRaw: any, opts: SolveOpts = {}) {
+            const validation = validateRawLevel(levelRaw);
+            const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
+            if (solverBoundaryErrors.length > 0) {
+                throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
+            }
+            return this.solveLevel(normalizeRawLevel(levelRaw), opts);
+        }
 
         // False-goal triggerability search on a normalized level. opts:
         //   timeLimitMs  — search budget in ms
