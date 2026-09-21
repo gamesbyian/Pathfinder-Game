@@ -336,8 +336,6 @@ export interface SolveOpts {
      *  review-controller.ts's interactive call sites) preserves GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_
      *  FRACTION exactly. */
     goalAttractionDisabledRetryBudgetFractionOverride?: number;
-    /** @deprecated Historical option name accepted on read only. */
-    attractionDiversityBudgetFractionOverride?: number;
     /** Overrides COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as goalAttractionDisabledRetryBudgetFractionOverride above (NOT
      *  an ablation flag; a batch-tooling caller may want to isolate this pass's own cost). Undefined
