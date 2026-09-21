@@ -68,6 +68,10 @@ Legacy workflow-specific combined artifacts remain for compatibility and richer/
 
 Workflow `run-name` values also include the inputs most useful for distinguishing nearby dispatches in the Actions list. Workflows that commit durable research reports write a small `gha-source-run` provenance sidecar with the originating run URL/id, SHA/ref, dispatch inputs, and completeness record, so agents can navigate report → run without reconstructing history.
 
+## One-shot research execution
+
+- `forced-work-prevalence-one-shot.yml` — temporary PR #1952 execution surface for the preregistered 64-parent forced-work census. Lifecycle status: retiring; delete after the decision-bearing result is captured in the retained report.
+
 ## Core capability
 
 - `search-loss-real-canary.yml` — research-only OFF/compact/rich observational parity, overhead, payload, and bounded-capture canary over a deterministic real stress sample; never changes production solver policy.
