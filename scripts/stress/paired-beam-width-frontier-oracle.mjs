@@ -15,6 +15,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
