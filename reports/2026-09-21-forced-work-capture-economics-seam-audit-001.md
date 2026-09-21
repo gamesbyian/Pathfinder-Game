@@ -1,11 +1,12 @@
 # Forced-work capture-economics seam audit 001
 
-> **Status:** active preflight / interpretation correction.
-> **Date:** 2026-09-21.
+> **Status:** active
+> **Last evidence:** 2026-09-21 — seam audit of the corrected 64-parent forced-work prevalence result and existing beam observer stages.
+> **Decision:** retain the 25.33% figure as a strong prevalence/work reservoir, but do not call it a directly removable post-prune work ceiling; expansion and hard-prune work is already paid when one-survivor status becomes knowable.
+> **Remaining gate:** rerun the frozen 64-parent probe with global singleton/singleton-to-singleton phase telemetry, then price only post-recognition replay, retention/frontier bookkeeping, and downstream consequences before any production contraction.
 > **Owner:** `WS2-FORCED-WORK-CAPTURE-ECONOMICS`.
 > **Production effect:** none.
 > **Source result:** [forced-work prevalence result 001](2026-09-21-forced-work-prevalence-result-001.md).
-> **Decision:** retain the 25.33% figure as a strong prevalence/work reservoir, but do not call it a directly removable post-prune work ceiling. At the current observation seam, the parent expansion and hard-prune work used to discover one-survivor status has already been paid.
 
 ## Why the economics question changes
 
