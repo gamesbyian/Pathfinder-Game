@@ -492,6 +492,14 @@ Every lane/candidate should eventually record:
 
 ## 10. Progress log
 
+### 2026-09-20 - branch reconciliation staging
+
+- PR #1938 (`chatgpt/parity-response-signature-integration-2026-09-20`) was merged into this branch with both histories preserved in merge commit `2f2367575d35cd2408b8b6b7a3e206a0f3876bab`.
+- The only overlapping path was `package.json`; reconciliation retained every #1938 script entry and this audit's `solver:audit-batch-cost` entry.
+- Compare verification after the merge showed #1938 head `beca9c0` is fully contained (0 commits behind the integrated head).
+- PR #1938 was then closed as superseded by this integration staging PR. PR #1936 was also closed because it was an empty-tree validation PR for an older integrated tree and carried no file content to preserve.
+- PR #1937 remains intentionally unreconciled while active work continues there. This branch is the staging target for its eventual reconciliation before anything is merged to `main`.
+
 ### 2026-09-20 - Phase 1/2 instrumentation and boundary design
 
 - Added `scripts/solver-batch-cost-probe.mjs`, exposed as `npm run solver:audit-batch-cost -- ...`. It measures validation, normalization, and `prepLevel` without requiring search; optional `--solve` adds ordinary solve wall time under a fixed work/node budget.
