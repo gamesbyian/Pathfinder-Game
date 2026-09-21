@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 // census refresh's solvingActions moved to this format and every DEFAULT_PAIRS entry stopped
 // matching anything (0/8 pairs found any left/right/both rows) -- this is a key-spelling fix
 // for the same eight comparisons, not a reselection of which pairs to test.
-const DEFAULT_PAIRS = [
+export const DEFAULT_PAIRS = [
     ['admissible-order|tieBreak=default|lds=off', 'admissible-order|tieBreak=mustCrossFirst|lds=off'],
     ['dfs|score=harvestThenFinish|bias=none', 'dfs|score=portalFirstTransfer|bias=none'],
     ['beam|score=objectiveFirst|bias=none|width=2000|retention=plain', 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain'],
