@@ -89,7 +89,7 @@ const legacyTopLevelConfiguration = clone(manifest);
 delete legacyTopLevelConfiguration.experiment.configurationHash;
 legacyTopLevelConfiguration.configurationHash = `sha256:${'b'.repeat(64)}`;
 assert.throws(
-  () => validateReconciliationSources([{ runId: 'legacy-config', manifest: legacyTopLevelConfiguration }]),
+  () => validateReconciliationSources([{ runId: '1', manifest: legacyTopLevelConfiguration }]),
   /no declared experiment configuration hash/u,
 );
 
