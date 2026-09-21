@@ -115,7 +115,15 @@ Run the first no-search response analysis with:
 npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
 ```
 
-It normalizes raw levels through the solver boundary and compares portal-pair phase structure and gate parity demand across frozen technique-discordance cohorts. The output remains outcome-selected development evidence and can only nominate Stage-0 premises.
+It normalizes raw levels through the solver boundary and compares portal-pair phase structure and gate parity demand across frozen technique-discordance cohorts.
+
+The second no-search probe is transformation-aware geometry:
+
+```bash
+npm run research:response-guided-orientation -- --out=tmp/response-guided-orientation-contrast.json
+```
+
+Its signed Gate→Goal side balances/moments obey a tested reflection law and target the large CW/CCW discordance that count features fail to explain. Both outputs remain outcome-selected development evidence and can only nominate Stage-0 premises.
 
 The first nominations are recorded in [the 2026-09-21 report](../reports/2026-09-21-response-guided-premise-nominations-001.md).
 
