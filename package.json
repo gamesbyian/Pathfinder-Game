@@ -375,7 +375,10 @@
     "solver:audit-equivalence": "node scripts/run-bundled.mjs scripts/solver-equivalence-opportunity-census.mjs",
     "solver:audit-family-constructive-reuse": "node scripts/family-constructive-reuse-census.mjs",
     "solver:audit-family-compile-reuse": "node scripts/family-compile-reuse-census.mjs",
-    "research:measure-deterministic-retention-payload": "node scripts/measure-deterministic-retention-payload.mjs"
+    "research:measure-deterministic-retention-payload": "node scripts/measure-deterministic-retention-payload.mjs",
+    "research:semantic-forcedness-capture": "node scripts/run-bundled.mjs scripts/stress/semantic-forcedness-capture.mjs",
+    "research:semantic-forcedness-reconcile": "node scripts/stress/semantic-forcedness-reconcile.mjs",
+    "test:semantic-forcedness": "node scripts/stress/semantic-forcedness-lib-node-test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
