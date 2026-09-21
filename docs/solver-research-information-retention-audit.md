@@ -842,6 +842,69 @@ Use this split:
 IR- transient-cache candidates remain observations only unless one of those owning programs earns measurement.
 
 
+
+### IR-028 — reconciliation proves composability but does not itself create a durable scientific verdict
+
+**Class:** semantic phase-transition / R1.
+
+`solver-combine-sweep-runs.yml` is deliberately rigorous about cross-run reconstruction:
+
+- it downloads standard artifacts from named source runs;
+- rejects unverifiable manifests;
+- validates compatible experiment contracts;
+- preserves immutable source-run ancestry;
+- verifies the exact reconciled population;
+- emits a reconciliation contract with `sourceRuns` and typed `reconciliationRun` semantics;
+- publishes the reconciled primary result through the standard publisher.
+
+This is exactly the right behavior for repairing a gap-filled/incomplete acquisition without rerunning already-valid work.
+
+But the reconciliation workflow does not itself declare a `researchOutcome`. Consequently the reconciled standard artifact does not automatically qualify for the durable decision-bearing experiment store.
+
+This matters particularly for high-budget gap fills. The acquisition workflow explicitly describes gap-fill reports as `artifact-only-pending-reconciliation`; reconciliation can then prove that the leaf runs jointly cover the intended frozen cohort. Yet a later scientific conclusion based on that reconstructed full population still requires a separate closeout/persistence step if the exact reconciled rows are to survive beyond Actions retention.
+
+**Interpretation:** reconciliation answers:
+
+> “Do these bytes jointly represent one coherent acquisition?”
+
+It does not answer:
+
+> “What scientific decision did this coherent acquisition support?”
+
+Those should remain separate. The retention gap is the same late-promotion transition identified in IR-025, now demonstrated across multiple source runs.
+
+### IR-029 — the asset registry can describe semantics but has no current field for instance durability/reconstructability
+
+**Class:** discoverability/schema opportunity, not yet an implementation requirement.
+
+The catalogue schema is intentionally small. Current asset fields are limited to:
+
+- identity/name/status;
+- grain;
+- locations/authorities;
+- query entry points;
+- join keys;
+- evidence roles/relationships;
+- affordances/caveats.
+
+`research-asset-query.mjs` exposes those fields and, for the four audited resources, additionally exposes Resource Contract decision-safety fields including `knownInformationLoss`.
+
+There is no catalogue-grade field equivalent to:
+
+- canonical durable instance exists;
+- artifact-bound producer only;
+- branch-bound;
+- generated/recomputable from durable inputs;
+- decision-bundle retained;
+- reconstructability horizon unknown.
+
+This explains IR-013 without implying a new registry schema is automatically warranted.
+
+**Best current fit:** the existing Resource Contract already owns reconstructability for resources important enough to receive an audit. For ordinary catalogue-grade generated interfaces, a small human-readable convention in `status`/caveats or the evidence-topology guide may be sufficient until at least two real consumers are making bad decisions because survival is hidden.
+
+**Disposition:** documentation-first. Do not add a new required registry field merely for conceptual completeness.
+
+
 ## 6. Positive findings / boundaries already working well
 
 The audit must record good boundaries as well as defects.
@@ -990,6 +1053,52 @@ Do not implement without demonstrated consumer/value:
 - explicit truncation/missingness;
 - row-preserving modern analyzers;
 - branch-independent Hint salvage.
+
+
+
+## 7B. Cross-cutting synthesis
+
+The audit's most important result is that four different questions had been hiding inside the word **retention**:
+
+1. **Did computation produce the observation?**
+2. **Can a normal research surface discover/query it?**
+3. **Do the exact bytes or a lossless-enough source survive for the likely reuse horizon?**
+4. **If its scientific role changes later, does persistence change with that role?**
+
+The repository is strongest on (1) and on decision-bearing forms of (3). It is increasingly strong on (2). The remaining weak seam is mostly (4): **late scientific promotion**.
+
+Several general-purpose rails intentionally acquire evidence without declaring a verdict:
+
+- targeted level-blind sweep;
+- exact/reference prefix acquisition;
+- cross-run reconciliation;
+- various forensic/method-probe uses.
+
+That is good architecture. Acquisition should not pretend to know the downstream conclusion.
+
+The missing prospective convention is narrower:
+
+> When an artifact-only or branch-bound acquisition actually becomes a durable premise, closeout, promotion decision, or recurring resource, explicitly decide whether the source evidence needed to reconstruct that use also needs to graduate in durability.
+
+This can usually be satisfied by one of the existing mechanisms:
+- retain an immutable decision-bearing bundle when the run genuinely has a frozen decision contract/outcome;
+- commit the smallest purpose-specific labelled/reference dataset when it becomes a recurring resource;
+- keep a deterministic derived view only when its durable inputs are sufficient to reproduce it;
+- otherwise record that the conclusion is historical but row-level reconstruction expires.
+
+No universal raw-artifact archive is implied.
+
+### What this audit does **not** recommend
+
+- retaining every Actions artifact indefinitely;
+- converting exploratory runs retroactively into confirmation;
+- attaching full attempt history to every Hint;
+- making rich search-loss capture routine;
+- adding all transient solver counters;
+- committing mutable `latest` benchmark pointers for research-only deterministic runs;
+- adding a new database/warehouse;
+- treating Git branch commits as canonical merely because Git objects once existed;
+- adding a mandatory durability schema field before repeated consumer need is demonstrated.
 
 
 ## 8. Investigation phases
