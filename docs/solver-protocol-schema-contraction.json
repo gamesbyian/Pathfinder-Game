@@ -19,7 +19,11 @@
       "concept": "hint mutable representation",
       "owners": [
         "scripts/level-data-io.mjs",
-        "modules/domain/hint-runtime.mjs"
+        "modules/domain/hint-runtime.mjs",
+        "scripts/hint-complete-enumeration-sharded.mjs",
+        "scripts/hint-corpus-expand.mjs",
+        "scripts/hint-diversification.mjs",
+        "scripts/hint-workbench.mjs"
       ],
       "forms": [
         "level.hints bare paths",
@@ -30,8 +34,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "single-mutable-authority",
-      "status": "open",
-      "retirementGate": "current writers mutate canonical Hint records only; bare paths are projections; sharded write safety retained"
+      "status": "in-progress",
+      "retirementGate": "current writers mutate canonical Hint records only; bare paths are projections; sharded write safety retained",
+      "progress": "Added setLevelHintRecords as the canonical mutation boundary: producers supply provenance-rich Hint records and the helper derives the legacy bare-path projection. Four batch hint producers now use it; concurrency regression coverage exercises the new path. Import/published and UI/editor dual-field writers remain before write-time reconciliation can retire."
     },
     {
       "id": "PSC-002",
