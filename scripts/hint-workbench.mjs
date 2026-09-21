@@ -1187,7 +1187,7 @@ for (const levelNumber of levelNumbers) {
             changedHintFiles.push(relativePath(hintFilePathFor(levelsPath, hintKeyForLevel(raw, levelNumber))));
             // Persist after EVERY level rather than only once at the very end: a long multi-level run
             // used to lose all its work on an interruption, and its progress was invisible until it
-            // finished. writeLevelsWithHints only rewrites files that actually changed, so this is
+            // finished. writeLevelCorpusDocumentWithHints only rewrites files that actually changed, so this is
             // cheap. (Within a single very large level, bound it with --wall-ms so the step returns
             // and persists; re-running accumulates more, deduped by path signature.)
             writeResult = writeLevelCorpusDocumentWithHints(levelsPath, corpusDocument);
