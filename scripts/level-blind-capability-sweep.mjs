@@ -51,15 +51,11 @@ const researchQuestion = argMap.get('--research-question') ?? null;
 const preflight = argMap.get('--preflight') ?? null;
 const declaredStageOrder = argMap.get('--stage-order')?.split(',').map(value => value.trim()).filter(Boolean) ?? null;
 const runStartedAt = new Date().toISOString();
-// --main-search-late-reserve-* is canonical; --main-loop-late-reserve-* is accepted as a legacy
-// alias for one migration window (naming-cleanup-ledger.json), same dual-read shape as the
-// SolveOpts override fields these flags feed.
+// Current CLI vocabulary is canonical-only; retired phase-6 spellings belong only in historical artifact readers.
 const mainSearchLateReserveFraction = argMap.has('--main-search-late-reserve-fraction')
-    ? Number(argMap.get('--main-search-late-reserve-fraction'))
-    : argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
+    ? Number(argMap.get('--main-search-late-reserve-fraction')) : undefined;
 const mainSearchLateReserveConfigCount = argMap.has('--main-search-late-reserve-config-count')
-    ? Number(argMap.get('--main-search-late-reserve-config-count'))
-    : argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+    ? Number(argMap.get('--main-search-late-reserve-config-count')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction')
     ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 // 2026-09-04 (reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md): lets a
@@ -72,14 +68,12 @@ const admissibleOrderNonDefaultRetryBudgetFraction = argMap.has('--admissible-or
 // 2026-08-13 (docs/future-work.md item 4b): lets a matched sweep compare candidate
 // EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
 // (10, 0.35) without editing modules/solver/orchestration.ts. Same optional/omitted-means-
-// production-default shape as the main-search-late-reserve flags above. --early-repair-search-
-// adaptive-* is canonical; --repair-probe-adaptive-* is accepted as a legacy alias.
+// production-default shape as the main-search-late-reserve flags above. Only the canonical
+// --early-repair-search-adaptive-* spellings are accepted by current producers.
 const earlyRepairSearchAdaptiveBadnessGate = argMap.has('--early-repair-search-adaptive-badness-gate')
-    ? Number(argMap.get('--early-repair-search-adaptive-badness-gate'))
-    : argMap.has('--repair-probe-adaptive-badness-gate') ? Number(argMap.get('--repair-probe-adaptive-badness-gate')) : undefined;
+    ? Number(argMap.get('--early-repair-search-adaptive-badness-gate')) : undefined;
 const earlyRepairSearchAdaptiveMinScale = argMap.has('--early-repair-search-adaptive-min-scale')
-    ? Number(argMap.get('--early-repair-search-adaptive-min-scale'))
-    : argMap.has('--repair-probe-adaptive-min-scale') ? Number(argMap.get('--repair-probe-adaptive-min-scale')) : undefined;
+    ? Number(argMap.get('--early-repair-search-adaptive-min-scale')) : undefined;
 // 2026-08-22 (docs/solver-future-work.md's "repair-fallback gate widening" reconciliation): lets a
 // matched sweep compare a candidate STRATEGY_REPAIR_LATE_PROBE node cap against the shipped
 // REPAIR_LATE_PROBE_NODE_BUDGET default (2,000,000, stage-budget.ts) without editing that constant.
