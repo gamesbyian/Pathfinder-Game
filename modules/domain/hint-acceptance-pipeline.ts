@@ -3,7 +3,7 @@
 //
 // Both scripts/hint-workbench.mjs's acceptCandidate() and scripts/hint-corpus-expand.mjs's
 // consider() independently re-implemented this exact sequence around the same underlying
-// primitives (validateCandidatePath, decideCandidateAcceptance, pathSignature) — sharing the
+// primitives (decodeCandidatePath + validateCanonicalPath, decideCandidateAcceptance, pathSignature) — sharing the
 // primitives but not the sequence meant the two call sites could silently diverge in ordering
 // or edge-case handling over time. This module is the single sequence both now call; each
 // caller keeps its own bookkeeping (accepted-list shape, rejection-reason tallying, provenance,
