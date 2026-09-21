@@ -19,6 +19,8 @@ node scripts/tooling-census.mjs --compact --query=<term>
 
 Use `research-asset-query --id=<asset-id>` for exact registry detail; `--full` includes the complete declaration.
 
+Asset/interface existence and evidence-instance survival are separate questions. A `generated-interface` entry means the repository has a defined way to produce/query that evidence shape; it does not guarantee that a particular historical instance is still retained. Likewise, workflow participation in an automatic harvester only guarantees that the harvester inspects that run for the evidence classes it knows how to preserve. For a conclusion that depends on later row-level reconstruction, verify whether the needed source is canonical/merged history, a durable experiment bundle, branch-bound, artifact-bound, or deterministically recomputable rather than inferring durability from the asset/workflow label alone.
+
 ## Required evidence preflight
 
 Before broad compute or a new dataset:
