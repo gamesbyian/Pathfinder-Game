@@ -26,6 +26,7 @@
 // run) or blocks the run with a clear message; it can never again just silently vanish.
 export const RACE_LEVEL_OPTS_FIELDS = Object.freeze([
     'timeBudgetMs',
+    'overallBudgetMs',
     'ablation',
     'repairAdditiveBudgetMultiplierOverride',
     'goalAttractionDisabledRetryBudgetFractionOverride',
@@ -39,6 +40,27 @@ export const RACE_LEVEL_OPTS_FIELDS = Object.freeze([
 // caller can still pass schedulerMode through the same shared solveOpts object used for the
 // sequential branch without tripping the unsupported-field failure below.
 const IGNORED_CONSTANT_FIELDS = Object.freeze(['schedulerMode']);
+
+/**
+ * Assert that an object already is the raced backend's narrow per-level request shape.
+ * Unlike toRaceLevelOpts(), this does not project or ignore anything.
+ *
+ * @param {object} levelOpts
+ * @returns {object}
+ */
+export function assertRaceLevelOpts(levelOpts = {}) {
+    const rejected = Object.entries(levelOpts)
+        .filter(([, value]) => value !== undefined)
+        .map(([key]) => key)
+        .filter(key => !RACE_LEVEL_OPTS_FIELDS.includes(key))
+        .sort();
+    if (rejected.length > 0) {
+        throw new Error(
+            `race solve request contains unsupported field(s): ${rejected.join(', ')}; supported fields are ${RACE_LEVEL_OPTS_FIELDS.join(', ')}`,
+        );
+    }
+    return levelOpts;
+}
 
 /**
  * Project a full SolveOpts-shaped object down to exactly the fields race.mjs's createRacePool
