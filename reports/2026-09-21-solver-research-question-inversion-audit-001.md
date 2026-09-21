@@ -1,7 +1,9 @@
 # Solver research question inversion audit 001
 
-> **Status:** conceptual audit complete; no automatic queue expansion.
-> **Date:** 2026-09-21.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — inverted the current solver-research question registry and reconciled the resulting themes against current work/future-work ownership.
+> **Decision:** adopt a lightweight question-inversion checkpoint; preserve only success-side avoidable-work and capability-obsolescence as deferred reopen hooks; create no inverse-question queue.
+> **Remaining gate:** none for this audit; concrete inverse descendants advance only through their existing owner or the explicit reopen hooks.
 > **Source authority:** `docs/solver-research-question-relations.json` on current `main`.
 > **Purpose:** invert each live/recent solver-research question to expose directional assumptions, then retain only cross-cutting question-generation lessons that are not already owned elsewhere.
 
