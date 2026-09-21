@@ -84,6 +84,16 @@ Begin with a current residual miss and ask:
 
 Record the answer as a **capability demand**, not as an algorithm recommendation.
 
+## Secondary acquisition instrument: response-guided invention
+
+Use [response-guided capability invention](solver-response-guided-capability-invention.md) when existing techniques or decisions disagree on the same population. Freeze the contrast identities, describe them with legal current-input facts, then seek the smallest exact explanation before proposing routing or architecture.
+
+This is complementary to first-loss sampling:
+- first-loss asks **what capability is missing at a causal failure boundary?**
+- response-guided invention asks **what exact distinction explains why two existing capabilities behave differently?**
+
+Both feed the same acquisition ladder and production boundary.
+
 ## Primary acquisition instrument: first-loss demand sampling
 
 [The first-loss causal taxonomy](solver-first-loss-causal-taxonomy.md) already defines the causal classes F0-F14. What is missing is prevalence and conversion from diagnosed loss to capability demand.
