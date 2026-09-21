@@ -31,6 +31,22 @@ const model = {
 assert.deepEqual(queryRelation(model, 'demo', { query: 'topology separator' }).rows.map(row => row.id), ['A']);
 assert.deepEqual(queryRelation(model, 'demo', { status: 'closed' }).rows.map(row => row.id), ['B']);
 assert.throws(() => indexBy([{ id: 'x' }, { id: 'x' }], 'id'), /duplicate relation identity/);
+assert.deepEqual(normalizePremiseAdmissions({
+    records: [
+        { id: 'P1', status: 'admitted' },
+        { propositionId: 'P2', status: 'deferred' },
+        { premiseId: 'P3', status: 'admitted' },
+    ],
+}), [
+    { status: 'admitted', premiseId: 'P1' },
+    { status: 'deferred', premiseId: 'P2' },
+    { status: 'admitted', premiseId: 'P3' },
+]);
+assert.throws(
+    () => normalizePremiseAdmissions([{ premiseId: 'P1', id: 'P2' }]),
+    /conflicting premise identity aliases/,
+);
+assert.throws(() => normalizePremiseAdmissions([{ status: 'admitted' }]), /lacks premiseId/);
 
 const envelopeBlock = {
     blockId: 'ENVELOPE-TEST',
