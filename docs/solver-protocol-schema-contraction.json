@@ -456,9 +456,10 @@
       "currentInputsMultipleForms": false,
       "historicalRequirement": false,
       "persistedExternalRequirement": false,
-      "treatment": "investigate",
-      "status": "open",
-      "retirementGate": "choose and document one canonical sidecar/event model before additional producer variants appear"
+      "treatment": "retain-canonical",
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: the existing pathfinder-research-consumption-link sidecar is the canonical model. A sidecar snapshots the source researchBlock definition, appends scoped consumptionEvents, records sourceBlockArtifact/selection provenance, and leaves the source block artifact immutable. research-relations-lib verifies base-block equality across snapshots before stable-hash event union; no reference-only second producer format is introduced.",
+      "progress": "Closed by architectural decision rather than adding another representation. The current sidecar is self-contained and envelope-valid, while sourceBlockArtifact preserves origin. Duplicate block snapshots are treated as integrity assertions: buildResearchArtifactRelations compares blocks with consumptionEvents removed and rejects conflicting definitions, then merges event sets deterministically. A reference-only block/event format would add path-resolution dependency and a second producer schema without a demonstrated need."
     },
     {
       "id": "PSC-020",
