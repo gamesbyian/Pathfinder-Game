@@ -84,7 +84,10 @@ function copyRequested(source, role) {
   const destination = path.join(outDir, relative);
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   fs.cpSync(source, destination, { recursive: stat.isDirectory() });
-  return { role, source, published, missing: false };
+  return {
+    role, source, published, missing: false,
+    ...(stat.isFile() ? { sha256: `sha256:${createHash('sha256').update(fs.readFileSync(destination)).digest('hex')}` } : {}),
+  };
 }
 
 let entries;
@@ -396,7 +399,10 @@ if (failureResponseDocument) {
   const published = 'failure-response/compact.json';
   fs.mkdirSync(path.join(outDir, 'failure-response'), { recursive: true });
   fs.writeFileSync(path.join(outDir, published), `${JSON.stringify(failureResponseDocument, null, 2)}\n`);
-  failureResponseEntry = { role: 'compact-failure-response', source: failureResponseFile, published, missing: false };
+  failureResponseEntry = {
+    role: 'compact-failure-response', source: failureResponseFile, published, missing: false,
+    sha256: `sha256:${createHash('sha256').update(fs.readFileSync(path.join(outDir, published))).digest('hex')}`,
+  };
   entries.push(failureResponseEntry);
 }
 const contract = {
