@@ -25,7 +25,8 @@ const failures = [{
     solverRef: 'solver',
     populationIntegrity: { populationIdentityHash: 'population-a' },
     records: [
-        { identity: 'f1', parentId: 'P1', runId: 'failure-run-1', outcome: 'workLimited', actionKey: 'repair' },
+        { identity: 'f1', parentId: 'P1', runId: 'failure-run-1', outcome: 'workLimited',
+          actionKey: 'repair|score=repair|guidance=standard', configurationKey: null },
         { identity: 'f2', parentId: 'P1', runId: 'failure-run-2', outcome: 'exhaustedNegative', actionKey: 'dfs' },
         { identity: 'f3', parentId: 'P2', runId: 'wrong-protocol', protocolHash: 'other', outcome: 'nodeLimited' },
     ],
@@ -40,6 +41,11 @@ assert.equal(joined.summary.independentMatchedParents, 1);
 assert.equal(joined.rows[0].parentId, 'P1');
 assert.equal(joined.rows[0].precedingAttemptCount, 1);
 assert.equal(joined.rows[0].populationIdentity, 'population-a');
+
+
+assert.equal(joined.rows[0].comparableFailureRecords[0].configurationKey, 'repair|score=repair|guidance=standard');
+assert.equal(joined.rows[0].comparableFailureRecords[0].actionKey, null,
+    'historical config-in-action evidence must not be exposed as a scheduler action after joining');
 
 const otherPopulation = JSON.parse(JSON.stringify(failures[0]));
 otherPopulation.populationIntegrity.populationIdentityHash = 'population-b';

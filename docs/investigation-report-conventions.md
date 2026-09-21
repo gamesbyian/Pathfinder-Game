@@ -153,15 +153,16 @@ Before calling an investigation complete:
 1. Set the final status and remove stale active wording.
 2. Link final evidence and separate measurement from inference.
 3. State evidence role, selection procedure, exact population identity/revision, generation ancestry, later selection history, intended/actual coverage, inference scope, and material alternatives tried for decision-bearing solver work.
-4. State whether the treatment actually participated enough to support the claimed positive/negative mechanism verdict.
-5. For profile evidence, state support/chronology limits and avoid turning sampled agreement, exhaustive events, or sparse nearest-neighbour matches into puzzle-level truth.
-6. Update the current surface that owns the decision: queue, opt-in ledger, or deferred-work index as appropriate.
-7. Ensure feature/flag descriptions do not advertise a stale gate.
-8. Update the authoritative topic/tool contract if reusable behavior changed.
-9. Add predecessor/successor links for follow-ups.
-10. If implementation changed after the decisive A/B, explicitly decide whether the verdict still applies; otherwise record a new gate.
-11. If a selected/tuned positive is being promoted, satisfy the proportional confirmation/transfer gate in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) or explicitly limit the claim.
-12. Archive concluded plans/notebooks when they make current-state retrieval harder.
-13. Run `npm run check:documentation-links`.
+4. When artifact-bound or branch-bound primary evidence is materially required to support or later audit a durable decision, capability/future-work premise, reusable exact/reference resource, or row-sensitive mechanism claim, verify reconstructability for the expected reuse horizon. Preserve the smallest existing-compatible bundle when needed, or explicitly state what expires and which later row-level re-analysis will no longer be possible. Mere exploratory mention of an artifact does not create an archival obligation. See the reconstructability rule in [`solver-research-resource-contract.md`](solver-research-resource-contract.md).
+5. State whether the treatment actually participated enough to support the claimed positive/negative mechanism verdict.
+6. For profile evidence, state support/chronology limits and avoid turning sampled agreement, exhaustive events, or sparse nearest-neighbour matches into puzzle-level truth.
+7. Update the current surface that owns the decision: queue, opt-in ledger, or deferred-work index as appropriate.
+8. Ensure feature/flag descriptions do not advertise a stale gate.
+9. Update the authoritative topic/tool contract if reusable behavior changed.
+10. Add predecessor/successor links for follow-ups.
+11. If implementation changed after the decisive A/B, explicitly decide whether the verdict still applies; otherwise record a new gate.
+12. If a selected/tuned positive is being promoted, satisfy the proportional confirmation/transfer gate in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) or explicitly limit the claim.
+13. Archive concluded plans/notebooks when they make current-state retrieval harder.
+14. Run `npm run check:documentation-links`.
 
 This convention is prospective. Older reports need not be reformatted unless revised, but stale status discovered in them must still be reconciled with current authorities.

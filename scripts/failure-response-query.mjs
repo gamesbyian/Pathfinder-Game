@@ -9,7 +9,7 @@
  *   node scripts/failure-response-query.mjs --in=<doc1>[,<doc2>...] [filters]
  *
  * Filters:
- *   --parent=ID --outcome=VALUE --action=KEY --stage=ID --producer=ID --run=ID
+ *   --parent=ID --outcome=VALUE --config=KEY --action=KEY --stage=ID --producer=ID --run=ID
  *   --protocol=HASH --participated=true|false --reached=true|false
  *   --solved-with-failed-attempt=true|false --attempt-outcome=VALUE
  *   --attempt-action=KEY --attempt-stage=ID
@@ -17,7 +17,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 
-import { validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { failureResponseIdentityView, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--') && a.includes('=')).map(a => {
     const i = a.indexOf('=');
@@ -38,7 +38,7 @@ const documents = inputFiles.map(file => {
     return { file, document };
 });
 let rows = documents.flatMap(({ file, document }) => document.records.map(record => ({
-    ...record,
+    ...failureResponseIdentityView(record),
     protocolHash: record.protocolHash ?? document.protocolHash ?? null,
     solverRef: record.solverRef ?? document.solverRef ?? null,
     __sourceFile: file,
@@ -57,6 +57,7 @@ function same(value, expected) {
 const directFilters = {
     parent: row => same(row.parentId ?? row.identity, args.get('parent')),
     outcome: row => same(row.outcome, args.get('outcome')),
+    config: row => same(row.configurationKey, args.get('config')),
     action: row => same(row.actionKey, args.get('action')),
     stage: row => same(row.stageId, args.get('stage')),
     producer: row => same(row.producer, args.get('producer')),
@@ -147,6 +148,7 @@ for (const row of rows) {
     parentRows.set(parent, list);
 }
 const outcomeCounts = new Map();
+const configurationCounts = new Map();
 const actionCounts = new Map();
 const stageCounts = new Map();
 const runCounts = new Map();
@@ -172,6 +174,7 @@ let reachedTrue = 0;
 let reachedFalse = 0;
 for (const row of rows) {
     increment(outcomeCounts, row.outcome);
+    increment(configurationCounts, row.configurationKey);
     increment(actionCounts, row.actionKey);
     increment(stageCounts, row.stageId);
     increment(runCounts, row.runId);
@@ -249,6 +252,7 @@ const result = {
         solvedControlsWithFailedAttempts,
         outcomes: objectFrom(outcomeCounts),
         parentOutcomes: objectFrom(parentOutcomeCounts),
+        configurations: objectFrom(configurationCounts),
         actions: objectFrom(actionCounts),
         stages: objectFrom(stageCounts),
         runs: objectFrom(runCounts),

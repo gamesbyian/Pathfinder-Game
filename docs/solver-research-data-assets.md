@@ -19,6 +19,8 @@ node scripts/tooling-census.mjs --compact --query=<term>
 
 Use `research-asset-query --id=<asset-id>` for exact registry detail; `--full` includes the complete declaration.
 
+Asset/interface existence and evidence-instance survival are separate questions. A `generated-interface` entry means the repository has a defined way to produce/query that evidence shape; it does not guarantee that a particular historical instance is still retained. Likewise, workflow participation in an automatic harvester only guarantees that the harvester inspects that run for the evidence classes it knows how to preserve. For a conclusion that depends on later row-level reconstruction, verify whether the needed source is canonical/merged history, a durable experiment bundle, branch-bound, artifact-bound, or deterministically recomputable rather than inferring durability from the asset/workflow label alone.
+
 ## Required evidence preflight
 
 Before broad compute or a new dataset:
@@ -59,6 +61,10 @@ Broad asset/feature mining creates selection pressure; discovered relationships 
 | Compact failure response | run × parent × attempt/stage | Participation, dose, censoring, termination, solved controls. |
 | Search-loss evidence | run × parent × selected event | Where did search lose or retain material, including solved-run controls? |
 | Capability-invention demand | parent × first-loss diagnosis | Is this miss HARVEST, EXTENSION/INVENTION, or still unresolved? |
+
+### Exact/reference evidence graduation
+
+Generic exact/reference workflows are acquisition surfaces, not universal archives. When selected exact/reference labels become a reusable research input rather than a one-off diagnostic, preserve the smallest purpose-specific labelled dataset/report needed for that use. Keep case/source identity, model/probe identity, non-collapsed LIVE/DEAD/UNKNOWN/UNSUPPORTED or timeout/abstention semantics, source population/provenance, and witness/referee information where emitted. Existing tracked explicit-prefix datasets are the precedent. Do not infer that every output of the generic CP-SAT/reference workflow is durably retained merely because the `exact-reference-labels` interface is listed here.
 
 ## High-value joins
 

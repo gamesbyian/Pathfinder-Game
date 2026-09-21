@@ -103,6 +103,34 @@ try {
     assert.equal(exactAction.summary.records, 1);
     assert.equal(exactAction.rows[0].parentId, 'A');
 
+
+    const legacyDoc = path.join(temp, 'legacy.json');
+    const configOnly = 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain';
+    fs.writeFileSync(legacyDoc, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'pathfinder-compact-failure-response',
+        records: [{
+            identity: 'LEGACY', parentId: 'LEGACY', actionKey: configOnly, configurationKey: null,
+            outcome: 'exhaustedNegative', attempts: [],
+        }],
+        summary: { observed: 1 },
+        populationIntegrity: null,
+        sourceFiles: [], missingSourceFiles: [], invalidSourceFiles: [],
+    }));
+    const normalizedLegacy = JSON.parse(execFileSync('node', [
+        'scripts/failure-response-query.mjs', '--in=' + legacyDoc,
+    ], { cwd: process.cwd(), encoding: 'utf8' }));
+    assert.equal(normalizedLegacy.rows[0].configurationKey, configOnly);
+    assert.equal(normalizedLegacy.rows[0].actionKey, null);
+    assert.equal(normalizedLegacy.summary.configurations[configOnly], 1);
+    assert.equal(normalizedLegacy.summary.actions.unknown, 1);
+
+    const filteredConfig = JSON.parse(execFileSync('node', [
+        'scripts/failure-response-query.mjs', '--in=' + legacyDoc, '--config=' + configOnly,
+    ], { cwd: process.cwd(), encoding: 'utf8' }));
+    assert.equal(filteredConfig.summary.records, 1);
+    assert.equal(filteredConfig.rows[0].parentId, 'LEGACY');
+
     console.log('failure response query tests passed');
 } finally {
     fs.rmSync(temp, { recursive: true, force: true });

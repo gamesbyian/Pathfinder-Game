@@ -1,3 +1,5 @@
+import { failureResponseIdentityView } from './solver-failure-response-lib.mjs';
+
 /**
  * Strict offline join between run-linked hint discovery-process evidence and compact failure
  * response documents.
@@ -55,6 +57,7 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
         const ambiguousParents = ambiguousScopedParentIds(document);
         for (const row of document?.records ?? []) {
             failureRecordsObserved += 1;
+            const identity = failureResponseIdentityView(row);
             const parentId = row?.parentId ?? row?.levelId ?? row?.identity;
             if (parentId != null && ambiguousParents.has(String(parentId))) {
                 ambiguousFailureRecords += 1;
@@ -69,7 +72,8 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
                 parentId: row.parentId ?? row.levelId ?? row.identity ?? null,
                 runId: row.runId ?? null,
                 outcome: row.outcome ?? 'unknown',
-                actionKey: row.actionKey ?? null,
+                configurationKey: identity.configurationKey ?? null,
+                actionKey: identity.actionKey ?? null,
                 stageId: row.stageId ?? null,
                 participated: row.participated ?? null,
                 reached: row.reached ?? null,

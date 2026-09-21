@@ -11,6 +11,7 @@
  * stress-refresh/benchmark level row, or any other row the shared classifier already understands).
  */
 import { buildResearchPopulationIntegrity, classifyResearchObservationOutcome } from './research-observation-integrity-lib.mjs';
+import { normalizeAttemptActionKey, normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 export const FAILURE_RESPONSE_SCHEMA_VERSION = 1;
 export const FAILURE_RESPONSE_KIND = 'pathfinder-compact-failure-response';
@@ -30,6 +31,50 @@ function rowAttempts(row) {
 
 function optionalBoolean(value) {
     return typeof value === 'boolean' ? value : null;
+}
+
+function normalizedConfigIdentity(value) {
+    if (typeof value !== 'string' || !value.length) return value ?? null;
+    try { return normalizeAttemptIdentityKey(value); } catch { return value; }
+}
+
+/**
+ * Read-time identity compatibility view for compact failure-response rows.
+ *
+ * Early schema-v1 producers projected winner configuration identity into row.actionKey and left
+ * row.configurationKey null. Frozen evidence remains untouched; consumers may use this view to
+ * interpret that specific historical shape without inventing a missing scheduler stage/action.
+ *
+ * A row action is reclassified as configuration-only iff it is not a valid action identity but is
+ * a valid attempt/config identity. Other producer-specific/noncanonical action labels are preserved.
+ */
+export function failureResponseIdentityView(row) {
+    let configurationKey = row?.configurationKey ?? null;
+    let actionKey = row?.actionKey ?? null;
+
+    if (typeof configurationKey === 'string' && configurationKey.length) {
+        configurationKey = normalizedConfigIdentity(configurationKey);
+    }
+
+    if (typeof actionKey === 'string' && actionKey.length) {
+        let isAction = false;
+        try {
+            actionKey = normalizeAttemptActionKey(actionKey);
+            isAction = true;
+        } catch {
+            // Compatibility case: historical compact rows stored config identity in actionKey.
+        }
+        if (!isAction && configurationKey == null) {
+            try {
+                configurationKey = normalizeAttemptIdentityKey(actionKey);
+                actionKey = null;
+            } catch {
+                // Producer-specific/noncanonical action labels remain as observed.
+            }
+        }
+    }
+
+    return { ...row, configurationKey, actionKey };
 }
 
 function attemptOutcome(attempt) {
@@ -85,7 +130,6 @@ function solvedWithFailedAttempt(row) {
  * not report that field, never a fabricated 0/false.
  */
 export function compactFailureResponseRow(row) {
-    const techniqueKeys = Array.isArray(row?.techniqueKeys) ? row.techniqueKeys.join('+') : null;
     const attempts = rowAttempts(row);
     const status = typeof row?.status === 'string' ? row.status : null;
     return {
@@ -97,8 +141,8 @@ export function compactFailureResponseRow(row) {
         runId: row?.runId ?? null,
         protocolHash: row?.protocolHash ?? row?.protocol?.hash ?? null,
         solverRef: row?.solverRef ?? row?.solverCommit ?? row?.commitSha ?? null,
-        configurationKey: row?.configurationKey ?? row?.configKey ?? null,
-        actionKey: row?.winningConfig ?? row?.winningConfigKey ?? row?.actionKey ?? techniqueKeys ?? null,
+        configurationKey: row?.configurationKey ?? row?.configKey ?? row?.winningConfig ?? row?.winningConfigKey ?? null,
+        actionKey: row?.winningActionKey ?? row?.actionKey ?? null,
         stageId: row?.stageId ?? row?.winningStage ?? null,
         outcome: classifyResearchObservationOutcome(row),
         refereeInvalid: rowHasRefereeInvalid(row),

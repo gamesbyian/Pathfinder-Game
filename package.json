@@ -370,7 +370,8 @@
     "solver:audit-initial-presolve": "node scripts/run-bundled.mjs scripts/initial-presolve-opportunity-census.mjs",
     "solver:audit-equivalence": "node scripts/run-bundled.mjs scripts/solver-equivalence-opportunity-census.mjs",
     "solver:audit-family-constructive-reuse": "node scripts/family-constructive-reuse-census.mjs",
-    "solver:audit-family-compile-reuse": "node scripts/family-compile-reuse-census.mjs"
+    "solver:audit-family-compile-reuse": "node scripts/family-compile-reuse-census.mjs",
+    "research:measure-deterministic-retention-payload": "node scripts/measure-deterministic-retention-payload.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,3 +1,5 @@
+import { failureResponseIdentityView } from './solver-failure-response-lib.mjs';
+
 /**
  * Integrity audit for compact failure-response identity granularity.
  *
@@ -23,6 +25,7 @@ function documentSolver(document, row) {
 }
 
 export function failureResponseObservationKey(document, row) {
+    const identity = failureResponseIdentityView(row);
     return stable({
         protocolHash: documentProtocol(document, row),
         solverRef: documentSolver(document, row),
@@ -30,9 +33,9 @@ export function failureResponseObservationKey(document, row) {
         identity: row?.identity ?? null,
         parentId: row?.parentId ?? null,
         cellId: row?.cellId ?? null,
-        actionKey: row?.actionKey ?? null,
+        actionKey: identity.actionKey ?? null,
         stageId: row?.stageId ?? null,
-        configurationKey: row?.configurationKey ?? null,
+        configurationKey: identity.configurationKey ?? null,
     });
 }
 
