@@ -92,6 +92,29 @@ try {
   assert.equal(manifest.failureEvidence.summary, null);
   assert.equal(manifest.failureEvidence.richCapturePresent, false);
 
+  const includeA = path.join(temp, 'include-a', 'summary.json');
+  const includeB = path.join(temp, 'include-b', 'summary.json');
+  fs.mkdirSync(path.dirname(includeA), { recursive: true });
+  fs.mkdirSync(path.dirname(includeB), { recursive: true });
+  fs.writeFileSync(includeA, JSON.stringify({ source: 'A' }));
+  fs.writeFileSync(includeB, JSON.stringify({ source: 'B' }));
+  const collisionOut = path.join(temp, 'include-collision-out');
+  let collisionError = null;
+  try {
+    execFileSync('node', [
+      'scripts/publish-solver-sweep-result.mjs',
+      `--primary=${primary}`,
+      `--include=${includeA}`,
+      `--include=${includeB}`,
+      `--out=${collisionOut}`,
+    ], { cwd: root, stdio: 'pipe' });
+  } catch (error) {
+    collisionError = error;
+  }
+  assert.ok(collisionError, 'distinct include sources with the same basename must fail instead of overwriting published evidence');
+  assert.equal(collisionError.status, 2);
+  assert.match(String(collisionError.stderr), /published evidence path collision/u);
+
   const unboundOutcome = path.join(temp, 'unbound-outcome.json');
   fs.writeFileSync(unboundOutcome, JSON.stringify({
     schemaVersion: 1, outcome: 'completed-positive', reason: 'unbound completed verdict',
