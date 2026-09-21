@@ -113,24 +113,25 @@
       "concept": "full solver execution request",
       "owners": [
         "modules/solver/solver-worker-client.ts",
-        "modules/Solver.ts",
-        "worker solve adapter",
-        "modules/solver/worker.js",
         "modules/solver/solver-worker-client.test.ts",
-        "modules/solver/worker-validation.test.ts"
+        "modules/solver/worker.js",
+        "modules/solver/worker-validation.test.ts",
+        "modules/solver/worker-result-serialization.mjs",
+        "modules/solver/orchestration-contracts.ts"
       ],
       "forms": [
-        "worker solve on raw level",
-        "direct solve on normalized level"
+        "direct solveLevel(NormalizedLevel, SolveOpts) -> SolveResult",
+        "worker-client solveLevel(NormalizedLevel, SolveOpts) -> SolveResult",
+        "raw solve(rawLevel, SolveOpts) convenience adapter"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": false,
       "persistedExternalRequirement": false,
       "treatment": "execution-contract-split",
-      "status": "in-progress",
-      "retirementGate": "direct and worker full solve share one canonical request/result meaning",
-      "progress": "Public worker client still accepts raw wire levels, but now validates/normalizes before postMessage. SOLVE worker transport carries the same NormalizedLevel consumed by direct solveLevel(); worker rejects non-normalized SOLVE messages. SolveOpts/request envelope and result-contract unification remain."
+      "status": "complete",
+      "retirementGate": "closed: direct and worker full solve share one canonical request/result contract; raw input and postMessage quirks terminate at adapters",
+      "progress": "Worker SOLVE transport now carries NormalizedLevel, matching direct solveLevel. createSolverWorkerClient exposes canonical solveLevel(normalized, opts); raw solve(raw, opts) is only a validation/normalization convenience adapter. Worker SolveOpts serialization forwards serializable data, bridges yieldFn cancellation, and rejects any other function-valued callback/observer explicitly. Public worker solve results strip transport type/id, normalize elapsedMs back to totalMs, remove undefined transport placeholders, and are typed as the same SolveResult contract as direct orchestration."
     },
     {
       "id": "PSC-006",
