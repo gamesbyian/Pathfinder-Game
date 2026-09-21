@@ -13,7 +13,7 @@ Before adding or launching machinery:
 
 1. Query the concept: `node scripts/tooling-census.mjs --compact --query=<term>`.
 2. For solver research, read the current gate in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) and query prior evidence with `research-status-index --compact`.
-3. Query existing research assets/joins with `node scripts/research-asset-query.mjs --query=<term>` before generating data. When the question is whether rejected/older policies demonstrate complementary capability, prefer the rebuildable [`solver capability-memory`](solver-capability-memory.md) view before rerunning solver work.
+3. Query existing research assets/joins with `node scripts/research-asset-query.mjs --query=<term>` before generating data. When the question is whether rejected/older policies demonstrate complementary capability, prefer the rebuildable [`solver capability-evidence`](solver-capability-evidence.md) view before rerunning solver work.
 4. Before broad/sharded solver compute, estimate the treatment's opportunity population and required informative rows with [`solver-experiment-opportunity-sizing.md`](solver-experiment-opportunity-sizing.md) / `node scripts/experiment-opportunity-audit.mjs`.
 5. Choose the smallest population/tool that can falsify or decide the gate; run a representative execution-family canary before scaling a materially new cap/selector/worker path.
 6. Escalate only surviving questions to broader/sharded workflows.
@@ -28,7 +28,7 @@ Tool choice does not determine evidence quality. Decision-bearing solver work st
 | Validation | [`testing.md`](testing.md); `npm run ci:fast`, `npm run ci`, targeted `check:*` / `test:*` | Implementation correctness and finish-line gates |
 | Solver direct/regression | query `solver:direct`, `solver:regression`, `solver:measure-speed` | Named-level debugging, published regression, pinned-work speed measurement |
 | Solver research preflight | `npm run solver:experiment-preflight`; [`solver-experiment-opportunity-sizing.md`](solver-experiment-opportunity-sizing.md); `node scripts/experiment-opportunity-audit.mjs` | Treatment/control/config comparability, exact opportunity/headroom, sample sizing, work-envelope checks before scale |
-| Solver capability memory | [`solver-capability-memory.md`](solver-capability-memory.md); `node scripts/solver-capability-memory.mjs --manifest=<manifest.json>` | Rebuildable current-residual joins over current row reports and historical gain/loss signatures; overlap, unique capability, displacement, and premise nomination without new solver compute |
+| Solver capability evidence | [`solver-capability-evidence.md`](solver-capability-evidence.md); `node scripts/analyze-solver-capability-evidence.mjs --manifest=<manifest.json>` | Rebuildable current-residual joins over current row reports and historical gain/loss signatures; overlap, unique capability, displacement, and premise nomination without new solver compute |
 | Stress/corpus | [`../data/stress/README.md`](../data/stress/README.md); query `stress` | Generation, benchmarks, reducers, lifecycle/failure diagnostics, profiles |
 | Compact corpus discovery | `node scripts/corpus-query.mjs` | Corpus summaries, filters, deterministic samples; `--full` only for exact payloads |
 | Technique capability/census | query `technique census`, `niches`, `relative advantage`, `temporal stability` | Isolated technique response, capability maps, niche/ownership analyses |
@@ -67,9 +67,9 @@ Use `package.json` only when the compact tool query does not expose the alias/op
 
 Keep these out of the tooling catalogue's command descriptions; the owning research docs are authoritative:
 
-- **Level-blindness:** exact identity, saved hints, historical per-level outcomes/cost, winner configs, capability-memory membership/signatures, and variant outcomes cannot steer cold production policy. See [`solver-level-blindness.md`](solver-level-blindness.md).
+- **Level-blindness:** exact identity, saved hints, historical per-level outcomes/cost, winner configs, capability-evidence membership/signatures, and variant outcomes cannot steer cold production policy. See [`solver-level-blindness.md`](solver-level-blindness.md).
 - **Generalization:** fresh same-generator data is not automatically cross-generator transfer. Human/editor descendants inherit source independence from their parents only at the parent-family level; mutation siblings are correlated and parent exposure still determines whether they are development, confirmation, or transfer evidence. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) and [`human-parent-contrast-research.md`](human-parent-contrast-research.md).
-- **Capability memory:** historical gain/loss intersections with today's residual are premise nominations, not current solve claims; row-report comparisons establish only the rows actually observed under their stated protocol. See [`solver-capability-memory.md`](solver-capability-memory.md).
+- **Capability evidence:** historical gain/loss intersections with today's residual are premise nominations, not current solve claims; row-report comparisons establish only the rows actually observed under their stated protocol. See [`solver-capability-evidence.md`](solver-capability-evidence.md).
 - **Allocation:** compare techniques/treatments with `workSpent`; wall deadlines must be non-binding for deterministic search evidence. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
 - **Selection:** a population/feature/config/policy selected after outcomes is development evidence until independently confirmed at strength proportional to selection pressure.
 - **Known solutions/exact labels:** powerful offline diagnostics, forbidden as hidden runtime lookup. A preserved generation witness proves solvability only; it does not prove solution-space completeness or DEAD alternatives.
