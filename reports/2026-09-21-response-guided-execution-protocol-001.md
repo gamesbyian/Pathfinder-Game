@@ -43,7 +43,7 @@ Interpretation:
 
 Use the exact `leftOnlyIds` from the two frozen prespecified 2K-vs-5K pairs. Run the paired frontier oracle separately for `objectiveFirst` and `intersectionHarvest` at identical profile/checkpoint settings; do not reselect inversion levels after reading any frontier output:
 
-`npm run research:paired-beam-width-frontier -- --corpus=data/stress/stress-levels-random.json --levels=<frozen leftOnlyIds for that width pair> --profile=<objectiveFirst|intersectionHarvest> --widths=2000,5000 --depth-fraction=0.2 --out=<pair-specific output>`
+`npm run research:paired-beam-width-frontier -- --corpora=data/levels.json,data/stress/stress-levels.json,data/stress/stress-levels-random.json --levels=<frozen leftOnlyIds for that width pair> --profile=<objectiveFirst|intersectionHarvest> --widths=2000,5000 --depth-fraction=0.2 --out=<pair-specific output>`
 
 Read first:
 - containment in either direction;
