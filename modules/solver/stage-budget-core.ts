@@ -884,9 +884,9 @@ import type { SolveOpts } from './orchestration.js';
 export interface StageBudgetPlanInput {
     opts: Pick<SolveOpts,
         | 'repairAdditiveBudgetMultiplierOverride' | 'disableExtraBudgetPasses'
-        | 'goalAttractionDisabledRetryBudgetFractionOverride' | 'attractionDiversityBudgetFractionOverride'
+        | 'goalAttractionDisabledRetryBudgetFractionOverride'
         | 'coarseStateNearTieRetentionRetryBudgetFractionOverride' | 'coarseStateNearTieRetentionRetryNodeReserveFractionOverride'
-        | 'dedupNearTieRetryBudgetFractionOverride' | 'dedupNearTieRetryNodeReserveFractionOverride'
+       
         | 'admissibleOrderNonDefaultRetryBudgetFractionOverride' | 'admissibleOrderNonDefaultRetryNodeReserveFractionOverride'
         | 'connectivityAxisExhaustedRetryBudgetFractionOverride' | 'connectivityAxisExhaustedRetryNodeReserveFractionOverride'
         | 'repairElitePrefixDfsRetryBudgetFractionOverride' | 'repairElitePrefixDfsRetryNodeReserveFractionOverride'
@@ -894,10 +894,10 @@ export interface StageBudgetPlanInput {
         | 'admissibleOrderBudgetFractionOverride' | 'admissibleOrderNodeReserveFractionOverride'
         | 'repairLateProbeNodeBudgetOverride' | 'admissibleOrderProfileNodeReserveFractionOverride'
         | 'repairLateProbeMultiSeedRetrySeedCountOverride'
-        | 'mainSearchLateReserveFractionOverride' | 'mainLoopLateReserveFractionOverride'
-        | 'mainSearchLateReserveConfigCountOverride' | 'mainLoopLateReserveConfigCountOverride'
+        | 'mainSearchLateReserveFractionOverride'
+        | 'mainSearchLateReserveConfigCountOverride'
         | 'repairFallbackNodeReserveFractionOverride' | 'repairShrinkRecoveryNodeReserveFractionOverride'
-        | 'goalAttractionDisabledRetryNodeReserveFractionOverride' | 'attractionDiversityNodeReserveFractionOverride'
+        | 'goalAttractionDisabledRetryNodeReserveFractionOverride'
     >;
     cfg: AblationConfig | null;
     nodeBudget: number;
