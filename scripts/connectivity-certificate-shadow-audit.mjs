@@ -58,8 +58,24 @@ function makeLevelStats(levelId, levelPos) {
         unscheduledProbeCalls: 0, unscheduledCertificatesScanned: 0,
         unscheduledPositionEligibleCertificates: 0, unscheduledBoundaryCellChecks: 0,
         unscheduledHits: 0, unscheduledCrossExactStateHits: 0, unscheduledHitSourceAgeWork: [],
+        unscheduledByCaller: new Map(),
     };
 }
+
+function attributionBucket(map, caller) {
+    const key = caller ?? 'unknown';
+    let bucket = map.get(key);
+    if (!bucket) {
+        bucket = {
+            probes: 0, certificateCandidates: 0, boundaryCellChecks: 0, hits: 0, crossExactStateHits: 0,
+            hitSourceAgeWork: [], hitRemainingSteps: [], schedulePhases: new Map(),
+        };
+        map.set(key, bucket);
+    }
+    return bucket;
+}
+
+const callerAggregate = new Map();
 
 const corpusDoc = JSON.parse(readFileSync(path.resolve(CORPUS_FILE), 'utf8'));
 const corpusLevels = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
@@ -104,11 +120,31 @@ for (const { entry, pos } of sample) {
                 stats.unscheduledCertificatesScanned += record.certificatesScanned ?? 0;
                 stats.unscheduledPositionEligibleCertificates += record.positionEligibleCertificates ?? 0;
                 stats.unscheduledBoundaryCellChecks += record.boundaryCellChecks ?? 0;
+
+                const local = attributionBucket(stats.unscheduledByCaller, record.researchCaller);
+                const global = attributionBucket(callerAggregate, record.researchCaller);
+                for (const bucket of [local, global]) {
+                    bucket.probes++;
+                    bucket.certificateCandidates += record.certificatesScanned ?? 0;
+                    bucket.boundaryCellChecks += record.boundaryCellChecks ?? 0;
+                    if (record.researchSchedulePhase != null) {
+                        const phase = String(record.researchSchedulePhase);
+                        bucket.schedulePhases.set(phase, (bucket.schedulePhases.get(phase) ?? 0) + 1);
+                    }
+                }
+
                 if (record.hitCertificateId === undefined) return;
                 stats.unscheduledHits++;
                 if (record.crossExactState) stats.unscheduledCrossExactStateHits++;
-                if (Number.isFinite(record.hitSourceWork)) {
-                    stats.unscheduledHitSourceAgeWork.push(Math.max(0, record.work - record.hitSourceWork));
+                const age = Number.isFinite(record.hitSourceWork) ? Math.max(0, record.work - record.hitSourceWork) : null;
+                if (age != null) stats.unscheduledHitSourceAgeWork.push(age);
+                for (const bucket of [local, global]) {
+                    bucket.hits++;
+                    if (record.crossExactState) bucket.crossExactStateHits++;
+                    if (age != null) bucket.hitSourceAgeWork.push(age);
+                    if (Number.isFinite(record.researchRemainingSteps)) {
+                        bucket.hitRemainingSteps.push(record.researchRemainingSteps);
+                    }
                 }
                 return;
             }
@@ -150,6 +186,16 @@ for (const { entry, pos } of sample) {
     const repeatedCertificateOccurrences = [...stats.certificateSignatureCounts.values()]
         .reduce((sum, count) => sum + Math.max(0, count - 1), 0);
     const topHitCounts = [...stats.hitCountsBySignature.values()].sort((a, b) => b - a).slice(0, 8);
+    const unscheduledByCaller = Object.fromEntries([...stats.unscheduledByCaller].map(([caller, bucket]) => [caller, {
+        probes: bucket.probes,
+        certificateCandidates: bucket.certificateCandidates,
+        boundaryCellChecks: bucket.boundaryCellChecks,
+        hits: bucket.hits,
+        crossExactStateHits: bucket.crossExactStateHits,
+        hitSourceAgeWorkP50: percentile(bucket.hitSourceAgeWork, 0.5),
+        hitRemainingStepsP50: percentile(bucket.hitRemainingSteps, 0.5),
+        schedulePhaseCounts: Object.fromEntries([...bucket.schedulePhases].sort((a, b) => Number(a[0]) - Number(b[0]))),
+    }]));
     levels.push({
         ...stats,
         certificateSignatureCounts: undefined,
@@ -159,6 +205,7 @@ for (const { entry, pos } of sample) {
         hitSourceAgeWork: undefined,
         hitBoundarySizes: undefined,
         unscheduledHitSourceAgeWork: undefined,
+        unscheduledByCaller,
         certificateOccurrences,
         uniqueCertificateSignatures: stats.certificateSignatureCounts.size,
         repeatedCertificateOccurrences,
@@ -235,6 +282,18 @@ summary.unscheduledHitRate = summary.unscheduledProbeCalls
 summary.unscheduledAveragePositionCandidates = summary.unscheduledProbeCalls
     ? summary.unscheduledPositionEligibleCertificates / summary.unscheduledProbeCalls
     : null;
+summary.unscheduledByCaller = Object.fromEntries([...callerAggregate].map(([caller, bucket]) => [caller, {
+    probes: bucket.probes,
+    certificateCandidates: bucket.certificateCandidates,
+    boundaryCellChecks: bucket.boundaryCellChecks,
+    hits: bucket.hits,
+    hitRate: bucket.probes ? bucket.hits / bucket.probes : null,
+    crossExactStateHits: bucket.crossExactStateHits,
+    parentsWithHits: levels.filter(row => (row.unscheduledByCaller?.[caller]?.hits ?? 0) > 0).length,
+    hitSourceAgeWorkP50: percentile(bucket.hitSourceAgeWork, 0.5),
+    hitRemainingStepsP50: percentile(bucket.hitRemainingSteps, 0.5),
+    schedulePhaseCounts: Object.fromEntries([...bucket.schedulePhases].sort((a, b) => Number(a[0]) - Number(b[0]))),
+}]));
 
 mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true });
 writeFileSync(path.resolve(OUT_FILE), JSON.stringify({ summary, levels }, null, 2) + '\n');
@@ -260,6 +319,7 @@ const md = [
     '- Potentially replaceable scheduled connectivity calls: ' + summary.potentiallyReplaceableConnectivityCalls + ' (' + rate + ' of probed scheduled calls).',
     '- Unscheduled hard-prune candidates probed: ' + summary.unscheduledProbeCalls + '; cut hits: ' + summary.unscheduledHits + ' across ' + summary.levelsWithUnscheduledHits + ' level(s).',
     '- Unscheduled indexed candidate checks: ' + summary.unscheduledCertificatesScanned + '; boundary-cell checks: ' + summary.unscheduledBoundaryCellChecks + '.',
+    '- Unscheduled caller attribution: ' + JSON.stringify(summary.unscheduledByCaller) + '.',
     '',
     'The shadow never prunes. Every hit is checked against the ordinary flood fill on the same call. Canonical replacement economics must combine these counts with the solver work model and a separate observer-overhead comparison before any behavioral consumer is considered.',
     '',
