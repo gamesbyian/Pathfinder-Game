@@ -14,10 +14,10 @@ import { makeLineLevel, makeRepairGatedInfeasibleLevel, exhaustingDispatch, make
 test('an explicit workBudget reproduces the same search and bounds the work spent', async () => {
     const level = makeLineLevel();
     const t0 = workMeter.units;
-    const a = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 600000, workBudget: 200000 });
+    const a = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 600000, baseWorkBudget: 200000 });
     const spentA = workMeter.units - t0;
     const t1 = workMeter.units;
-    const b = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 600000, workBudget: 200000 });
+    const b = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 600000, baseWorkBudget: 200000 });
     const spentB = workMeter.units - t1;
     assert.equal(a.ok, true);
     assert.equal(b.ok, a.ok);
@@ -25,16 +25,13 @@ test('an explicit workBudget reproduces the same search and bounds the work spen
     assert.equal(spentB, spentA, 'and spend the same work');
 });
 
-test('baseWorkBudget is the preferred alias for legacy workBudget and conflicts fail loudly', async () => {
+test('retired workBudget input fails loudly instead of silently falling back to time-derived work', async () => {
     const level = makeLineLevel() as unknown as NormalizedLevel;
-    const legacy = await solveLevel(level, { timeBudgetMs: 600_000, workBudget: 200_000 });
-    const preferred = await solveLevel(level, { timeBudgetMs: 600_000, baseWorkBudget: 200_000 });
-    assert.equal(preferred.ok, legacy.ok);
-    assert.equal(preferred.nodesExpanded, legacy.nodesExpanded);
-    assert.equal(preferred.workSpent, legacy.workSpent);
+    const canonical = await solveLevel(level, { timeBudgetMs: 600_000, baseWorkBudget: 200_000 });
+    assert.equal(canonical.ok, true);
     await assert.rejects(
-        solveLevel(level, { timeBudgetMs: 600_000, baseWorkBudget: 200_000, workBudget: 199_999 }),
-        /baseWorkBudget .* legacy workBudget .* disagree/,
+        solveLevel(level, { timeBudgetMs: 600_000, workBudget: 200_000 } as any),
+        /retired SolveOpts\.workBudget input; use baseWorkBudget/,
     );
 });
 
@@ -45,7 +42,7 @@ test('a non-binding deadline cannot resize an explicit-work main-ladder trajecto
     const level = makeLineLevel() as unknown as NormalizedLevel;
     const run = (timeBudgetMs: number) => solveLevel(level, {
         timeBudgetMs,
-        workBudget: 200_000,
+        baseWorkBudget: 200_000,
         disableExtraBudgetPasses: true,
         attemptBudgetTelemetry: true,
     });
@@ -136,7 +133,7 @@ test('a non-binding deadline cannot resize an explicit-work trajectory across th
     const level = makeRepairGatedInfeasibleLevel();
     const run = (timeBudgetMs: number) => solveLevel(level, {
         timeBudgetMs,
-        workBudget: 200_000,
+        baseWorkBudget: 200_000,
         attemptBudgetTelemetry: true,
         attemptSearchForTesting: exhaustingDispatch,
     });
@@ -154,7 +151,7 @@ test('a non-binding deadline cannot resize an explicit-work trajectory across th
     const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
     const run = (timeBudgetMs: number) => solveLevel(level, {
         timeBudgetMs,
-        workBudget: 200_000,
+        baseWorkBudget: 200_000,
         attemptBudgetTelemetry: true,
         attemptSearchForTesting: exhaustingDispatch,
     });
@@ -177,7 +174,7 @@ test('strictTotalWorkBudget installs one remaining-work cap across every additiv
     const common = {
         timeBudgetMs: 10_000,
         nodeBudget: 1_000_000,
-        workBudget: 100_000,
+        baseWorkBudget: 100_000,
         attemptBudgetTelemetry: true,
         attemptSearchForTesting: dispatch,
     };
@@ -232,7 +229,7 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
     };
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 5000,
-        workBudget: 100_000,
+        baseWorkBudget: 100_000,
         attemptBudgetTelemetry: true,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false },
         attemptSearchForTesting: dispatch,
@@ -325,7 +322,7 @@ function isolateMcNeighborRetryWorkDoseOpts(overrides: Record<string, unknown> =
 test('must-cross-neighbor-prune-disabled-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const run = (timeBudgetMs: number) => solveLevel(
         makeRepairGatedInfeasibleLevel(),
-        isolateMcNeighborRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }),
+        isolateMcNeighborRetryWorkDoseOpts({ timeBudgetMs, baseWorkBudget: 200_000 }),
     );
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
@@ -359,7 +356,7 @@ test('lifecycle telemetry separates mechanical eligibility from disabled routing
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 100,
-        workBudget: 100_000,
+        baseWorkBudget: 100_000,
         disableExtraBudgetPasses: true,
         lifecycleTelemetry: true,
     });
@@ -391,7 +388,7 @@ test('lifecycle telemetry reports guidance-goal-distance-retry and late-repair-m
 test('attempt work telemetry sums exactly to whole-level canonical work', async () => {
     const result = await solveLevel(makeLineLevel() as unknown as NormalizedLevel, {
         timeBudgetMs: 10_000,
-        workBudget: 200_000,
+        baseWorkBudget: 200_000,
         lifecycleTelemetry: true,
     });
     const attemptWork = result.attempts.reduce((sum, attempt) => sum + Number(attempt.workSpent), 0);
