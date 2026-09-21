@@ -26,7 +26,6 @@ export function combinePopulationIntegrity(inputs, { kind = 'multi-population', 
   // re-upgrade a legacy component merely because its older coverage/outcome shape looks clean.
   const decisionValidComplete = normalizedInputs.every(({ integrity }) => integrity.decisionValidComplete === true);
   return {
-    complete: coverageComplete,
     coverageComplete,
     decisionValidComplete,
     expectedCount: normalizedInputs.reduce((sum, { integrity }) => sum + integrity.expectedCount, 0),
