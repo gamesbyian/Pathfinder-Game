@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-forced-work-prevalence-sample",
+  "createdDate": "2026-09-21",
+  "evidenceRole": "discovery",
+  "source": {
+    "productionBoundaryRunId": 35066677597,
+    "artifactId": 10440286196,
+    "artifactDigest": "sha256:4e4f3ab1d7d823e1d667af000c5e4a640c629cc32e405d2fb3e57e8d5e0a2428",
+    "headSha": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "corpus": "data/stress/stress-levels-random.json",
+    "observedCount": 1700,
+    "solvedCount": 1169,
+    "residualCount": 531,
+    "residualIdHash": "sha256:ea633507674fc62c23fad5eb664a488be3cd72bcb08dc30010cd8efa2ef82bc8"
+  },
+  "selection": {
+    "targetCount": 64,
+    "sampleIdHash": "sha256:af8f00121df791c98fb6dda072479fe0db32585476e53548cf88681f5ce73e2b",
+    "method": "stratify exact residual by production-stage mechanicallyEligible/reached signature; minimum 2 per nonempty signature; remaining quota proportional to signature size; evenly spaced baseline workSpent ranks within signature; no forced-work telemetry inspected",
+    "independentUnit": "C2 parent level"
+  },
+  "signatureCounts": [
+    {"id":"S01","residualCount":2,"sampleCount":2},
+    {"id":"S02","residualCount":5,"sampleCount":2},
+    {"id":"S03","residualCount":13,"sampleCount":3},
+    {"id":"S04","residualCount":15,"sampleCount":3},
+    {"id":"S05","residualCount":20,"sampleCount":4},
+    {"id":"S06","residualCount":31,"sampleCount":4},
+    {"id":"S07","residualCount":32,"sampleCount":4},
+    {"id":"S08","residualCount":35,"sampleCount":5},
+    {"id":"S09","residualCount":65,"sampleCount":7},
+    {"id":"S10","residualCount":78,"sampleCount":8},
+    {"id":"S11","residualCount":80,"sampleCount":8},
+    {"id":"S12","residualCount":155,"sampleCount":14}
+  ],
+  "levelIds": [
+    "R00044","R00118","R00479","R00512","R00555","R00565","R00646","R00647",
+    "R00923","R00963","R01011","R01132","R01269","R01290","R01516","R01551",
+    "R01625","R02030","R02072","R02091","R02118","R02154","R02187","R02199",
+    "R02203","R02280","R02317","R02334","R02395","R02403","R02408","R02432",
+    "R02437","R02470","R02472","R02498","R02541","R02545","R02588","R02621",
+    "R02625","R02666","R02693","R02697","R02733","R02744","R02747","R02751",
+    "R02768","R02904","R02951","R02954","R03021","R03088","R03092","R03159",
+    "R03199","R03213","R03251","R03278","R03280","R03296","R03334","R03346"
+  ]
+}
