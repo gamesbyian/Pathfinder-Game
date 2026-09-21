@@ -78,6 +78,8 @@ Do not reopen unchanged:
 - broad alternative-search frameworks before their active cheap falsifier;
 - hazard/bandit/ML scheduling before a fixed-work marginal-value premise;
 - bulk variant generation without a frozen causal question.
+- richer twist/same-parity portal-count decomposition as an explanation of the frozen 5K plain-vs-mechanic-buckets response contrast; raw portal count remained stronger in both scoring families;
+- the tested static CW/CCW side-balance / signed-moment / absolute-moment descriptor basis as a sufficient explanation of perimeter direction disagreement; next sibling must use operational traces or a materially different exact representation.
 
 Closure is form-scoped: cross-level connectivity does not close solve-local rediscovery; detour gadgets do not close per-instance commutativity; blueprint implementations do not close future-intersection realizability; positional repair does not close dependency-defined revision; H1 vocabulary does not close bounded per-instance feasibility.
 
