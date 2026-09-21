@@ -63,18 +63,9 @@ For relationship quality, prefer: validated authored ID/edge > authored one-way 
 
 ## Concept-family audit checkpoint
 
-For premise-generation work, especially invariants, representations and exact relations, add a checkpoint **before implementation**:
+Before implementing a new invariant/representation/relation premise: state the claim and soundness direction; map mechanic support; provide positive and novelty witnesses against current reasoning; name the opportunity denominator; separate proof value from response value; and record the nearest materially different sibling formulations so the first positive/negative does not define the whole family. Testing every sibling is not required.
 
-1. state the exact claim and soundness direction;
-2. map mechanic support/perturbation explicitly rather than treating unsupported mechanics as noise;
-3. identify a positive witness and a **novelty witness** against current production reasoning;
-4. name the denominator/opportunity population before measuring incidence;
-5. separate theorem/proof value from descriptive/response value;
-6. after the first productive formulation, inventory the nearest sibling formulations and record their disposition before narrowing the family.
-
-This last step is an anti-path-dependence control. It does not require testing every sibling. It prevents a convenient first positive from silently defining the whole concept space, and prevents a first negative form from closing adjacent semantics.
-
-For compact exact consequences, use [the small exact projections program](solver-small-exact-projections-program.md).
+Use [the small exact projections program](solver-small-exact-projections-program.md) for compact exact consequences.
 
 ## Stop rules
 
