@@ -277,20 +277,23 @@
       "id": "PSC-012",
       "concept": "durable evidence manifest edge",
       "owners": [
+        "scripts/durable-evidence-bundle-lib.mjs",
+        "scripts/persist-decision-bearing-experiment-evidence.mjs",
         "scripts/research-relations-lib.mjs",
-        "durable bundle producer"
+        "scripts/research-relations-node-test.mjs"
       ],
       "forms": [
         "manifestStoredPath",
         "legacy files[].source=manifest.json"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "permanent-archive-reader",
-      "status": "open",
-      "retirementGate": "new bundles always author manifestStoredPath; legacy lookup isolated to versioned/archive reader"
+      "status": "complete",
+      "retirementGate": "closed: new bundles author manifestStoredPath under schema v2; legacy files[] lookup is isolated to the v1/archive decoder",
+      "progress": "Introduced durable evidence bundle schema v2. New retained bundles write schemaVersion:2 and mandatory manifestStoredPath, pinned by the producer self-test. research-relations delegates manifest-edge decoding to durable-evidence-bundle-lib.mjs. v2 readers reject missing manifestStoredPath even if files[] contains a manifest record; unversioned/v1 bundles alone may recover the historical files[].source='manifest.json' edge through historicalDurableBundleManifestStoredPath()."
     },
     {
       "id": "PSC-013",
