@@ -10,6 +10,7 @@ import {
     exactPathIntegrityRecords,
     indexBy,
     leftJoin,
+    normalizePremiseAdmissions,
     queryRelation,
     summarizeIndependentSupport,
 } from './research-relations-lib.mjs';
