@@ -187,7 +187,8 @@ test('connectivity goal-cut shadow remains valid with pending obligations', () =
         nextId: 1,
     };
     const source = stateAt(level, prep, [K(1, 1)]);
-    assert.notEqual(source.mustMask, 0, 'fixture must have a pending must-pass');
+    assert.equal(source.mpVisitedMask, 0, 'fixture must have an unvisited must-pass');
+    assert.ok(level.mustPassKeys.length > 0, 'fixture must contain a must-pass obligation');
     assert.notEqual(source.mustCrossMask, 0, 'fixture must have a pending must-cross');
     assert.equal(isConnected(K(1, 1), source, level, prep), false);
     assert.ok(records.some(r => r.kind === 'certificate'),
