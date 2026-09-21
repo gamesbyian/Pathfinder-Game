@@ -33,7 +33,7 @@ test('worker SolveOpts serializer preserves data and rejects callback-shaped opt
     }), /failureProgressObserver\.observe/);
 });
 
-test('solve validates raw input and transports one normalized level contract', () => {
+test('solve validates raw input, transports one normalized contract, and returns direct SolveResult shape', async () => {
     const worker = new FakeWorker();
     const client = createSolverWorkerClient(worker as any);
     const raw = {
@@ -44,7 +44,7 @@ test('solve validates raw input and transports one normalized level contract', (
         reqInt: 0,
     };
 
-    void client.solve(raw, { timeBudgetMs: 1234 });
+    const solvePromise: any = client.solve(raw, { timeBudgetMs: 1234 });
     const request = worker.messages.find(m => m.type === 'SOLVE');
     assert.ok(request);
     assert.equal(request.budgetMs, 1234);
@@ -52,6 +52,24 @@ test('solve validates raw input and transports one normalized level contract', (
     assert.ok(Array.isArray(request.level.gateKeys));
     assert.ok(request.level.portalMap instanceof Map);
     assert.equal(request.level.requiredLength, 3);
+
+    worker.emit({
+        type: 'RESULT',
+        id: request.id,
+        ok: true,
+        status: 'success',
+        solution: [1, 2, 3],
+        solutions: [[1, 2, 3]],
+        totalMs: 10,
+        nodesExpanded: 7,
+        attempts: [],
+    });
+    const result = await solvePromise;
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'success');
+    assert.deepEqual(result.solution, [1, 2, 3]);
+    assert.equal(Object.hasOwn(result, 'type'), false, 'worker routing type must not leak into public solve result');
+    assert.equal(Object.hasOwn(result, 'id'), false, 'worker routing id must not leak into public solve result');
 
     assert.throws(() => client.solve({
         grid: { w: 16, h: 16 },
