@@ -97,19 +97,25 @@ if (schedulerMode === 'static-portfolio') {
     }
 }
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
-// Canonical flag names below accept their pre-phase-6-derived-vocabulary legacy spelling as an
-// alias for one migration window (naming-cleanup-ledger.json), same shape as --scheduler-mode above.
+const retiredBudgetFlags = new Map([
+    ['--attraction-diversity-budget-fraction', '--goal-attraction-disabled-retry-budget-fraction'],
+    ['--main-loop-late-reserve-fraction', '--main-search-late-reserve-fraction'],
+    ['--main-loop-late-reserve-config-count', '--main-search-late-reserve-config-count'],
+]);
+for (const [retired, canonical] of retiredBudgetFlags) {
+    if (argMap.has(retired)) {
+        console.error(`${retired} is retired; use ${canonical}`);
+        process.exit(2);
+    }
+}
 const goalAttractionDisabledRetryBudgetFraction = argMap.has('--goal-attraction-disabled-retry-budget-fraction')
-    ? Number(argMap.get('--goal-attraction-disabled-retry-budget-fraction'))
-    : argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
+    ? Number(argMap.get('--goal-attraction-disabled-retry-budget-fraction')) : undefined;
 const admissibleOrderBudgetFraction = argMap.has('--admissible-order-budget-fraction') ? Number(argMap.get('--admissible-order-budget-fraction')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction') ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 const mainSearchLateReserveFraction = argMap.has('--main-search-late-reserve-fraction')
-    ? Number(argMap.get('--main-search-late-reserve-fraction'))
-    : argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
+    ? Number(argMap.get('--main-search-late-reserve-fraction')) : undefined;
 const mainSearchLateReserveConfigCount = argMap.has('--main-search-late-reserve-config-count')
-    ? Number(argMap.get('--main-search-late-reserve-config-count'))
-    : argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+    ? Number(argMap.get('--main-search-late-reserve-config-count')) : undefined;
 const disableExtraBudgetPasses = flags.has('--disable-extra-budget-passes');
 // DEPRECATED --baseline-budget: per-level adaptive node budgets scaled off recorded per-level
 // nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
