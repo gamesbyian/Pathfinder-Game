@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-21 — production-inert beam observer seam and prevalence probe implemented on PR #1952.
 > **Decision:** measure current-residual one-successor canonical-work prevalence before considering any forced-chain consumer.
-> **Remaining gate:** freeze a representative current-residual parent population and run the bounded prevalence census under the preregistered admission bands below.
+> **Remaining gate:** run the frozen 64-parent current-residual census below and apply the preregistered admission bands; no forced-chain consumer before that result.
 > **Evidence role:** discovery
 > **Selection:** prespecified current-residual sample to be frozen before execution.
 > **Inference scope:** oracle-ceiling and prevalence sizing only; no production behavior claim.
@@ -67,20 +67,22 @@ Therefore:
 
 ## Population
 
-Use the current hard residual rather than a hand-picked historical success set.
+The first development population is now frozen in [`reports/stress/forced-work-prevalence-sample-2026-09-21.json`](stress/forced-work-prevalence-sample-2026-09-21.json): 64 independent C2 parents sampled from the exact 531-level residual of production-boundary run `35066677597` (artifact `10440286196`, head `16114b80`). Selection grouped the residual by production-stage eligibility/reach signature, allocated at least two parents per nonempty signature, then sampled across baseline `workSpent` rank. No forced-work telemetry was inspected.
 
-The first run should be a bounded development census over independent current residual parents, stratified enough to avoid letting one mechanic/family dominate. Historical residual class membership is legal for offline research selection but never a production input.
+The full residual identity is retained by source run/artifact plus a sorted-ID SHA-256 in the manifest. The sample itself has its own ID hash. This avoids mutable “current residual” reconstruction.
 
-The CLI deliberately requires explicit `--levels` or `--levels-file` so population identity is frozen outside the probe rather than silently reconstructed from filenames or current outcomes.
+First execution:
 
-Recommended first pass:
+```bash
+npm run research:forced-work-prevalence -- \
+  --corpus=data/stress/stress-levels-random.json \
+  --levels-file=reports/stress/forced-work-prevalence-sample-2026-09-21.json \
+  --profile=objectiveFirst --width=500 \
+  --work-budget=5000000 --budget-ms=600000 \
+  --out=reports/stress/forced-work-prevalence-current-residual-2026-09-21.json
+```
 
-- one representative production-relevant beam profile/width;
-- a work cap large enough to expose meaningful search without making this an expensive full solve campaign;
-- non-binding wall deadline;
-- report parent-grouped results, not rows as independent observations.
-
-If the first pass exposes substantial headroom, replicate on at least one materially different beam width/profile before inferring general prevalence.
+Treat any wall-deadline-bound row as censored. Report parents as independent units. If the first pass exposes substantial headroom, replicate at a materially different beam width/profile before inferring general prevalence.
 
 ## Frozen interpretation gate
 
