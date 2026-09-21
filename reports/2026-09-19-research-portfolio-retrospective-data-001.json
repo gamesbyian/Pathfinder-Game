@@ -13,20 +13,20 @@
     "derivedInventory": "scripts/research-system-inventory-lib.mjs"
   },
   "counts": {
-    "windowQuestions": 30,
+    "windowQuestions": 31,
     "answerability": {
-      "answerable-or-concluded": 25,
+      "answerable-or-concluded": 26,
       "evidence/population-blocked": 4,
       "measurement-blocked": 1
     },
     "proposalProvenance": {
-      "explicitTrigger": 14,
-      "candidateSetVisible": 17,
+      "explicitTrigger": 15,
+      "candidateSetVisible": 18,
       "neitherTriggerNorCandidateSet": 7
     },
     "instrumentShaping": {
       "questionsWithMeasurementOpportunity": 5,
-      "questionsWithoutMeasurementOpportunity": 25,
+      "questionsWithoutMeasurementOpportunity": 26,
       "uniqueMeasurementOpportunitiesUsed": 3,
       "underExplicitOpportunitiesUsed": [
         "MO-005"
@@ -991,6 +991,47 @@
         "explicitTrigger": false,
         "explicitConstraintSources": 2,
         "candidateSetVisible": false
+      }
+    },
+    {
+      "id": "WS2-PARITY-RESPONSE-SIGNATURE",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "question": "Do current-input parity features explain technique-response discordance or successful-path realization beyond existing structural descriptors strongly enough to nominate a transferable solver consumer?",
+      "evidenceRefs": [
+        "reports/2026-09-19-solver-parity-invariant-audit-001.md"
+      ],
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "measurementOpportunityStatus": [],
+      "answerability": {
+        "disposition": "answerable-or-concluded",
+        "evidenceDeficit": true,
+        "strongEvidenceGate": false,
+        "measurementDeficit": false,
+        "computeDeficit": true,
+        "codeDeficit": false,
+        "conceptDeficit": false,
+        "reopenConditionPresent": false
+      },
+      "proposalProvenance": {
+        "triggers": [
+          "WS2-CHECKERBOARD-CAPACITY",
+          "WS2-PARITY-PHASE-DISTANCE"
+        ],
+        "constraints": [
+          "docs/solver-parity-phase-capacity-preflight.md",
+          "docs/solver-parity-response-signature-preflight.md",
+          "reports/2026-09-19-solver-parity-invariant-audit-001.md"
+        ],
+        "aliases": [
+          "parity capability axis",
+          "parity pressure",
+          "parity response signature"
+        ],
+        "explicitTrigger": true,
+        "explicitConstraintSources": 3,
+        "candidateSetVisible": true
       }
     },
     {
