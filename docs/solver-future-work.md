@@ -47,7 +47,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 ## Earned experiment designs
 
-H3 remaining-length allocation and admissible-order reserve repricing have already cleared their evidence gates. They are **earned experiment designs**, not deferred reopen hooks; their precommitment gates live in [solver optimization workstreams](solver-optimization-workstreams.md). Neither is authorized for dispatch or production use yet.
+H3 remaining-length allocation and admissible-order reserve repricing have cleared their evidence gates. They are **earned experiment designs**, not reopen hooks; precommitment lives in [solver optimization workstreams](solver-optimization-workstreams.md). Neither is authorized for dispatch or production use.
 
 ## Conditional composition/allocation work
 
