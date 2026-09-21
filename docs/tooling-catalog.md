@@ -1,4 +1,3 @@
-<!-- agent-context-budget: warn=10500 max=14000 -->
 # Tooling catalog
 
 > **Purpose:** family-level map for existing developer/research tooling.
