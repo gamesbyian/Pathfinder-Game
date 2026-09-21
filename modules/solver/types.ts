@@ -547,6 +547,12 @@ export interface ConnectivityCertificateShadowRecord {
     /** False only for the production-inert hard-prune-seam probe executed when the caller's
      * connectivity schedule deliberately skipped the ordinary flood fill. */
     scheduled?: boolean;
+    /** Temporary development attribution for unscheduled probes; caller-owned and never inferred. */
+    researchCaller?: 'dfs' | 'beam' | 'admissible-order' | 'repair-random-walk'
+        | 'repair-completion-dfs' | 'repair-bounded-dfs' | 'repair-relink';
+    /** Caller-local phase of the periodic connectivity schedule when meaningful. */
+    researchSchedulePhase?: number | null;
+    researchRemainingSteps?: number;
 }
 
 /** Production-inert one-solve shadow observer for the portal-free goal cut certificate documented
