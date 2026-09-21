@@ -93,51 +93,27 @@ Advance only on incremental, decision-bearing information with a cheaper plausib
 
 ## Candidate families after region-flow balance
 
-These are **not live experiments**.
-
-### Obligation-resource matching / Hall pressure
-Several obligations may each be feasible while a subset has too few compatible scarce supports: approach axes, crossing cells, region interfaces, turn slots, or portal opportunities. Start from support relations already implied by mechanic analysis; do not invent arbitrary resources to make matching interesting.
-
-### Dominance / monotone option containment
-Seek one-way dominance before equivalence: no more resource spent, no additional scarce opportunity consumed, and a sound superset of future options. This is distinct from naive transposition.
-
-### Planar separation / cycle-space consequences
-Turn “topology” into discrete consequences: required objects cut off from the goal, enclosure, residual face access, or a small homology/cycle-space coordinate whose change has a proved completion consequence. Raw phase coordinates are nominations, not consumers.
-
-### Partial-order independence / commutativity
-Ask which remaining commitments commute and which create dependency edges. The existing splice result is narrow evidence. A sound independence relation could reduce order branching or expose decomposition boundaries.
-
-### Finite-state residues
-Inspect mechanic transition systems for small quotients. Derive any modulo/cyclic law from the mechanic automaton; do not start by trying arbitrary moduli.
-
-### Exact symmetry / automorphisms
-Only automorphisms preserving gate/goal roles, mechanic labels/state, portal pairing/orientation and relevant path history count. This is narrower than generic canonicalization.
+Not live experiments:
+- **Matching / Hall pressure:** subsets of individually feasible obligations may have too few compatible scarce supports.
+- **Dominance:** seek sound one-way option containment before equivalence/transposition.
+- **Planar separation / cycle space:** seek discrete enclosure, access, homology or cycle consequences, not raw phase coordinates.
+- **Independence / commutativity:** identify dependency edges or safely interchangeable commitments.
+- **Finite-state residues:** derive small quotients from mechanic transition semantics, never arbitrary moduli.
+- **Exact symmetry:** require automorphisms preserving all future-relevant roles, labels, pairing, orientation and history.
 
 ## Evidence ladder
 
-1. Stage-0 theorem + novelty audit.
-2. Retained witness/counterexample replay using exact/referee-valid evidence.
-3. Incidence and overlap with current rejects/decisions.
-4. Existing technique-census/capability/hint joins for **response nomination**, with proper protocol and success-selection caveats.
-5. Production-inert observer only if existing evidence cannot establish opportunity.
-6. Smallest consumer.
-7. Matched-work economics and independent confirmation proportional to selection pressure.
+Stage-0 theorem/novelty -> exact/referee witness replay -> incidence/overlap -> existing response joins -> observer only if needed -> smallest consumer -> matched-work economics/confirmation.
 
-Hard and soft descendants are independent: negligible prune incidence does not automatically kill a response feature, and a response association does not prove sound rejection.
+Hard and soft descendants are independent: low prune incidence does not kill response value, and response association never proves rejection.
 
 ## Candidate-ranking rule
 
-Do not rank concepts by elegance. Prefer:
-
-`expected information value ≈ supported opportunity × novelty × consumer leverage ÷ derivation cost`
-
-No scalar score is authoritative; the decomposition forces the right questions. A broad concept may lose to a narrow exact law with a cheap denominator and obvious consumer.
+Prefer supported opportunity × novelty × consumer leverage relative to derivation cost. This is a decomposition, not an authoritative scalar score.
 
 ## Stop and closure semantics
 
-Stop when the claim restates an existing bound, supported scope is vanishing, projected state approaches full residual identity, construction cost rivals the avoided work, or incremental decision value is negligible.
-
-Record *which family and theorem closed*. A failed matching relaxation does not close conserved cut flow; a failed symmetry quotient does not close dominance; a failed cross-level interface signature does not close board-specific conservation.
+Stop on redundancy, vanishing support, near-full residual identity, excessive cost, or negligible incremental decision value. Record the exact family/theorem closed; negatives do not transfer across proof families.
 
 ## Current next action
 
