@@ -6,7 +6,7 @@
 > **Remaining gate:** run the parity/portal and transformation-aware orientation contrasts on the frozen prespecified pairs, then apply Stage-0 theorem/novelty gates to surviving signals
 > **Evidence role:** discovery
 > **Selection:** observational; A-only/B-only cohorts are selected on technique outcomes within prespecified technique pairs
-> **Population identity:** `reports/stress/technique-niches/2026-09-01/level-capability.json` with its embedded source identities
+> **Population identity:** original nomination evidence: `reports/stress/technique-niches/2026-09-01/level-capability.json`; executable replay population: freeze the tracked `reports/stress/technique-niches/2026-09-03/level-capability.json` by SHA-256 before analysis
 > **Selection history:** frozen T1 technique-census outcomes joined to legal static descriptors; this report reinterprets retained contrasts after seeing those outcomes
 > **Inference scope:** offline premise nomination only; not confirmation and not runtime routing evidence
 > **Proposal provenance:** response-guided reinterpretation of existing technique discordance after the parity/exact-projection audit
@@ -122,9 +122,12 @@ The next code should **not** be a selector. It should be the smallest shared cur
 ## Reproduction
 
 ```bash
+npm run research:freeze-response-guided-contrasts -- \
+  --base=reports/stress/technique-niches/2026-09-03/level-capability.json \
+  --out=tmp/response-guided-contrast-population.json
 npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
 npm run research:response-guided-orientation -- --out=tmp/response-guided-orientation-contrast.json
 # Width oracle intentionally requires explicit frozen --levels; see Nomination 3.
 ```
 
-This command performs normalization and static feature analysis only; it runs no solver search.
+The freezer performs no solver search. Parity/orientation analyses perform normalization and static feature analysis only.
