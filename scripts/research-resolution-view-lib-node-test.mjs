@@ -4,6 +4,7 @@ import {
   compactResearchResolution,
   extractResearchResolutionEnvelope,
   extractResearchIndependenceVector,
+  summarizeResearchResolutionComposition,
   summarizeResearchResolutionDocuments,
 } from './research-resolution-view-lib.mjs';
 import { buildResearchResolutionEnvelope } from './research-resolution-envelope-lib.mjs';
@@ -75,5 +76,38 @@ assert.equal(summary[1].resolutionStatus, 'observability-blocked');
 assert.equal(summary[1].independenceVector.sourceConstruction, 'shared generator family');
 assert.equal(summary[2].questionId, 'Q-LEGACY');
 assert.equal(summary[2].independenceVector, null);
+
+
+const companion = buildResearchResolutionEnvelope({
+  questionId: 'Q-BLOCKED',
+  liveRivals: ['c', 'd'],
+  discriminatingObservable: 'y',
+  requiredAxes: ['participation', 'censoring'],
+  axes: {
+    participation: { status: 'satisfied', reason: 'separate participation capture' },
+    censoring: { status: 'unknown', reason: 'this artifact does not establish censoring' },
+  },
+  negativeInterpretationPolicy: 'null is uninterpretable while blocked',
+});
+const composition = summarizeResearchResolutionComposition([
+  { source: 'blocked.json', document: { resolution: blocked } },
+  { source: 'companion.json', document: { resolution: companion } },
+]);
+assert.equal(composition.length, 1);
+assert.equal(composition[0].questionId, 'Q-BLOCKED');
+assert.equal(composition[0].compatibleInterpretationContract, true);
+assert.deepEqual(composition[0].axisCoverage.participation.satisfiedSources, ['companion.json']);
+assert.deepEqual(composition[0].axisCoverage.participation.blockedSources, ['blocked.json']);
+assert.equal(composition[0].compositionStatus, 'diagnostic-only');
+assert.equal(composition[0].decisionEntitlement, 'none');
+
+const incompatible = summarizeResearchResolutionComposition([
+  { source: 'blocked.json', document: { resolution: blocked } },
+  { source: 'other.json', document: { resolution: {
+    ...companion,
+    discriminatingObservable: 'different observable',
+  } } },
+]);
+assert.equal(incompatible[0].compatibleInterpretationContract, false);
 
 console.log('research resolution view tests passed');
