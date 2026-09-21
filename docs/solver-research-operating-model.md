@@ -61,19 +61,9 @@ The same rule applies to relationships: if a stable ID/edge exists, join on it r
 
 For relationship quality, prefer: validated authored ID/edge > authored one-way path/ID with referential integrity > embedded contract identity discovered from candidate files > explicitly labelled lexical/path discovery. If both endpoints author the same relation, check agreement. Co-location, filenames, hyperlinks and shared vocabulary may discover candidates but do not define membership or scientific ancestry. See `reports/2026-09-19-research-relation-authority-audit-001.md`.
 
-## Concept-family audit checkpoint
+## Concept-family and inversion checkpoint
 
-Before implementing a new invariant/representation/relation premise: state the claim and soundness direction; map mechanic support; provide positive and novelty witnesses against current reasoning; name the opportunity denominator; separate proof value from response value; and record the nearest materially different sibling formulations so the first positive/negative does not define the whole family. Testing every sibling is not required.
-
-Use [the small exact projections program](solver-small-exact-projections-program.md) for compact exact consequences.
-
-## Question-inversion checkpoint
-
-Before promoting a new research question, and again at closeout when choosing descendants, write the nearest **useful inverse** of the question. This is not a requirement to test the inverse and does not create a second queue. It is a directional-bias check: ask whether the same evidence supports removal rather than addition, overexposure rather than starvation, LIVE/slack/fragility rather than DEAD proof, board-local derivation rather than universal compression, success/early determination rather than failure explanation, or capability obsolescence rather than invention.
-
-An inverse earns question authority only through the ordinary gates: a materially distinct ambiguity, concrete evidence source, decision-changing discriminator, explicit population/independent unit, and smallest next step. If it is already owned by an active or deferred question, join it there rather than cloning it.
-
-Use the [question inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md) as the worked example. In particular, treat clean compression failures as possible evidence of non-compressibility/per-instance reasoning, and treat successful runs as potential evidence about avoidable downstream work without leaking eventual answers into cold policy.
+Before implementing or promoting a premise/question: state its claim/soundness direction, mechanic support, novelty witness, opportunity denominator, proof-versus-response value, nearest material siblings, and nearest **useful inverse**. Inverses test directional bias such as add/remove, starvation/overexposure, DEAD/LIVE-slack, universal/per-instance, failure/success, or invention/obsolescence. They create no queue entitlement: reuse an existing owner or pass the ordinary evidence/discriminator/population gates. See [small exact projections](solver-small-exact-projections-program.md) and the [inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md).
 
 ## Stop rules
 
