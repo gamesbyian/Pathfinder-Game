@@ -261,5 +261,5 @@ async function main() {
     console.log(JSON.stringify({ out: outFile, ...report.summary }, null, 2));
 }
 
-if (process.argv[1] && path.basename(process.argv[1]).startsWith('paired-beam-width-frontier-oracle')
+if (process.argv[1] && ['paired-beam-width-frontier-oracle.mjs', 'paired-beam-width-frontier-oracle.bundle.mjs'].includes(path.basename(process.argv[1]))
     && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
