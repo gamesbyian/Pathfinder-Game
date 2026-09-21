@@ -107,6 +107,15 @@ Add a lightweight **question-inversion checkpoint** to the research operating mo
 
 Only an inverse with a concrete evidence source, decision-changing discriminator, population and smallest next gate deserves question authority.
 
+## Immediate readiness check
+
+The current evidence topology does **not** justify promoting either new hook today.
+
+- **Success-side avoidable work:** lifecycle telemetry, compact failure response, hint discovery process and search-loss solved controls can describe work and successful controls, but none currently owns a leakage-safe oracle for the earliest current-input point at which the eventual success became effectively determined. The one-successor beam probe in PR #1952 is a narrower, already-owned oracle-ceiling question and should run first.
+- **Capability obsolescence:** capability evidence already exposes historical/current gains, losses, overlap, unique nominations and displacement, and the capability-evidence contract explicitly asks whether current production absorbs or exchanges old basins. That is enough to nominate an obsolescence audit after boundary churn, but not enough to remove a current stage: deletion requires current-code participation, unique marginal solves/displacement and removable-work economics under a compatible production boundary.
+
+Therefore both remain precise deferred hooks rather than unexecuted active experiments.
+
 ## Queue disposition
 
 No new active workstream is created by this audit.
