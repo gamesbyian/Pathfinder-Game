@@ -82,7 +82,7 @@ const orchestrationOnlySha = clone(manifest);
 delete orchestrationOnlySha.experiment.resolvedSha;
 orchestrationOnlySha.sha = 'a'.repeat(40);
 assert.throws(
-  () => validateReconciliationSources([{ runId: 'legacy', manifest: orchestrationOnlySha }]),
+  () => validateReconciliationSources([{ runId: '1', manifest: orchestrationOnlySha }]),
   /no declared experiment resolved SHA/u,
 );
 const legacyTopLevelConfiguration = clone(manifest);
