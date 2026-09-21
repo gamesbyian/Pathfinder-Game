@@ -261,4 +261,5 @@ async function main() {
     console.log(JSON.stringify({ out: outFile, ...report.summary }, null, 2));
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
+if (process.argv[1] && path.basename(process.argv[1]).startsWith('paired-beam-width-frontier-oracle')
+    && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
