@@ -161,6 +161,7 @@ jobs:
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/solver-combined/combined.json" \
             --include="${{ inputs.expected_ids_file }}" \
+            --include="logs/solver-combined/source-provenance.json" \
             --shards-expected="$(echo '${{ inputs.run_ids }}' | tr ',' '\n' | grep -c .)" \
             --shards-observed="$(find logs/solver-combined/sources -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
             --shards-basis="source runs merged; exact expected population validated separately" \
