@@ -72,6 +72,7 @@ try {
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${contractFile}`, `--out=${out}`], { cwd: root });
   const manifest = JSON.parse(fs.readFileSync(path.join(out, 'manifest.json')));
   assert.equal(manifest.schemaVersion, 3);
+  assert.match(manifest.entries[0].sha256, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(manifest.population.expectedCount, 1);
   assert.equal(manifest.population.identityHash, `sha256:${'a'.repeat(64)}`);
   assert.equal(manifest.coverage.populationIntegrity.coverageComplete, true);
