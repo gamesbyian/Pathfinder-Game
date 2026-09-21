@@ -4,6 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { buildResearchEnrichmentLink, RESEARCH_ENRICHMENT_KINDS } from './research-enrichment-link-lib.mjs';
+import { assertCanonicalResearchArtifactEnvelope, extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
