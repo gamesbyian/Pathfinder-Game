@@ -289,6 +289,7 @@ async function main() {
 
     // ─── merge: deterministic regardless of completion order — sort before dedupe/report ───────
     const levelReports = [];
+    const changedHintLevels = new Set();
     let totalNovel = 0;
     for (const levelNumber of levelNumbers) {
         const raw = rawLevels[levelNumber - 1];
@@ -337,6 +338,7 @@ async function main() {
                 levelRevision,
             })]));
             setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
+            changedHintLevels.add(raw);
         }
 
         levelReports.push({
@@ -353,7 +355,7 @@ async function main() {
             + `${allJobsHaveResults && allExhausted ? 'EXHAUSTIVE' : 'incomplete'}`);
     }
 
-    if (writeLevels && totalNovel > 0) writeLevelCorpusDocumentWithHints(resolveFromRoot(levelsJsonPath), corpusDocument);
+    if (writeLevels && totalNovel > 0) writeLevelCorpusDocumentWithHints(resolveFromRoot(levelsJsonPath), corpusDocument, { changedHintLevels });
 
     const report = {
         schemaVersion: 1,
