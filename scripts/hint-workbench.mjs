@@ -1190,7 +1190,7 @@ for (const levelNumber of levelNumbers) {
             // finished. writeLevelCorpusDocumentWithHints only rewrites files that actually changed, so this is
             // cheap. (Within a single very large level, bound it with --wall-ms so the step returns
             // and persists; re-running accumulates more, deduped by path signature.)
-            writeResult = writeLevelCorpusDocumentWithHints(levelsPath, corpusDocument);
+            writeResult = writeLevelCorpusDocumentWithHints(levelsPath, corpusDocument, { changedHintLevels: [raw] });
         }
         if (opts.writePatch) {
             patchLevels.push({
@@ -1207,7 +1207,6 @@ for (const levelNumber of levelNumbers) {
         + `${result.duplicateProvenanceCount > 0 ? `, +${result.duplicateProvenanceCount} provenance merged into existing hints` : ''} ${result.elapsedMs}ms`);
 }
 
-if (opts.writeLevels && !opts.writePatch && !opts.auditMode && (totalAccepted > 0 || totalDuplicateProvenance > 0)) writeResult = writeLevelCorpusDocumentWithHints(levelsPath, corpusDocument);
 if (opts.writePatch && !opts.auditMode && (totalAccepted > 0 || totalDuplicateProvenance > 0)) {
     patchResult = {
         schemaVersion: 1,
