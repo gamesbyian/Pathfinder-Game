@@ -1,9 +1,14 @@
 # Forced-work prevalence preflight 001
 
-> **Status:** probe implemented; empirical run pending.
-> **Date:** 2026-09-21.
+> **Status:** active
+> **Last evidence:** 2026-09-21 — production-inert beam observer seam and prevalence probe implemented on PR #1952.
+> **Decision:** measure current-residual one-successor canonical-work prevalence before considering any forced-chain consumer.
+> **Remaining gate:** freeze a representative current-residual parent population and run the bounded prevalence census under the preregistered admission bands below.
+> **Evidence role:** discovery
+> **Selection:** prespecified current-residual sample to be frozen before execution.
+> **Inference scope:** oracle-ceiling and prevalence sizing only; no production behavior claim.
 > **Question owner:** capability-gap reconciliation, forced-chain traversal row.
-> **Production effect:** none. This is production-inert research telemetry over the existing beam search.
+> **Production effect:** none. Research telemetry only.
 > **Implementation:** `scripts/stress/forced-work-prevalence.mjs` and `forced-work-prevalence-lib.mjs`.
 
 ## Question
