@@ -1035,6 +1035,33 @@
       "premiseRefs": [],
       "measurementOpportunities": [],
       "acquisitionNeed": "telemetry-or-economics"
+    },
+    {
+      "id": "WS2-FORCED-WORK-CAPTURE-ECONOMICS",
+      "question": "Of the large current beam parent-expansion work reservoir at one-successor states, what fraction is actually removable by a semantics-preserving forced-step treatment after paying transition, solution-recognition, mechanics, observer, retention, replay, frontier, and accounting costs?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": [
+        "forced-work capture fraction",
+        "forced-step economics",
+        "one-successor contraction economics",
+        "forced-chain capture"
+      ],
+      "constrainedBy": [
+        "reports/2026-09-21-forced-work-prevalence-preflight-001.md",
+        "reports/2026-09-21-forced-work-prevalence-result-001.md"
+      ],
+      "result": "The preregistered 64-parent C2-residual census is headroom-positive: 39.55% of expanded parents had exactly one post-hard-prune successor and they carried 25.33% of measured canonical parent-expansion work; all 64 independent parents exceeded the 5% headroom band. Corrected post-hard-prune chain reconstruction found 4,932,517 chain starts, maximum length 19 and maximum chain work 196, with most parent medians at length 1-2, so the reservoir is dominated by ubiquitous short forced segments rather than rare giant corridors.",
+      "constrains": [
+        "Do not equate the 25.33% oracle ceiling with realizable savings; mandatory transition, mechanics, solution-recognition and accounting work remains.",
+        "Do not assume a long-chain compressor is the consumer; corrected chain anatomy points first to ordinary one-successor transitions and short runs.",
+        "No production contraction is earned until a production-inert study measures removable-work capture fraction, overhead, semantic/observer parity, solve and capability preservation, and overlap with existing pruning."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [],
+      "measurementOpportunities": [],
+      "acquisitionNeed": "telemetry-or-economics"
+
     }
   ]
 }
