@@ -1,10 +1,11 @@
 # Protocol/schema contraction audit 001
 
 > **Status:** concluded-positive
-> **Date:** 2026-09-20
-> **Scope:** solver + solver-research machinery, with emphasis on current live polymorphism rather than naming residue
-> **Decision:** the repository has enough repeated "same concept, several shapes" seams to justify a focused contraction program. Historical evidence should remain readable, but current machinery should become canonical-only wherever possible.
-> **Next:** execute `docs/solver-protocol-schema-contraction-plan.md`.
+> **Last evidence:** 2026-09-20 — structural audit identified thirteen live protocol/schema contraction seams and classified their ownership.
+> **Decision:** the repeated "same concept, several shapes" seams justify a focused contraction program. Historical evidence remains readable while current machinery moves toward canonical-only protocols.
+> **Remaining gate:** execute and close the work in `docs/solver-protocol-schema-contraction-plan.md`.
+
+> **Scope:** solver + solver-research machinery, emphasizing current live polymorphism rather than naming residue.
 
 ## Question
 
