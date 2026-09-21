@@ -32,6 +32,10 @@ export interface PruneDiagnostics {
 export interface PruneEvaluationOptions {
     allowNeighborBudgetPrune?: boolean;
     diagnostics?: PruneDiagnostics;
+    researchCaller?: 'dfs' | 'beam' | 'admissible-order' | 'repair-random-walk'
+        | 'repair-completion-dfs' | 'repair-bounded-dfs' | 'repair-relink';
+    researchSchedulePhase?: number | null;
+    researchRemainingSteps?: number;
 }
 
 function reached(diagnostics: PruneDiagnostics | undefined, id: PruneId): void {
@@ -244,6 +248,9 @@ export function evaluatePrunedMove(
                 certificatesScanned: probe.certificatesScanned,
                 boundaryCellChecks: probe.boundaryCellChecks,
                 positionEligibleCertificates: probe.positionEligibleCertificates,
+                researchCaller: options.researchCaller,
+                researchSchedulePhase: options.researchSchedulePhase,
+                researchRemainingSteps: options.researchRemainingSteps,
                 ...(probe.hitCertificateId !== undefined
                     ? {
                         hitCertificateId: probe.hitCertificateId,
