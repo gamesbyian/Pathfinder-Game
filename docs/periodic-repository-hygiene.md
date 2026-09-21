@@ -1,4 +1,3 @@
-<!-- agent-context-budget: warn=24000 max=30000 -->
 # Periodic repository hygiene plan
 
 > **Purpose:** recurring agent-driven entropy-control pass for Pathfinder.
