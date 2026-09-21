@@ -648,12 +648,14 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
 
     const axisExhausted = (!_cfg || _cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
 
-    // Production-inert certificate shadow: test retained cut certificates BEFORE the ordinary
-    // scheduled flood fill, but never consume the result. The real flood fill below remains the
-    // sole pruning authority and verifies every shadow hit.
-    const certificateProbe = _probeConnectivityGoalCutCertificates(
-        pos, state, level, prep, maxVisit, mcOpenMask, axisExhausted,
-    );
+    // Production-inert certificate shadow: when absent (every production call), keep this to one
+    // nullable field read/branch rather than paying an extra helper call inside a 10^5-10^6-call
+    // hot loop. When present, test retained cuts BEFORE the ordinary scheduled flood fill, but never
+    // consume the result. The real flood fill below remains the sole pruning authority.
+    const certificateShadow = prep._connectivityCertificateShadow;
+    const certificateProbe = certificateShadow
+        ? _probeConnectivityGoalCutCertificates(pos, state, level, prep, maxVisit, mcOpenMask, axisExhausted)
+        : null;
     const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys);
 
     // Research-only rejection observer (see ConnectivityRejectionObserver's doc in types.ts and
@@ -668,7 +670,6 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     const research = prep._connectivityRejectionObserver;
 
     const goalUnreachable = !_reached(level.goalKey);
-    const certificateShadow = prep._connectivityCertificateShadow;
     if (certificateShadow && certificateProbe) {
         certificateShadow.observer.observe({
             kind: 'probe',
@@ -688,7 +689,9 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
 
     if (goalUnreachable) {
         if (research) _reportConnectivityRejection(research, 'goal', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted);
-        _retainConnectivityGoalCutCertificate(state, level, prep, maxVisit, pos, mcOpenMask, axisExhausted);
+        if (certificateShadow) {
+            _retainConnectivityGoalCutCertificate(state, level, prep, maxVisit, pos, mcOpenMask, axisExhausted);
+        }
         return false;
     }
     for (let i = 0; i < level.mustPassKeys.length; i++) {
