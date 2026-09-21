@@ -4,7 +4,7 @@
 > **Opened:** 2026-09-20
 > **Audit basis:** [protocol/schema contraction audit 001](../reports/2026-09-20-protocol-schema-contraction-audit-001.md)
 > **Purpose:** reduce live solver/research polymorphism without rewriting historical evidence or losing durable compatibility.
-> **Progress (2026-09-20, PR #1937):** implementation is well past the founding boundary slice. Direct and worker full-solver execution now share normalized-level/SolveResult semantics; raced execution has an explicit narrower request contract. Current scheduler, renamed SolveOpts override, false-goal worker, ablation-feature, stage-ID, and attempt-identity inputs are canonical-only, with historical decoding explicitly isolated where retained evidence needs it. Research envelope fields, premise admissions, population integrity, durable evidence manifest edges, Lane A cut identities, candidate paths, sweep reports, hints, and corpus documents now have named canonicalization boundaries at varying completion levels. Current major work-budget producers map CLI `--work-budget` to `SolveOpts.baseWorkBudget`. Eight registry seams are closed and most remaining high-priority seams are materially contracted. The latest broad-CI failure was primarily stale compatibility tests/wiring exposed by these removals; this branch has now updated the validator list, architecture-boundary test ownership, worker/race tests, stage-budget type contracts, normalization typing, and affected research/report fixtures without restoring retired compatibility.
+> **Progress (2026-09-20, PR #1937):** current APIs/producers are increasingly canonical-only while historical compatibility is being pushed behind named ingress readers. Eleven registry seams are now closed. This session closed the hint mutable-representation seam (canonical Hint records are the sole write authority; bare paths are derived), the corpus-document seam (explicit {levels, metadata, storageShape} end to end; LEVEL_WRAPPERS and array facades removed), and the SolveOpts work-budget seam (baseWorkBudget only on current input). It also removed residual stage-budget option aliases that contradicted PSC-022's earlier closeout and repaired the resulting stale CI fixtures/types without restoring retired compatibility. Remaining work is concentrated in candidate-path caller cleanup, sweep/research envelope finalization, historical-reader censuses, population-integrity output contraction, durable level addressing, family-attempt archival strategy, hint-provenance old-field audit, explicit corpus write-set semantics, and the research-consumption sidecar model.
 
 ## Goal
 
@@ -486,6 +486,17 @@ For scientific evidence, semantic parity matters more than byte parity. Preserve
 - `docs/architecture-unification-debt.md` should receive only surviving architectural debt after concrete packages close, not duplicate live task state.
 - `docs/solver-future-work.md` should carry only deferred/reopen descendants that survive this program.
 - Solver research priority remains owned by `solver-optimization-workstreams.md`; this plan is infrastructure/correctness work and must not masquerade as a solver capability experiment.
+
+
+## 2026-09-20 implementation checkpoint
+
+The live finish-line interpretation is now concrete:
+
+- **Closed current hint duality:** setLevelHintRecords() is the mutation boundary for batch, import, editor, async-load, and review paths. writeLevelCorpusDocumentWithHints() persists hintRecords directly and never reconciles a sibling .hints write back into canonical state. Historical bare paths are upgraded only on ingress.
+- **Closed hidden corpus container state:** production callers carry the explicit corpus document. The LEVEL_WRAPPERS WeakMap plus readLevelsWithHints() / writeLevelsWithHints() compatibility facade are gone; array/object on-disk shapes remain explicit storage metadata.
+- **Closed current work-budget alias:** SolveOpts.workBudget and solve-time dual-read logic are gone. baseWorkBudget is the sole current solver input; report/result workBudget remains valid descriptive data.
+- **Corrected PSC-022 residue:** retired dedupNearTie*, attractionDiversity*, and mainLoopLateReserve* SolveOpts aliases are no longer read in stage-budget planning, and tests no longer preserve them.
+- **Still open inside package B:** concurrency safety still uses read-time hintRecords reference identity to skip untouched hint files. B3 should replace that implicit touched-state heuristic with an explicit write-set/changed-ID contract before the overall package is considered maximally contracted.
 
 ## Completion criteria
 
