@@ -530,7 +530,7 @@
         "variant-family-data",
         "operational-traces",
         "static-level-descriptors",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "search-loss-evidence",
         "compact-failure-response"
       ],
@@ -601,7 +601,7 @@
         "raw-logs-and-baselines",
         "static-level-descriptors",
         "hint-provenance",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "compact-failure-response"
       ],
       "affordances": [
@@ -616,8 +616,8 @@
       ]
     },
     {
-      "id": "solver-capability-memory",
-      "name": "Derived solver capability-memory view and health churn",
+      "id": "solver-capability-evidence",
+      "name": "Derived solver capability-evidence view and health churn",
       "status": "generated-interface",
       "grain": [
         "baseline solver run",
@@ -627,7 +627,7 @@
       "locations": [
         {
           "kind": "generated",
-          "path": "outputs selected by scripts/solver-capability-memory.mjs"
+          "path": "outputs selected by scripts/analyze-solver-capability-evidence.mjs"
         },
         {
           "kind": "tracked",
@@ -639,13 +639,13 @@
         }
       ],
       "authorities": [
-        "docs/solver-capability-memory.md",
-        "scripts/solver-capability-memory.mjs",
-        "scripts/solver-capability-memory-lib.mjs",
+        "docs/solver-capability-evidence.md",
+        "scripts/analyze-solver-capability-evidence.mjs",
+        "scripts/solver-capability-evidence-lib.mjs",
         "scripts/append-solver-health-record.mjs"
       ],
       "queryEntryPoints": [
-        "node scripts/solver-capability-memory.mjs --manifest=<manifest.json>",
+        "node scripts/analyze-solver-capability-evidence.mjs --manifest=<manifest.json>",
         "reports/stress/solver-health-timeline.jsonl"
       ],
       "joinKeys": [
@@ -679,7 +679,7 @@
       ],
       "caveats": [
         "Historical signature intersections with a current residual are nomination evidence only; they are not current-code/current-budget capability.",
-        "Exact historical level outcomes and capability-memory membership are forbidden production routing inputs.",
+        "Exact historical level outcomes and capability-evidence membership are forbidden production routing inputs.",
         "Candidate rows omitted from a report are unknown, not failures; errors/truncation are inconclusive.",
         "Mining many policies/signatures creates selection pressure and descendant treatments require proportionate independent confirmation."
       ]
@@ -727,7 +727,7 @@
         "production-benchmarks",
         "operational-traces",
         "experiment-manifests",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "search-loss-evidence"
       ],
       "affordances": [
@@ -841,7 +841,7 @@
         "exact-reference-labels",
         "solver-determinism-fingerprints",
         "variant-family-data",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "search-loss-evidence"
       ],
       "affordances": [
@@ -1018,7 +1018,7 @@
         "operational-traces",
         "exact-reference-labels",
         "experiment-manifests",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "search-loss-evidence",
         "compact-failure-response"
       ],
@@ -1076,7 +1076,7 @@
         "variant-family-data",
         "solver-determinism-fingerprints",
         "raw-logs-and-baselines",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "hint-discovery-process"
       ],
       "affordances": [
@@ -1139,7 +1139,7 @@
         "production-benchmarks",
         "experiment-manifests",
         "research-status-index",
-        "solver-capability-memory"
+        "solver-capability-evidence"
       ],
       "affordances": [
         "Recover raw evidence behind dated reports and compare current behavior to historical baselines.",
@@ -1193,7 +1193,7 @@
         "experiment-manifests",
         "production-benchmarks",
         "technique-census",
-        "solver-capability-memory"
+        "solver-capability-evidence"
       ],
       "affordances": [
         "Find prior experiments, current decisions, remaining gates, and linked artifacts before rerunning work.",
@@ -1249,7 +1249,7 @@
         "technique-census",
         "solution-space-profiles",
         "variant-family-data",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "compact-failure-response"
       ],
       "affordances": [
@@ -1305,7 +1305,7 @@
         "lifecycle-telemetry",
         "research-status-index",
         "operational-traces",
-        "solver-capability-memory"
+        "solver-capability-evidence"
       ],
       "affordances": [
         "Preserve which failures were already inspected or selected for a bounded investigation.",
@@ -1362,7 +1362,7 @@
         "production-benchmarks",
         "lifecycle-telemetry",
         "search-loss-evidence",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "hint-discovery-process",
         "static-level-descriptors",
         "variant-family-data"
@@ -1427,7 +1427,7 @@
         "lifecycle-telemetry",
         "exact-reference-labels",
         "operational-traces",
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "variant-family-data",
         "technique-census",
         "compact-failure-response"
@@ -1669,9 +1669,9 @@
       "boundary": "Observational feature correlations nominate hypotheses; selected thresholds require held-out confirmation. Selected residuals do not estimate unconditional prevalence."
     },
     {
-      "id": "capability-memory-to-current-residual",
+      "id": "capability-evidence-to-current-residual",
       "assets": [
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "production-benchmarks",
         "raw-logs-and-baselines",
         "experiment-manifests"
@@ -1685,9 +1685,9 @@
       "boundary": "Historical gain intersections are nominations only; current capability requires a comparable current row-level observation. Exact same-level history may not steer production."
     },
     {
-      "id": "capability-memory-to-mechanism",
+      "id": "capability-evidence-to-mechanism",
       "assets": [
-        "solver-capability-memory",
+        "solver-capability-evidence",
         "operational-traces",
         "variant-family-data",
         "static-level-descriptors",
@@ -1708,7 +1708,7 @@
         "lifecycle-telemetry",
         "variant-family-data",
         "raw-logs-and-baselines",
-        "solver-capability-memory"
+        "solver-capability-evidence"
       ],
       "join": "runId/experimentId/output artifact plus solver ref and level selection hash",
       "questions": [
@@ -1726,7 +1726,7 @@
         "production-benchmarks",
         "technique-census",
         "failure-triage",
-        "solver-capability-memory"
+        "solver-capability-evidence"
       ],
       "join": "report/artifact paths plus normalized topic/stage/routing/attempt terminology",
       "questions": [
@@ -1741,7 +1741,7 @@
         "solver-determinism-fingerprints",
         "production-benchmarks",
         "operational-traces",
-        "solver-capability-memory"
+        "solver-capability-evidence"
       ],
       "join": "level + solver ref/config",
       "questions": [
@@ -1759,7 +1759,7 @@
         "operational-traces",
         "exact-reference-labels",
         "variant-family-data",
-        "solver-capability-memory"
+        "solver-capability-evidence"
       ],
       "join": "selected corpus + levelId with recorded selection provenance",
       "questions": [
@@ -1807,10 +1807,10 @@
       "boundary": "Trace-selected examples remain development/forensic evidence unless separately sampled."
     },
     {
-      "id": "search-loss-to-capability-memory",
+      "id": "search-loss-to-capability-evidence",
       "assets": [
         "search-loss-evidence",
-        "solver-capability-memory"
+        "solver-capability-evidence"
       ],
       "join": "policy/baseline identity + loss-signature/phenotype",
       "questions": [
