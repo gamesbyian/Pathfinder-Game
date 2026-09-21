@@ -202,6 +202,53 @@ A normal sweep row can therefore lose stage/action/seed resolution when transfor
 
 **Disposition:** confirmed candidate bug; document first, fix only after this audit establishes expected identity semantics across producers.
 
+
+### IR-002 / IR-023 contract verification — configuration and action identities are distinct canonical types
+
+The final identity audit confirms the intended semantics.
+
+`modules/solver/attempt-identity.mjs` defines:
+
+- **configuration identity** via `formatAttemptIdentityKey(...)`;
+- **action identity** via `formatAttemptActionKey(...)`, explicitly documented as stable scheduler/research identity comprising **stage + config + repair seed salt**, with gate and budget remaining separate dimensions.
+
+`portfolio-solve-sweep-lib.mjs` already preserves this distinction correctly:
+
+- every attempt record carries `configKey`;
+- when a canonical stage exists it also carries `actionKey`;
+- a solved level row carries `winningConfig` and `winningActionKey` separately.
+
+The compact failure-response contract likewise exposes both `configurationKey` and `actionKey`, and the search-loss plan explicitly requires stable stage/action/config/gate identity as separate dimensions.
+
+Current `compactFailureResponseRow()` does not preserve that separation for common row shapes:
+
+```text
+configurationKey <- row.configurationKey ?? row.configKey
+actionKey        <- row.winningConfig ?? row.winningConfigKey ?? row.actionKey ?? techniqueKeys
+```
+
+For production sweep rows this means:
+
+- source `winningConfig` is a **configuration key**;
+- source `winningActionKey` is the real **action key**;
+- compact `configurationKey` becomes null;
+- compact `actionKey` receives the configuration key;
+- `winningActionKey` is ignored.
+
+For method-probe and technique-census rows, `winningConfigKey` is likewise configuration identity, not scheduler action identity. Their compact attempts may have richer attempt-local action/stage identity when available, but the row-level field should not relabel a config as an action merely to avoid null.
+
+Therefore the prospective fix should preserve the type distinction rather than merely prepend `winningActionKey` to the existing fallback chain.
+
+Expected normalization semantics, subject to tests against every producer:
+
+- `configurationKey`: prefer explicit `configurationKey/configKey`, then producer winner configuration mirrors such as `winningConfig` / `winningConfigKey`;
+- `actionKey`: prefer explicit `winningActionKey` / `actionKey`; otherwise remain null unless the producer supplies a value that is genuinely a canonical action identity;
+- `stageId`: remain a separate field;
+- `techniqueKeys`: do not silently masquerade as one action identity for multi-technique cells; keep technique/cell context in its native source or add a separately named compact field only if a real consumer needs it.
+
+**Disposition:** fully specified, high-confidence implementation candidate after this documentation-first phase. Backward compatibility/query migration must be considered because historical compact documents may already contain configuration strings in `actionKey`.
+
+
 ### IR-003 — targeted level-blind sweeps expose less diagnostic telemetry than canonical stress refresh
 
 **Class:** R2/R4.
