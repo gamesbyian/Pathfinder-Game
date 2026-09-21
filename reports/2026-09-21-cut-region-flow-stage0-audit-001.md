@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-21 — current connectivity semantics plus synthetic multigraph theorem tests
 > **Decision:** advance one narrow theorem, **bridge excursion impossibility**, to synthetic proof tests and sampled-state incidence; defer general k-cut/flow machinery
-> **Remaining gate:** measure incremental incidence on connectivity-passing sampled production states before adding a solver observer or consumer
+> **Remaining gate:** execute the wired Stage-B incidence analyzer on a frozen production-frontier sample and measure parent-level recurrence before adding a solver observer or consumer
 > **Evidence role:** development
 > **Selection:** theorem audit nominated by the parity/exact-projection program; no solver outcomes used to select a threshold
 > **Inference scope:** soundness/novelty of one necessary condition only; no production prune is authorized
@@ -129,18 +129,17 @@ Do **not** build general min-cut/flow machinery yet. The bridge form is cheaper 
 - multiple pending objectives / multiple bridges;
 - edge-order invariance.
 
-### Stage B — sampled production-state incidence
+### Stage B — sampled production-state incidence — **TOOLING IMPLEMENTED; EXECUTION NEXT**
 
-Do not run Tarjan on every hot-path connectivity call yet.
+`scripts/stress/cut-bridge-incidence.mjs` now:
+1. replays already-frozen production-frontier prefixes through canonical solver state semantics;
+2. obtains the real connectivity reached multigraph through `connectivityResearchSnapshot()`;
+3. applies BC1 only where ordinary connectivity/volume passes;
+4. reports row incidence and parent-level recurrence separately.
 
-Prefer already frozen/sampleable production frontier prefixes:
-1. reconstruct the exact solver state;
-2. build the same generous reachability multigraph under connectivity semantics;
-3. require ordinary connectivity to pass;
-4. measure BC1 positives and overlap with later existing rejects;
-5. preserve parent as the independent unit.
+The bundled test covers the smallest connectivity-passing bridge-pocket witness and a no-obligation non-reject.
 
-Only non-trivial incremental incidence earns a production-inert observer.
+Do not run Tarjan on every hot-path connectivity call yet. Execute this analyzer on a frozen development frontier population first. Only non-trivial parent-level recurrence earns a production-inert observer.
 
 ## 8. Consumer boundary
 
@@ -155,7 +154,7 @@ If BC1 incidence is negligible, retain cut/flow **response value** as separately
 
 ## 9. Stage-0 disposition
 
-**Advance BC1 only. Stage A is green by construction; Stage B incidence is next.**
+**Advance BC1 only. Stage A and Stage-B tooling are implemented; frozen-population Stage-B execution is next.**
 
 The audit found:
 - a precise theorem;
