@@ -56,14 +56,21 @@ export function extractResearchArtifactEnvelope(document) {
     };
 }
 
-export function assertCanonicalResearchArtifactEnvelope(document) {
+export function assertCanonicalResearchArtifactLocations(document) {
     const envelope = extractResearchArtifactEnvelope(document);
-    if (!envelope.researchBlock) throw new Error('research artifact missing researchBlock');
-    if (!envelope.populationIdentity) throw new Error('research artifact missing populationIdentity');
-    if (!envelope.canonicalCurrent) {
+    const nonCanonicalResearchBlock = envelope.sources.researchBlock.some(source => source !== 'researchBlock');
+    const nonCanonicalPopulationIdentity = envelope.sources.populationIdentity.some(source => source !== 'populationIdentity');
+    if (nonCanonicalResearchBlock || nonCanonicalPopulationIdentity) {
         throw new Error(
-            'current research artifact envelope must use top-level researchBlock and populationIdentity',
+            'current research artifact shared fields must use top-level researchBlock and populationIdentity',
         );
     }
+    return envelope;
+}
+
+export function assertCanonicalResearchArtifactEnvelope(document) {
+    const envelope = assertCanonicalResearchArtifactLocations(document);
+    if (!envelope.researchBlock) throw new Error('research artifact missing researchBlock');
+    if (!envelope.populationIdentity) throw new Error('research artifact missing populationIdentity');
     return envelope;
 }
