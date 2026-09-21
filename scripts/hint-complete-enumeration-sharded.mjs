@@ -64,7 +64,7 @@ const { enumerateFromGate, rootChildrenForGate, planGateShards } = await import(
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
 const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
 const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.ts');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const resolveFromRoot = p => (path.isAbsolute(p) ? p : path.join(ROOT, p));
@@ -161,7 +161,8 @@ if (!isMainThread) {
 async function main() {
     const argMap = parseArgs(process.argv.slice(2));
     const levelsJsonPath = argMap.get('--levels-json') || 'data/levels.json';
-    const rawLevels = readLevelsWithHints(resolveFromRoot(levelsJsonPath));
+    const corpusDocument = readLevelCorpusDocumentWithHints(resolveFromRoot(levelsJsonPath));
+    const rawLevels = corpusDocument.levels;
     const levelNumbers = [...parseLevelSelector(rawLevels, argMap.get('--levels'))].sort((a, b) => a - b);
     const shardsPerGate = Math.max(1, Number(argMap.get('--shards-per-gate') || 4));
     const nodeBudget = Number(argMap.get('--node-budget') || 0); // 0 = unbounded (true "complete")
@@ -352,7 +353,7 @@ async function main() {
             + `${allJobsHaveResults && allExhausted ? 'EXHAUSTIVE' : 'incomplete'}`);
     }
 
-    if (writeLevels && totalNovel > 0) writeLevelsWithHints(resolveFromRoot(levelsJsonPath), rawLevels);
+    if (writeLevels && totalNovel > 0) writeLevelCorpusDocumentWithHints(resolveFromRoot(levelsJsonPath), corpusDocument);
 
     const report = {
         schemaVersion: 1,
