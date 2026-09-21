@@ -1,24 +1,24 @@
 /** Shared pure helpers for sequential and worker portfolio-sweep paths. */
 
-import { formatAttemptActionKey, formatAttemptIdentityKey, normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
-import { normalizeHistoricalSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
+import { formatAttemptActionKey, formatAttemptIdentityKey, parseAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 
-/** Reconstruct canonical config identity from a persisted Attempt shape. */
+/** Reconstruct canonical config identity from a current canonical Attempt shape. */
 export function attemptConfigKey(attempt) {
     return formatAttemptIdentityKey({
-        scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? 'unknown',
-        orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
-        beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention ?? attempt?.diverseBeam, repair: attempt?.repair,
+        scoringProfileId: attempt?.scoringProfileId ?? 'unknown',
+        orderingBiasId: attempt?.orderingBiasId ?? null,
+        beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention, repair: attempt?.repair,
         repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
         admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: attempt?.admissibleOrderLds,
     });
 }
 
-/** Normalize a persisted config string when present; otherwise reconstruct it from Attempt fields. */
+/** Validate a current canonical config string when present; otherwise reconstruct it from Attempt fields. */
 export function canonicalAttemptConfigKey(attempt) {
-    const raw = attempt?.configKey ?? attempt?.config;
-    if (raw != null) return normalizeAttemptIdentityKey(String(raw));
+    const raw = attempt?.configKey;
+    if (raw != null) return formatAttemptIdentityKey(parseAttemptIdentityKey(String(raw)));
     return attemptConfigKey(attempt);
 }
 
@@ -30,10 +30,10 @@ export function canonicalAttemptConfigKey(attempt) {
 export function attemptActionKey(attempt) {
     if (!attempt?.stageId) return null;
     return formatAttemptActionKey({
-        stageId: normalizeHistoricalSolverStageId(attempt.stageId),
-        scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? 'unknown',
-        orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
-        beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention ?? attempt?.diverseBeam, repair: attempt?.repair,
+        stageId: normalizeSolverStageId(attempt.stageId),
+        scoringProfileId: attempt?.scoringProfileId ?? 'unknown',
+        orderingBiasId: attempt?.orderingBiasId ?? null,
+        beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention, repair: attempt?.repair,
         repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
         admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: attempt?.admissibleOrderLds,
@@ -60,16 +60,16 @@ function projectedAttemptError(error) {
     const field = (key) => { try { return error?.[key]; } catch { return undefined; } };
     const rawConfigKey = bounded(field('configKey'), 'unknown', 240);
     let configKey = rawConfigKey;
-    try { configKey = normalizeAttemptIdentityKey(rawConfigKey); } catch {}
+    try { configKey = formatAttemptIdentityKey(parseAttemptIdentityKey(rawConfigKey)); } catch {}
     return {
         name: bounded(field('name'), 'Error', 120),
         message: bounded(field('message'), 'Unknown attempt error', 500),
         gateKey: Number.isFinite(field('gateKey')) ? field('gateKey') : null,
         configKey,
-        scoringProfileId: bounded(field('scoringProfileId') ?? field('profile'), 'unknown', 120),
-        orderingBiasId: (field('orderingBiasId') ?? field('template')) == null
+        scoringProfileId: bounded(field('scoringProfileId'), 'unknown', 120),
+        orderingBiasId: field('orderingBiasId') == null
             ? null
-            : bounded(field('orderingBiasId') ?? field('template'), 'unknown', 120),
+            : bounded(field('orderingBiasId'), 'unknown', 120),
     };
 }
 
@@ -90,15 +90,15 @@ export function attemptRecord(a) {
         ...(a.stageId !== undefined ? { stageId: a.stageId } : {}),
         ...(actionKey !== null ? { actionKey } : {}),
         gateKey: a.gateKey,
-        scoringProfileId: a.scoringProfileId ?? a.profile,
-        orderingBiasId: a.orderingBiasId ?? a.template ?? null,
+        scoringProfileId: a.scoringProfileId,
+        orderingBiasId: a.orderingBiasId ?? null,
         beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
         ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),
         // Whitelist error fields; never persist arbitrary thrown objects/stacks.
         ...(a.error !== undefined ? { error: projectedAttemptError(a.error) } : {}),
         ...(a.passNumber !== undefined ? { passNumber: a.passNumber } : {}),
-        ...(a.configKey !== undefined || a.config !== undefined ? { configKey: canonicalAttemptConfigKey(a) } : {}),
+        ...(a.configKey !== undefined ? { configKey: canonicalAttemptConfigKey(a) } : {}),
         ...(a.restart !== undefined ? { restart: a.restart } : {}),
         ...(a.schedulerPhase !== undefined ? { schedulerPhase: a.schedulerPhase } : {}),
         ...(a.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: a.allocatedBudgetMs } : {}),
@@ -106,18 +106,18 @@ export function attemptRecord(a) {
         ...(a.timedOut !== undefined ? { timedOut: a.timedOut } : {}),
         ...(a.bestBadness !== undefined ? { bestBadness: a.bestBadness } : {}),
         ...(a.finalBadness !== undefined ? { finalBadness: a.finalBadness } : {}),
-        ...(a.mechanicBucketRetention || a.diverseBeam ? { mechanicBucketRetention: true } : {}),
+        ...(a.mechanicBucketRetention ? { mechanicBucketRetention: true } : {}),
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(a.repairTurnBiased ? { repairTurnBiased: true } : {}),
-        ...((a.earlyRepairSearch ?? a.repairProbe) ? { earlyRepairSearch: true } : {}),
-        ...((a.repairShrinkRecovery ?? a.repairProbeShrinkRecovery) ? { repairShrinkRecovery: true } : {}),
+        ...(a.earlyRepairSearch ? { earlyRepairSearch: true } : {}),
+        ...(a.repairShrinkRecovery ? { repairShrinkRecovery: true } : {}),
         ...(a.admissibleOrder ? { admissibleOrder: true } : {}),
         ...(a.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
         ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
-        ...((a.mainSearchLateReserve ?? a.mainLoopLateReserve) ? { mainSearchLateReserve: true } : {}),
-        ...((a.goalAttractionDisabledRetry ?? a.attractionDiversity) ? { goalAttractionDisabledRetry: true } : {}),
-        ...((a.coarseStateNearTieRetentionRetry ?? a.dedupNearTieRetry) ? { coarseStateNearTieRetentionRetry: true } : {}),
+        ...(a.mainSearchLateReserve ? { mainSearchLateReserve: true } : {}),
+        ...(a.goalAttractionDisabledRetry ? { goalAttractionDisabledRetry: true } : {}),
+        ...(a.coarseStateNearTieRetentionRetry ? { coarseStateNearTieRetentionRetry: true } : {}),
         ...(a.admissibleOrderNonDefaultRetry ? { admissibleOrderNonDefaultRetry: true } : {}),
         ...(a.connectivityAxisExhaustedRetry ? { connectivityAxisExhaustedRetry: true } : {}),
         ...(a.repairElitePrefixDfsRetry ? { repairElitePrefixDfsRetry: true } : {}),
