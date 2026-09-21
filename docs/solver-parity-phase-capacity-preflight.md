@@ -136,28 +136,9 @@ Report:
 
 ## 4. Premise `WS2-PARITY-RESPONSE-SIGNATURE`: parity as a capability-response axis
 
-### Hypothesis
+Reuse existing evidence before new compute: test a compact current-input parity feature basis against technique-census pairwise discordance, then use saved hint/provenance only for within-success path mechanism evidence. Do not predeclare level classes; derive categories only if stable response regions emerge. Any routing descendant requires independent shared-budget transfer.
 
-A compact **current-input parity feature basis** explains some technique-census discordance or successful-path behavior beyond generic size/density/mechanic descriptors. Do not prespecify named level "types"; derive categories only if stable response regions emerge.
-
-Initial level features:
-- required twist parity for each gate, plus all-even / all-odd / mixed gate demand;
-- twist-pair and same-parity portal-pair counts;
-- best required-phase distance/slack and scalar-to-phase slack loss;
-- spread between best and worse gate phase slack;
-- no-twist initial checkerboard-capacity margin where defined.
-
-### Cheapest discriminator: existing evidence first
-
-1. **Technique census, primary.** Enrich the existing level descriptor join; first test whether parity features predict the **direction of pairwise technique discordance** among fully comparable cells, not merely absolute solve rate. Compare against existing reqLen/area/density/mechanic descriptors and preserve work/censoring semantics.
-2. **Hint/provenance, secondary.** On successful stored paths derive realized twist parity/count, first-twist timing, chosen gate and phase-correction timing. Prefer within-level comparisons across independently discovered paths/techniques. Hints are success-selected and cannot estimate failure prevalence.
-3. **Prospective search-state observation only if nominated.** Reuse the phase-distance/capacity observers to test whether a static response association corresponds to actual search behavior before proposing routing, scoring, retention or repair changes.
-
-### Stop / advance
-
-**Stop** if support is thin or parity adds no stable explanatory value beyond existing descriptors.
-
-**Advance** only if a legal current-input feature predicts differentiated response on a supported population, then require an independent shared-budget transfer before any WS1 selector/routing gate. Historical technique outcomes, hint identities and exact level IDs may nominate the relationship but can never be runtime inputs.
+Full feature basis, evidence semantics and stop/advance rules: [parity response-signature preflight](solver-parity-response-signature-preflight.md).
 
 ## 5. Secondary observational seams
 
@@ -229,49 +210,6 @@ Lane H is a cheap premise-acquisition lane and may run in parallel with the curr
 
 ## 9. Implemented observational seam
 
-The first falsifier machinery is now implemented on this branch.
+The phase-distance and checkerboard-capacity observers are production-inert and share the real production solve path. `solver:parity-invariant-shadow` runs both under a strict whole-solve work envelope and emits the canonical research-resolution envelope. Synthetic witnesses cover incremental phase-distance and color-capacity cases; no production prune, ordering, scoring, routing or repair change is authorized.
 
-### Phase-conditioned distance
-
-- `distance.ts` owns a static two-layer 0-1 relaxation keyed by future twist-jump parity.
-- `prepLevel()` builds the two goal-distance layers only on twist-bearing levels.
-- `evaluatePrunedMove()` compares the required phase layer with the existing scalar goal distance at the same distance-prune seam.
-- `ParityPhaseDistanceObserver` is research-only and cannot affect the returned prune verdict.
-- A synthetic regression witness proves an incremental H1 case: scalar goal distance fits while the required twist phase cannot fit.
-
-### Checkerboard capacity
-
-- `isConnected()` reuses the exact reached set from its existing flood fill.
-- The observer performs only a bounded grid scan; it never launches a second fill.
-- It records the existing scalar-volume result and the over-generous checkerboard-capacity result at the same decision seam.
-- `ParityCapacityObserver` is research-only and cannot affect the connectivity verdict.
-- A synthetic regression witness has compatible endpoint parity and enough total volume, but insufficient fresh capacity on one checkerboard color.
-
-### Synchronous corpus probe
-
-Run:
-
-```bash
-npm run solver:parity-invariant-shadow -- \
-  --corpus=data/stress/stress-levels.json \
-  --work-budget=<fixed-whole-solve-work> \
-  --budget-ms=<generous-wall-safety-deadline> \
-  --out=reports/stress/parity-invariant-shadow/<run>.json
-```
-
-The probe:
-
-- uses the real sequential production `solveLevel` ladder;
-- changes no ablation/profile or solver decision;
-- uses `strictTotalWorkBudget=true` so the scientific work envelope is deterministic;
-- leaves ordinary additive-tier policy intact inside that cap;
-- records both parity-premise participation/opportunity in the same solve;
-- reports observer reach, measurement support, fidelity, coverage, deadline truncation and errors separately;
-- treats no observer reach / deadline truncation / ineligible mechanic regime as indeterminate, never as a clean negative;
-- keeps only bounded example records while aggregating all observer calls.
-
-This is deliberately compatible in spirit with PR #1923's resolution-envelope discipline without duplicating that shared library on this branch. Once #1923 is in the base, the raw `resolutionInputs` should be adapted through the canonical resolution-envelope owner rather than growing a second validator here.
-
-### Decision boundary
-
-The new code is still **observer machinery**, not an earned treatment. No the phase-distance and checkerboard-capacity premises result may change pruning, ordering, scoring, routing or repair until the preflight's stated witness/replay/differential/economic gates are met.
+The response-signature premise is analysis-first and has no new runtime instrumentation yet. See [its preflight](solver-parity-response-signature-preflight.md).
