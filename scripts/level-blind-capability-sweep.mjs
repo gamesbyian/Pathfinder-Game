@@ -17,7 +17,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
+import { parseLevelPositions, readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { buildRow } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool } from './solver-worker-pool.mjs';
@@ -134,27 +134,12 @@ const ablation = enableFlags.length || disableFlags.length
     ? Object.fromEntries([...enableFlags.map(f => [f, true]), ...disableFlags.map(f => [f, false])])
     : null;
 
-function parseLevelSpec(spec, total) {
-    if (!spec) return Array.from({ length: total }, (_, i) => i + 1);
-    const normalized = spec.startsWith('pos:') ? spec.slice(4) : spec;
-    const selected = new Set();
-    for (const token of normalized.split(',').map(s => s.trim()).filter(Boolean)) {
-        const range = token.match(/^(\d+)-(\d+)$/u);
-        if (range) {
-            const a = Number(range[1]), b = Number(range[2]);
-            for (let n = Math.min(a, b); n <= Math.max(a, b); n++) selected.add(n);
-        } else if (/^\d+$/u.test(token)) selected.add(Number(token));
-        else throw new Error(`Cannot parse --levels token "${token}".`);
-    }
-    return [...selected].filter(n => n >= 1 && n <= total).sort((a, b) => a - b);
-}
-
 const parsedCorpus = JSON.parse(readFileSync(corpusPath, 'utf8'));
 const corpusBytes = readFileSync(corpusPath);
 const corpusSha256 = createHash('sha256').update(corpusBytes).digest('hex');
 const rawLevels = Array.isArray(parsedCorpus) ? parsedCorpus : parsedCorpus.levels;
 if (!Array.isArray(rawLevels)) throw new Error(`${corpusPath}: expected an array or {levels:[...]}`);
-const targets = parseLevelSpec(argMap.get('--levels'), rawLevels.length);
+const targets = parseLevelPositions(argMap.get('--levels'), { maxLevel: rawLevels.length });
 const sampleSha256 = createHash('sha256').update(targets.join('\n')).digest('hex');
 const commit = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
 
