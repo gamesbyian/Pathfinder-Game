@@ -1,7 +1,7 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — hostile continuation through `fdf63e3353`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite and sampling leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
+> **Last evidence:** 2026-09-20 — hostile continuation through `d853a7bd04`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite/sampling/partial-metadata leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, durable-retention stale-binding trust, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
 > **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
@@ -377,3 +377,36 @@ The repair now:
 This is deliberately not a new lineage framework. It preserves data the existing validator already owns and proves.
 
 Commits: `7c246797d4`, `924bfcaa28`, `650c388df3`, `04bef5d788`, `ccc20ac2b5`, `fdf63e3353`.
+
+
+## S. Durable retention re-proves existing byte and population claims
+
+The durable experiment-evidence harvester already re-ran the shared decision-bearing predicate, but that predicate is intentionally a pure manifest/contract check. It cannot inspect the files behind a manifest. A downloaded artifact could therefore retain a structurally valid `decisionBearing: true` manifest while the exact result bytes it refers to had changed before durable retention.
+
+The harvester now re-proves two existing publisher-owned claims before copying a bundle:
+
+- when `researchOutcome.binding.resultContentHashes` exists, every publisher-domain level-bearing JSON result is rehashed and the exact hash multiset must still match;
+- for the unambiguous simple-population shape (`populationIntegrity.expectedIds`, no paired arms/components, file primary with `levels[]`), the retained primary rows must still exactly match the expected population.
+
+Composite and paired population ownership is deliberately not guessed here; those remain with their specialist contracts. The harvester is replaying claims that are already explicit and unambiguous, not inventing new entitlement rules.
+
+The self-test now includes both stale exact-result bytes and a result whose content hash is current but whose row population disagrees with `expectedIds`.
+
+Commits: `1db9cdab36`, `1f8961ff26`, `ac2406238e`, `558c89b1ab`.
+
+## T. Exact verdict metadata bindings are cardinality-sensitive
+
+The publisher's result-content hash check already included every bound result file. Its configuration-hash and resolved-SHA checks instead mapped the same result set and then called `.filter(Boolean)`. In a multi-result verdict, one file could therefore omit modern configuration/revision metadata while the binding listed only the sibling that had it; after filtering, the arrays could still compare equal.
+
+Configuration and revision binding now fail closed when any bound result lacks the corresponding metadata or when binding/result cardinality differs. A fixture with two exact-content-bound results, only one carrying configuration/revision identity, is rejected on both dimensions.
+
+Commits: `91f81384ac`, `f3842ee573`.
+
+## U. Shard transport ambiguity cleanup
+
+Two small follow-ups close ambiguity created by the previous shard-topology hardening:
+
+- with an authored technique-census shard count, missing shards are now synthesized only from canonical numeric shard identity rather than also retaining whichever padded directory spelling happened to be present;
+- method-probe staging rejects a mixed flat-and-nested download layout. The Actions transport has two supported shapes: one flat artifact or multiple named artifact directories. Seeing both at once is treated as ambiguous/stale transport evidence rather than silently preferring the named directories and ignoring root shard files.
+
+Commits: `99ba6a284a`, `3aee3ed53a`, `d853a7bd04`.
