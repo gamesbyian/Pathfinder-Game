@@ -15,7 +15,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import path from 'node:path';
 import process from 'node:process';
 import { createHintCapture } from './hint-capture-lib.mjs';
-import { readLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import {
     buildHintHarvestSelectionManifest,
     validateHintHarvestSelectionManifest,
@@ -66,9 +66,10 @@ const corpusState = new Map();
 function stateFor(corpusRel) {
     if (corpusState.has(corpusRel)) return corpusState.get(corpusRel);
     const corpusPath = path.join(root, corpusRel);
-    const levels = readLevelsWithHints(corpusPath);
+    const document = readLevelCorpusDocumentWithHints(corpusPath);
+    const levels = document.levels;
     const byId = new Map(levels.map((level, i) => [String(level.id ?? i + 1), { level, index: i }]));
-    const state = { corpusPath, corpusSha256: sha256(corpusPath), levels, byId };
+    const state = { corpusPath, corpusSha256: sha256(corpusPath), document, levels, byId };
     corpusState.set(corpusRel, state);
     return state;
 }
@@ -176,7 +177,7 @@ for (const file of walk(stagingDir).sort()) {
         };
         if (capture.record(entry.level, syntheticResult)) recordChanges += 1;
     }
-    capture.flush(state.corpusPath, state.levels);
+    capture.flush(state.corpusPath, state.document);
     reportsHarvested += 1;
 }
 
