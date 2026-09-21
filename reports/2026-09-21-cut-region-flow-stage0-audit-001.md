@@ -1,9 +1,9 @@
 # Cut / region-flow Stage-0 audit: bridge-excursion theorem
 
 > **Status:** active
-> **Last evidence:** 2026-09-21 — current `isConnected()` reachability semantics, edge-axis reuse rules, portal single-visit rule, and prior Lane-A separator closeout
+> **Last evidence:** 2026-09-21 — current connectivity semantics plus synthetic multigraph theorem tests
 > **Decision:** advance one narrow theorem, **bridge excursion impossibility**, to synthetic proof tests and sampled-state incidence; defer general k-cut/flow machinery
-> **Remaining gate:** prove the multigraph theorem in code on adversarial synthetic graphs, then measure incremental incidence on connectivity-passing sampled production states before adding a solver observer or consumer
+> **Remaining gate:** measure incremental incidence on connectivity-passing sampled production states before adding a solver observer or consumer
 > **Evidence role:** development
 > **Selection:** theorem audit nominated by the parity/exact-projection program; no solver outcomes used to select a threshold
 > **Inference scope:** soundness/novelty of one necessary condition only; no production prune is authorized
@@ -118,9 +118,9 @@ Do **not** build general min-cut/flow machinery yet. The bridge form is cheaper 
 
 ## 7. Cheapest evidence plan
 
-### Stage A — pure theorem tests
+### Stage A — pure theorem tests — **IMPLEMENTED**
 
-Implement a specialist multigraph helper and require:
+`scripts/stress/cut-bridge-excursion-lib.mjs` owns the specialist theorem helper; its Node test covers:
 
 - bridge-pocket positive;
 - goal-across-bridge non-reject;
@@ -155,7 +155,7 @@ If BC1 incidence is negligible, retain cut/flow **response value** as separately
 
 ## 9. Stage-0 disposition
 
-**Advance BC1 only.**
+**Advance BC1 only. Stage A is green by construction; Stage B incidence is next.**
 
 The audit found:
 - a precise theorem;
