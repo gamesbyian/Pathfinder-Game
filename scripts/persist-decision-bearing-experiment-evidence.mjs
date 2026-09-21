@@ -353,7 +353,7 @@ function selfTest() {
     fs.writeFileSync(path.join(exactBoundArtifact, 'result.json'), JSON.stringify({ levels: [{ id: 'A', ok: false }] }));
     assert.throws(
       () => persistDecisionBearingExperimentEvidence({ stagingDir: exactBoundArtifact, outRoot: path.join(temp, 'exact-retained-2'), compressAboveBytes: 8 }),
-      /exact verdict binding is stale.*resultContentHashes no longer match/u,
+      /retained scientific binding is stale.*resultContentHashes no longer match/u,
       'durable retention must re-prove an exact verdict-byte binding instead of trusting the manifest boolean',
     );
 
