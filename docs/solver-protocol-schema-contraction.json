@@ -154,7 +154,9 @@
       "concept": "research block location",
       "owners": [
         "scripts/research-relations-lib.mjs",
-        "scripts/research-consumption-link.mjs"
+        "scripts/research-consumption-link.mjs",
+        "scripts/research-enrichment-link.mjs",
+        "scripts/research-artifact-envelope-lib.mjs"
       ],
       "forms": [
         "document.researchBlock",
@@ -165,15 +167,20 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "one shared research envelope/extractor and one current producer location"
+      "status": "in-progress",
+      "retirementGate": "one shared research envelope/extractor and one current producer location",
+      "progress": "Shared decoder owns top-level/nested reads across relations, consumption-link, and enrichment-link; conflicting duplicate researchBlock locations fail closed. Canonical current location is top-level researchBlock. Current producer census/guard remains."
     },
     {
       "id": "PSC-009",
       "concept": "research population identity location",
       "owners": [
         "scripts/research-relations-lib.mjs",
-        "scripts/research-consumption-link.mjs"
+        "scripts/research-consumption-link.mjs",
+        "scripts/research-enrichment-link.mjs",
+        "scripts/research-artifact-envelope-lib.mjs",
+        "scripts/capture-search-loss-evidence.mjs",
+        "scripts/search-loss-real-canary.mjs"
       ],
       "forms": [
         "document.populationIdentity",
@@ -185,8 +192,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingress-adapter",
-      "status": "open",
-      "retirementGate": "one canonical current population-identity location; historical alternatives normalize at ingress"
+      "status": "in-progress",
+      "retirementGate": "one canonical current population-identity location; historical alternatives normalize at ingress",
+      "progress": "Shared decoder owns three historical/current identity locations and rejects conflicts. Search-loss current producers now write top-level populationIdentity; historical nested capture identity remains fixture-backed readable. Broader current-producer guard/census remains."
     },
     {
       "id": "PSC-010",
@@ -378,5 +386,7 @@
       "status": "open",
       "retirementGate": "choose and document one canonical sidecar/event model before additional producer variants appear"
     }
-  ]
+  ],
+  "lastUpdated": "2026-09-20",
+  "activePullRequest": 1937
 }
