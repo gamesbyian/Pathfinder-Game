@@ -99,7 +99,7 @@ async function writeFixtureCorpus(dirAbs, level) {
     // the parent's own real id keeps sibling ids (F<suffix>-NN) traceable in assertions below.
     // Persist through the canonical hint-record authority; `.hints` is only a derived view.
     setLevelHintRecords(level, [{ path: witnessPath, provenance: [] }]);
-    writeLevelCorpusDocumentWithHints(levelsPathAbs, { levels: [level], metadata: {}, storageShape: 'array' });
+    writeLevelCorpusDocumentWithHints(levelsPathAbs, { levels: [level], metadata: {}, storageShape: 'array' }, { changedHintLevels: [level] });
     return levelsPathAbs;
 }
 
