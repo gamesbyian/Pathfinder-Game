@@ -616,6 +616,56 @@ However the producer semantics differ:
 **Disposition:** documentation/query-semantics issue first. Do not solve by fabricating a universal progress metric. Any cross-family research use should name the measurement semantics or use the bounded progress observer where comparable best-over-time behavior is actually needed.
 
 
+
+### IR-022 — run-linked hint discovery process is only as durable as its source solver report
+
+**Class:** R1/R2 generated-interface dependency.
+
+The durable Hint schema intentionally does not embed the whole attempt sequence preceding every discovered solution.
+
+Instead, `hint-discovery-process.mjs` reconstructs that process offline from a solver report:
+
+- locate the first successful attempt;
+- retain compact projections of all preceding attempts;
+- retain the compact winning attempt;
+- bind the result to run/protocol/solver/population identity from an experiment contract when available;
+- exact-match the solution path to stored Hint evidence.
+
+This is a good normalization design: it avoids bloating every Hint event with dependent attempt history.
+
+But the process evidence is **derived from the source solver report**. The generated document explicitly records `sourceReport`, and the resource registry lists `hint-discovery-process` as a generated interface rather than a durable store.
+
+Therefore a valid solution can survive indefinitely in hint provenance while its discovery-process history becomes unreconstructable if the source report was artifact-only and expires.
+
+The risk is producer-dependent:
+
+- canonical refresh/census or decision-bearing experiment bundles may retain the relevant primary rows;
+- artifact-only exploratory runs may not;
+- a failed/cancelled run may salvage the Hint but not the report rows needed to recover preceding failures.
+
+This is a concrete example of why **success durability does not imply process durability**.
+
+**Disposition:** do not expand the Hint schema by default. First inventory which recurring consumers actually need longitudinal pre-win process evidence after source-artifact expiry; the failure-evidence plan already prefers sibling joins over direct Hint bloat.
+
+### IR-023 — top-level action identity degradation propagates into longitudinal phenotype and join products
+
+**Class:** R5 with downstream blast radius.
+
+IR-002 identified that the compact failure-response row-level `actionKey` does not currently consider `winningActionKey`, even when the source sweep row has it.
+
+That degraded field is consumed downstream:
+
+- `failure-response-novelty-lib.mjs` includes row-level `actionKey` and `stageId` in the categorical failure phenotype used for longitudinal novelty/saturation analysis;
+- `failure-evidence-purpose-query.mjs` exposes the row-level action/stage identity in purpose-filtered evidence;
+- `hint-failure-process-join-lib.mjs` carries row-level action/stage identity into comparable failure records.
+
+Full compact attempts may still retain their own correct `attempt.actionKey`, so the evidence is not wholly destroyed. But the canonical row-level identity used by higher-level reducers can collapse distinctions that the source row already knew.
+
+**Research consequence:** two observations that differ in winning stage/action/seed context can appear more similar at the row phenotype layer than the source evidence warrants.
+
+**Disposition:** remains a narrow, high-confidence projection bug candidate. Investigation should confirm intended row-level semantics across all producers before implementation, but this no longer looks like mere presentation polish.
+
+
 ## 6. Positive findings / boundaries already working well
 
 The audit must record good boundaries as well as defects.
