@@ -137,19 +137,24 @@
       "concept": "raced solver capability surface",
       "owners": [
         "scripts/solver-parallel/race.mjs",
-        "scripts/solver-parallel/race-opts.mjs"
+        "scripts/solver-parallel/race-opts.mjs",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/portfolio-solve-sweep-worker.mjs",
+        "scripts/stress/benchmark.mjs",
+        "scripts/portfolio-solve-sweep-worker-node-test.mjs"
       ],
       "forms": [
         "full SolveOpts surface",
         "race-supported option projection"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": false,
       "persistedExternalRequirement": false,
       "treatment": "execution-contract-split",
-      "status": "open",
-      "retirementGate": "race backend either runs canonical orchestration or exposes a narrower typed request that cannot impersonate full solve"
+      "status": "complete",
+      "retirementGate": "closed: raced backend can no longer impersonate full solve or silently accept unsupported per-level options",
+      "progress": "Raced execution now exposes an explicit narrow per-level request contract. RACE_LEVEL_OPTS_FIELDS declares exactly timeBudgetMs, overallBudgetMs, ablation, repairAdditiveBudgetMultiplierOverride, and goalAttractionDisabledRetryBudgetFractionOverride. Full SolveOpts callers project through toRaceLevelOpts(); createRacePool().solveLevel() independently enforces assertRaceLevelOpts() so direct callers cannot bypass capability validation. solveLevelRaced() explicitly separates poolSize from per-level options."
     },
     {
       "id": "PSC-007",
