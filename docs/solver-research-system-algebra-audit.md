@@ -22,48 +22,27 @@ Do **not** build a generic algebra layer. Promote an operator only when:
 
 ## A. Evidence applicability — **IMPLEMENTED**
 
-`research-evidence-applicability-lib.mjs` now exposes the purpose-local meet
-`admissible > context-bound > inadmissible`.
-Combining already-classified constituents for one use takes the weakest required value. Tests cover identity, weakening, absorbing inadmissibility, commutativity, idempotence and associativity.
-
-Boundary: never combine classifications from different purposes/regimes without reclassification. This is not a global evidence-quality score. Current hint/failure classifiers mostly aggregate alternative observations, so they must **not** be migrated to this meet; the operator is for genuinely conjunctive evidence requirements.
+Purpose-local meet: `admissible > context-bound > inadmissible`, with algebraic-law tests. Use only for genuinely conjunctive requirements already classified for the same purpose/regime. Hint/failure observations are usually alternatives, so do not aggregate them with this meet.
 
 ## B. Population identity sets — **IMPLEMENTED**
 
-`research-population-identity-lib.mjs` now exposes canonical same-domain set comparison: equal, left proper subset/superset, overlap, disjoint, plus intersection/difference/union counts and identities.
+Canonical same-domain relation: equal, proper subset/superset, overlap, disjoint, plus intersection/difference/union detail. Callers still prove identity-basis compatibility. Capability-memory reuses it for generic historical/pairwise overlap; policy-specific greedy coverage remains local.
 
-Boundary: callers still prove corpus/identity-basis compatibility. The helper deliberately does not infer semantic domain or auto-build cross-domain unions/hashes. Capability-memory now reuses it for historical-signature intersections and pairwise nomination overlap; policy-specific greedy coverage remains local.
+## C. Research-block consumption — **AUDIT CLOSED**
 
-## C. Research-block consumption — **AUDIT CLOSED; SUMMARY VIEW SUFFICIENT**
+Consumption is monotone/scoped; immutable source blocks plus sidecars remain canonical. A summary view and `summarizeResearchBlockUsageOverlap()` report consumption and proposed-parent overlap, including unresolved family scope. Both are diagnostic; `researchBlockEligibility()` remains authoritative. No spent/unspent state machine.
 
-`solver-research-block-lineage.mjs` behaves like a scoped consumable resource: history grows monotonically; copying artifacts does not mint independence; confirmation/transfer eligibility is lineage/scope-sensitive; development remains reusable.
+## D. Observability envelopes — **CENSUS NEGATIVE**
 
-The call-site/docs audit found one canonical recording path: `research:record-consumption` writes sidecars, including matched-cohort parent scopes derived from selection artifacts, while source blocks remain immutable. No competing fresh/spent registry or alternate block mutation path is currently authoritative.
+Current producers do not require same-question multi-envelope composition: they reconcile inputs before one envelope or emit distinct-question envelopes. The exploratory helper was removed. Reopen only when independent artifacts for one question/interpretation contract must jointly establish resolution; require typed compatibility, never axis max/min.
 
-The relation model exposes a pure consumption summary. `summarizeResearchBlockUsageOverlap()` now also compares a proposed parent set with immutable block lineage and reports known-consumed overlap, parent-scope apparent untouched overlap, and unresolved family scopes. It is diagnostic only; `researchBlockEligibility()` remains authoritative. Do not add a spent/unspent state machine.
+## E. Independence vectors — **ORDER ABSENT**
 
-## D. Observability envelopes — **COMPOSITION CENSUS NEGATIVE; KEEP SINGLE-ENVELOPE OWNER**
+No aggregate score. Pareto relations become meaningful only after an axis earns a stable ordered vocabulary; current values remain study-authored prose. Never compare raw strings.
 
-The eight axes form an explicit product space, but current producers do not expose a real same-question multi-envelope composition problem:
-- WS2 may read multiple raw evidence documents, then reconciles them before emitting one envelope;
-- reserve-starvation emits one envelope under one frozen sample/interpretation contract;
-- the parity shadow emits separate envelopes for separate questions.
+## F. Claim derivation / invalidation — **NOT EARNED**
 
-Therefore the exploratory multi-envelope composition helper was removed before merge. A generic axis max/min remains unsafe because blockers can be instrument-local and fidelity/coverage require joint identity proof.
-
-Reopen only when at least two independent artifacts for the same question/interpretation contract must jointly establish resolution. Then define a typed bundle contract with explicit compatibility proof rather than composing statuses by rank.
-
-## E. Independence vectors — **PARETO IDEA REAL; ORDER ABSENT**
-
-The no-score design is correct. Pareto dominance becomes meaningful only after individual axes have stable ordered vocabularies; today values are intentionally prose.
-
-Producer inspection confirms the vector is commonly frozen and propagated intact, but axis values remain study-authored prose. Normalize only axes with genuinely repeated categories; never compare/order raw strings or synthesize an overall independence score.
-
-## F. Claim derivation / invalidation — **PROMISING, NOT EARNED**
-
-Claim capsules already encode direct material dependencies and bounded reverse invalidation. A transitive reevaluation closure would be useful, but there is not yet one authoritative persisted multi-claim graph and relation kinds need explicit composition laws.
-
-Current WS2 claim production still derives from artifacts/contracts/protocols rather than upstream claim identities, so there is no real multi-hop claim chain yet. Revisit only when persisted claim-to-claim identity edges exist; closure would mean “reconsider,” never “rewrite.”
+Direct dependencies exist, but no authoritative persisted claim→claim chain does. Revisit when such edges appear. Any closure means “reconsider,” never “rewrite.”
 
 ## G. Research-unit topology — **NARROW GROUPING PRIMITIVE EARNED**
 
