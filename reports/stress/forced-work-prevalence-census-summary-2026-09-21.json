@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-forced-work-prevalence-result-summary",
+  "date": "2026-09-21",
+  "sourceRunId": 35659746572,
+  "sourceArtifactId": 10666891944,
+  "sourceArtifactDigest": "sha256:a66fa018aa6496bca0c357ef5521996b45fad574fefbabc10c2dfafef6cf4eac",
+  "headSha": "ab0e21263f26460d3813856e48f2d2ab8cfbec44",
+  "population": {
+    "manifest": "data/stress/forced-work-prevalence-sample-2026-09-21.json",
+    "independentParents": 64,
+    "sourceResidualCount": 531
+  },
+  "protocol": {
+    "profile": "objectiveFirst",
+    "beamWidth": 5000,
+    "perGateWorkBudget": 5000000,
+    "wallSafetyMs": 600000
+  },
+  "coverage": {
+    "runs": 64,
+    "exhausted": 63,
+    "workBudgetPhaseBoundary": 1,
+    "timedOut": 0
+  },
+  "aggregate": {
+    "expandedParents": 19260501,
+    "oneSuccessorParents": 7617557,
+    "oneSuccessorParentRate": 0.3955014981178319,
+    "totalExpansionWork": 90572067,
+    "oneSuccessorExpansionWork": 22944663,
+    "oneSuccessorExpansionWorkShare": 0.25333045562491135
+  },
+  "parentDistribution": {
+    "minExpansionWorkShare": 0.11683004566701091,
+    "medianExpansionWorkShare": 0.24806710810645402,
+    "meanExpansionWorkShare": 0.2513622592414563,
+    "p90ExpansionWorkShare": 0.3368584857693163,
+    "maxExpansionWorkShare": 0.46645689521997546,
+    "parentsAtOrAboveFivePercent": 64,
+    "parentsAtOrAboveTwentyPercent": 47
+  },
+  "chains": {
+    "observedChainStarts": 4932517,
+    "maxObservedLength": 19,
+    "maxObservedChainWork": 196,
+    "terminationCounts": {
+      "branch": 2363307,
+      "forced-child-not-retained": 1700586,
+      "dead-end": 868624
+    },
+    "note": "Corrected post-hard-prune child identity. The initial run's generated-stage diagnostic path list included candidates later removed by hard pruning; prevalence/work totals were unaffected."
+  },
+  "disposition": "HEADROOM_POSITIVE",
+  "interpretation": "The preregistered prevalence gate clears decisively. This is an oracle ceiling over measured parent-expansion work, not expected production savings. Next measure capture fraction and semantic safety before any forced-chain consumer."
+}
