@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK } from './cell-key.js';
 import { buildWireLevelData, parseRawLevel } from './level-codec.js';
-import { validateCandidatePath } from './path-validator.js';
+import { decodeCandidatePath, validateCandidatePath, validateCanonicalPath } from './path-validator.js';
 
 // 1-based wire coords → 0-based packed key
 const K = (x: number, y: number) => PACK(x - 1, y - 1);
@@ -32,6 +32,24 @@ function level(overrides: any = {}) {
 }
 
 // ── Basic shape and coordinate formats ────────────────────────────────────────
+
+test('decodes legacy/raw path encodings before canonical referee validation', () => {
+    const l = level({ grid: { w: 5, h: 1 }, reqLen: 4 });
+    const expected = keys([1, 1], [2, 1], [3, 1], [4, 1], [5, 1]);
+    assert.deepEqual(decodeCandidatePath([[1, 1], [2, 1], [3, 1], [4, 1], [5, 1]]), expected);
+    assert.deepEqual(decodeCandidatePath([
+        { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }, { x: 4, y: 0 },
+    ]), expected);
+    assert.equal(decodeCandidatePath(['bogus', null] as any), null);
+
+    const canonical = validateCanonicalPath(l, expected);
+    assert.equal(canonical.ok, true, (canonical as any).reason);
+    assert.match(
+        (validateCanonicalPath(l, [[1, 1], [2, 1]] as any) as any).reason,
+        /Invalid canonical path key/,
+        'canonical referee must not reinterpret wire-coordinate arrays',
+    );
+});
 
 test('accepts a straight corridor solution in packed-key, [x,y], and {x,y} formats', () => {
     const l = level({ grid: { w: 5, h: 1 }, reqLen: 4 });
