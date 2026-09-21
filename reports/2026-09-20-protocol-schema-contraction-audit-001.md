@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-20 — structural audit identified thirteen live protocol/schema contraction seams and classified their ownership.
 > **Decision:** the repeated "same concept, several shapes" seams justify a focused contraction program. Historical evidence remains readable while current machinery moves toward canonical-only protocols.
-> **Remaining gate:** execute and close the work in `docs/solver-protocol-schema-contraction-plan.md`.
+> **Remaining gate:** none for this audit; the contraction plan completed 23/23 registered seams in PR #1937. Reopen only on evidence of a newly duplicated live protocol/schema or a regression that restores retired compatibility.
 
 > **Scope:** solver + solver-research machinery, emphasizing current live polymorphism rather than naming residue.
 
