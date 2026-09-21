@@ -1,11 +1,9 @@
 # Solver family reuse architecture audit 001
 
-> **Status:** static architecture conclusion; quantitative census tooling committed, execution pending.
-> **Date:** 2026-09-20
-> **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Evidence role:** solve-less / reuse-more architecture audit.
-> **Decision:** use existing family provenance directly where constructive reuse is operationally allowed; do not build global symmetry canonicalization or consume family witnesses inside blind capability experiments.
-
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — family provenance audit found legitimate constructive and partial-compilation reuse while preserving blind-capability boundaries.
+> **Decision:** Reuse explicit family provenance where operationally legal; do not treat generated-family witnesses as cold solver capability.
+> **Remaining gate:** Use the committed family reuse censuses to decide whether partial compilation has enough field-level invariance to implement.
 ## 1. Question
 
 The batch-digestion audit asked whether historical computation can become a reusable asset rather than
