@@ -7,13 +7,13 @@
 
 Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
 
-## Data-audit guardrail
+## Data guardrail
 
-C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts, never historical identity/outcome/hints/capability membership. Negatives close only tested claims.
+C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts, never historical outcomes/identity/hints. Negatives close only tested claims.
 
-## Portfolio posture
+## Portfolio
 
-Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. [Rules/register](solver-capability-invention-program.md): `data/stress/capability-invention-demand.json`.
+**HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. [Rules/register](solver-capability-invention-program.md): `data/stress/capability-invention-demand.json`.
 
 Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs need freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
@@ -22,7 +22,7 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 **State:** ACTIVE / two-front portfolio.
 
-**Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
+**Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; classes 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
 - **Classes 1-3:** class 1 has no menu headroom. **Class 3 RESOLVED:** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative; repair deadline and admissible-order reserve starvation have separate follow-ups. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
