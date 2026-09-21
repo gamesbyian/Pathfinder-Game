@@ -1,9 +1,9 @@
 name: Forced-work prevalence one-shot
 
 on:
-  push:
+  pull_request:
     branches:
-      - chatgpt/forced-work-prevalence-probe-2026-09-21
+      - main
     paths:
       - .github/workflows/forced-work-prevalence-one-shot.yml
 
