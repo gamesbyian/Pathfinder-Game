@@ -42,6 +42,7 @@ export function validateCapabilityInventionDemand(doc) {
     }
     if (doc.schemaVersion !== 1) errors.push('schemaVersion must equal 1');
     requireNonEmptyString(doc.purpose, 'purpose', errors);
+    requireNonEmptyString(doc.researchQuestion, 'researchQuestion', errors);
     if (!Array.isArray(doc.rows)) {
         errors.push('rows must be an array');
         return errors;
