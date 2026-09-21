@@ -1,3 +1,5 @@
+import { failureResponseIdentityView } from './solver-failure-response-lib.mjs';
+
 /**
  * Longitudinal novelty/saturation analysis for compact failure-response evidence.
  *
@@ -39,11 +41,12 @@ function categoricalAttempt(attempt) {
  * those are compatibility strata, not the phenomenon itself.
  */
 export function failureResponseRecordPhenotype(row) {
+    const identity = failureResponseIdentityView(row);
     return {
         outcome: row?.outcome ?? 'unknown',
-        actionKey: row?.actionKey ?? null,
+        actionKey: identity.actionKey ?? null,
         stageId: row?.stageId ?? null,
-        configurationKey: row?.configurationKey ?? null,
+        configurationKey: identity.configurationKey ?? null,
         participated: typeof row?.participated === 'boolean' ? row.participated : null,
         reached: typeof row?.reached === 'boolean' ? row.reached : null,
         exhausted: typeof row?.exhausted === 'boolean' ? row.exhausted : null,
