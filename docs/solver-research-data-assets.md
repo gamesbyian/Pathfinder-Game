@@ -68,7 +68,7 @@ Generic exact/reference workflows are acquisition surfaces, not universal archiv
 
 ## High-value joins
 
-Use the smallest useful join. High-value examples include failure response × census/benchmarks, provenance × profiles/census, hint discovery process × failure response/manifests, hint harvest selection × provenance/manifests, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units.
+Use the smallest useful join: failure response × census/benchmarks, provenance × profiles/census, hint process × failure response/manifests, harvest selection × provenance/manifests, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units.
 
 ### Four-resource lineage recipe
 
