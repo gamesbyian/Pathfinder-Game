@@ -1,9 +1,9 @@
 # Response-guided execution protocol
 
 > **Status:** active
-> **Last evidence:** 2026-09-21 — execution contract frozen; parity/orientation cohorts, paired-width consumer oracle, and BC1 Stage-B screen are specified but not yet dispositioned here.
-> **Decision:** use one frozen development contrast population for parity/orientation, explicit frozen inversion IDs for paired-width, and parent-level recurrence for BC1; none of these development analyses authorize production routing or pruning.
-> **Remaining gate:** execute the frozen development screens, record their dated dispositions, and advance only the smallest consumer earned by those results.
+> **Last evidence:** 2026-09-21 — frozen execution completed in GHA run `35560075075` (artifact `10621363382`): parity/orientation contrasts, both paired-width cohorts, and BC1 Stage-B.
+> **Decision:** close the tested richer portal-parity and static orientation explanations; advance non-nested width survivor composition to bounded viability/dominance tracing; advance BC1 to a production-inert safety/economics consumer. No production routing or pruning is authorized.
+> **Remaining gate:** downstream consumers now live in canonical workstreams: selected CW/CCW operational traces, bounded exclusive-prefix viability/dominance, and BC1 reference-safety/cost measurement.
 > **Question family:** response-guided capability invention + `WS2-CUT-BALANCE-PROJECTION`.
 > **Evidence role:** development.
 > **Selection rule:** freeze cohorts before reading parity/orientation outputs; preserve parent identity for BC1 incidence.
@@ -90,6 +90,16 @@ npm run research:cut-bridge-incidence -- \
 ```
 
 Report sampled rows/parents, connectivity-passing rows/parents, conflict rows/parents, and conflict-parent recurrence. Zero or near-zero parent recurrence closes BC1 as a near-term prune candidate on this population; material recurrence earns a larger development incidence pass before any observer.
+
+## Executed dispositions
+
+- **Portal/parity contrast:** closed in tested form. Raw portal count remains the strongest separator on both frozen plain-vs-mechanic-buckets cohorts; twist/same-parity decomposition and gate-demand parity do not add a stronger stable distinction.
+- **Orientation contrast:** closed in tested static form. Perimeter beam tops out at `|d|=0.249`; perimeter DFS at `|d|=0.426`, with different leading descriptors. Move to selected operational traces.
+- **Paired 2K/5K frontier:** non-nested survivor regimes confirmed. Objective: 20/29 parents have 2K-only support at a comparable gate, mean Jaccard 0.412. Intersection-harvest: 25/39, mean Jaccard 0.433. This earns retention/dominance/regime explanation only, not width routing.
+- **BC1 Stage-B:** strongly positive incidence. 105/263 connectivity-passing states conflict across 22/24 eligible parents (91.7% parent recurrence). This earns a production-inert safety/economics consumer only.
+- **Later-outcome overlap:** not measurable from the frozen BC1 frontier because no later disposition labels were captured. Capture prospectively in the earned observer study; do not backfill an outcome join after seeing incidence.
+
+Full interpretation and closure semantics live in the dated nomination and cut/flow reports.
 
 ## Stop rules
 
