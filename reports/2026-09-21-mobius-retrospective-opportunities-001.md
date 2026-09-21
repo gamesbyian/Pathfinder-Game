@@ -1,6 +1,9 @@
 # Möbius retrospective: parity, exact projections, research algebra, and capability invention
 
-> **Status:** retrospective synthesis and handoff.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — response-guided invention, research-algebra hardening, and static parity/portal feature extraction on PR #1938
+> **Decision:** preserve the closed-loop invention method and route each remaining opportunity to its owning method/deferred surface rather than creating a new queue
+> **Remaining gate:** none
 > **Scope:** the parity → exact-projection → research-system-algebra session and its second-order opportunities.
 > **Priority authority:** [solver optimization workstreams](../docs/solver-optimization-workstreams.md).
 > **Method authorities:** [capability invention](../docs/solver-capability-invention-program.md), [small exact projections](../docs/solver-small-exact-projections-program.md), [response-guided invention](../docs/solver-response-guided-capability-invention.md), and [research operating model](../docs/solver-research-operating-model.md).
