@@ -263,6 +263,48 @@ Comments document that combined reports previously dropped some budget context, 
 
 This is evidence that adapter/combiner boundaries deserve systematic sibling inspection rather than assuming current problems are isolated.
 
+
+## 5A. Preliminary workflow durability matrix
+
+This matrix is intentionally about **research reconstruction**, not merely whether a workflow uploads an artifact. A durable hint can preserve a success while still losing the failed-attempt/process evidence from the same run.
+
+| Producer/workflow | Raw/shard retention | Combined/standard retention | Canonical/durable behavior | Preliminary retention disposition |
+|---|---:|---:|---|---|
+| `solver-stress-refresh.yml` | 90d | 90d standard + report artifact | complete canonical runs commit combined reports, capability-run summaries/maps/timeline, baselines and hints | strong durability; inspect whether rich row fields survive canonical projection |
+| `technique-census.yml` | 14d shards | 30d intermediate, 90d combined/standard | combined run directory and discovered hints are committed | strong combined-row durability; raw shard/log detail still ephemeral |
+| `collect-variant-family-dataset.yml` | 90d | 90d | family data, attempt reports, logs/source provenance committed to research branch | strong durability; inspect per-task transient fields |
+| `solver-diagnostics.yml` | 30d full diagnostic artifact | 90d standard | audit history, hints, drift report committed | generally durable; distinguish console-only diagnostics |
+| `solver-highbudget-unsolved-sweep.yml` | 90d | 90d | full-cohort rounds commit combined reports/telemetry/hints; gap fills deliberately defer aggregate persistence pending reconciliation | conditional but explicit; gap-fill research depends on reconciliation before artifact expiry |
+| `solver-broad-confirmation.yml` | 90d | 90d | artifact-only workflow, but standard decision-bearing experiment evidence is eligible for the shared harvester/durable bundle path | likely durable when valid decision-bearing v3 publication succeeds; verify non-decision-bearing/failure paths |
+| `solver-residual-confirmation.yml` | 90d | 90d | same decision-bearing durable-evidence rail as broad confirmation | likely durable for completed decision-bearing result; verify phase-1 explanatory evidence |
+| `static-portfolio-confirmation.yml` | 90d | 90d | artifact-only, included in durable decision-bearing harvest family | likely durable when publication qualifies |
+| `solver-routing-regime-sample-ab.yml` | 90d | 90d | artifact-only; standard compact failure response published; not obviously a canonical report writer | durability beyond Actions depends on decision-bearing retention/other report consumers; verify |
+| `solver-level-blind-targeted-sweep.yml` | 90d | 90d | artifact-only; compact failure-response persistence is opt-in; valid solves may be harvested | **R1 candidate:** ordinary exploratory negative/process evidence can expire unless separately persisted or decision-bearing |
+| `method-probe-sweep.yml` | 14d | 30d combined, 90d standard | no canonical result commit in workflow | **R1 confirmed class:** non-solution probe evidence is Actions-retention-bound unless another resource/report imports it |
+| `search-loss-real-canary.yml` | 30d | 30d | canary/capture/preflight artifact only | **R1 candidate:** rich instrumentation evidence expires unless intentionally promoted/persisted elsewhere |
+| `cpsat-explicit-prefix-reference.yml` | 30d shard/result; 90d analysis/standard | 90d standard | artifact-only in inspected workflow | **R1 candidate:** exact/reference rows may outlive reports only if separately imported; verify consumers before calling actual loss |
+| `cpsat-hint-harvest-sweep.yml` | 30d | 30d combined, 90d standard | discovered hints committed/harvested | success evidence durable; unsuccessful/reference-process detail mostly ephemeral |
+| `solver-combine-sweep-runs.yml` | n/a input reconciliation | 90d | combined standard result; durable only when downstream decision-bearing harvester or later report captures it | utility itself should not be assumed archival |
+| `solver-production-replay-baseline.yml` | to complete | to complete | history-aware benchmark family included in hint/evidence harvesting | pending detailed inspection |
+
+### Durability observations
+
+1. **The repo does not have a blanket evidence-retention problem.** Canonical refresh, technique census, diagnostics, family collection, and full high-budget runs already preserve substantial combined evidence.
+2. **The sharp edge is exploratory/specialist work.** Method probe, targeted sweeps, search-loss canaries, and some exact/reference tools can create unique negative/process observations without a durable primary-row destination.
+3. **Success rescue and process rescue are different.** A harvester can reconstruct a valid solved path from an ephemeral run while the unsuccessful attempts preceding it, or comparable failed parents from the same run, still disappear.
+4. **Decision-bearing durability is intentionally strong but selective.** That protects conclusions after promotion/closeout; it does not automatically preserve the exploratory observations that nominate the next hypothesis.
+5. **Artifact-only is not itself a defect.** It becomes R1 only when the observation is plausibly reusable, not represented in another durable resource, and expected to matter after the retention horizon.
+
+### Immediate verification targets from the matrix
+
+- verify exactly which artifact-only workflows produce `decisionBearing=true` manifests and therefore reach durable experiment retention;
+- inspect failed/cancelled publication paths: whether a red run's negative/process rows can become durable or only its successful hints are rescued;
+- identify specialist exact/reference outputs already imported into canonical resource assets before labeling them R1;
+- verify whether routing-regime A/B evidence is durably consumed by dated reports/resources or only Actions;
+- compare phase-1 versus phase-2 retention in residual confirmation;
+- inspect one-shot/deleted-workflow policy for whether deleting the wrapper can strand artifact-only primary evidence after Actions expiry.
+
+
 ## 6. Positive findings / boundaries already working well
 
 The audit must record good boundaries as well as defects.
