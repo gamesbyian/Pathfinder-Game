@@ -1,7 +1,7 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — hostile continuation through `160634195e`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite/sampling/partial-metadata leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, durable-retention stale-binding trust, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
+> **Last evidence:** 2026-09-20 — hostile continuation through `5edc457817`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite/sampling/partial-metadata leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, durable-retention stale-binding trust, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
 > **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
@@ -432,3 +432,12 @@ Durable retention rechecks any declared entry digest before copying. This gives 
 A hostile fixture mutates an embedded-verdict primary after its manifest digest is written and verifies that durable retention rejects the artifact.
 
 Commits: `12615826c9`, `053868e93a`, `160634195e`.
+
+
+## X. Final executable-test reachability closure
+
+The closing diff-level audit found one last instance of the second main audit class: a regression test existed but was not on the executable PR test rail. `scripts/method-probe-staging-lib-node-test.mjs` covered the flat/nested artifact-layout resolver, including the new mixed-layout rejection, and had its own package script, but `test:method-probe-staging-lib` was absent from the aggregate `test:node` command used by PR CI.
+
+The test is now wired into `test:node`. A systematic comparison of every changed `scripts/*node-test.mjs` file in this branch against package scripts and the aggregate Node rail found no other changed Node regression test stranded outside PR CI.
+
+Commit: `5edc457817`.
