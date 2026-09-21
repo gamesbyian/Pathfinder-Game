@@ -41,9 +41,9 @@ Interpretation:
 
 ## D. 2K/5K frontier consumer oracle
 
-Use only the explicit development identities already nominated by the frozen relative-advantage contrast. Run the paired frontier oracle at identical profile/checkpoint settings:
+Use the exact `leftOnlyIds` from the two frozen prespecified 2K-vs-5K pairs. Run the paired frontier oracle separately for `objectiveFirst` and `intersectionHarvest` at identical profile/checkpoint settings; do not reselect inversion levels after reading any frontier output:
 
-`npm run research:paired-beam-width-frontier -- --corpus=data/stress/stress-levels-random.json --levels=<explicit frozen 2K-only/5K-only development ids> --profile=objectiveFirst --widths=2000,5000 --depth-fraction=0.2 --out=tmp/paired-width-frontier.json`
+`npm run research:paired-beam-width-frontier -- --corpus=data/stress/stress-levels-random.json --levels=<frozen leftOnlyIds for that width pair> --profile=<objectiveFirst|intersectionHarvest> --widths=2000,5000 --depth-fraction=0.2 --out=<pair-specific output>`
 
 Read first:
 - containment in either direction;
@@ -54,21 +54,42 @@ Do not infer feasibility or dominance from frontier membership alone.
 
 ## E. BC1 bridge-excursion incidence
 
-Construct/freeze a development production-frontier sample first using the existing sampler, preserving parent identity and question:
+Use the exact preregistered Stage-B development screen from the Stage-0 audit:
 
-`node scripts/run-bundled.mjs scripts/stress/production-search-frontier-sampler.mjs -- --corpus=data/stress/stress-levels-random.json --levels=<prespecified development parents> --depth-fraction=0.1 --picks=25 --seed=ws2-cut-balance-bc1-v1 --profile=intersectionHarvest --width=5000 --question=WS2-CUT-BALANCE-PROJECTION --evidence-role=development --population-out=tmp/ws2-bc1-frontier-population.json`
+- parent source: `data/stress/stress-levels-random.json`;
+- selection: uniform deterministic sample of **24 parents**;
+- seed: `ws2-cut-balance-bc1-stageb-v1`;
+- independent unit: parent level;
+- frontier profile: `intersectionHarvest`;
+- width: 5000;
+- depth fraction: 0.20;
+- picks: 12 distinct frontier states per sampled parent;
+- BC1 denominator: only sampled states where existing connectivity/volume passes.
 
-Then:
+Reproduction:
 
-`npm run research:cut-bridge-incidence -- --population=tmp/ws2-bc1-frontier-population.json --corpus=data/stress/stress-levels-random.json --out=tmp/ws2-bc1-incidence.json`
+```bash
+npm run stress:select-random-sample -- \
+  --corpus=data/stress/stress-levels-random.json --corpus-label=corpus2 \
+  --sample=24 --seed=ws2-cut-balance-bc1-stageb-v1 \
+  --out=tmp/bc1-stageb-parents.json
 
-Primary denominator:
-- states where existing connectivity/volume passes.
+BC1_IDS=$(node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('tmp/bc1-stageb-parents.json'));process.stdout.write(r.map(x=>x.levelId).join(','))")
 
-Primary recurrence unit:
-- parent level, not frontier row.
+node scripts/run-bundled.mjs scripts/stress/production-search-frontier-sampler.mjs -- \
+  --corpus=data/stress/stress-levels-random.json --levels="$BC1_IDS" \
+  --depth-fraction=0.20 --picks=12 --seed=ws2-cut-balance-bc1-stageb-v1 \
+  --profile=intersectionHarvest --width=5000 \
+  --question=WS2-CUT-BALANCE-PROJECTION --evidence-role=development \
+  --population-out=tmp/bc1-stageb-frontier.json
 
-Only non-trivial parent-level recurrence earns a production-inert observer.
+npm run research:cut-bridge-incidence -- \
+  --population=tmp/bc1-stageb-frontier.json \
+  --corpus=data/stress/stress-levels-random.json \
+  --out=tmp/bc1-stageb-incidence.json
+```
+
+Report sampled rows/parents, connectivity-passing rows/parents, conflict rows/parents, and conflict-parent recurrence. Zero or near-zero parent recurrence closes BC1 as a near-term prune candidate on this population; material recurrence earns a larger development incidence pass before any observer.
 
 ## Stop rules
 
