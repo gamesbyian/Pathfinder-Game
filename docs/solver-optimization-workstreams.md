@@ -67,7 +67,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane H — parity invariants
 
-**PARALLEL PREMISE OBSERVERS; production unchanged.** `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` run together via `solver:parity-invariant-shadow`. Advance only after resolution-ready incidence and soundness; details: [preflight](solver-parity-phase-capacity-preflight.md) · [audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
+**PARALLEL PARITY PREMISES; production unchanged.** `WS2-PARITY-PHASE-DISTANCE` + `WS2-CHECKERBOARD-CAPACITY` use the shadow probe; `WS2-PARITY-RESPONSE-SIGNATURE` first reuses technique-census and hint/provenance evidence to test parity as a capability-response axis. [preflight](solver-parity-phase-capacity-preflight.md) · [audit](../reports/2026-09-19-solver-parity-invariant-audit-001.md).
 
 ### Post-mining premise-map handoff closeout
 
@@ -85,6 +85,7 @@ Frozen-map mining is complete. P201-P206 remain evidence/method premises only. T
 | 2 | Residual capability + premise acquisition | `active` | **ACTIVE / ECONOMICS CLOSED NEGATIVE** | Failure-response recon on compatible rows, then smallest justified discriminator; first-loss only by explicit selection | `WS2-FAILURE-RESPONSE-RECONNAISSANCE` |
 | 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
 | 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
+| 2R | Parity response signature | `supporting` | **OFFLINE EVIDENCE FIRST** | Census discordance + within-level hint realization; independent transfer before routing | `WS2-PARITY-RESPONSE-SIGNATURE` |
 | 1 | Automatic action selection | `supporting` | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
