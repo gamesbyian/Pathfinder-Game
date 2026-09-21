@@ -44,11 +44,25 @@ jobs:
             --corpus=corpus2 --count=200 --stride=5 --repeats=10 \
             --out=tmp/solver-batch-digestion/corpus2.json
 
+      - name: Measure published solve-relative cost
+        run: |
+          npm run solver:audit-batch-cost -- \
+            --corpus=published --count=160 --repeats=1 --solve \
+            --node-budget=250000 --budget-ms=600000 \
+            --out=tmp/solver-batch-digestion/published-solve.json
+
+      - name: Measure hard Corpus 2 solve-relative cost
+        run: |
+          npm run solver:audit-batch-cost -- \
+            --corpus=corpus2 --count=24 --stride=70 --repeats=1 --solve \
+            --node-budget=250000 --budget-ms=600000 \
+            --out=tmp/solver-batch-digestion/corpus2-solve.json
+
       - name: Summarize evidence
         run: |
           node <<'NODE'
           const fs = require('fs');
-          for (const name of ['published', 'corpus1', 'corpus2']) {
+          for (const name of ['published', 'corpus1', 'corpus2', 'published-solve', 'corpus2-solve']) {
             const doc = JSON.parse(fs.readFileSync(`tmp/solver-batch-digestion/${name}.json`, 'utf8'));
             console.log(JSON.stringify({ name, summary: doc.summary }, null, 2));
           }
