@@ -32,7 +32,6 @@
     "check:css-dead-components": "node scripts/check-css-dead-components.mjs",
     "check:css-class-coverage": "node scripts/check-css-class-coverage.mjs",
     "check:no-solver-level-numbers": "node scripts/check-no-solver-level-numbers.mjs",
-    "check:solveopts-transport-parity": "node scripts/check-solveopts-transport-parity.mjs",
     "check:level-metric-boundaries": "node scripts/audit-level-metric-boundaries.mjs",
     "check:canvas-theme-coverage": "node scripts/check-canvas-theme-coverage.mjs",
     "check:level-provenance": "node scripts/check-level-provenance.mjs",
