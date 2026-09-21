@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-21 — preserved technique contrast populations plus shared static parity/portal feature owner
 > **Decision:** retain three response-guided premise nominations; no routing or production change is licensed
-> **Remaining gate:** run the shared parity/portal contrast analysis on the prespecified pairs, then apply Stage-0 theorem/novelty gates to any surviving signal
+> **Remaining gate:** run the parity/portal and transformation-aware orientation contrasts on the frozen prespecified pairs, then apply Stage-0 theorem/novelty gates to surviving signals
 > **Evidence role:** discovery
 > **Selection:** observational; A-only/B-only cohorts are selected on technique outcomes within prespecified technique pairs
 > **Population identity:** `reports/stress/technique-niches/2026-09-01/level-capability.json` with its embedded source identities
@@ -63,9 +63,9 @@ Prefer geometry with transformation semantics rather than adding arbitrary coord
 
 ### Cheapest falsifier
 
-Construct a small transformation-aware descriptor bundle and test whether it explains direction discordance on the frozen contrast IDs. Include mirrored-level metamorphic checks where mechanics preserve reflection.
+Implemented as a no-search specialist probe. `research:response-guided-orientation` derives signed Gate→Goal side balances and signed/absolute moments for blocks, required objects, portal terminals, flippers and their constrained union. Synthetic metamorphic coverage requires signed features to reverse under horizontal reflection while absolute moments remain unchanged.
 
-If orientation remains unexplained, selected operational traces are more valuable than more count features.
+Run it on the frozen contrast IDs. If orientation remains unexplained, selected operational traces are more valuable than more count features.
 
 ## Nomination 3 — non-monotonic 2K/5K beam width
 
@@ -120,6 +120,7 @@ The next code should **not** be a selector. It should be the smallest shared cur
 
 ```bash
 npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
+npm run research:response-guided-orientation -- --out=tmp/response-guided-orientation-contrast.json
 ```
 
 This command performs normalization and static feature analysis only; it runs no solver search.
