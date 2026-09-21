@@ -351,7 +351,7 @@ jobs:
             --integrity-file="logs/static-portfolio-confirmation/population-integrity.json" \
             --contract-file="logs/static-portfolio-confirmation/experiment-contract.json" \
             --shards-expected="${{ inputs.shards }}" \
-            --shards-observed="$(find logs/static-portfolio-confirmation -maxdepth 1 -name 'shard-*.json' | wc -l | tr -d ' ')" \
+            --shards-observed="$(find artifact-staging/downloaded -type f -name 'shard-*.json' | wc -l | tr -d ' ')" \
             --source-artifact="static-portfolio-combined"
 
       - name: Upload standard solver sweep result
