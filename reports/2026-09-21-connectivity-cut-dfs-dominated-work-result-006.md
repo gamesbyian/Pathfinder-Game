@@ -4,7 +4,7 @@
 > **Last evidence:** 2026-09-21 — non-overlapping outermost DFS proof-hit subtrees accounted for only 49,034 canonical work units across the frozen 24-parent hard-C2 development population.
 > **Decision:** close the connectivity cut-certificate behavioral consumer. Do not run a matched-work prune A/B; the maximum observed downstream-work reservoir is already too small relative to lookup/validation work.
 > **Remaining gate:** reopen only if the solver's connectivity cadence/cost changes materially, or a fundamentally cheaper certificate applicability test removes the present boundary-validation burden by orders of magnitude.
-> **Evidence role:** development.
+> **Evidence role:** development
 > **Preflight:** [DFS dominated-work preflight 006](2026-09-21-connectivity-cut-dfs-dominated-work-preflight-006.md).
 > **Parent result:** [caller attribution result 005](2026-09-21-connectivity-cut-unscheduled-caller-attribution-result-005.md).
 > **Execution:** GitHub Actions run `35647486103`, fast-gate job `106491849187`.
