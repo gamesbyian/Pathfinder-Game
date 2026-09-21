@@ -96,7 +96,7 @@ async function main() {
         assert.equal(combined.solved, 1);
         assert.equal(combined.outcomes.deadlineTruncated, 1);
         assert.equal(combined.outcomes.harnessError, 0);
-        assert.equal(combined.populationIntegrity.complete, false, 'observed rows alone cannot establish intended-population completeness');
+        assert.equal('complete' in combined.populationIntegrity, false, 'current sweep reports must not emit the retired complete mirror');
         assert.equal(combined.populationIntegrity.expectedCount, null);
         assert.equal(combined.total, null, 'unknown intended population must not use observed rows as the denominator');
         console.log('  ✓ merges two batches into one flat, budgetMs-bearing report');
@@ -106,7 +106,9 @@ async function main() {
         await writeFile(expectedFile, 'R00002\nR00001\n');
         await run([`--in=${batch1},${batch2}`, `--expected-ids=${expectedFile}`, `--out=${exactOut}`]);
         const exactCombined = JSON.parse(await readFile(exactOut, 'utf8'));
-        assert.equal(exactCombined.populationIntegrity.complete, true);
+        assert.equal(exactCombined.populationIntegrity.coverageComplete, true);
+        assert.equal(exactCombined.populationIntegrity.decisionValidComplete, false, 'deadline-truncated rows are coverage-complete but not decision-valid');
+        assert.equal('complete' in exactCombined.populationIntegrity, false);
         assert.equal(exactCombined.expectedCount, 2);
         assert.match(exactCombined.population.identityHash, /^sha256:[0-9a-f]{64}$/);
         console.log('  ✓ intended ID input makes exact completeness and denominator explicit');
@@ -121,8 +123,9 @@ async function main() {
         await writeFile(commaExpected, `${commaId}\n`);
         await run([`--in=${commaBatch}`, `--expected-ids=${commaExpected}`, `--out=${commaOut}`]);
         const commaCombined = JSON.parse(await readFile(commaOut, 'utf8'));
-        assert.equal(commaCombined.populationIntegrity.complete, true,
+        assert.equal(commaCombined.populationIntegrity.coverageComplete, true,
             'comma-bearing expected ids must survive as one scientific identity');
+        assert.equal('complete' in commaCombined.populationIntegrity, false);
         assert.deepEqual(commaCombined.populationIntegrity.expectedIds, [commaId]);
         console.log('  ✓ comma-bearing expected ids survive sweep-combiner identity parsing');
 
