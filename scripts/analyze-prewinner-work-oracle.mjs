@@ -7,6 +7,7 @@
  * could eliminate. It is NOT evidence that predecessor attempts were predictably redundant.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,6 +21,62 @@ const success = a => a?.ok === true || a?.outcome === 'success' || a?.outcome ==
 const num = v => Number.isFinite(Number(v)) ? Number(v) : 0;
 const pct = (sorted, q) => sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(q * (sorted.length - 1)))] : null;
 const ratio = (a, b) => b > 0 ? a / b : null;
+const splitRole = id => (Number.parseInt(createHash('sha256').update(String(id)).digest('hex').slice(0, 8), 16) % 10) < 7 ? 'development' : 'validation';
+
+export function analyzeZeroWinActionShadow(document, { minAttemptThresholds = [1, 100, 200, 500] } = {}) {
+    const levels = Array.isArray(document) ? document : (document?.levels ?? document?.data?.levels ?? []);
+    const stats = new Map();
+    for (const level of levels) {
+        const id = String(level?.id ?? level?.level ?? '');
+        if (splitRole(id) !== 'development') continue;
+        for (const attempt of level?.attempts ?? []) {
+            const key = attempt?.actionKey ?? '(unknown)';
+            const s = stats.get(key) ?? { attempts:0, wins:0 };
+            s.attempts++; if (success(attempt)) s.wins++;
+            stats.set(key, s);
+        }
+    }
+    const validationSolved = levels.filter(level => {
+        const id = String(level?.id ?? level?.level ?? '');
+        return splitRole(id) === 'validation' && (level?.ok === true || level?.status === 'success');
+    });
+    const policies = minAttemptThresholds.map(minDevelopmentAttempts => {
+        let preWinnerWork = 0, nominatedSavedWork = 0, lostWinners = 0, skippedAttempts = 0;
+        for (const level of validationSolved) {
+            const attempts = level?.attempts ?? [];
+            const winnerIndex = attempts.findIndex(success);
+            if (winnerIndex < 0) continue;
+            const skip = attempt => {
+                const s = stats.get(attempt?.actionKey ?? '(unknown)');
+                return !!s && s.wins === 0 && s.attempts >= minDevelopmentAttempts;
+            };
+            for (const attempt of attempts.slice(0, winnerIndex)) {
+                const work = num(attempt?.workSpent);
+                preWinnerWork += work;
+                if (skip(attempt)) { nominatedSavedWork += work; skippedAttempts++; }
+            }
+            if (skip(attempts[winnerIndex])) lostWinners++;
+        }
+        return {
+            policy: 'skip-development-zero-win-exact-action',
+            minDevelopmentAttempts,
+            validationSolvedLevels: validationSolved.length,
+            nominatedSavedWork,
+            preWinnerWork,
+            capturedPreWinnerWorkShare: ratio(nominatedSavedWork, preWinnerWork),
+            lostWinners,
+            lostWinnerRate: ratio(lostWinners, validationSolved.length),
+            skippedAttempts,
+        };
+    });
+    return {
+        split: 'sha256(levelId) first32bits mod10: 0-6 development, 7-9 validation',
+        developmentLevels: levels.filter(level => splitRole(String(level?.id ?? level?.level ?? '')) === 'development').length,
+        validationLevels: levels.filter(level => splitRole(String(level?.id ?? level?.level ?? '')) === 'validation').length,
+        policies,
+        interpretation: 'selected diagnostic baseline only; skipping is simulated from recorded attempt identities and does not model counterfactual downstream execution',
+    };
+}
 
 export function analyzePrewinnerWorkDocuments(documents) {
     const rows = [];
@@ -118,6 +175,7 @@ export function analyzePrewinnerWorkDocuments(documents) {
         },
         byWinningStage,
         predecessorWinningStagePairs,
+        shadowBaselines: documents.map(({ source, document }) => ({ source, ...analyzeZeroWinActionShadow(document) })),
         levels: rows,
     };
 }
