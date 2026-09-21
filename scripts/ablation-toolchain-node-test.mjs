@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { buildExperimentList, canonicalAblationFeatureName, historicalAblationFeatureName } from '../modules/solver/ablation-config.ts';
+import { buildExperimentList, canonicalAblationFeatureName, normalizeHistoricalAblationFeatureName } from '../modules/solver/ablation-config.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -23,8 +23,8 @@ assert.deepEqual(legacyTemplates.map(x => x.name), canonicalBiases.map(x => x.na
 
 assert.throws(() => canonicalAblationFeatureName('SCORE_TEMPLATE_BONUS'), /Unknown canonical feature/);
 assert.throws(() => canonicalAblationFeatureName('TEMPLATE_PERIMETER_CW'), /Unknown canonical feature/);
-assert.equal(historicalAblationFeatureName('SCORE_TEMPLATE_BONUS'), 'SCORE_ORDERING_BIAS_BONUS');
-assert.equal(historicalAblationFeatureName('TEMPLATE_PERIMETER_CW'), 'ORDERING_BIAS_PERIMETER_CW');
+assert.equal(normalizeHistoricalAblationFeatureName('SCORE_TEMPLATE_BONUS'), 'SCORE_ORDERING_BIAS_BONUS');
+assert.equal(normalizeHistoricalAblationFeatureName('TEMPLATE_PERIMETER_CW'), 'ORDERING_BIAS_PERIMETER_CW');
 assert.ok(canonicalBiases.some(x => x.name === 'ordering-bias-off:perimeterCW'),
     'current ordering-bias experiment names must stay canonical while old feature flags remain readable only through the historical decoder');
 
