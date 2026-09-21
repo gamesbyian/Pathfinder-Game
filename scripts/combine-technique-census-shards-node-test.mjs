@@ -31,7 +31,6 @@ try {
     `--out-dir=${out}`,
     `--solver-version=${commit}`,
     '--expected-shards=2',
-    '--expected-shards=2',
   ], { cwd: process.cwd(), encoding: 'utf8' });
   assert.equal(ok.status, 0, ok.stderr);
   const combined = JSON.parse(fs.readFileSync(path.join(out, 'combined-cells.json'), 'utf8'));
