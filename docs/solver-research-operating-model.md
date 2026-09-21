@@ -59,6 +59,21 @@ The same rule applies to relationships: if a stable ID/edge exists, join on it r
 
 For relationship quality, prefer: validated authored ID/edge > authored one-way path/ID with referential integrity > embedded contract identity discovered from candidate files > explicitly labelled lexical/path discovery. If both endpoints author the same relation, check agreement. Co-location, filenames, hyperlinks and shared vocabulary may discover candidates but do not define membership or scientific ancestry. See `reports/2026-09-19-research-relation-authority-audit-001.md`.
 
+## Concept-family audit checkpoint
+
+For premise-generation work, especially invariants, representations and exact relations, add a checkpoint **before implementation**:
+
+1. state the exact claim and soundness direction;
+2. map mechanic support/perturbation explicitly rather than treating unsupported mechanics as noise;
+3. identify a positive witness and a **novelty witness** against current production reasoning;
+4. name the denominator/opportunity population before measuring incidence;
+5. separate theorem/proof value from descriptive/response value;
+6. after the first productive formulation, inventory the nearest sibling formulations and record their disposition before narrowing the family.
+
+This last step is an anti-path-dependence control. It does not require testing every sibling. It prevents a convenient first positive from silently defining the whole concept space, and prevents a first negative form from closing adjacent semantics.
+
+For compact exact consequences, use [the small exact projections program](solver-small-exact-projections-program.md).
+
 ## Stop rules
 
 These are gates, not aspirations.
