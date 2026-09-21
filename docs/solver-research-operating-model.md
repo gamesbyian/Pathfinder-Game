@@ -110,9 +110,7 @@ Use three renewable roles, defined fully in [`solver-evaluation-evidence.md`](so
 - **confirmation:** sample-independent evidence used after the treatment is fixed;
 - **transfer/challenge:** evidence from a materially different source/construction distribution for broader claims.
 
-Prefer locked pools partitioned into untouched blocks when repeated confirmation is expected. Spend the
-block whose outcomes inform the decision, not every untouched block in the pool. Once exact results
-from a block influence redesign, that block is development evidence for descendants.
+Prefer locked untouched blocks for repeated confirmation. Spend only the block that informs the decision. Once its exact results influence redesign, it becomes development evidence for descendants.
 
 ## Failure classes
 
