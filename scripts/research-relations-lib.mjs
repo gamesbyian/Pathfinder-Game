@@ -13,6 +13,7 @@ import {
 import { researchSemanticHash as stableHash } from './research-semantic-identity-lib.mjs';
 import { loadPremiseMap } from './research-premise-map-lib.mjs';
 import { extractResearchArtifactEnvelope } from './research-artifact-envelope-lib.mjs';
+import { durableBundleManifestStoredPath } from './durable-evidence-bundle-lib.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     questions: { identity: 'id', source: 'docs/solver-research-question-relations.json' },
@@ -129,10 +130,12 @@ export function discoverResearchArtifactPaths(root = process.cwd()) {
 
 function durableBundleManifestPath(root, bundlePath, bundle) {
     const bundleDir = path.dirname(bundlePath);
-    const explicit = bundle?.manifestStoredPath ?? null;
-    const legacyFile = (bundle?.files ?? []).find(file => file?.source === 'manifest.json')?.stored ?? null;
-    const stored = explicit ?? legacyFile;
-    if (!stored) throw new Error(`durable evidence bundle has no explicit manifest edge: ${bundlePath}`);
+    let stored;
+    try {
+        stored = durableBundleManifestStoredPath(bundle);
+    } catch (error) {
+        throw new Error(`durable evidence bundle manifest edge is invalid: ${bundlePath}: ${error.message}`);
+    }
 
     const resolved = path.resolve(root, bundleDir, stored);
     const base = path.resolve(root, bundleDir);
