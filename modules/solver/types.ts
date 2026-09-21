@@ -311,6 +311,7 @@ export interface PrepLevel {
             id: number;
             reachedRows: number[];
             boundaryCells: number[];
+            signature: string;
             sourceStateFingerprint: string;
             createdWork: number;
         }>;
@@ -523,6 +524,9 @@ export interface ConnectivityCertificateShadowRecord {
     kind: 'certificate' | 'certificate-dropped' | 'probe';
     work: number;
     certificateId?: number;
+    /** Normalized proof-object identity: reached component rows + sorted complete cardinal boundary.
+     *  Same signature means the same cut implication template, not residual-state equivalence. */
+    certificateSignature?: string;
     boundarySize?: number;
     certificatesScanned?: number;
     boundaryCellChecks?: number;
