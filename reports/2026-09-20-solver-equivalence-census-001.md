@@ -1,12 +1,9 @@
 # Solver exact/symmetry equivalence census 001
 
-> **Status:** partial but decision-relevant negative; Corpus 2 pending execution.
-> **Date:** 2026-09-20
-> **Parent plan:** [`../docs/solver-batch-digestion-architecture-audit-plan.md`](../docs/solver-batch-digestion-architecture-audit-plan.md)
-> **Evidence role:** solve-less opportunity census.
-> **Population:** complete committed published corpus (160) + complete Corpus 1 (102), 262 rows total.
-> **Decision:** no exact/symmetry canonicalization implementation is earned from these populations.
-
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-20 — complete published + Corpus-1 census found no implementation-worthy natural exact/symmetry equivalence opportunity.
+> **Decision:** Do not implement natural-corpus exact/symmetry canonicalization from current evidence.
+> **Remaining gate:** Only reopen if Corpus 2 or another genuinely natural population shows material exact/symmetry reuse.
 ## Question
 
 Are independently stored Pathfinder levels duplicated exactly, or equivalent under the exact 8-way
