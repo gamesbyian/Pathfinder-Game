@@ -11,6 +11,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
+import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.js';
+import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
+import { researchSemanticHash } from '../research-semantic-identity-lib.mjs';
+import { validateResearchUnitTopology } from '../research-unit-topology-lib.mjs';
 import { findBridgeExcursionConflicts } from './cut-bridge-excursion-lib.mjs';
 
 function replayPrefix(level, prefix) {
@@ -123,6 +127,63 @@ export function analyzeBridgeExcursionIncidence({ population, levels }) {
     };
 }
 
+export async function attachBridgeExcursionResearchLineage(report, {
+    population,
+    populationPath,
+    levels,
+} = {}) {
+    if (!report || !Array.isArray(report.rows)) throw new Error('report.rows must be an array');
+    if (!population || !Array.isArray(population.rows)) throw new Error('population.rows must be an array');
+    if (!Array.isArray(levels)) throw new Error('levels must be an array');
+    if (typeof populationPath !== 'string' || !populationPath.trim()) throw new Error('populationPath is required');
+
+    const rawById = new Map(levels.map(level => [String(level?.id ?? ''), level]));
+    const parentIds = [...new Set(report.rows.map(row => String(row.parentId ?? row.levelId ?? '')).filter(Boolean))].sort();
+    const parentContentIdentities = await Promise.all(parentIds.map(async parentId => {
+        const raw = rawById.get(parentId);
+        if (!raw) throw new Error(`missing raw level for lineage parent: ${parentId}`);
+        return getLevelFingerprint(raw);
+    }));
+    const questionId = String(report.question ?? population.question ?? 'WS2-CUT-BALANCE-PROJECTION');
+    const sourceRevision = researchSemanticHash({
+        kind: 'pathfinder-cut-bridge-incidence-source-population',
+        population,
+    });
+    const blockId = `${questionId}:bc1:${researchSemanticHash({
+        sourceRevision,
+        parentIds,
+        parentContentIdentities,
+    }).slice('sha256:'.length, 'sha256:'.length + 12)}`;
+    const lineage = buildResearchBlock({
+        blockId,
+        questionId,
+        sourceRegime: 'frozen-production-frontier-prefixes',
+        sourceRevision,
+        evidenceRole: report.evidenceRole ?? 'development',
+        independentUnit: 'parent-level',
+        parentIds,
+        parentContentIdentities,
+        sourceArtifactRefs: [populationPath],
+        producer: 'scripts/stress/cut-bridge-incidence.mjs',
+        manifestRef: populationPath,
+        generationRef: null,
+    });
+    return {
+        ...report,
+        researchEnrichmentKind: 'observation',
+        populationIdentity: lineage.populationIdentity,
+        researchBlock: lineage.researchBlock,
+        unitTopology: validateResearchUnitTopology({
+            observationUnit: 'frontier-state',
+            opportunityUnit: 'connectivity-passing-frontier-state',
+            assignmentUnit: null,
+            dependenceClusterUnit: 'parent',
+            analysisUnit: 'frontier-state-with-parent-cluster-reporting',
+            generalizationUnit: 'parent-under-frozen-production-frontier-sampling-protocol',
+        }),
+    };
+}
+
 async function main() {
     const args = new Map(process.argv.slice(2).map(arg => arg.split('=', 2)));
     const populationPath = args.get('--population');
@@ -134,7 +195,12 @@ async function main() {
     const population = JSON.parse(readFileSync(populationPath, 'utf8'));
     const corpusDoc = JSON.parse(readFileSync(corpusPath, 'utf8'));
     const levels = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
-    const report = analyzeBridgeExcursionIncidence({ population, levels });
+    const analysis = analyzeBridgeExcursionIncidence({ population, levels });
+    const report = await attachBridgeExcursionResearchLineage(analysis, {
+        population,
+        populationPath,
+        levels,
+    });
 
     const absolute = path.resolve(outPath);
     mkdirSync(path.dirname(absolute), { recursive: true });
