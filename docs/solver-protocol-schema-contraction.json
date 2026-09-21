@@ -348,19 +348,25 @@
       "id": "PSC-016",
       "concept": "ablation feature input vocabulary",
       "owners": [
-        "modules/solver/ablation-config.ts"
+        "modules/solver/ablation-config.ts",
+        "modules/solver/orchestration-contracts.ts",
+        "modules/solver/orchestration.ts",
+        "scripts/level-blind-capability-sweep.mjs",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/solver-parallel/race.mjs"
       ],
       "forms": [
         "canonical feature keys",
         "LEGACY_FEATURE_ALIASES"
       ],
       "currentWritesMultipleForms": false,
-      "currentInputsMultipleForms": true,
+      "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "remove-current-alias",
-      "status": "open",
-      "retirementGate": "fresh CLI/workflow/config input rejects retired feature names; historical artifacts use explicit decoder"
+      "status": "in-progress",
+      "retirementGate": "Complete artifact-reader census for any persisted ablation configs and route those readers to normalizeHistoricalAblationConfig(). Known fresh solver/CLI/config input is already canonical-only.",
+      "progress": "Split canonicalAblationFeatureName() from normalizeHistoricalAblationFeatureName(), and normalizeAblationConfig() from normalizeHistoricalAblationConfig(). Current experiment constructors, level-blind CLI parsing, portfolio sweep flag validation, raced config materialization, and direct solveLevel ablation input now accept canonical feature keys only. Historical aliases remain readable through explicitly historical APIs. Non-feature control keys ATTEMPT_ORDER/_randomSeed bypass feature decoding on both paths."
     },
     {
       "id": "PSC-017",
