@@ -117,12 +117,12 @@ npm run research:freeze-response-guided-contrasts -- \
   --out=tmp/response-guided-contrast-population.json
 ```
 
-The freezer records the exact A-only/B-only/both identities plus the source file SHA-256. The historical September 1 analysis remains provenance for the original nominations; new executable development work uses the tracked September 3 capability map unless an older artifact is supplied explicitly.
+The freezer records the exact A-only/B-only/both identities plus the source file SHA-256. Once `--cohorts` is supplied, downstream analyzers use those identities directly rather than recomputing outcome-selected cohorts. The historical September 1 analysis remains provenance for the original nominations; new executable development work uses the tracked September 3 capability map unless an older artifact is supplied explicitly.
 
 Then run the first no-search response analysis:
 
 ```bash
-npm run research:response-guided-parity -- --out=tmp/response-guided-parity-contrast.json
+npm run research:response-guided-parity -- --cohorts=tmp/response-guided-contrast-population.json --out=tmp/response-guided-parity-contrast.json
 ```
 
 It normalizes raw levels through the solver boundary and compares portal-pair phase structure and gate parity demand across the prespecified technique-discordance cohorts.
@@ -130,7 +130,7 @@ It normalizes raw levels through the solver boundary and compares portal-pair ph
 The second no-search probe is transformation-aware geometry:
 
 ```bash
-npm run research:response-guided-orientation -- --out=tmp/response-guided-orientation-contrast.json
+npm run research:response-guided-orientation -- --cohorts=tmp/response-guided-contrast-population.json --out=tmp/response-guided-orientation-contrast.json
 ```
 
 Its signed Gate→Goal side balances/moments obey a tested reflection law and target the large CW/CCW discordance that count features fail to explain. Both outputs remain outcome-selected development evidence and can only nominate Stage-0 premises.
