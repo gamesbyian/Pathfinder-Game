@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { researchResolutionEnvelopeIssues } from './research-resolution-envelope-lib.mjs';
+
 const DEFAULT_FILE = 'data/stress/capability-invention-demand.json';
 const WORK_CLASSES = new Set(['HARVEST', 'EXTENSION', 'INVENTION', 'UNKNOWN']);
 const DIAGNOSIS_STATUSES = new Set(['resolved', 'partial', 'unresolved']);
@@ -108,6 +110,22 @@ export function validateCapabilityInventionDemand(doc) {
         }
         if (row.workClass === 'UNKNOWN' && row.diagnosisStatus === 'resolved') {
             errors.push(`${prefix}: resolved diagnosis should not retain UNKNOWN workClass`);
+        }
+
+        if (row.resolution != null) {
+            errors.push(...researchResolutionEnvelopeIssues(row.resolution, { path: `${prefix}.resolution` }));
+            if (row.diagnosisStatus === 'resolved' && row.resolution?.resolutionStatus !== 'resolution-ready') {
+                errors.push(`${prefix}: resolved diagnosis requires resolution-ready shared resolution envelope`);
+            }
+        }
+        if (row.resolutionRef != null) {
+            requireNonEmptyString(row.resolutionRef, `${prefix}.resolutionRef`, errors);
+        }
+        const recurrentAcquisition = (row.workClass === 'EXTENSION' || row.workClass === 'INVENTION')
+            && (row.recurrenceScope === 'multiple-independent-parents' || row.recurrenceScope === 'population-level');
+        if (recurrentAcquisition && row.resolution == null
+            && (typeof row.resolutionRef !== 'string' || !row.resolutionRef.trim())) {
+            errors.push(`${prefix}: recurrent EXTENSION/INVENTION demand requires resolution or resolutionRef`);
         }
     }
     return errors;
