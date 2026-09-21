@@ -147,6 +147,22 @@ export function hintPaths(hints) {
     return hints.map(h => h.path);
 }
 
+/**
+ * Canonical mutation boundary for level-like objects carrying persisted hints.
+ * Hint records are authoritative; the bare-path field is a derived compatibility/view projection.
+ *
+ * @param {Record<string, any>} level
+ * @param {Hint[]} records
+ * @returns {Hint[]}
+ */
+export function setLevelHintRecords(level, records) {
+    if (!level || typeof level !== 'object' || Array.isArray(level)) throw new Error('level must be an object');
+    if (!Array.isArray(records)) throw new Error('hint records must be an array');
+    level.hintRecords = records;
+    level.hints = hintPaths(records);
+    return records;
+}
+
 /** Remove duplicate recordings of the same discovery event while preserving evidence from genuinely distinct finds. */
 /** @param {HintProvenanceEntry[]} entries @returns {HintProvenanceEntry[]} */
 export function dedupeProvenanceEntries(entries) {
