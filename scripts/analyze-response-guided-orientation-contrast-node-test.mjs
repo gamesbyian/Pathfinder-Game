@@ -34,8 +34,9 @@ const base = {
     ],
 };
 
+const frozenContrasts = freezeResponseGuidedContrasts(base, { pairs: [['left', 'right']] });
 const result = analyzeResponseGuidedOrientationContrasts({
-    base,
+    frozenContrasts,
     pairs: [['left', 'right']],
     levels: [
         rawLevel('A', { x: 1, y: 5 }),
@@ -105,7 +106,7 @@ for (const key of ['blocks', 'mustPass', 'mustCross', 'portalTerminals', 'flippe
 
 assert.throws(
     () => analyzeResponseGuidedOrientationContrasts({
-        base,
+        frozenContrasts,
         pairs: [['left', 'right']],
         levels: [rawLevel('A', null), rawLevel('A', null)],
     }),
