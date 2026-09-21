@@ -65,18 +65,20 @@ jobs:
           NODE
 
       - name: Run paired objective 2K/5K frontier oracle
+        continue-on-error: true
         run: |
           IDS="$(cat tmp/response-guided-hardening/objective-2k-only-ids.txt)"
           npm run research:paired-beam-width-frontier -- \
-            --corpus=data/stress/stress-levels-random.json \
+            --corpora=data/levels.json,data/stress/stress-levels.json,data/stress/stress-levels-random.json \
             --levels="$IDS" --profile=objectiveFirst --widths=2000,5000 \
             --depth-fraction=0.2 --out=tmp/response-guided-hardening/paired-width-objective.json
 
       - name: Run paired intersection 2K/5K frontier oracle
+        continue-on-error: true
         run: |
           IDS="$(cat tmp/response-guided-hardening/intersection-2k-only-ids.txt)"
           npm run research:paired-beam-width-frontier -- \
-            --corpus=data/stress/stress-levels-random.json \
+            --corpora=data/levels.json,data/stress/stress-levels.json,data/stress/stress-levels-random.json \
             --levels="$IDS" --profile=intersectionHarvest --widths=2000,5000 \
             --depth-fraction=0.2 --out=tmp/response-guided-hardening/paired-width-intersection.json
 
