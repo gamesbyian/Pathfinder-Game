@@ -1,9 +1,9 @@
 # BC1 removable-work economics seam audit 001
 
-> **Status:** SOURCE AUDIT COMPLETE; incidence evidence is insufficient for saved-work claims.
-> **Date:** 2026-09-21.
-> **Canonical owner:** [small exact projections program](../docs/solver-small-exact-projections-program.md), `WS2-CUT-BALANCE-PROJECTION`.
-> **Parent audit:** [computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).
+> **Status:** active
+> **Last evidence:** 2026-09-21 — source audit showed frozen frontier-prefix BC1 incidence cannot reconstruct downstream production work; existing continuation tools answer different questions.
+> **Decision:** keep BC1 under WS2-CUT-BALANCE-PROJECTION and use a production-inert beam later-disposition shadow after ordinary hard-prune survival as the first honest economics microscope.
+> **Remaining gate:** measure proof construction cost, later production disposition/descendant work, overlap with existing prunes, and valid/reference safety on multiple independent parents before any behavioral BC1 consumer.
 
 ## Question
 
