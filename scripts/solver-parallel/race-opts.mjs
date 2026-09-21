@@ -29,9 +29,6 @@ export const RACE_LEVEL_OPTS_FIELDS = Object.freeze([
     'ablation',
     'repairAdditiveBudgetMultiplierOverride',
     'goalAttractionDisabledRetryBudgetFractionOverride',
-    // Legacy alias for the field above; race.mjs's runOneLevel dual-reads both (`??`), matching
-    // the dual-read convention scripts/check-solveopts-transport-parity.mjs enforces elsewhere.
-    'attractionDiversityBudgetFractionOverride',
 ]);
 
 // Fields that are meaningful on the caller's SolveOpts but deliberately NOT forwarded to race.mjs
