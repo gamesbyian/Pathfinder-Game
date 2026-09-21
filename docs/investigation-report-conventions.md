@@ -29,6 +29,7 @@ The capsule is deliberately small. Version 1 carries only the already-common lif
 - evidence role when it is already meaningful for the report;
 - population identity, selection basis, and inference scope when the conclusion depends on them;
 - local claim references and source/derivation artifacts when the report is downstream of machine evidence;
+- exact successor question/artifact refs when the report has already authored a concrete next handoff;
 - prospective expectation, surprise, or anomaly labels when they were actually recorded.
 
 It does **not** replace the report body, experiment contract, claim capsule, population/selection detail, or priority authority. Specialist semantics remain in their existing owners.
@@ -36,7 +37,7 @@ It does **not** replace the report body, experiment contract, claim capsule, pop
 Example:
 
 ```markdown
-<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-negative","lastEvidenceDate":"2026-09-19","decision":"close the tested form","remainingGate":"none","joins":{"researchQuestion":"WS2-...","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"confirmation","scope":{"populationIdentity":"sha256:...","selection":"prespecified","inferenceScope":"recorded confirmation population only"},"claimRefs":["claim:..."],"sourceArtifacts":["reports/...json"],"prospective":{"expectation":null,"surprise":null,"anomaly":null}} -->
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-negative","lastEvidenceDate":"2026-09-19","decision":"close the tested form","remainingGate":"none","joins":{"researchQuestion":"WS2-...","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"confirmation","scope":{"populationIdentity":"sha256:...","selection":"prespecified","inferenceScope":"recorded confirmation population only"},"claimRefs":["claim:..."],"sourceArtifacts":["reports/...json"],"successors":{"questions":[],"artifacts":[]},"prospective":{"expectation":null,"surprise":null,"anomaly":null}} -->
 ```
 
 `research:system-inventory -- --view=brief-inputs` consumes valid capsules as a bounded recent-closeout feed and reports malformed capsules as diagnostics. This lets generated retrieval use structured state without parsing decision prose while keeping the Markdown report authoritative for its own evidence narrative.
@@ -74,7 +75,7 @@ When a report or preflight **nominates a new research question or materially new
 
 This is deliberately **not** a machine enum or registry. Multiple contributing origins are allowed and often correct. Reuse stable plain-language method names when they fit (for example premise-map mining, archaeology, negative-space audit, failure-response nomination, capability-memory contrast, family microscopy, exact/reference disagreement, or human/agent reconstruction), but do not force a proposal into one bucket or backfill a plausible origin after results are known. Existing `triggeredBy`/`constrainedBy` question relations remain the authority for actual question ancestry; this line records method-of-discovery history that those relations do not encode.
 
-The purpose is to accumulate prospective observations for later calibration of proposal channels without freezing an ontology prematurely. Omit the line when origin is unknown or only inferable in hindsight.
+The purpose is to accumulate prospective observations for later calibration of proposal channels without freezing an ontology prematurely. Treat this as part of the lightweight preflight/report checklist whenever the artifact creates a new nomination; omit the line when origin is unknown or only inferable in hindsight.
 
 For solution-profile evidence, also state material sample support/chronology limits when the claim depends on diversity, ordering, saturation, or similarity. `observedSingleOrder` is sampled agreement; `hasExhaustiveSearchEvent` is an event marker; neither is whole-space proof. Sparse nearest-profile identity is exploratory unless independently calibrated under current schema-v3 semantics.
 
@@ -98,7 +99,7 @@ The same artifact can support different claims at different roles, but the repor
 - **Cancelled** explains why the original scope is no longer decision-relevant and any reopen condition.
 - **Remaining gate** is the smallest decision-bearing check, with population and acceptance criterion when known.
 - A prospective/data-gated remaining gate should name **how the trigger will be observed or collected** when that path is known (producer/workflow/report field/monitor); otherwise say that detection is intentionally opportunistic. Do not close work by waiting for evidence no current process is capable of producing.
-- When a later report closes a gate, link both directions.
+- When a report has already authored an exact successor question or artifact, record it in the closeout capsule's structured successor refs as well as linking in prose. When a later report closes a gate, preserve the reverse link too.
 - An A/B applies to the implementation it tested. If participation, budget, ordering, applicability, candidate set, or interactions materially change, state whether the old verdict still applies.
 - A positive result selected from many alternatives is normally **nomination evidence** until confirmed independently. Evidence intensity should scale with selection pressure and claim scope under [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md); do not report the maximum observed arm as though it were a prespecified single test.
 - A negative result closes the tested form, not every imaginable descendant. Conversely, do not indefinitely rescue a null hypothesis by changing one more threshold, budget, seed, or cohort. Reopen only when new evidence changes the mechanism premise or the original treatment was demonstrably invalid.
