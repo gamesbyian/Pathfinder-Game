@@ -179,11 +179,15 @@ async function main() {
         console.log('  ✓ mixed-corpus expected-id files require structured tuple identities');
 
         const exact = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002'], levels: combined.levels });
-        assert.equal(exact.complete, true);
+        assert.equal(exact.coverageComplete, true);
+        assert.equal(exact.decisionValidComplete, true);
+        assert.equal('complete' in exact, false);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels }), /missing results: R00003/);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001'], levels: combined.levels }), /unexpected results: R00002/);
         const partial = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels, allowIncomplete: true });
-        assert.equal(partial.complete, false);
+        assert.equal(partial.coverageComplete, false);
+        assert.equal(partial.decisionValidComplete, false);
+        assert.equal('complete' in partial, false);
         assert.deepEqual(partial.missingIds, ['R00003']);
         console.log('  ✓ exact-population validator rejects missing and unexpected result ids');
 
