@@ -1,8 +1,9 @@
 /**
  * Shared I/O for split level/hint artifacts. Level JSON has no hints at rest; per-level files hold
- * canonical `{schemaVersion:3,hints:Hint[]}`. Reads upgrade legacy shapes and attach both `.hints`
- * (bare paths) and `.hintRecords` (canonical records); writes reconcile them and strip both from
- * level JSON. Hint files use persistent level ids verbatim when present, else 1-based position.
+ * canonical `{schemaVersion:3,hints:Hint[]}`. Reads upgrade legacy shapes and attach `.hintRecords`
+ * as canonical mutable state plus derived `.hints` bare paths. Writes strip both from level JSON and
+ * persist only levels named in an explicit hint write set. Hint files use persistent level ids
+ * verbatim when present, else 1-based position.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -10,8 +11,6 @@ import { stringifyCorpusJson } from './level-json-format.mjs';
 import { setLevelHintRecords, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-runtime.mjs';
 
 const HINT_SCHEMA_VERSION = 3;
-// Original read-time array refs let writes skip levels this process never mutated.
-const UNTOUCHED_HINTS_STATE = new WeakMap();
 
 /** Sibling hint dir. `stress-levels-<suffix>.json` maps to `hints-<suffix>/`; others to `hints/`. */
 export function hintsDirFor(levelsJsonPath) {
@@ -74,7 +73,6 @@ function hydrateLevelHints(levelsJsonPath, levels) {
             records = inlineRecords || [];
         }
         setLevelHintRecords(level, records);
-        UNTOUCHED_HINTS_STATE.set(level, { hintRecords: level.hintRecords });
     });
     return levels;
 }
@@ -106,11 +104,14 @@ export function stringifyHints(records) {
 }
 
 /**
- * Persist level JSON without inline hints plus changed per-level hint files. Unchanged read-time
- * array refs are skipped: this is required for safe concurrent shard writers over disjoint levels,
- * not merely an optimization. New zero-hint files are not created; existing emptied files remain.
+ * Persist level JSON without inline hints plus ONLY the per-level hint files explicitly named by
+ * changedHintLevels. This write set is a correctness boundary for concurrent shard writers: a
+ * process may hold a stale full-corpus snapshot, but it cannot rewrite hint files for levels it did
+ * not declare as changed. Object identity here expresses caller-owned write intent; it is never
+ * inferred from read-time references. New zero-hint files are not created; existing emptied files
+ * remain.
  */
-export function writeLevelCorpusDocumentWithHints(levelsJsonPath, document) {
+export function writeLevelCorpusDocumentWithHints(levelsJsonPath, document, { changedHintLevels = [] } = {}) {
     if (!document || typeof document !== 'object' || Array.isArray(document)) throw new Error('corpus document must be an object');
     const { levels, metadata = {}, storageShape = 'object' } = document;
     if (!Array.isArray(levels)) throw new Error('corpus document levels must be an array');
@@ -120,12 +121,16 @@ export function writeLevelCorpusDocumentWithHints(levelsJsonPath, document) {
     const dir = hintsDirFor(levelsJsonPath);
     mkdirSync(dir, { recursive: true });
 
+    const changedLevels = changedHintLevels instanceof Set ? changedHintLevels : new Set(changedHintLevels);
+    for (const level of changedLevels) {
+        if (!levels.includes(level)) throw new Error('changedHintLevels contains a level outside corpus document levels');
+    }
+
     let hintFilesChanged = 0;
     levels.forEach((level, i) => {
+        if (!changedLevels.has(level)) return;
         const filePath = hintFilePathFor(levelsJsonPath, hintKeyForLevel(level, i + 1));
         const fileExists = existsSync(filePath);
-        const untouched = UNTOUCHED_HINTS_STATE.get(level);
-        if (fileExists && untouched && untouched.hintRecords === level?.hintRecords) return;
 
         // Current mutation is single-authority: hintRecords is canonical persisted state and
         // hints is only its derived in-memory view. Historical bare paths are upgraded during
