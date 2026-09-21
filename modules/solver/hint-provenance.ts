@@ -15,7 +15,7 @@ type AttemptLike = Partial<Attempt> & {
 };
 
 /** Persisted evidence may predate canonical Attempt field/stage names. Historical entrypoints only. */
-type HistoricalAttemptLike = AttemptLike & {
+type HistoricalAttemptLike = Omit<AttemptLike, 'stageId'> & {
     stageId?: Attempt['stageId'] | string;
     profile?: string;
     template?: string | null;
