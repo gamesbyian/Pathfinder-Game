@@ -99,6 +99,25 @@ assert.equal(standardManifest.status, 'published');
 assert.equal(standardManifest.entries[0].source, 'reports/families/variant-family-dataset-summary.md');
 assert.equal(standardManifest.sourceArtifact, 'variant-family-dataset-combined');
 
+const conflictTemp = mkdtempSync(path.join(tmpdir(), 'variant-family-conflicting-repeat-'));
+mkdirSync(path.join(conflictTemp, 'data/families'), { recursive: true });
+mkdirSync(path.join(conflictTemp, 'logs/family-census'), { recursive: true });
+mkdirSync(path.join(conflictTemp, 'reports/families'), { recursive: true });
+writeFileSync(path.join(conflictTemp, 'data/families/variant-family-dataset-manifest.json'), JSON.stringify([
+    { id: 'R00001', corpus: 'corpus1', modes: ['symmetry'] },
+]));
+writeFileSync(path.join(conflictTemp, 'logs/family-census/wide-shard-01-summary.jsonl'), [
+    JSON.stringify({ corpus: 'corpus1', id: 'R00001', mode: 'symmetry', solved: 1, total: 7 }),
+    JSON.stringify({ corpus: 'corpus1', id: 'R00001', mode: 'symmetry', solved: 2, total: 7 }),
+    '',
+].join('\n'));
+const conflictRun = spawnSync(process.execPath, [path.join(ROOT, 'scripts/merge-variant-family-dataset-shards.mjs'),
+    '--in-dir=logs/family-census',
+    '--manifest=data/families/variant-family-dataset-manifest.json',
+], { cwd: conflictTemp, encoding: 'utf8' });
+assert.notEqual(conflictRun.status, 0, 'conflicting repeated task summaries must fail rather than let append order select the canonical outcome');
+assert.match(conflictRun.stderr, /conflicting repeated summary row for corpus1\|R00001\|symmetry/u);
+
 const legacyTemp = mkdtempSync(path.join(tmpdir(), 'variant-family-legacy-identity-'));
 mkdirSync(path.join(legacyTemp, 'data/families'), { recursive: true });
 mkdirSync(path.join(legacyTemp, 'logs/family-census'), { recursive: true });
