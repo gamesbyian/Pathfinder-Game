@@ -360,8 +360,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // (non-strict) mode; pinned by orchestration.test.ts's own
         // 'strictTotalWorkBudget installs one remaining-work cap across every additive path' test.
         const probe = await runEarlyRepairSearch(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainSearchEarlyNodeBudget,
-            opts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride ?? opts.repairProbeAdaptiveBiasedBadnessGateOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
-            opts.earlyRepairSearchAdaptiveBiasedMinScaleOverride ?? opts.repairProbeAdaptiveBiasedMinScaleOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
+            opts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
+            opts.earlyRepairSearchAdaptiveBiasedMinScaleOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
         probeAttempts.push(...probe.attempts);
         shrunkBiasedTiers = probe.shrunkBiased ?? [];
         if (probe.solution) {
