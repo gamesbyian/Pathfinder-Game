@@ -1,9 +1,9 @@
 # Computational work elimination: paired beam proof-overlap execution preflight 001
 
-> **Status:** active
+> **Status:** superseded / concluded-without-execution
 > **Last evidence:** 2026-09-21 — original response-guided GHA artifact recovered the exact frozen 29-parent objective-first and 39-parent intersection-harvest 2K-only cohorts.
-> **Decision:** execute only isolated paired 2K/5K searches with opt-in exact connectivity-cut proof overlap; no shared execution or cache is authorized.
-> **Remaining gate:** measure shared exact proof identities conditional on proof opportunity across multiple independent parents, then advance one narrow handoff or close connectivity-cut sharing for W2.
+> **Decision:** do not execute this connectivity-cut overlap study; later W1 dominated-work evidence made the result non-decision-bearing. See [paired proof-overlap disposition 002](2026-09-21-computational-work-elimination-paired-proof-overlap-disposition-002.md).
+> **Remaining gate:** reopen W2 only for a proof family that first clears soundness, recurrence and removable-work economics under its own canonical owner.
 > **Evidence role:** development.
 > **Parent:** [computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).
 > **W2 preflight:** [multi-query divergence preflight 001](2026-09-21-computational-work-elimination-multi-query-preflight-001.md).
