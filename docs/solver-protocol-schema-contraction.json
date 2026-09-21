@@ -368,7 +368,9 @@
         "modules/solver/orchestration.ts",
         "scripts/level-blind-capability-sweep.mjs",
         "scripts/portfolio-solve-sweep.mjs",
-        "scripts/solver-parallel/race.mjs"
+        "scripts/solver-parallel/race.mjs",
+        "scripts/run-ablation.mjs",
+        "scripts/analyze-ablation.mjs"
       ],
       "forms": [
         "canonical feature keys",
@@ -379,9 +381,9 @@
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "remove-current-alias",
-      "status": "in-progress",
-      "retirementGate": "Complete artifact-reader census for any persisted ablation configs and route those readers to normalizeHistoricalAblationConfig(). Known fresh solver/CLI/config input is already canonical-only.",
-      "progress": "Split canonicalAblationFeatureName() from normalizeHistoricalAblationFeatureName(), and normalizeAblationConfig() from normalizeHistoricalAblationConfig(). Current experiment constructors, level-blind CLI parsing, portfolio sweep flag validation, raced config materialization, and direct solveLevel ablation input now accept canonical feature keys only. Historical aliases remain readable through explicitly historical APIs. Non-feature control keys ATTEMPT_ORDER/_randomSeed bypass feature decoding on both paths."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-21: the persisted-artifact census found no maintained reader that semantically replays a saved non-baseline ablation config. analyze-ablation.mjs treats persisted run config as opaque evidence, while run-ablation.mjs may reuse only the baseline run and buildExperimentList() defines that baseline config as null. Historical feature/config normalization therefore remains an explicit archive API rather than being wired into a current producer.",
+      "progress": "Closed. Split canonicalAblationFeatureName() from normalizeHistoricalAblationFeatureName(), and normalizeAblationConfig() from normalizeHistoricalAblationConfig(). Current experiment constructors, level-blind CLI parsing, portfolio sweep flag validation, raced config materialization, and direct solveLevel ablation input accept canonical feature keys only. Artifact-reader census covered run-ablation/analyze-ablation: persisted non-baseline config is never replayed, and reusable baseline config is null. The ablation toolchain test now locks that boundary with a retired-key persisted fixture. Historical aliases remain readable only through explicitly historical APIs."
     },
     {
       "id": "PSC-017",
