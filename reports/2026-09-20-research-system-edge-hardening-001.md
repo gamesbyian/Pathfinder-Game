@@ -1,9 +1,9 @@
 # Research-system edge hardening 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-20 — branch head `3bb2225633`; stable-head CI proved the repaired publisher fixture and Node/CLI contract suite green, with the sole red lane caused by this report's non-canonical status metadata.
+> **Last evidence:** 2026-09-20 — hostile continuation through `415eb81fc4`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite, and reconciliation source relabelling.
 > **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
-> **Remaining gate:** revalidate once after the metadata repair while continuing the adjacent-join/executable-surface audit; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
+> **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
 
 ## Why this pass exists
 
@@ -251,3 +251,43 @@ Current validation is split intentionally:
 - only a real targeted dispatch can establish runtime artifact visibility across the new reusable-workflow call.
 
 Do not describe that last runtime boundary as tested until the post-merge canary has actually committed the expected compact response and manifest.
+
+
+## P. Continuation pass: authority monotonicity, published-path identity and recovery source identity
+
+The post-handoff hostile pass found three additional concrete second-order holes. None required a new framework.
+
+### P1. Combined integrity cannot re-upgrade legacy evidence
+
+`combine-population-integrity.mjs` previously inferred `decisionValidComplete: true` for a component that lacked the explicit modern field when older coverage/outcome fields looked clean. That recreated exactly the backward-compatibility hazard closed elsewhere in this branch: a legacy artifact could regain fresh decision authority at a downstream combine boundary.
+
+Combination now treats decision validity as monotonic authority: every component must explicitly carry `decisionValidComplete: true`. Clean historical components remain readable and may still be coverage-complete, but combining them cannot manufacture modern decision entitlement. The mixed modern/legacy case is pinned in the Node test.
+
+Commits: `c5ce6ca2fb`, `06e5c79f95`.
+
+### P2. Published evidence paths must be one-to-one with source artifacts
+
+The standard publisher staged every non-primary `--include` under `files/<basename>`. Two distinct source artifacts with the same basename therefore mapped to the same destination: the later copy overwrote the earlier bytes while the manifest still recorded both source entries. Each source could be individually valid, yet the published bundle told a false story about which bytes survived.
+
+The publisher now claims each published path once and fails with an integrity error on any collision before a second source can overwrite that path. A real subprocess test supplies two distinct `summary.json` includes and requires the CLI to fail rather than publish an ambiguous bundle.
+
+Commits: `9907ac3e96`, `832325a1b0`.
+
+### P3. Reconciliation source identity comes from the manifest, not the staging directory
+
+Cross-run reconciliation used the directory name under `sources/<run-id>/` as the source run identity without proving that the staged manifest actually belonged to that workflow run. A misplaced or incorrectly downloaded artifact could therefore be relabelled by its directory name, after which the false identity entered `sourceRuns` and `sourceSetHash`.
+
+Fresh reconciliation sources must now declare `experiment.workflowRunId` and `experiment.workflowRunAttempt`. The declared run ID must equal the staging directory identity; top-level and experiment run/attempt fields must agree when both are present. Missing attempt identity is also rejected, because a rerun attempt is part of the acquisition provenance rather than an incidental workflow detail.
+
+This leaves directory layout as transport only. It can locate a source, but it cannot define the scientific source identity.
+
+Commits: `daec86b202`, `415eb81fc4`.
+
+### P4. Negative checks from this continuation
+
+Two nearby seams were inspected and did not earn changes:
+
+- technique-census duplicate cells are only deduplicated when their scientifically comparable payloads agree; conflicting duplicates already fail loudly before plan/result analysis;
+- the method-probe flat-versus-nested staging adapter is layout-sensitive by necessity, but exact population validation, duplicate result detection, authored outer-shard count and execution-metadata agreement prevent that layout from becoming scientific identity.
+
+The deliberate non-fixes remain unchanged: no generic composite-configuration-vs-single-result hash equality assertion without an ownership signal, and no claim that the extracted targeted-persistence workflow has passed its required post-merge runtime canary.
