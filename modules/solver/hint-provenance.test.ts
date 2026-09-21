@@ -64,10 +64,8 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
   }
   assert.equal(entry.search.workSpent, null, 'attempt workSpent is not whole-solve provenance workSpent');
   assert.equal(entry.solver.technique, 'repair');
-  // Every retry-tier flag is true on this fixture, so classifyAttemptTier's precedence chain
-  // (orchestration.ts) resolves to its most-specific category, 'late-repair-search' — proving the
-  // derived retryTier field (not a raw copied attempt field, hence not in either Set above) is
-  // actually wired through to provenance.
+  // Current classification is stageId-only. The fixture's canonical stageId is late-repair-search
+  // even though every legacy boolean is deliberately populated for projection coverage.
   assert.equal(entry.solver.forcing?.retryTier, 'late-repair-search');
 });
 import { repairPrimarySeed } from './repair-search.js';
@@ -245,7 +243,7 @@ test('provenanceFromSolveResult maps the current single-written goal-attraction 
 // force-enabled last-resort passes carried the exact same provenance shape as an ordinary
 // main-ladder/repair-fallback win, with no way to tell them apart from the stored hint alone.
 test('deriveSolveAttemptInfo records which force-enabled retry tier won, distinct from an ordinary win', () => {
-  const canonicalRetry = deriveSolveAttemptInfo([{ scoringProfileId: 'objectiveFirst', beamWidth: 5000, coarseStateNearTieRetentionRetry: true, ok: true }]);
+  const canonicalRetry = deriveSolveAttemptInfo([{ scoringProfileId: 'objectiveFirst', beamWidth: 5000, stageId: 'coarse-state-near-tie-retention-disabled-retry', ok: true }]);
   assert.equal(canonicalRetry.retryTier, 'coarse-state-near-tie-retention-disabled-retry');
 
   const legacyRetry = deriveSolveAttemptInfo([{ profile: 'objectiveFirst', beamWidth: 5000, dedupNearTieRetry: true, ok: true }]);
