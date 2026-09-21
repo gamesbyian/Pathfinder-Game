@@ -31,7 +31,7 @@ export function normalizeSolverSweepReportInput(document, source = '<input>') {
         corpus: document.corpus,
         nodeBudget: document.nodeBudget,
         workBudget: document.workBudget,
-        schedulerMode: document.schedulerMode ?? document.execution?.schedulerMode,
+        schedulerMode: document.schedulerMode ?? document.execution?.schedulerMode ?? document.executionConfig?.schedulerMode,
         repairBudgetFraction: document.repairBudgetFraction,
         commit: document.commitSha,
         ...(document.executionConfig || {}),
