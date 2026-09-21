@@ -79,8 +79,7 @@ export function readLevelsWithHints(levelsJsonPath) {
         } else {
             records = inlineRecords || [];
         }
-        level.hintRecords = records;
-        level.hints = hintPaths(records);
+        setLevelHintRecords(level, records);
         UNTOUCHED_HINTS_STATE.set(level, { hints: level.hints, hintRecords: level.hintRecords });
     });
     return levels;
