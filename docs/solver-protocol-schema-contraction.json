@@ -430,7 +430,7 @@
       "treatment": "canonical-ingress-adapter",
       "status": "in-progress",
       "retirementGate": "Decide/migrate remaining current compatibility outputs: legacy complete coverage mirror and legacy display identity arrays. Decision-bearing consumers are already canonical-only; do not reintroduce inference.",
-      "progress": "Added normalizeResearchPopulationIntegrity() at the canonical research-observation integrity owner. Persisted records now normalize once: historical complete may recover coverageComplete, but decisionValidComplete is explicit-only and is never inferred from clean-looking legacy outcomes; absent expectedIds stays unknown rather than becoming an empty population. combine-population-integrity and publish-solver-sweep-result consume normalized integrity and no longer carry their own coverage fallback expressions. Current observation builders already emit explicit decision validity."
+      "progress": "Population integrity normalizes once at research-observation ingress; historical complete may recover coverage only and never decision authority. Current buildResearchPopulationIntegrity(), validate-solver-sweep-integrity output, and combinePopulationIntegrity() no longer emit the legacy complete mirror: current completeness is explicit coverageComplete plus decisionValidComplete. Remaining compatibility output is the combined-population legacy display identity arrays alongside canonical JSON-tuple identities; those still need a consumer/migration decision before closeout."
     },
     {
       "id": "PSC-019",
