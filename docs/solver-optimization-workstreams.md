@@ -20,7 +20,7 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / two-front portfolio. Production boundary `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
+**State:** ACTIVE. Production boundary `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
 - **Classes 1-3:** class 1 has no menu headroom. **Class 3 dose RESOLVED:** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative; repair-family deadline censoring and admissible-order reserve starvation route to separate follow-ups. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
@@ -112,7 +112,7 @@ A/D1/F3 did not earn a shared runtime substrate; dated reports own chronology. [
 - Match protocol identity, not nominal stage reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes may generate premises, never production exceptions.
 - Prefer the cheapest information-value test. Hold out independent units and scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not impossibility certificates or state equivalence.
 - Classify proposed solver work as **HARVEST / EXTENSION / INVENTION** before implementation; a new strategy flag or retry shell is not automatically a new capability.
-- No generic blackboard, production exact solver, CEGAR, LNS, decomposition engine or per-level compiler is earned by an open semantic gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
+- No generic blackboard/exact solver/CEGAR/LNS/decomposition engine/per-level compiler is earned by an open semantic gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
 
 ## Cheap evidence routing
 
