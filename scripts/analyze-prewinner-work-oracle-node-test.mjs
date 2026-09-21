@@ -20,4 +20,7 @@ assert.equal(result.summary.preWinnerWork, 30);
 assert.equal(result.summary.preWinnerWorkShare, .5);
 assert.equal(result.levels.find(r => r.levelId === 'A').winnerIndex, 1);
 assert.equal(result.byWinningStage.find(r => r.winningStage === 'late').preWinnerWork, 30);
+assert.equal(result.predecessorWinningStagePairs[0].predecessorStage, 'early');
+assert.equal(result.predecessorWinningStagePairs[0].winningStage, 'late');
+assert.equal(result.predecessorWinningStagePairs[0].preWinnerWork, 30);
 console.log('analyze-prewinner-work-oracle: ok');
