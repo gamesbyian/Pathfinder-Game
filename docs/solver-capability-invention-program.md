@@ -109,6 +109,12 @@ The durable machine-readable register is `data/stress/capability-invention-deman
 
 A candidate capability climbs this ladder:
 
+### 0. FORMALIZATION / REDUNDANCY
+
+Before population work, state the semantic claim precisely enough to falsify, map which mechanics preserve/transform/invalidate it, and identify the smallest witness where it says something current production machinery does not already know. For invariant/projection work, use the Stage-0 contract in [small exact projections](solver-small-exact-projections-program.md).
+
+A candidate with no novelty witness stops here even if mathematically elegant.
+
 ### 1. EXISTENCE
 
 Show that the proposed fact/relation/failure phenomenon occurs on real hard states.
@@ -136,6 +142,10 @@ Test the smallest consumer on a frozen population with independent confirmation 
 Compare at matched machine-independent work. A real semantic capability can still be uneconomic in a particular placement or implementation.
 
 A negative at stages 2-5 closes only the tested form/consumer/economics contract. Preserve the parent semantic premise unless the evidence actually falsifies it.
+
+### Sibling-form checkpoint
+
+When one formulation becomes productive, do not immediately mistake it for the concept. Before implementation/promotion, enumerate the nearest materially different siblings in the same semantic family and record why each is redundant, unsupported, lower-value, or separately queued. Also distinguish **proof value** (sound reject/bound) from **response value** (explains technique/path behavior). A positive or negative on one channel does not silently settle the other.
 
 ## Capability probe contract
 
