@@ -190,7 +190,7 @@ writeFileSync(solveCorpusPath, JSON.stringify(mechanicsOnlyCorpus));
 // matches the actually-resolved mode.
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode: 'production' };
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
-if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
+if (Number.isFinite(workBudget)) solveOpts.baseWorkBudget = workBudget;
 if (strictTotalWorkBudget) solveOpts.strictTotalWorkBudget = true;
 if (attemptBudgetTelemetry) solveOpts.attemptBudgetTelemetry = true;
 if (lifecycleTelemetry) solveOpts.lifecycleTelemetry = true;
