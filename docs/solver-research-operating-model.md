@@ -176,7 +176,7 @@ A live handoff needs measured consumer limitation, producer information the cons
 
 ## Family and accepted-path evidence
 
-Use the off-main variant-family dataset for controlled diagnosis, never production lookup or independent-row bulk statistics; new generation follows [`variant-level-research.md`](variant-level-research.md). Referee-validate accepted paths and retain provenance, but keep them out of cold solves. Diagnose the first unchanged-search loss and test the generic boundary: fixed reusable descriptors need recurrence across unrelated parents, while procedures deriving instance-specific proofs/plans need soundness plus useful solve/work behavior across independent levels. One path remains a case study, not a population.
+Use variant families for controlled diagnosis, never production lookup or independent-row bulk statistics; generation follows [`variant-level-research.md`](variant-level-research.md). Referee-validate paths, retain provenance, and keep them out of cold solves. Fixed reusable descriptors need recurrence across unrelated parents; instance-derived proofs/plans need soundness plus useful solve/work behavior across independent levels. One path is a case study, not a population.
 
 ## Promotion contract
 
