@@ -60,6 +60,10 @@ const reconciliation = buildReconciliationContract(result, {
   reconciliationSha: 'f'.repeat(40),
 });
 assert.deepEqual(reconciliation.experiment.sourceRuns, ['1', '2']);
+assert.equal(reconciliation.experiment.sourceProtocolHash, result.protocolHash);
+assert.equal(reconciliation.experiment.sourceSetHash, result.sourceSetHash);
+assert.equal(reconciliation.experiment.reconciliationRun.sourceProtocolHash, result.protocolHash);
+assert.equal(reconciliation.experiment.reconciliationRun.sourceSetHash, result.sourceSetHash);
 assert.equal(reconciliation.experiment.resolvedSha, 'a'.repeat(40), 'recombine preserves source execution identity');
 assert.equal(reconciliation.experiment.reconciliationRun.kind, 'recombine-only');
 assert.equal(reconciliation.experiment.reconciliationRun.preservesExperimentIdentity, true);
