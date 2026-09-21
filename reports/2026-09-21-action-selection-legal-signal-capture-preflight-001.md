@@ -8,6 +8,7 @@
 > **Selection:** current production-boundary C1/C2 attempts; split before fitting or threshold selection.
 > **Population identity:** GitHub Actions run `35066677597`, solver ref `16114b80e54233910f34ec2ea8e2c1a41a859eb4`.
 > **Inference scope:** shadow predictability/capture on the recorded current production population only; no scheduler promotion.
+> **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 
 ## Parent finding
 
