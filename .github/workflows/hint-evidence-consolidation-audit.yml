@@ -1,0 +1,21 @@
+name: Hint evidence consolidation audit (temporary)
+on:
+  push:
+    branches:
+      - chatgpt/hint-determinism-provenance-audit-2026-09-22
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run consolidation census
+        run: node scripts/hint-evidence-consolidation-audit.mjs --out=reports/2026-09-22-hint-evidence-consolidation-census.json
+      - name: Upload census
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hint-evidence-consolidation-census
+          path: reports/2026-09-22-hint-evidence-consolidation-census.json
+          if-no-files-found: error
