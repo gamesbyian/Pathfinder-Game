@@ -1,0 +1,4144 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "development equal-work pricing to production-reach join",
+  "identityContract": "historical/current attempt, action, and stage identities canonicalized at ingestion",
+  "decisionBearing": true,
+  "blockers": [],
+  "equalWork": {
+    "rows": 2015,
+    "levels": 60,
+    "techniques": 34
+  },
+  "production": {
+    "documents": 2,
+    "rows": 1802,
+    "rowsWithLifecycle": 1802,
+    "rowsWithUnknownCorpus": 0,
+    "corpora": [
+      "corpus1",
+      "corpus2"
+    ],
+    "commits": [
+      "39d14d49023aa09cb680053b975ef786eeae9b01"
+    ],
+    "missingCommitDocuments": 0,
+    "currentHead": "39d14d49023aa09cb680053b975ef786eeae9b01",
+    "currentHeadRequired": true,
+    "matchedAttempts": 56906,
+    "unmatchedAttemptIdentity": 0,
+    "missingMatchedAttemptWork": 0
+  },
+  "techniques": [
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=standard",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 2,
+        "solvedLevels": 2,
+        "meanWork": 9823835.616666667,
+        "medianWork": 10000032.5,
+        "workBudgetReached": 58,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 1341,
+        "winningLevels": 233,
+        "attempts": 4220,
+        "successfulAttempts": 233,
+        "work": 47615300825,
+        "meanAttemptWork": 11283246.64099526,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "early-repair-search",
+            "attempts": 2089,
+            "successfulAttempts": 177,
+            "work": 13487792685,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "early-repair-search|repair|score=repair|guidance=standard|seedSalt=0",
+              "early-repair-search|repair|score=repair|guidance=standard|seedSalt=1"
+            ]
+          },
+          {
+            "stageId": "late-repair-multiseed-retry",
+            "attempts": 1370,
+            "successfulAttempts": 33,
+            "work": 22831523687,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "late-repair-multiseed-retry|repair|score=repair|guidance=standard|seedSalt=1",
+              "late-repair-multiseed-retry|repair|score=repair|guidance=standard|seedSalt=2",
+              "late-repair-multiseed-retry|repair|score=repair|guidance=standard|seedSalt=3",
+              "late-repair-multiseed-retry|repair|score=repair|guidance=standard|seedSalt=4",
+              "late-repair-multiseed-retry|repair|score=repair|guidance=standard|seedSalt=5",
+              "late-repair-multiseed-retry|repair|score=repair|guidance=standard|seedSalt=6",
+              "late-repair-multiseed-retry|repair|score=repair|guidance=standard|seedSalt=7"
+            ]
+          },
+          {
+            "stageId": "late-repair-search",
+            "attempts": 236,
+            "successfulAttempts": 17,
+            "work": 3743580855,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "late-repair-search|repair|score=repair|guidance=standard|seedSalt=0"
+            ]
+          },
+          {
+            "stageId": "repair-fallback",
+            "attempts": 525,
+            "successfulAttempts": 6,
+            "work": 7552403598,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "repair-fallback|repair|score=repair|guidance=standard|seedSalt=0"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=objectiveFirst|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000098.05,
+        "medianWork": 10000092.5,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 1077,
+        "winningLevels": 18,
+        "attempts": 4878,
+        "successfulAttempts": 18,
+        "work": 30762275211,
+        "meanAttemptWork": 6306329.481549815,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 761,
+            "successfulAttempts": 0,
+            "work": 3002679437,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=objectiveFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 726,
+            "successfulAttempts": 0,
+            "work": 5689344949,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=objectiveFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 822,
+            "successfulAttempts": 0,
+            "work": 60616618,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=objectiveFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 690,
+            "successfulAttempts": 0,
+            "work": 7640495159,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=objectiveFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 1077,
+            "successfulAttempts": 18,
+            "work": 6531028895,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=objectiveFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 400,
+            "successfulAttempts": 0,
+            "work": 4000641924,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=objectiveFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 402,
+            "successfulAttempts": 0,
+            "work": 3837468229,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=objectiveFirst|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 4,
+        "solvedLevels": 4,
+        "meanWork": 1483292.8833333333,
+        "medianWork": 1407232.5,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 56
+      },
+      "production": {
+        "reachedLevels": 1059,
+        "winningLevels": 95,
+        "attempts": 4737,
+        "successfulAttempts": 95,
+        "work": 4315232563,
+        "meanAttemptWork": 910963.1756385898,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 737,
+            "successfulAttempts": 0,
+            "work": 291602076,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 700,
+            "successfulAttempts": 0,
+            "work": 273005112,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 804,
+            "successfulAttempts": 0,
+            "work": 339153532,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 667,
+            "successfulAttempts": 1,
+            "work": 673921730,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 1059,
+            "successfulAttempts": 78,
+            "work": 1571798964,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 374,
+            "successfulAttempts": 0,
+            "work": 515466556,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 396,
+            "successfulAttempts": 16,
+            "work": 650284593,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 2,
+        "solvedLevels": 2,
+        "meanWork": 1393775.7333333334,
+        "medianWork": 1326927,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 58
+      },
+      "production": {
+        "reachedLevels": 1036,
+        "winningLevels": 202,
+        "attempts": 3770,
+        "successfulAttempts": 202,
+        "work": 3577845240,
+        "meanAttemptWork": 949030.5676392573,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 550,
+            "successfulAttempts": 0,
+            "work": 262062724,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 518,
+            "successfulAttempts": 0,
+            "work": 245236283,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 621,
+            "successfulAttempts": 4,
+            "work": 310694796,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 491,
+            "successfulAttempts": 1,
+            "work": 519352600,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 1036,
+            "successfulAttempts": 177,
+            "work": 1477646683,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 278,
+            "successfulAttempts": 1,
+            "work": 355429226,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 276,
+            "successfulAttempts": 19,
+            "work": 407422928,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 3,
+        "solvedLevels": 3,
+        "meanWork": 2927473.9,
+        "medianWork": 2875997,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 57
+      },
+      "production": {
+        "reachedLevels": 1018,
+        "winningLevels": 116,
+        "attempts": 4660,
+        "successfulAttempts": 116,
+        "work": 9827152843,
+        "meanAttemptWork": 2108831.0821888414,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 735,
+            "successfulAttempts": 4,
+            "work": 1070141594,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 696,
+            "successfulAttempts": 0,
+            "work": 1047641802,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 799,
+            "successfulAttempts": 12,
+            "work": 551626189,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 662,
+            "successfulAttempts": 1,
+            "work": 1526983078,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 1018,
+            "successfulAttempts": 82,
+            "work": 3188571776,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 368,
+            "successfulAttempts": 1,
+            "work": 1077874530,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 382,
+            "successfulAttempts": 16,
+            "work": 1364313874,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 3,
+        "solvedLevels": 3,
+        "meanWork": 2943330.45,
+        "medianWork": 2944517.5,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 57
+      },
+      "production": {
+        "reachedLevels": 988,
+        "winningLevels": 115,
+        "attempts": 4632,
+        "successfulAttempts": 115,
+        "work": 9805854756,
+        "meanAttemptWork": 2116980.733160622,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 731,
+            "successfulAttempts": 3,
+            "work": 1059672757,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 696,
+            "successfulAttempts": 0,
+            "work": 1046670529,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 791,
+            "successfulAttempts": 3,
+            "work": 536293323,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 662,
+            "successfulAttempts": 0,
+            "work": 1542904780,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 988,
+            "successfulAttempts": 83,
+            "work": 3071626421,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 367,
+            "successfulAttempts": 2,
+            "work": 1094286339,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 397,
+            "successfulAttempts": 24,
+            "work": 1454400607,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=intersectionHarvest|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000090.116666667,
+        "medianWork": 10000084,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 978,
+        "winningLevels": 8,
+        "attempts": 4623,
+        "successfulAttempts": 8,
+        "work": 21494417055,
+        "meanAttemptWork": 4649452.099286178,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 752,
+            "successfulAttempts": 0,
+            "work": 792573543,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=intersectionHarvest|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 720,
+            "successfulAttempts": 1,
+            "work": 2767868134,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=intersectionHarvest|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 812,
+            "successfulAttempts": 0,
+            "work": 4124529,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=intersectionHarvest|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 684,
+            "successfulAttempts": 0,
+            "work": 7071672774,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=intersectionHarvest|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 862,
+            "successfulAttempts": 7,
+            "work": 4989436254,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=intersectionHarvest|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 393,
+            "successfulAttempts": 0,
+            "work": 3357967545,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=intersectionHarvest|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 400,
+            "successfulAttempts": 0,
+            "work": 2510774276,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=intersectionHarvest|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=default|lds=off",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 1,
+        "solvedLevels": 1,
+        "meanWork": 9916850.016666668,
+        "medianWork": 10000160.5,
+        "workBudgetReached": 59,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 822,
+        "winningLevels": 44,
+        "attempts": 822,
+        "successfulAttempts": 44,
+        "work": 12091364955,
+        "meanAttemptWork": 14709689.726277372,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "admissible-order-fallback",
+            "attempts": 822,
+            "successfulAttempts": 44,
+            "work": 12091364955,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "admissible-order-fallback|admissible-order|tieBreak=default|lds=off"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=none|lds=off",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 1,
+        "solvedLevels": 1,
+        "meanWork": 9890850.35,
+        "medianWork": 10000157.5,
+        "workBudgetReached": 59,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 761,
+        "winningLevels": 31,
+        "attempts": 761,
+        "successfulAttempts": 31,
+        "work": 11329872193,
+        "meanAttemptWork": 14888136.915900132,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "admissible-order-alternate-tiebreak-retry",
+            "attempts": 761,
+            "successfulAttempts": 31,
+            "work": 11329872193,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "admissible-order-alternate-tiebreak-retry|admissible-order|tieBreak=none|lds=off"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=perimeterCW",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000090.466666667,
+        "medianWork": 10000084,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 660,
+        "winningLevels": 27,
+        "attempts": 2729,
+        "successfulAttempts": 27,
+        "work": 8852793708,
+        "meanAttemptWork": 3243969.8453646023,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 439,
+            "successfulAttempts": 0,
+            "work": 981443021,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=perimeterSweep|bias=perimeterCW"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 416,
+            "successfulAttempts": 0,
+            "work": 1024823143,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=perimeterSweep|bias=perimeterCW"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 479,
+            "successfulAttempts": 0,
+            "work": 71113642,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=perimeterSweep|bias=perimeterCW"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 387,
+            "successfulAttempts": 0,
+            "work": 2410464407,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=perimeterSweep|bias=perimeterCW"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 551,
+            "successfulAttempts": 27,
+            "work": 2576260383,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=perimeterSweep|bias=perimeterCW"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 211,
+            "successfulAttempts": 0,
+            "work": 936342046,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=perimeterSweep|bias=perimeterCW"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 246,
+            "successfulAttempts": 0,
+            "work": 852347066,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=perimeterSweep|bias=perimeterCW"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=must-turn-biased",
+      "equalWork": {
+        "eligibleCells": 35,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000047.17142857,
+        "medianWork": 10000033,
+        "workBudgetReached": 35,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 624,
+        "winningLevels": 35,
+        "attempts": 624,
+        "successfulAttempts": 35,
+        "work": 7275735127,
+        "meanAttemptWork": 11659831.934294872,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "early-repair-search",
+            "attempts": 624,
+            "successfulAttempts": 35,
+            "work": 7275735127,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=perimeterCCW",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000092.383333333,
+        "medianWork": 10000095.5,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 611,
+        "winningLevels": 10,
+        "attempts": 2638,
+        "successfulAttempts": 10,
+        "work": 6371791953,
+        "meanAttemptWork": 2415387.3968915846,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 430,
+            "successfulAttempts": 0,
+            "work": 206399473,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=perimeterSweep|bias=perimeterCCW"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 409,
+            "successfulAttempts": 0,
+            "work": 930578461,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=perimeterSweep|bias=perimeterCCW"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 469,
+            "successfulAttempts": 0,
+            "work": 1626083,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=perimeterSweep|bias=perimeterCCW"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 381,
+            "successfulAttempts": 0,
+            "work": 2317750505,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=perimeterSweep|bias=perimeterCCW"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 502,
+            "successfulAttempts": 10,
+            "work": 1795577738,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=perimeterSweep|bias=perimeterCCW"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 204,
+            "successfulAttempts": 0,
+            "work": 528130565,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=perimeterSweep|bias=perimeterCCW"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 243,
+            "successfulAttempts": 0,
+            "work": 591729128,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=perimeterSweep|bias=perimeterCCW"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=knotBuilder|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 1,
+        "solvedLevels": 1,
+        "meanWork": 9887272.383333333,
+        "medianWork": 10000083.5,
+        "workBudgetReached": 59,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 569,
+        "winningLevels": 2,
+        "attempts": 2481,
+        "successfulAttempts": 2,
+        "work": 3839874489,
+        "meanAttemptWork": 1547712.4099153567,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 406,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=knotBuilder|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 385,
+            "successfulAttempts": 0,
+            "work": 108199054,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=knotBuilder|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 443,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=knotBuilder|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 358,
+            "successfulAttempts": 0,
+            "work": 1880435348,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=knotBuilder|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 479,
+            "successfulAttempts": 2,
+            "work": 878731954,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=knotBuilder|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 181,
+            "successfulAttempts": 0,
+            "work": 442726354,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=knotBuilder|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 229,
+            "successfulAttempts": 0,
+            "work": 529781779,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=knotBuilder|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 5,
+        "solvedLevels": 5,
+        "meanWork": 3341313.8833333333,
+        "medianWork": 3222437.5,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 55
+      },
+      "production": {
+        "reachedLevels": 549,
+        "winningLevels": 173,
+        "attempts": 2354,
+        "successfulAttempts": 173,
+        "work": 8596725224,
+        "meanAttemptWork": 3651964.8360237894,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 334,
+            "successfulAttempts": 9,
+            "work": 1202009449,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 309,
+            "successfulAttempts": 2,
+            "work": 1137233462,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 367,
+            "successfulAttempts": 22,
+            "work": 1321666626,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 295,
+            "successfulAttempts": 6,
+            "work": 1093896700,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 549,
+            "successfulAttempts": 108,
+            "work": 1965070906,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 305,
+            "successfulAttempts": 2,
+            "work": 1093249283,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 195,
+            "successfulAttempts": 24,
+            "work": 783598798,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 3,
+        "solvedLevels": 3,
+        "meanWork": 3330129.3666666667,
+        "medianWork": 3486620.5,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 57
+      },
+      "production": {
+        "reachedLevels": 413,
+        "winningLevels": 40,
+        "attempts": 2093,
+        "successfulAttempts": 40,
+        "work": 7316831904,
+        "meanAttemptWork": 3495858.530339226,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 312,
+            "successfulAttempts": 1,
+            "work": 1104480814,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 298,
+            "successfulAttempts": 1,
+            "work": 1073759384,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 328,
+            "successfulAttempts": 1,
+            "work": 806395166,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 282,
+            "successfulAttempts": 0,
+            "work": 1053778842,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 413,
+            "successfulAttempts": 22,
+            "work": 1531485818,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 294,
+            "successfulAttempts": 2,
+            "work": 1070903534,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 166,
+            "successfulAttempts": 13,
+            "work": 676028346,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=sideCommitment",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000100.683333334,
+        "medianWork": 10000101,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 338,
+        "winningLevels": 4,
+        "attempts": 1475,
+        "successfulAttempts": 4,
+        "work": 4023079132,
+        "meanAttemptWork": 2727511.2759322035,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 236,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=perimeterSweep|bias=sideCommitment"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 223,
+            "successfulAttempts": 0,
+            "work": 36850763,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=perimeterSweep|bias=sideCommitment"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 259,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=perimeterSweep|bias=sideCommitment"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 206,
+            "successfulAttempts": 0,
+            "work": 1090350641,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=perimeterSweep|bias=sideCommitment"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 338,
+            "successfulAttempts": 3,
+            "work": 561576668,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=perimeterSweep|bias=sideCommitment"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 75,
+            "successfulAttempts": 1,
+            "work": 1039239650,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=perimeterSweep|bias=sideCommitment"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 138,
+            "successfulAttempts": 0,
+            "work": 1295061410,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=perimeterSweep|bias=sideCommitment"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 2,
+        "solvedLevels": 2,
+        "meanWork": 1182440.4833333334,
+        "medianWork": 1108655.5,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 58
+      },
+      "production": {
+        "reachedLevels": 308,
+        "winningLevels": 21,
+        "attempts": 1352,
+        "successfulAttempts": 21,
+        "work": 1519809458,
+        "meanAttemptWork": 1124119.421597633,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 203,
+            "successfulAttempts": 0,
+            "work": 236818536,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 193,
+            "successfulAttempts": 0,
+            "work": 237172335,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=objectiveFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 225,
+            "successfulAttempts": 3,
+            "work": 148674522,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=objectiveFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 182,
+            "successfulAttempts": 1,
+            "work": 221173320,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=objectiveFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 308,
+            "successfulAttempts": 12,
+            "work": 372372968,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=objectiveFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 136,
+            "successfulAttempts": 1,
+            "work": 153174308,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=objectiveFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 105,
+            "successfulAttempts": 4,
+            "work": 150423469,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=objectiveFirst|bias=none|width=2000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 2,
+        "solvedLevels": 2,
+        "meanWork": 1158344.4333333333,
+        "medianWork": 1099044,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 58
+      },
+      "production": {
+        "reachedLevels": 302,
+        "winningLevels": 36,
+        "attempts": 1308,
+        "successfulAttempts": 36,
+        "work": 1490497951,
+        "meanAttemptWork": 1139524.4273700307,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 194,
+            "successfulAttempts": 0,
+            "work": 233180858,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=intersectionHarvest|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 186,
+            "successfulAttempts": 0,
+            "work": 224631578,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=intersectionHarvest|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 219,
+            "successfulAttempts": 6,
+            "work": 161314703,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=intersectionHarvest|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 176,
+            "successfulAttempts": 0,
+            "work": 209814382,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=intersectionHarvest|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 302,
+            "successfulAttempts": 24,
+            "work": 375236313,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=intersectionHarvest|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 130,
+            "successfulAttempts": 1,
+            "work": 143907456,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=intersectionHarvest|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 101,
+            "successfulAttempts": 5,
+            "work": 142412661,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=intersectionHarvest|bias=none|width=2000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=cornerHarvest",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000083.116666667,
+        "medianWork": 10000072.5,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 225,
+        "winningLevels": 18,
+        "attempts": 658,
+        "successfulAttempts": 18,
+        "work": 859736910,
+        "meanAttemptWork": 1306591.0486322187,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 118,
+            "successfulAttempts": 0,
+            "work": 100503018,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=perimeterSweep|bias=cornerHarvest"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 108,
+            "successfulAttempts": 0,
+            "work": 83751797,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=perimeterSweep|bias=cornerHarvest"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 135,
+            "successfulAttempts": 0,
+            "work": 51170783,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=perimeterSweep|bias=cornerHarvest"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 94,
+            "successfulAttempts": 0,
+            "work": 103851604,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=perimeterSweep|bias=cornerHarvest"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 116,
+            "successfulAttempts": 18,
+            "work": 389060503,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=perimeterSweep|bias=cornerHarvest"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 20,
+            "successfulAttempts": 0,
+            "work": 37333327,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=perimeterSweep|bias=cornerHarvest"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 67,
+            "successfulAttempts": 0,
+            "work": 94065878,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=perimeterSweep|bias=cornerHarvest"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=harvestThenFinish|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 1,
+        "solvedLevels": 1,
+        "meanWork": 9887427.416666666,
+        "medianWork": 10000094.5,
+        "workBudgetReached": 59,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 221,
+        "winningLevels": 4,
+        "attempts": 763,
+        "successfulAttempts": 4,
+        "work": 1429476715,
+        "meanAttemptWork": 1873495.0393184796,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 118,
+            "successfulAttempts": 0,
+            "work": 56894655,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=harvestThenFinish|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 108,
+            "successfulAttempts": 0,
+            "work": 313694669,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=harvestThenFinish|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 135,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=harvestThenFinish|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 94,
+            "successfulAttempts": 0,
+            "work": 346135584,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=harvestThenFinish|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 221,
+            "successfulAttempts": 4,
+            "work": 583186632,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=harvestThenFinish|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 21,
+            "successfulAttempts": 0,
+            "work": 38481959,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=harvestThenFinish|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 66,
+            "successfulAttempts": 0,
+            "work": 91083216,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=harvestThenFinish|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=portalFirstTransfer|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 1,
+        "solvedLevels": 1,
+        "meanWork": 9887366.283333333,
+        "medianWork": 10000072,
+        "workBudgetReached": 59,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 183,
+        "winningLevels": 18,
+        "attempts": 670,
+        "successfulAttempts": 18,
+        "work": 1668906901,
+        "meanAttemptWork": 2490905.82238806,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 109,
+            "successfulAttempts": 0,
+            "work": 324959083,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=portalFirstTransfer|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 101,
+            "successfulAttempts": 0,
+            "work": 301509599,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=portalFirstTransfer|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 127,
+            "successfulAttempts": 2,
+            "work": 226449995,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=portalFirstTransfer|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 88,
+            "successfulAttempts": 0,
+            "work": 261308080,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=portalFirstTransfer|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 167,
+            "successfulAttempts": 16,
+            "work": 451263279,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=portalFirstTransfer|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 14,
+            "successfulAttempts": 0,
+            "work": 18589458,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=portalFirstTransfer|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 64,
+            "successfulAttempts": 0,
+            "work": 84827407,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=portalFirstTransfer|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=mustCrossFirst|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000092.55,
+        "medianWork": 10000087,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 182,
+        "winningLevels": 2,
+        "attempts": 708,
+        "successfulAttempts": 2,
+        "work": 852421674,
+        "meanAttemptWork": 1203985.4152542374,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 118,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=mustCrossFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 108,
+            "successfulAttempts": 0,
+            "work": 15944163,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=mustCrossFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 135,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=mustCrossFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 94,
+            "successfulAttempts": 0,
+            "work": 346133207,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=mustCrossFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 166,
+            "successfulAttempts": 2,
+            "work": 299917088,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=mustCrossFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 21,
+            "successfulAttempts": 0,
+            "work": 86115764,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=mustCrossFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 66,
+            "successfulAttempts": 0,
+            "work": 104311452,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=mustCrossFirst|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 1,
+        "solvedLevels": 1,
+        "meanWork": 9886840.033333333,
+        "medianWork": 10000097,
+        "workBudgetReached": 59,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 172,
+        "winningLevels": 1,
+        "attempts": 658,
+        "successfulAttempts": 1,
+        "work": 831885762,
+        "meanAttemptWork": 1264264.075987842,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 109,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=perimeterSweep|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 101,
+            "successfulAttempts": 0,
+            "work": 1454150,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=perimeterSweep|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 125,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=perimeterSweep|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 88,
+            "successfulAttempts": 0,
+            "work": 294807109,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=perimeterSweep|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 157,
+            "successfulAttempts": 1,
+            "work": 431852434,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=perimeterSweep|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 14,
+            "successfulAttempts": 0,
+            "work": 18949604,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=perimeterSweep|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 64,
+            "successfulAttempts": 0,
+            "work": 84822465,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=perimeterSweep|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=portalCommitted|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000086.316666666,
+        "medianWork": 10000079.5,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 167,
+        "winningLevels": 5,
+        "attempts": 652,
+        "successfulAttempts": 5,
+        "work": 1412999088,
+        "meanAttemptWork": 2167176.5153374234,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 109,
+            "successfulAttempts": 0,
+            "work": 324959373,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=portalCommitted|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 101,
+            "successfulAttempts": 0,
+            "work": 301508557,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=portalCommitted|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 125,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=portalCommitted|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 88,
+            "successfulAttempts": 0,
+            "work": 261306293,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=portalCommitted|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 151,
+            "successfulAttempts": 5,
+            "work": 421883721,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=portalCommitted|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 14,
+            "successfulAttempts": 0,
+            "work": 18576776,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=portalCommitted|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 64,
+            "successfulAttempts": 0,
+            "work": 84764368,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=portalCommitted|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=default|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 1,
+        "solvedLevels": 1,
+        "meanWork": 9887412,
+        "medianWork": 10000090,
+        "workBudgetReached": 59,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 163,
+        "winningLevels": 1,
+        "attempts": 555,
+        "successfulAttempts": 1,
+        "work": 160092890,
+        "meanAttemptWork": 288455.65765765763,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 109,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=default|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 101,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=default|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 125,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=default|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 88,
+            "successfulAttempts": 0,
+            "work": 30150028,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=default|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 54,
+            "successfulAttempts": 0,
+            "work": 27028271,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=default|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 14,
+            "successfulAttempts": 1,
+            "work": 18049450,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=default|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 64,
+            "successfulAttempts": 0,
+            "work": 84865141,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=default|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=finishFirst|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 1,
+        "solvedLevels": 1,
+        "meanWork": 9843075.383333333,
+        "medianWork": 10000073,
+        "workBudgetReached": 59,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 127,
+        "winningLevels": 0,
+        "attempts": 503,
+        "successfulAttempts": 0,
+        "work": 362844721,
+        "meanAttemptWork": 721361.2743538767,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 109,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=finishFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 101,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=finishFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 125,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=finishFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 88,
+            "successfulAttempts": 0,
+            "work": 257035134,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=finishFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 2,
+            "successfulAttempts": 0,
+            "work": 2366463,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=finishFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 14,
+            "successfulAttempts": 0,
+            "work": 18707022,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=finishFirst|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 64,
+            "successfulAttempts": 0,
+            "work": 84736102,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=finishFirst|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=nearClosureRescue|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000092.783333333,
+        "medianWork": 10000086.5,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 126,
+        "winningLevels": 0,
+        "attempts": 502,
+        "successfulAttempts": 0,
+        "work": 179583828,
+        "meanAttemptWork": 357736.7091633466,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 109,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=nearClosureRescue|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 101,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=nearClosureRescue|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 125,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=nearClosureRescue|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 88,
+            "successfulAttempts": 0,
+            "work": 72593841,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=nearClosureRescue|bias=none"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 1,
+            "successfulAttempts": 0,
+            "work": 3560451,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|dfs|score=nearClosureRescue|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 14,
+            "successfulAttempts": 0,
+            "work": 18694938,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=nearClosureRescue|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 64,
+            "successfulAttempts": 0,
+            "work": 84734598,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=nearClosureRescue|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=closureCommitment|bias=none",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000085.116666667,
+        "medianWork": 10000075.5,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 125,
+        "winningLevels": 0,
+        "attempts": 501,
+        "successfulAttempts": 0,
+        "work": 137506427,
+        "meanAttemptWork": 274463.9261477046,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 109,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|dfs|score=closureCommitment|bias=none"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 101,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|dfs|score=closureCommitment|bias=none"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 125,
+            "successfulAttempts": 0,
+            "work": 0,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|dfs|score=closureCommitment|bias=none"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 88,
+            "successfulAttempts": 0,
+            "work": 34171872,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|dfs|score=closureCommitment|bias=none"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 14,
+            "successfulAttempts": 0,
+            "work": 18546438,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|dfs|score=closureCommitment|bias=none"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 64,
+            "successfulAttempts": 0,
+            "work": 84788117,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|dfs|score=closureCommitment|bias=none"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 3,
+        "solvedLevels": 3,
+        "meanWork": 1182010.4666666666,
+        "medianWork": 1144002.5,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 57
+      },
+      "production": {
+        "reachedLevels": 64,
+        "winningLevels": 11,
+        "attempts": 247,
+        "successfulAttempts": 11,
+        "work": 240437108,
+        "meanAttemptWork": 973429.5870445344,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 33,
+            "successfulAttempts": 0,
+            "work": 24597593,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=mustCrossFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 31,
+            "successfulAttempts": 0,
+            "work": 31951242,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=mustCrossFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 38,
+            "successfulAttempts": 0,
+            "work": 28126782,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=mustCrossFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 29,
+            "successfulAttempts": 0,
+            "work": 30411795,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=mustCrossFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 64,
+            "successfulAttempts": 10,
+            "work": 66443402,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=mustCrossFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 31,
+            "successfulAttempts": 0,
+            "work": 32221150,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=mustCrossFirst|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 21,
+            "successfulAttempts": 1,
+            "work": 26685144,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=mustCrossFirst|bias=none|width=2000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 3,
+        "solvedLevels": 3,
+        "meanWork": 1170424.9333333333,
+        "medianWork": 1120573.5,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 57
+      },
+      "production": {
+        "reachedLevels": 31,
+        "winningLevels": 0,
+        "attempts": 166,
+        "successfulAttempts": 0,
+        "work": 166001753,
+        "meanAttemptWork": 1000010.5602409638,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 24,
+            "successfulAttempts": 0,
+            "work": 24292383,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 24,
+            "successfulAttempts": 0,
+            "work": 24171682,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 26,
+            "successfulAttempts": 0,
+            "work": 24746462,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 23,
+            "successfulAttempts": 0,
+            "work": 23476648,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 31,
+            "successfulAttempts": 0,
+            "work": 29637735,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 24,
+            "successfulAttempts": 0,
+            "work": 22509568,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 14,
+            "successfulAttempts": 0,
+            "work": 17167275,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 3,
+        "solvedLevels": 3,
+        "meanWork": 1177467.9166666667,
+        "medianWork": 1155127,
+        "workBudgetReached": 0,
+        "naturallyExhausted": 57
+      },
+      "production": {
+        "reachedLevels": 31,
+        "winningLevels": 0,
+        "attempts": 166,
+        "successfulAttempts": 0,
+        "work": 154288040,
+        "meanAttemptWork": 929446.0240963856,
+        "missingWorkAttempts": 0,
+        "stages": [
+          {
+            "stageId": "coarse-state-near-tie-retention-disabled-retry",
+            "attempts": 24,
+            "successfulAttempts": 0,
+            "work": 23002584,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "coarse-state-near-tie-retention-disabled-retry|beam|score=knotBuilder|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "connectivity-axis-prune-disabled-retry",
+            "attempts": 24,
+            "successfulAttempts": 0,
+            "work": 22728710,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "connectivity-axis-prune-disabled-retry|beam|score=knotBuilder|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "goal-attraction-disabled-retry",
+            "attempts": 26,
+            "successfulAttempts": 0,
+            "work": 20122810,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "goal-attraction-disabled-retry|beam|score=knotBuilder|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "guidance-goal-distance-retry",
+            "attempts": 23,
+            "successfulAttempts": 0,
+            "work": 21721030,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "guidance-goal-distance-retry|beam|score=knotBuilder|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "main-search",
+            "attempts": 31,
+            "successfulAttempts": 0,
+            "work": 27979165,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "main-search|beam|score=knotBuilder|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "must-cross-neighbor-prune-disabled-retry",
+            "attempts": 24,
+            "successfulAttempts": 0,
+            "work": 21791713,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "must-cross-neighbor-prune-disabled-retry|beam|score=knotBuilder|bias=none|width=2000|retention=plain"
+            ]
+          },
+          {
+            "stageId": "portal-coarse-state-merge-dead-last-retry",
+            "attempts": 14,
+            "successfulAttempts": 0,
+            "work": 16942028,
+            "missingWorkAttempts": 0,
+            "actionKeys": [
+              "portal-coarse-state-merge-dead-last-retry|beam|score=knotBuilder|bias=none|width=2000|retention=plain"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 2,
+        "solvedLevels": 2,
+        "meanWork": 9746449.4,
+        "medianWork": 10000140,
+        "workBudgetReached": 58,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 0,
+        "winningLevels": 0,
+        "attempts": 0,
+        "successfulAttempts": 0,
+        "work": 0,
+        "meanAttemptWork": null,
+        "missingWorkAttempts": 0,
+        "stages": []
+      }
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=intersectionHarvest|lds=off",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000180.05,
+        "medianWork": 10000155,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 0,
+        "winningLevels": 0,
+        "attempts": 0,
+        "successfulAttempts": 0,
+        "work": 0,
+        "meanAttemptWork": null,
+        "missingWorkAttempts": 0,
+        "stages": []
+      }
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+      "equalWork": {
+        "eligibleCells": 60,
+        "solvedCells": 0,
+        "solvedLevels": 0,
+        "meanWork": 10000157.933333334,
+        "medianWork": 10000150,
+        "workBudgetReached": 60,
+        "naturallyExhausted": 0
+      },
+      "production": {
+        "reachedLevels": 0,
+        "winningLevels": 0,
+        "attempts": 0,
+        "successfulAttempts": 0,
+        "work": 0,
+        "meanAttemptWork": null,
+        "missingWorkAttempts": 0,
+        "stages": []
+      }
+    }
+  ],
+  "levelHeadroom": {
+    "levels": [
+      {
+        "corpus": "corpus2",
+        "levelId": "R00044",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 184079146,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R00118",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 208854283,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+            "ew1SolveWork": 3063399,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          }
+        ],
+        "pricingComparison": "ew1-solvers-not-offered",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 7,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R00142",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 302215435,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 1,
+          "singleton": true,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R00350",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 202322334,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R00536",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 346326328,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R00656",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 356597892,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R00703",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 248627574,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 1,
+          "singleton": true,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R00732",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 30104489,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "admissible-order|tieBreak=default|lds=off",
+            "ew1SolveWork": 5000240,
+            "productionAttempts": 1,
+            "productionSuccessfulAttempts": 1,
+            "productionMaxAttemptWork": 3532486,
+            "productionStages": [
+              "admissible-order-fallback"
+            ]
+          },
+          {
+            "attemptConfigIdentity": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+            "ew1SolveWork": 4769112,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R00765",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 248933157,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01577",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 322682719,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01600",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 241146025,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01673",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 276031485,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01698",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 231912545,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01738",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 192910345,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01767",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 287291204,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01860",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 16837409,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 1,
+          "singleton": true,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01872",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 286554731,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R01953",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 208676162,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02000",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 253070395,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02011",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 322633976,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02095",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 91587151,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "dfs|score=finishFirst|bias=none",
+            "ew1SolveWork": 579561,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 3,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02104",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 336800670,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02128",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 8055863,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+            "ew1SolveWork": 8068,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+            "ew1SolveWork": 4507598,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "dfs|score=default|bias=none",
+            "ew1SolveWork": 3239298,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "dfs|score=harvestThenFinish|bias=none",
+            "ew1SolveWork": 3240049,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "dfs|score=knotBuilder|bias=none",
+            "ew1SolveWork": 3231072,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=none",
+            "ew1SolveWork": 3204601,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "dfs|score=portalFirstTransfer|bias=none",
+            "ew1SolveWork": 3236869,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 7,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02184",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 203062790,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02221",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 20942467,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 984783,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+            "ew1SolveWork": 3559335,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+            "ew1SolveWork": 3193757,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+            "ew1SolveWork": 3675923,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+            "ew1SolveWork": 2621455,
+            "productionAttempts": 1,
+            "productionSuccessfulAttempts": 1,
+            "productionMaxAttemptWork": 2621455,
+            "productionStages": [
+              "main-search"
+            ]
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 13,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02276",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 258677635,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02282",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 312933757,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02326",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 291241746,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02347",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 266722309,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02365",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 237193910,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02389",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 113399070,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02401",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 138525255,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02457",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 278212123,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02555",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 173661612,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02597",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 223490689,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02598",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 188599501,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02643",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 222998919,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02651",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 8179948,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02657",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 23718411,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 593360,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 580028,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+            "ew1SolveWork": 1517049,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+            "ew1SolveWork": 1517049,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 575348,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 534562,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 544765,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+            "ew1SolveWork": 1427821,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+            "ew1SolveWork": 1427821,
+            "productionAttempts": 1,
+            "productionSuccessfulAttempts": 1,
+            "productionMaxAttemptWork": 1427821,
+            "productionStages": [
+              "main-search"
+            ]
+          },
+          {
+            "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+            "ew1SolveWork": 528198,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+            "ew1SolveWork": 467182,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "repair|score=repair|guidance=standard",
+            "ew1SolveWork": 222282,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 17,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02693",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 209877506,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02696",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 145012385,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 609150,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 660150,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 604008,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          }
+        ],
+        "pricingComparison": "ew1-solvers-not-offered",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 1,
+          "singleton": true,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02757",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 260461500,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02800",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 51938968,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+            "ew1SolveWork": 1772112,
+            "productionAttempts": 1,
+            "productionSuccessfulAttempts": 1,
+            "productionMaxAttemptWork": 1772112,
+            "productionStages": [
+              "main-search"
+            ]
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 1,
+          "singleton": true,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02902",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 322719664,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02903",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 288648797,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 1,
+          "singleton": true,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02936",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 282464990,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02940",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 121107643,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "repair|score=repair|guidance=standard",
+            "ew1SolveWork": 9183647,
+            "productionAttempts": 1,
+            "productionSuccessfulAttempts": 1,
+            "productionMaxAttemptWork": 9183951,
+            "productionStages": [
+              "late-repair-search"
+            ]
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 2,
+          "singleton": false,
+          "doubleton": true
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02974",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 154569355,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R02987",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 313920680,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03041",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 271568176,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03046",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 291483216,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 10,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03056",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 291143755,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03068",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 77344462,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "admissible-order|tieBreak=none|lds=off",
+            "ew1SolveWork": 3441619,
+            "productionAttempts": 1,
+            "productionSuccessfulAttempts": 1,
+            "productionMaxAttemptWork": 3444367,
+            "productionStages": [
+              "admissible-order-alternate-tiebreak-retry"
+            ]
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03092",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 281622953,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03106",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 9858731,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03125",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 232345848,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03171",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 20051121,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 659533,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+            "ew1SolveWork": 1477089,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+            "ew1SolveWork": 1507886,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 617660,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 625836,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+            "ew1SolveWork": 651447,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+            "ew1SolveWork": 1218700,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+            "ew1SolveWork": 1240598,
+            "productionAttempts": 1,
+            "productionSuccessfulAttempts": 1,
+            "productionMaxAttemptWork": 1240598,
+            "productionStages": [
+              "main-search"
+            ]
+          },
+          {
+            "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+            "ew1SolveWork": 961355,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          },
+          {
+            "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+            "ew1SolveWork": 831915,
+            "productionAttempts": 0,
+            "productionSuccessfulAttempts": 0,
+            "productionMaxAttemptWork": null,
+            "productionStages": []
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-frozen-t1-solvable",
+          "solverCount": 12,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03241",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 277685045,
+        "ew1EligibleActions": 33,
+        "ew1SolvedActions": [],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03274",
+        "productionPresent": true,
+        "productionSolved": true,
+        "productionWorkSpent": 61571358,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [
+          {
+            "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+            "ew1SolveWork": 2415768,
+            "productionAttempts": 1,
+            "productionSuccessfulAttempts": 1,
+            "productionMaxAttemptWork": 2415768,
+            "productionStages": [
+              "main-search"
+            ]
+          }
+        ],
+        "pricingComparison": "production-solved",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      },
+      {
+        "corpus": "corpus2",
+        "levelId": "R03280",
+        "productionPresent": true,
+        "productionSolved": false,
+        "productionWorkSpent": 298769534,
+        "ew1EligibleActions": 34,
+        "ew1SolvedActions": [],
+        "pricingComparison": "no-ew1-solve",
+        "frozenCapability": {
+          "frozenT1SupportClass": "production-miss-without-frozen-t1-winner",
+          "solverCount": 0,
+          "singleton": false,
+          "doubleton": false
+        }
+      }
+    ],
+    "summary": {
+      "levels": 60,
+      "ew1SolvableLevels": 12,
+      "productionSolvedLevels": 27,
+      "missingProductionLevels": 0,
+      "productionMissEw1SolvableLevels": 2,
+      "comparisonCounts": [
+        {
+          "key": "ew1-solvers-not-offered",
+          "count": 2
+        },
+        {
+          "key": "no-ew1-solve",
+          "count": 31
+        },
+        {
+          "key": "production-solved",
+          "count": 27
+        }
+      ],
+      "capabilityRowsProvided": 1962,
+      "missingCapabilityLevels": 0
+    }
+  }
+}

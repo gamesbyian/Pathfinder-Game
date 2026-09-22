@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-action-selection-frozen-model-challenge",
+  "modelPath": "reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json",
+  "inputMetadata": [
+    {
+      "source": "reports/stress/solver-corpus1-latest.json",
+      "timestamp": null,
+      "commitSha": null,
+      "configurationHash": null,
+      "solved": null,
+      "observedLevels": 102,
+      "actionBoundaryDigest": "sha256:08f3c8ea00314d0a3a2c131711e2119f3e49e102304350b4b8302405a4dd6029"
+    },
+    {
+      "source": "reports/stress/solver-corpus2-latest.json",
+      "timestamp": null,
+      "commitSha": null,
+      "configurationHash": null,
+      "solved": null,
+      "observedLevels": 1700,
+      "actionBoundaryDigest": "sha256:7de29bbf6b979088ffc13f04b556856be083fc00be19e75922b5b47d767f2d09"
+    }
+  ],
+  "actionBoundaryDigest": "sha256:a41826feff203fbfdc0cb348a795773cbc21b0372835159c976b8348055d7388",
+  "combined": {
+    "schemaVersion": 1,
+    "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+    "model": {
+      "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+      "family": "prior-response+work+next-stage",
+      "minDevelopmentSupport": 100,
+      "signatureCount": 15,
+      "source": {
+        "workflowRunId": 35066677597,
+        "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+        "role": "development split of frozen C2 production boundary"
+      }
+    },
+    "validationSolvedLevels": 391,
+    "validationRows": 17456,
+    "preWinnerWork": 21508259349,
+    "nominatedPreWinnerWork": 2097886124,
+    "capturedPreWinnerWorkShare": 0.09753862876390965,
+    "endangeredWinnerLevels": 0,
+    "endangeredWinnerRate": 0,
+    "diagnostics": {
+      "nominatedSameStageContinuationWork": 2023977269,
+      "nominatedSameStageContinuationWorkShare": 0.9647698441996082,
+      "baselineSameStageContinuationWorkShare": 0.6727130050006912,
+      "nominatedByPriorOutcome": [
+        {
+          "key": "censored",
+          "work": 1802931454,
+          "workShare": 0.8594038701025318,
+          "attempts": 2195,
+          "levels": 90
+        },
+        {
+          "key": "exhausted",
+          "work": 294954670,
+          "workShare": 0.14059612989746817,
+          "attempts": 83,
+          "levels": 15
+        }
+      ],
+      "baselineByPriorOutcome": [
+        {
+          "key": "censored",
+          "work": 13153974934,
+          "workShare": 0.6115778464709455,
+          "attempts": 4163,
+          "levels": 263
+        },
+        {
+          "key": "exhausted",
+          "work": 6721778395,
+          "workShare": 0.312520798914047,
+          "attempts": 1691,
+          "levels": 177
+        },
+        {
+          "key": "start",
+          "work": 1632506020,
+          "workShare": 0.07590135461500754,
+          "attempts": 309,
+          "levels": 309
+        }
+      ],
+      "nominatedByNextStage": [
+        {
+          "key": "guidance-goal-distance-retry",
+          "work": 1108803447,
+          "workShare": 0.5285336674451449,
+          "attempts": 366,
+          "levels": 35
+        },
+        {
+          "key": "connectivity-axis-prune-disabled-retry",
+          "work": 532750284,
+          "workShare": 0.2539462356441993,
+          "attempts": 512,
+          "levels": 62
+        },
+        {
+          "key": "must-cross-neighbor-prune-disabled-retry",
+          "work": 292340848,
+          "workShare": 0.13935019859066478,
+          "attempts": 55,
+          "levels": 24
+        },
+        {
+          "key": "coarse-state-near-tie-retention-disabled-retry",
+          "work": 163991545,
+          "workShare": 0.07816989831999098,
+          "attempts": 544,
+          "levels": 69
+        },
+        {
+          "key": "goal-attraction-disabled-retry",
+          "work": 0,
+          "workShare": 0,
+          "attempts": 801,
+          "levels": 90
+        }
+      ]
+    },
+    "interpretation": {
+      "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+      "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+    }
+  },
+  "bySource": {
+    "reports/stress/solver-corpus1-latest.json": {
+      "schemaVersion": 1,
+      "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+      "model": {
+        "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+        "family": "prior-response+work+next-stage",
+        "minDevelopmentSupport": 100,
+        "signatureCount": 15,
+        "source": {
+          "workflowRunId": 35066677597,
+          "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+          "role": "development split of frozen C2 production boundary"
+        }
+      },
+      "validationSolvedLevels": 35,
+      "validationRows": 147,
+      "preWinnerWork": 334085458,
+      "nominatedPreWinnerWork": 0,
+      "capturedPreWinnerWorkShare": 0,
+      "endangeredWinnerLevels": 0,
+      "endangeredWinnerRate": 0,
+      "diagnostics": {
+        "nominatedSameStageContinuationWork": 0,
+        "nominatedSameStageContinuationWorkShare": null,
+        "baselineSameStageContinuationWorkShare": 0.6565631569632702,
+        "nominatedByPriorOutcome": [
+          {
+            "key": "censored",
+            "work": 0,
+            "workShare": null,
+            "attempts": 4,
+            "levels": 1
+          }
+        ],
+        "baselineByPriorOutcome": [
+          {
+            "key": "censored",
+            "work": 191889181,
+            "workShare": 0.574371545977317,
+            "attempts": 43,
+            "levels": 8
+          },
+          {
+            "key": "exhausted",
+            "work": 71662654,
+            "workShare": 0.21450396083986392,
+            "attempts": 17,
+            "levels": 5
+          },
+          {
+            "key": "start",
+            "work": 70533623,
+            "workShare": 0.21112449318281912,
+            "attempts": 16,
+            "levels": 16
+          }
+        ],
+        "nominatedByNextStage": [
+          {
+            "key": "goal-attraction-disabled-retry",
+            "work": 0,
+            "workShare": null,
+            "attempts": 4,
+            "levels": 1
+          }
+        ]
+      },
+      "interpretation": {
+        "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+        "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+      },
+      "actionBoundaryDigest": "sha256:08f3c8ea00314d0a3a2c131711e2119f3e49e102304350b4b8302405a4dd6029"
+    },
+    "reports/stress/solver-corpus2-latest.json": {
+      "schemaVersion": 1,
+      "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+      "model": {
+        "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+        "family": "prior-response+work+next-stage",
+        "minDevelopmentSupport": 100,
+        "signatureCount": 15,
+        "source": {
+          "workflowRunId": 35066677597,
+          "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+          "role": "development split of frozen C2 production boundary"
+        }
+      },
+      "validationSolvedLevels": 356,
+      "validationRows": 17309,
+      "preWinnerWork": 21174173891,
+      "nominatedPreWinnerWork": 2097886124,
+      "capturedPreWinnerWorkShare": 0.09907759021907808,
+      "endangeredWinnerLevels": 0,
+      "endangeredWinnerRate": 0,
+      "diagnostics": {
+        "nominatedSameStageContinuationWork": 2023977269,
+        "nominatedSameStageContinuationWorkShare": 0.9647698441996082,
+        "baselineSameStageContinuationWorkShare": 0.6729678168014248,
+        "nominatedByPriorOutcome": [
+          {
+            "key": "censored",
+            "work": 1802931454,
+            "workShare": 0.8594038701025318,
+            "attempts": 2191,
+            "levels": 89
+          },
+          {
+            "key": "exhausted",
+            "work": 294954670,
+            "workShare": 0.14059612989746817,
+            "attempts": 83,
+            "levels": 15
+          }
+        ],
+        "baselineByPriorOutcome": [
+          {
+            "key": "censored",
+            "work": 12962085753,
+            "workShare": 0.6121648863245372,
+            "attempts": 4120,
+            "levels": 255
+          },
+          {
+            "key": "exhausted",
+            "work": 6650115741,
+            "workShare": 0.3140673055408601,
+            "attempts": 1674,
+            "levels": 172
+          },
+          {
+            "key": "start",
+            "work": 1561972397,
+            "workShare": 0.07376780813460261,
+            "attempts": 293,
+            "levels": 293
+          }
+        ],
+        "nominatedByNextStage": [
+          {
+            "key": "guidance-goal-distance-retry",
+            "work": 1108803447,
+            "workShare": 0.5285336674451449,
+            "attempts": 366,
+            "levels": 35
+          },
+          {
+            "key": "connectivity-axis-prune-disabled-retry",
+            "work": 532750284,
+            "workShare": 0.2539462356441993,
+            "attempts": 512,
+            "levels": 62
+          },
+          {
+            "key": "must-cross-neighbor-prune-disabled-retry",
+            "work": 292340848,
+            "workShare": 0.13935019859066478,
+            "attempts": 55,
+            "levels": 24
+          },
+          {
+            "key": "coarse-state-near-tie-retention-disabled-retry",
+            "work": 163991545,
+            "workShare": 0.07816989831999098,
+            "attempts": 544,
+            "levels": 69
+          },
+          {
+            "key": "goal-attraction-disabled-retry",
+            "work": 0,
+            "workShare": 0,
+            "attempts": 797,
+            "levels": 89
+          }
+        ]
+      },
+      "interpretation": {
+        "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+        "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+      },
+      "actionBoundaryDigest": "sha256:7de29bbf6b979088ffc13f04b556856be083fc00be19e75922b5b47d767f2d09"
+    }
+  }
+}
