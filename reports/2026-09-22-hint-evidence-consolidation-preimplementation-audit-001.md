@@ -244,6 +244,46 @@ The previously identified `hint-candidate-search.mjs` is not the only stale writ
 
 PSC-001's writer census must therefore be rerun comprehensively before re-closing.
 
+## 4.1 Stale hint I/O consumers are current reachable functionality
+
+The removed `readLevelsWithHints` / `writeLevelsWithHints` facade is still referenced by more
+maintained code than the first pass found.
+
+Confirmed current consumers include:
+
+- `scripts/hint-candidate-search.mjs` — writer;
+- `scripts/dedupe-hint-provenance.mjs` — writer;
+- `scripts/family-parent-hint-replay-batch.mjs` — writer and manual `hintRecords -> hints`
+  projection;
+- `scripts/stress/cpsat-hint-harvest.mjs` — maintained GHA writer and manual projection;
+- `scripts/hint-expansion-audit.mjs` — reader;
+- `scripts/hint-workbench-parallel.mjs` — reader/orchestrator whose comments still rely on the old
+  writer contract;
+- `scripts/validate-hint-paths.mjs` — reader.
+
+Several are normal package entry points:
+
+- `test:hint-path-validation`;
+- `hints:expansion-audit`;
+- `hints:discover-candidates`;
+- `hints:workbench-parallel`.
+
+The CP-SAT path is also exercised by the maintained
+`cpsat-hint-harvest-sweep.yml` workflow.
+
+The inspected CI/main-push workflow files do not directly exercise these package commands, so a
+green ordinary validation floor does not prove this compatibility seam works.
+
+### Consequence
+
+Phase -1 needs both repair and enforcement:
+
+- migrate all maintained readers/writers off the removed facade;
+- add focused smoke/tests for the maintained package entry points or a static ownership check that
+  fails on removed-facade imports;
+- keep at least one end-to-end persistence test proving `changedHintLevels` semantics for a real
+  writer and one read-only consumer.
+
 ## 5. Firestore five-hint cap
 
 Current `review-repository.ts::approveHintAddition()` performs:
