@@ -193,6 +193,17 @@ const viewCli = spawnSync(process.execPath, [
 assert.equal(viewCli.status, 0, viewCli.stderr);
 assert.equal(JSON.parse(viewCli.stdout).view, 'answerability');
 
+const systemLineageCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--view=system-lineage',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(systemLineageCli.status, 0, systemLineageCli.stderr);
+const systemLineage = JSON.parse(systemLineageCli.stdout);
+assert.equal(systemLineage.view, 'system-lineage');
+assert.ok(systemLineage.findingsWithoutPerFindingLineage.length > 0);
+assert.ok(systemLineage.reportLineageRows.some(row =>
+  row.report === 'reports/2026-09-21-research-queryability-audit-001.md'));
+
 const snapshotCli = spawnSync(process.execPath, [
   'scripts/research-query.mjs',
   '--snapshot',
