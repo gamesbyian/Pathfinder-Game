@@ -34,9 +34,9 @@ const result = runResearchQueryabilityAudit(process.cwd(), { discoverArtifacts: 
 assert.equal(result.failed, 0, JSON.stringify(result.results.filter(row => row.status === 'failed'), null, 2));
 assert.equal(result.knownGaps, 0);
 assert.equal(result.partial, 2);
-assert.equal(result.conditional, 1);
+assert.equal(result.conditional, 0);
 assert.equal(result.benchmarkCount, 13);
-assert.equal(result.passed, 10);
+assert.equal(result.passed, 11);
 assert.equal(result.graphDiagnostics.unresolvedEdgeCount, 0);
 
 const answerability = result.results.find(row => row.id === 'QB-003');
