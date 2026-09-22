@@ -40,7 +40,7 @@
       "treatment": "single-mutable-authority",
       "status": "in-progress",
       "retirementGate": "Re-close only after a fresh maintained-writer census proves every current writer uses canonical hintRecords/setLevelHintRecords plus explicit corpus-document/HintStore persistence, removed readLevelsWithHints/writeLevelsWithHints imports are gone from maintained code, and a guard prevents projection-only `.hints` persistence.",
-      "progress": "Reopened by the hint evidence/storage consolidation audit. The prior closeout remains valid for the previously exercised writers, but at least two supported current paths were missed: targeted candidate search and CP-SAT hint harvesting still depend on the removed corpus I/O facade; both also bypass or manually mirror the canonical hintRecords mutation boundary."
+      "progress": "Reverified 2026-09-22 against current main 0494a0a after PRs #1994/#1995. Seven concrete stale maintained seams remain in the planning inventory: four writers and three readers/orchestrators still reference removed readLevelsWithHints/writeLevelsWithHints semantics and/or manually mirror .hintRecords/.hints. Several are directly exposed by package commands. The isolated report harvester is now a positive counterexample: current main uses the explicit corpus-document API and historical-provenance ingress. Phase -1 must add a source-tree census guard because external code search is not a reliable ownership check."
     },
     {
       "id": "PSC-002",
@@ -631,7 +631,7 @@
       "treatment": "investigate",
       "status": "in-progress",
       "retirementGate": "Every canonical SolveOpts field and maintained execution backend is classified by one request-identity owner; new fields fail closed until classified. Current identity fields map to documented semantic layers (request/config, execution protocol, reproducibility class, run envelope, immutable solver ref). Determinism consumers compare only execution classes whose contract promises path-stable repeatability.",
-      "progress": "Expanded 2026-09-22 after research-system hardening. The raced backend explicitly permits winner/path variation from first-success scheduling, so concurrency/backend semantics cannot be treated as incidental execution metadata. The request identity should derive from the canonical SolveOpts contract rather than a hand-maintained behavior-affecting allowlist."
+      "progress": "Expanded and reverified 2026-09-22 against main 0494a0a. The planning inventory has exact membership parity with all 49 current SolveOpts fields (no missing or extra field), and race-opts.mjs already fail-closes unsupported defined SolveOpts through RACE_LEVEL_OPTS_FIELDS/toRaceLevelOpts. The remaining gap is semantic, not membership: each field still needs an explicit canonical default plus request-vs-execution identity participation and backend support classification, with a mechanical check tying future SolveOpts/race-boundary additions to the inventory."
     },
     {
       "id": "PSC-027",
@@ -655,7 +655,7 @@
       "treatment": "single-mutable-authority",
       "status": "in-progress",
       "retirementGate": "Modern GHA solver discoveries use one central semantic hint-ingestion authority from specialist discovery artifacts projected through a common execution capsule. Do not force failure/exact/family/search-loss evidence into one universal artifact schema. Direct hint-file import remains historical/mixed-era compatibility after parity and partial-failure recovery are demonstrated.",
-      "progress": "Expanded 2026-09-22: centralization is semantic rather than a universal report format, preserving the research-system rule that materially different evidence families keep specialist schemas while sharing common identity/execution value objects."
+      "progress": "Expanded 2026-09-22 after current-main workflow reconstruction. The harvester already centralizes semantic replay after partial failures and deliberately leaves broad/residual/static-portfolio/combine as experiment-only. Combine artifacts already retain typed constituent source-run lineage. Two workflow_run trigger names are now stale residue ('Solver repair-fallback node-reserve sample A/B' and 'Solver elite-prefix-dfs-retry local validation'): no corresponding maintained workflow file exists, so lifecycle/harvester source ownership needs a mechanical agreement check."
     },
     {
       "id": "PSC-028",
@@ -703,7 +703,7 @@
       "treatment": "investigate",
       "status": "in-progress",
       "retirementGate": "Define one semantic Hint retention contract across Firestore backends. Remove the legacy five-path truncation or replace it with an explicit provenance-aware capacity policy, and ensure a newly accepted Hint cannot lose existing provenance merely because the target uses local_level_hints. Physical schemas may differ, but semantic merge/provenance preservation must not.",
-      "progress": "Strengthened 2026-09-22 by historical/current-path audit. Firestore approveHintAddition()'s `mergeHints(...).slice(0, 5)` predates provenance and conflicts with modern 1000/5000/display limits. In addition, approveLocalHintAddition() takes only `hint.provenance[hint.provenance.length - 1]` and local_level_hints stores a singular provenance entry per novel path, so the same newly submitted semantic Hint can retain all provenance in published_levels but lose all but one event in the local supplemental backend."
+      "progress": "Strengthened 2026-09-22 by full current Firestore trace. published_levels still silently truncates mergeHints(...).slice(0,5). local_level_hints is structurally one-path/one-event: approval selects only the final submitted provenance event, deterministic path-hash docs are create-only, and saveLocalLevelHintIfNovel refuses an already-known signature, so later rediscovery provenance cannot be represented at all. scripts/import-published-levels.mjs imports published_levels but no supplemental local_level_hints path was found, so the two Firestore backends also have different convergence to canonical git evidence. Exact serialized-size measurement remains the capacity-policy gate."
     },
     {
       "id": "PSC-030",
@@ -750,7 +750,7 @@
       "treatment": "investigate",
       "status": "in-progress",
       "retirementGate": "Preserve semantic dedupe while retaining exact source-run occurrence lineage where required: effective execution semantics participate in semantic event identity, physical run IDs do not; repeated equivalent rediscoveries merge occurrence metadata rather than duplicate full provenance objects. Determinism/replay tooling must not treat one semantic event as proof of one physical run.",
-      "progress": "Opened 2026-09-22. Existing persistence intentionally collapses retried same-config/seed/forcing/result discoveries across foundAt and wall-allocation fields. Adding run IDs directly to provenanceEventIdentity would destroy that invariant, while omitting occurrence lineage prevents exact run joins and complete repeat-run accounting."
+      "progress": "Refined 2026-09-22. Semantic event identity should include meaning-changing effective execution semantics but continue excluding physical source-run occurrence. Occurrences belong in a compact child/source-lineage set under the semantic event; recomposed observations inherit constituent acquisition-run lineage already modeled by solver combine provenance rather than substituting the combine run. Historical events with unrecoverable occurrences remain semantic events with occurrence lineage explicitly unavailable."
     },
     {
       "id": "PSC-032",
@@ -772,7 +772,7 @@
       "treatment": "investigate",
       "status": "in-progress",
       "retirementGate": "Measure and, if beneficial, generate runtime path-only hint artifacts from canonical decoded hints during build, with source-hash/path-equivalence checks and no second tracked authority. Canonical browser/Node decoding remains shared for development/compatibility.",
-      "progress": "Opened 2026-09-22. Vite currently copies all canonical published/stress hint trees into dist even though ordinary player hint display immediately projects Hint[] to paths. Provenance growth would otherwise increase shipped product payload unnecessarily."
+      "progress": "Measured 2026-09-22 at main 0494a0a: Vite copies 171,566,523 B of published hints, 83,920,958 B of stress-1 hints, and 485,744,016 B of stress-2 hints into dist, 741,231,497 raw bytes total. Published hints are lazy per-level; stress hints are only browser-accessed after the admin Dev-Mode corpus switcher selects a stress corpus, yet all provenance-rich trees ship in every build. A generated path-only projection is strongly motivated, but exact full-corpus path-only and gzip measurements remain a pre-adoption gate."
     }
   ],
   "lastUpdated": "2026-09-22",
