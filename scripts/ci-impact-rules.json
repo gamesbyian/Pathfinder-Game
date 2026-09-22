@@ -18,7 +18,7 @@
   "rules": [
     {
       "id": "ci-routing-infrastructure",
-      "pattern": "^(?:\\.github/|scripts/(?:ci-(?:impact|validation-plan|node-concurrency-benchmark)[^/]*|validation-groups|check-ci-gate-parity|check-ci-validation-plan-parity|check-package-scripts|run-scripts-parallel)\\.)",
+      "pattern": "^(?:\\.github/|scripts/(?:ci-(?:impact|validation-plan|execution-plan|node-concurrency-benchmark)[^/]*|validation-groups|check-ci-gate-parity|check-ci-validation-plan-parity|check-package-scripts|run-scripts-parallel)\\.)",
       "surfaces": [
         "all"
       ],
