@@ -31,6 +31,11 @@ expect(
 );
 
 expect(
+  ['modules/persistence/local-level-hints-repository.ts'],
+  ['game', 'persistence'],
+);
+
+expect(
   ['data/levels.json'],
   ['data', 'game', 'research', 'solver'],
 );
@@ -42,19 +47,19 @@ expect(
 
 expect(
   ['package.json'],
-  ['data', 'game', 'repo', 'research', 'shared', 'solver'],
+  ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver'],
   { full: true },
 );
 
 expect(
   ['.github/workflows/ci.yml'],
-  ['data', 'game', 'repo', 'research', 'shared', 'solver'],
+  ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver'],
   { full: true },
 );
 
 const unknown = expect(
   ['brand-new-top-level-surface/example.txt'],
-  ['data', 'game', 'repo', 'research', 'shared', 'solver'],
+  ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver'],
   { full: true },
 );
 assert.equal(unknown.files[0].rule, null);
@@ -74,11 +79,11 @@ const registeredRepoHarness = expect(
 );
 assert.equal(registeredRepoHarness.files[0].rule, 'registered-validation-entrypoint');
 
-const registeredGameHarness = expect(
+const registeredPersistenceHarness = expect(
   ['scripts/firestore-rules-test.mjs'],
-  ['game'],
+  ['persistence'],
 );
-assert.equal(registeredGameHarness.files[0].rule, 'registered-validation-entrypoint');
+assert.equal(registeredPersistenceHarness.files[0].rule, 'registered-validation-entrypoint');
 
 const packageBase = {
   name: 'pathfinder-game',
@@ -147,7 +152,7 @@ assert.deepEqual(renamedAcrossBoundary.surfaces, ['research', 'solver']);
 
 const malformedChange = classifyChanges([{ status: 'X', path: 'docs/solver-future-work.md' }]);
 assert.equal(malformedChange.full, true);
-assert.deepEqual(malformedChange.surfaces, ['data', 'game', 'repo', 'research', 'shared', 'solver']);
+assert.deepEqual(malformedChange.surfaces, ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver']);
 
 
 const composedResearchPackage = classifyChangeSet(
