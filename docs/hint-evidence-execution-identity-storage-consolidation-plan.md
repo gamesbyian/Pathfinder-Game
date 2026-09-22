@@ -825,6 +825,249 @@ A seam marked complete may be reopened when exercised current code disproves its
 the contraction plan explicitly permits that behavior.
 
 
+## 13.2 Research-system hardening pass: revisions to the target design
+
+Comparing this plan against the current research operating model, Resource Contract, information-
+retention work, queryability rules, failure-response architecture, and the raced execution backend
+changes several design details.
+
+### J. Canonical request projection should be complete-by-default, not a hand-maintained allowlist
+
+A manually curated `EffectiveSolverConfig` list would recreate the exact drift class this plan is
+trying to remove. `SolveOpts` is large, evolves frequently, and has repeatedly acquired
+behavior-affecting overrides outside ablation configuration.
+
+Prefer a versioned **canonical solver-request capsule** derived at the actual invocation boundary.
+
+Every canonical SolveOpts field must be classified by one owner as one of:
+
+- solver-semantic: can affect search policy, ordering, eligibility, allocation, randomness or result;
+- observation-semantic: can alter emitted evidence but is contractually search-inert;
+- transport/execution: backend/concurrency/runtime dispatch semantics;
+- level-specific/history-derived: such as a prime attempt or adaptive per-level budget;
+- non-semantic output/control plumbing.
+
+The identity builder should include every solver-semantic field by default and fail tests/CI when a
+new SolveOpts field has no classification. Exclusions therefore require an explicit classification
+rather than silent omission.
+
+Reuse the direct/worker/race request-contract work already in the repository. Do not maintain a
+second independent list of what the solver can receive.
+
+The effective-input identity for one discovery can then be a projection of:
+
+- canonical request capsule;
+- level revision;
+- immutable solver implementation ref;
+- per-attempt action/forcing/seed dimensions not already represented in the request.
+
+### K. Reproducibility class is part of execution identity
+
+Not every Pathfinder execution backend promises one deterministic winning path.
+
+The raced backend explicitly uses first-success-wins concurrency and documents that repeated runs
+can report different winning attempts because worker scheduling changes which valid success arrives
+first. Historical wall-clock-budgeted solver eras have another reproducibility contract. Seeded
+randomized search has another.
+
+Add a small, explicit reproducibility/execution class, for example conceptually:
+
+- deterministic-work;
+- seeded-deterministic;
+- first-success-race;
+- historical-wall-clock-sensitive;
+- externally-determined;
+- unknown.
+
+Exact vocabulary should be derived from actual maintained execution families.
+
+This class belongs in the execution/run semantic capsule and in determinism auditing. A
+different-path repeat is suspicious only when the compared execution class promises path-stable
+determinism under the compared input identity. For a first-success race, the appropriate invariant
+may instead be validity plus membership in the reachable success set, not winner identity.
+
+The #1996 audit should therefore evolve from “same recorded inputs -> same path?” into a
+reproducibility-contract audit.
+
+### L. Durable hint evidence needs a self-contained semantic capsule, not only an external run ref
+
+The Resource Contract requires decision-relevant evidence to remain reconstructable after ephemeral
+workflow artifacts expire.
+
+A hint event that stores only:
+
+- source run ID; or
+- an opaque effective-config digest
+
+can establish a weak equality/join but cannot later explain or replay what configuration the digest
+represented if the source manifest disappears.
+
+For modern Pathfinder solver provenance, persist the **minimal reconstructable execution capsule**
+needed by the hint evidence itself, preferably interned once per hint artifact when repeated:
+
+- identity schema/version;
+- immutable solver ref;
+- canonical solver-request/config projection or its replay-relevant subset;
+- execution backend/reproducibility class;
+- execution-protocol identity and enough canonical payload to interpret it;
+- source-run locator/lineage as provenance, not as the sole semantic source.
+
+A digest remains useful for equality and cross-file joins, but the payload needed to interpret the
+digest must be durably reconstructable somewhere with an explicit retention guarantee.
+
+Do not make canonical hint evidence depend on dereferencing an expiring GHA artifact.
+
+### M. Keep success evidence separate from attempted-population evidence
+
+A hint store is intrinsically **success-selected**. Even perfect run provenance on every discovered
+path does not establish:
+
+- how many levels/attempts were tried;
+- how many failed;
+- treatment participation;
+- solve rate;
+- unconditional performance;
+- censoring/coverage.
+
+Those belong to run manifests, population integrity, failure response, lifecycle/process evidence,
+and decision-bearing experiment bundles.
+
+The consolidated ingestion path must therefore never imply that a richer hint event makes the hint
+store a performance dataset.
+
+The common semantic kernel should let a hint join mechanically back to its run/process evidence
+when that evidence survives, while preserving the Resource Contract warning that a path-only
+success corpus cannot supply its own denominator.
+
+### N. Centralize semantics, not every specialist artifact
+
+The research-system consolidation work explicitly warns against fake universal schemas.
+
+The target should therefore be:
+
+- one canonical solver-request/execution/run semantic kernel;
+- one canonical hint semantic model and HintStore boundary;
+- one canonical ingestion vocabulary for persistence outcomes;
+- specialist evidence schemas for hint discoveries, failures, exact/reference probes, family runs,
+  search-loss, etc.
+
+A maintained producer need not serialize one universal “solved observation” document. It must
+instead be able to project its successful hint-discovery observation plus the common execution
+capsule into the canonical hint-ingestion interface.
+
+This keeps independent evidence implementations useful while eliminating duplicated meanings.
+
+### O. Identity schema evolution and artifact schema evolution must be independent
+
+A hint artifact schema version answers “how are these bytes encoded?”.
+
+An execution/request identity version answers “which semantic fields define equality?”.
+
+A provenance semantic version may answer “which meaning/missingness contract does this event use?”.
+
+Do not make these one version number.
+
+For example, a future request-identity v2 should not require rewriting the physical hint codec from
+v4 to v5 merely because equality semantics gained a newly classified SolveOpts field.
+
+Persist identity algorithm/version alongside digests/capsules so historical equalities remain
+interpretable.
+
+### P. V4 must remain self-contained per file
+
+Interning should be local to one hint artifact unless a later measured need earns a broader store.
+
+Do not create a global dictionary whose loss, skew, or partial checkout makes otherwise valid hint
+files undecodable.
+
+Local tables should:
+
+- be deterministically ordered;
+- preserve original hint order;
+- preserve provenance-event order;
+- preserve `foundAt` and all semantic payload exactly;
+- decode without another corpus file;
+- re-encode byte-stably after decode/merge.
+
+Cross-file identity should use versioned semantic digests, not physical table indexes.
+
+### Q. Bulk migration needs a reversible evidence transaction
+
+The tracked hint corpus is itself research evidence. A successful decoder test is necessary but not
+sufficient justification for rewriting hundreds of megabytes.
+
+The migration should generate a machine-readable migration manifest containing at least:
+
+- source commit;
+- source artifact path;
+- old schema/version and byte/content hash;
+- new schema/version and byte/content hash;
+- hint count and provenance count before/after;
+- semantic digest before/after over expanded canonical Hint[];
+- referee-validation disposition;
+- migration tool/version.
+
+Keep the migration deterministic and rerunnable from the pre-migration commit.
+
+This manifest is an audit/rollback aid, not a new evidence authority.
+
+### R. The generated hint index needs freshness binding and query benchmarks
+
+A compact hint-store index is useful only if agents can tell whether it matches the underlying
+evidence.
+
+Bind each index row/store to a deterministic content/semantic hash of its source artifact or decoded
+semantic input. The query surface should fail or flag stale indexes rather than silently answer from
+them.
+
+Before expanding the index, add concrete repeated questions to the existing research-queryability
+benchmark discipline. Persist only summary fields that answer demonstrated recurring questions;
+derive rarer questions from the canonical store on demand.
+
+### S. Partial failure and recovery should be tested as first-class ingestion transactions
+
+The broader research system treats recoverability as a capability. Hint ingestion should do the
+same.
+
+End-to-end fixtures should cover:
+
+- shard produces discoveries, then fails before normal closeout;
+- some shards succeed and combine/publish fails;
+- harvester is rerun;
+- the same source run is harvested twice;
+- mixed old direct-file and new observation artifacts arrive together;
+- one source artifact is corrupt or missing;
+- persistence fails after some levels are written;
+- source-run metadata conflicts between artifacts.
+
+Required behavior:
+
+- no silent evidence loss;
+- no duplicate semantic events;
+- no invented source identity;
+- clear quarantine for unmergeable rows;
+- deterministic replay of the import;
+- safe retry after partial persistence.
+
+### T. “Unknown”, “default”, “not applicable”, and “not observed” need an explicit semantic table
+
+The missingness problem is broader than three context booleans.
+
+Before sparse v4 encoding, inventory every provenance field and declare which states are possible:
+
+- known value;
+- canonical default;
+- not applicable to this producer/technique;
+- not observed/not retained by this producer;
+- historically unknown.
+
+Only canonical defaults may be omitted and reconstructed unconditionally.
+
+If null currently carries more than one of these meanings, either retain that limitation explicitly
+for historical events or introduce a small tagged representation where a real recurring consumer
+needs the distinction. Do not bulk-enrich history merely to make the model visually uniform.
+
+
 ## 14. Implementation sequence
 
 ### Phase 0 — land and adopt the determinism audit
@@ -838,9 +1081,10 @@ the contraction plan explicitly permits that behavior.
 
 ### Phase 1 — identity consolidation
 
-- inventory every behavior-affecting `SolveOpts` field and existing identity owner;
-- define/version `EffectiveSolverConfig`;
-- define execution protocol and run-envelope projections;
+- inventory every canonical `SolveOpts` field, execution backend and existing identity owner;
+- define a complete-by-default, versioned solver-request field-classification contract;
+- define the canonical solver-request capsule and its purpose-specific identity projections;
+- define execution protocol, reproducibility class and run-envelope projections;
 - add canonical semantic hashing;
 - add effective solver input identity/reconstructability helper;
 - replace duplicate producer-local stable-hash logic where semantics match;
@@ -858,11 +1102,10 @@ the contraction plan explicitly permits that behavior.
 
 **Exit:** every modern Pathfinder solver discovery can carry complete effective-input binding.
 
-### Phase 3 — standardized solved-observation contract
+### Phase 3 — standardized hint-ingestion projection
 
-- define a small solved-observation artifact contract;
-- include complete solution path, level identity/revision, winning attempt/action data, execution
-  envelope reference/projection, and enough search observation to construct canonical provenance;
+- define a small canonical hint-discovery ingestion interface over specialist producer artifacts, not a universal research artifact schema;
+- require complete solution path, level identity/revision, winning attempt/action data, the common execution capsule, source-run lineage, and enough search observation to construct canonical provenance;
 - make representative direct-save and artifact-only producers emit it;
 - extend solver-sweep result/manifests to preserve it and constituent source lineage;
 - harden workflow contract checks.
