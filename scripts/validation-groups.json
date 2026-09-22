@@ -62,9 +62,7 @@
     ],
     "game": [
       "test:startup-smoke",
-      "test:loader",
-      "test:probe-corpus-loader",
-      "test:firestore-rules"
+      "test:loader"
     ],
     "solver": [
       "test:publish-solver-sweep-result",
@@ -114,7 +112,8 @@
       "test:hint-discovery-process-cli",
       "test:hint-harvest-selection-manifest",
       "test:hint-harvest-selection-integration",
-      "test:method-probe-shard-plan"
+      "test:method-probe-shard-plan",
+      "test:probe-corpus-loader"
     ],
     "research": [
       "test:research-domain-ownership",
@@ -225,6 +224,9 @@
       "test:known-support-extinction",
       "test:class3-dose-exposure",
       "test:class3-dose-expectations"
+    ],
+    "persistence": [
+      "test:firestore-rules"
     ]
   }
 }
