@@ -250,6 +250,7 @@
     "check:validation-groups": "node scripts/validation-groups.mjs --check",
     "ci:impact:inventory": "node scripts/ci-impact-inventory.mjs",
     "ci:impact:inventory:strict": "node scripts/ci-impact-inventory.mjs --require-zero-unclassified",
+    "ci:benchmark-node-concurrency": "node scripts/ci-node-concurrency-benchmark.mjs",
     "check:ci-impact-inventory": "node scripts/ci-impact-inventory.mjs --require-zero-unclassified",
     "check:validators:repo": "node scripts/validation-groups.mjs validators repo",
     "check:validators:research": "node scripts/validation-groups.mjs validators research",
