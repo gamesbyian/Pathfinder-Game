@@ -141,7 +141,7 @@ F3 was the original candidate but is now closed in its tested form and must not 
 
 ### Pilot B: broad-population-first path
 
-**Current earned candidate (2026-09-22):** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` now naturally needs sample-independent/current-production confirmation of an already-frozen late-continuation model after retained evidence was exhausted. If that acquisition proceeds, use it as Pilot B prospectively; do not create a separate infrastructure demonstration. See `../reports/2026-09-22-ws1-independent-continuation-confirmation-preflight-001.md`.
+**Current earned candidate (2026-09-22):** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` now naturally needs sample-independent/current-production confirmation of an already-frozen late-continuation model after retained evidence was exhausted. Its preflight uses fresh solver-blind random witness-first **parent blocks** (24-parent opportunity canary, then a separate untouched 96-parent confirmation block only if earned), which is exactly the broad-population-first path this pilot exists to exercise. Use the shared block/consumption lineage prospectively and do not create a separate infrastructure demonstration. See `../reports/2026-09-22-ws1-independent-continuation-confirmation-preflight-001.md`.
 
 Choose the next live question whose first decision-bearing evidence is a broad independent population.
 
