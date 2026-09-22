@@ -614,12 +614,16 @@
           "field": "overallBudgetMs",
           "semanticClass": "backend-wall-budget",
           "effect": "outcome-affecting-when-binding",
-          "note": "Not a SolveOpts field; phase-1 hard wall cap for raced engine."
+          "note": "Not a SolveOpts field; phase-1 hard wall cap for raced engine.",
+          "canonicalDefaultSemantics": "absent => ceil(effective timeBudgetMs * (effective repairAdditiveBudgetMultiplier + 1)); hard wall cap for raced phase 1",
+          "identityParticipation": "execution/reproducibility identity; outcome-affecting when binding"
         },
         {
           "field": "poolSize",
           "semanticClass": "backend-concurrency",
-          "effect": "changes attempt concurrency and first-success winner opportunity"
+          "effect": "changes attempt concurrency and first-success winner opportunity",
+          "canonicalDefaultSemantics": "absent => max(1, availableParallelism()-1); explicit values clamp to at least 1",
+          "identityParticipation": "execution/reproducibility identity using the effective worker count, never the omitted/raw syntax"
         }
       ],
       "impliedFields": [
@@ -630,7 +634,9 @@
       ],
       "notes": "First-success raced engine supports only main-search + repair-fallback + goal-attraction-disabled-retry stages and does not promise stable winner identity.",
       "boundaryAuthority": "scripts/solver-parallel/race-opts.mjs::RACE_LEVEL_OPTS_FIELDS + toRaceLevelOpts/assertRaceLevelOpts",
-      "reproducibilitySemantics": "first-success-wins; pool scheduling may change the winning attempt/path even with otherwise equivalent request content"
+      "reproducibilitySemantics": "first-success-wins; pool scheduling may change the winning attempt/path even with otherwise equivalent request content",
+      "stageSubsetAuthority": "scripts/solver-parallel/race.mjs::RACE_SUPPORTED_STAGE_IDS = main-search, repair-fallback, goal-attraction-disabled-retry",
+      "firstSuccessSemantics": "first successful worker wins; scheduling and effective pool size may change winning attempt/path, so raced execution does not promise stable winner identity"
     }
   },
   "observerRule": "Read-only/diagnostic instrumentation is policy-inert, not automatically outcome-inert. Under binding wall-clock termination observer overhead can change reached work/opportunity; comparability requires parity evidence or deterministic/non-binding execution conditions.",
