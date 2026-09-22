@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+  "researchQuestion": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+  "family": "prior-response+work+next-stage",
+  "minDevelopmentSupport": 100,
+  "source": {
+    "workflowRunId": 35066677597,
+    "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "role": "development split of frozen C2 production boundary"
+  },
+  "workBands": [
+    "0",
+    "<100k",
+    "100k-1m",
+    "1m-10m",
+    ">=10m"
+  ],
+  "selectionRule": "retain signatures with development support >=100 and zero development winners",
+  "signatures": [
+    {
+      "signature": [
+        "coarse-state-near-tie-retention-disabled-retry",
+        "censored",
+        "0",
+        ">=10m",
+        "coarse-state-near-tie-retention-disabled-retry"
+      ],
+      "developmentSupport": 2873,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "coarse-state-near-tie-retention-disabled-retry",
+        "censored",
+        "1m-10m",
+        ">=10m",
+        "coarse-state-near-tie-retention-disabled-retry"
+      ],
+      "developmentSupport": 706,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "coarse-state-near-tie-retention-disabled-retry",
+        "exhausted",
+        "100k-1m",
+        ">=10m",
+        "coarse-state-near-tie-retention-disabled-retry"
+      ],
+      "developmentSupport": 120,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "connectivity-axis-prune-disabled-retry",
+        "censored",
+        "0",
+        ">=10m",
+        "connectivity-axis-prune-disabled-retry"
+      ],
+      "developmentSupport": 2170,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "connectivity-axis-prune-disabled-retry",
+        "censored",
+        "1m-10m",
+        ">=10m",
+        "connectivity-axis-prune-disabled-retry"
+      ],
+      "developmentSupport": 922,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "connectivity-axis-prune-disabled-retry",
+        "censored",
+        ">=10m",
+        ">=10m",
+        "connectivity-axis-prune-disabled-retry"
+      ],
+      "developmentSupport": 231,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "connectivity-axis-prune-disabled-retry",
+        "exhausted",
+        "100k-1m",
+        ">=10m",
+        "connectivity-axis-prune-disabled-retry"
+      ],
+      "developmentSupport": 118,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "goal-attraction-disabled-retry",
+        "censored",
+        "0",
+        ">=10m",
+        "goal-attraction-disabled-retry"
+      ],
+      "developmentSupport": 3991,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "goal-attraction-disabled-retry",
+        "censored",
+        "100k-1m",
+        ">=10m",
+        "goal-attraction-disabled-retry"
+      ],
+      "developmentSupport": 253,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "goal-attraction-disabled-retry",
+        "censored",
+        "1m-10m",
+        ">=10m",
+        "goal-attraction-disabled-retry"
+      ],
+      "developmentSupport": 272,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "guidance-goal-distance-retry",
+        "censored",
+        "0",
+        ">=10m",
+        "guidance-goal-distance-retry"
+      ],
+      "developmentSupport": 658,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "guidance-goal-distance-retry",
+        "censored",
+        "1m-10m",
+        ">=10m",
+        "guidance-goal-distance-retry"
+      ],
+      "developmentSupport": 1521,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "late-repair-search",
+        "censored",
+        ">=10m",
+        ">=10m",
+        "guidance-goal-distance-retry"
+      ],
+      "developmentSupport": 135,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "must-cross-neighbor-prune-disabled-retry",
+        "censored",
+        ">=10m",
+        ">=10m",
+        "must-cross-neighbor-prune-disabled-retry"
+      ],
+      "developmentSupport": 253,
+      "developmentWins": 0
+    },
+    {
+      "signature": [
+        "must-cross-neighbor-prune-disabled-retry",
+        "exhausted",
+        "100k-1m",
+        ">=10m",
+        "must-cross-neighbor-prune-disabled-retry"
+      ],
+      "developmentSupport": 173,
+      "developmentWins": 0
+    }
+  ],
+  "use": "Apply unchanged to future/independent action-boundary evidence; do not refit support or membership on challenge data."
+}
