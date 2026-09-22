@@ -1497,13 +1497,13 @@ These findings were verified against `main` at `0494a0a2c2cc698b8c2a0c40782c88b8
 
 The stale-facade problem is still real and broader than the first spot checks. The planning inventory now records four current writers and three current readers/orchestrators that still depend on removed `readLevelsWithHints`/`writeLevelsWithHints` behavior and/or manually synchronize `.hintRecords` and `.hints`. Several are directly reachable through package commands. Conversely, `scripts/harvest-isolated-report-hints.mjs` is now a current positive example: PRs #1994/#1995 moved it onto the explicit corpus-document API and historical-provenance ingress and added a node smoke boundary. That supports the architecture here: historical semantics should be adapted at ingress, not normalized destructively in storage.
 
-Repository-hosted code search proved incomplete during this audit, so PSC-001 cannot re-close on a grep transcript. Phase -1 must add a repository-local census validator that scans maintained source/package/workflow reachability and fails when a hint persistence seam is unclassified. It should detect removed facade imports, direct canonical hint-file writes, direct `.hintRecords`/`.hints` mutation, manual projection synchronization, and unregistered uses of `setLevelHintRecords`/corpus-document readers/writers.
+Repository-hosted code search proved incomplete during this audit, so PSC-001 cannot re-close on a grep transcript. Phase 1 must add a repository-local census validator that scans maintained source/package/workflow reachability and fails when a hint persistence seam is unclassified. It should detect removed facade imports, direct canonical hint-file writes, direct `.hintRecords`/`.hints` mutation, manual projection synchronization, and unregistered uses of `setLevelHintRecords`/corpus-document readers/writers.
 
 ### Solver request semantics: membership closed, semantics not yet closed
 
 The current `SolveOpts` interface contains 49 fields and `docs/solver-request-semantics-inventory.json` contains exactly those 49: no current field is missing and no retired field remains. This closes the field-membership question but not the identity question. Before canonical request hashing is implemented, every field still needs an explicit canonical effective default and an explicit identity layer classification.
 
-Do not create a second backend-support registry. Direct/worker transport contracts already own their capability boundary; raced execution already owns its narrow boundary in `RACE_LEVEL_OPTS_FIELDS`, `toRaceLevelOpts()`, and `assertRaceLevelOpts()`. Phase -1 should mechanically compare those owners to the semantic inventory and fail when a new common/backend field is unclassified.
+Do not create a second backend-support registry. Direct/worker transport contracts already own their capability boundary; raced execution already owns its narrow boundary in `RACE_LEVEL_OPTS_FIELDS`, `toRaceLevelOpts()`, and `assertRaceLevelOpts()`. Phase 2 should mechanically compare those owners to the semantic inventory and fail when a new common/backend field is unclassified.
 
 Normalization must compare effective values, not input syntax. In particular, omitted ablation flags cannot be expanded with a generic boolean rule: `normalizeAblationConfig()` and `OPT_IN_FEATURES` own the unusual opt-in defaults. Likewise, `primeAttempt` and adaptive per-level allocation are derived effective-input dimensions, not necessarily run-wide request dimensions. Policy-inert observers remain execution-comparability dimensions when a binding wall deadline makes their overhead outcome-reactive.
 
@@ -1517,7 +1517,7 @@ The central harvester already has a useful semantic split:
 
 Future occurrence lineage should therefore preserve the acquisition/source runs already named by recombination provenance. A combine run is a reconstruction occurrence, not a substitute acquisition identity.
 
-The harvester also contains two stale `workflow_run` trigger names for workflows that no longer exist in the maintained workflow tree: “Solver repair-fallback node-reserve sample A/B” and “Solver elite-prefix-dfs-retry local validation”. Phase -1 should make harvester source ownership mechanically agree with `docs/solver-workflow-lifecycle.json` and the actual workflow tree, rather than allowing historical trigger residue to masquerade as a maintained producer.
+The harvester also contains two stale `workflow_run` trigger names for workflows that no longer exist in the maintained workflow tree: “Solver repair-fallback node-reserve sample A/B” and “Solver elite-prefix-dfs-retry local validation”. Phase 5 should make harvester source ownership mechanically agree with `docs/solver-workflow-lifecycle.json` and the actual workflow tree, rather than allowing historical trigger residue to masquerade as a maintained producer.
 
 ### Semantic event versus physical occurrence: concrete target
 
@@ -1562,9 +1562,9 @@ Commit `7a651d391b49986626ceffbc4612352ddefb9bd4` on 2026-07-11 introduced prove
 
 Before any v4 sparsification, run a full current-corpus census that reports each provenance field as absent / explicit null / false / true / concrete value and separately identifies migration-synthetic `foundAt` candidates. The adapter/migration decision must be based on exact counts and false-positive analysis. Original discovery time must never be inferred.
 
-### Phase -1 entry gate
+### Pre-implementation empirical entry gate (satisfied)
 
-Do **not** start physical v4 migration yet. Phase -1 may begin only as semantic-authority and validation work once the remaining empirical gates below are closed or explicitly made Phase -1’s first read-only audits:
+These were the empirical gates required before semantic implementation could begin. They are now closed by the investigation results below; they remain regression constraints for Phases 1-3:
 
 1. full current-corpus missingness census, including exact July-11 synthetic-`foundAt` population;
 2. exhaustive per-field effective-default/identity classification for the 49 `SolveOpts` fields plus backend-specific request dimensions;
@@ -1575,7 +1575,7 @@ Do **not** start physical v4 migration yet. Phase -1 may begin only as semantic-
 
 These are measurement/authority tasks, not v4 storage changes. Once they are green, the semantic architecture described above is sufficiently constrained to implement execution capsules, occurrence lineage, single-ingestion boundaries, and only then the physical v4 codec/migration.
 
-## Investigation closure: answers required before Phase -1
+## Investigation closure: answers required before implementation
 
 The continuation audit has now answered the major semantic questions that were intentionally left open when this plan was first written. These answers are implementation constraints, not suggestions.
 
@@ -1585,7 +1585,7 @@ The full current committed store contains **775,469 provenance events**. Its phy
 
 The September 11 audit measured **505,993** provenance events with `isolatedTechnique` absent. The current store has only **32,254** events where that field remains absent, alongside **507,334 explicit `false`** values. `usedExistingHints` and `hintGuided` now have zero physical absences. The mechanism is concrete: canonical corpus reads pass historical events through `upgradeProvenanceEntry()`, which fills absent capability booleans with `false`; a later touched-file write can serialize that expanded object. A read-time compatibility convenience has therefore become a mutable historical authority.
 
-Phase -1 must split these concepts:
+Phase 1 must split these concepts:
 - **physical storage value**: what the current JSON happens to contain;
 - **observed semantic value**: what the producer/source generation actually retained;
 - **canonical modern default**: what a current producer means by omission/default.
@@ -1615,7 +1615,7 @@ Canonical request identity must hash **normalized effective values**, not raw re
 
 The raced backend's effective identity includes its narrow supported request projection, effective `overallBudgetMs`, effective worker pool size, supported stage subset, and first-success scheduling semantics. Stable winner/path identity is not promised.
 
-A newly discovered worker seam must be fixed in Phase -1: `beamFlowCounters` and `pruneDiagnostics` are mutable plain objects, so the worker accepts and structured-clones them, the worker mutates only its private clone, and no updated object is returned. They are therefore not semantically equivalent to direct execution. Either reject them as direct-only or return an explicit telemetry projection.
+A newly discovered worker seam must be fixed in Phase 1: `beamFlowCounters` and `pruneDiagnostics` are mutable plain objects, so the worker accepts and structured-clones them, the worker mutates only its private clone, and no updated object is returned. They are therefore not semantically equivalent to direct execution. Either reject them as direct-only or return an explicit telemetry projection.
 
 ### Semantic discovery event versus occurrence lineage
 
@@ -1665,7 +1665,7 @@ This disproves fixed path-count limits as a capacity contract. The current five-
 
 The supplemental backend is also semantically incomplete: it is create-only and path-keyed, stores one provenance event, rejects a rediscovered path, and has no canonical-git convergence path equivalent to `published_levels`.
 
-Phase -1 should specify a **bounded-growth persistence unit** and byte-aware preflight. Event/occurrence child documents are favored by the measured size distribution because their growth is naturally bounded; a full semantic-Hint-per-path document risks eventually crossing document limits as provenance accumulates. The exact Firestore SDK/emulator encoded-size check belongs in implementation validation, but no further empirical evidence is needed to reject silent truncation/count caps as the semantic policy.
+Phase 3 should specify a **bounded-growth persistence unit** and byte-aware preflight. Event/occurrence child documents are favored by the measured size distribution because their growth is naturally bounded; a full semantic-Hint-per-path document risks eventually crossing document limits as provenance accumulates. The exact Firestore SDK/emulator encoded-size check belongs in implementation validation, but no further empirical evidence is needed to reject silent truncation/count caps as the semantic policy.
 
 Any overflow must be explicit and durable:
 - duplicate/no-op;
@@ -1700,13 +1700,13 @@ This is a delivery optimization, never a second evidence authority.
 
 The exhaustive source census exposed **56 source/workflow files** still mentioning the removed `readLevelsWithHints`/`writeLevelsWithHints` facade names. Package/workflow-seeded relative-import analysis classifies **24 as maintained-entrypoint reachable** and **32 as dormant/unreachable** today. Nineteen of the live files are referenced directly from `package.json`, four directly from workflows, and one is a reachable library. This is materially broader than the original seven-file spot census.
 
-The live 24-file set is the Phase -1 migration target. Dormant writers remain historical/maintenance debt and must not become reachable again without migration. Phase -1 should turn the reachability classification into a permanent guard and migrate every maintained reachable stale seam before PSC-001 closes.
+The live 24-file set is the Phase 1 migration target. Dormant writers remain historical/maintenance debt and must not become reachable again without migration. Phase 1 should turn the reachability classification into a permanent guard and migrate every maintained reachable stale seam before PSC-001 closes.
 
-### Phase -1 readiness decision
+### Implementation readiness decision
 
-The architecture is now specified enough to begin **Phase -1 semantic/authority implementation**.
+The architecture is now specified enough to begin the dependency-ordered implementation sequence in Section 14.
 
-Phase -1 may implement:
+The now-closed investigation authorizes the following work, ordered across Phases 1-9 as specified in Section 14:
 - source-generation-aware provenance compatibility semantics;
 - request/execution identity value objects and drift tests;
 - semantic-event + occurrence-lineage representation;
@@ -1715,7 +1715,7 @@ Phase -1 may implement:
 - Firestore bounded-growth/explicit-capacity semantics;
 - generated runtime path projection with equivalence checks.
 
-Physical hint schema v4 bulk migration is **still later**. It remains gated on Phase -1 proving that:
+Physical hint schema v4 bulk migration is **still later**. It remains gated on the preceding semantic/authority phases proving that:
 - historical unknown survives canonical decode/encode without becoming false/null/default;
 - the 662 synthetic-`foundAt` events decode as unknown discovery time;
 - current producers emit complete execution/occurrence capsules;
@@ -1723,7 +1723,7 @@ Physical hint schema v4 bulk migration is **still later**. It remains gated on P
 - Firestore and GHA adapters preserve the same semantic Hint;
 - the runtime projection is demonstrably derived only.
 
-The remaining questions are implementation-validation questions, not architecture-discovery blockers: exact Firestore wire/emulator byte overhead, the final maintained-reachability list produced by the new census guard, and migration/referee dry-run hashes once the Phase -1 semantic codec exists.
+The remaining questions are implementation-validation questions, not architecture-discovery blockers: exact Firestore wire/emulator byte overhead, the final maintained-reachability list produced by the new census guard, and migration/referee dry-run hashes once the shared semantic decoder and provenance model exist.
 
 
 ### Artifact layout/discovery authority
@@ -1739,7 +1739,7 @@ The current split is concrete:
 
 That means writable identity and discoverable identity are different contracts, and corpus-to-hint layout is encoded twice.
 
-Phase -1 should replace directory-regex discovery with an explicit corpus layout authority:
+Phase 1 should replace directory-regex discovery with an explicit corpus layout authority:
 
 1. one neutral corpus-layout descriptor maps each maintained corpus to its level artifact and hint artifact location;
 2. Node and browser adapters consume that descriptor instead of re-encoding the mapping independently;
@@ -1756,7 +1756,7 @@ PSC-028 is also specified enough for implementation.
 
 Today only the level-blind report importer emits a structured hint-harvest selection manifest, and that schema hard-codes `source.harvester = harvest-level-blind-report-hints`. The isolated importer and direct hint-artifact merger expose different funnels through console counters plus pending/quarantine files. The underlying semantic stages overlap but the names and units do not.
 
-Phase -1 should add one small, versioned **hint-ingestion receipt** emitted by every canonical ingestion lane. It is an accounting envelope, not a universal producer artifact. The common vocabulary should distinguish at least:
+Phase 5 should add one small, versioned **hint-ingestion receipt** emitted by every canonical ingestion lane. It is an accounting envelope, not a universal producer artifact. The common vocabulary should distinguish at least:
 
 - source candidate observations seen;
 - candidate observations structurally/semantically eligible for this importer;
@@ -1772,7 +1772,7 @@ Producer-specific fields may extend the receipt, but the common counters must pr
 
 The existing level-blind selection manifest should migrate into this shared receipt or become a producer-specific extension of it. Isolated harvesting and direct-artifact compatibility import should emit the same core receipt. Attempted-population/failure denominators remain separate research evidence and must not be inferred from these success-selected ingestion receipts.
 
-With PSC-025 and PSC-028 reduced to these contracts, there are no remaining architecture-discovery blockers before Phase -1. Their implementation and regression checks belong in Phase -1 alongside the already-measured semantic/storage repairs.
+With PSC-025 and PSC-028 reduced to these contracts, there are no remaining architecture-discovery blockers before implementation. Their implementation and regression checks belong in the dependency-ordered phases above rather than another exploratory pass.
 
 
 ## Inversion pressure test: preserve richer evidence without bloating Hint
@@ -1853,7 +1853,7 @@ success-selected hints cannot.
 Do **not** embed selected frontier/search-state capsules into Hint. `search-loss-evidence` owns that richer,
 bounded forensic grain.
 
-Instead, Phase -1 execution/occurrence identity should make joins among these resources cheaper and more
+Instead, Phases 2-3 execution/occurrence identity should make joins among these resources cheaper and more
 reliable.
 
 ### Evidence richness is consumer-earned
@@ -1873,7 +1873,7 @@ a second unstructured research warehouse.
 
 ### Consequences for this plan
 
-Phase -1 should treat the execution capsule and occurrence lineage as a **join contract** as well as provenance.
+Phases 2-3 should treat the execution capsule and occurrence lineage as a **join contract** as well as provenance.
 Acceptance tests should prove that a modern Hint occurrence can be joined, when corresponding resources are
 present, to:
 
