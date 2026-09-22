@@ -138,7 +138,7 @@ for (const [corpus, rel] of hintRoots) {
   }
 }
 
-for (const [name,c] of Object.entries(byCorpus)) {
+for (const c of Object.values(byCorpus)) {
   c.migrationCandidateFiles=[...c.migrationCandidateFiles].sort();
   const firestoreSizes=[...c.firestoreEncodedHintArrayBytes];
   c.firestoreEncodedHintArrayThresholds={
