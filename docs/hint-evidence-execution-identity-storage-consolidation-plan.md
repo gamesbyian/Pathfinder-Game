@@ -1152,6 +1152,38 @@ semantically identical same-path rediscoveries can already have been deduplicate
 reproducibility evidence should use occurrence lineage or dedicated run artifacts rather than infer
 “only one run happened” from one persisted semantic event.
 
+### X. Canonical research storage and shipped runtime delivery should be separate projections
+
+The production Vite build currently copies the entire canonical hint trees into `dist/`:
+
+- `data/hints`;
+- `data/stress/hints`;
+- `data/stress/hints-random`.
+
+Those canonical stores are provenance-heavy research evidence, while ordinary browser hint display
+projects loaded `Hint[]` immediately to paths. The Dev-mode stress switch likewise needs known
+solution paths, not the research provenance envelope itself.
+
+Do not create a second hand-maintained hint authority. Instead, evaluate a **derived build-time
+runtime projection**:
+
+- canonical tracked hint artifacts remain the single research/evidence authority;
+- Vite/build tooling decodes canonical hints and emits path-only runtime hint artifacts into
+  `dist/`;
+- runtime files are generated, not tracked;
+- source semantic hash / build checks prove every runtime path came from the canonical artifact;
+- Firestore supplemental/current-session hints may still carry provenance in memory where authoring
+  flows need it;
+- dev/test paths may continue to exercise the full shared canonical decoder.
+
+This optimization is independent of v4. Even after provenance compression, shipping provenance
+that the player UI does not consume is unnecessary product payload. Benchmark deployed bytes and
+build time before/after.
+
+The browser-safe canonical decoder is still required for development, compatibility tests and any
+authoring surface that reads canonical artifacts directly; the runtime projection is not a license
+to let Node/browser semantic decoding diverge.
+
 ## 14. Implementation sequence
 
 ### Phase -1 — repair confirmed semantic/storage-boundary regressions
