@@ -40,16 +40,16 @@ Shared ownership applies only to the named invariant, not similar field names. A
 
 Do not collapse distinct kinds of state merely because they describe the same line of work.
 
-- **Execution priority and next gate:** `solver-optimization-workstreams.md`.
-- **Scientific-question lifecycle and reopen condition:** `solver-research-question-relations.json`.
-- **New report-local status/decision/remaining gate:** the structured `pathfinder.research-closeout/v1` capsule; the Markdown status block is a human mirror and legacy fallback.
-- **Evidence applicability:** the evidence-family classifier for the stated purpose/regime, using the shared applicability lattice; there is no global timeless applicability flag.
-- **Claim validity/invalidation:** the claim plus its material derivation dependencies, not a report summary.
-- **Production default polarity:** runtime code/config. The opt-in ledger owns promotion disposition for retained default-OFF experiments, and its promoted-history rows may carry a primary decision-evidence ref; that provenance edge does not override runtime truth.
+- **Execution priority/next gate:** `solver-optimization-workstreams.md`.
+- **Question lifecycle/reopen:** `solver-research-question-relations.json`.
+- **Report status/decision/gate:** `pathfinder.research-closeout/v1`; Markdown is the human mirror/legacy fallback.
+- **Evidence applicability:** purpose/regime-local classifier + shared lattice; no timeless global flag.
+- **Claim validity:** claim + material derivation dependencies, not report summary.
+- **Production default:** runtime code/config; the opt-in ledger owns retained default-OFF promotion disposition.
 
-An active workstream may legitimately reference a `deferred-reopen` scientific question when satisfying its reopen trigger is the current execution gate. A live workstream referencing an unknown or terminal question is an authority error. Derived indexes/inventories may expose these relationships but must not silently become a second owner.
+A workstream may reference `deferred-reopen` when satisfying its trigger is the current gate; unknown/terminal refs are authority errors. Derived views never become owners.
 
-At every cross-artifact scientific join (result/integrity, control/treatment, result/contract, reconciliation, durable persistence), prove identity at the consuming boundary. Filenames, labels, step order and separately valid documents are not identity evidence; prefer one identity owner, validate duplicated identity, and fail closed on mixed strong/legacy identity.
+At cross-artifact scientific joins, prove identity at the consumer. Filenames, labels, order and separately valid documents are not identity evidence; validate duplicated identity and fail closed on mixed strong/legacy identity.
 
 ### Prose versus machine state
 
@@ -57,11 +57,11 @@ Keep nuanced/open-ended scientific reasoning in prose when no machine consumer c
 
 Likewise, join on stable IDs/edges when available. Lexical similarity is discovery/fallback only and must not silently manufacture authority.
 
-For relationship quality, prefer: validated authored ID/edge > authored one-way path/ID with referential integrity > embedded contract identity discovered from candidate files > explicitly labelled lexical/path discovery. If both endpoints author the same relation, check agreement. Co-location, filenames, hyperlinks and shared vocabulary may discover candidates but do not define membership or scientific ancestry. See `reports/2026-09-19-research-relation-authority-audit-001.md`.
+Relationship quality: validated authored edge > authored path/ID > embedded contract identity > labelled lexical/path discovery. Dual-authored relations must agree; co-location/names/links/vocabulary discover candidates but do not define ancestry. See `reports/2026-09-19-research-relation-authority-audit-001.md`.
 
 ## Concept-family and inversion checkpoint
 
-Before promoting a premise/question, state its claim, mechanic support, novelty witness, opportunity denominator, proof/response value, nearest material siblings, and nearest **useful inverse**. Inverses test directional bias such as add/remove, starvation/overexposure, DEAD/LIVE-slack, universal/per-instance, failure/success, or invention/obsolescence. They create no queue entitlement: reuse an owner or pass the ordinary evidence/discriminator/population gates. See [small exact projections](solver-small-exact-projections-program.md) and the [inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md).
+Before promoting a premise/question, state claim, mechanic support, novelty witness, opportunity denominator, proof/response value, nearest siblings, and nearest **useful inverse**. Inverses test directional bias; they create no queue entitlement and must pass ordinary evidence/discriminator/population gates. See [small exact projections](solver-small-exact-projections-program.md) and the [inversion audit](../reports/2026-09-21-solver-research-question-inversion-audit-001.md).
 
 ## Stop rules
 
