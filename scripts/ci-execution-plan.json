@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Shadow/future execution packing for semantic CI obligations. Does not itself authorize skipping.",
+  "jobs": {
+    "fast-gate": {
+      "alwaysMaterialized": true,
+      "validatorGroups": "selected",
+      "nodeTestGroups": "selected",
+      "capabilities": [
+        "lint",
+        "solver-canary",
+        "build"
+      ],
+      "note": "Primary installed-dependency lane. Always exists initially because lint remains universal and selected validator/Node groups run here."
+    },
+    "deep-verification": {
+      "alwaysMaterialized": false,
+      "capabilities": [
+        "unit-coverage",
+        "deep-proofs",
+        "firestore-boundary"
+      ],
+      "note": "Expensive implementation/persistence lane. Future scoped CI may skip the whole job when none of these capabilities are selected."
+    }
+  },
+  "finalStatus": {
+    "jobId": "ci-success",
+    "needs": [
+      "impact-shadow",
+      "fast-gate",
+      "deep-verification"
+    ],
+    "if": "always()",
+    "acceptedResults": {
+      "impact-shadow": [
+        "success"
+      ],
+      "fast-gate": [
+        "success"
+      ],
+      "deep-verification": [
+        "success",
+        "skipped"
+      ]
+    },
+    "note": "Single stable required status. A skipped deep lane is acceptable only because routing decides it was unnecessary; router and fast gate must succeed."
+  }
+}
