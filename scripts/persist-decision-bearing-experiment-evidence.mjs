@@ -122,9 +122,21 @@ function simplePopulationBindingIssues(manifest, artifactRoot) {
     : ['simple primary result rows no longer match populationIntegrity.expectedIds'];
 }
 
+function isInsideDurableEvidenceBundle(manifestFile) {
+  const bundlePath = path.join(path.dirname(manifestFile), 'bundle.json');
+  if (!fs.existsSync(bundlePath)) return false;
+  try {
+    const bundle = JSON.parse(fs.readFileSync(bundlePath, 'utf8'));
+    return bundle?.kind === 'pathfinder-durable-experiment-evidence-bundle';
+  } catch {
+    return false;
+  }
+}
+
 function findDecisionBearingManifests(root) {
   return walk(root)
     .filter(file => path.basename(file) === 'manifest.json')
+    .filter(file => !isInsideDurableEvidenceBundle(file))
     .map(file => {
       try {
         return { file, manifest: JSON.parse(fs.readFileSync(file, 'utf8')) };
