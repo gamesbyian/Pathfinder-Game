@@ -17,6 +17,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Shadow the same impact model used by PR CI without changing this workflow's broad safety-net
+  # behavior. Use the push event's full before->after range rather than HEAD^ so multi-commit pushes
+  # are classified as one repository update.
+  impact-shadow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /package.json
+            /scripts/ci-execution-plan.json
+            /scripts/ci-execution-plan.mjs
+            /scripts/ci-impact-classifier.mjs
+            /scripts/ci-impact-rules.json
+            /scripts/ci-impact-shadow-plan.mjs
+            /scripts/ci-validation-plan.json
+            /scripts/ci-validation-plan.mjs
+            /scripts/validation-groups.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+      - name: Compute main-push shadow validation plan
+        continue-on-error: true
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if [[ "$BEFORE" =~ ^0+$ ]]; then
+            node scripts/ci-impact-shadow-plan.mjs --full
+          else
+            node scripts/ci-impact-shadow-plan.mjs --git-diff "$BEFORE" "$AFTER"
+          fi
+
   validate:
     runs-on: ubuntu-latest
     steps:
