@@ -1,10 +1,10 @@
 # Solver protocol/schema contraction plan
 
-> **Status:** implementation complete; awaiting final CI confirmation
+> **Status:** implementation complete; 23/23 seams closed. Repository CI remains a validation surface, not unfinished contraction work.
 > **Opened:** 2026-09-20
 > **Audit basis:** [protocol/schema contraction audit 001](../reports/2026-09-20-protocol-schema-contraction-audit-001.md)
 > **Purpose:** reduce live solver/research polymorphism without rewriting historical evidence or losing durable compatibility.
-> **Progress (2026-09-21, PR #1937):** all 23 registered seams are now closed in the machine-readable registry. The final implementation wave replaced implicit hint mutation tracking with explicit `changedHintLevels` write sets, re-closed PSC-001/002, finished durable level-addressing census (PSC-004), closed the canonical sweep envelope (PSC-007), completed historical Attempt/provenance isolation (PSC-015/017), and removed the last current phase-6/work-budget aliases (PSC-022/023). Current producers and APIs are canonical-only; historical normalization is named and centralized; frozen evidence is unchanged. The latest red CI was reduced to two stale tests and both fixes are committed. No architectural or caller-migration work is known to remain; only final CI confirmation on the reconciled head is pending.
+> **Progress (2026-09-21, PR #1937):** all 23 registered seams are closed in the machine-readable registry. The final wave replaced implicit hint mutation tracking with explicit `changedHintLevels` write sets, re-closed PSC-001/002, finished durable level-addressing census (PSC-004), closed the canonical sweep envelope (PSC-007), completed historical Attempt/provenance isolation (PSC-015/017), and removed the last current phase-6/work-budget aliases (PSC-022/023). Current producers/APIs are canonical-only; historical normalization is named and centralized; frozen evidence is unchanged. No architectural or caller-migration work remains. Subsequent integrated-tree CI failures are ordinary repository validation defects and should be fixed without restoring retired compatibility.
 
 ## Goal
 

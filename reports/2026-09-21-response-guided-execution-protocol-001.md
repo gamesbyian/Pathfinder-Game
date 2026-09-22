@@ -1,9 +1,9 @@
 # Response-guided execution protocol
 
-> **Status:** active
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-21 — frozen execution completed in GHA run `35560075075` (artifact `10621363382`): parity/orientation contrasts, both paired-width cohorts, and BC1 Stage-B.
-> **Decision:** close the tested richer portal-parity and static orientation explanations; advance non-nested width survivor composition to bounded viability/dominance tracing; advance BC1 to a production-inert safety/economics consumer. No production routing or pruning is authorized.
-> **Remaining gate:** downstream consumers now live in canonical workstreams: selected CW/CCW operational traces, bounded exclusive-prefix viability/dominance, and BC1 reference-safety/cost measurement.
+> **Decision:** this frozen protocol is complete. Tested portal-parity/static-orientation explanations closed; non-nested width composition and BC1 advanced to their canonical successor gates. No production routing or pruning is authorized.
+> **Remaining gate:** none for this protocol; selected CW/CCW traces, bounded exclusive-prefix viability/dominance, and BC1 safety/economics are owned by `solver-optimization-workstreams.md`.
 > **Question family:** response-guided capability invention + `WS2-CUT-BALANCE-PROJECTION`.
 > **Evidence role:** development.
 > **Selection rule:** freeze cohorts before reading parity/orientation outputs; preserve parent identity for BC1 incidence.

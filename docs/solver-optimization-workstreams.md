@@ -4,30 +4,30 @@
 > **Reconciled:** 2026-09-21.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
-Method: [`operating model`](solver-research-operating-model.md) · Scheduling: [`scheduling policy`](solver-scheduling-policy.md) · Evidence: [`evaluation evidence`](solver-evaluation-evidence.md) · Capability evidence: [`capability evidence`](solver-capability-evidence.md) · Semantic gaps: [`capability atlas`](solver-reasoning-capability-atlas.md) · Capability acquisition: [`invention program`](solver-capability-invention-program.md) · Stops: [`stop reconciliation`](solver-capability-gap-stop-condition-reconciliation.md).
+Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
 
-## Data-audit guardrail
+## Data guardrail
 
-C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts but not consume historical identity/outcome/hints/capability-evidence membership. Negatives close only tested claims.
+C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts, never historical outcomes/identity/hints. Negatives close only tested claims.
 
-## Portfolio posture
+## Portfolio
 
-Two fronts: **HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. Rules: [capability invention program](solver-capability-invention-program.md). Register: `data/stress/capability-invention-demand.json`.
+**HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. [Rules/register](solver-capability-invention-program.md): `data/stress/capability-invention-demand.json`.
 
-Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs have a frozen freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
+Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs need freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
 **State:** ACTIVE / two-front portfolio.
 
-**Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
+**Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; classes 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-- **Classes 1-3:** class 1 has no menu headroom. **Class 3 dose RESOLVED:** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative; repair-family deadline censoring and admissible-order reserve starvation route to separate follow-ups. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
+- **Classes 1-3:** class 1 has no menu headroom. **Class 3 RESOLVED:** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative; repair deadline and admissible-order reserve starvation have separate follow-ups. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 - **Class 5:** topology remains research-only; F3 population 14 pairs/7 parents. No raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 - **Card-E:** 17/156 reconstructable-unexposed; both tested descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
-- **Post-topology:** H1 vocabulary and DEAD-core size-1 are closed; H3/H2 are negative; behavioral quotient remains research-only. H3 allocation-value is positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md)
+- **Post-topology:** H1 + DEAD-core size-1 closed; H3/H2 negative; behavioral quotient research-only. H3 allocation: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md)
 
 ### Premise-acquisition lanes
 
@@ -71,7 +71,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane H — parity invariants
 
-**PARALLEL PREMISE OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` and `WS2-CHECKERBOARD-CAPACITY` together; advance only after resolution-ready incidence and soundness. The response-guided static portal decomposition is separately **CLOSED IN TESTED FORM**: on the frozen plain/diverse contrasts it adds no explanatory value beyond raw portal count. [preflight](solver-parity-phase-capacity-preflight.md) · [response result](../reports/2026-09-21-response-guided-premise-nominations-001.md)
+**PARALLEL OBSERVERS; production unchanged.** Run `WS2-PARITY-PHASE-DISTANCE` + `WS2-CHECKERBOARD-CAPACITY`; advance on incidence/soundness. Static portal decomposition is **CLOSED** beyond raw portal count on frozen contrasts. [preflight](solver-parity-phase-capacity-preflight.md) · [result](../reports/2026-09-21-response-guided-premise-nominations-001.md)
 
 #### Lane I — small exact projections
 
@@ -79,9 +79,9 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 ### Post-mining premise-map handoff closeout
 
-Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: A closes at C2, D1's ranking consumer is negative, and F3 has no compact decision-bearing consumer. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
+Frozen-map mining is complete; A/D1/F3 did not earn a shared runtime substrate. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** HARVEST adds the repair node-cap seam and designs its matched-work A/B; reserve repricing is separately nominated. ACQUISITION runs the 3-row beam freshness gate, broadens first-loss sampling beyond capability-selected Class 3, and has two earned response-guided follow-ups: bounded 2K/5K exclusive-prefix viability/dominance tracing and a selected CW/CCW operational-trace discriminator. BC1 separately advances to a production-inert safety/economics consumer. Literal forced-work prevalence is broad: 25.33% of measured beam parent-expansion work occurs at post-prune one-successor states across the frozen 64-parent C2 residual sample. The seam audit establishes that this is a gross prevalence reservoir, because expansion/pruning work has already been paid when one-survivor status becomes knowable. `WS2-FORCED-WORK-CAPTURE-ECONOMICS` therefore next reruns the frozen sample with global singleton/singleton->singleton phase telemetry and prices only post-recognition consequences before any production contraction. [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-result-001.md)
+**Current WS2 gate:** HARVEST adds repair node-cap + matched-work A/B; reserve repricing stays separate. ACQUISITION runs beam freshness, broader first-loss sampling, then earned prefix/orientation traces. BC1 advances to inert safety/economics. Forced-work prevalence is 25.33%, but expansion/pruning is already paid when forcedness is known; `WS2-FORCED-WORK-CAPTURE-ECONOMICS` next prices post-recognition singleton-chain consequences. [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-result-001.md)
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** LEGAL-SIGNAL CAPTURE ACTIVE. Next: inert action-boundary capture. [`oracle`](../reports/2026-09-21-prewinner-work-oracle-census-001.md) · [`preflight`](../reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md)
@@ -109,13 +109,13 @@ Frozen-map mining is complete. A/D1/F3 did not earn a shared runtime substrate: 
 ## Standing research rules
 
 - Compare techniques with `workSpent`; nodes are within-technique diagnostics. New actions/configs compete inside total work.
-- IDs, historical outcomes, hints, family labels, stored exact answers and capability-evidence membership are forbidden cold routing inputs. Current-input exact derivation is legal only if sound and economical.
+- Cold routing cannot consume IDs, historical outcomes, hints, family labels, or stored answers. Current-input exact derivation is legal only if sound/economical.
 - Separate semantic premise from tested form before transporting a negative. Offline/exact evidence may nominate/falsify a production premise; it cannot license runtime behavior.
-- Match protocol identity, not nominal stage reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes may generate premises, never production exceptions.
-- Prefer the cheapest information-value test. Hold out independent units and scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not impossibility certificates or state equivalence.
+- Match protocol identity, not nominal reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes generate premises, never production exceptions.
+- Prefer cheapest information-value tests. Hold out independent units; scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not proofs.
 - Classify proposed solver work as **HARVEST / EXTENSION / INVENTION** before implementation; a new strategy flag or retry shell is not automatically a new capability.
-- No generic blackboard, production exact solver, CEGAR, LNS, decomposition engine or per-level compiler is earned by an open semantic gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
+- No generic blackboard/exact solver/CEGAR/LNS/decomposition engine/per-level compiler from an open gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
 
 ## Cheap evidence routing
 
-Prefer indexed/queryable retained evidence before bespoke work. Measurements belong in dated reports; deferred forms with precise reopen triggers belong in [`solver-future-work.md`](solver-future-work.md).
+Prefer indexed retained evidence before bespoke work. Measurements go in dated reports; deferred forms/reopen triggers in [`solver-future-work.md`](solver-future-work.md).

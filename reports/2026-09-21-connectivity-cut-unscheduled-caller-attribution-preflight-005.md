@@ -1,9 +1,9 @@
 # Connectivity cut-certificate unscheduled caller attribution preflight 005
 
-> **Status:** active
-> **Last evidence:** 2026-09-21 — result 004 found 49,270 theorem-backed cut hits at production candidates where connectivity was skipped, but the aggregate mixes search families with materially different connectivity schedules.
-> **Decision:** run one bounded production-inert attribution pass on the frozen 24-parent development population before building subtree/lineage accounting.
-> **Remaining gate:** identify the search family and schedule phase owning the dominant unscheduled cut opportunity; only that family may advance to downstream-work economics.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — attribution assigned 47,389 / 49,270 unscheduled cut hits to ordinary DFS. [Result 005](2026-09-21-connectivity-cut-unscheduled-caller-attribution-result-005.md)
+> **Decision:** only ordinary DFS advanced to dominated-work economics; beam and repair did not justify separate tracing on this population.
+> **Remaining gate:** none for this preflight; DFS dominated-work result 006 subsequently closed the behavioral consumer.
 > **Evidence role:** development.
 > **Parent result:** [unscheduled applicability result 004](2026-09-21-connectivity-cut-certificate-unscheduled-applicability-result-004.md).
 > **Parent audit:** [computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).

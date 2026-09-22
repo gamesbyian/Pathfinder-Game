@@ -1,9 +1,9 @@
 # Computational work elimination: multi-query divergence preflight 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-21 — the existing paired 2K/5K beam comparison was extended opt-in to compare exact portal-free connectivity-cut proof identities while searches remain isolated.
-> **Decision:** no shared-search architecture is earned; first measure whether exact proof overlap materially exceeds exact path-prefix overlap on a frozen real width-divergent development cohort.
-> **Remaining gate:** run the frozen eight-parent paired-width proof-overlap cohort and require repeated expensive exact proof overlap across multiple parents before designing any shared-computation consumer.
+> **Status:** cancelled
+> **Last evidence:** 2026-09-21 — downstream connectivity-cut dominated-work economics closed before the planned paired-width overlap run became decision-bearing.
+> **Decision:** do not execute this overlap acquisition for the tested connectivity-cut proof family. [Disposition 002](2026-09-21-computational-work-elimination-paired-proof-overlap-disposition-002.md) owns the cancellation.
+> **Remaining gate:** none for this preflight; reopen multi-query overlap only for a proof family that first clears soundness, solve-local recurrence, and removable-work economics.
 
 ## 1. Why this preflight is needed
 

@@ -1,9 +1,9 @@
 # Connectivity cut DFS dominated-work preflight 006
 
-> **Status:** active
-> **Last evidence:** 2026-09-21 — caller attribution assigned 47,389 / 49,270 unscheduled cut hits to ordinary DFS across all 9 positive parents.
-> **Decision:** measure only non-overlapping outermost DFS proof-hit subtrees; do not build a behavioral prune or generic search tracer.
-> **Remaining gate:** dominated canonical work must be material across multiple parents and comfortably exceed proof-validation cost before a matched-work behavioral DFS consumer is earned.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-21 — non-overlapping outermost DFS proof-hit subtrees contained only 49,034 canonical work units across the frozen 24-parent population. [Result 006](2026-09-21-connectivity-cut-dfs-dominated-work-result-006.md)
+> **Decision:** dominated work is too small to justify a matched-work behavioral prune; the connectivity-cut consumer and parent computational-work-elimination audit are closed.
+> **Remaining gate:** none for this preflight; use result 006's explicit reopen condition if connectivity cadence/cost or applicability economics materially change.
 > **Evidence role:** development.
 > **Parent result:** [caller attribution result 005](2026-09-21-connectivity-cut-unscheduled-caller-attribution-result-005.md).
 > **Parent audit:** [computational work elimination audit](../docs/solver-computational-work-elimination-audit-plan.md).

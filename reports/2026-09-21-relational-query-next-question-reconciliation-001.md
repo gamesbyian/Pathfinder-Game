@@ -1,7 +1,9 @@
 # Relational-query next-question reconciliation 001
 
-> **Status:** concluded-positive as question-generation work; no new active workstream item.
-> **Date:** 2026-09-21.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — R03147 exact future-intersection replication, negative D1 beam-retention consumer, LIVE constrained-event feasibility, and residual-interface commutativity reconciliation.
+> **Decision:** preserve candidate-commitment viability and residual-interface commutativity only as deferred evidence-backed descendants with explicit reopen conditions; create no new active workstream item.
+> **Remaining gate:** none for this reconciliation; descendants advance only when their conditions in `docs/solver-future-work.md` are met.
 > **Purpose:** reconcile the per-instance relational-feasibility positives against the later D1 production-consumer negative, and preserve only the descendants that remain materially distinct.
 > **Priority authority:** [solver optimization workstreams](../docs/solver-optimization-workstreams.md).
 > **Deferred/reopen authority:** [solver future work](../docs/solver-future-work.md).

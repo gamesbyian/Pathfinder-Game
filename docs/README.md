@@ -63,7 +63,8 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 Before broad catalogs, reports, corpora, or histories:
 
 - solver priority/state: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md);
-- prior evidence: `node scripts/research-status-index.mjs --compact --query=<term>`;
+- new/unregistered research question: [`research-question-intake.md`](research-question-intake.md), then `node scripts/research-status-index.mjs --compact --query=<term>`;
+- prior evidence / known question discovery: `node scripts/research-status-index.mjs --compact --query=<term>`;
 - research-system orientation: `npm run research:system-inventory -- --view=brief`;
 - machine inputs/findings: `npm run research:system-inventory -- --view=brief-inputs|findings`;
 - historical solver premise/disposition memory: [`solver-archaeology-register.md`](solver-archaeology-register.md) when the question is explicitly about old/retired work;
@@ -76,7 +77,9 @@ Open the owning reference only when the compact result is insufficient or its co
 
 ## Solver research route
 
-Default orientation:
+For a conversational/unregistered idea, start with [`research-question-intake.md`](research-question-intake.md). Expand and contextualize the ambiguity before minting an ID; if an existing stable question emerges, switch to `research:dossier`.
+
+For an existing gate/question, default orientation is:
 
 1. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md)
 2. [`solver-research-operating-model.md`](solver-research-operating-model.md)

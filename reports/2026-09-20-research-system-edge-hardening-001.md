@@ -1,9 +1,13 @@
 # Research-system edge hardening 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-20 — hostile continuation through `5edc457817`: repaired publisher fixture/Node CLI suite were green at `3bb2225633`; the sole CI red was this report's non-canonical status metadata, since repaired. Subsequent edge audit closed legacy decision-authority re-upgrade, publisher include-path overwrite/sampling/partial-metadata leaks, reconciliation source relabelling and lineage compression, mixed modern/legacy execution-revision upgrade, durable-retention stale-binding trust, conflicting append-summary reruns, static-portfolio shard-count path drift, and technique/method-probe outer-shard identity gaps.
-> **Decision:** harden concrete boundaries that can silently misidentify, misjoin, downgrade, suppress, or strand otherwise-valid evidence; prefer derived inventories and narrow shared primitives over new broad frameworks.
-> **Remaining gate:** inspect one stable-head validation opportunistically after the current hardening cluster; after merge, run the smallest practical `solver-level-blind-targeted-sweep.yml` dispatch with `persist_failure_response=true` and confirm the reusable persistence job commits both compact response and manifest.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-20 — targeted-sweep run `35531721218` completed successfully after the persistence-order fixes; its `Persist compact failure-response evidence (opt-in)` job succeeded, and the resulting frozen 53-parent evidence was subsequently consumed by the Class-3 dose/failure-response analysis.
+> **Decision:** the concrete edge-hardening program and its real persistence canary are complete. Preserve the resulting join, execution-identity, verdict, durability and executable-surface invariants; reopen only on a concrete new boundary failure or repeated consumer that earns broader machinery.
+> **Remaining gate:** none for this hardening pass; future edge work is evidence-triggered.
+
+## Closeout reconciliation
+
+The original handoff requested one post-merge real canary of `solver-level-blind-targeted-sweep.yml` with compact-response persistence enabled. That gate was satisfied by workflow-dispatch run `35531721218`: all 16 targeted shards, both combine jobs, and `Persist compact failure-response evidence (opt-in)` completed successfully. PR #1931 then used the persisted 53-parent acquisition to resolve the Class-3 dose and failure-response questions. The old pending-gate wording was stale documentation, not unfinished runtime work.
 
 ## Why this pass exists
 
