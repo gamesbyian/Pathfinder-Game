@@ -70,8 +70,9 @@
       "id": "QB-010",
       "question": "What became newly answerable after a specific asset, observer, capability, or commit was added?",
       "kind": "temporal-change",
-      "expected": "conditional",
-      "gap": "Snapshot/diff support now exists, but answering a concrete historical change requires a saved or reconstructed baseline snapshot from before the change."
+      "expected": "supported",
+      "gap": null,
+      "gitRef": "HEAD"
     },
     {
       "id": "QB-011",
