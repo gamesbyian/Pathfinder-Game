@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-21.
+> **Reconciled:** 2026-09-22.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
@@ -17,15 +17,19 @@ C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedur
 Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs need freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
 
-### Pending broad evidence refresh
+### Broad evidence refresh in progress
 
-Before the next solver-research interpretation pass, run one canonical stress refresh and one canonical technique census from the same current `main` SHA. The census keeps T1/T3/T4 at 50M nodes and now includes a bounded 60-level / 10M-work EW1 pricing tranche. **After both runs complete, do not stop at green workflows:** run the maintained broad-evidence reconciliation consumer over the canonical derived outputs, then reconcile the fresh production boundary, lifecycle/compact failure evidence, frozen WS1 challenge, T1 capability churn and EW1 pricing before changing scheduler policy or census budgets. Required closeout steps and budget reopen conditions: [broad-run reconciliation 001](../reports/2026-09-21-technique-census-budget-and-broad-run-reconciliation-001.md).
+The canonical stress refresh and technique census were dispatched from the same solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`. Stress refresh run `35687363645` is complete; technique census run `35687337464` is still waiting on its final long-running shard before combine/analysis.
+
+The production refresh reproduces the prior solved sets exactly: **101/102 C1 + 1,169/1,700 C2, 0 gains / 0 losses in both corpora**. Its main new value is diagnostic: compact failure response covers all 1,802 parents and 56,906 attempts, with complete normalized action/configuration identity and canonical work. All 532 current misses are invocation-level node-limited, but 1,010 solved parents also contain failed attempts, so censoring/failure frequency alone is not a residual phenotype. Broader first-loss/capability-gap work must first contrast residual response against solved-parent failed-attempt controls. [production-side reconciliation](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md)
+
+**After the census completes, do not stop at green workflows:** run the maintained broad-evidence reconciliation consumer over the canonical derived outputs, then close T1 capability churn, EW1 pricing, production participation, and the frozen WS1 challenge before changing scheduler policy or census budgets. Required closeout steps and budget reopen conditions: [broad-run reconciliation 001](../reports/2026-09-21-technique-census-budget-and-broad-run-reconciliation-001.md).
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
 **State:** ACTIVE / two-front portfolio.
 
-**Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; classes 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
+**Production boundary:** `35687363645`: **101/102 C1 + 1,169/1,700 C2**, C2 residual 531; exact solved-set churn versus `35066677597` is 0 gained / 0 lost in both corpora. Historical class counts remain 17/30/23/71/390 until a class-specific refresh changes them. [`fresh reconciliation`](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md) · [`prior class refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
 - **Classes 1-3:** class 1 has no menu headroom. **Class 3 RESOLVED:** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative; repair deadline and admissible-order reserve starvation have separate follow-ups. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
 - **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
@@ -85,10 +89,10 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 Frozen-map mining is complete; A/D1/F3 did not earn a shared runtime substrate. Dated reports own chronology. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-**Current WS2 gate:** HARVEST adds repair node-cap + matched-work A/B; reserve repricing stays separate. ACQUISITION runs beam freshness, broader first-loss sampling, then earned prefix/orientation traces. BC1 advances to inert safety/economics. Forced-work prevalence is 25.33%, but expansion/pruning is already paid when forcedness is known; `WS2-FORCED-WORK-CAPTURE-ECONOMICS` next prices post-recognition singleton-chain consequences. [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-result-001.md)
+**Current WS2 gate:** HARVEST adds repair node-cap + matched-work A/B; reserve repricing stays separate. ACQUISITION runs beam freshness, then uses the fresh 1,802-parent compact failure-response corpus as the existing-data gate before expanding first-loss sampling or buying prefix/orientation traces. A candidate residual phenotype must differ from solved-parent failed-attempt controls at the parent level before it earns richer capture. BC1 advances to inert safety/economics. Forced-work prevalence is 25.33%, but expansion/pruning is already paid when forcedness is known; `WS2-FORCED-WORK-CAPTURE-ECONOMICS` next prices post-recognition singleton-chain consequences. [`fresh failure evidence`](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md) · [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-result-001.md)
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** LATE-CONTINUATION SIGNAL POSITIVE / CONFIRMATION NEXT. Exact frozen model is positive across three distinct scoreable retained C2 attempt regimes: 6.93%, 6.99%, and 9.91% validation pre-winner-work capture with zero observed winner losses; C1 remains 0%. Across all scoreable regimes >95% of nominated work is same-stage continuation and >85% follows censored work. Two older refreshes are telemetry-inapplicable and one pre-promotion refresh duplicates an earlier attempt regime. This is temporal/portfolio robustness, not independent-population confirmation. [`result`](../reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md) · [`temporal challenge`](../reports/2026-09-21-ws1-legal-signal-continuation-temporal-challenge-001.md)
+**State:** LATE-CONTINUATION SIGNAL POSITIVE / CONFIRMATION NEXT. Exact frozen model is positive across three distinct scoreable retained C2 attempt regimes: 6.93%, 6.99%, and 9.91% validation pre-winner-work capture with zero observed winner losses; C1 remains 0%. The fresh canonical refresh reproduces the signal without refit at **9.75%** combined pre-winner-work capture, **0 endangered winner levels**, 96.48% same-stage continuation, and 85.94% following censored work. This strengthens temporal/portfolio robustness but is still not independent-population confirmation. [`result`](../reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md) · [`fresh challenge`](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md)
 
 ## Workstream state
 
