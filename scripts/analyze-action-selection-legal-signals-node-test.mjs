@@ -49,7 +49,8 @@ const contextual=result.families.find(f=>f.family==='prior-response+next-stage')
 assert.equal(contextual.endangeredWinnerLevels,1);
 assert.ok(contextual.preWinnerWork>0);
 assert.ok(contextual.diagnostics);
-assert.ok(contextual.diagnostics.nominatedByPriorOutcome.some(row=>row.key==='failed'));
+assert.deepEqual(contextual.diagnostics.nominatedByPriorOutcome.map(row=>row.key),['start'],
+  'the only nominated validation pre-winner row is the first boundary; the failed prior-response row is the held-out winner itself');
 assert.equal(contextual.diagnostics.topSignatures[0].developmentWins,0);
 assert.ok(contextual.diagnostics.nominatedSameStageContinuationWorkShare >= 0);
 console.log('analyze-action-selection-legal-signals: ok');

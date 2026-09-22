@@ -56,7 +56,9 @@ if (view) {
 }
 
 if (args.includes('--snapshot')) {
-  console.log(JSON.stringify(buildResearchQuerySnapshot(graph), null, 2));
+  // Snapshots can be large. Emit compact JSON so subprocess consumers and CI log capture
+  // do not truncate a valid document merely because pretty-print whitespace inflated it.
+  process.stdout.write(JSON.stringify(buildResearchQuerySnapshot(graph)) + '\n');
   process.exit(0);
 }
 
