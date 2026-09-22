@@ -10,7 +10,7 @@
 
 Measurements belong in dated reports, current workstream decisions in the workstream authority, deferred work in [`solver-future-work.md`](solver-future-work.md), and retained/default-off dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
 
-New conversational/unregistered questions enter through [`research-question-intake.md`](research-question-intake.md) before they have a stable question ID. That intake is a routing discipline, not a new authority: expand hidden interpretations, identify the decision consequence, reconcile existing questions/evidence/closed forms, classify answerability, and promote only the surviving ambiguity. Known-ID questions continue to start from `research:dossier`. General questions about the research system route through the same intake but do not enter the solver-science question registry by default.
+New/unregistered questions enter through [`research-question-intake.md`](research-question-intake.md): contextualize and collapse the ambiguity before minting an ID. Known-ID solver questions start from `research:dossier`; research-system questions do not enter the solver-science registry by default.
 
 ## Pipeline
 
