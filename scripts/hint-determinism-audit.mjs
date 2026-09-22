@@ -19,7 +19,9 @@ function filesUnder(root) {
         .sort();
 }
 
-// Recorded-input collisions use only fields persisted in hint provenance. Full effective-config\n// identity is absent, so reconcile collisions to source experiment arms before interpreting them.\nconst summary = {
+// Recorded-input collisions use only fields persisted in hint provenance. Full effective-config
+// identity is absent, so reconcile collisions to source experiment arms before interpreting them.
+const summary = {
     schemaVersion: 1,
     roots,
     files: 0,
