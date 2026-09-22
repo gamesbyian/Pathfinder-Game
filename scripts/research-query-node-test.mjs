@@ -20,6 +20,20 @@ assert.ok(!graph.diagnostics.shapeDebt.acquisitionNeedLexicalFallbackQuestions.i
 const question = resolveResearchEntity(graph, 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION');
 assert.ok(question.some(node => node.type === 'questions'));
 
+const ambiguousGraph = {
+  ...graph,
+  nodes: [
+    ...graph.nodes,
+    { type: 'fixtureA', id: 'AMBIGUOUS-ID', row: {}, source: {} },
+    { type: 'fixtureB', id: 'AMBIGUOUS-ID', row: {}, source: {} },
+  ],
+};
+assert.throws(
+  () => buildResearchQueryView(ambiguousGraph, { view: 'impact', entity: 'AMBIGUOUS-ID' }),
+  /ambiguous research entity/,
+  'semantic views must reject ambiguous bare IDs instead of relying on node order',
+);
+
 const outgoing = queryResearchGraph(graph, {
   entity: 'questions:WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION',
   direction: 'out',
