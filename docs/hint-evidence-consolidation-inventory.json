@@ -8,28 +8,32 @@
       "status": "current-regression",
       "mode": "writer",
       "issue": "imports removed readLevelsWithHints/writeLevelsWithHints facade and mutates bare .hints directly",
-      "target": "migrate to readLevelCorpusDocumentWithHints + setLevelHintRecords + writeLevelCorpusDocumentWithHints"
+      "target": "migrate to readLevelCorpusDocumentWithHints + setLevelHintRecords + writeLevelCorpusDocumentWithHints",
+      "reachability": "package command hints:discover-candidates"
     },
     {
       "path": "scripts/dedupe-hint-provenance.mjs",
       "status": "current-regression",
       "mode": "writer",
       "issue": "imports removed facade; mutates hintRecords but persists through removed writer",
-      "target": "migrate to explicit corpus-document API; preserve changed-level write intent"
+      "target": "migrate to explicit corpus-document API; preserve changed-level write intent",
+      "reachability": "maintained utility; package-command reachability must be mechanically checked"
     },
     {
       "path": "scripts/family-parent-hint-replay-batch.mjs",
       "status": "current-regression",
       "mode": "writer",
       "issue": "imports removed facade and manually mirrors parent.hintRecords to parent.hints",
-      "target": "use setLevelHintRecords and explicit corpus-document writer"
+      "target": "use setLevelHintRecords and explicit corpus-document writer",
+      "reachability": "batch utility; no direct package command found in the current package excerpt"
     },
     {
       "path": "scripts/stress/cpsat-hint-harvest.mjs",
       "status": "current-regression",
       "mode": "writer",
       "issue": "imports removed facade and manually mirrors hintRecords to hints",
-      "target": "use canonical HintStore boundary; if run in GHA, emit exact external-solver discovery observations before retiring direct transport"
+      "target": "use canonical HintStore boundary; if run in GHA, emit exact external-solver discovery observations before retiring direct transport",
+      "reachability": "maintained CP-SAT workflow producer"
     },
     {
       "path": "scripts/family-parent-hint-replay.mjs",
@@ -85,21 +89,32 @@
       "status": "current-regression",
       "mode": "reader",
       "issue": "imports removed readLevelsWithHints facade",
-      "target": "migrate to explicit corpus-document reader"
+      "target": "migrate to explicit corpus-document reader",
+      "reachability": "package command hints:expansion-audit"
     },
     {
       "path": "scripts/hint-workbench-parallel.mjs",
       "status": "current-regression",
       "mode": "reader/orchestrator",
       "issue": "imports removed readLevelsWithHints and comments rely on removed writer semantics",
-      "target": "migrate reader and concurrency commentary to changedHintLevels contract"
+      "target": "migrate reader and concurrency commentary to changedHintLevels contract",
+      "reachability": "package command hints:workbench-parallel"
     },
     {
       "path": "scripts/validate-hint-paths.mjs",
       "status": "current-regression",
       "mode": "reader",
       "issue": "imports removed readLevelsWithHints facade",
-      "target": "migrate to explicit corpus-document reader"
+      "target": "migrate to explicit corpus-document reader",
+      "reachability": "package test command test:hint-path-validation"
+    },
+    {
+      "path": "scripts/harvest-isolated-report-hints.mjs",
+      "status": "current",
+      "mode": "central-import-writer",
+      "issue": null,
+      "target": "retain explicit corpus-document API and historical-provenance ingress; add execution capsule/occurrence lineage without rewriting historical unknowns",
+      "reachability": "Harvest solver hint evidence; node smoke test now exercises the bundle/API boundary"
     }
   ],
   "workflowIngestion": [
@@ -192,7 +207,8 @@
       "currentHintMode": "explicitly excluded from canonical hint harvest",
       "centralHarvester": true,
       "target": "remain reconciliation/experiment evidence only; preserve constituent source lineage",
-      "partialFailureEvidence": true
+      "partialFailureEvidence": true,
+      "constituentLineage": "already materialized as typed source-run provenance; future occurrence lineage should preserve acquisition runs rather than substitute the recombination run"
     }
   ],
   "provenanceMissingness": [
@@ -380,7 +396,8 @@
       "physicalShape": "one document per novel path with singular provenance entry",
       "mergeSemantics": "approveLocalHintAddition selects only hint.provenance[last] and saveLocalLevelHintIfNovel rejects already-known path signatures",
       "capacity": "MAX_HINTS_PER_LEVEL=5000",
-      "finding": "a novel semantic Hint carrying multiple provenance entries is truncated to one provenance event; backend semantics diverge from published_levels"
+      "finding": "backend is structurally one-path/one-provenance-event: novel semantic Hints lose all but the last event, and rediscovery of an already-known path cannot append provenance because path-hash documents are create-only and saveLocalLevelHintIfNovel rejects known signatures",
+      "importToGit": "no local_level_hints ingestion is present in scripts/import-published-levels.mjs; published_levels and supplemental evidence currently have different canonical-git convergence paths"
     },
     {
       "surface": "submission",
@@ -389,5 +406,42 @@
       "capacity": "up to 1000 submitted paths",
       "finding": "downstream local Firestore storage can lose provenance already present in the submitted semantic Hint"
     }
-  ]
+  ],
+  "verifiedAgainstMain": "0494a0a2c2cc698b8c2a0c40782c88b8983d99ca",
+  "inventoryNotes": [
+    "GitHub code search was incomplete during the 2026-09-22 continuation; current seams below were reverified against concrete source files, package commands, the repository tree, and harvester/workflow ownership. Phase -1 should add a repository-local census validator so aliases/re-exports cannot evade this inventory.",
+    "PR #1994/#1995 moved harvest-isolated-report-hints.mjs onto the explicit corpus-document API and historical-provenance ingress; treat it as a current central importer and as evidence for compatibility-at-ingress rather than historical bulk normalization."
+  ],
+  "workflowInventoryGaps": [
+    {
+      "source": ".github/workflows/harvest-solver-evidence.yml",
+      "finding": "workflow_run trigger still names 'Solver repair-fallback node-reserve sample A/B' and 'Solver elite-prefix-dfs-retry local validation', but no corresponding maintained workflow file exists in the current .github/workflows tree",
+      "classification": "stale current compatibility/trigger residue",
+      "target": "remove or explicitly document historical-only trigger names during Phase -1; workflow lifecycle and harvester source allowlist must mechanically agree"
+    }
+  ],
+  "runtimeDeliveryMeasurement": {
+    "measuredAtMain": "0494a0a2c2cc698b8c2a0c40782c88b8983d99ca",
+    "source": "Git tree blob sizes plus vite.config.ts copy allowlist",
+    "copiedHintTrees": [
+      {
+        "path": "data/hints",
+        "files": 160,
+        "bytes": 171566523
+      },
+      {
+        "path": "data/stress/hints",
+        "files": 102,
+        "bytes": 83920958
+      },
+      {
+        "path": "data/stress/hints-random",
+        "files": 1700,
+        "bytes": 485744016
+      }
+    ],
+    "totalRawBytes": 741231497,
+    "loadingSemantics": "published hints are per-level lazy; stress corpora are fetched only after the signed-in admin Dev-Mode corpus switcher selects them, but all three provenance-rich trees are still copied into dist",
+    "pathOnlyBenchmarkStatus": "pending exact full-corpus encoder/gzip benchmark before adopting a runtime projection"
+  }
 }
