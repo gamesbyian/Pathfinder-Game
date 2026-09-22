@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { buildResearchQueryGraph, queryResearchGraph } from './research-query-lib.mjs';
+import { buildResearchQueryView } from './research-query-views-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith('--' + name + '='))?.slice(name.length + 3) ?? '';
@@ -17,6 +18,16 @@ if (args.includes('--stats')) {
       .map(relation => [relation, graph.edges.filter(e => e.relation === relation).length])),
     diagnostics: graph.diagnostics,
   }, null, 2));
+  process.exit(0);
+}
+
+const view = value('view');
+if (view) {
+  console.log(JSON.stringify(buildResearchQueryView(graph, {
+    view,
+    entity: value('entity'),
+    minimum: value('minimum') ? Number(value('minimum')) : 2,
+  }), null, 2));
   process.exit(0);
 }
 
