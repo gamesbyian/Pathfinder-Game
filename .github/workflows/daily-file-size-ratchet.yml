@@ -21,4 +21,26 @@ jobs:
         with:
           node-version: '20'
       - name: Enforce repository-wide file-size ratchet
+        id: ratchet
         run: node scripts/check-file-size-ratchet.mjs
+
+      - name: Summarize file-size ratchet
+        if: always()
+        shell: bash
+        env:
+          RATCHET: ${{ steps.ratchet.outcome }}
+        run: |
+          {
+            echo '## Daily file-size ratchet'
+            echo
+            echo "| Check | Outcome |"
+            echo "| --- | --- |"
+            echo "| Repository-wide size/debt scan | `$RATCHET` |"
+            echo
+            if [[ "$RATCHET" == success ]]; then
+              echo 'No repository-wide file-size ratchet violation was detected.'
+            else
+              echo 'The repository-wide file-size ratchet failed. Open the **Enforce repository-wide file-size ratchet** step for the violating paths and thresholds.'
+              echo '::error::Repository-wide file-size ratchet failed; inspect the ratchet step for violating paths and thresholds.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
