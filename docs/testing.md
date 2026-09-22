@@ -65,6 +65,8 @@ For targeted local diagnosis, semantic groups are available as `npm run check:va
 
 Ambiguous ownership belongs in `shared` until inspected. Unknown impact must broaden future routing rather than narrowing it.
 
+For end-to-end activation rehearsal, `.github/workflows/ci-scoped-dry-run.yml` is manual-only. It accepts explicit base/head refs, computes the same semantic plan, runs only the selected fast/deep obligations, and finishes through the intended single `ci-success` result contract. It is deliberately separate from ordinary PR CI until shadow evidence is sufficient; a successful dry run is implementation evidence for the routing machinery, not permission by itself to weaken the PR gate.
+
 Persistence is intentionally separate from generic game ownership. Firestore emulator/rules validation is expensive infrastructure with a narrow contract; UI/render/input changes should not eventually pay Java/Firestore startup merely because both ship in the same application. `modules/persistence/**` carries both game and persistence impact, while Firestore authority/harnesses carry persistence explicitly.
 
 ## Fast vs deep
