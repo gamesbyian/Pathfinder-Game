@@ -292,6 +292,14 @@ if (!activationWorkflowPath) {
   if (!/validation-groups\.mjs\s+nodeTests\b/u.test(activationWorkflow)) {
     failures.push(`${activationWorkflowPath}: missing selected Node-test-group execution`);
   }
+  const activationRouterStart = activationWorkflow.search(/^  impact-shadow:\s*$/mu);
+  const activationFastStart = activationWorkflow.search(/^  fast-gate:\s*$/mu);
+  const activationRouterBlock = activationRouterStart >= 0 && activationFastStart > activationRouterStart
+    ? activationWorkflow.slice(activationRouterStart, activationFastStart)
+    : '';
+  if (/continue-on-error:\s*true/u.test(activationRouterBlock)) {
+    failures.push(`${activationWorkflowPath}: activation router must fail closed; continue-on-error is forbidden`);
+  }
   if (!new RegExp(`^  ${escapeRegex(finalStatus?.jobId ?? '')}:\\s*$[\\s\\S]*?^    if:\\s*always\\(\\)\\s*$`, 'mu').test(activationWorkflow)) {
     failures.push(`${activationWorkflowPath}: final status job must use if: always()`);
   }
