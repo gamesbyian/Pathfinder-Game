@@ -52,6 +52,12 @@ The interface comments explicitly record a prior failure mode in which worker ex
 
 Portfolio sweep reports already record `engine` and `racePoolSize`, but current hint provenance does not.
 
+### Existing reproducibility contract to extend
+
+The general experiment contract already carries `execution.reproducibilityExpected` and validates it as part of compatibility. The checked-in experiment-result schema also reserves that field in the canonical execution object. That is an existing semantic owner and should be evolved/reused rather than shadowed by a hint-only reproducibility namespace.
+
+A boolean expectation is not sufficient to describe why a run is or is not path-stable, so implementation should add a versioned execution/reproducibility mode through the existing contract family or a shared value object it consumes. Historical boolean contracts remain readable.
+
 ### Consequence
 
 Do not maintain a separate hand-authored "behavior-affecting options" list in hint code.
@@ -111,6 +117,19 @@ The current tracked hint schema has no source-run field.
 The Resource Contract already says hint provenance should, where practical, reference the originating run/experiment so denominator, failures, protocol and work semantics can be recovered.
 
 However the current `hint-discovery-process` resource is a **generated interface**, not a guarantee that a durable run-linked document exists for every hint. Standard GHA manifests and source artifacts can also expire unless promoted into a durable evidence bundle.
+
+### Measured source-run reconstruction check
+
+The six September 9 source runs used to reconcile #1996 are still available in GitHub Actions at audit time:
+
+- 34315398129;
+- 34315357361;
+- 34320087947;
+- 34320103478;
+- 34337871124;
+- 34337880617.
+
+Every run still has an unexpired `solver-sweep-result` artifact plus shard artifacts. This explains why the forensic reconciliation can be performed mechanically today. It does **not** establish durable reconstructability: these are GHA-retained artifacts, not semantic payload preserved inside the canonical hint evidence.
 
 ### Consequence
 
