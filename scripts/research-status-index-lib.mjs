@@ -226,12 +226,19 @@ export function buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable 
     const reportsRoot = path.join(root, 'reports');
     const topics = [];
     const legacyEvidence = [];
+    const metadataErrors = [];
     for (const name of readdirSync(reportsRoot).sort()) {
         const filename = REPORT_NAME.exec(name);
         if (!filename) continue;
         const reportPath = `reports/${name}`;
         const source = readFileSync(path.join(root, reportPath), 'utf8');
-        const metadata = reportMachineMetadata(source, reportPath);
+        let metadata;
+        try {
+            metadata = reportMachineMetadata(source, reportPath);
+        } catch (error) {
+            metadataErrors.push(error instanceof Error ? error.message : String(error));
+            continue;
+        }
         if (!metadata) {
             legacyEvidence.push({
                 topicId: filename[2], date: filename[1], title: reportTitle(source, filename[2]),
@@ -274,6 +281,10 @@ export function buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable 
             inferenceScope: metadata.inferenceScope,
         });
     }
+    if (metadataErrors.length) {
+        throw new Error(`Research report metadata validation failed (${metadataErrors.length} issue${metadataErrors.length === 1 ? '' : 's'}):\n- ${metadataErrors.join('\n- ')}`);
+    }
+
     const workstreamsPath = 'docs/solver-optimization-workstreams.md';
     const workstreamsSource = existsSync(path.join(root, workstreamsPath)) ? readFileSync(path.join(root, workstreamsPath), 'utf8') : '';
     // Preserve the public `queue` collection name for index consumers, but source it from the
