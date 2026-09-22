@@ -56,9 +56,15 @@ if (view) {
 }
 
 if (args.includes('--snapshot')) {
-  // Snapshots can be large. Emit compact JSON so subprocess consumers and CI log capture
-  // do not truncate a valid document merely because pretty-print whitespace inflated it.
-  process.stdout.write(JSON.stringify(buildResearchQuerySnapshot(graph)) + '\n');
+  // Snapshots can be large. Emit compact JSON and wait for the pipe to drain before exiting;
+  // process.exit() can otherwise truncate buffered stdout under CI capture.
+  const payload = JSON.stringify(buildResearchQuerySnapshot(graph)) + '\n';
+  await new Promise((resolve, reject) => {
+    process.stdout.write(payload, error => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
   process.exit(0);
 }
 
