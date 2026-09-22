@@ -912,7 +912,42 @@
     "currentExplicitFalseIsolatedTechnique": 507334,
     "finding": "Historical unknown capability context has not merely remained ambiguous: read-normalize-write cycles can persist upgradeProvenanceEntry()'s synthesized false values. Current raw storage therefore cannot use explicit false as proof that old observations recorded false unless source generation/ingress proves it.",
     "mechanism": "level-data-io reads provenance through upgradeProvenanceEntry(); that adapter fills absent usedExistingHints/hintGuided/isolatedTechnique with false; a later canonical hint-file write serializes the expanded hintRecords and can materialize those synthesized values.",
-    "correctionRule": "Treat historical source-generation absence as unknown at semantic ingress even if a later storage rewrite materialized false. Do not infer original false from current physical presence alone. Future write paths must preserve an explicit semantic unknown state rather than laundering it into a default."
+    "correctionRule": "Treat historical source-generation absence as unknown at semantic ingress even if a later storage rewrite materialized false. Do not infer original false from current physical presence alone. Future write paths must preserve an explicit semantic unknown state rather than laundering it into a default.",
+    "september11FieldStates": {
+      "context.usedExistingHints": {
+        "absent": 0,
+        "false": 577093,
+        "true": 98140
+      },
+      "context.hintGuided": {
+        "absent": 0,
+        "false": 613463,
+        "true": 61770
+      },
+      "context.isolatedTechnique": {
+        "absent": 505993,
+        "false": 24998,
+        "true": 144242
+      }
+    },
+    "currentFieldStates": {
+      "context.usedExistingHints": {
+        "absent": 0,
+        "false": 677329,
+        "true": 98140
+      },
+      "context.hintGuided": {
+        "absent": 0,
+        "false": 713699,
+        "true": 61770
+      },
+      "context.isolatedTechnique": {
+        "absent": 32254,
+        "false": 507334,
+        "true": 235881
+      }
+    },
+    "scopeNote": "usedExistingHints/hintGuided were already physically expanded by the September 11 snapshot; isolatedTechnique supplies the clean before/after proof that later storage rewrites can collapse legacy absence into explicit modern booleans."
   },
   "migrationSyntheticFoundAt": {
     "migrationCommit": "7a651d391b49986626ceffbc4612352ddefb9bd4",
@@ -964,7 +999,14 @@
       "max": 5269927
     },
     "finding": "Path-count caps are not a capacity contract. At current provenance density the median published corpus hint array proxy already exceeds 1 MiB before level metadata/Firestore overhead, while one-event supplemental documents remain small. A full-Hint-per-path Firestore document can also grow dangerously large as provenance accumulates.",
-    "capacityTarget": "preflight actual encoded document size and surface overflow explicitly. Prefer a layout whose growth unit is bounded (semantic-event/occurrence child documents or another sharded representation) over silently truncating paths/events. Exact Firestore SDK/emulator wire-size validation should accompany implementation, but the current five/1000/5000 count policies are already disproven as semantically principled limits."
+    "capacityTarget": "preflight actual encoded document size and surface overflow explicitly. Prefer a layout whose growth unit is bounded (semantic-event/occurrence child documents or another sharded representation) over silently truncating paths/events. Exact Firestore SDK/emulator wire-size validation should accompany implementation, but the current five/1000/5000 count policies are already disproven as semantically principled limits.",
+    "publishedCanonicalCorpusProjectionThresholds": {
+      "levels": 160,
+      "over900kBytes": 122,
+      "over950kBytes": 114,
+      "over1MiB": 94,
+      "note": "These project the current git-canonical Hint arrays through Firestore's encodeHints shape; they do not claim the live published_levels collection currently contains those full arrays, because current review approval truncates to five paths."
+    }
   },
   "readerWriterCensusStatus": {
     "rawFilesMentioningRemovedFacades": 56,
