@@ -40,8 +40,14 @@ export function queryabilityBenchmarkIssues(registry) {
         if (!BENCHMARK_EXPECTATIONS.has(benchmark?.expected)) {
             issues.push(`${prefix}.expected is unknown: ${benchmark?.expected ?? '(missing)'}`);
         }
-        if (!BENCHMARK_KINDS.has(benchmark?.kind)) {
-            issues.push(`${prefix}.kind is unknown: ${benchmark?.kind ?? '(missing)'}`);
+        const kind = String(benchmark?.kind ?? '').trim();
+        if (!kind) {
+            issues.push(`${prefix}.kind is required`);
+        } else if (benchmark?.expected !== 'known-gap' && !BENCHMARK_KINDS.has(kind)) {
+            issues.push(`${prefix}.kind is unknown for executable benchmark: ${kind}`);
+        }
+        if (benchmark?.expected === 'known-gap' && !String(benchmark?.gap ?? '').trim()) {
+            issues.push(`${prefix}.gap is required for known-gap benchmarks`);
         }
     });
     return issues;
