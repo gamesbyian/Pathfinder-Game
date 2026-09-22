@@ -1036,26 +1036,30 @@
         "reports/2026-09-21-prewinner-work-oracle-census-001.md",
         "reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md"
       ],
-      "result": "Retained-evidence development pass is narrowed-positive. On the frozen production-boundary C2 validation split, prior-response + work-band + next-stage signatures capture 9.91% of pre-winner work at the conservative min-development-support=100 point with 0/356 recorded validation winners endangered; C1 captures 0%. The validation set was used to select among four signature families x three support floors, so this is development evidence, not confirmation. Freeze that exact family/support floor for sample-independent confirmation before any live scheduling treatment.",
+      "result": "Retained-evidence development is narrowed-positive and historically robust across three distinct scoreable C2 attempt regimes. The exact frozen 15-signature prior-response+work+next-stage model captures 6.93%, 6.99%, and 9.91% of validation pre-winner work with 0/310, 0/318, and 0/356 recorded winner losses; C1 remains 0%. Across all scoreable regimes >95% of nominated work is same-stage continuation and >85% follows censored prior work. Two older full refreshes are telemetry-inapplicable because canonical workSpent was not retained, and one later pre-promotion refresh duplicates an earlier attempt regime. Treat this as a late continuation-value seam with temporal/portfolio robustness, not independent-population confirmation or broad scheduler evidence.",
       "constrains": [
         "Do not treat pre-winner work as ex-ante redundant; predecessor attempts may provide information, preserve rare capability, or change later state/budget.",
         "Do not use level identity, future attempts, eventual winner identity, hints, census membership, stored solutions, or other historical outcome leakage as candidate policy inputs.",
         "No live skipping, reordering, dynamic budgeting, or learned selector is earned until a fixed simple legal-signal rule shows held-out captured-work value, protects rare winners, and beats fixed-order/tranche baselines.",
         "Do not treat the 0/356 validation loss count as confirmation after family/threshold selection on the same validation set.",
         "Do not generalize the C2 signal to C1; tested C1 capture is 0%.",
-        "Do not tune additional bins/signatures on the same validation population before sample-independent confirmation."
+        "Do not tune additional bins/signatures on the same validation population before sample-independent confirmation.",
+        "Do not broaden the next consumer into a generic dynamic scheduler before the frozen late-continuation model receives sample-independent/current-production confirmation.",
+        "The September 12 refresh is attempt-sequence equivalent to the pre-promotion September 16 refresh and must not be counted as a separate replication."
       ],
       "reopensOn": null,
       "premiseRefs": [],
       "measurementOpportunities": [],
       "acquisitionNeed": "telemetry-or-economics",
       "answeredBy": [
-        "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md"
+        "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md",
+        "reports/2026-09-21-ws1-legal-signal-continuation-temporal-challenge-001.md"
       ],
       "decisionSupport": {
         "mode": "all",
         "refs": [
-          "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md"
+          "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md",
+          "reports/2026-09-21-ws1-legal-signal-continuation-temporal-challenge-001.md"
         ]
       }
     },

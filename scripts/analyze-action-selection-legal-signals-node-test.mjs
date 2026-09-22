@@ -48,4 +48,8 @@ assert.equal(stage.endangeredWinnerRate,1);
 const contextual=result.families.find(f=>f.family==='prior-response+next-stage').thresholds[0];
 assert.equal(contextual.endangeredWinnerLevels,1);
 assert.ok(contextual.preWinnerWork>0);
+assert.ok(contextual.diagnostics);
+assert.equal(contextual.diagnostics.nominatedByPriorOutcome[0].key,'failed');
+assert.equal(contextual.diagnostics.topSignatures[0].developmentWins,0);
+assert.ok(contextual.diagnostics.nominatedSameStageContinuationWorkShare >= 0);
 console.log('analyze-action-selection-legal-signals: ok');
