@@ -10,7 +10,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import path from 'node:path';
 import process from 'node:process';
 import { createHintCapture } from './hint-capture-lib.mjs';
-import { readLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [key, ...rest] = a.split('=');
@@ -50,9 +50,10 @@ const states = new Map();
 function stateFor(corpusRel) {
     if (states.has(corpusRel)) return states.get(corpusRel);
     const corpusPath = path.join(root, corpusRel);
-    const levels = readLevelsWithHints(corpusPath);
+    const document = readLevelCorpusDocumentWithHints(corpusPath);
+    const { levels } = document;
     const byId = new Map(levels.map((level, i) => [String(level.id ?? i + 1), { level, index: i }]));
-    const state = { corpusPath, levels, byId };
+    const state = { corpusPath, document, levels, byId };
     states.set(corpusRel, state);
     return state;
 }
@@ -106,7 +107,7 @@ async function harvestRows({ corpusRel, rows, budgetMs = null, identity }) {
         };
         if (capture.record(entry.level, result)) changes += 1;
     }
-    capture.flush(state.corpusPath, state.levels);
+    capture.flush(state.corpusPath, state.document);
 }
 
 for (const file of walk(stagingDir).sort()) {
