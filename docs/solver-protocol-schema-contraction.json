@@ -608,14 +608,19 @@
         "scripts/solver-experiment-contract.mjs",
         "scripts/publish-solver-sweep-result.mjs",
         "scripts/research-semantic-identity-lib.mjs",
-        "scripts/hint-discovery-process-evidence-lib.mjs"
+        "scripts/hint-discovery-process-evidence-lib.mjs",
+        "modules/solver/orchestration-contracts.ts",
+        "scripts/solver-parallel/race-opts.mjs",
+        "scripts/solver-parallel/race.mjs"
       ],
       "forms": [
         "effectiveConfigDigest",
         "experiment.configurationHash",
         "configurationHash",
         "protocolHash/sourceProtocolHash",
-        "solverRef/sha/commit/commitSha/hint solver.version"
+        "solverRef/sha/commit/commitSha/hint solver.version",
+        "canonical SolveOpts request vs raced-backend supported subset",
+        "deterministic-work vs first-success-race reproducibility semantics"
       ],
       "currentWritesMultipleForms": true,
       "currentInputsMultipleForms": true,
@@ -623,8 +628,8 @@
       "persistedExternalRequirement": false,
       "treatment": "investigate",
       "status": "in-progress",
-      "retirementGate": "Assign each current identity field to a documented canonical semantic layer (effective solver config, execution protocol, run envelope, immutable solver ref), migrate duplicate current spellings where semantics are identical, and retain specialist names only where meaning genuinely differs.",
-      "progress": "Opened 2026-09-22 after PR #1996 showed attempt-level provenance can collide across different run-level ablation arms. Some current helpers also dual-write protocolHash and configurationHash with the same value."
+      "retirementGate": "Every canonical SolveOpts field and maintained execution backend is classified by one request-identity owner; new fields fail closed until classified. Current identity fields map to documented semantic layers (request/config, execution protocol, reproducibility class, run envelope, immutable solver ref). Determinism consumers compare only execution classes whose contract promises path-stable repeatability.",
+      "progress": "Expanded 2026-09-22 after research-system hardening. The raced backend explicitly permits winner/path variation from first-success scheduling, so concurrency/backend semantics cannot be treated as incidental execution metadata. The request identity should derive from the canonical SolveOpts contract rather than a hand-maintained behavior-affecting allowlist."
     },
     {
       "id": "PSC-027",
@@ -647,8 +652,8 @@
       "persistedExternalRequirement": false,
       "treatment": "single-mutable-authority",
       "status": "in-progress",
-      "retirementGate": "Modern GHA solver discoveries flow through one central semantic ingestion/persistence authority from standardized solved observations plus execution envelopes; direct hint-file import remains only historical/mixed-era compatibility after parity is demonstrated.",
-      "progress": "Opened 2026-09-22. Current parallel persistence routes capture different provenance context at construction time and are the architectural source of the run-envelope gap exposed by PR #1996."
+      "retirementGate": "Modern GHA solver discoveries use one central semantic hint-ingestion authority from specialist discovery artifacts projected through a common execution capsule. Do not force failure/exact/family/search-loss evidence into one universal artifact schema. Direct hint-file import remains historical/mixed-era compatibility after parity and partial-failure recovery are demonstrated.",
+      "progress": "Expanded 2026-09-22: centralization is semantic rather than a universal report format, preserving the research-system rule that materially different evidence families keep specialist schemas while sharing common identity/execution value objects."
     },
     {
       "id": "PSC-028",
@@ -697,6 +702,31 @@
       "status": "in-progress",
       "retirementGate": "Document one semantic adapter/capacity contract per external persistence surface, audit the 5-hint truncation for intentionality, and guarantee that backend limits cannot silently discard merged provenance. Physical Firestore/git schemas may remain different when required.",
       "progress": "Opened 2026-09-22. Physical divergence is partly legitimate, but current capacity and merge behavior differ materially across published Firestore, local supplemental hints, submissions, and git-backed canonical storage."
+    },
+    {
+      "id": "PSC-030",
+      "concept": "hint provenance missingness semantics",
+      "owners": [
+        "modules/domain/hint-runtime.mjs",
+        "modules/domain/hint-types.ts",
+        "scripts/stress/provenance-source-taxonomy.mjs",
+        "scripts/hint-discovery-replayability-lib.mjs"
+      ],
+      "forms": [
+        "omitted field",
+        "explicit null",
+        "explicit false/default",
+        "not-applicable producer semantics",
+        "historically unknown/not observed"
+      ],
+      "currentWritesMultipleForms": true,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": true,
+      "persistedExternalRequirement": true,
+      "treatment": "investigate",
+      "status": "in-progress",
+      "retirementGate": "Before sparse hint schema v4, every provenance field has an explicit semantic missingness/default contract. Only true canonical defaults may be omitted and reconstructed; historical absence remains unknown where required; consumers use shared helpers rather than interpreting omission locally.",
+      "progress": "Opened 2026-09-22. The hardening pass found that safe sparse encoding depends on distinguishing default, unknown, not-applicable, and not-observed states rather than treating null/omission/false as interchangeable."
     }
   ],
   "lastUpdated": "2026-09-22",
