@@ -140,8 +140,19 @@ const ws2 = earlier.gates.find(row => row.workstreamId === 2);
 assert.ok(ws2);
 ws2.gateClass = 'bounded-compute';
 const temporal = diffResearchQuerySnapshots(earlier, snapshot);
+assert.equal(temporal.gateClassComparison.comparable, true);
 assert.ok(temporal.newlyNoFreshSolverExecution.some(row => row.workstreamId === 2),
   'snapshot diff should identify workstreams that became advanceable without solver compute');
+
+const preGateClass = structuredClone(snapshot);
+preGateClass.gates[0].gateClass = null;
+preGateClass.gateClassCoverage.classified -= 1;
+preGateClass.gateClassCoverage.complete = false;
+const preGateDiff = diffResearchQuerySnapshots(preGateClass, snapshot);
+assert.equal(preGateDiff.gateClassComparison.comparable, false);
+assert.deepEqual(preGateDiff.newlyNoFreshSolverExecution, [],
+  'historical refs without complete gate classification must not manufacture answerability transitions');
+assert.deepEqual(preGateDiff.newlyBoundedCompute, []);
 
 const searched = queryResearchGraph(graph, { query: 'portal coarse', limit: 20 });
 assert.ok(searched.nodes.some(node => node.type === 'questions'));
