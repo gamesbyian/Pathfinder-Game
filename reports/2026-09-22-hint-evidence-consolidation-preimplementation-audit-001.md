@@ -340,3 +340,69 @@ The following can be completed during implementation without blocking the archit
 - v4 byte/decode/diff benchmarks after semantic normalization is fixed.
 
 The key result is that no physical v4 decision is currently blocked by a need for a new evidence warehouse or universal observation schema. The existing research architecture already has the right specialist resources. The missing work is semantic boundary consolidation and prospective completeness.
+
+## Continuation findings against current main
+
+Reconstruction point: `main=0494a0a2c2cc698b8c2a0c40782c88b8983d99ca`; PR #1996 head at session restart was still `f80abe0741689e0089bb4368a6b6dcb1ee82217a` and was 33 commits ahead / 0 behind current main. PRs #1994/#1995 are already in main and repair the isolated-harvester corpus API/historical-provenance ingress.
+
+### I/O ownership recheck
+
+The stale current seams were reverified in source:
+- writers: `hint-candidate-search.mjs`, `dedupe-hint-provenance.mjs`, `family-parent-hint-replay-batch.mjs`, `stress/cpsat-hint-harvest.mjs`;
+- readers/orchestrators: `hint-expansion-audit.mjs`, `hint-workbench-parallel.mjs`, `validate-hint-paths.mjs`.
+
+Four of the reader/candidate/workbench surfaces are directly exposed through package commands. CP-SAT is maintained by workflow. The dedupe and family batch utilities have no package alias, so package reachability alone is not a safe census.
+
+A source-tree validation guard is warranted because GitHub code search returned incomplete/empty results even for known-live symbols during this audit.
+
+### Request semantics
+
+The current `SolveOpts` interface and planning inventory both contain 49 fields, exactly. There are no membership deltas. `race-opts.mjs` already owns a fail-closed narrow projection, so a future classification check should import/compare that boundary rather than duplicate its field list.
+
+Still open: effective canonical defaults and per-field identity participation are not exhaustive enough to construct a stable request hash. Ablation defaults in particular must be obtained from canonical normalization/opt-in ownership.
+
+### Workflow/ingestion findings
+
+`harvest-solver-evidence.yml` is already a central semantic replay point and runs after partial failures. Broad/residual/static-portfolio/combine are deliberately experiment-only. Recombination already has typed constituent source-run provenance and should remain the lineage source for observations acquired in earlier runs.
+
+Two stale workflow-run trigger names remain in the harvester although their workflow files no longer exist: repair-fallback node-reserve sample A/B and elite-prefix-dfs-retry local validation.
+
+CP-SAT is a confirmed specialist exception. `cpsat-hint-harvest.mjs` receives and referee-validates exact `PATH` output, but only retains the exact path in its in-memory pending map immediately before direct hint persistence. Its optional JSON result row omits the path. `cpsat-hint-harvest-sweep.mjs` does not request the JSON result and writes a Markdown summary containing only status / added / rediscovered counts. Therefore current CP-SAT artifacts cannot construct a future semantic Hint without transporting the already-mutated canonical hint files. Centralization requires a richer specialist discovery artifact first.
+
+### Firestore findings
+
+The supplemental backend is not merely lossy for a multi-provenance submission. It cannot represent a later provenance rediscovery of an existing path at all: documents are deterministically path-keyed and create-only, and the repository rejects known signatures before write. `scripts/import-published-levels.mjs` only converges `published_levels`, not `local_level_hints`, into git.
+
+Representative canonical Hint JSON sizes from five provenance-heavy real files vary materially:
+- maxima ranged from 43,687 to 168,521 bytes per semantic Hint;
+- the largest sampled Hint carried 215 provenance events;
+- medians ranged from 361 to 7,526 bytes.
+
+This invalidates fixed path-count capacity as a principled policy. Physical Firestore encoding/document-size measurement is still required before selecting layout/limits.
+
+### Runtime-delivery measurement
+
+Current Vite build copying contributes 741,231,497 raw bytes from canonical hint trees:
+- published 171,566,523 B;
+- stress-1 83,920,958 B;
+- stress-2 485,744,016 B.
+
+Published hints are per-level lazy. Stress hints are only fetched after the admin Dev-Mode corpus switcher selects a stress corpus, but the provenance-rich trees are still copied into every build.
+
+Ten large real files were decoded through Git blobs and projected to path-only JSON. Path-only/raw ratios ranged 0.0582..0.3750, i.e. 62.5%..94.2% raw-byte reduction in this deliberately heavy sample. This establishes materiality, not a corpus-wide estimate; exact all-file and gzip measurement remains required.
+
+### July-11 historical boundary
+
+Commit `7a651d391b49986626ceffbc4612352ddefb9bd4` (2026-07-11) introduced provenance storage and states that all 606 then-existing published/stress hint files were migrated. Existing before/after samples show originally undated flat metadata later carrying a narrow migration-time `foundAt` cluster. The full current-corpus count remains an explicit gate; migration membership/source generation should be preferred over timestamp-range guessing when mechanically identifying synthetic times.
+
+### Resulting architecture pressure
+
+The evidence now favors:
+1. semantic discovery events deduped independently from physical occurrence lineage;
+2. occurrence lineage as a compact child/source set, preserving constituent acquisition runs through recombination;
+3. a single central GHA semantic-ingestion authority fed by specialist artifacts, with CP-SAT temporarily exempt until its artifact is sufficient;
+4. historical semantic adapters at ingress, not inferred bulk rewrites;
+5. byte-aware external persistence policy;
+6. a generated runtime path projection, if the exact full-corpus/gzip benchmark confirms the sampled savings.
+
+Physical schema v4 remains intentionally blocked.
