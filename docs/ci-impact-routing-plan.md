@@ -167,8 +167,9 @@ Evidence:
 - [historical backtest 002](../reports/2026-09-21-ci-impact-routing-historical-backtest-002.md)
 - [shadow readiness result 002](../reports/2026-09-21-ci-impact-routing-shadow-readiness-result-002.md)
 - [scoped execution historical economics 003](../reports/2026-09-21-ci-scoped-execution-historical-economics-003.md)
+- [live shadow evidence 004](../reports/2026-09-22-ci-impact-routing-live-shadow-evidence-004.md)
 
-**Phase 2 measurement/shadowing is active.** `.github/workflows/ci.yml` now contains non-gating, dependency-free `impact-shadow`. It reports what validation would be selected while `fast-gate` and `deep-verification` still run unchanged. Router failure is non-gating during this phase.
+**Phase 2 measurement/shadowing has enough live shape evidence for activation rehearsal.** `.github/workflows/ci.yml` contains non-gating, dependency-free `impact-shadow`. Real post-foundation PRs now cover all three important routing shapes: research-only scoped (#1974/#1975), solver scoped (#1982), and repeated full-impact authority changes. In both research-only samples, every observed failure was in retained fast/research obligations while the entire deep lane passed; #1982 correctly retained solver coverage/proofs/canary/build while excluding Firestore. Router failure remains non-gating while broad CI is authoritative.
 
 The parallel-script runner also supports opt-in `PATHFINDER_PARALLEL_JOBS=<N>` bounded concurrency, but the historical unbounded default remains unchanged until representative 4/8/16/unbounded measurements justify a new default.
 
@@ -186,4 +187,4 @@ The validation-plan parity checker now also proves every expensive capability be
 
 `ci-scoped-dry-run.yml` now provides a manual end-to-end activation rehearsal over explicit base/head refs. Its job/capability/always-on/final-status structure is mechanically checked against the execution plan. Ordinary PR CI remains unchanged.
 
-**Next:** collect shadow outcomes across real non-router PR shapes, run representative manual scoped dry-runs, and benchmark Node-harness concurrency. Do not enable skipped validation until those empirical gates are green and the final required status is deliberately promoted into ordinary PR CI.
+**Next:** establish a green current-main broad baseline after #1984, then run representative manual scoped dry-runs for research-only, solver, and full-impact refs and verify the `ci-success` skipped/required-deep semantics. Node-harness concurrency remains a separate measurement gate for changing the fan-out default, not a prerequisite for a routing rollout. Do not enable skipped validation until the broad baseline and scoped dry-run gates are green and the final required status is deliberately promoted into ordinary PR CI.
