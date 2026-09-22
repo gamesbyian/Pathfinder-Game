@@ -1,4 +1,4 @@
-<!-- agent-context-budget: warn=6500 max=8500 -->
+<!-- agent-context-budget: warn=12000 max=24000 -->
 # Solver research queryability
 
 > **Status:** current query/read-model contract.
