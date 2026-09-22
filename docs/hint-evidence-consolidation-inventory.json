@@ -968,8 +968,42 @@
   },
   "readerWriterCensusStatus": {
     "rawFilesMentioningRemovedFacades": 56,
-    "directlyPackageReferencedRemovedFacadeFiles": 19,
-    "finding": "The stale-facade seam is systemic across current research tooling, not limited to the original seven spot-checked files. Raw count includes dormant/historical utilities, so retirement must use maintained-entrypoint/import-graph reachability rather than treating every script equally.",
-    "validationTool": "scripts/hint-evidence-consolidation-audit.mjs now computes package/workflow-seeded relative-import reachability; use that output to classify maintained stale seams before PSC-001 re-close."
+    "maintainedEntrypointReachable": 24,
+    "dormantOrUnreachable": 32,
+    "directlyPackageReferenced": 19,
+    "directlyWorkflowReferenced": 4,
+    "maintainedReachablePaths": [
+      "scripts/check-corpus-level-formatting.mjs",
+      "scripts/experiment-manifest-lib-check.mjs",
+      "scripts/generate-level-heatmaps.mjs",
+      "scripts/hint-candidate-search.mjs",
+      "scripts/hint-expansion-audit.mjs",
+      "scripts/hint-weight-calibration.mjs",
+      "scripts/hint-workbench-parallel.mjs",
+      "scripts/req-length-sweep.mjs",
+      "scripts/run-solver-direct.mjs",
+      "scripts/stress/analyze-residual-interfaces.mjs",
+      "scripts/stress/census-repair-rollback-windows.mjs",
+      "scripts/stress/collect-known-solution-prefix-branches.mjs",
+      "scripts/stress/collect-prune-gap-labels.mjs",
+      "scripts/stress/compare-search-producer-populations.mjs",
+      "scripts/stress/cpsat-hint-harvest-sweep.mjs",
+      "scripts/stress/cpsat-hint-harvest.mjs",
+      "scripts/stress/lane-a-c1-boundary-kinematics-analysis.mjs",
+      "scripts/stress/lane-a-c2-global-accounting-analysis.mjs",
+      "scripts/stress/provenance-coverage-report.mjs",
+      "scripts/stress/prune-gap-probe.mjs",
+      "scripts/stress/solution-profile-compare.mjs",
+      "scripts/stress/solution-profile-lib.mjs",
+      "scripts/stress/validate-corpus-witnesses.mjs",
+      "scripts/validate-hint-paths.mjs"
+    ],
+    "notableDormantWriters": [
+      "scripts/dedupe-hint-provenance.mjs",
+      "scripts/family-parent-hint-replay-batch.mjs",
+      "scripts/stress/minizinc-probe.mjs"
+    ],
+    "finding": "The maintained stale-facade seam is 24 reachable files. Dormant writers remain historical/maintenance debt but should not be allowed to become reachable again without migration.",
+    "validationTool": "scripts/hint-evidence-consolidation-audit.mjs computes package/workflow-seeded relative-import reachability; Phase -1 should turn this into a fail-closed guard."
   }
 }
