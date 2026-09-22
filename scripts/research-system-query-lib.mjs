@@ -52,6 +52,13 @@ export function buildResearchSystemFindingIndex(root = process.cwd(), { allowHis
         ...flattenFindingFamilies(inventory.findings, 'finding'),
         ...flattenFindingFamilies(inventory.architectureFindings, 'architecture'),
     ].sort((a, b) => a.id.localeCompare(b.id));
+    const seen = new Set();
+    for (const finding of findings) {
+        if (seen.has(finding.id)) {
+            throw new Error('duplicate derived research-system finding identity: ' + finding.id);
+        }
+        seen.add(finding.id);
+    }
 
     return {
         schemaVersion: 1,
