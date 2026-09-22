@@ -20,7 +20,8 @@
     "c1": {
       "capturedPreWinnerWorkShare": 0,
       "endangeredWinnerLevels": 0
-    }
+    },
+    "actionBoundaryDigest": "sha256:7de29bbf6b979088ffc13f04b556856be083fc00be19e75922b5b47d767f2d09"
   },
   "challenge": {
     "workflowRunId": 35043165547,
@@ -39,18 +40,21 @@
     "c1": {
       "capturedPreWinnerWorkShare": 0,
       "endangeredWinnerLevels": 0
-    }
+    },
+    "actionBoundaryDigest": "sha256:6bd7d06c6f1952ba1fc82da6289e4e05681b2ea62c9acde8caaea4a27685819f"
   },
   "duplicateHistoricalCheck": {
     "workflowRunId": 34683011115,
     "solverRef": "5973d6e4141f1480a5ebe58618e7e0d59dae9b8e",
     "attemptSequenceDigest": "sha256:2a861c7ed7f45b1253a9f7ca92939ebd7bf43a7795dbb7d07551cab59e6a88b1",
-    "disposition": "attempt-sequence identical to run 35043165547; not counted as an independent replication"
+    "disposition": "attempt-sequence identical to run 35043165547; not counted as an independent replication",
+    "actionBoundaryDigest": "sha256:6bd7d06c6f1952ba1fc82da6289e4e05681b2ea62c9acde8caaea4a27685819f"
   },
   "interpretation": {
     "decision": "historical temporal/portfolio robustness positive across three distinct scoreable attempt regimes",
     "scope": "same level population across three distinct scoreable execution regimes; two earlier artifacts are telemetry-inapplicable and one later pre-promotion run duplicates an earlier attempt regime; still not independent-population confirmation",
-    "nextGate": "sample-independent/current-production confirmation of the exact frozen model before any live scheduler treatment"
+    "nextGate": "sample-independent/current-production confirmation of the exact frozen model before any live scheduler treatment",
+    "evidenceUnitIdentity": "Use actionBoundaryDigest, not workflow run ID or commit SHA alone, when deciding whether retained executions are distinct for this question."
   },
   "historicalLadder": [
     {
@@ -76,7 +80,8 @@
       "c1": {
         "capturedPreWinnerWorkShare": 0,
         "endangeredWinnerLevels": 0
-      }
+      },
+      "actionBoundaryDigest": "sha256:8eeafe386afaf72b58ae24fc69c16e7ff1c21a91642fe4fa8755b7f6ac6ea936"
     },
     {
       "workflowRunId": 34674256538,
@@ -101,7 +106,8 @@
       "c1": {
         "capturedPreWinnerWorkShare": 0,
         "endangeredWinnerLevels": 0
-      }
+      },
+      "actionBoundaryDigest": "sha256:6bd7d06c6f1952ba1fc82da6289e4e05681b2ea62c9acde8caaea4a27685819f"
     },
     {
       "workflowRunId": 35043165547,
@@ -109,7 +115,8 @@
       "solvedC2": 1048,
       "applicability": "duplicate-attempt-regime",
       "attemptSequenceDigest": "sha256:2a861c7ed7f45b1253a9f7ca92939ebd7bf43a7795dbb7d07551cab59e6a88b1",
-      "duplicateOf": 34683011115
+      "duplicateOf": 34683011115,
+      "actionBoundaryDigest": "sha256:6bd7d06c6f1952ba1fc82da6289e4e05681b2ea62c9acde8caaea4a27685819f"
     },
     {
       "workflowRunId": 35066677597,
@@ -127,7 +134,8 @@
       "c1": {
         "capturedPreWinnerWorkShare": 0,
         "endangeredWinnerLevels": 0
-      }
+      },
+      "actionBoundaryDigest": "sha256:7de29bbf6b979088ffc13f04b556856be083fc00be19e75922b5b47d767f2d09"
     }
   ]
 }
