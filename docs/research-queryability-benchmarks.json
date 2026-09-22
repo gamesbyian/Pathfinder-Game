@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Stable decision-relevant benchmark questions for solver-research queryability. Required cases must remain mechanically answerable; known-gap cases document missing source structure or query capability without pretending they are solved.",
+  "benchmarks": [
+    {
+      "id": "QB-001",
+      "question": "What depends on premise P204?",
+      "kind": "impact",
+      "entity": "premises:P204",
+      "expected": "supported",
+      "mustIncludeQuestion": "WS2-D1-PRODUCTION-INERT-OBSERVATION"
+    },
+    {
+      "id": "QB-002",
+      "question": "What question support depends on the WS1 retained-evidence result report?",
+      "kind": "impact",
+      "entity": "repositoryRefs:reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md",
+      "expected": "supported",
+      "mustIncludeQuestion": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE"
+    },
+    {
+      "id": "QB-003",
+      "question": "Which current workstream gates can advance without fresh solver/reference execution?",
+      "kind": "answerability",
+      "expected": "supported",
+      "requireFullyClassified": true
+    },
+    {
+      "id": "QB-004",
+      "question": "Which evidence reports have successor questions that are still live?",
+      "kind": "live-successors",
+      "expected": "supported"
+    },
+    {
+      "id": "QB-005",
+      "question": "Which terminal questions still constrain live questions?",
+      "kind": "closed-constraints",
+      "expected": "supported"
+    },
+    {
+      "id": "QB-006",
+      "question": "Which measurement opportunities are shared by multiple questions?",
+      "kind": "shared-measurements",
+      "expected": "supported",
+      "minimum": 2,
+      "mustIncludeMeasurement": "MO-004"
+    },
+    {
+      "id": "QB-007",
+      "question": "Which research blocks have been consumed by multiple questions?",
+      "kind": "multi-consumed-blocks",
+      "expected": "supported",
+      "minimum": 2
+    },
+    {
+      "id": "QB-008",
+      "question": "Where do stable ownership/provenance links still fall back to lexical discovery or no owner?",
+      "kind": "ownership-gaps",
+      "expected": "supported"
+    },
+    {
+      "id": "QB-009",
+      "question": "Is the graph internally connected without unresolved authored references, and are current workstream gates structurally classified?",
+      "kind": "coverage",
+      "expected": "supported",
+      "requireZeroUnresolvedEdges": true,
+      "requireFullyClassified": true
+    },
+    {
+      "id": "QB-010",
+      "question": "What became newly answerable after a specific asset, observer, capability, or commit was added?",
+      "kind": "temporal-change",
+      "expected": "known-gap",
+      "gap": "The current read model represents current state but does not yet compare two research-graph snapshots or refs."
+    },
+    {
+      "id": "QB-011",
+      "question": "Which research-system audits or architecture findings still have live successors or unpropagated lessons?",
+      "kind": "research-system-lineage",
+      "expected": "known-gap",
+      "gap": "Research-system findings intentionally remain outside the solver-science graph and do not yet have stable finding identities/successor edges."
+    },
+    {
+      "id": "QB-012",
+      "question": "Which conclusions would actually become unsupported if one evidence source were withdrawn, accounting for redundant support?",
+      "kind": "support-redundancy",
+      "expected": "known-gap",
+      "gap": "The graph can enumerate dependency paths, but scientific sufficiency/redundancy is not yet authored as machine-readable support sets and must not be inferred from edge count."
+    }
+  ]
+}
