@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 
 import { buildResearchQueryGraph, queryResearchGraph, resolveResearchEntity } from './research-query-lib.mjs';
+import { buildResearchQueryView } from './research-query-views-lib.mjs';
 
 const graph = buildResearchQueryGraph(process.cwd(), { discoverArtifacts: false });
 assert.equal(graph.authority.kind, 'derived-read-only');
@@ -74,6 +75,38 @@ const experimentReverse = queryResearchGraph(graph, {
 assert.ok(experimentReverse.nodes.some(node =>
   node.type === 'experiments' && node.id === 'STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY'));
 
+const premiseImpact = buildResearchQueryView(graph, { view: 'impact', entity: 'premises:P204' });
+assert.ok(premiseImpact.impactedQuestions.some(row => row.questionId === 'WS2-D1-PRODUCTION-INERT-OBSERVATION'),
+  'premise impact must compose through measurement opportunities when no direct question-premise edge exists');
+
+const reportImpact = buildResearchQueryView(graph, {
+  view: 'impact',
+  entity: 'repositoryRefs:reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md',
+});
+assert.ok(reportImpact.impactedQuestions.some(row =>
+  row.questionId === 'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE'));
+
+const answerability = buildResearchQueryView(graph, { view: 'answerability' });
+assert.ok(answerability.noSolverCompute.some(row => row.workstreamId === 2),
+  'implementation gate should be visible as no-new-solver-compute work');
+assert.ok(answerability.boundedCompute.some(row => row.workstreamId === 1),
+  'WS1 confirmation should be explicitly classified as bounded compute');
+assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2R'),
+  'reopen-only parity lane should not appear as an active execution gate');
+assert.equal(answerability.unclassified.length, 0,
+  'canonical workstream table should classify every immediate gate');
+
+const sharedMeasurements = buildResearchQueryView(graph, { view: 'shared-measurements', minimum: 2 });
+assert.ok(sharedMeasurements.rows.some(row =>
+  row.measurementOpportunityId === 'MO-004' && row.consumerCount >= 2));
+
+const ownershipGaps = buildResearchQueryView(graph, { view: 'ownership-gaps' });
+assert.ok(Array.isArray(ownershipGaps.capabilityDemandsWithoutQuestion));
+
+const coverage = buildResearchQueryView(graph, { view: 'coverage' });
+assert.equal(coverage.structuredGateCoverage.unclassified, 0);
+assert.equal(coverage.unresolvedEdges.length, 0);
+
 const searched = queryResearchGraph(graph, { query: 'portal coarse', limit: 20 });
 assert.ok(searched.nodes.some(node => node.type === 'questions'));
 
@@ -98,5 +131,12 @@ const cli = spawnSync(process.execPath, [
 ], { cwd: process.cwd(), encoding: 'utf8' });
 assert.equal(cli.status, 0, cli.stderr);
 assert.equal(JSON.parse(cli.stdout).mode, 'traverse');
+
+const viewCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--view=answerability',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(viewCli.status, 0, viewCli.stderr);
+assert.equal(JSON.parse(viewCli.stdout).view, 'answerability');
 
 console.log('research-query-node-test: ok');
