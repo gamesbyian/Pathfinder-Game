@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { buildResearchQueryGraph } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
-import { buildResearchQuerySnapshot, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
+import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 import { buildResearchSystemFindingIndex } from './research-system-query-lib.mjs';
 
 const BENCHMARK_EXPECTATIONS = new Set(['supported', 'partial', 'conditional', 'known-gap']);
@@ -60,8 +60,10 @@ function loadBenchmarks(root) {
 function evaluateSupported(graph, benchmark, root) {
     let view;
     if (benchmark.kind === 'temporal-change') {
-        const snapshot = buildResearchQuerySnapshot(graph);
-        view = diffResearchQuerySnapshots(snapshot, snapshot);
+        if (!benchmark.gitRef) throw new Error('temporal-change benchmark requires gitRef');
+        const before = buildResearchQuerySnapshotFromGitRef(root, benchmark.gitRef, { discoverArtifacts: false });
+        const after = buildResearchQuerySnapshot(graph);
+        view = diffResearchQuerySnapshots(before, after);
     } else if (benchmark.kind === 'system-findings') {
         view = buildResearchSystemFindingIndex(root);
     } else if (benchmark.kind === 'system-lineage') {
