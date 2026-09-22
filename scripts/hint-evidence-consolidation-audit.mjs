@@ -262,8 +262,9 @@ const result={
   },
   sourceCensus,
 };
-fs.mkdirSync(path.dirname(path.join(ROOT,OUT)),{recursive:true});
-fs.writeFileSync(path.join(ROOT,OUT),JSON.stringify(result,null,2)+'\n');
+const outPath = path.isAbsolute(OUT) ? OUT : path.join(ROOT, OUT);
+fs.mkdirSync(path.dirname(outPath),{recursive:true});
+fs.writeFileSync(outPath,JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify({
   out:OUT,
   totalHints,totalEvents,
