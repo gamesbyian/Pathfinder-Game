@@ -53,7 +53,14 @@ jobs:
         id: plan
         run: >-
           node scripts/ci-impact-shadow-plan.mjs
-          --git-diff "${{ inputs.base_ref }}" "${{ inputs.head_ref }}"
+          --git-diff "${{ inputs.base_ref }}" "${{ inputs.head_ref }}" --out=tmp/ci-impact-shadow.json
+
+      - name: Upload scoped impact plan
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-impact-shadow
+          path: tmp/ci-impact-shadow.json
+          retention-days: 14
 
   fast-gate:
     needs: impact-shadow
