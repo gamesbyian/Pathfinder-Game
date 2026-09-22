@@ -319,6 +319,12 @@ assert.ok(real.relations.promotions.some(row =>
     && row.decisionEvidenceRef === 'reports/2026-09-16-class4-113-allocation-promotion-001.md'),
     'promoted runtime mechanisms should expose their authored decision-evidence edge when retained');
 assert.ok(real.relations.promotions.every(row => row._researchSource?.relation === 'promotions'));
+assert.ok(real.relations.experiments.some(row =>
+    row.experimentId === 'STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY'
+    && row.questionRef === 'WS2-MUST-TURN-LATE-ADDITIVE'));
+assert.ok(real.relations.experiments.some(row =>
+    row.experimentId === 'STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT'
+    && row.questionRef === 'WS2-ADMISSIBLE-ORDER-RETRY-REPRICING'));
 for (const bundle of real.relations.durableEvidence) {
     const source = JSON.parse(readFileSync(bundle.bundlePath, 'utf8'));
     assert.ok(source.manifestStoredPath || (source.files ?? []).some(file => file.source === 'manifest.json'),
