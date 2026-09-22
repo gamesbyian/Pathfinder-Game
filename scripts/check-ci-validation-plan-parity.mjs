@@ -51,7 +51,7 @@ for (const [name, capability] of Object.entries(plan.capabilities ?? {})) {
       failures.push(`${name}: missing package script ${capability.packageScript}`);
     }
     const escaped = escapeRegex(capability.packageScript);
-    if (!new RegExp(`npm run ${escaped}(?:\\s|$)`, 'mu').test(workflow)) {
+    if (!new RegExp(`npm run ${escaped}(?=\\s|["']|$)`, 'mu').test(workflow)) {
       failures.push(`${name}: ci.yml no longer runs npm run ${capability.packageScript}`);
     }
   }
@@ -139,7 +139,7 @@ if (!activationWorkflowPath) {
   }
   for (const scriptName of plan.always?.packageScripts ?? []) {
     const escaped = escapeRegex(scriptName);
-    if (!new RegExp(`npm run ${escaped}(?:\\s|$)`, 'mu').test(activationWorkflow)) {
+    if (!new RegExp(`npm run ${escaped}(?=\\s|["']|$)`, 'mu').test(activationWorkflow)) {
       failures.push(`${activationWorkflowPath}: does not explicitly run always-on package script ${scriptName}`);
     }
   }
