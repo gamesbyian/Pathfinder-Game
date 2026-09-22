@@ -2,7 +2,7 @@
 
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-21 — exact frozen-model replay against retained pre-promotion run `35043165547`, plus mechanism decomposition of development run `35066677597`.
-> **Decision:** the retained WS1 signal is not broad action selection. It is overwhelmingly repeated late-stage continuation after censored/exhausted work, and the exact frozen rule survives a materially different pre-promotion production regime. Keep the model frozen and advance only to sample-independent/current-production confirmation.
+> **Decision:** the retained WS1 signal is not broad action selection. It is overwhelmingly repeated late-stage continuation after censored/exhausted work, and the exact frozen rule remains positive across three distinct scoreable retained execution regimes (6.93%–9.91% C2 capture, zero observed winner losses). Keep the model frozen and advance only to sample-independent/current-production confirmation.
 > **Remaining gate:** confirm the exact frozen 15-signature model on sample-independent/current production evidence. Do not refit membership, work bands, support floor, or stage set on challenge data.
 > **Evidence role:** development / temporal robustness
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
@@ -137,6 +137,31 @@ The post-promotion development run has a different normalized attempt digest:
 - `sha256:393c58d75161d54a4242558c105d144226b6499f33fda04d627a74dd2e8fe6ef`.
 
 This preserves the correct evidence count: two distinct execution regimes, not three.
+
+## Historical retained-refresh ladder
+
+The exact frozen model was then checked against the retained full-refresh history where the attempt contract is sufficient.
+
+| run | solver ref | applicability | C2 capture | recorded winner losses | mechanism |
+|---|---|---|---:|---:|---|
+| 33824275953 | 1b735395… | **inapplicable** — attempt rows predate retained canonical `workSpent` | — | — | cannot reconstruct work-band rule truthfully |
+| 34531412380 | 92c31558… | distinct scoreable regime | **6.93%** | **0/310** | 95.32% same-stage; 90.23% censored-prior |
+| 34674256538 | 51715da5… | **inapplicable** — canonical `workSpent` absent | — | — | missing work is not zero |
+| 34683011115 | 5973d6e4… | distinct scoreable regime | **6.99%** | **0/318** | 95.26% same-stage; 90.09% censored-prior |
+| 35043165547 | 4421bd8f… | duplicate attempt regime | 6.99% | 0/318 | normalized attempt sequence identical to 34683011115 |
+| 35066677597 | 16114b80… | development/post-promotion distinct regime | **9.91%** | **0/356** | 96.48% same-stage; 85.94% censored-prior |
+
+This produces **three distinct scoreable attempt regimes**, not six replications.
+
+The frozen rule is directionally stable across all three:
+
+- capture remains between **6.93% and 9.91%**;
+- observed winner endangerment remains **0** in each scoreable regime;
+- same-stage continuation remains above **95%** of nominated work;
+- censored-prior work remains above **85%**.
+
+The two telemetry-inapplicable runs are important negative-space evidence about the research system itself: older solver compute exists, but the exact canonical-work question cannot be reconstructed because the necessary field was not retained. They are not zeros and they are not failed replications.
+
 
 ## Interpretation
 
