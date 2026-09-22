@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import { withDetachedGitWorktree } from './git-ref-worktree-lib.mjs';
 import { buildResearchSystemInventory } from './research-system-inventory-lib.mjs';
 
 function stableFindingIdentity(category, family, row) {
@@ -45,8 +46,8 @@ function flattenFindingFamilies(container, category) {
     return rows;
 }
 
-export function buildResearchSystemFindingIndex(root = process.cwd()) {
-    const inventory = buildResearchSystemInventory(root);
+export function buildResearchSystemFindingIndex(root = process.cwd(), { allowHistoricalWorkstreamTable = false } = {}) {
+    const inventory = buildResearchSystemInventory(root, { allowHistoricalWorkstreamTable });
     const findings = [
         ...flattenFindingFamilies(inventory.findings, 'finding'),
         ...flattenFindingFamilies(inventory.architectureFindings, 'architecture'),
@@ -87,6 +88,13 @@ export function buildResearchSystemFindingSnapshot(index) {
             fingerprint: row.fingerprint,
         })),
     };
+}
+
+export function buildResearchSystemFindingSnapshotFromGitRef(root, ref) {
+    return withDetachedGitWorktree(root, ref, worktree =>
+        buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(worktree, {
+            allowHistoricalWorkstreamTable: true,
+        })));
 }
 
 export function diffResearchSystemFindingSnapshots(before, after) {
