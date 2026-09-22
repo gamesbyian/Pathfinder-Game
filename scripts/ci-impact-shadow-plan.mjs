@@ -96,7 +96,7 @@ function writeSummary(result, plan, execution) {
 }
 
 try {
-  const { mode, json } = parseArgs(process.argv.slice(2));
+  const { mode, json, out } = parseArgs(process.argv.slice(2));
   const result = mode.full ? fullImpact() : classifyGitDiff(mode.base, mode.head);
   const plan = planValidation(result.surfaces);
   const execution = packValidationPlan(plan);
