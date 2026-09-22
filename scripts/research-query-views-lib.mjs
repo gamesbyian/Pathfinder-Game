@@ -221,6 +221,49 @@ export function buildConsumptionView(graph, minimumQuestionConsumers = 2) {
     return { view: 'multi-consumed-blocks', minimumQuestionConsumers, rows };
 }
 
+export function buildSupportImpactView(graph, selector) {
+    const target = graph.nodes.find(node => nodeKey(node) === selector || node.id === selector);
+    if (!target || target.type !== 'repositoryRefs') {
+        throw new Error('support-impact requires a repositoryRefs entity');
+    }
+
+    const rows = [];
+    for (const question of graph.nodes.filter(node => node.type === 'questions')) {
+        const support = question.row?.decisionSupport ?? null;
+        const answeredBy = new Set(question.row?.answeredBy ?? []);
+        const supportRefs = new Set(support?.refs ?? []);
+        if (!answeredBy.has(target.id) && !supportRefs.has(target.id)) continue;
+
+        let disposition = 'unknown';
+        let rationale = 'The source appears in the evidence trail, but this question does not author decision-support sufficiency semantics.';
+        if (supportRefs.has(target.id) && support?.mode === 'all') {
+            disposition = 'necessary';
+            rationale = 'The current disposition explicitly requires all authored decision-support refs.';
+        } else if (supportRefs.has(target.id) && support?.mode === 'any') {
+            disposition = support.refs.length === 1 ? 'necessary' : 'redundant-alternative';
+            rationale = support.refs.length === 1
+                ? 'This is the only authored independently sufficient support ref.'
+                : 'Another authored decision-support ref is declared independently sufficient.';
+        }
+
+        rows.push({
+            questionId: question.id,
+            state: question.row?.state ?? null,
+            supportMode: support?.mode ?? null,
+            supportRefs: support?.refs ?? [],
+            disposition,
+            rationale,
+        });
+    }
+
+    return {
+        view: 'support-impact',
+        target: target.id,
+        rows: rows.sort((a, b) => a.questionId.localeCompare(b.questionId)),
+        interpretation: 'Only authored decisionSupport semantics can establish necessity or redundancy. answeredBy alone remains an evidence trail.',
+    };
+}
+
 export function buildNonQuestionLineageView(graph) {
     const rows = [];
     for (const evidence of graph.nodes.filter(node => node.type === 'evidence')) {
@@ -300,6 +343,7 @@ export function buildResearchQueryView(graph, { view, entity = '', minimum = 2 }
         case 'multi-consumed-blocks': return buildConsumptionView(graph, minimum);
         case 'ownership-gaps': return buildOwnershipGapsView(graph);
         case 'non-question-lineage': return buildNonQuestionLineageView(graph);
+        case 'support-impact': return buildSupportImpactView(graph, entity);
         case 'coverage': return buildQueryabilityCoverageView(graph);
         default: throw new Error('unknown research query view: ' + view);
     }
