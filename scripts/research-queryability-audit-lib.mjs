@@ -181,6 +181,7 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
                     evidenceWithoutQuestionRef: view.evidenceWithoutQuestionRef.length,
                     queueWithoutQuestionRef: view.queueWithoutQuestionRef.length,
                     acquisitionNeedLexicalFallbackQuestions: view.acquisitionNeedLexicalFallbackQuestions.length,
+                    decisionSupportUnknownQuestions: view.decisionSupportUnknownQuestions.length,
                 };
                 if (benchmark.kind === 'coverage') return {
                     unresolvedEdges: view.unresolvedEdges.length,
