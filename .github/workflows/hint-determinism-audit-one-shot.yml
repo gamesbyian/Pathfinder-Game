@@ -12,10 +12,22 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            data/hints
+            data/stress/hints
+            data/stress/hints-random
+            scripts/hint-determinism-audit-lib.mjs
+            scripts/hint-determinism-audit.mjs
+            scripts/hint-determinism-audit-node-test.mjs
+            scripts/hint-provenance-identity.mjs
+            modules/domain/hint-runtime.mjs
+          sparse-checkout-cone-mode: false
       - name: Unit test audit semantics
         run: node scripts/hint-determinism-audit-node-test.mjs
       - name: Audit committed hint provenance
         run: |
+          mkdir -p tmp
           node scripts/hint-determinism-audit.mjs --out=tmp/hint-determinism-audit.json > tmp/hint-determinism-audit.stdout.json
           node - <<'NODE'
           const fs = require('fs');
