@@ -17,6 +17,10 @@ C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedur
 Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs need freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
 
+### Pending broad evidence refresh
+
+Before the next solver-research interpretation pass, run one canonical stress refresh and one canonical technique census from the same current `main` SHA. The census keeps T1/T3/T4 at 50M nodes and now includes a bounded 60-level / 10M-work EW1 pricing tranche. **After both runs complete, do not stop at green workflows:** reconcile the fresh production boundary, lifecycle/compact failure evidence, frozen WS1 challenge, T1 capability churn and EW1 pricing before changing scheduler policy or census budgets. Required closeout steps and budget reopen conditions: [broad-run reconciliation 001](../reports/2026-09-21-technique-census-budget-and-broad-run-reconciliation-001.md).
+
 ### 1. Workstream 2: residual capability + premise acquisition
 
 **State:** ACTIVE / two-front portfolio.
