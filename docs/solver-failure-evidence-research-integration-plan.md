@@ -398,6 +398,8 @@ Possible routing:
 
 **Exit:** one current queue-authorized discriminator is selected with a dated preflight, or all remain unjustified.
 
+**2026-09-22 reuse note:** the canonical stress refresh now supplies a full current-population Stage-A denominator. Before any new Stage-B compact acquisition, reduce this retained resource contrastively at the parent level. In particular, treat solved parents with failed/capped attempts as controls so common censoring, node-cap contact, or stage participation is not mislabeled as a failure phenotype.
+
 ### Phase 4 — immediate existing-question integrations
 
 These are independent consumers; do not block one on another.
