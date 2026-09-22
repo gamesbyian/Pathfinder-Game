@@ -1,6 +1,6 @@
 # Broad solver-evidence reconciliation consumer 001
 
-> **Status:** implemented
+> **Status:** active
 > **Last evidence:** 2026-09-21 — current broad-run closeout contract after PRs #1977–#1978.
 > **Decision:** use one derived reconciliation artifact to join canonical production participation, EW1 equal-work pricing, deep T1 capability, and the frozen WS1 continuation challenge after the next stress refresh + technique census. Do not make agents reconstruct these relationships manually from raw shards.
 > **Remaining gate:** run the consumer after both broad workflows complete and use its nominations as question-intake inputs, not automatic solver-policy decisions.
