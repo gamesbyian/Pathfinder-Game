@@ -306,6 +306,15 @@ duplicateDecisionSupport.questions[0].decisionSupport = {
 assert.ok(validateResearchQuestionRegistry(duplicateDecisionSupport, { root })
     .some(error => error.includes('decisionSupport.refs duplicates')));
 
+const supportOutsideEvidenceTrail = JSON.parse(JSON.stringify(questionRegistry));
+supportOutsideEvidenceTrail.questions[0].decisionSupport = {
+    mode: 'all',
+    refs: ['reports/2026-08-21-example.md'],
+};
+supportOutsideEvidenceTrail.questions[0].answeredBy = [];
+assert.ok(validateResearchQuestionRegistry(supportOutsideEvidenceTrail, { root })
+    .some(error => error.includes('decisionSupport ref must also appear in answeredBy')));
+
 const invalidAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
 invalidAnsweredBy.questions[0].answeredBy = ['not-a-repository-edge'];
 {
