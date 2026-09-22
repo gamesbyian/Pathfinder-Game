@@ -61,7 +61,7 @@ The CI impact-routing program is tracked in [`ci-impact-routing-plan.md`](ci-imp
 
 `node scripts/validation-groups.mjs --check` requires the registry to be an exact non-duplicating partition of the current authoritative aggregates. `check:dead-scripts` runs that parity check, so adding/removing an ordinary permanent validator or Node/CLI harness requires an explicit ownership decision rather than silently changing the inventory.
 
-For targeted local diagnosis, semantic groups are available as `npm run check:validators:<group>` and `npm run test:node:<group>`. These are convenience/profiling surfaces only until scoped CI is deliberately enabled. They do not replace the documented local finish lines or authorize skipping unaffected-looking validation by hand.
+For targeted local diagnosis, semantic group aliases exist for validator and Node-test families, for example `npm run check:validators:repo` and `npm run test:node:repo`. These are convenience/profiling surfaces only until scoped CI is deliberately enabled. They do not replace the documented local finish lines or authorize skipping unaffected-looking validation by hand.
 
 Ambiguous ownership belongs in `shared` until inspected. Unknown impact must broaden future routing rather than narrowing it.
 
