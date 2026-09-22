@@ -3,11 +3,11 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-21 — current `main` after PRs #1954-#1966, live question authority, current workstreams/future-work, pre-winner machine summaries, forced-work result/seam audit, inversion/intake method, and recent closeout reconciliation.
 > **Decision:** do not create a standalone “zero-compute harvest” program. The new research-question intake already requires existing-data analysis before acquisition. Apply that rule directly to live questions. `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` is the strongest current existing-data target and now has a dedicated retained-evidence analyzer; most other live questions still require genuinely missing telemetry, current-head replay, exact/reference acquisition, or matched-work execution.
-> **Remaining gate:** run the action-boundary analyzer on the retained C1/C2 production-boundary artifacts, freeze the derived dataset/result, and evaluate whether any prespecified simple legal-signal family captures material held-out pre-winner work without endangering rare winners. No solver execution is required for that gate.
+> **Remaining gate:** the retained-evidence development gate has now run. Freeze the selected prior-response+work+next-stage form at min development support 100 for sample-independent/current-production confirmation before any live scheduling treatment.
 > **Evidence role:** forensic / research-routing
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 
-<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-09-21","decision":"Fold zero-new-solver-compute research into ordinary question intake rather than creating a parallel program; advance WS1 legal-signal capture with a retained-evidence analyzer and preserve acquisition gates where required evidence is genuinely absent.","remainingGate":"Run the retained C1/C2 action-boundary analysis and freeze its held-out shadow result; no solver execution is required.","joins":{"researchQuestion":"WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":"current retained C1/C2 production-boundary evidence and current solver-research authorities","selection":"all live/deferred solver questions reviewed for cheapest truthful answerability route","inferenceScope":"research routing and retained-evidence answerability; no solver-efficacy or production-savings claim"},"claimRefs":[],"sourceArtifacts":["docs/research-question-intake.md","docs/solver-optimization-workstreams.md","docs/solver-research-question-relations.json","docs/solver-future-work.md","reports/2026-09-21-prewinner-work-oracle-census-001.md","reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md","reports/2026-09-21-forced-work-prevalence-result-001.md","reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md"],"successors":{"questions":["WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE"],"artifacts":["scripts/analyze-action-selection-legal-signals.mjs"]},"prospective":{"expectation":"recent integration would make at least one live question materially advanceable from retained evidence while also revealing questions that still require acquisition","surprise":"the strongest immediate existing-data opportunity is whole-action selection economics, while the forced-work lane specifically demonstrates why large retrospective reservoirs must not be mistaken for removable work","anomaly":"WS2-PARITY-RESPONSE-SIGNATURE remained active-candidate even though its own result and workstream prose said the tested static form was closed"}} -->
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-09-21","decision":"Fold zero-new-solver-compute research into ordinary question intake rather than creating a parallel program; advance WS1 legal-signal capture with a retained-evidence analyzer and preserve acquisition gates where required evidence is genuinely absent.","remainingGate":"Confirm the frozen prior-response+work+next-stage family at minDevelopmentSupport=100 on sample-independent/current production evidence before any live scheduler treatment.","joins":{"researchQuestion":"WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE","premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"forensic","scope":{"populationIdentity":"current retained C1/C2 production-boundary evidence and current solver-research authorities","selection":"all live/deferred solver questions reviewed for cheapest truthful answerability route","inferenceScope":"research routing and retained-evidence answerability; no solver-efficacy or production-savings claim"},"claimRefs":[],"sourceArtifacts":["docs/research-question-intake.md","docs/solver-optimization-workstreams.md","docs/solver-research-question-relations.json","docs/solver-future-work.md","reports/2026-09-21-prewinner-work-oracle-census-001.md","reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md","reports/2026-09-21-forced-work-prevalence-result-001.md","reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md"],"successors":{"questions":["WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE"],"artifacts":["scripts/analyze-action-selection-legal-signals.mjs"]},"prospective":{"expectation":"recent integration would make at least one live question materially advanceable from retained evidence while also revealing questions that still require acquisition","surprise":"the strongest immediate existing-data opportunity is whole-action selection economics, while the forced-work lane specifically demonstrates why large retrospective reservoirs must not be mistaken for removable work","anomaly":"WS2-PARITY-RESPONSE-SIGNATURE remained active-candidate even though its own result and workstream prose said the tested static form was closed"}} -->
 
 ## Question
 
@@ -146,9 +146,9 @@ In that case, refusing acquisition would merely convert “unknown” into story
 
 ## Current disposition
 
-### Advance now from retained evidence
+### Advanced now from retained evidence
 
-- `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`: analyzer implemented; execute on retained C1/C2 artifacts and freeze the shadow result.
+- `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`: development execution completed from retained C1/C2 artifacts. The conservative prior-response + work-band + next-stage form captures 9.91% of C2 validation pre-winner work with 0/356 recorded validation winner losses; C1 capture is 0%. Freeze that exact form for sample-independent confirmation.
 
 ### Corrected without acquisition
 
@@ -166,7 +166,7 @@ In that case, refusing acquisition would merely convert “unknown” into story
 
 ## Reproduction
 
-Once the retained production-boundary sweep JSON is materialized locally:
+The development result was reproduced from the exact retained run-35066677597 artifacts. To rerun the reducer once those sweep JSON files are materialized locally:
 
 ```bash
 npm run research:action-selection-legal-signals -- \
@@ -176,6 +176,10 @@ npm run research:action-selection-legal-signals -- \
 ```
 
 The command performs no solver execution.
+
+## Executed retained-evidence result
+
+The new analyzer was run against the exact retained production-boundary artifacts without solver execution. The development result is recorded in `2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md` and its machine summary. It narrows WS1 to a frozen ~10%-capture C2 contextual rule family requiring independent confirmation.
 
 ## Result
 
