@@ -79,7 +79,8 @@
       "question": "Which research-system audits or architecture findings still have live successors or unpropagated lessons?",
       "kind": "system-lineage",
       "expected": "partial",
-      "gap": "Current research-system findings now have stable derived IDs and snapshots, and structured questionless reports expose report-level successors; individual architecture findings still do not author resolvedBy/successor links."
+      "gap": "Current research-system findings now have stable derived IDs and snapshots, and structured questionless reports expose report-level successors; individual architecture findings still do not author resolvedBy/successor links.",
+      "mustIncludeReport": "reports/2026-09-21-research-queryability-audit-001.md"
     },
     {
       "id": "QB-012",
