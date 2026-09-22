@@ -1479,6 +1479,296 @@ The ordering rule is simple: **never optimize or migrate a representation before
 authority that will judge the migration exists, and never defer preservation of expiring authority
 until after the evidence needed to interpret it may be gone.**
 
+## 14.3 Implementation-history hardening: likely agent failure modes
+
+The repository's earlier long-plan implementations show a repeated pattern: the central owner changes
+correctly, local validation goes green, and the real defect survives at a consumer, alternate
+transport, remote-CI topology, historical join, workflow argument path, or current authority.
+
+This plan therefore treats the following as **predicted failure modes**, not generic caution.
+
+### A. Do not implement a numbered phase as one PR merely because it is one phase
+
+Phase numbers are dependency milestones, not PR sizing.
+
+Split implementation into the smallest serial batches that have one main compatibility owner and
+one coherent validation graph. Typical boundaries should separate:
+
+- semantic reader/normalizer repair;
+- direct/worker/raced request identity;
+- provenance semantic model;
+- Firestore persistence semantics;
+- one producer/workflow-family ingestion migration;
+- physical codec implementation;
+- bulk tracked-data migration.
+
+A batch must merge and be verified on current `main` before the next dependent batch starts. Do
+not build a long stacked branch chain. Independent leaf work may proceed separately only when its
+inputs are already stable and it cannot pre-decide a dependent semantic choice.
+
+### B. Every implementation batch starts by reconstructing current-main truth
+
+Before editing:
+
+- fetch current `main`, this plan's current authority, open related PRs and plausible sibling branches;
+- compare the intended surface against changes merged since the previous batch;
+- recover unique relevant work explicitly; branch names and old PR descriptions are evidence, not authority;
+- update the batch impact map when new consumers/producers have appeared.
+
+Before merge, repeat the comparison against current `main`. If the intended change is already
+present, superseded, or materially altered by intervening architecture, reconcile rather than
+blindly applying the old plan.
+
+### C. Leave a durable batch record, not only a PR body or chat history
+
+For every cross-boundary batch, record in a compact checked-in implementation record or dated
+report:
+
+- base/reconciliation SHA;
+- exact scope and non-scope;
+- authority/invariant being changed;
+- producer/transport/consumer impact map;
+- compatibility owner and retirement rule;
+- before-state oracle/fixture;
+- actual validation surfaces and runtime topology;
+- parity/recovery results;
+- unexpected findings and plan amendments;
+- final head SHA / merged PR when known.
+
+Keep the PR description current as a human front door, but do not make it the sole durable state.
+Commit frequently enough that recovery does not depend on an agent session surviving.
+
+### D. Real execution topology outranks local green
+
+A validation only counts for the boundary it actually exercises.
+
+This program must distinguish at least:
+
+- plain Node under the repository-supported Node version;
+- TypeScript/bundled execution;
+- browser/Vite execution;
+- direct solver execution;
+- worker transport;
+- raced backend;
+- GitHub Actions workflow invocation;
+- sparse-checkout CI;
+- Firestore/emulator or encoded-size semantics where storage behavior is under test.
+
+Do not infer one from another. In particular, avoid new `.mjs -> .ts` runtime dependencies unless
+the supported plain-Node path is proved.
+
+### E. Design all artifact validation for sparse checkout and large-file scale
+
+The hint corpus is hundreds of megabytes, so the Phase-9 naming failure is directly relevant here.
+
+New checks must not assume that every registered artifact is materialized in the working tree.
+Where repository identity is sufficient, distinguish tracked-HEAD existence from worktree presence.
+Where file content is required, make materialization an explicit job requirement.
+
+Do not shell large hint artifacts through default-buffer `execFileSync` / `git show` paths. Use
+streaming/file APIs, bounded per-file processing, or explicit larger-buffer logic with measured
+limits. Synthetic CI fixtures should be the smallest representative artifacts, not copies of
+multi-megabyte live hint files.
+
+Any new check that touches hint trees must be exercised in the **same sparse/full topology used by
+the CI job that will own it** before that batch can close.
+
+### F. Prove value transport, not merely field existence
+
+The naming cleanup repeatedly found canonical fields that existed at the definition but disappeared
+or changed meaning in a sibling transport.
+
+For each new solver-request / execution / provenance dimension, use a distinctive sentinel value
+and prove it travels through every applicable path:
+
+`CLI/workflow input -> parser -> common request -> direct/worker/raced projection -> solver result ->
+producer artifact -> harvester -> semantic provenance -> query consumer`.
+
+A schema/type membership test is necessary but not sufficient.
+
+When a dimension is unsupported by a backend, the test must prove explicit rejection/absence
+semantics rather than quiet dropping.
+
+### G. Workflow parity must prove treatment semantics, not only YAML validity
+
+Pathfinder has had green workflows that effectively ran control-vs-control because the treatment
+value was unwired.
+
+For every migrated GHA producer family:
+
+- emit the resolved canonical request/protocol identity into the artifact;
+- assert the declared arm differs on exactly the intended dimensions when an A/B is expected;
+- compare the invocation-boundary resolved value, not only the matrix label;
+- require the central harvester receipt/result summary to expose source run, arm, accepted/addition
+  counts, quarantine/failure disposition and persistence result.
+
+Structural workflow validation or a successful job is not evidence that the intended treatment
+participated.
+
+### H. Prefer construction-time contracts over another layer of post-hoc validators
+
+Where an invalid execution capsule, ingestion receipt, source-run binding or provenance event can be
+prevented by a shared constructor/serializer, do that first.
+
+Post-hoc checks remain valuable for cross-boundary parity and historical compatibility, but do not
+create a forest of validators compensating for producers that are still free to emit malformed
+canonical artifacts.
+
+If two materially different live producers need the same correctness-critical construction rule,
+promote that rule to their shared owner.
+
+### I. Historical compatibility is tested at the semantic operation that matters
+
+A decoder accepting v1-v3 does not prove historical compatibility.
+
+Representative historical fixtures must be exercised through the downstream operations that use
+them:
+
+- grouping and dedupe;
+- missingness classification;
+- chronology/longitudinal queries;
+- replayability/effective-input reconstruction;
+- source taxonomy/applicability;
+- joins to process/failure/experiment evidence.
+
+Mixed-era joins must normalize both sides before comparison. Raw historical spellings/booleans may
+not silently participate in a current equality/grouping operation.
+
+### J. Current-authority documentation gets a semantic closeout, not only link checking
+
+When a batch changes an authority, field meaning, ingestion route, runtime projection, Firestore
+lifecycle or workflow ownership, search all current authorities that teach those semantics.
+
+Do not copy volatile facts into several documents. Prefer the executable/structured owner plus
+links/projections. Dated reports remain historical.
+
+Closeout must verify that a fresh agent entering through the normal docs/resource-query front door
+will learn the new architecture before encountering a stale one.
+
+### K. New checks must be CI-friendly and failure-localizing
+
+Do not add a checker that turns a small semantic defect into unrelated red jobs or requires agents
+to excavate logs.
+
+Every new maintained workflow/check should:
+
+- fail as near as practical to the violated invariant;
+- print the exact offending producer/artifact/identity and expected owner;
+- distinguish semantic failure, stale derived output, missing materialization, capacity refusal and
+  infrastructure error;
+- emit a concise completion digest suitable for agent consumption;
+- avoid reading unrelated giant resources merely to prove a narrow invariant.
+
+When a new check first turns CI red, diagnose its execution topology and ownership before patching
+symptoms in downstream jobs. Repeated red/green pinball is evidence that the invariant belongs
+earlier or in a shared constructor.
+
+### L. Bulk migration is a separately reviewable evidence transaction
+
+Do not mix physical v4 corpus rewriting with semantic code changes.
+
+The migration PR should contain, as nearly as practical:
+
+- the frozen migration tool/version;
+- machine manifest;
+- tracked-data changes;
+- semantic/referee/join parity evidence;
+- no unrelated semantic refactor.
+
+If the corpus rewrite exposes a semantic disagreement, stop the migration and repair the semantic
+owner in a prerequisite PR. Do not teach the migration to normalize away the discrepancy.
+
+### M. Firestore and git are different persistence systems, not two serializers for one assumption
+
+A green git-corpus path does not validate Firestore authorization, document growth, idempotency,
+merge semantics or convergence.
+
+Test Firestore duplicate, rediscovery, occurrence append, capacity refusal and approval/import
+lifecycle explicitly. Capacity policy must be stated in bytes/semantic units where possible, not
+only path counts.
+
+If supplemental Firestore evidence is intentionally non-durable or non-convergent with git, expose
+that lifecycle honestly instead of making a reader infer it from implementation.
+
+### N. Stop-and-reconcile triggers
+
+Pause the current batch and amend/reconcile the plan before continuing if implementation reveals:
+
+- a new canonical identity owner or competing schema;
+- a field whose semantic layer differs from the current classification;
+- a maintained producer that cannot supply the assumed ingestion contract;
+- a historical cohort whose missingness cannot be represented honestly;
+- a workflow family whose actual artifact/run lineage contradicts the planned source-run model;
+- a backend whose execution semantics make the current comparability/reproducibility model false;
+- a storage limit that requires lossy behavior;
+- a current consumer that depends on v4 physical representation rather than decoded Hint semantics.
+
+Do not “finish the phase” by adding a local exception around a contradicted assumption.
+
+### O. Close from consumers inward, preferably with a fresh context
+
+After implementation tests are green, perform a distinct closeout pass beginning from:
+
+- browser/application consumers;
+- query/research consumers;
+- workflows and artifact harvesters;
+- Firestore/git writers and readers;
+- historical compatibility fixtures;
+- current documentation/front-door discovery.
+
+Do not use the implementation diff as the checklist. Prefer a fresh agent/session for high-risk
+batches. If the same agent performs closeout, record that and deliberately reconstruct the surface
+inventory from current `main`.
+
+### P. Remote CI completion is part of merge evidence
+
+A local `ci:fast`, an older green SHA, or a queued/running GitHub check is not evidence for the
+current PR head.
+
+Do not merge a high-risk batch until required remote checks for that exact head have completed.
+If no useful work remains while CI is running, stop at the committed/PR-described boundary rather
+than making speculative edits to occupy the wait.
+
+### Q. Avoid plan-document accretion during execution
+
+This plan is already extensive. Implementation findings should not turn it into an ever-growing
+chronological notebook.
+
+- Amend the plan only when sequencing, authority, semantics, scope or a standing guardrail changes.
+- Put measurements and batch evidence in dated reports/implementation records.
+- Compact concluded implementation detail when it no longer helps future execution.
+- Respect the repository's document-size hysteresis policy rather than repeatedly shaving a few
+  bytes at every closeout.
+
+The plan should remain the execution contract, not the exhaust from executing it.
+
+### 14.4 Suggested implementation batch topology
+
+The following is a default decomposition, not a new priority authority. Reconcile it against current
+`main` before each batch.
+
+1. **Baseline/evidence rescue** — preserve expiring #1996 source authority; no semantic rewrite.
+2. **Semantic ingress + missingness** — v1-v3 shared decoder, historical missingness/foundAt repair,
+   stale-I/O/current writer migration and guards.
+3. **Request identity direct/worker/raced parity** — solver request capsule, backend semantics,
+   sentinel transport tests.
+4. **Provenance event/occurrence model** — semantic merge identity and source occurrence lineage.
+5. **Firestore semantic persistence** — bounded-growth implementation against the stable event model.
+6. **Query/research observability** — query surfaces, determinism oracle integration, cross-resource
+   joins.
+7. **Ingestion projection + receipt constructors** — canonical producer-to-store contract.
+8. **Workflow migrations** — one producer/workflow family per PR or small compatibility-owned group;
+   dual-path parity and partial-failure/reharvest tests before removing direct mutation.
+9. **Historical authoritative enrichment** — backfill from rescued/durable evidence with manifest.
+10. **V4 codec implementation** — no bulk data rewrite yet.
+11. **V4 data migration** — dedicated evidence-transaction PR.
+12. **Runtime path projection** — independent derived-delivery optimization after semantic decoder
+    stability.
+13. **Bounded level cleanup** — separate follow-up only if still earned.
+
+The implementation agent may combine adjacent batches only when they share the same compatibility
+owner, validation graph and rollback boundary. “They are in the same phase” is not sufficient.
+
 ## 15. Review and stopping points
 
 This program should be interruptible after each phase.
