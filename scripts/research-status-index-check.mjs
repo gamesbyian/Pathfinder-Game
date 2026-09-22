@@ -130,6 +130,7 @@ A canonical attempt identity must not be rewritten as though its search-family t
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
 assert.equal(index.queue[0].executionState, 'active');
+assert.equal(index.queue[0].gateClass, 'existing-data');
 assert.equal(index.queue[0].questionRef, 'WS2-CURRENT');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), [
     'FLAG_ONE', 'FLAG_TWO', 'FLAG_THREE', 'FLAG_FOUR',
@@ -212,6 +213,7 @@ assert.equal(compact.count, 1);
 assert.equal(compact.entries[0].kind, 'queue');
 assert.equal(compact.entries[0].authority, 'docs/solver-optimization-workstreams.md');
 assert.equal(compact.entries[0].workstreamId, 2, 'workstream ID is identity, not a priority rank');
+assert.equal(compact.entries[0].gateClass, 'existing-data');
 
 {
     const workstreamPath = path.join(root, 'docs/solver-optimization-workstreams.md');
