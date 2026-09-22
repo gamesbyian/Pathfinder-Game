@@ -44,6 +44,7 @@ Prefer typed selectors such as `premises:P204` or `repositoryRefs:reports/...`. 
 | `support-impact` | Would withdrawal of this evidence source remove necessary support, leave an independent alternative, or remain unknown? | Only explicit `decisionSupport` can establish necessity/redundancy. |
 | `coverage` | Is the graph internally resolved and are current workstream gates structurally classified? | Structural/query coverage, not scientific coverage. |
 | `system-findings` | What current research-system architecture/lifecycle findings exist under stable derived IDs? | IDs are derived observations, not queue authority. |
+| `system-lineage` | How much current research-system lineage is available at per-finding versus report level? | Explicitly reports findings lacking per-finding successor semantics alongside structured questionless report handoffs. |
 
 Examples:
 
