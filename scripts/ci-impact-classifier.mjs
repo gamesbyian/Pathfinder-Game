@@ -50,8 +50,9 @@ export function classifyPaths(paths, config = loadImpactRules()) {
   let full = false;
 
   for (const file of paths) {
-    const exactSurfaces = config.exactOwnership?.get(file);
-    const rule = exactSurfaces ? null : config.compiled.find(candidate => candidate.regex.test(file));
+    const rule = config.compiled.find(candidate => candidate.regex.test(file));
+    const explicitFull = rule?.surfaces?.includes('all') ?? false;
+    const exactSurfaces = explicitFull ? null : config.exactOwnership?.get(file);
     if (!exactSurfaces && !rule) {
       full = true;
       files.push({ path: file, rule: null, reason: 'unclassified path', surfaces: ['all'] });
@@ -60,7 +61,14 @@ export function classifyPaths(paths, config = loadImpactRules()) {
     const fileSurfaces = exactSurfaces ? [...exactSurfaces] : [...rule.surfaces];
     if (fileSurfaces.includes('all')) full = true;
     for (const surface of fileSurfaces) if (surface !== 'all') selected.add(surface);
-    files.push({ path: file, rule: exactSurfaces ? 'registered-validation-entrypoint' : rule.id, reason: exactSurfaces ? 'ownership derived from validation-groups.json + package.json' : rule.reason, surfaces: fileSurfaces });
+    files.push({
+      path: file,
+      rule: exactSurfaces ? 'registered-validation-entrypoint' : rule.id,
+      reason: exactSurfaces
+        ? 'ownership derived from validation-groups.json + package.json'
+        : rule.reason,
+      surfaces: fileSurfaces,
+    });
   }
 
   if (full) {
