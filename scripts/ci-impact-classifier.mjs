@@ -6,6 +6,28 @@ import process from 'node:process';
 const ROOT = process.cwd();
 const RULES_PATH = path.join(ROOT, 'scripts', 'ci-impact-rules.json');
 
+function deriveRegisteredEntrypointOwnership(root) {
+  const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  const registry = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'validation-groups.json'), 'utf8'));
+  const ownership = new Map();
+
+  for (const familyName of ['validators', 'nodeTests']) {
+    for (const [group, members] of Object.entries(registry[familyName] ?? {})) {
+      for (const member of members) {
+        const command = packageJson.scripts?.[member];
+        for (const entrypoint of commandLocalPaths(command)) {
+          if (!ownership.has(entrypoint)) ownership.set(entrypoint, new Set());
+          ownership.get(entrypoint).add(group);
+        }
+      }
+    }
+  }
+
+  return new Map(
+    [...ownership.entries()].map(([entrypoint, surfaces]) => [entrypoint, [...surfaces].sort()]),
+  );
+}
+
 export function loadImpactRules(root = ROOT) {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'ci-impact-rules.json'), 'utf8'));
   if (config.schemaVersion !== 1) throw new Error(`unsupported ci-impact-rules schemaVersion ${config.schemaVersion}`);
@@ -20,7 +42,7 @@ export function loadImpactRules(root = ROOT) {
     }
     return { ...rule, regex: new RegExp(rule.pattern, 'u') };
   });
-  return { ...config, surfaceSet: surfaces, compiled };
+  return { ...config, surfaceSet: surfaces, compiled, exactOwnership: deriveRegisteredEntrypointOwnership(root) };
 }
 
 export function classifyPaths(paths, config = loadImpactRules()) {
@@ -29,16 +51,17 @@ export function classifyPaths(paths, config = loadImpactRules()) {
   let full = false;
 
   for (const file of paths) {
-    const rule = config.compiled.find(candidate => candidate.regex.test(file));
-    if (!rule) {
+    const exactSurfaces = config.exactOwnership?.get(file);
+    const rule = exactSurfaces ? null : config.compiled.find(candidate => candidate.regex.test(file));
+    if (!exactSurfaces && !rule) {
       full = true;
       files.push({ path: file, rule: null, reason: 'unclassified path', surfaces: ['all'] });
       continue;
     }
-    const fileSurfaces = [...rule.surfaces];
+    const fileSurfaces = exactSurfaces ? [...exactSurfaces] : [...rule.surfaces];
     if (fileSurfaces.includes('all')) full = true;
     for (const surface of fileSurfaces) if (surface !== 'all') selected.add(surface);
-    files.push({ path: file, rule: rule.id, reason: rule.reason, surfaces: fileSurfaces });
+    files.push({ path: file, rule: exactSurfaces ? 'registered-validation-entrypoint' : rule.id, reason: exactSurfaces ? 'ownership derived from validation-groups.json + package.json' : rule.reason, surfaces: fileSurfaces });
   }
 
   if (full) {
