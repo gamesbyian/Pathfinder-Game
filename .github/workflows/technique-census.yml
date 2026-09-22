@@ -57,7 +57,7 @@
 # exactly which cells did and didn't complete; any gap is closed by a follow-up dispatch with
 # --skip-existing pointed at the prior partial output, not by re-running everything.
 name: Technique capability census (isolated single-/paired-/flag-technique, full budget)
-run-name: "Technique census · workers=${{ inputs.workers }}"
+run-name: "Technique census · T1=${{ inputs.t1_sample_size }} · EW1=${{ inputs.equal_work_sample_size }}x${{ inputs.equal_work_budget }} · workers=${{ inputs.workers }}"
 
 on:
   workflow_dispatch:
@@ -82,6 +82,18 @@ on:
         description: 'PRNG seed for the T1/T3/T4 sampling -- fixed by default for full reproducibility'
         required: false
         default: '20260819'
+      equal_work_sample_size:
+        description: 'EW1 equal-canonical-work pricing tranche. Default 60 refreshes the bounded shallow-cost surface without turning the deep census into a second full matrix; set 0 to omit.'
+        required: false
+        default: '60'
+      equal_work_budget:
+        description: 'EW1 canonical work cap per isolated technique. 10M preserves the validated shallow-pricing contract; T1 remains the deep 50M-node capability map.'
+        required: false
+        default: '10000000'
+      equal_work_seed:
+        description: 'Independent deterministic seed for the EW1 frozen production-unsolved sample.'
+        required: false
+        default: '20260921'
       workers:
         description: 'Cross-cell worker processes per shard. Default 4 matches current standard public ubuntu-latest runner vCPU count; lower this if runner sizing or memory pressure warrants it.'
         required: false
@@ -127,6 +139,9 @@ jobs:
             --t1-node-budget="${{ inputs.t1_node_budget }}" \
             --t3-node-budget="${{ inputs.t1_node_budget }}" \
             --t4-node-budget="${{ inputs.t1_node_budget }}" \
+            --equal-work-sample-size="${{ inputs.equal_work_sample_size }}" \
+            --equal-work-budget="${{ inputs.equal_work_budget }}" \
+            --equal-work-seed="${{ inputs.equal_work_seed }}" \
             --out=plan/technique-census-plan.json
 
       - name: 'Execution-family canary: verify the resolved plan on one representative cell'
@@ -151,6 +166,25 @@ jobs:
             --workers=1 \
             --out=logs/technique-census-canary.json
           node scripts/verify-canary-cell.mjs --result=logs/technique-census-canary.json --mode=technique-census
+
+      - name: 'Equal-work canary: verify one EW1 work-capped cell when present'
+        if: inputs.equal_work_sample_size != '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          read ew1_index total_cells < <(node - <<'NODE'
+          const plan = JSON.parse(require('fs').readFileSync('plan/technique-census-plan.json', 'utf8'));
+          const index = plan.cells.findIndex(cell => cell.tier === 'EW1');
+          if (index < 0) process.exit(2);
+          console.log(index + 1, plan.cells.length);
+          NODE
+          )
+          node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=plan/technique-census-plan.json \
+            --shard="${ew1_index}" --shards="${total_cells}" \
+            --workers=1 \
+            --out=logs/technique-census-ew1-canary.json
+          node scripts/verify-canary-cell.mjs --result=logs/technique-census-ew1-canary.json --mode=technique-census
 
       - name: Upload the plan
         uses: actions/upload-artifact@v7
