@@ -5,8 +5,8 @@ import { runResearchQueryabilityAudit } from './research-queryability-audit-lib.
 
 const result = runResearchQueryabilityAudit(process.cwd(), { discoverArtifacts: false });
 assert.equal(result.failed, 0, JSON.stringify(result.results.filter(row => row.status === 'failed'), null, 2));
-assert.equal(result.knownGaps, 1);
-assert.equal(result.partial, 1);
+assert.equal(result.knownGaps, 0);
+assert.equal(result.partial, 2);
 assert.equal(result.conditional, 1);
 assert.equal(result.benchmarkCount, 13);
 assert.equal(result.passed, 10);
