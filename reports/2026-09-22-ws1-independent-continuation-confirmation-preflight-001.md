@@ -8,8 +8,6 @@
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 > **Gate class:** `bounded-compute`
 > **Compute status:** not dispatched.
-> **Decision:** acquire fresh solver-blind random witness-first parents through the existing research-generation front door. Run a 24-parent development/opportunity canary first; only if it exercises the frozen late-continuation seam, acquire a separate untouched 96-parent confirmation block. Apply the exact frozen 15-signature model unchanged. No live scheduling treatment is authorized.
-> **Compute status:** not dispatched.
 
 ## Why fresh acquisition is now earned
 
