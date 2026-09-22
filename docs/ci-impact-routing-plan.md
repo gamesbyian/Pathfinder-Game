@@ -182,6 +182,8 @@ The execution layer is now modeled separately in `scripts/ci-execution-plan.json
 
 The validation-plan parity checker now also proves every expensive capability belongs to exactly one execution lane and the final-status acceptance contract is structurally conservative.
 
+`main-push-validation.yml` now also shadows the same impact model over the complete push event range while leaving its broad safety-net validation untouched.
+
 `ci-scoped-dry-run.yml` now provides a manual end-to-end activation rehearsal over explicit base/head refs. Its job/capability/always-on/final-status structure is mechanically checked against the execution plan. Ordinary PR CI remains unchanged.
 
 **Next:** collect shadow outcomes across real non-router PR shapes, run representative manual scoped dry-runs, and benchmark Node-harness concurrency. Do not enable skipped validation until those empirical gates are green and the final required status is deliberately promoted into ordinary PR CI.
