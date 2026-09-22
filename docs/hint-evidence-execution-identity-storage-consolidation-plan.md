@@ -767,9 +767,9 @@ Current research/execution artifacts use overlapping concepts under names such a
 In at least one current helper, hint-discovery-process evidence writes
 `protocolHash` and `configurationHash` to the same value.
 
-Do not simply add another `effectiveSolverConfigDigest` field beside these. Phase 1 must inventory
+Do not simply add another `effectiveSolverConfigDigest` field beside these. Phase 2 must inventory
 the meaning of every current identity field, assign each to the target hierarchy
-(EffectiveSolverConfig / ExecutionProtocol / RunEnvelope / immutable solver ref), and either:
+(solver-request identity / execution protocol / source-run binding / immutable solver ref), and either:
 
 - migrate current writers to the canonical field;
 - retain a clearly scoped specialist field because its semantics genuinely differ; or
@@ -910,17 +910,17 @@ workflow artifacts expire.
 A hint event that stores only:
 
 - source run ID; or
-- an opaque effective-config digest
+- an opaque solver-request/configuration digest
 
 can establish a weak equality/join but cannot later explain or replay what configuration the digest
 represented if the source manifest disappears.
 
-For modern Pathfinder solver provenance, persist the **minimal reconstructable execution capsule**
+For modern Pathfinder solver provenance, persist the **minimal reconstructable solver-execution binding**
 needed by the hint evidence itself, preferably interned once per hint artifact when repeated:
 
 - identity schema/version;
 - immutable solver ref;
-- canonical solver-request/config projection or its replay-relevant subset;
+- canonical solver-request projection or its replay-relevant subset;
 - execution backend/reproducibility class;
 - execution-protocol identity and enough canonical payload to interpret it;
 - source-run locator/lineage as provenance, not as the sole semantic source.
@@ -1313,7 +1313,7 @@ Build the semantic identities that later provenance and ingestion must carry.
 - define canonical normalized solver-request projections and effective defaults;
 - define purpose-specific request/effective-input identity, execution protocol and reproducibility
   class;
-- define the bounded run/execution capsule;
+- define the bounded solver-execution/source-run binding;
 - define the durable cross-resource join spine: level revision, exact path signature, semantic
   discovery identity, acquisition run, immutable solver ref, protocol/configuration, arm/population
   and exact artifact locator where applicable;
@@ -1390,7 +1390,7 @@ Migrate workflow families one at a time.
 For each family:
 
 1. keep the old direct-file route;
-2. emit the new specialist observation + execution capsule;
+2. emit the new specialist observation + solver-execution/source-run binding;
 3. central-harvest it;
 4. compare semantic Hint additions, occurrence lineage and ingestion receipt;
 5. exercise partial failure and reharvest;
@@ -1801,7 +1801,7 @@ This plan does not:
 - create a monolithic research database;
 - replace existing failure-response/search-loss evidence;
 - rewrite frozen historical artifacts without proof;
-- require all non-Pathfinder producers to pretend to have Pathfinder run envelopes;
+- require all non-Pathfinder producers to pretend to have Pathfinder source-run bindings;
 - compress level coordinates into opaque packed storage;
 - remove legacy readers after migration.
 
@@ -1859,7 +1859,7 @@ Keep `provenanceEventIdentity()` as the semantic-dedupe concept, but version/ext
 
 Attach a compact occurrence set to the semantic event when physical lineage is known. The minimum useful occurrence record is:
 - source/acquisition run identity;
-- producer/workflow/experiment arm identity needed to recover the run envelope;
+- producer/workflow/experiment arm identity needed to recover the source-run binding;
 - artifact/reconstruction lineage when the event was harvested later;
 - observed time only when genuinely observed, not migration-synthesized.
 
@@ -1962,7 +1962,7 @@ One semantic discovery event means one interpretation-equivalent solver discover
 
 A semantic event may carry a compact set of **physical occurrences**. A modern occurrence should retain, where known:
 - acquisition/source run identity;
-- workflow/producer and experiment arm needed to recover the run envelope;
+- workflow/producer and experiment arm needed to recover the source-run binding;
 - artifact/shard/row locator sufficient for an exact join;
 - genuine observation time when the producer actually observed it;
 - reconstruction/harvest lineage separately when persistence occurred later.
@@ -2045,7 +2045,7 @@ The now-closed investigation authorizes the following work, ordered across Phase
 - request/execution identity value objects and drift tests;
 - semantic-event + occurrence-lineage representation;
 - maintained hint-I/O census enforcement and stale-current seam migration;
-- common execution capsules and central-ingestion adapters;
+- common solver-execution/source-run bindings and central-ingestion adapters;
 - Firestore bounded-growth/explicit-capacity semantics;
 - generated runtime path projection with equivalence checks.
 
@@ -2207,7 +2207,7 @@ a second unstructured research warehouse.
 
 ### Consequences for this plan
 
-Phases 2-3 should treat the execution capsule and occurrence lineage as a **join contract** as well as provenance.
+Phases 2-3 should treat the solver-execution/source-run binding and occurrence lineage as a **join contract** as well as provenance.
 Acceptance tests should prove that a modern Hint occurrence can be joined, when corresponding resources are
 present, to:
 
