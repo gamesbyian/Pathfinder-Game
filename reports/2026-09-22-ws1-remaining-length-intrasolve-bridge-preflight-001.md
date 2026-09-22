@@ -1,11 +1,13 @@
 # WS1 remaining-length intra-solve bridge preflight 001
 
-> **Status:** preflight-complete / no dispatch
+> **Status:** active
+> **Last evidence:** 2026-09-22 — preflight and inert implementation recovered onto current mainline; no experiment dispatched.
+> **Decision:** do not jump directly from the confirmed cross-row remaining-length effect to a production selector. First test the missing transport step inside one solve: reorder the existing elite-prefix completion candidate pool by ascending remaining length under identical candidates, per-candidate caps and total node budget.
+> **Remaining gate:** run the frozen 20-level Stage A matched-work bridge with candidate-attribution telemetry; a negative closes this tested intra-solve form without retuning.
 > **Date:** 2026-09-22
 > **Research question:** `WS1-REMAINING-LENGTH-INTRA-SOLVE-BRIDGE`
 > **Triggered by:** `WS1-REMAINING-LENGTH-ALLOCATION`
 > **Evidence role:** development discriminator
-> **Decision:** do not jump directly from the confirmed cross-row remaining-length effect to a production selector. First test the missing transport step inside one solve: reorder the existing elite-prefix completion candidate pool by ascending remaining length under identical candidates, per-candidate caps and total node budget.
 > **Compute status:** not dispatched.
 
 ## Why a bridge is required
