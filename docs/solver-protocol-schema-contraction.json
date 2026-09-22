@@ -596,10 +596,10 @@
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
-      "treatment": "investigate",
+      "treatment": "canonical-layout-authority",
       "status": "in-progress",
       "retirementGate": "Define one corpus-to-hint-artifact layout contract with Node/browser adapters; every canonical writable hint filename is discoverable by validators, formatters, migrators, and indexes; legacy numeric fallback remains explicit.",
-      "progress": "Opened 2026-09-22. Current writer and lister accept different ID vocabularies, and browser/Node directory mapping is separately encoded."
+      "progress": "Investigation closed 2026-09-22. Node/browser corpus-to-hint directory mapping has two owners; hintFileName accepts arbitrary string ids while listHintFiles recognizes only a narrower filename regex. Phase -1 target is one neutral corpus-layout descriptor plus expected artifact names derived from corpus level ids; enumeration becomes missing/orphan verification and numeric fallback stays explicit."
     },
     {
       "id": "PSC-026",
@@ -675,10 +675,10 @@
       "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
-      "treatment": "investigate",
+      "treatment": "canonical-ingestion-receipt",
       "status": "in-progress",
       "retirementGate": "All modern ingestion lanes expose one minimal canonical funnel vocabulary for observed solved candidates, referee/compatibility rejection, already-represented semantic evidence, quarantine, and persisted changes, with producer-specific extensions allowed.",
-      "progress": "Opened 2026-09-22. The research asset registry already documents that level-blind harvest selection provenance does not cover sibling importers in the same source run."
+      "progress": "Investigation closed 2026-09-22. Only level-blind harvesting emits a structured selection manifest; isolated and direct-artifact compatibility import expose different log/quarantine counters. Phase -1 will add one versioned hint-ingestion receipt with explicit units for candidate, eligible, referee-accepted, already-represented, path/event/occurrence additions, quarantine reasons, and physical changes. It remains success-ingestion accounting, never an attempted-population denominator."
     },
     {
       "id": "PSC-029",
