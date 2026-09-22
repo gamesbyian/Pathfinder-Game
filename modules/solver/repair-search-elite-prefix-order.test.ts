@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildElitePrefixDfsCandidatePlan } from './repair-search.js';
+import type { ElitePrefixDfsCandidatePlanRow } from './repair-search.js';
 
 describe('elite-prefix DFS candidate ordering', () => {
   const elites = [
@@ -19,7 +20,7 @@ describe('elite-prefix DFS candidate ordering', () => {
     const legacy = buildElitePrefixDfsCandidatePlan(elites, 120, false);
     const treatment = buildElitePrefixDfsCandidatePlan(elites, 120, true);
 
-    const key = row => [row.eliteIndex,row.fraction,row.destroyIdx,row.remainingLength,row.legacyOrdinal].join('|');
+    const key = (row: ElitePrefixDfsCandidatePlanRow) => [row.eliteIndex,row.fraction,row.destroyIdx,row.remainingLength,row.legacyOrdinal].join('|');
     expect(treatment.map(key).sort()).toEqual(legacy.map(key).sort());
 
     for (let i = 1; i < treatment.length; i++) {
