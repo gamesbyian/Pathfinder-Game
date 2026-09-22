@@ -87,8 +87,8 @@ function stableJson(value) {
 
 function commandLocalPaths(command) {
   if (typeof command !== 'string') return [];
-  const matches = [...command.matchAll(/(?:^|\s)((?:\.\/)?scripts\/[A-Za-z0-9_./-]+\.(?:mjs|cjs|js|ts|tsx))(?:\s|$)/gu)];
-  return matches.map(match => match[1].replace(/^\.\//u, ''));
+  const matches = command.match(/(?:\.\/)?scripts\/[A-Za-z0-9_./-]+\.(?:mjs|cjs|js|ts|tsx)/gu) ?? [];
+  return matches.map(entrypoint => entrypoint.replace(/^\.\//u, ''));
 }
 
 const TRANSPARENT_PACKAGE_WRAPPERS = new Set([
