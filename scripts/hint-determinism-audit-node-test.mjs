@@ -38,13 +38,13 @@ const stable = auditHintFile('P1', [
     { path: [1, 2, 3], provenance: [b] },
 ]);
 assert.equal(stable.repeatRunStable.length, 1);
-assert.equal(stable.repeatRunInputDivergence.length, 0);
+assert.equal(stable.repeatRunRecordedInputCollision.length, 0);
 
 const divergent = auditHintFile('P1', [
     { path: [1, 2, 3], provenance: [a] },
     { path: [1, 4, 3], provenance: [b] },
 ]);
-assert.equal(divergent.repeatRunInputDivergence.length, 1);
+assert.equal(divergent.repeatRunRecordedInputCollision.length, 1);
 
 const exactA = entry({ foundAt: '2026-01-01T00:00:00Z' });
 const exactB = structuredClone(exactA);
