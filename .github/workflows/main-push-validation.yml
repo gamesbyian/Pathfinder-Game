@@ -73,12 +73,42 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Run fast repository and contract validation
+        id: fast
         run: npm run ci:fast
       - name: Build production bundle
+        id: build
         run: npm run build
       - name: Solver capability canary
+        id: solver_canary
         run: |
           node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
             --baseline=logs/solver-canary-baseline.json \
             --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
             --budget-ms=15000 --work-budget=5000000
+
+      - name: Summarize main-push validation
+        if: always()
+        shell: bash
+        env:
+          FAST: ${{ steps.fast.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          SOLVER_CANARY: ${{ steps.solver_canary.outcome }}
+        run: |
+          {
+            echo '## Main push validation'
+            echo
+            echo "| Check | Outcome |"
+            echo "| --- | --- |"
+            echo "| Fast repository + contract validation | `$FAST` |"
+            echo "| Production build | `$BUILD` |"
+            echo "| Solver capability canary | `$SOLVER_CANARY` |"
+            echo
+            if [[ "$FAST" == success && "$BUILD" == success && "$SOLVER_CANARY" == success ]]; then
+              echo 'All post-merge safety-net checks passed.'
+            else
+              echo 'One or more post-merge safety-net checks did not pass. The table above identifies the first useful step(s) to inspect.'
+              [[ "$FAST" == failure ]] && echo '::error::Main-push fast repository/contract validation failed.'
+              [[ "$BUILD" == failure ]] && echo '::error::Main-push production build failed.'
+              [[ "$SOLVER_CANARY" == failure ]] && echo '::error::Main-push solver capability canary failed.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
