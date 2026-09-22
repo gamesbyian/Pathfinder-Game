@@ -140,7 +140,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const doc=JSON.parse(readFileSync(input,'utf8'));
     merged.rows.push(...buildActionBoundaryDataset(doc,{source:input}).rows);
   }
-  const result=analyzeLegalSignalCapture(merged);
+  const sources=[...new Set(merged.rows.map(r=>r.source))];
+  const result={
+    ...analyzeLegalSignalCapture(merged),
+    bySource:Object.fromEntries(sources.map(source=>[source,analyzeLegalSignalCapture({...merged,rows:merged.rows.filter(r=>r.source===source)})])),
+  };
   mkdirSync(path.dirname(path.resolve(out)),{recursive:true});
   writeFileSync(out,`${JSON.stringify(result,null,2)}\n`);
   if (datasetOut) {
