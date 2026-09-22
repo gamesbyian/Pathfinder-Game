@@ -1,6 +1,6 @@
 # Action-selection legal-signal capture preflight 001
 
-> **Status:** concluded-positive; development execution completed in `2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md`.
+> **Status:** superseded
 > **Last evidence:** 2026-09-21 — pre-winner oracle census found 94.74% C2 and 87.58% C1 solved-row canonical work before the eventual winning attempt.
 > **Decision:** test whether cheap level-blind signals available before each action can capture a material fraction of the pre-winner oracle ceiling in shadow mode.
 > **Remaining gate:** the development gate completed from retained evidence. Freeze the selected prior-response+work+next-stage form at min development support 100 for sample-independent confirmation before any live scheduler treatment.
