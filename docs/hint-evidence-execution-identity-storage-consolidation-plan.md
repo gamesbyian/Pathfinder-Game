@@ -13,6 +13,8 @@
 > parallel persistence/configuration paths that should be consolidated rather than permanently
 > worked around.
 >
+> **Pre-implementation empirical audit:** [`reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md`](../reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md) verifies request/backend semantics, provenance missingness, source-run reconstructability, producer observation sufficiency, stale writers, and Firestore retention behavior.
+>
 > **Primary goal:** make solver evidence smaller, more queryable, more replay-/audit-friendly, and
 > harder to record incompletely, without losing semantic information, breaking historical data,
 > weakening level-blindness, or coupling offline evidence to production routing.
@@ -438,8 +440,12 @@ Important producers include:
 Audit any tool that mutates `.hints` directly before a persistent write. `hintRecords` is the
 canonical persisted semantic state and `.hints` is a derived compatibility projection.
 
-In particular, verify/fix `scripts/hint-candidate-search.mjs --write-levels`, which currently
-appears to append bare paths directly before invoking modern level/hint persistence.
+Current regressions already confirmed by the pre-implementation audit include:
+
+- `scripts/hint-candidate-search.mjs --write-levels`, which imports removed corpus I/O helpers and mutates bare `.hints`;
+- `scripts/stress/cpsat-hint-harvest.mjs` / its sweep path, which also imports the removed corpus I/O facade and manually synchronizes `hintRecords` with derived `.hints`.
+
+Re-run the maintained-writer census rather than assuming these are the only residues.
 
 Add a guard/test that prevents new persistent writers from mutating only the bare-path projection.
 
@@ -805,9 +811,7 @@ physical storage, but their semantic adapters and capacity expectations are inco
 - Firestore `approveHintAddition()` currently truncates the merged hint set to **5**;
 - submission/search surfaces can handle far more hints.
 
-Do not blindly make all backends use the git v4 wire format. Instead audit the five-hint truncation
-and define one semantic capacity/retention contract per persistence surface. Any intentional
-backend limit must be explicit and must not silently discard provenance/events during a merge.
+Do not blindly make all backends use the git v4 wire format. The pre-implementation audit traced the Firestore `slice(0, 5)` cap back to the pre-provenance era. It now conflicts with the submission path's explicit 1,000-hint Firestore safety margin, the local supplemental store's 5,000 soft cap, and player-facing display curation's independent default cap of 15. Treat the five-hint persistence cap as a current evidence-loss defect: remove it or replace it with an explicit provenance-aware backend capacity policy. Player display limits belong in `selectDisplayHints()`, not storage.
 
 ### I. Existing schema-contraction registry is part of this program's control plane
 
@@ -1069,6 +1073,16 @@ needs the distinction. Do not bulk-enrich history merely to make the model visua
 
 
 ## 14. Implementation sequence
+
+### Phase -1 — repair confirmed semantic/storage-boundary regressions
+
+- fix maintained writers still using removed hint/corpus persistence facades;
+- restore one canonical hint mutation/write authority across candidate-search and CP-SAT paths;
+- define and repair provenance missingness so historical absence is not promoted into factual modern false;
+- remove or replace the legacy Firestore five-hint persistence truncation with an explicit capacity policy;
+- add regression/static guards before relying on these boundaries for the migration.
+
+**Exit:** current producers obey the semantic/storage contracts the later phases assume.
 
 ### Phase 0 — land and adopt the determinism audit
 
