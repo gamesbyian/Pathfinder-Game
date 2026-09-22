@@ -9,7 +9,7 @@
 At this checkpoint the branch has:
 
 - **28/28** permanent validators owned exactly once;
-- **164/164** permanent Node/CLI harnesses owned exactly once;
+- **165/165** permanent Node/CLI harnesses owned exactly once;
 - **10,291/10,291** tracked blobs classified;
 - **0** unknown tracked paths.
 
