@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 jobs:
-  route:
+  impact-shadow:
     runs-on: ubuntu-latest
     outputs:
       full: ${{ steps.plan.outputs.full }}
@@ -56,7 +56,7 @@ jobs:
           --git-diff "${{ inputs.base_ref }}" "${{ inputs.head_ref }}"
 
   fast-gate:
-    needs: route
+    needs: impact-shadow
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -75,10 +75,10 @@ jobs:
         env:
           PATHFINDER_PR_INCREMENTAL: '0'
       - name: Run selected non-lint validators
-        if: needs.route.outputs.validator_groups != ''
+        if: needs.impact-shadow.outputs.validator_groups != ''
         shell: bash
         env:
-          VALIDATOR_GROUPS: ${{ needs.route.outputs.validator_groups }}
+          VALIDATOR_GROUPS: ${{ needs.impact-shadow.outputs.validator_groups }}
           PATHFINDER_PR_INCREMENTAL: '0'
         run: |
           groups="${VALIDATOR_GROUPS//,/ }"
@@ -86,27 +86,27 @@ jobs:
       - name: Run lint
         run: npm run check:lint
       - name: Run selected Node and CLI contract tests
-        if: needs.route.outputs.node_test_groups != ''
+        if: needs.impact-shadow.outputs.node_test_groups != ''
         shell: bash
         env:
-          NODE_TEST_GROUPS: ${{ needs.route.outputs.node_test_groups }}
+          NODE_TEST_GROUPS: ${{ needs.impact-shadow.outputs.node_test_groups }}
         run: |
           groups="${NODE_TEST_GROUPS//,/ }"
           node scripts/validation-groups.mjs nodeTests $groups
       - name: Solver capability canary
-        if: needs.route.outputs.needs_solver_canary == 'true'
+        if: needs.impact-shadow.outputs.needs_solver_canary == 'true'
         run: |
           node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
             --baseline=logs/solver-canary-baseline.json \
             --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
             --budget-ms=15000 --work-budget=5000000
       - name: Build production bundle
-        if: needs.route.outputs.needs_build == 'true'
+        if: needs.impact-shadow.outputs.needs_build == 'true'
         run: npm run build
 
   deep-verification:
-    needs: route
-    if: needs.route.outputs.deep_job_required == 'true'
+    needs: impact-shadow
+    if: needs.impact-shadow.outputs.deep_job_required == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -119,21 +119,21 @@ jobs:
       - name: Install dependencies from the npm cache
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Run covered ordinary test population
-        if: needs.route.outputs.needs_coverage == 'true'
+        if: needs.impact-shadow.outputs.needs_coverage == 'true'
         run: npm run test:coverage
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
       - name: Run heavyweight implementation proofs
-        if: needs.route.outputs.needs_deep_proofs == 'true'
+        if: needs.impact-shadow.outputs.needs_deep_proofs == 'true'
         run: npm run test:deep-proofs
       - uses: actions/setup-java@v5
-        if: needs.route.outputs.needs_firestore == 'true'
+        if: needs.impact-shadow.outputs.needs_firestore == 'true'
         with:
           distribution: temurin
           java-version: '21'
       - name: Exercise level-fingerprint repository identity through Firestore emulator
-        if: needs.route.outputs.needs_firestore == 'true'
+        if: needs.impact-shadow.outputs.needs_firestore == 'true'
         run: >-
           npx --yes firebase-tools@15.28.2
           emulators:exec --only firestore
@@ -142,7 +142,7 @@ jobs:
 
   ci-success:
     needs:
-      - route
+      - impact-shadow
       - fast-gate
       - deep-verification
     if: always()
@@ -151,7 +151,7 @@ jobs:
       - name: Enforce scoped CI result contract
         shell: bash
         env:
-          ROUTE_RESULT: ${{ needs.route.result }}
+          ROUTE_RESULT: ${{ needs.impact-shadow.result }}
           FAST_RESULT: ${{ needs.fast-gate.result }}
           DEEP_RESULT: ${{ needs.deep-verification.result }}
         run: |
