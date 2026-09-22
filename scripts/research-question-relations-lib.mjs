@@ -122,6 +122,13 @@ export function validateResearchQuestionRegistry(registry, { root = null } = {})
                         }
                         seenSupportRefs.add(ref);
                     }
+                    const answeredBy = new Set(Array.isArray(question.answeredBy) ? question.answeredBy : []);
+                    for (const ref of seenSupportRefs) {
+                        if (!answeredBy.has(ref)) {
+                            errors.push(`${prefix}.decisionSupport ref must also appear in answeredBy: ${ref}`);
+                            break;
+                        }
+                    }
                 }
             }
         }
