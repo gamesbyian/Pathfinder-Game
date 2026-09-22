@@ -1,7 +1,10 @@
 # CI impact routing foundation result 001
 
-> **Date:** 2026-09-21
-> **Status:** implementation checkpoint; scoped CI remains disabled.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — the impact-routing foundation, ownership model, classifier, planner, and zero-unclassified inventory were implemented and exercised while scoped CI remained disabled.
+> **Decision:** retain the conservative impact-routing foundation and continue through shadow validation before any execution-skipping activation.
+> **Remaining gate:** validate the routing model against historical/recent PRs and live shadow runs before enabling scoped CI.
+
 > **Branch/PR:** `chatgpt/ci-impact-routing-foundation-2026-09-21` / #1965.
 
 ## What is now true
