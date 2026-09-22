@@ -395,6 +395,10 @@ jobs:
             enableFlags: process.env.ENABLE_FLAGS,
             disableFlags: process.env.DISABLE_FLAGS,
             deterministic: process.env.DETERMINISTIC,
+            lifecycleTelemetry: process.env.LIFECYCLE === 'true',
+            mainLoopLateReserveFraction: process.env.LATE_RESERVE_FRACTION || null,
+            mainLoopLateReserveConfigCount: process.env.LATE_RESERVE_CONFIG_COUNT || null,
+            repairLateProbeNodeBudget: process.env.REPAIR_LATE_PROBE_NODE_BUDGET || null,
             persistHints: true,
             corpus1: summarize(c1),
             corpus2: summarize(c2),
@@ -563,6 +567,10 @@ jobs:
           ENABLE: ${{ inputs.enable_flags }}
           DISABLE: ${{ inputs.disable_flags }}
           DETERMINISTIC: ${{ inputs.deterministic }}
+          LIFECYCLE: ${{ inputs.lifecycle_telemetry }}
+          LATE_RESERVE_FRACTION: ${{ inputs.main_loop_late_reserve_fraction }}
+          LATE_RESERVE_CONFIG_COUNT: ${{ inputs.main_loop_late_reserve_config_count }}
+          REPAIR_LATE_PROBE_NODE_BUDGET: ${{ inputs.repair_late_probe_node_budget }}
 
       - name: Upload standard solver sweep result
         if: always()
