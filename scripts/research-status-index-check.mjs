@@ -47,7 +47,7 @@ writeFileSync(path.join(root, 'docs/solver-research-question-relations.json'), J
             question: 'Can the current seam solve more levels?',
             owner: 'WS2',
             state: 'active-candidate',
-            answeredBy: [],
+            answeredBy: ['reports/2026-08-21-example.md'],
             result: null,
             implies: ['WS2-FOLLOWUP'],
         },
