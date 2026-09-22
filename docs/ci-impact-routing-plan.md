@@ -150,7 +150,7 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 **Phase 1 source-impact hardening is complete enough for shadow operation.** Current branch state:
 
-- zero unclassified paths across the current tracked tree (**10,296 blobs** at the latest structural sweep);
+- zero unclassified paths across the current tracked tree (**10,297 blobs** at the latest structural sweep);
 - permanent tracked-path coverage validation;
 - explicit full-impact precedence over derived harness ownership;
 - rename/delete/copy-safe Git change parsing;
