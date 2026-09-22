@@ -17,6 +17,20 @@ function edgesTo(graph, type, id, relation = null) {
         edge.to.type === type && edge.to.id === id && (!relation || edge.relation === relation));
 }
 
+function resolveUniqueEntity(graph, selector, viewName) {
+    const raw = String(selector ?? '').trim();
+    if (!raw) throw new Error(viewName + ' requires --entity=<type:id>');
+    const exact = graph.nodes.filter(node => nodeKey(node) === raw);
+    if (exact.length === 1) return exact[0];
+    if (exact.length > 1) throw new Error('duplicate typed research entity: ' + raw);
+    const bare = graph.nodes.filter(node => node.id === raw);
+    if (bare.length === 1) return bare[0];
+    if (bare.length > 1) {
+        throw new Error('ambiguous research entity ' + raw + '; use <type:id>');
+    }
+    throw new Error('unknown research entity for ' + viewName + ': ' + raw);
+}
+
 function questionLifecycle(node) {
     return researchQuestionLifecycleClass(String(node?.row?.state ?? '').toLowerCase());
 }
@@ -71,8 +85,7 @@ export function buildAnswerabilityView(graph) {
 
 export function buildDependencyImpactView(graph, selector) {
     const nodes = nodeMap(graph);
-    const target = graph.nodes.find(node => nodeKey(node) === selector || node.id === selector);
-    if (!target) throw new Error('unknown research entity for impact view: ' + selector);
+    const target = resolveUniqueEntity(graph, selector, 'impact view');
     const impacted = new Map();
 
     const record = (questionRef, path, reason) => {
@@ -222,8 +235,8 @@ export function buildConsumptionView(graph, minimumQuestionConsumers = 2) {
 }
 
 export function buildSupportImpactView(graph, selector) {
-    const target = graph.nodes.find(node => nodeKey(node) === selector || node.id === selector);
-    if (!target || target.type !== 'repositoryRefs') {
+    const target = resolveUniqueEntity(graph, selector, 'support-impact');
+    if (target.type !== 'repositoryRefs') {
         throw new Error('support-impact requires a repositoryRefs entity');
     }
 
