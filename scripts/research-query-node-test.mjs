@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 
 import { buildResearchQueryGraph, queryResearchGraph, resolveResearchEntity } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
+import { buildResearchQuerySnapshot, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 
 const graph = buildResearchQueryGraph(process.cwd(), { discoverArtifacts: false });
 assert.equal(graph.authority.kind, 'derived-read-only');
@@ -107,6 +108,15 @@ const coverage = buildResearchQueryView(graph, { view: 'coverage' });
 assert.equal(coverage.structuredGateCoverage.unclassified, 0);
 assert.equal(coverage.unresolvedEdges.length, 0);
 
+const snapshot = buildResearchQuerySnapshot(graph);
+const earlier = structuredClone(snapshot);
+const ws2 = earlier.gates.find(row => row.workstreamId === 2);
+assert.ok(ws2);
+ws2.gateClass = 'bounded-compute';
+const temporal = diffResearchQuerySnapshots(earlier, snapshot);
+assert.ok(temporal.newlyNoSolverCompute.some(row => row.workstreamId === 2),
+  'snapshot diff should identify workstreams that became advanceable without solver compute');
+
 const searched = queryResearchGraph(graph, { query: 'portal coarse', limit: 20 });
 assert.ok(searched.nodes.some(node => node.type === 'questions'));
 
@@ -138,5 +148,12 @@ const viewCli = spawnSync(process.execPath, [
 ], { cwd: process.cwd(), encoding: 'utf8' });
 assert.equal(viewCli.status, 0, viewCli.stderr);
 assert.equal(JSON.parse(viewCli.stdout).view, 'answerability');
+
+const snapshotCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--snapshot',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(snapshotCli.status, 0, snapshotCli.stderr);
+assert.equal(JSON.parse(snapshotCli.stdout).schemaVersion, 1);
 
 console.log('research-query-node-test: ok');
