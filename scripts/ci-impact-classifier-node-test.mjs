@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 
-import { classifyChangeSet, classifyChanges, classifyPackageJsonDocuments, classifyPaths } from './ci-impact-classifier.mjs';
+import { classifyChangeSet, classifyChanges, classifyPackageJsonDocuments, classifyPaths, parseGitNameStatusZ } from './ci-impact-classifier.mjs';
 
 function expect(paths, surfaces, { full = false } = {}) {
   const result = classifyPaths(paths);
@@ -122,6 +122,16 @@ const ciScriptChange = classifyPackageJsonDocuments(packageBase, {
 });
 assert.equal(ciScriptChange.full, true);
 
+
+
+assert.deepEqual(
+  parseGitNameStatusZ('M\0docs/solver-future-work.md\0D\0modules/solver/old.ts\0R100\0scripts/old.mjs\0scripts/new.mjs\0'),
+  [
+    { status: 'M', path: 'docs/solver-future-work.md' },
+    { status: 'D', path: 'modules/solver/old.ts' },
+    { status: 'R', path: 'scripts/new.mjs', previousPath: 'scripts/old.mjs' },
+  ],
+);
 
 const deletedSolver = classifyChanges([{ status: 'D', path: 'modules/solver/search.ts' }]);
 assert.equal(deletedSolver.full, false);
