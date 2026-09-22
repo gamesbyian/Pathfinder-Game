@@ -46,7 +46,7 @@ function randomizedTechnique(technique) {
     return value === 'repair' || value.includes('random') || value.includes('enumerat') || value.includes('prefix-anchored');
 }
 
-export function inputComparability(entry) {
+// IMPORTANT: this screens attempt-level provenance only. Hint provenance does not currently\n// persist the complete run-level effective/ablation configuration. A collision returned by this\n// screen is therefore a candidate requiring source-run reconciliation, not by itself evidence of\n// solver nondeterminism.\nexport function inputComparability(entry) {
     const solver = entry?.solver ?? {};
     const search = entry?.search ?? {};
     const context = entry?.context ?? {};
@@ -104,7 +104,7 @@ export function auditHintFile(levelId, hints) {
         });
     }
 
-    const repeatRunInputDivergence = [];
+    const repeatRunRecordedInputCollision = [];
     const repeatRunStable = [];
     for (const [identity, group] of inputs) {
         if (group.foundAt.size < 2) continue;
@@ -112,7 +112,7 @@ export function auditHintFile(levelId, hints) {
             levelId, identity, paths: group.paths.size, runTimestamps: group.foundAt.size,
             observations: group.observations, example: group.example,
         };
-        if (group.paths.size > 1) repeatRunInputDivergence.push(row);
+        if (group.paths.size > 1) repeatRunRecordedInputCollision.push(row);
         else repeatRunStable.push(row);
     }
 
@@ -123,7 +123,7 @@ export function auditHintFile(levelId, hints) {
         comparableEvents,
         excludedReasons: Object.fromEntries([...reasonCounts].sort()),
         exactEventCrossPath,
-        repeatRunInputDivergence,
+        repeatRunRecordedInputCollision,
         repeatRunStable,
     };
 }
