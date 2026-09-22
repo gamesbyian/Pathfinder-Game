@@ -1,8 +1,4 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-
+import { withDetachedGitWorktree } from './git-ref-worktree-lib.mjs';
 import { buildResearchQueryGraph } from './research-query-lib.mjs';
 import { buildAnswerabilityView } from './research-query-views-lib.mjs';
 
@@ -45,44 +41,13 @@ export function buildResearchQuerySnapshot(graph) {
 }
 
 export function buildResearchQuerySnapshotFromGitRef(root, ref, { discoverArtifacts = false } = {}) {
-    const gitRef = String(ref ?? '').trim();
-    if (!gitRef) throw new Error('git ref is required');
-    const gitRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], {
-        cwd: root,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-    }).trim();
-    const tempRoot = mkdtempSync(path.join(tmpdir(), 'pathfinder-research-query-ref-'));
-    const worktree = path.join(tempRoot, 'repo');
-    let added = false;
-    try {
-        execFileSync('git', ['worktree', 'add', '--detach', '--quiet', worktree, gitRef], {
-            cwd: gitRoot,
-            stdio: ['ignore', 'pipe', 'pipe'],
-        });
-        added = true;
+    return withDetachedGitWorktree(root, ref, worktree => {
         const graph = buildResearchQueryGraph(worktree, {
             discoverArtifacts,
             allowHistoricalWorkstreamTable: true,
         });
         return buildResearchQuerySnapshot(graph);
-    } catch (error) {
-        const detail = String(error?.stderr ?? error?.message ?? error).trim();
-        throw new Error('failed to reconstruct research query snapshot for git ref '
-            + gitRef + (detail ? ': ' + detail : ''));
-    } finally {
-        if (added) {
-            try {
-                execFileSync('git', ['worktree', 'remove', '--force', worktree], {
-                    cwd: gitRoot,
-                    stdio: ['ignore', 'pipe', 'pipe'],
-                });
-            } catch {
-                // Best-effort cleanup; tempRoot removal below handles ordinary filesystem residue.
-            }
-        }
-        rmSync(tempRoot, { recursive: true, force: true });
-    }
+    });
 }
 
 export function diffResearchQuerySnapshots(before, after) {
