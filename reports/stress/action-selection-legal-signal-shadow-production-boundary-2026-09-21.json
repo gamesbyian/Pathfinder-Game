@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-action-selection-legal-signal-shadow-result",
+  "evidenceRole": "development",
+  "researchQuestion": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+  "source": {
+    "workflowRunId": 35066677597,
+    "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "corpus1Rows": 102,
+    "corpus2Rows": 1700
+  },
+  "split": "sha256(levelId) first32bits mod10: 0-6 development, 7-9 validation",
+  "population": {
+    "combined": {
+      "boundaryRows": 56906,
+      "developmentRows": 39450,
+      "validationRows": 17456,
+      "validationSolvedLevels": 391
+    },
+    "corpus1": {
+      "boundaryRows": 415,
+      "developmentRows": 268,
+      "validationRows": 147,
+      "validationSolvedLevels": 35
+    },
+    "corpus2": {
+      "boundaryRows": 56491,
+      "developmentRows": 39182,
+      "validationRows": 17309,
+      "validationSolvedLevels": 356
+    }
+  },
+  "results": {
+    "corpus2": {
+      "validationPreWinnerWork": 21174173891,
+      "families": [
+        {
+          "family": "next-stage",
+          "minDevelopmentSupport": 100,
+          "capturedPreWinnerWorkShare": 0,
+          "endangeredWinnerLevels": 0
+        },
+        {
+          "family": "prior-response+next-stage",
+          "minDevelopmentSupport": 100,
+          "capturedPreWinnerWorkShare": 0.027237226772995147,
+          "nominatedPreWinnerWork": 576725776,
+          "endangeredWinnerLevels": 0
+        },
+        {
+          "family": "prior-response+work+next-stage",
+          "minDevelopmentSupport": 10,
+          "capturedPreWinnerWorkShare": 0.10628845321595266,
+          "nominatedPreWinnerWork": 2250570191,
+          "endangeredWinnerLevels": 0
+        },
+        {
+          "family": "prior-response+work+next-stage",
+          "minDevelopmentSupport": 50,
+          "capturedPreWinnerWorkShare": 0.10561310087051462,
+          "nominatedPreWinnerWork": 2236270163,
+          "endangeredWinnerLevels": 0
+        },
+        {
+          "family": "prior-response+work+next-stage",
+          "minDevelopmentSupport": 100,
+          "capturedPreWinnerWorkShare": 0.09907759021907808,
+          "nominatedPreWinnerWork": 2097886124,
+          "endangeredWinnerLevels": 0
+        },
+        {
+          "family": "prior-response+next-config-family",
+          "minDevelopmentSupport": 100,
+          "capturedPreWinnerWorkShare": 0.20202850368666597,
+          "nominatedPreWinnerWork": 4277786668,
+          "endangeredWinnerLevels": 1
+        }
+      ],
+      "selectedForFutureConfirmation": {
+        "family": "prior-response+work+next-stage",
+        "minDevelopmentSupport": 100,
+        "reason": "most conservative prespecified support floor retains ~10% held-out capture with zero observed validation winner loss; selection occurred after inspecting this validation set, so this is not confirmation",
+        "concentration": {
+          "topSignatureShare": 0.46277708709920307,
+          "topThreeSignatureShare": 0.7197545375469019,
+          "topSignatures": [
+            {
+              "signature": [
+                "guidance-goal-distance-retry",
+                "censored",
+                "1m-10m",
+                ">=10m",
+                "guidance-goal-distance-retry"
+              ],
+              "nominatedPreWinnerWork": 1034894592
+            },
+            {
+              "signature": [
+                "connectivity-axis-prune-disabled-retry",
+                "censored",
+                "1m-10m",
+                ">=10m",
+                "connectivity-axis-prune-disabled-retry"
+              ],
+              "nominatedPreWinnerWork": 378791430
+            },
+            {
+              "signature": [
+                "must-cross-neighbor-prune-disabled-retry",
+                "censored",
+                ">=10m",
+                ">=10m",
+                "must-cross-neighbor-prune-disabled-retry"
+              ],
+              "nominatedPreWinnerWork": 195879575
+            }
+          ]
+        }
+      }
+    },
+    "corpus1": {
+      "validationPreWinnerWork": 334085458,
+      "capturedPreWinnerWorkShareAtSelectedFamilySupport100": 0,
+      "endangeredWinnerLevels": 0
+    },
+    "combined": {
+      "validationPreWinnerWork": 21508259349,
+      "capturedPreWinnerWorkShareAtSelectedFamilySupport100": 0.09753862876390965,
+      "nominatedPreWinnerWorkAtSelectedFamilySupport100": 2097886124,
+      "endangeredWinnerLevels": 0
+    }
+  },
+  "interpretation": {
+    "decision": "narrowed-positive",
+    "allowed": "A simple contextual current-boundary signature family has material C2 held-out shadow signal and is worth freezing for sample-independent confirmation.",
+    "forbidden": "No live scheduler skip/reorder, causal savings, unseen-level prevalence, or cross-corpus generalization is established.",
+    "nextGate": "Freeze prior-response+work+next-stage at minDevelopmentSupport=100 and test on sample-independent/current production evidence with signature concentration and rare-winner protection reported separately."
+  }
+}

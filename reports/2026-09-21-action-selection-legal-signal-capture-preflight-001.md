@@ -1,9 +1,9 @@
 # Action-selection legal-signal capture preflight 001
 
-> **Status:** active
+> **Status:** concluded-positive; development execution completed in `2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md`.
 > **Last evidence:** 2026-09-21 — pre-winner oracle census found 94.74% C2 and 87.58% C1 solved-row canonical work before the eventual winning attempt.
 > **Decision:** test whether cheap level-blind signals available before each action can capture a material fraction of the pre-winner oracle ceiling in shadow mode.
-> **Remaining gate:** build the smallest action-boundary dataset from current production artifacts, freeze independent development/validation splits, and compare simple legal-signal policies against current order and static action-order baselines.
+> **Remaining gate:** the development gate completed from retained evidence. Freeze the selected prior-response+work+next-stage form at min development support 100 for sample-independent confirmation before any live scheduler treatment.
 > **Evidence role:** discovery
 > **Selection:** current production-boundary C1/C2 attempts; split before fitting or threshold selection.
 > **Population identity:** GitHub Actions run `35066677597`, solver ref `16114b80e54233910f34ec2ea8e2c1a41a859eb4`.
@@ -87,6 +87,21 @@ If simple signals capture little of the oracle ceiling, close the dynamic-select
 Use this dataset to rank predecessor/winner pairs by potentially avoidable work. Only pairs with large recurring economic headroom should advance to deeper operational-overlap tracing.
 
 That tracing then asks whether two actions repurchase the same states/facts/failure structure. Do not run an all-actions operational census first.
+
+## Implementation checkpoint — retained-evidence analyzer ready
+
+The first shadow consumer is now implemented as `scripts/analyze-action-selection-legal-signals.mjs`.
+
+It requires no solver execution. It derives action-boundary rows from the retained sweep attempts, preserves the deterministic level-held-out split, and evaluates a deliberately small prespecified family of coarse legal signatures before any learned model:
+
+- next stage;
+- prior stage/outcome + next stage;
+- prior response/work bands + next stage;
+- prior response + next coarse config family.
+
+For each family/support floor it reports held-out pre-winner work nominated and held-out winner levels endangered. These remain observational upper bounds because skipping a predecessor can change downstream context and budgets.
+
+The next gate is therefore execution of this reducer on the frozen C1/C2 production-boundary artifacts and retention of the derived dataset/result, not a new solver sweep.
 
 ## No production change
 
