@@ -751,6 +751,28 @@
       "status": "in-progress",
       "retirementGate": "Preserve semantic dedupe while retaining exact source-run occurrence lineage where required: effective execution semantics participate in semantic event identity, physical run IDs do not; repeated equivalent rediscoveries merge occurrence metadata rather than duplicate full provenance objects. Determinism/replay tooling must not treat one semantic event as proof of one physical run.",
       "progress": "Opened 2026-09-22. Existing persistence intentionally collapses retried same-config/seed/forcing/result discoveries across foundAt and wall-allocation fields. Adding run IDs directly to provenanceEventIdentity would destroy that invariant, while omitting occurrence lineage prevents exact run joins and complete repeat-run accounting."
+    },
+    {
+      "id": "PSC-032",
+      "concept": "canonical hint evidence versus shipped runtime hint projection",
+      "owners": [
+        "vite.config.ts",
+        "modules/data-asset-loaders.ts",
+        "modules/data.ts",
+        "modules/domain/hint-runtime.mjs"
+      ],
+      "forms": [
+        "tracked provenance-rich canonical hint artifacts",
+        "potential generated path-only dist/runtime hint artifacts"
+      ],
+      "currentWritesMultipleForms": false,
+      "currentInputsMultipleForms": true,
+      "historicalRequirement": false,
+      "persistedExternalRequirement": false,
+      "treatment": "investigate",
+      "status": "in-progress",
+      "retirementGate": "Measure and, if beneficial, generate runtime path-only hint artifacts from canonical decoded hints during build, with source-hash/path-equivalence checks and no second tracked authority. Canonical browser/Node decoding remains shared for development/compatibility.",
+      "progress": "Opened 2026-09-22. Vite currently copies all canonical published/stress hint trees into dist even though ordinary player hint display immediately projects Hint[] to paths. Provenance growth would otherwise increase shipped product payload unnecessarily."
     }
   ],
   "lastUpdated": "2026-09-22",
