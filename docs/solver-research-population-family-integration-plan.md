@@ -141,6 +141,8 @@ F3 was the original candidate but is now closed in its tested form and must not 
 
 ### Pilot B: broad-population-first path
 
+**Current earned candidate (2026-09-22):** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` now naturally needs sample-independent/current-production confirmation of an already-frozen late-continuation model after retained evidence was exhausted. If that acquisition proceeds, use it as Pilot B prospectively; do not create a separate infrastructure demonstration. See `../reports/2026-09-22-ws1-independent-continuation-confirmation-preflight-001.md`.
+
 Choose the next live question whose first decision-bearing evidence is a broad independent population.
 
 1. Freeze the independent parent block before downstream outcome-conditioned selection.
