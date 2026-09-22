@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 
 import { buildResearchQueryGraph, queryResearchGraph, resolveResearchEntity } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
-import { buildResearchQuerySnapshot, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
+import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 
 const graph = buildResearchQueryGraph(process.cwd(), { discoverArtifacts: false });
 assert.equal(graph.authority.kind, 'derived-read-only');
@@ -132,6 +132,9 @@ assert.equal(coverage.structuredGateCoverage.unclassified, 0);
 assert.equal(coverage.unresolvedEdges.length, 0);
 
 const snapshot = buildResearchQuerySnapshot(graph);
+const headSnapshot = buildResearchQuerySnapshotFromGitRef(process.cwd(), 'HEAD');
+assert.deepEqual(headSnapshot.gates, snapshot.gates,
+  'Git-ref reconstruction of HEAD should preserve current workstream gate state');
 const earlier = structuredClone(snapshot);
 const ws2 = earlier.gates.find(row => row.workstreamId === 2);
 assert.ok(ws2);
@@ -178,5 +181,14 @@ const snapshotCli = spawnSync(process.execPath, [
 ], { cwd: process.cwd(), encoding: 'utf8' });
 assert.equal(snapshotCli.status, 0, snapshotCli.stderr);
 assert.equal(JSON.parse(snapshotCli.stdout).schemaVersion, 1);
+
+const compareRefCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--compare-ref=HEAD',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(compareRefCli.status, 0, compareRefCli.stderr);
+const headDiff = JSON.parse(compareRefCli.stdout);
+assert.equal(headDiff.addedNodes.length, 0);
+assert.equal(headDiff.removedNodes.length, 0);
 
 console.log('research-query-node-test: ok');
