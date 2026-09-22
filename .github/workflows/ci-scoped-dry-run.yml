@@ -88,6 +88,7 @@ jobs:
           groups="${VALIDATOR_GROUPS//,/ }"
           node scripts/validation-groups.mjs validators $groups
       - name: Run lint
+        id: lint
         run: npm run check:lint
       - name: Run selected Node and CLI contract tests
         if: needs.impact-shadow.outputs.node_test_groups != ''
@@ -98,6 +99,7 @@ jobs:
           groups="${NODE_TEST_GROUPS//,/ }"
           node scripts/validation-groups.mjs nodeTests $groups
       - name: Solver capability canary
+        id: solver_canary
         if: needs.impact-shadow.outputs.needs_solver_canary == 'true'
         run: |
           node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
@@ -105,6 +107,7 @@ jobs:
             --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
             --budget-ms=15000 --work-budget=5000000
       - name: Build production bundle
+        id: build
         if: needs.impact-shadow.outputs.needs_build == 'true'
         run: npm run build
 
@@ -123,12 +126,14 @@ jobs:
       - name: Install dependencies from the npm cache
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Run covered ordinary test population
+        id: coverage
         if: needs.impact-shadow.outputs.needs_coverage == 'true'
         run: npm run test:coverage
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
       - name: Run heavyweight implementation proofs
+        id: deep_proofs
         if: needs.impact-shadow.outputs.needs_deep_proofs == 'true'
         run: npm run test:deep-proofs
       - uses: actions/setup-java@v5
@@ -137,6 +142,7 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Exercise level-fingerprint repository identity through Firestore emulator
+        id: firestore
         if: needs.impact-shadow.outputs.needs_firestore == 'true'
         run: >-
           npx --yes firebase-tools@15.28.2
