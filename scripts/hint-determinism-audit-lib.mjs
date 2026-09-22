@@ -46,7 +46,11 @@ function randomizedTechnique(technique) {
     return value === 'repair' || value.includes('random') || value.includes('enumerat') || value.includes('prefix-anchored');
 }
 
-// IMPORTANT: this screens attempt-level provenance only. Hint provenance does not currently\n// persist the complete run-level effective/ablation configuration. A collision returned by this\n// screen is therefore a candidate requiring source-run reconciliation, not by itself evidence of\n// solver nondeterminism.\nexport function inputComparability(entry) {
+// IMPORTANT: this screens attempt-level provenance only. Hint provenance does not currently
+// persist the complete run-level effective/ablation configuration. A collision returned by this
+// screen is therefore a candidate requiring source-run reconciliation, not by itself evidence of
+// solver nondeterminism.
+export function inputComparability(entry) {
     const solver = entry?.solver ?? {};
     const search = entry?.search ?? {};
     const context = entry?.context ?? {};
