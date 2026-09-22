@@ -755,6 +755,8 @@ export interface ElitePrefixDfsTraceEvent {
     fraction: number;
     destroyIdx: number;
     remainingLength: number;
+    countedRemainingLength: number;
+    portalJumps: number;
     legacyOrdinal: number;
     nodeBudget: number;
     nodesUsed: number;
@@ -799,6 +801,11 @@ export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLev
         const prefix = elitePath.slice(0, candidate.destroyIdx + 1);
         replayToPrefix(ws, liveUndo, prefix, level, prep);
         const floor = liveUndo.length;
+        // Observation only: the frozen treatment sorts on candidate.remainingLength
+        // (requiredLength - destroyIdx). Capture Pathfinder's actual counted-length residual
+        // separately so portal jumps can be diagnosed without refitting the ordering key.
+        const countedRemainingLength = Math.max(0, level.requiredLength - getRealLengthFromState(ws));
+        const portalJumps = ws.portalJumps;
         const remaining = Math.min(ELITE_PREFIX_DFS_NODE_BUDGET_PER_ATTEMPT, totalNodeBudget - totalNodes);
         if (remaining <= 0) break;
         const result = boundedDfsFromHere(ws, level, prep, profile, orderingBias, cfg, liveUndo, floor, remaining);
@@ -810,6 +817,8 @@ export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLev
             fraction: candidate.fraction,
             destroyIdx: candidate.destroyIdx,
             remainingLength: candidate.remainingLength,
+            countedRemainingLength,
+            portalJumps,
             legacyOrdinal: candidate.legacyOrdinal,
             nodeBudget: remaining,
             nodesUsed: result.nodes,
