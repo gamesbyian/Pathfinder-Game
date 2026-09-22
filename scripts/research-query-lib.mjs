@@ -195,7 +195,10 @@ function repositoryRefNodes(edges) {
 }
 
 export function buildResearchQueryGraph(root = process.cwd(), options = {}) {
-  const model = buildResearchRelations(root, { discoverArtifacts: options.discoverArtifacts ?? true });
+  const model = buildResearchRelations(root, {
+    discoverArtifacts: options.discoverArtifacts ?? true,
+    allowHistoricalWorkstreamTable: options.allowHistoricalWorkstreamTable ?? false,
+  });
   const edges = authoredEdges(model);
   const nodes = [...rowNodes(model), ...repositoryRefNodes(edges)];
   const nodeMap = new Map(nodes.map(node => [key(node), node]));
