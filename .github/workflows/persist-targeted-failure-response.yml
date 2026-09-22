@@ -25,6 +25,7 @@ jobs:
           path: artifact-staging/solver-sweep-result
 
       - name: Persist the compact failure-response document
+        id: persist_response
         shell: bash
         run: |
           set -euo pipefail
@@ -45,8 +46,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          echo "FAILURE_RESPONSE_DEST=$DEST_DIR" >> "$GITHUB_ENV"
           if [ -z "$(git status --porcelain -- "$DEST_DIR")" ]; then
             echo "No new failure-response evidence to persist."
+            echo 'FAILURE_RESPONSE_RESULT=no-change' >> "$GITHUB_ENV"
             exit 0
           fi
 
@@ -55,6 +58,8 @@ jobs:
 
           for attempt in 1 2 3 4; do
             if git push origin HEAD:main; then
+              echo 'FAILURE_RESPONSE_RESULT=persisted' >> "$GITHUB_ENV"
+              echo "FAILURE_RESPONSE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
               exit 0
             fi
             git fetch origin main
@@ -62,5 +67,38 @@ jobs:
             sleep $((attempt * 5))
           done
 
+          echo 'FAILURE_RESPONSE_RESULT=persist-failed' >> "$GITHUB_ENV"
           echo "Failed to persist failure-response evidence after four retries." >&2
           exit 1
+
+      - name: Summarize compact failure-response persistence
+        if: always()
+        shell: bash
+        env:
+          PERSIST: ${{ steps.persist_response.outcome }}
+        run: |
+          {
+            echo '## Targeted-sweep failure-response persistence'
+            echo
+            echo "Persistence step: `$PERSIST`"
+            echo "Source run: `$GITHUB_RUN_ID` (attempt `$GITHUB_RUN_ATTEMPT`)"
+            [[ -n "${FAILURE_RESPONSE_DEST:-}" ]] && echo "Destination: `$FAILURE_RESPONSE_DEST`"
+            echo
+            case "${FAILURE_RESPONSE_RESULT:-unknown}" in
+              persisted)
+                echo 'Result: compact failure-response evidence was persisted to main.'
+                [[ -n "${FAILURE_RESPONSE_COMMIT:-}" ]] && echo "Persistence commit: `$FAILURE_RESPONSE_COMMIT`"
+                ;;
+              no-change)
+                echo 'Result: the requested compact failure-response evidence was already present; no commit was needed.'
+                ;;
+              persist-failed)
+                echo 'Result: the evidence was prepared, but all push/rebase retries failed.'
+                echo '::error::Compact failure-response persistence failed after four retries.'
+                ;;
+              *)
+                echo 'Result: persistence did not reach a classified outcome. Inspect the persistence step, especially artifact presence.'
+                [[ "$PERSIST" == failure ]] && echo '::error::Compact failure-response persistence failed before completion.'
+                ;;
+            esac
+          } >> "$GITHUB_STEP_SUMMARY"
