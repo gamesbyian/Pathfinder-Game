@@ -88,6 +88,21 @@ Use this dataset to rank predecessor/winner pairs by potentially avoidable work.
 
 That tracing then asks whether two actions repurchase the same states/facts/failure structure. Do not run an all-actions operational census first.
 
+## Implementation checkpoint — retained-evidence analyzer ready
+
+The first shadow consumer is now implemented as `scripts/analyze-action-selection-legal-signals.mjs`.
+
+It requires no solver execution. It derives action-boundary rows from the retained sweep attempts, preserves the deterministic level-held-out split, and evaluates a deliberately small prespecified family of coarse legal signatures before any learned model:
+
+- next stage;
+- prior stage/outcome + next stage;
+- prior response/work bands + next stage;
+- prior response + next coarse config family.
+
+For each family/support floor it reports held-out pre-winner work nominated and held-out winner levels endangered. These remain observational upper bounds because skipping a predecessor can change downstream context and budgets.
+
+The next gate is therefore execution of this reducer on the frozen C1/C2 production-boundary artifacts and retention of the derived dataset/result, not a new solver sweep.
+
 ## No production change
 
 This preflight earns dataset construction and shadow analysis only. It does not authorize action skipping, reordering, dynamic budgeting or a learned selector.
