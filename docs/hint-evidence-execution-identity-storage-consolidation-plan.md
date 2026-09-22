@@ -1566,9 +1566,9 @@ This is a delivery optimization, never a second evidence authority.
 
 ### Maintained reader/writer census
 
-The exhaustive source census exposed **56 source/workflow files** still mentioning the removed `readLevelsWithHints`/`writeLevelsWithHints` facade names. At least **19 are directly referenced by package.json**. This is materially broader than the original seven-file spot census.
+The exhaustive source census exposed **56 source/workflow files** still mentioning the removed `readLevelsWithHints`/`writeLevelsWithHints` facade names. Package/workflow-seeded relative-import analysis classifies **24 as maintained-entrypoint reachable** and **32 as dormant/unreachable** today. Nineteen of the live files are referenced directly from `package.json`, four directly from workflows, and one is a reachable library. This is materially broader than the original seven-file spot census.
 
-That number includes dormant/historical research tools, so the correct retirement criterion is **maintained-entrypoint reachability**, not raw grep count. The audit tool now seeds package/workflow entrypoints and follows relative imports to classify the live set. Phase -1 should turn that classification into a permanent guard and migrate every maintained reachable stale seam before PSC-001 closes.
+The live 24-file set is the Phase -1 migration target. Dormant writers remain historical/maintenance debt and must not become reachable again without migration. Phase -1 should turn the reachability classification into a permanent guard and migrate every maintained reachable stale seam before PSC-001 closes.
 
 ### Phase -1 readiness decision
 
