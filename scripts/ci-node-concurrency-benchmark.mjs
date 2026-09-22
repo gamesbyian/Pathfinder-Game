@@ -72,6 +72,27 @@ const summary = variants.map(variant => {
   };
 });
 
+const baseline = summary.find(row => row.jobs === 'unbounded' && row.medianSeconds != null) ?? null;
+for (const row of summary) {
+  row.speedupVsUnbounded = baseline && row.medianSeconds
+    ? Number((baseline.medianSeconds / row.medianSeconds).toFixed(3))
+    : null;
+}
+
+const complete = summary.filter(row => row.passed === row.runs && row.medianSeconds != null);
+const fastest = complete.length
+  ? [...complete].sort((a, b) => a.medianSeconds - b.medianSeconds)[0]
+  : null;
+const conclusion = !fastest
+  ? 'No worker-pool variant completed every requested run; do not change the default.'
+  : fastest.jobs === 'unbounded'
+    ? 'The historical unbounded fan-out has the lowest observed median in this run.'
+    : baseline
+      ? `jobs=${fastest.jobs} has the lowest observed median (${fastest.medianSeconds}s), `
+        + `${fastest.speedupVsUnbounded}x versus unbounded (${baseline.medianSeconds}s).`
+      : `jobs=${fastest.jobs} has the lowest observed median (${fastest.medianSeconds}s); `
+        + 'no unbounded baseline was included.';
+
 console.log('\n=== Node harness concurrency benchmark ===');
 console.log(JSON.stringify({ schemaVersion: 1, variants: summary, runs: rows }, null, 2));
 
@@ -83,11 +104,17 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     '|---:|---:|---:|---:|---:|',
     ...summary.map(row => `| ${row.jobs} | ${row.passed}/${row.runs} | ${row.medianSeconds ?? 'n/a'} | ${row.minSeconds ?? 'n/a'} | ${row.maxSeconds ?? 'n/a'} |`),
     '',
-    'All variants execute the same `npm run test:node` population sequentially on this runner. Variant order rotates deterministically across repeats to reduce warm-cache/order bias. ',
+    `**Observed conclusion:** ${conclusion}`,
+    '',
+    'All variants execute the same `npm run test:node` population sequentially on this runner. Variant order rotates deterministically across repeats to reduce warm-cache/order bias.',
     'Use repeated runs before changing the default; runner state/order effects still make this a benchmark, not a correctness proof.',
     '',
   ];
   fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n'));
+}
+
+if (rows.some(row => row.code !== 0)) {
+  console.error('::error::One or more Node concurrency benchmark variants failed; inspect the failed variant before comparing timings.');
 }
 
 process.exit(rows.every(row => row.code === 0) ? 0 : 1);
