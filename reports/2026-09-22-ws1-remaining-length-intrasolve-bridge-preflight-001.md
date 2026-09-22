@@ -238,11 +238,11 @@ Prefer a direct research harness over a new general-purpose production flag. If 
 
 ## Next step
 
-Implement:
+Recovery implementation is now complete for:
 
-1. a pure deterministic candidate-plan builder for legacy vs ascending-remaining-length order;
-2. a trailing research-only `enableElitePrefixLengthOrder=false` parameter so all existing callers remain unchanged;
-3. a focused 20-level A/B harness with attribution telemetry;
+1. the pure deterministic legacy-vs-treatment candidate-plan builder;
+2. the trailing research-only `enableElitePrefixLengthOrder=false` parameter, with all existing callers unchanged;
+3. candidate-level attribution trace including frozen index-depth residual plus observational exact counted residual / portal-jump count;
 4. tests that both orderings contain the exact same candidate multiset and that false/default preserves legacy order.
 
-Then dispatch only the frozen Stage A population.
+The remaining implementation item is the focused 20-level A/B harness that emits the frozen decision evidence without changing the treatment. After that harness is validated, dispatch only the frozen Stage A population.
