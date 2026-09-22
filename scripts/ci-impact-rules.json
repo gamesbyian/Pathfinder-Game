@@ -17,7 +17,7 @@
   "rules": [
     {
       "id": "ci-routing-infrastructure",
-      "pattern": "^(?:\\.github/|scripts/(?:validation-groups|check-ci-gate-parity|check-package-scripts|run-scripts-parallel)\\.)",
+      "pattern": "^(?:\\.github/|scripts/(?:ci-impact|validation-groups|check-ci-gate-parity|check-package-scripts|run-scripts-parallel)\\.)",
       "surfaces": [
         "all"
       ],
