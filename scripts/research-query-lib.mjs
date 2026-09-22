@@ -142,8 +142,21 @@ function authoredEdges(model) {
     }
   }
 
+  const premiseIds = new Set((model.relations.premises ?? []).map(row => String(row.premiseId)));
+  const premiseRefType = value => {
+    const id = String(value);
+    if (premiseIds.has(id) || /^P\d+$/u.test(id)) return 'premises';
+    return 'premiseConcepts';
+  };
   for (const row of model.relations.premiseEdges ?? []) {
-    add('premises', row.from, row.type ?? 'premiseRelation', 'premises', row.to, sourceFor(row, 'premiseEdges'));
+    add(
+      premiseRefType(row.from),
+      row.from,
+      row.type ?? 'premiseRelation',
+      premiseRefType(row.to),
+      row.to,
+      sourceFor(row, 'premiseEdges'),
+    );
   }
   for (const row of model.relations.premiseAdmissions ?? []) {
     add('premiseAdmissions', row.premiseId, 'premise', 'premises', row.premiseId, sourceFor(row, 'premiseAdmissions'));
@@ -200,7 +213,18 @@ export function buildResearchQueryGraph(root = process.cwd(), options = {}) {
     allowHistoricalWorkstreamTable: options.allowHistoricalWorkstreamTable ?? false,
   });
   const edges = authoredEdges(model);
-  const nodes = [...rowNodes(model), ...repositoryRefNodes(edges)];
+  const premiseConceptIds = new Set();
+  for (const e of edges) {
+    if (e.from.type === 'premiseConcepts') premiseConceptIds.add(e.from.id);
+    if (e.to.type === 'premiseConcepts') premiseConceptIds.add(e.to.id);
+  }
+  const premiseConceptNodes = [...premiseConceptIds].sort().map(id => ({
+    type: 'premiseConcepts',
+    id,
+    row: { label: id },
+    source: { relation: 'authored-premise-concept', source: null },
+  }));
+  const nodes = [...rowNodes(model), ...premiseConceptNodes, ...repositoryRefNodes(edges)];
   const nodeMap = new Map(nodes.map(node => [key(node), node]));
   const unresolvedEdges = edges.filter(e => !nodeMap.has(key(e.from)) || !nodeMap.has(key(e.to)));
   const degree = new Map(nodes.map(node => [key(node), 0]));

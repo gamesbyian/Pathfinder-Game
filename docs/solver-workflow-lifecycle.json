@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "workflows": [
     {
+      "workflow": "ci-node-concurrency-benchmark.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual CI Node-harness fan-out measurement",
+      "retirementTrigger": "retire when bounded-concurrency measurement is no longer needed or equivalent timing evidence moves elsewhere"
+    },
+    {
+      "workflow": "ci-scoped-dry-run.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual scoped-CI activation rehearsal",
+      "retirementTrigger": "retire when scoped CI is authoritative and equivalent route/lane/final-status coverage is permanently exercised elsewhere"
+    },
+    {
       "workflow": "ci.yml",
       "role": "operational",
       "status": "maintained",

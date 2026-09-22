@@ -72,44 +72,88 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --fund=false
-      - name: Run fast repository and contract validation
-        id: fast
-        run: npm run ci:fast
+
+      # Keep independent validation phases running after one phase fails. This is intentionally
+      # different from the local ci:fast convenience chain: main-push is a repository-health
+      # diagnostic surface, so one push should expose the whole current debt set instead of
+      # revealing the next layer only after each fix lands.
+      - name: Check package-script reachability
+        id: dead_scripts
+        continue-on-error: true
+        run: npm run check:dead-scripts
+      - name: Check textual source invariants
+        id: text_source
+        continue-on-error: true
+        run: npm run check:text-source-files
+      - name: Run repository/domain validators
+        id: validators
+        continue-on-error: true
+        run: npm run check:validators
+      - name: Run lint
+        id: lint
+        continue-on-error: true
+        run: npm run check:lint
+      - name: Run fast unit tests
+        id: unit_fast
+        continue-on-error: true
+        run: npm run test:unit:fast
+      - name: Run Node and CLI contract tests
+        id: node_tests
+        continue-on-error: true
+        run: npm run test:node
       - name: Build production bundle
         id: build
+        continue-on-error: true
         run: npm run build
       - name: Solver capability canary
         id: solver_canary
+        continue-on-error: true
         run: |
           node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
             --baseline=logs/solver-canary-baseline.json \
             --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
             --budget-ms=15000 --work-budget=5000000
 
-      - name: Summarize main-push validation
+      - name: Summarize and enforce main-push validation
         if: always()
         shell: bash
         env:
-          FAST: ${{ steps.fast.outcome }}
+          DEAD_SCRIPTS: ${{ steps.dead_scripts.outcome }}
+          TEXT_SOURCE: ${{ steps.text_source.outcome }}
+          VALIDATORS: ${{ steps.validators.outcome }}
+          LINT: ${{ steps.lint.outcome }}
+          UNIT_FAST: ${{ steps.unit_fast.outcome }}
+          NODE_TESTS: ${{ steps.node_tests.outcome }}
           BUILD: ${{ steps.build.outcome }}
           SOLVER_CANARY: ${{ steps.solver_canary.outcome }}
         run: |
+          failed=0
           {
             echo '## Main push validation'
             echo
-            echo "| Check | Outcome |"
-            echo "| --- | --- |"
-            printf '| Fast repository + contract validation | `%s` |\n' "$FAST"
+            echo '| Validation phase | Outcome |'
+            echo '| --- | --- |'
+            printf '| Package/script reachability | `%s` |\n' "$DEAD_SCRIPTS"
+            printf '| Textual source invariants | `%s` |\n' "$TEXT_SOURCE"
+            printf '| Repository/domain validators | `%s` |\n' "$VALIDATORS"
+            printf '| Lint | `%s` |\n' "$LINT"
+            printf '| Fast unit tests | `%s` |\n' "$UNIT_FAST"
+            printf '| Node + CLI contracts | `%s` |\n' "$NODE_TESTS"
             printf '| Production build | `%s` |\n' "$BUILD"
             printf '| Solver capability canary | `%s` |\n' "$SOLVER_CANARY"
             echo
-            if [[ "$FAST" == success && "$BUILD" == success && "$SOLVER_CANARY" == success ]]; then
-              echo 'All post-merge safety-net checks passed.'
-            else
-              echo 'One or more post-merge safety-net checks did not pass. The table above identifies the first useful step(s) to inspect.'
-              [[ "$FAST" == failure ]] && echo '::error::Main-push fast repository/contract validation failed.'
-              [[ "$BUILD" == failure ]] && echo '::error::Main-push production build failed.'
-              [[ "$SOLVER_CANARY" == failure ]] && echo '::error::Main-push solver capability canary failed.'
-            fi
-          :
           } >> "$GITHUB_STEP_SUMMARY"
+          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT UNIT_FAST NODE_TESTS BUILD SOLVER_CANARY; do
+            status="${!name}"
+            printf '%-14s %s\n' "$name" "$status"
+            if [[ "$status" != "success" ]]; then
+              failed=1
+              echo "::error::Main-push validation phase $name finished with $status."
+            fi
+          done
+          if [[ "$failed" == 0 ]]; then
+            echo 'All post-merge safety-net phases passed.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'One or more post-merge phases failed. All independent phases were still executed; fix the complete failure set rather than rerunning to discover the next layer.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$failed"

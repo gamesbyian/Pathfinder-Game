@@ -11,6 +11,9 @@ assert.equal(graph.authority.kind, 'derived-read-only');
 assert.ok(graph.nodes.length > 0);
 assert.ok(graph.edges.length > 0);
 assert.equal(graph.diagnostics.unresolvedEdgeCount, 0, JSON.stringify(graph.diagnostics.unresolvedEdges.slice(0, 8)));
+assert.ok(graph.nodes.some(node =>
+  node.type === 'premiseConcepts' && node.id === 'production promotion claims'),
+  'authored free-text premise relation targets must be represented as concepts rather than dangling premise IDs');
 assert.deepEqual(graph.diagnostics.shapeDebt.openExperimentsOnTerminalQuestions, [],
   'stable experiment/question ownership must not leave an open promotion gate on a terminal question');
 assert.ok(graph.diagnostics.shapeDebt.acquisitionNeedLexicalFallbackQuestions.includes('WS2-CUT-BALANCE-PROJECTION'),
