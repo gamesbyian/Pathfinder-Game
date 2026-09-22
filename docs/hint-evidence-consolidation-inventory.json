@@ -1,0 +1,1119 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-22",
+  "purpose": "Pre-implementation executable inventory for hint evidence consolidation. This file is descriptive planning input, not a runtime authority.",
+  "writerCensus": [
+    {
+      "path": "scripts/hint-candidate-search.mjs",
+      "status": "current-regression",
+      "mode": "writer",
+      "issue": "imports removed readLevelsWithHints/writeLevelsWithHints facade and mutates bare .hints directly",
+      "target": "migrate to readLevelCorpusDocumentWithHints + setLevelHintRecords + writeLevelCorpusDocumentWithHints",
+      "reachability": "package command hints:discover-candidates"
+    },
+    {
+      "path": "scripts/dedupe-hint-provenance.mjs",
+      "status": "current-regression",
+      "mode": "writer",
+      "issue": "imports removed facade; mutates hintRecords but persists through removed writer",
+      "target": "migrate to explicit corpus-document API; preserve changed-level write intent",
+      "reachability": "maintained source utility; no package.json command found"
+    },
+    {
+      "path": "scripts/family-parent-hint-replay-batch.mjs",
+      "status": "current-regression",
+      "mode": "writer",
+      "issue": "imports removed facade and manually mirrors parent.hintRecords to parent.hints",
+      "target": "use setLevelHintRecords and explicit corpus-document writer",
+      "reachability": "maintained batch source utility; no package.json command found"
+    },
+    {
+      "path": "scripts/stress/cpsat-hint-harvest.mjs",
+      "status": "current-regression",
+      "mode": "writer",
+      "issue": "imports removed facade and manually mirrors hintRecords to hints",
+      "target": "use canonical HintStore boundary; if run in GHA, emit exact external-solver discovery observations before retiring direct transport",
+      "reachability": "maintained CP-SAT workflow producer; no direct package.json alias required"
+    },
+    {
+      "path": "scripts/family-parent-hint-replay.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical setLevelHintRecords + explicit changedHintLevels path"
+    },
+    {
+      "path": "scripts/hint-complete-enumeration-sharded.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical boundary; later add execution capsule where solver provenance applies"
+    },
+    {
+      "path": "scripts/hint-corpus-expand.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical boundary"
+    },
+    {
+      "path": "scripts/hint-diversification.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical boundary"
+    },
+    {
+      "path": "scripts/hint-workbench.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical boundary"
+    },
+    {
+      "path": "scripts/merge-hint-artifacts.mjs",
+      "status": "current-transition",
+      "mode": "central-import-writer",
+      "issue": "primary modern GHA path today; source-run metadata is not embedded into already-formed incoming provenance",
+      "target": "become central semantic importer/compatibility reader; modern producers project through common execution capsule"
+    },
+    {
+      "path": "scripts/migrate-hint-schema-v2.mjs",
+      "status": "historical-migration",
+      "mode": "writer",
+      "issue": "writes canonical current stringify output from historical inputs",
+      "target": "leave historical semantics frozen; add separate v4 migrator"
+    },
+    {
+      "path": "scripts/hint-expansion-audit.mjs",
+      "status": "current-regression",
+      "mode": "reader",
+      "issue": "imports removed readLevelsWithHints facade",
+      "target": "migrate to explicit corpus-document reader",
+      "reachability": "package command hints:expansion-audit"
+    },
+    {
+      "path": "scripts/hint-workbench-parallel.mjs",
+      "status": "current-regression",
+      "mode": "reader/orchestrator",
+      "issue": "imports removed readLevelsWithHints and comments rely on removed writer semantics",
+      "target": "migrate reader and concurrency commentary to changedHintLevels contract",
+      "reachability": "package command hints:workbench-parallel"
+    },
+    {
+      "path": "scripts/validate-hint-paths.mjs",
+      "status": "current-regression",
+      "mode": "reader",
+      "issue": "imports removed readLevelsWithHints facade",
+      "target": "migrate to explicit corpus-document reader",
+      "reachability": "package test command test:hint-path-validation"
+    },
+    {
+      "path": "scripts/harvest-isolated-report-hints.mjs",
+      "status": "current",
+      "mode": "central-import-writer",
+      "issue": null,
+      "target": "retain explicit corpus-document API and historical-provenance ingress; add execution capsule/occurrence lineage without rewriting historical unknowns",
+      "reachability": "Harvest solver hint evidence; node smoke test now exercises the bundle/API boundary"
+    }
+  ],
+  "workflowIngestion": [
+    {
+      "workflow": "solver-stress-refresh.yml",
+      "currentHintMode": "direct hint files + report artifacts",
+      "centralHarvester": true,
+      "target": "report/discovery projection -> central persistence",
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/level-blind-capability-sweep.mjs",
+      "executionClass": "level-blind production/capability sweep; canonical hints currently mutated in shard worktrees",
+      "exactSuccessfulPathAvailability": "yes: transported changed canonical hint files; combined reports retain winning action/config metadata but direct file transport is the persistence dependency",
+      "winningAttemptConfigAvailability": "yes/partial by report family; must be projected through the shared execution capsule rather than re-derived by harvester",
+      "levelRevisionAvailability": "source SHA + corpus/report identity available; durable per-event level revision still required",
+      "effectiveExecutionConfigAvailability": "run/report configuration available, not durably self-contained in each hint event",
+      "sourceRunLineageAvailability": "GitHub source run + artifact provenance; partial-failure shard artifacts retained",
+      "artifactSufficientForFutureSemanticHint": "yes after execution capsule is added",
+      "migrationTarget": "central ingestion",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "shards mutate canonical hint files with --save-hints and also emit sweep reports",
+      "exactSuccessfulPath": "yes: canonical shard hint artifacts and solved report rows",
+      "winningAttemptConfig": "yes in sweep rows",
+      "levelRevision": "partially/current corpus identity available; future Hint needs explicit level revision at discovery",
+      "effectiveExecutionConfig": "experiment contract + report configuration exist but not yet projected into every Hint event",
+      "sourceRunLineage": "GHA source-run manifest/harvester run id",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "solver-production-replay-baseline.yml",
+      "currentHintMode": "direct hint files + report artifacts",
+      "centralHarvester": true,
+      "target": "report/discovery projection -> central persistence",
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/portfolio-solve-sweep.mjs",
+      "executionClass": "history-aware production replay",
+      "exactSuccessfulPathAvailability": "yes through changed canonical hint files and solved report rows",
+      "winningAttemptConfigAvailability": "yes in sweep report family",
+      "levelRevisionAvailability": "source SHA/corpus identity available; per-event durable revision needs capsule",
+      "effectiveExecutionConfigAvailability": "run-level work/deadline/ablation inputs + report configuration; not self-contained in current hint provenance",
+      "sourceRunLineageAvailability": "source run and recovery combine-from-run lineage exist",
+      "artifactSufficientForFutureSemanticHint": "yes after execution capsule projection",
+      "migrationTarget": "central ingestion",
+      "levelBlind": false,
+      "historyAware": true,
+      "currentHintPersistence": "shards mutate canonical hint files with --save-hints and emit reports",
+      "exactSuccessfulPath": "yes",
+      "winningAttemptConfig": "yes",
+      "levelRevision": "corpus/report identity available; event projection needs explicit binding",
+      "effectiveExecutionConfig": "experiment contract/report config available",
+      "sourceRunLineage": "source run + recovery/recombine lineage",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "solver-highbudget-unsolved-sweep.yml",
+      "currentHintMode": "direct hint files + report artifacts",
+      "centralHarvester": true,
+      "target": "report/discovery projection -> central persistence",
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/portfolio-solve-sweep.mjs",
+      "executionClass": "targeted/high-budget solver discovery",
+      "exactSuccessfulPathAvailability": "yes in solved sweep rows and/or changed hint artifacts",
+      "winningAttemptConfigAvailability": "yes in report family",
+      "levelRevisionAvailability": "source/corpus identity available",
+      "effectiveExecutionConfigAvailability": "report/run config available but not canonicalized into durable event capsule",
+      "sourceRunLineageAvailability": "source run artifact lineage available",
+      "artifactSufficientForFutureSemanticHint": "yes after execution capsule projection",
+      "migrationTarget": "central ingestion",
+      "levelBlind": false,
+      "historyAware": true,
+      "currentHintPersistence": "direct canonical hint artifacts plus reports",
+      "exactSuccessfulPath": "yes",
+      "winningAttemptConfig": "yes",
+      "levelRevision": "corpus identity available",
+      "effectiveExecutionConfig": "contract/report config available",
+      "sourceRunLineage": "source run",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "solver-level-blind-targeted-sweep.yml",
+      "currentHintMode": "artifact-only level-blind reports",
+      "centralHarvester": true,
+      "target": "retain central report harvest; add canonical execution capsule",
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/level-blind-capability-sweep.mjs",
+      "executionClass": "level-blind artifact-only discovery",
+      "exactSuccessfulPathAvailability": "yes: row.solution",
+      "winningAttemptConfigAvailability": "yes: winning attempt/action/config fields retained by report family",
+      "levelRevisionAvailability": "corpusSha256/source commit available and harvester checks current corpus compatibility",
+      "effectiveExecutionConfigAvailability": "summary budget/work/ablation fields available; needs canonical execution capsule",
+      "sourceRunLineageAvailability": "source run/workflow/artifact supplied to central harvester",
+      "artifactSufficientForFutureSemanticHint": "yes after execution capsule projection",
+      "migrationTarget": "central ingestion",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "artifact-only solved reports; central harvester reconstructs hints",
+      "exactSuccessfulPath": "yes in solved rows",
+      "winningAttemptConfig": "yes",
+      "levelRevision": "population/corpus identity available",
+      "effectiveExecutionConfig": "experiment contract + report config",
+      "sourceRunLineage": "source run + manifest",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "solver-routing-regime-sample-ab.yml",
+      "currentHintMode": "artifact-only level-blind reports",
+      "centralHarvester": true,
+      "target": "retain central report harvest; add canonical execution capsule",
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/level-blind-capability-sweep.mjs",
+      "executionClass": "paired level-blind A/B",
+      "exactSuccessfulPathAvailability": "yes: row.solution",
+      "winningAttemptConfigAvailability": "yes",
+      "levelRevisionAvailability": "corpus/source identity available",
+      "effectiveExecutionConfigAvailability": "arm configuration is present at run/report scope, which is exactly the determinism-audit gap when not copied into durable hint semantics",
+      "sourceRunLineageAvailability": "run + arm artifacts available",
+      "artifactSufficientForFutureSemanticHint": "yes after execution capsule projection and arm identity preservation",
+      "migrationTarget": "central ingestion",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "artifact-only A/B reports; central harvester reconstructs eligible hints",
+      "exactSuccessfulPath": "yes",
+      "winningAttemptConfig": "yes",
+      "levelRevision": "population/corpus identity available",
+      "effectiveExecutionConfig": "arm-specific experiment contract/configuration",
+      "sourceRunLineage": "source run + arm",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "method-probe-sweep.yml",
+      "currentHintMode": "artifact-only isolated reports",
+      "centralHarvester": true,
+      "target": "retain isolated semantic projection; add common execution capsule",
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/method-probe.mjs",
+      "executionClass": "isolated/direct attempt",
+      "exactSuccessfulPathAvailability": "yes: solved rows include solution",
+      "winningAttemptConfigAvailability": "yes: isolated method identity/config represented in report",
+      "levelRevisionAvailability": "source/corpus identity available to harvester",
+      "effectiveExecutionConfigAvailability": "specialist report semantics available; needs common execution capsule projection",
+      "sourceRunLineageAvailability": "source run/workflow/artifact available",
+      "artifactSufficientForFutureSemanticHint": "yes through isolated semantic adapter",
+      "migrationTarget": "central ingestion",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "isolated specialist reports; central isolated harvester",
+      "exactSuccessfulPath": "yes",
+      "winningAttemptConfig": "isolated technique identity is explicit",
+      "levelRevision": "corpus/level identity available",
+      "effectiveExecutionConfig": "specialist method request is retained; common execution capsule still needed",
+      "sourceRunLineage": "source run",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "technique-census.yml",
+      "currentHintMode": "isolated/census report evidence plus current combine-side hint handling",
+      "centralHarvester": true,
+      "target": "one central isolated ingestion authority",
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/technique-census.mjs",
+      "executionClass": "isolated technique census",
+      "exactSuccessfulPathAvailability": "yes for solved cell rows consumed by isolated harvester",
+      "winningAttemptConfigAvailability": "technique/cell identity available",
+      "levelRevisionAvailability": "source/corpus context available",
+      "effectiveExecutionConfigAvailability": "census-specific configuration available; common capsule still needed",
+      "sourceRunLineageAvailability": "source run/artifact available",
+      "artifactSufficientForFutureSemanticHint": "yes after one isolated ingestion adapter owns persistence",
+      "migrationTarget": "central ingestion",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "isolated cell/shard evidence; combine currently has --save-hints semantics",
+      "exactSuccessfulPath": "yes in cell results/combined hint handling",
+      "winningAttemptConfig": "technique/cell identity explicit",
+      "levelRevision": "sealed plan population identity",
+      "effectiveExecutionConfig": "sealed plan + experiment contract",
+      "sourceRunLineage": "source run/cell/shard",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "cpsat-hint-harvest-sweep.yml",
+      "currentHintMode": "direct canonical hint files in shard artifacts",
+      "centralHarvester": true,
+      "target": "first emit exact successful CP-SAT discovery observations; then centralize persistence",
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/stress/cpsat-hint-harvest-sweep.mjs -> scripts/stress/cpsat-hint-harvest.mjs",
+      "executionClass": "external CP-SAT reference probe; cold with optional forcing grid",
+      "exactSuccessfulPathInSpecialistArtifact": false,
+      "winningAttemptConfigInSpecialistArtifact": false,
+      "levelRevisionAvailability": "canonical hint file carries current level association; sweep summary does not bind an explicit level revision",
+      "effectiveExecutionConfigAvailability": "partial in command/workflow inputs; not emitted with each successful observation",
+      "sourceRunLineageAvailability": "workflow artifact/run metadata only; not attached to each successful observation",
+      "artifactSufficientForFutureSemanticHint": "no from summary alone",
+      "reason": "inner harvester parses/referee-validates exact PATH but stores it only in in-memory pending before direct HintStore write; its optional JSON result row omits the path, and the sweep does not request --out. Sweep summary retains only status/added/rediscovered counts.",
+      "migrationTarget": "specialist direct producer temporarily; first emit exact successful discovery artifact, then central ingestion",
+      "levelBlind": null,
+      "historyAware": null,
+      "currentHintPersistence": "direct canonical hint files transported in shard artifacts",
+      "exactSuccessfulPath": "yes only in canonical hint artifact today; current sweep summary alone is insufficient",
+      "winningAttemptConfig": "specialist forced-grid/search status retained incompletely for central reconstruction",
+      "levelRevision": "corpus level identity available",
+      "effectiveExecutionConfig": "specialist execution details not yet sufficient in summary",
+      "sourceRunLineage": "source run/shard artifact",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "solver-diagnostics.yml",
+      "currentHintMode": "direct canonical hint capture",
+      "centralHarvester": true,
+      "target": "centralize only if diagnostics artifact preserves complete successful observations; otherwise retain approved local writer semantics",
+      "partialFailureEvidence": false,
+      "producerEntrypoint": "npm solver:analyze-diagnostics / underlying diagnostics solver runner",
+      "executionClass": "diagnostic/mixed",
+      "exactSuccessfulPathAvailability": "direct canonical hint capture; artifact sufficiency varies by diagnostic",
+      "winningAttemptConfigAvailability": "not uniformly guaranteed across diagnostic submodes",
+      "levelRevisionAvailability": "not uniformly guaranteed in a specialist reconstruction artifact",
+      "effectiveExecutionConfigAvailability": "not uniformly guaranteed",
+      "sourceRunLineageAvailability": "workflow run exists; per-observation binding not uniform",
+      "artifactSufficientForFutureSemanticHint": "not proven from artifact alone",
+      "migrationTarget": "approved specialist direct producer until artifact parity is proven",
+      "levelBlind": false,
+      "historyAware": true,
+      "currentHintPersistence": "direct canonical hint capture via --save-hints",
+      "exactSuccessfulPath": "yes in direct hint writes",
+      "winningAttemptConfig": "available in diagnostics output",
+      "levelRevision": "published corpus level identity",
+      "effectiveExecutionConfig": "not yet one common capsule",
+      "sourceRunLineage": "workflow source run",
+      "partialFailureUpload": false
+    },
+    {
+      "workflow": "solver-broad-confirmation.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain experiment evidence only",
+      "partialFailureEvidence": true,
+      "executionClass": "paired confirmation experiment",
+      "artifactSufficientForFutureSemanticHint": "intentionally irrelevant",
+      "migrationTarget": "remain experiment-only",
+      "producerEntrypoint": "scripts/level-blind-capability-sweep.mjs",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "experiment evidence only; harvester explicitly skips hints",
+      "exactSuccessfulPath": "yes in reports but intentionally not canonicalized",
+      "winningAttemptConfig": "yes",
+      "levelRevision": "sealed generated/frozen population",
+      "effectiveExecutionConfig": "paired experiment contract",
+      "sourceRunLineage": "source run + arm",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "solver-residual-confirmation.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain experiment evidence only",
+      "partialFailureEvidence": true,
+      "executionClass": "two-phase residual confirmation experiment",
+      "artifactSufficientForFutureSemanticHint": "intentionally irrelevant",
+      "migrationTarget": "remain experiment-only",
+      "producerEntrypoint": "scripts/level-blind-capability-sweep.mjs",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "experiment evidence only",
+      "exactSuccessfulPath": "yes",
+      "winningAttemptConfig": "yes",
+      "levelRevision": "frozen pool/residual identities",
+      "effectiveExecutionConfig": "paired experiment contract",
+      "sourceRunLineage": "source run + phase + arm",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "static-portfolio-confirmation.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain experiment evidence only",
+      "partialFailureEvidence": true,
+      "executionClass": "fixed-arm portfolio confirmation",
+      "artifactSufficientForFutureSemanticHint": "intentionally irrelevant",
+      "migrationTarget": "remain experiment-only",
+      "producerEntrypoint": "scripts/technique-census.mjs",
+      "levelBlind": true,
+      "historyAware": false,
+      "currentHintPersistence": "experiment evidence only",
+      "exactSuccessfulPath": "yes in cell rows",
+      "winningAttemptConfig": "portfolio technique identity",
+      "levelRevision": "sealed plan",
+      "effectiveExecutionConfig": "experiment contract",
+      "sourceRunLineage": "source run + cell/arm",
+      "partialFailureUpload": true
+    },
+    {
+      "workflow": "solver-combine-sweep-runs.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain reconciliation/experiment evidence only; preserve constituent source lineage",
+      "partialFailureEvidence": true,
+      "constituentLineage": "already materialized as typed source-run provenance; future occurrence lineage should preserve acquisition runs rather than substitute the recombination run",
+      "executionClass": "recombination/reconciliation only; no new acquisition",
+      "artifactSufficientForFutureSemanticHint": "do not reattribute discoveries to combine run",
+      "migrationTarget": "remain reconciliation-only; constituent acquisition lineage is authoritative",
+      "producerEntrypoint": "scripts/combine-solver-sweep-reports.mjs + validate-reconciliation-sources.mjs",
+      "levelBlind": null,
+      "historyAware": null,
+      "currentHintPersistence": "reconciliation/experiment evidence only; harvester skips hints",
+      "exactSuccessfulPath": "preserved from constituent reports",
+      "winningAttemptConfig": "preserved from constituent reports",
+      "levelRevision": "validated expected population",
+      "effectiveExecutionConfig": "source contracts must be compatible",
+      "sourceRunLineage": "typed constituent acquisition runs already retained",
+      "partialFailureUpload": true
+    }
+  ],
+  "provenanceMissingness": [
+    {
+      "field": "solver.id",
+      "freshDefault": "pathfinder-solver",
+      "historicalAbsence": "unknown producer unless legacy adapter can prove",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.version",
+      "freshDefault": null,
+      "historicalAbsence": "unknown solver revision",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.technique",
+      "freshDefault": "required argument / legacy may be unknown",
+      "historicalAbsence": "unknown technique",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.scoringProfileId",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.orderingBiasId",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.beamWidth",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-applicable depends on technique",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.mechanicBucketRetention",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-applicable depends on technique",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.gateKey",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained or not-applicable",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.forcing",
+      "freshDefault": null,
+      "historicalAbsence": "unknown forcing availability vs no forcing concept",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.attemptIndex",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.nodesExpanded",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.elapsedMs",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.budgetMs",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.workSpent",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.workBudget",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.cumulativeNodesExpanded",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.cumulativeElapsedMs",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.cumulativeBudgetMs",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.termination",
+      "freshDefault": "unknown",
+      "historicalAbsence": "unknown; witness legacy may normalize to witness",
+      "sparseOmitSafe": true
+    },
+    {
+      "field": "search.randomSeed",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained or not-applicable",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.seedSalt",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained or not-applicable",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "context.usedExistingHints",
+      "freshDefault": false,
+      "historicalAbsence": "unknown per audited resource contract",
+      "sparseOmitSafe": "current-only after semantic versioning; unsafe for untagged historical events"
+    },
+    {
+      "field": "context.hintGuided",
+      "freshDefault": false,
+      "historicalAbsence": "unknown per audited resource contract",
+      "sparseOmitSafe": "current-only after semantic versioning; unsafe for untagged historical events"
+    },
+    {
+      "field": "context.levelRevision",
+      "freshDefault": null,
+      "historicalAbsence": "unknown revision",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "context.isolatedTechnique",
+      "freshDefault": false,
+      "historicalAbsence": "unknown per audited resource contract",
+      "sparseOmitSafe": "current-only after semantic versioning; unsafe for untagged historical events"
+    },
+    {
+      "field": "context.techniqueCensusCell",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-applicable",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "foundAt",
+      "freshDefault": "current timestamp",
+      "historicalAbsence": "unknown discovery time; schema-v1 flat hintMetadata migration on 2026-07-11 is proven to have stamped migration time into foundAt",
+      "sparseOmitSafe": false,
+      "measuredEvidence": "sampled pre-migration stress files 001-010 and 448-450 had undated hintMetadata; their migrated events were stamped within 2026-07-11T01:44:17.863Z..18.004Z"
+    }
+  ],
+  "measuredHistoricalContext": {
+    "source": "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md",
+    "totalEventsAtAudit": 675233,
+    "eventsOmittingAtLeastIsolatedTechnique": 505993,
+    "nominalStrictColdWithLegacyAmbiguousContext": 57497,
+    "strictColdWithCompleteCapabilityContext": 24998
+  },
+  "firestoreFindings": [
+    {
+      "surface": "published_levels hint addition",
+      "physicalShape": "Hint[] encoded as JSON strings inside levelData.hints",
+      "mergeSemantics": "mergeHints preserves all provenance on submitted novel paths",
+      "capacity": "legacy slice(0,5) after merge",
+      "finding": "five-path cap predates provenance and is an evidence-loss defect"
+    },
+    {
+      "surface": "local_level_hints supplemental store",
+      "physicalShape": "one document per novel path with singular provenance entry",
+      "mergeSemantics": "approveLocalHintAddition selects only hint.provenance[last] and saveLocalLevelHintIfNovel rejects already-known path signatures",
+      "capacity": "MAX_HINTS_PER_LEVEL=5000",
+      "finding": "backend is structurally one-path/one-provenance-event: novel semantic Hints lose all but the last event, and rediscovery of an already-known path cannot append provenance because path-hash documents are create-only and saveLocalLevelHintIfNovel rejects known signatures",
+      "importToGit": "no local_level_hints ingestion is present in scripts/import-published-levels.mjs; published_levels and supplemental evidence currently have different canonical-git convergence paths"
+    },
+    {
+      "surface": "submission",
+      "physicalShape": "semantic Hint[] built by reconcileHints after path novelty filtering",
+      "mergeSemantics": "novel path may carry multiple known provenance events before persistence",
+      "capacity": "up to 1000 submitted paths",
+      "finding": "downstream local Firestore storage can lose provenance already present in the submitted semantic Hint"
+    }
+  ],
+  "verifiedAgainstMain": "0494a0a2c2cc698b8c2a0c40782c88b8983d99ca",
+  "inventoryNotes": [
+    "GitHub code search was incomplete during the 2026-09-22 continuation; current seams below were reverified against concrete source files, package commands, the repository tree, and harvester/workflow ownership. Phase -1 should add a repository-local census validator so aliases/re-exports cannot evade this inventory.",
+    "PR #1994/#1995 moved harvest-isolated-report-hints.mjs onto the explicit corpus-document API and historical-provenance ingress; treat it as a current central importer and as evidence for compatibility-at-ingress rather than historical bulk normalization."
+  ],
+  "workflowInventoryGaps": [
+    {
+      "source": ".github/workflows/harvest-solver-evidence.yml",
+      "finding": "workflow_run trigger still names 'Solver repair-fallback node-reserve sample A/B' and 'Solver elite-prefix-dfs-retry local validation', but no corresponding maintained workflow file exists in the current .github/workflows tree",
+      "classification": "stale current compatibility/trigger residue",
+      "target": "remove or explicitly document historical-only trigger names during Phase -1; workflow lifecycle and harvester source allowlist must mechanically agree"
+    }
+  ],
+  "runtimeDeliveryMeasurement": {
+    "measuredAtBranchSha": "7dab37284c3a7f6e33f837cdafebd0ea3eb26736",
+    "copiedHintTrees": [
+      {
+        "path": "data/hints",
+        "files": 160,
+        "bytes": 171566523
+      },
+      {
+        "path": "data/stress/hints",
+        "files": 102,
+        "bytes": 83920958
+      },
+      {
+        "path": "data/stress/hints-random",
+        "files": 1700,
+        "bytes": 485744016
+      }
+    ],
+    "totalRawBytes": 741231497,
+    "canonicalGzipBytes": 21176345,
+    "pathOnlyMinifiedBytes": 149368243,
+    "pathOnlyPrettyBytes": 308947047,
+    "pathOnlyGzipBytes": 4924828,
+    "minifiedRawSavingsPercent": 79.8486,
+    "prettyRawSavingsPercent": 58.3198,
+    "gzipSavingsPercent": 76.7437,
+    "loadingSemantics": "published hints are per-level lazy; stress corpora are fetched only after the signed-in admin Dev-Mode corpus switcher selects them, but all three provenance-rich trees are copied into every dist",
+    "conclusion": "A generated path-only runtime projection is empirically earned. Keep it derived/untracked, source-hash bound, path-equivalence checked, and fail the build when generation/validation is stale."
+  },
+  "firestoreSerializedSamples": {
+    "basis": "JSON.stringify(Hint) sizes from five provenance-rich real files; excludes Firestore document/field encoding overhead",
+    "files": [
+      {
+        "path": "data/hints/P00160.json",
+        "medianHintBytes": 3142,
+        "p99HintBytes": 17229,
+        "maxHintBytes": 110010,
+        "maxProvenanceEvents": 145
+      },
+      {
+        "path": "data/hints/P00161.json",
+        "medianHintBytes": 361,
+        "p99HintBytes": 12323,
+        "maxHintBytes": 147122,
+        "maxProvenanceEvents": 194
+      },
+      {
+        "path": "data/hints/P00063.json",
+        "medianHintBytes": 987,
+        "p99HintBytes": 19437,
+        "maxHintBytes": 168521,
+        "maxProvenanceEvents": 215
+      },
+      {
+        "path": "data/stress/hints/S00030.json",
+        "medianHintBytes": 7526,
+        "p99HintBytes": 12809,
+        "maxHintBytes": 43687,
+        "maxProvenanceEvents": 60
+      },
+      {
+        "path": "data/stress/hints-random/R02197.json",
+        "medianHintBytes": 1620,
+        "p99HintBytes": 7311,
+        "maxHintBytes": 69154,
+        "maxProvenanceEvents": 94
+      }
+    ],
+    "implication": "capacity cannot be safely expressed as a fixed path count; provenance-rich Hint size varies by orders of magnitude. Measure encoded Firestore document bytes and enforce a byte-aware surfaced failure policy."
+  },
+  "currentCorpusCensus": {
+    "auditedBranchSha": "7dab37284c3a7f6e33f837cdafebd0ea3eb26736",
+    "corpusFiles": 1962,
+    "hints": 267046,
+    "provenanceEvents": 775469,
+    "fieldStates": {
+      "solver.id": {
+        "absent": 0,
+        "null": 0,
+        "false": 0,
+        "true": 0,
+        "concrete": 775469
+      },
+      "solver.version": {
+        "absent": 0,
+        "null": 350922,
+        "false": 0,
+        "true": 0,
+        "concrete": 424547
+      },
+      "solver.technique": {
+        "absent": 0,
+        "null": 0,
+        "false": 0,
+        "true": 0,
+        "concrete": 775469
+      },
+      "solver.scoringProfileId": {
+        "absent": 30016,
+        "null": 420578,
+        "false": 0,
+        "true": 0,
+        "concrete": 324875
+      },
+      "solver.orderingBiasId": {
+        "absent": 30016,
+        "null": 678035,
+        "false": 0,
+        "true": 0,
+        "concrete": 67418
+      },
+      "solver.beamWidth": {
+        "absent": 84275,
+        "null": 552164,
+        "false": 0,
+        "true": 0,
+        "concrete": 139030
+      },
+      "solver.mechanicBucketRetention": {
+        "absent": 30016,
+        "null": 606429,
+        "false": 112437,
+        "true": 26587,
+        "concrete": 0
+      },
+      "solver.gateKey": {
+        "absent": 84275,
+        "null": 377098,
+        "false": 0,
+        "true": 0,
+        "concrete": 314096
+      },
+      "solver.forcing": {
+        "absent": 72117,
+        "null": 640963,
+        "false": 0,
+        "true": 0,
+        "concrete": 62389
+      },
+      "solver.attemptIndex": {
+        "absent": 0,
+        "null": 446471,
+        "false": 0,
+        "true": 0,
+        "concrete": 328998
+      },
+      "search.nodesExpanded": {
+        "absent": 0,
+        "null": 361873,
+        "false": 0,
+        "true": 0,
+        "concrete": 413596
+      },
+      "search.elapsedMs": {
+        "absent": 0,
+        "null": 360415,
+        "false": 0,
+        "true": 0,
+        "concrete": 415054
+      },
+      "search.budgetMs": {
+        "absent": 0,
+        "null": 357474,
+        "false": 0,
+        "true": 0,
+        "concrete": 417995
+      },
+      "search.workSpent": {
+        "absent": 115299,
+        "null": 603623,
+        "false": 0,
+        "true": 0,
+        "concrete": 56547
+      },
+      "search.workBudget": {
+        "absent": 115299,
+        "null": 603678,
+        "false": 0,
+        "true": 0,
+        "concrete": 56492
+      },
+      "search.cumulativeNodesExpanded": {
+        "absent": 21565,
+        "null": 436436,
+        "false": 0,
+        "true": 0,
+        "concrete": 317468
+      },
+      "search.cumulativeElapsedMs": {
+        "absent": 21565,
+        "null": 436436,
+        "false": 0,
+        "true": 0,
+        "concrete": 317468
+      },
+      "search.cumulativeBudgetMs": {
+        "absent": 21565,
+        "null": 689978,
+        "false": 0,
+        "true": 0,
+        "concrete": 63926
+      },
+      "search.termination": {
+        "absent": 0,
+        "null": 0,
+        "false": 0,
+        "true": 0,
+        "concrete": 775469
+      },
+      "search.randomSeed": {
+        "absent": 0,
+        "null": 665894,
+        "false": 0,
+        "true": 0,
+        "concrete": 109575
+      },
+      "search.seedSalt": {
+        "absent": 84275,
+        "null": 665567,
+        "false": 0,
+        "true": 0,
+        "concrete": 25627
+      },
+      "context.usedExistingHints": {
+        "absent": 0,
+        "null": 0,
+        "false": 677329,
+        "true": 98140,
+        "concrete": 0
+      },
+      "context.hintGuided": {
+        "absent": 0,
+        "null": 0,
+        "false": 713699,
+        "true": 61770,
+        "concrete": 0
+      },
+      "context.levelRevision": {
+        "absent": 0,
+        "null": 78956,
+        "false": 0,
+        "true": 0,
+        "concrete": 696513
+      },
+      "context.isolatedTechnique": {
+        "absent": 32254,
+        "null": 0,
+        "false": 507334,
+        "true": 235881,
+        "concrete": 0
+      },
+      "context.techniqueCensusCell": {
+        "absent": 32329,
+        "null": 743140,
+        "false": 0,
+        "true": 0,
+        "concrete": 0
+      },
+      "foundAt": {
+        "absent": 0,
+        "null": 0,
+        "false": 0,
+        "true": 0,
+        "concrete": 775469
+      }
+    }
+  },
+  "historicalMissingnessComparison": {
+    "september11Commit": "b53a17e30f64107f5a5c4744deea871215398aa2",
+    "september11Events": 675233,
+    "priorMeasuredOmittingIsolatedTechnique": 505993,
+    "currentEvents": 775469,
+    "currentAbsentIsolatedTechnique": 32254,
+    "currentExplicitFalseIsolatedTechnique": 507334,
+    "finding": "Historical unknown capability context has not merely remained ambiguous: read-normalize-write cycles can persist upgradeProvenanceEntry()'s synthesized false values. Current raw storage therefore cannot use explicit false as proof that old observations recorded false unless source generation/ingress proves it.",
+    "mechanism": "level-data-io reads provenance through upgradeProvenanceEntry(); that adapter fills absent usedExistingHints/hintGuided/isolatedTechnique with false; a later canonical hint-file write serializes the expanded hintRecords and can materialize those synthesized values.",
+    "correctionRule": "Treat historical source-generation absence as unknown at semantic ingress even if a later storage rewrite materialized false. Do not infer original false from current physical presence alone. Future write paths must preserve an explicit semantic unknown state rather than laundering it into a default.",
+    "september11FieldStates": {
+      "context.usedExistingHints": {
+        "absent": 0,
+        "false": 577093,
+        "true": 98140
+      },
+      "context.hintGuided": {
+        "absent": 0,
+        "false": 613463,
+        "true": 61770
+      },
+      "context.isolatedTechnique": {
+        "absent": 505993,
+        "false": 24998,
+        "true": 144242
+      }
+    },
+    "currentFieldStates": {
+      "context.usedExistingHints": {
+        "absent": 0,
+        "false": 677329,
+        "true": 98140
+      },
+      "context.hintGuided": {
+        "absent": 0,
+        "false": 713699,
+        "true": 61770
+      },
+      "context.isolatedTechnique": {
+        "absent": 32254,
+        "false": 507334,
+        "true": 235881
+      }
+    },
+    "scopeNote": "usedExistingHints/hintGuided were already physically expanded by the September 11 snapshot; isolatedTechnique supplies the clean before/after proof that later storage rewrites can collapse legacy absence into explicit modern booleans."
+  },
+  "migrationSyntheticFoundAt": {
+    "migrationCommit": "7a651d391b49986626ceffbc4612352ddefb9bd4",
+    "candidateWindow": [
+      "2026-07-11T01:44:17.863Z",
+      "2026-07-11T01:44:18.004Z"
+    ],
+    "exactCandidateEvents": 662,
+    "affectedFiles": 102,
+    "corpora": {
+      "published": 0,
+      "stress1": 662,
+      "stress2": 0
+    },
+    "september11Reconstruction": {
+      "events": 662,
+      "files": 102,
+      "corpora": {
+        "stress1": 662
+      }
+    },
+    "interpretation": "The cohort is stable back to the September 11 raw store and confined to the legacy stress-1 migration population. Use migration/source-shape membership plus the timestamp cluster as the compatibility predicate; timestamp alone is not a universal rule.",
+    "correctionTarget": "semantic compatibility adapter exposes foundAt as historically unknown for the proven migration-synthetic cohort; do not invent discovery times. A later reversible physical migration may encode that unknown explicitly."
+  },
+  "firestoreSizing": {
+    "measurementKind": "UTF-8 JSON payload proxy/lower bound, before Firestore field/index overhead and other levelData fields",
+    "semanticHintJsonBytes": {
+      "count": 267046,
+      "min": 96,
+      "p50": 1437,
+      "p95": 7653,
+      "p99": 27784,
+      "max": 574971
+    },
+    "localPathSingleEventDocJsonBytes": {
+      "count": 775469,
+      "min": 653,
+      "p50": 1892,
+      "p95": 2585,
+      "p99": 2797,
+      "max": 3440
+    },
+    "publishedEncodedHintArrayJsonBytes": {
+      "levels": 160,
+      "min": 465078,
+      "p50": 1149023,
+      "p95": 1690263,
+      "p99": 2044991,
+      "max": 5269927
+    },
+    "finding": "Path-count caps are not a capacity contract. At current provenance density the median published corpus hint array proxy already exceeds 1 MiB before level metadata/Firestore overhead, while one-event supplemental documents remain small. A full-Hint-per-path Firestore document can also grow dangerously large as provenance accumulates.",
+    "capacityTarget": "preflight actual encoded document size and surface overflow explicitly. Prefer a layout whose growth unit is bounded (semantic-event/occurrence child documents or another sharded representation) over silently truncating paths/events. Exact Firestore SDK/emulator wire-size validation should accompany implementation, but the current five/1000/5000 count policies are already disproven as semantically principled limits.",
+    "publishedCanonicalCorpusProjectionThresholds": {
+      "levels": 160,
+      "over900kBytes": 122,
+      "over950kBytes": 114,
+      "over1MiB": 94,
+      "note": "These project the current git-canonical Hint arrays through Firestore's encodeHints shape; they do not claim the live published_levels collection currently contains those full arrays, because current review approval truncates to five paths."
+    }
+  },
+  "readerWriterCensusStatus": {
+    "rawFilesMentioningRemovedFacades": 56,
+    "maintainedEntrypointReachable": 24,
+    "dormantOrUnreachable": 32,
+    "directlyPackageReferenced": 19,
+    "directlyWorkflowReferenced": 4,
+    "maintainedReachablePaths": [
+      "scripts/check-corpus-level-formatting.mjs",
+      "scripts/experiment-manifest-lib-check.mjs",
+      "scripts/generate-level-heatmaps.mjs",
+      "scripts/hint-candidate-search.mjs",
+      "scripts/hint-expansion-audit.mjs",
+      "scripts/hint-weight-calibration.mjs",
+      "scripts/hint-workbench-parallel.mjs",
+      "scripts/req-length-sweep.mjs",
+      "scripts/run-solver-direct.mjs",
+      "scripts/stress/analyze-residual-interfaces.mjs",
+      "scripts/stress/census-repair-rollback-windows.mjs",
+      "scripts/stress/collect-known-solution-prefix-branches.mjs",
+      "scripts/stress/collect-prune-gap-labels.mjs",
+      "scripts/stress/compare-search-producer-populations.mjs",
+      "scripts/stress/cpsat-hint-harvest-sweep.mjs",
+      "scripts/stress/cpsat-hint-harvest.mjs",
+      "scripts/stress/lane-a-c1-boundary-kinematics-analysis.mjs",
+      "scripts/stress/lane-a-c2-global-accounting-analysis.mjs",
+      "scripts/stress/provenance-coverage-report.mjs",
+      "scripts/stress/prune-gap-probe.mjs",
+      "scripts/stress/solution-profile-compare.mjs",
+      "scripts/stress/solution-profile-lib.mjs",
+      "scripts/stress/validate-corpus-witnesses.mjs",
+      "scripts/validate-hint-paths.mjs"
+    ],
+    "notableDormantWriters": [
+      "scripts/dedupe-hint-provenance.mjs",
+      "scripts/family-parent-hint-replay-batch.mjs",
+      "scripts/stress/minizinc-probe.mjs"
+    ],
+    "finding": "The maintained stale-facade seam is 24 reachable files. Dormant writers remain historical/maintenance debt but should not be allowed to become reachable again without migration.",
+    "validationTool": "scripts/hint-evidence-consolidation-audit.mjs computes package/workflow-seeded relative-import reachability; Phase -1 should turn this into a fail-closed guard."
+  },
+  "artifactLayoutAuthority": {
+    "status": "investigation-complete-implementation-pending",
+    "currentOwners": [
+      "scripts/level-data-io.mjs::hintsDirFor/hintFileName/listHintFiles",
+      "modules/data-asset-loaders.ts::createDefaultHintsSource",
+      "modules/dev-corpus.ts::DEV_CORPORA"
+    ],
+    "defect": "corpus-to-hint layout is encoded independently in Node/browser; writable string-id vocabulary is broader than listHintFiles discovery regex",
+    "target": {
+      "authority": "one neutral corpus-layout descriptor consumed by Node and browser adapters",
+      "identity": "derive expected hint artifact names from corpus level identity; directory enumeration verifies expected/missing/orphan files rather than defining identity",
+      "legacy": "numeric positional fallback remains explicit for corpora without permanent ids",
+      "enforcement": "writers and validators must round-trip through the same layout/id contract"
+    }
+  },
+  "ingestionAccountingAuthority": {
+    "status": "investigation-complete-implementation-pending",
+    "currentState": {
+      "levelBlind": "structured selection manifest with importer-specific hard-coded harvester identity",
+      "isolated": "console counters + pending quarantine artifact",
+      "directArtifactCompatibilityImport": "console counters + pending quarantine artifact"
+    },
+    "target": {
+      "artifact": "versioned hint-ingestion receipt shared by canonical ingestion lanes",
+      "commonCounters": [
+        "sourceCandidateObservationsSeen",
+        "eligibleCandidateObservations",
+        "refereeAcceptedObservations",
+        "acceptedAlreadyRepresented",
+        "semanticPathAdditions",
+        "semanticProvenanceEventAdditions",
+        "occurrenceLineageAdditions",
+        "quarantinedObservationsByReason",
+        "physicalArtifactsChanged"
+      ],
+      "rule": "counter units are explicit; physical file changes are not semantic evidence counts; success-ingestion receipts are not attempted-population denominators",
+      "extensibility": "producer-specific receipt fields allowed; producer research artifacts remain specialist schemas"
+    }
+  },
+  "richEvidenceInversion": {
+    "status": "investigation-complete-implementation-guidance",
+    "conclusion": "keep Hint compact; strengthen exact joins to existing richer sibling evidence resources rather than creating a universal discovery record",
+    "existingResources": {
+      "hintProvenance": "accepted path + semantic discovery event",
+      "hintDiscoveryProcess": "run + level + exact stored path + attempt sequence through winner",
+      "compactFailureResponse": "run + level + attempt/stage participation, dose, censoring, termination and failure/solved controls",
+      "searchLossEvidence": "run + level + attempt/stage + selected rich search event",
+      "experimentContracts": "protocol/configuration/population/treatment authority"
+    },
+    "retentionClasses": [
+      "embedded-semantic-core",
+      "durably-joinable-evidence",
+      "reconstructable-authority",
+      "ephemeral-diagnostic"
+    ],
+    "requiredJoinSpine": [
+      "level identity + structural revision",
+      "exact path signature",
+      "semantic discovery-event identity",
+      "source/acquisition run",
+      "immutable solver ref",
+      "protocol/configuration identity",
+      "experiment arm when applicable",
+      "population identity when applicable",
+      "artifact/shard/row locator when durable source exposes one"
+    ],
+    "rule": "schema v4 optimizes physical representation; it must preserve cross-resource join identity and may not become a ceiling on richer future research evidence"
+  }
+}
