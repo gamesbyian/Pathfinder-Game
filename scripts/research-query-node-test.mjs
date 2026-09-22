@@ -6,6 +6,8 @@ import { buildResearchQueryGraph, queryResearchGraph, resolveResearchEntity } fr
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
 import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 
+const CLI_OPTIONS = { cwd: process.cwd(), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 };
+
 const graph = buildResearchQueryGraph(process.cwd(), { discoverArtifacts: false });
 assert.equal(graph.authority.kind, 'derived-read-only');
 assert.ok(graph.nodes.length > 0);
@@ -186,21 +188,21 @@ const cli = spawnSync(process.execPath, [
   'scripts/research-query.mjs',
   '--entity=questions:WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION',
   '--depth=1',
-], { cwd: process.cwd(), encoding: 'utf8' });
+], CLI_OPTIONS);
 assert.equal(cli.status, 0, cli.stderr);
 assert.equal(JSON.parse(cli.stdout).mode, 'traverse');
 
 const viewCli = spawnSync(process.execPath, [
   'scripts/research-query.mjs',
   '--view=answerability',
-], { cwd: process.cwd(), encoding: 'utf8' });
+], CLI_OPTIONS);
 assert.equal(viewCli.status, 0, viewCli.stderr);
 assert.equal(JSON.parse(viewCli.stdout).view, 'answerability');
 
 const systemLineageCli = spawnSync(process.execPath, [
   'scripts/research-query.mjs',
   '--view=system-lineage',
-], { cwd: process.cwd(), encoding: 'utf8' });
+], CLI_OPTIONS);
 assert.equal(systemLineageCli.status, 0, systemLineageCli.stderr);
 const systemLineage = JSON.parse(systemLineageCli.stdout);
 assert.equal(systemLineage.view, 'system-lineage');
@@ -211,14 +213,14 @@ assert.ok(systemLineage.reportLineageRows.some(row =>
 const snapshotCli = spawnSync(process.execPath, [
   'scripts/research-query.mjs',
   '--snapshot',
-], { cwd: process.cwd(), encoding: 'utf8' });
+], CLI_OPTIONS);
 assert.equal(snapshotCli.status, 0, snapshotCli.stderr);
 assert.equal(JSON.parse(snapshotCli.stdout).schemaVersion, 1);
 
 const compareRefCli = spawnSync(process.execPath, [
   'scripts/research-query.mjs',
   '--compare-ref=HEAD',
-], { cwd: process.cwd(), encoding: 'utf8' });
+], CLI_OPTIONS);
 assert.equal(compareRefCli.status, 0, compareRefCli.stderr);
 const headDiff = JSON.parse(compareRefCli.stdout);
 assert.equal(headDiff.addedNodes.length, 0);
@@ -227,7 +229,7 @@ assert.equal(headDiff.removedNodes.length, 0);
 const compareSystemRefCli = spawnSync(process.execPath, [
   'scripts/research-query.mjs',
   '--compare-system-ref=HEAD',
-], { cwd: process.cwd(), encoding: 'utf8' });
+], CLI_OPTIONS);
 assert.equal(compareSystemRefCli.status, 0, compareSystemRefCli.stderr);
 const systemHeadDiff = JSON.parse(compareSystemRefCli.stdout);
 assert.equal(systemHeadDiff.added.length, 0);
