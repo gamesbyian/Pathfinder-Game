@@ -88,23 +88,25 @@ Frozen-map mining is complete; A/D1/F3 did not earn a shared runtime substrate. 
 
 ## Workstream state
 
-| ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
-|---:|---|---|---|---|---|
-| 2 | Residual capability + premise acquisition | `active` | **HARVEST** | Add repair node-cap seam; preflight matched-work A/B | `WS2-REPAIR-DEADLINE-ALLOCATION` |
-| 2A | Admissible-order reserve repricing | `supporting` | **EXPERIMENT DESIGN EARNED** | Precommit the smallest matched-total-work reserve-fraction A/B, including earlier-stage loss controls; no dispatch until that design is frozen | `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` |
-| 2I | Capability invention demand | `active` | **ACQUISITION** | Run 3-row beam freshness gate; expand first-loss sampling outside capability-selected Class 3 | `WS2-CAPABILITY-INVENTION-DEMAND` |
-| 2P | Parity phase distance | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
-| 2C | Checkerboard capacity | `supporting` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
-| 2R | Parity response signature | `on-demand` | **STATIC FORM CLOSED / REOPEN ONLY** | Reopen only on a materially different parity mechanism from success-path or prospective seam evidence | `WS2-PARITY-RESPONSE-SIGNATURE` |
-| 2X | Small exact projections | `supporting` | **BC1 CONSUMER EARNED** | Beam-hosted later-disposition shadow after ordinary hard-prune survival; record proof cost, work-at-proof, later reject/cull/descendant work, and valid/reference safety. No hot-path prune yet. [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md) | `WS2-CUT-BALANCE-PROJECTION` |
-| 2F | Forced-work capture economics | `supporting` | **SEAM AUDIT COMPLETE / PHASE CENSUS NEXT** | 25.33% is a gross per-parent forced-work reservoir, not directly removable post-prune work. Rerun the frozen 64-parent probe with phase-level singleton/singleton->singleton telemetry, then price actual replay, retention/frontier bookkeeping and downstream consequences. No production contraction. [seam audit](../reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md) | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
-| 1 | Automatic action selection | `supporting` | **DEVELOPMENT POSITIVE / CONFIRMATION NEXT** | Confirm frozen prior-response+work+next-stage family at min support 100 on sample-independent/current production evidence; report source-stratified capture, concentration and rare-winner protection | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
-| 1A | Remaining-length allocation | `supporting` | **EXPERIMENT DESIGN EARNED** | Precommit bounded matched-work near-miss completion ordering by ascending remaining length; no production change or dispatch implied | `WS1-REMAINING-LENGTH-ALLOCATION` |
-| 6/7 | Repair reachability / speed | `supporting` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
-| 3 | Generalization | `method-complete` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
-| 8 | Isolated capability | `subsumed` | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
-| 0/4 | Restart/randomization / beam retention | `closed` | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence | — |
-| 5 | Exact/reference model | `on-demand` | **ON DEMAND / BUSIER** | Truth/query service for microscopes | — |
+| ID | Workstream | Execution state | Gate class | State / context | Next gate | Stable question ref |
+|---:|---|---|---|---|---|---|
+| 2 | Residual capability + premise acquisition | `active` | `implementation` | **HARVEST** | Add repair node-cap seam; preflight matched-work A/B | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2A | Admissible-order reserve repricing | `supporting` | `design` | **EXPERIMENT DESIGN EARNED** | Precommit the smallest matched-total-work reserve-fraction A/B, including earlier-stage loss controls; no dispatch until that design is frozen | `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` |
+| 2I | Capability invention demand | `active` | `bounded-compute` | **ACQUISITION** | Run 3-row beam freshness gate; expand first-loss sampling outside capability-selected Class 3 | `WS2-CAPABILITY-INVENTION-DEMAND` |
+| 2P | Parity phase distance | `supporting` | `bounded-compute` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-PARITY-PHASE-DISTANCE` |
+| 2C | Checkerboard capacity | `supporting` | `bounded-compute` | **PARALLEL OBSERVER** | Combined shadow, then incidence/soundness gate | `WS2-CHECKERBOARD-CAPACITY` |
+| 2R | Parity response signature | `on-demand` | `reopen-only` | **STATIC FORM CLOSED / REOPEN ONLY** | Reopen only on a materially different parity mechanism from success-path or prospective seam evidence | `WS2-PARITY-RESPONSE-SIGNATURE` |
+| 2X | Small exact projections | `supporting` | `bounded-compute` | **BC1 CONSUMER EARNED** | Beam-hosted later-disposition shadow after ordinary hard-prune survival; record proof cost, work-at-proof, later reject/cull/descendant work, and valid/reference safety. No hot-path prune yet. [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md) | `WS2-CUT-BALANCE-PROJECTION` |
+| 2F | Forced-work capture economics | `supporting` | `bounded-compute` | **SEAM AUDIT COMPLETE / PHASE CENSUS NEXT** | 25.33% is a gross per-parent forced-work reservoir, not directly removable post-prune work. Rerun the frozen 64-parent probe with phase-level singleton/singleton->singleton telemetry, then price actual replay, retention/frontier bookkeeping and downstream consequences. No production contraction. [seam audit](../reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md) | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
+| 1 | Automatic action selection | `supporting` | `bounded-compute` | **DEVELOPMENT POSITIVE / CONFIRMATION NEXT** | Confirm frozen prior-response+work+next-stage family at min support 100 on sample-independent/current production evidence; report source-stratified capture, concentration and rare-winner protection | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
+| 1A | Remaining-length allocation | `supporting` | `design` | **EXPERIMENT DESIGN EARNED** | Precommit bounded matched-work near-miss completion ordering by ascending remaining length; no production change or dispatch implied | `WS1-REMAINING-LENGTH-ALLOCATION` |
+| 6/7 | Repair reachability / speed | `supporting` | `bounded-compute` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
+| 3 | Generalization | `method-complete` | `method` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
+| 8 | Isolated capability | `subsumed` | `subsumed` | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
+| 0/4 | Restart/randomization / beam retention | `closed` | `reopen-only` | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence | — |
+| 5 | Exact/reference model | `on-demand` | `service` | **ON DEMAND / BUSIER** | Truth/query service for microscopes | — |
+
+`Gate class` is the immediate operational route, not a claim about the question's scientific lifecycle or population-acquisition need. Use `existing-data` when retained evidence can directly answer the next discriminator, `instrument-only` when only new production-inert observation/persistence is needed, `bounded-compute` when fresh solver/reference execution is required, `design` or `implementation` for pre-execution work, `blocked` when the discriminator is not currently identifiable, and `reopen-only`/`method`/`subsumed`/`service` for non-execution lanes. Update this field whenever the immediate gate changes.
 
 ## Standing research rules
 
