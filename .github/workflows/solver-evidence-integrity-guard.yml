@@ -36,6 +36,34 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Rebuild solver evidence integrity index
+        id: rebuild
         run: npm run solver:evidence-integrity-audit
       - name: Require checked-in audit authority to be fresh
+        id: freshness
         run: git diff --exit-code -- reports/stress/solver-evidence-integrity-index.json
+
+      - name: Summarize evidence-integrity guard
+        if: always()
+        shell: bash
+        env:
+          REBUILD: ${{ steps.rebuild.outcome }}
+          FRESHNESS: ${{ steps.freshness.outcome }}
+        run: |
+          {
+            echo '## Solver evidence integrity guard'
+            echo
+            echo "| Check | Outcome |"
+            echo "| --- | --- |"
+            echo "| Rebuild integrity index | `$REBUILD` |"
+            echo "| Checked-in authority matches rebuilt index | `$FRESHNESS` |"
+            echo
+            if [[ "$REBUILD" == success && "$FRESHNESS" == success ]]; then
+              echo 'The checked-in solver evidence-integrity authority is fresh.'
+            elif [[ "$FRESHNESS" == failure ]]; then
+              echo 'The audit ran, but the tracked integrity index differs from the regenerated authority. Inspect the freshness step diff.'
+              echo '::error::Solver evidence integrity index is stale relative to the current audit.'
+            else
+              echo 'The integrity audit itself did not complete successfully. Inspect the rebuild step before interpreting freshness.'
+              [[ "$REBUILD" == failure ]] && echo '::error::Solver evidence integrity audit failed before freshness could be established.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

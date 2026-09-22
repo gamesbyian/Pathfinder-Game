@@ -68,6 +68,7 @@ jobs:
         run: node scripts/persist-decision-bearing-experiment-evidence.mjs --self-test
 
       - name: Resolve source run identity
+        id: source_identity
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -91,6 +92,7 @@ jobs:
           printf 'SOURCE_SHA=%s\n' "$source_sha" >> "$GITHUB_ENV"
 
       - name: Download every artifact from the source solver run
+        id: download
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -105,6 +107,7 @@ jobs:
           gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir artifact-staging
 
       - name: Merge recoverable solver evidence onto latest main
+        id: merge
         shell: bash
         env:
           SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
@@ -169,6 +172,7 @@ jobs:
 
             if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ 2>/dev/null)" ]; then
               echo 'No new canonical hint/provenance, selection, pending, or decision-bearing experiment evidence to persist.'
+              echo 'HARVEST_RESULT=no-new-evidence' >> "$GITHUB_ENV"
               exit 0
             fi
 
@@ -184,10 +188,56 @@ jobs:
             fi
             git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
             if git push origin HEAD:main; then
+              echo 'HARVEST_RESULT=persisted' >> "$GITHUB_ENV"
+              echo "HARVEST_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
               exit 0
             fi
             sleep $((attempt * 5))
           done
 
+          echo 'HARVEST_RESULT=persist-failed' >> "$GITHUB_ENV"
           echo 'Failed to persist solver evidence after four semantic-merge retries.' >&2
           exit 1
+
+      - name: Summarize solver evidence harvest
+        if: always()
+        shell: bash
+        env:
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
+          SOURCE_IDENTITY: ${{ steps.source_identity.outcome }}
+          DOWNLOAD: ${{ steps.download.outcome }}
+          MERGE: ${{ steps.merge.outcome }}
+        run: |
+          {
+            echo '## Solver evidence harvest'
+            echo
+            echo "| Stage | Outcome |"
+            echo "| --- | --- |"
+            echo "| Resolve source identity | `$SOURCE_IDENTITY` |"
+            echo "| Download source artifacts | `$DOWNLOAD` |"
+            echo "| Semantic merge / persistence | `$MERGE` |"
+            echo
+            echo "Source run: `$SOURCE_RUN_ID`"
+            [[ -n "${SOURCE_WORKFLOW:-}" ]] && echo "Source workflow: `$SOURCE_WORKFLOW`"
+            [[ -n "${SOURCE_SHA:-}" ]] && echo "Source SHA: `$SOURCE_SHA`"
+            echo
+            case "${HARVEST_RESULT:-unknown}" in
+              persisted)
+                echo "Result: new durable solver evidence was persisted to main."
+                [[ -n "${HARVEST_COMMIT:-}" ]] && echo "Persistence commit: `$HARVEST_COMMIT`"
+                ;;
+              no-new-evidence)
+                echo 'Result: the source run contained no new canonical/pending/decision-bearing evidence to persist.'
+                ;;
+              persist-failed)
+                echo 'Result: semantic import succeeded far enough to attempt persistence, but all push retries failed.'
+                echo '::error::Solver evidence harvest could not persist its semantic merge after four retries.'
+                ;;
+              *)
+                echo 'Result: the harvest did not reach a classified persistence outcome. Use the stage table above to locate the failure.'
+                [[ "$SOURCE_IDENTITY" == failure ]] && echo '::error::Solver evidence harvest could not verify the source run identity.'
+                [[ "$DOWNLOAD" == failure ]] && echo '::error::Solver evidence harvest could not download the source run artifacts.'
+                [[ "$MERGE" == failure ]] && echo '::error::Solver evidence harvest failed during semantic merge or persistence.'
+                ;;
+            esac
+          } >> "$GITHUB_STEP_SUMMARY"
