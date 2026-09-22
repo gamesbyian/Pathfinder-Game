@@ -1,6 +1,6 @@
 # Broad capability refresh and failure-evidence reconciliation 001
 
-> **Status:** partial broad-run reconciliation; production-side acquisition complete, technique-census closeout pending.
+> **Status:** active
 > **Last evidence:** 2026-09-22 — canonical stress refresh run `35687363645`, solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`.
 > **Decision:** the production capability boundary is unchanged, but the refresh materially strengthens the diagnostic substrate. Use the complete compact failure-response and exact action/configuration identity joins to screen residual hypotheses before buying richer trace/exact work. Do not interpret censoring alone as a failure phenotype.
 > **Remaining gate:** finish technique census run `35687337464`, run the maintained broad-evidence reconciliation consumer, then close T1/EW1 capability and budget implications.
