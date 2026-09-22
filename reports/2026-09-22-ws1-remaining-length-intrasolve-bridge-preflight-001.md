@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-22 — preflight and inert implementation recovered onto current mainline; no experiment dispatched.
 > **Decision:** do not jump directly from the confirmed cross-row remaining-length effect to a production selector. First test the missing transport step inside one solve: reorder the existing elite-prefix completion candidate pool by ascending remaining length under identical candidates, per-candidate caps and total node budget.
-> **Remaining gate:** run the frozen 20-level Stage A matched-work bridge with candidate-attribution telemetry; a negative closes this tested intra-solve form without retuning.
+> **Remaining gate:** validate the dedicated frozen Stage A harness, then run the 20-level matched-work bridge with candidate-attribution telemetry; a negative closes this tested intra-solve form without retuning.
 > **Date:** 2026-09-22
 > **Research question:** `WS1-REMAINING-LENGTH-INTRA-SOLVE-BRIDGE`
 > **Triggered by:** `WS1-REMAINING-LENGTH-ALLOCATION`
@@ -102,7 +102,7 @@ For a candidate prefix ending after `destroyIdx` path steps:
 
 `remainingLength = requiredLength - destroyIdx`
 
-This is the same structural quantity class as H3's remaining-length-at-cull feature: current puzzle requirement minus current prefix depth. It uses no level identity, history, outcome or exact label.
+**Post-recovery semantic clarification (2026-09-22):** preserve that expression exactly as the frozen treatment. It is an **index-depth proxy**, not literally the same counted-length quantity as H3 on portal-bearing prefixes. H3 replays native state and subtracts non-portal steps; Pathfinder counted length excludes free portal jumps. The Stage A trace therefore also records exact `countedRemainingLength` and `portalJumps` after prefix replay, but neither may influence ordering before the frozen bridge verdict. See [semantics audit](2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md). It still uses no level identity, history, outcome or exact label.
 
 No candidate is added or removed.
 
@@ -150,7 +150,8 @@ Per level and arm retain:
 - total repair nodes/work;
 - number of elite-prefix triggers;
 - candidate attempts per trigger;
-- candidate remaining lengths in attempted order;
+- frozen index-depth remaining lengths in attempted order;
+- exact counted remaining length and portal-jump count at each replayed candidate prefix (observational only; never an ordering input in Stage A);
 - nodes spent per candidate;
 - first successful candidate identity/remaining length when applicable;
 - best intermediate badness attributable to the operator;
@@ -237,11 +238,17 @@ Prefer a direct research harness over a new general-purpose production flag. If 
 
 ## Next step
 
-Implement:
+Recovery implementation is now complete for:
 
-1. a pure deterministic candidate-plan builder for legacy vs ascending-remaining-length order;
-2. a trailing research-only `enableElitePrefixLengthOrder=false` parameter so all existing callers remain unchanged;
-3. a focused 20-level A/B harness with attribution telemetry;
+1. the pure deterministic legacy-vs-treatment candidate-plan builder;
+2. the trailing research-only `enableElitePrefixLengthOrder=false` parameter, with all existing callers unchanged;
+3. candidate-level attribution trace including frozen index-depth residual plus observational exact counted residual / portal-jump count;
 4. tests that both orderings contain the exact same candidate multiset and that false/default preserves legacy order.
 
-Then dispatch only the frozen Stage A population.
+The focused direct A/B harness is now implemented at `scripts/stress/ws1-remaining-length-intrasolve-bridge.mjs`. It emits the frozen solve/work decision evidence plus candidate attribution without changing the treatment or introducing a production flag.
+
+Remaining before evidence acquisition:
+
+1. validate the harness against current CI/type/lint and the historical control contract;
+2. dispatch only the frozen Stage A population;
+3. apply the frozen decision rule without retuning.

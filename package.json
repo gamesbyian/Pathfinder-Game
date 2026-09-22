@@ -413,7 +413,8 @@
     "research:apply-action-selection-legal-signal-model": "node scripts/apply-action-selection-legal-signal-model.mjs",
     "test:apply-action-selection-legal-signal-model": "node scripts/apply-action-selection-legal-signal-model-node-test.mjs",
     "research:reconcile-broad-solver-evidence": "node scripts/reconcile-broad-solver-evidence.mjs",
-    "test:reconcile-broad-solver-evidence": "node scripts/reconcile-broad-solver-evidence-node-test.mjs"
+    "test:reconcile-broad-solver-evidence": "node scripts/reconcile-broad-solver-evidence-node-test.mjs",
+    "research:ws1-remaining-length-intrasolve-stage-a": "node scripts/run-bundled.mjs scripts/stress/ws1-remaining-length-intrasolve-bridge.mjs --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
