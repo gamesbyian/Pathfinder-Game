@@ -146,4 +146,8 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 ## Current next gate
 
-Phase 0 is being implemented on the same branch as this plan. Do not enable CI skipping until registry parity, impact-model tests, and recent-PR backtesting are complete.
+**Phase 0 foundation is implemented on PR #1965.** The ownership registry is in exact parity with 26 permanent validators and 163 Node/CLI harnesses, and the existing structural gate checks that parity. Universal CI remains unchanged.
+
+**Phase 1 is active.** The conservative source-impact classifier and its first tests are present, and the nine-PR backtest is recorded in `reports/2026-09-21-ci-impact-routing-recent-pr-backtest-001.md`. The dominant false-broadening seam is now measured: research-heavy PRs that modify `package.json` solely to register tooling still escalate to full impact.
+
+Next: inventory current tracked-path coverage/unknowns, inspect `package.json` and generic-script ownership seams, harden rename/delete/config-mutation behavior, then rerun a larger historical backtest. Do not enable CI skipping until those gates close.
