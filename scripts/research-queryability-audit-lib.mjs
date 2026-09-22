@@ -61,6 +61,16 @@ function evaluateSupported(graph, benchmark, root) {
         const count = view.count ?? view.rows?.length ?? view.findings?.length ?? 0;
         if (count === 0) failures.push('expected a non-empty result');
     }
+    if (benchmark.mustIncludeSupport) {
+        const match = (view.rows ?? []).find(row =>
+            row.questionId === benchmark.mustIncludeSupport.questionId
+            && row.disposition === benchmark.mustIncludeSupport.disposition);
+        if (!match) {
+            failures.push('missing required support impact '
+                + benchmark.mustIncludeSupport.questionId + ':'
+                + benchmark.mustIncludeSupport.disposition);
+        }
+    }
 
     return { view, failures };
 }
