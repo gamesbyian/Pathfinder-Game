@@ -11,7 +11,7 @@
 > **Capability-history authority:** [`solver-capability-evidence.md`](solver-capability-evidence.md).
 > **Search-loss implementation authority:** [`solver-search-loss-evidence-implementation-plan.md`](solver-search-loss-evidence-implementation-plan.md).
 
-## Implementation status (reconciled 2026-09-21)
+## Implementation status (reconciled 2026-09-22)
 
 Direct implementation/precommitment work is exhausted; surviving science is routed through current workstream/future-work authorities.
 
@@ -23,6 +23,7 @@ Direct implementation/precommitment work is exhausted; surviving science is rout
 - **Phase 4E — complete:** capability evidence may consume protocol-compatible failure-response joins as derived research evidence, never production policy.
 - **Phase 5 — condition-gated:** no recurring rich producer is justified; a repeated event/state consumer may reopen bounded targeted capture. [Audit](../reports/2026-09-19-recurring-rich-search-loss-producer-candidate-audit-001.md).
 - **Phases 6-8 — condition-gated / routed:** repeated compatible populations may earn richer reducers/resource work; recurring rich production routes to search-loss P8; explicit first-loss selection routes to P9.
+- **2026-09-22 broad compact acquisition — available / contrastive use required:** canonical refresh `35687363645` produced complete compact response for 1,802 parents and 56,906 attempts with complete normalized action/configuration work joins. All 532 current misses are invocation-level node-limited, but 1,010 solved parents also contain failed attempts. Therefore broad residual screening should use parent-level residual-vs-solved controls before richer capture; censoring/event volume alone is non-discriminating. This does not create a recurring rich producer or satisfy search-loss P8. [Reconciliation](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md).
 
 Do not manufacture populations or select a discriminator to close this plan. Live descendants are the repair-deadline experiment, reserve-repricing experiment design, and future recurrence/first-loss triggers owned by canonical authorities.
 
