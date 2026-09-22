@@ -93,16 +93,73 @@ export function analyzeLegalSignalCapture(dataset,{minSupports=[10,50,100]}={}) 
     const thresholds=minSupports.map(minSupport=>{
       let preWinnerWork=0,nominatedPreWinnerWork=0,nominatedAttempts=0;
       const endangeredLevels=new Set(), validationSolvedLevels=new Set();
+      const nominatedPreWinnerRows=[], allPreWinnerRows=[];
       for (const r of val) {
         if (r.levelSolved) validationSolvedLevels.add(r.levelId);
-        if (r.offlinePreWinner) preWinnerWork += r.nextAttemptWork;
+        if (r.offlinePreWinner) {
+          preWinnerWork += r.nextAttemptWork;
+          allPreWinnerRows.push(r);
+        }
         const s=stats.get(keyOf(fn(r)));
         const nominate=!!s && s.support>=minSupport && s.wins===0;
         if (!nominate) continue;
         nominatedAttempts++;
-        if (r.offlinePreWinner) nominatedPreWinnerWork += r.nextAttemptWork;
+        if (r.offlinePreWinner) {
+          nominatedPreWinnerWork += r.nextAttemptWork;
+          nominatedPreWinnerRows.push(r);
+        }
         if (r.offlineIsWinner) endangeredLevels.add(r.levelId);
       }
+
+      const workBreakdown=(rows,keyFn,total)=> {
+        const groups=new Map();
+        for (const r of rows) {
+          const key=keyFn(r);
+          const g=groups.get(key) ?? {key,work:0,attempts:0,levels:new Set()};
+          g.work += r.nextAttemptWork;
+          g.attempts++;
+          g.levels.add(r.levelId);
+          groups.set(key,g);
+        }
+        return [...groups.values()]
+          .map(g=>({key:g.key,work:g.work,workShare:ratio(g.work,total),attempts:g.attempts,levels:g.levels.size}))
+          .sort((a,b)=>b.work-a.work || String(a.key).localeCompare(String(b.key)));
+      };
+
+      const sameStageWork=nominatedPreWinnerRows
+        .filter(r=>r.priorStage===r.nextStage)
+        .reduce((sum,r)=>sum+r.nextAttemptWork,0);
+      const baselineSameStageWork=allPreWinnerRows
+        .filter(r=>r.priorStage===r.nextStage)
+        .reduce((sum,r)=>sum+r.nextAttemptWork,0);
+
+      const signatureGroups=new Map();
+      for (const r of nominatedPreWinnerRows) {
+        const parts=fn(r), key=keyOf(parts);
+        const g=signatureGroups.get(key) ?? {
+          signature:parts,
+          developmentSupport:stats.get(key)?.support ?? 0,
+          developmentWins:stats.get(key)?.wins ?? 0,
+          work:0,attempts:0,levels:new Set(),
+        };
+        g.work += r.nextAttemptWork;
+        g.attempts++;
+        g.levels.add(r.levelId);
+        signatureGroups.set(key,g);
+      }
+      const topSignatures=[...signatureGroups.values()]
+        .map(g=>({
+          signature:g.signature,
+          developmentSupport:g.developmentSupport,
+          developmentWins:g.developmentWins,
+          work:g.work,
+          workShare:ratio(g.work,nominatedPreWinnerWork),
+          attempts:g.attempts,
+          levels:g.levels.size,
+        }))
+        .sort((a,b)=>b.work-a.work || keyOf(a.signature).localeCompare(keyOf(b.signature)))
+        .slice(0,10);
+
       return {
         minDevelopmentSupport:minSupport,
         validationSolvedLevels:validationSolvedLevels.size,
@@ -112,6 +169,15 @@ export function analyzeLegalSignalCapture(dataset,{minSupports=[10,50,100]}={}) 
         capturedPreWinnerWorkShare:ratio(nominatedPreWinnerWork,preWinnerWork),
         endangeredWinnerLevels:endangeredLevels.size,
         endangeredWinnerRate:ratio(endangeredLevels.size,validationSolvedLevels.size),
+        diagnostics:{
+          nominatedSameStageContinuationWork:sameStageWork,
+          nominatedSameStageContinuationWorkShare:ratio(sameStageWork,nominatedPreWinnerWork),
+          baselineSameStageContinuationWorkShare:ratio(baselineSameStageWork,preWinnerWork),
+          nominatedByPriorOutcome:workBreakdown(nominatedPreWinnerRows,r=>r.priorOutcome,nominatedPreWinnerWork),
+          baselineByPriorOutcome:workBreakdown(allPreWinnerRows,r=>r.priorOutcome,preWinnerWork),
+          nominatedByNextStage:workBreakdown(nominatedPreWinnerRows,r=>r.nextStage,nominatedPreWinnerWork),
+          topSignatures,
+        },
       };
     });
     families.push({family,developmentDistinctSignatures:stats.size,thresholds});
