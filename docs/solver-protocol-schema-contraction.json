@@ -702,8 +702,8 @@
       "persistedExternalRequirement": true,
       "treatment": "investigate",
       "status": "in-progress",
-      "retirementGate": "Remove the legacy five-hint storage truncation or replace it with an explicit provenance-aware Firestore capacity policy based on backend limits. Display curation remains separate. Any intentional backend cap must preserve semantic merge/provenance up to that declared capacity and must surface, not silently discard, overflow.",
-      "progress": "Strengthened 2026-09-22 by historical/current-path audit. Firestore approveHintAddition()'s `mergeHints(...).slice(0, 5)` predates provenance and survived later migrations without a provenance-era rationale. It now conflicts with submission's explicit 1,000-hint Firestore safety margin, local_level_hints' 5,000 soft cap, and player display curation's independent default cap of 15."
+      "retirementGate": "Define one semantic Hint retention contract across Firestore backends. Remove the legacy five-path truncation or replace it with an explicit provenance-aware capacity policy, and ensure a newly accepted Hint cannot lose existing provenance merely because the target uses local_level_hints. Physical schemas may differ, but semantic merge/provenance preservation must not.",
+      "progress": "Strengthened 2026-09-22 by historical/current-path audit. Firestore approveHintAddition()'s `mergeHints(...).slice(0, 5)` predates provenance and conflicts with modern 1000/5000/display limits. In addition, approveLocalHintAddition() takes only `hint.provenance[hint.provenance.length - 1]` and local_level_hints stores a singular provenance entry per novel path, so the same newly submitted semantic Hint can retain all provenance in published_levels but lose all but one event in the local supplemental backend."
     },
     {
       "id": "PSC-030",
