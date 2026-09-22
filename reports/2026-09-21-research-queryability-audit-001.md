@@ -69,7 +69,7 @@ The first graph layer is now only the lowest tier.
 
 `research:query -- --view=...` now owns recurring cross-system questions that should not be reimplemented ad hoc:
 
-- `answerability`: current workstream gates split into no-fresh-solver-compute, bounded-compute, dormant/conditional, and unclassified;
+- `answerability`: current workstream gates split into no-fresh-solver/reference-execution, instrument-only observation, bounded-compute, dormant/conditional, and unclassified;
 - `impact`: bounded dependency/support paths from a premise, question, measurement opportunity, or repository artifact;
 - `live-successors`: reports with structured successor questions still live;
 - `closed-constraints`: terminal questions constraining live descendants;
@@ -83,7 +83,7 @@ The first graph layer is now only the lowest tier.
 
 ### Temporal queryability
 
-`research:query -- --snapshot` emits a compact current graph/gate snapshot. `--compare-snapshot=<file>` reports node/edge additions/removals and workstream gate transitions, including gates that became newly advanceable without fresh solver/reference compute.
+`research:query -- --snapshot` emits a compact current graph/gate snapshot. `--compare-snapshot=<file>` reports node/edge additions/removals and workstream gate transitions, including gates that became newly advanceable without fresh solver/reference execution; instrument-only transitions are reported separately because observation may still require fresh runs.
 
 Research-system findings have a separate `--system-snapshot` / `--compare-system-snapshot=<file>` surface. Finding identity hashes stable keys; a separate content fingerprint reports changed findings without turning content mutation into a new identity.
 
