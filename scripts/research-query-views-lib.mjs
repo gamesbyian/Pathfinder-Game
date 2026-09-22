@@ -46,12 +46,13 @@ function isTerminalQuestion(node) {
 export function buildAnswerabilityView(graph) {
     const queues = graph.nodes.filter(node => node.type === 'queue');
     const buckets = {
-        noSolverCompute: [],
+        noFreshSolverExecution: [],
+        instrumentOnly: [],
         boundedCompute: [],
         dormantOrConditional: [],
         unclassified: [],
     };
-    const noCompute = new Set(['existing-data', 'instrument-only', 'design', 'implementation']);
+    const noFreshExecution = new Set(['existing-data', 'design', 'implementation']);
     const dormant = new Set(['blocked', 'reopen-only', 'method', 'subsumed', 'service']);
 
     for (const node of queues) {
@@ -66,7 +67,8 @@ export function buildAnswerabilityView(graph) {
             context: node.row?.state ?? null,
         };
         if (gateClass === 'bounded-compute') buckets.boundedCompute.push(item);
-        else if (noCompute.has(gateClass)) buckets.noSolverCompute.push(item);
+        else if (gateClass === 'instrument-only') buckets.instrumentOnly.push(item);
+        else if (noFreshExecution.has(gateClass)) buckets.noFreshSolverExecution.push(item);
         else if (dormant.has(gateClass)) buckets.dormantOrConditional.push(item);
         else buckets.unclassified.push(item);
     }
@@ -74,8 +76,9 @@ export function buildAnswerabilityView(graph) {
     return {
         view: 'answerability',
         semantics: {
-            noSolverCompute: 'The immediate canonical workstream gate can advance without fresh solver/reference execution.',
-            boundedCompute: 'The immediate canonical workstream gate explicitly requires fresh solver/reference execution.',
+            noFreshSolverExecution: 'The immediate canonical workstream gate can advance without fresh solver/reference execution.',
+            instrumentOnly: 'The immediate gate requires new production-inert observation/instrumentation. This may require fresh solver execution even though it is not treatment acquisition.',
+            boundedCompute: 'The immediate canonical workstream gate explicitly requires fresh solver/reference execution for the scientific discriminator.',
             dormantOrConditional: 'No ordinary execution gate is currently active; the lane is blocked, conditional, methodological, subsumed, reopen-only, or service-like.',
             unclassified: 'The workstream has no authored gate class. Do not infer one from prose.',
         },
@@ -338,8 +341,8 @@ export function buildQueryabilityCoverageView(graph) {
         orphanCounts: graph.diagnostics?.orphanCounts ?? {},
         unresolvedEdges: graph.diagnostics?.unresolvedEdges ?? [],
         structuredGateCoverage: {
-            classified: answerability.noSolverCompute.length + answerability.boundedCompute.length
-                + answerability.dormantOrConditional.length,
+            classified: answerability.noFreshSolverExecution.length + answerability.instrumentOnly.length
+                + answerability.boundedCompute.length + answerability.dormantOrConditional.length,
             unclassified: answerability.unclassified.length,
         },
         provenanceGaps: ownership,
