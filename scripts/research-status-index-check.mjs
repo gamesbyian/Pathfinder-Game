@@ -20,9 +20,9 @@ mkdirSync(path.join(root, 'reports')); mkdirSync(path.join(root, 'docs'));
 writeFileSync(path.join(root, 'docs/topic.md'), '# Topic\n');
 writeFileSync(path.join(root, 'docs/solver-optimization-workstreams.md'), `# Solver optimization workstreams
 ## Workstream state
-| ID | Workstream | Execution state | State / context | Next gate | Stable question ref |
-|---:|---|---|---|---|---|
-| 2 | Current question | \`active\` | **ACTIVE** | Run current gate. | \`WS2-CURRENT\` |
+| ID | Workstream | Execution state | Gate class | State / context | Next gate | Stable question ref |
+|---:|---|---|---|---|---|---|
+| 2 | Current question | \`active\` | \`existing-data\` | **ACTIVE** | Run current gate. | \`WS2-CURRENT\` |
 `);
 writeFileSync(path.join(root, 'docs/solver-opt-in-experiment-ledger.md'), `# Ledger
 ## Current production-default-OFF flags
