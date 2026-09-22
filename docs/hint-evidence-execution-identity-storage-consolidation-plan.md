@@ -647,6 +647,184 @@ Allow explicit compatibility/migration exemptions with comments where necessary.
 This turns the architecture into an enforceable repository invariant instead of relying on future
 agents remembering this plan.
 
+## 13.1 Parallel-dialect audit findings to absorb before implementation
+
+A follow-up audit against the repository's existing protocol/schema-contraction authority found
+additional seams directly relevant to this program. These are not merely compatibility trivia.
+Where they represent current divergence, this plan should close them or deliberately classify them
+as permanent external/archive adapters.
+
+### A. Hint mutable authority has regressed in one maintained tool
+
+`docs/solver-protocol-schema-contraction.json` marks the `.hints` versus `.hintRecords` seam
+closed, with `setLevelHintRecords()` as the sole current mutation boundary.
+
+However `scripts/hint-candidate-search.mjs` still:
+
+- imports removed `readLevelsWithHints` / `writeLevelsWithHints` APIs from
+  `scripts/level-data-io.mjs`;
+- mutates `raw.hints` directly under `--write-levels`;
+- never constructs provenance-rich canonical records for those accepted candidates.
+
+This means the supported targeted-candidate tool is both stale against the current I/O contract and
+a violation of the claimed single mutable authority.
+
+Treat this as a current regression, not historical compatibility. Repair it early and add the
+storage-boundary check proposed above so the seam cannot silently reopen again.
+
+### B. Canonical provenance normalization currently has contradictory missingness semantics
+
+The evidence doctrine says missing legacy context remains unknown, especially absent capability
+booleans such as `isolatedTechnique`.
+
+Current `upgradeProvenanceEntry()` for nested records nevertheless fills absent:
+
+- `usedExistingHints`;
+- `hintGuided`;
+- `isolatedTechnique`;
+
+with `false`.
+
+At the same time it does not fully fill all missing solver/search fields to the explicit-null shape
+produced by `makeProvenanceEntry()`.
+
+Therefore two records may both be described as canonical expanded provenance while using different
+rules for omission, null, false, and historical unknown. This also conflicts with the September 11
+provenance audit's stated fix for absent-as-false interpretation.
+
+Before v4 sparse storage is designed, define one canonical semantic-normalization contract that
+distinguishes:
+
+- canonical default false/null;
+- historically absent/unknown;
+- truly not-applicable fields.
+
+A compact codec cannot safely omit defaults until those semantics are executable and tested.
+
+### C. Hint artifact `schemaVersion` is currently advisory rather than authoritative
+
+Node and browser readers primarily detect shapes by field presence:
+
+- bare array;
+- object with `hints`;
+- transitional `hintMetadata`.
+
+They do not dispatch on `schemaVersion`, and an unknown future wrapper containing an array named
+`hints` can be accepted as though it were understood.
+
+This conflicts with the repository's own protocol/schema-contraction rule that versioned artifacts
+should use explicit versioned adapters rather than field-presence guessing.
+
+The shared v4 codec should therefore be introduced as a **version authority**, not merely a new
+serializer:
+
+- explicit known-version readers;
+- explicitly named unversioned/legacy adapters;
+- fail closed on unsupported future schema versions;
+- one current write version;
+- fixtures for every retained historical generation.
+
+### D. Hint file writing, listing, and corpus-to-hints layout have different authorities
+
+`hintFileName()` accepts any string persistent ID verbatim, while `listHintFiles()` discovers only
+filenames matching `[A-Za-z]?\d{3,}.json`. A valid future/string ID can therefore be writable but
+invisible to formatting/validation/migration callers that enumerate through `listHintFiles()`.
+
+Likewise the Node side derives hint directories from the levels filename
+(`stress-levels-<suffix>.json -> hints-<suffix>/`), while the browser side is configured separately
+with `basePath` / `hintsDirName`.
+
+These should become one documented artifact-layout contract with environment-specific path
+adapters. A file that the canonical writer can create must be discoverable by canonical validators,
+migrators, and indexes.
+
+### E. Execution/protocol identity already has several overlapping field dialects
+
+Current research/execution artifacts use overlapping concepts under names such as:
+
+- `effectiveConfigDigest`;
+- `experiment.configurationHash`;
+- `configurationHash`;
+- `protocolHash`;
+- `sourceProtocolHash`;
+- `solverRef`, `sha`, `commit`, `commitSha`, and hint `solver.version`.
+
+In at least one current helper, hint-discovery-process evidence writes
+`protocolHash` and `configurationHash` to the same value.
+
+Do not simply add another `effectiveSolverConfigDigest` field beside these. Phase 1 must inventory
+the meaning of every current identity field, assign each to the target hierarchy
+(EffectiveSolverConfig / ExecutionProtocol / RunEnvelope / immutable solver ref), and either:
+
+- migrate current writers to the canonical field;
+- retain a clearly scoped specialist field because its semantics genuinely differ; or
+- move old spellings behind historical ingress adapters.
+
+### F. Standard source-run provenance is duplicated in multiple envelope shapes
+
+`publish-solver-sweep-result.mjs` writes a standard `manifest.json` and can also write a
+`pathfinder-gha-source-run` provenance sidecar containing an overlapping projection of workflow,
+run, SHA/ref, dispatch inputs, artifact coverage, and research outcome.
+
+Other evidence families carry run/protocol identity again in failure-response documents,
+hint-discovery-process envelopes, harvest-selection manifests, and pending quarantine files.
+
+The target RunEnvelope should not require every specialist artifact to become physically identical,
+but there should be one canonical semantic source-run projection and one extractor. Current
+specialist artifacts may reference or embed that projection rather than independently deciding its
+field vocabulary.
+
+### G. Hint-harvest selection accounting is asymmetric across ingestion paths
+
+The level-blind report harvester has a durable selection manifest describing solved candidates,
+referee acceptance, already-represented evidence, and quarantines.
+
+The direct hint-artifact merger and isolated-report harvester have separate semantics and do not
+currently expose the same standardized retention funnel. The asset registry explicitly documents
+this asymmetry.
+
+As GHA persistence is centralized, standardize a common minimal ingestion accounting model while
+allowing producer-specific details. This is necessary to distinguish:
+
+- producer novelty;
+- referee rejection;
+- compatibility rejection;
+- semantic deduplication;
+- already-represented evidence;
+- quarantine;
+- actual persistence failure.
+
+### H. Firestore hint persistence has multiple physical schemas and materially different limits
+
+Git-backed hints, Firestore `published_levels`, and `local_level_hints` legitimately need different
+physical storage, but their semantic adapters and capacity expectations are inconsistent:
+
+- submitted/published level hints are JSON-stringified individually inside `levelData.hints`;
+- local published-corpus additions store one path/provenance entry per Firestore document;
+- local-level hint storage soft-caps at 5,000;
+- Firestore `approveHintAddition()` currently truncates the merged hint set to **5**;
+- submission/search surfaces can handle far more hints.
+
+Do not blindly make all backends use the git v4 wire format. Instead audit the five-hint truncation
+and define one semantic capacity/retention contract per persistence surface. Any intentional
+backend limit must be explicit and must not silently discard provenance/events during a merge.
+
+### I. Existing schema-contraction registry is part of this program's control plane
+
+Do not maintain this plan as a parallel cleanup universe.
+
+The follow-up audit reopens at least:
+
+- PSC-001, hint mutable representation;
+- PSC-015, hint provenance schema generations.
+
+Add newly discovered seams for version dispatch, artifact layout/discovery, execution identity,
+GHA persistence lanes, ingestion accounting, and external hint persistence where appropriate.
+
+A seam marked complete may be reopened when exercised current code disproves its retirement gate;
+the contraction plan explicitly permits that behavior.
+
+
 ## 14. Implementation sequence
 
 ### Phase 0 — land and adopt the determinism audit
