@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 
-import { classifyPackageJsonDocuments, classifyPaths } from './ci-impact-classifier.mjs';
+import { classifyChanges, classifyPackageJsonDocuments, classifyPaths } from './ci-impact-classifier.mjs';
 
 function expect(paths, surfaces, { full = false } = {}) {
   const result = classifyPaths(paths);
@@ -108,5 +108,22 @@ const ciScriptChange = classifyPackageJsonDocuments(packageBase, {
   },
 });
 assert.equal(ciScriptChange.full, true);
+
+
+const deletedSolver = classifyChanges([{ status: 'D', path: 'modules/solver/search.ts' }]);
+assert.equal(deletedSolver.full, false);
+assert.deepEqual(deletedSolver.surfaces, ['research', 'solver']);
+
+const renamedAcrossBoundary = classifyChanges([{
+  status: 'R',
+  previousPath: 'modules/solver/search.ts',
+  path: 'scripts/stress/search-copy.mjs',
+}]);
+assert.equal(renamedAcrossBoundary.full, false);
+assert.deepEqual(renamedAcrossBoundary.surfaces, ['research', 'solver']);
+
+const malformedChange = classifyChanges([{ status: 'X', path: 'docs/solver-future-work.md' }]);
+assert.equal(malformedChange.full, true);
+assert.deepEqual(malformedChange.surfaces, ['data', 'game', 'repo', 'research', 'shared', 'solver']);
 
 console.log('CI impact classifier conservative routing tests passed.');
