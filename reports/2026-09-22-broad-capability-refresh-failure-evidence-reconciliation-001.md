@@ -47,12 +47,43 @@ The 532 residual parents contain 35,957 attempts:
 
 Censoring and failed attempts are therefore common on both sides of the solve boundary. Any recurrence/phenotype analysis must compare parent-level residual behavior with solved-parent failed-attempt controls and preserve stage/action/protocol identity. Raw event counts, raw censoring rates, or "many failed attempts" are not discriminators.
 
+## Same-stage failed-control result
+
+The fresh corpus was reduced one step further instead of merely being queued for later analysis.
+
+A naive residual-vs-solved comparison makes late-stage reach look highly discriminating because unsolved parents necessarily fall through more of the sequential portfolio. That is outcome/sequence conditioning. The fairer compact comparison is: among parents that reached a stage **and that stage itself failed**, compare the eventual residuals with solved parents whose same stage also failed.
+
+That largely removes the apparent separation:
+
+| Failed stage | Residual parents | Solved-parent failed controls | Median work, residual | Median work, controls | Node-cap rate, residual | Node-cap rate, controls |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| main-search | 532 | 349 | 29.23M | 30.33M | 70.5% | 71.9% |
+| early-repair-search | 383 | 510 | 23.01M | 22.88M | 100% | 100% |
+| connectivity-axis-prune-disabled-retry | 532 | 194 | 23.24M | 23.33M | 100% | 100% |
+| admissible-order-fallback | 532 | 246 | 14.35M | 15.18M | 100% | 100% |
+| admissible-order-alternate-tiebreak-retry | 532 | 198 | 14.47M | 15.50M | 100% | 100% |
+| coarse-state-near-tie-retention-disabled-retry | 532 | 229 | 14.41M | 14.40M | 100% | 100% |
+| guidance-goal-distance-retry | 532 | 155 | 42.20M | 49.63M | 48.7% | 50.3% |
+| late-repair-multiseed-retry | 149 | 33 | 126.83M | 126.91M | 100% | 100% |
+
+This is a real stop result for the generic compact discriminator. Current residuals are not a visibly separate species at stage-level work/cap resolution; successful solve histories often traverse the same capped/failed regimes before a later success.
+
+Consequences:
+
+- do not buy another whole-corpus run merely to collect more of the same compact fields;
+- do not treat stage reach itself as causal evidence;
+- keep the already-earned narrow repair-deadline and reserve-repricing questions under their existing owners;
+- for the broader capability-invention question, move one rung richer to mechanically sampled first-loss / operational-divergence evidence outside capability-selected Class 3, using the compact denominator to freeze/stratify the sample and preserve solved controls;
+- keep exact/reference annotation downstream of the selected richer sample.
+
+The failure-data firehose therefore narrows the next information purchase rather than creating a new taxonomy.
+
 ## Immediate research use
 
 The fresh dataset is large enough to make several existing-data questions cheap before any new solver execution:
 
-1. **Residual-vs-solved response contrast.** Use the compact reducer to compare stage participation, termination mode, work share, and supported progress/prune/beam-flow fields by parent, with solved-parent failed attempts as controls.
-2. **First-loss acquisition triage.** Rank candidate residual strata by response features that are uncommon in solved controls, then use those strata only to choose the smallest richer trace/exact instrument. Do not promote a selected phenotype directly.
+1. **Residual-vs-solved compact contrast: COMPLETE / GENERIC DISCRIMINATOR EXHAUSTED.** Same-stage failed controls largely match residual work/cap behavior. Preserve compact response as denominator/routing evidence rather than collecting more of it for the same question.
+2. **First-loss acquisition triage: NEXT FOR THE BROADER GAP.** Freeze a mechanically sampled residual/control population from the fresh denominator and buy richer operational-divergence / first-loss evidence. Use exact/reference work only after that richer sample identifies a discriminating locus.
 3. **Allocation questions.** Recheck repair-deadline and reserve-repricing premises against the full fresh attempt population before dispatching their bounded experiments. Existing causal precommitments remain authoritative; this dataset may size or stratify them, not rewrite their decision rules.
 4. **Capability-invention demand.** Use exposure/censoring/response evidence to rule out cheap HARVEST explanations before escalating residual examples to EXTENSION/INVENTION.
 5. **Research-system economics.** Because exact action/configuration identity and work are complete, broad residual screening can now happen without bespoke JSON archaeology or another whole-corpus acquisition.
