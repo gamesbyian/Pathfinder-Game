@@ -255,6 +255,7 @@
     "check:validators:research": "node scripts/validation-groups.mjs validators research",
     "check:validators:solver": "node scripts/validation-groups.mjs validators solver",
     "check:validators:game": "node scripts/validation-groups.mjs validators game",
+    "check:validators:persistence": "node scripts/validation-groups.mjs validators persistence",
     "check:validators:data": "node scripts/validation-groups.mjs validators data",
     "check:validators:shared": "node scripts/validation-groups.mjs validators shared",
     "test:node:repo": "node scripts/validation-groups.mjs nodeTests repo",
