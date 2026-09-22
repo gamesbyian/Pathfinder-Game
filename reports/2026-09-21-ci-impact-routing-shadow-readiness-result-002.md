@@ -81,6 +81,12 @@ Permanent tests cover research-only, solver, persistence, and full plans plus ac
 
 This contract remains descriptive until `ci-success` and scoped conditions are deliberately activated in the workflow.
 
+## Durable shadow evidence
+
+PR shadowing, main-push shadowing, and the manual activation rehearsal now write a machine-readable `ci-impact-shadow` artifact containing run context, semantic impact, validation obligations, and lane packing. This turns future shadow collection into comparable data rather than log archaeology.
+
+Ordinary shadow jobs intentionally remain non-gating while the existing full gates are authoritative. The activation rehearsal is different: its `impact-shadow` job must fail closed, and the parity checker rejects `continue-on-error: true` inside that router job. The future required-status contract therefore cannot mistake a classifier failure for a successful routing decision.
+
 ## Remaining activation gates
 
 Before scoped execution becomes authoritative:
