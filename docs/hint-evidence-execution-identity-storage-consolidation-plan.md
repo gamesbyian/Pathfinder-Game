@@ -157,62 +157,69 @@ must remain separate.
 Do not silently redefine `provenanceEventIdentity()` to mean deterministic replay identity. Its
 persistence semantics and historical dedupe behavior are distinct.
 
-### 3.2 New canonical effective solver configuration
+### 3.2 Canonical solver request capsule
 
-Add a shared owner for a versioned `EffectiveSolverConfig` projection.
+Do **not** introduce a surfaced `EffectiveSolverConfig` aggregate. That name would collapse several
+dimensions that the repository's canonical solver vocabulary deliberately keeps distinct: attempt
+configuration, routing regime, solver stage, resource envelope, seed, backend execution semantics
+and experiment treatment are not one generic “config”.
 
-It should contain every behavior-affecting solver option that can change the search trajectory or
-allocation, normalized through existing semantic owners wherever possible, including:
+Instead add one versioned **solver request capsule** whose job is transport/replay completeness, not
+new conceptual taxonomy. It should compose the existing canonical owners for behavior-affecting
+request dimensions, including as applicable:
 
-- canonical normalized ablation configuration;
-- scheduler mode;
-- static-portfolio configuration when applicable;
-- strict-total-work behavior;
-- canonical base work/node allocations and relevant override semantics;
-- behavior-affecting retry/reserve/repair/search overrides;
-- other solver options demonstrated to affect candidate ordering, attempt availability, budgets, or
-  traversal.
+- canonical attempt/action identity and normalized ablation configuration;
+- scheduler mode / solver stage semantics;
+- routing/static-portfolio request semantics;
+- resource-envelope fields such as base/strict-total work and relevant node/work overrides;
+- behavior-affecting retry/reserve/repair/search request fields;
+- deterministic seed/salt dimensions;
+- backend-specific request fields demonstrated to affect execution;
+- observer configuration only when the operating-model reactivity rules make it outcome-relevant.
 
 It should exclude:
 
 - corpus hash/population identity;
 - workflow/run ID;
 - output filenames;
-- diagnostic-only observer configuration that is proven search-inert;
+- diagnostic-only observer configuration proven outcome-inert for the applicable execution;
 - artifact transport details;
-- host/concurrency details already covered by stronger determinism contracts unless they become
-  semantically relevant.
+- unrelated host metadata.
 
-Create a versioned semantic digest from this canonical projection. Reuse shared stable/canonical
-serialization instead of producer-local `stableStringify()` implementations.
+The capsule must preserve the canonical names of its component dimensions rather than rebranding them
+as subfields of a generic configuration concept. Create a versioned semantic digest from the
+canonical request projection and reuse shared stable/canonical serialization instead of
+producer-local `stableStringify()` implementations.
 
 ### 3.3 Execution protocol
 
-Define a second canonical projection for the execution protocol:
+Define a separate canonical projection for execution protocol:
 
-- effective solver configuration identity;
-- solver mode such as level-blind/history-aware;
-- scheduler/work semantics not already represented in effective solver config;
-- named experimental treatment/arm where needed;
+- solver-request identity;
+- level-blind/history-aware execution mode where applicable;
+- backend/reproducibility semantics not already intrinsic to the request capsule;
+- named experimental treatment/arm where comparison semantics require it;
 - other meaning-changing execution rules.
 
-This identity answers “are these observations protocol-comparable?” rather than “are the solver
-inputs byte-for-byte equivalent?”.
+This identity answers “are these observations protocol-comparable?” rather than “are these solver
+requests equal?”.
 
-### 3.4 Run envelope
+### 3.4 Source-run binding
 
-Define a bounded source/run envelope:
+Define a bounded source-run binding:
 
 - immutable solver commit/ref;
 - source workflow/tool family;
 - source run ID and run attempt when available;
 - execution protocol identity;
-- effective solver config identity;
+- solver-request identity;
 - population/corpus identity or hash;
 - experiment/cohort/arm identity when applicable;
 - source-run lineage for recombined runs.
 
-The run envelope is identity glue, not a telemetry dump. Do not copy full pre-win attempt sequences,
+This binding is identity glue, not a telemetry dump. Reuse the repository's established
+`gha-source-run` / source-run vocabulary where the GHA provenance contract applies rather than
+minting an overlapping generic “run envelope” identity. Do not copy full pre-win attempt sequences,
 rich traces, or entire experiment manifests into every hint event.
 
 ### 3.5 Effective solver input identity
@@ -226,11 +233,11 @@ effective attempts, such as:
 
 - level structural revision;
 - solver version;
-- canonical action/config identity;
+- canonical action/attempt identity;
 - forcing/gate dimensions;
-- relevant work/node allocation;
+- relevant resource envelope;
 - seed/salt when meaningful;
-- effective solver configuration identity.
+- canonical solver-request identity.
 
 Prefer returning structured availability information rather than a naked hash, for example:
 
@@ -247,7 +254,7 @@ Extend the semantic provenance model additively with a bounded execution/run bin
 The exact final field names should be chosen during implementation, but the semantic shape should
 support:
 
-- effective solver configuration identity;
+- solver-request identity;
 - execution protocol identity;
 - source run identity;
 - optional experiment arm/cohort identity;
@@ -255,7 +262,7 @@ support:
 
 Non-solver producers are not required to invent solver-run semantics. Human paths, construction
 witnesses, transformed family witnesses, and external solvers may legitimately leave Pathfinder
-effective-config fields unavailable while retaining their own producer identity.
+Pathfinder solver-request fields unavailable while retaining their own producer identity.
 
 `makeProvenanceEntry()`, current-solve provenance construction, historical-result upgrading, and
 query/replay helpers should all share this model.
@@ -271,7 +278,7 @@ Target flow:
 
 ```
 solver execution
-  -> solved observation + canonical execution/run envelope
+  -> solved observation + canonical execution/source-run binding
   -> shard artifact uploaded even on partial failure where useful
   -> Harvest solver hint evidence
   -> source/run compatibility checks
@@ -505,7 +512,7 @@ After canonical effective-input identity exists:
 - replace bespoke recorded-input grouping with the shared identity helper;
 - retain conservative “recorded-input collision” language for incomplete historical events;
 - require the fifteen known 2026-09-09 control/treatment collisions to separate automatically if
-  their run envelopes are mechanically backfilled;
+  their source-run bindings are mechanically backfilled;
 - otherwise require them to remain explicitly incomplete, not falsely equal;
 - preserve the finding that the reconstructable current population contains zero demonstrated
   same-effective-input/different-path cases unless new evidence changes it.
@@ -522,7 +529,7 @@ whole effective-input equality.
 
 Update the structured research asset registry and derived prose so hint provenance advertises:
 
-- effective solver config identity;
+- solver-request identity;
 - execution protocol/run binding;
 - effective-input reconstructability;
 - distinct event-vs-input identity;
@@ -1183,6 +1190,43 @@ build time before/after.
 The browser-safe canonical decoder is still required for development, compatibility tests and any
 authoring surface that reads canonical artifacts directly; the runtime projection is not a license
 to let Node/browser semantic decoding diverge.
+
+## 13.2 Naming-cleanup compatibility guard
+
+This program is not a naming-cleanup phase, but several implementation steps are cross-boundary
+identity/schema migrations and therefore inherit the repository's naming-migration safeguards.
+
+Before introducing or surfacing a new durable type, field, schema key, command, workflow/artifact
+identity or public helper:
+
+1. reconcile against current `docs/naming-and-vocabulary.md`;
+2. search both the proposed canonical term and nearby/legacy terms and classify target-name
+   occupancy as same concept, unrelated use, collision or historical compatibility;
+3. prefer existing canonical vocabulary and owners over a new synonym;
+4. use `docs/change-recipes.md` for any persisted or cross-boundary identity migration, including
+   producer/normalizer/transports/writer/historical-reader/grouping-consumer impact mapping;
+5. use dual-read / canonical-internal / single-write where historical compatibility is promised;
+6. prove alternate direct/worker/raced/workflow transports rather than assuming a definition-site
+   change propagated;
+7. keep frozen historical names in historical evidence rather than cosmetically rewriting them;
+8. close the migration from consumers inward and leave a mechanical residue/parity guard where the
+   old/new distinction is detectable.
+
+Planning shorthand is not automatically a durable product/schema name. In particular:
+
+- **join spine** describes the cross-resource identity relationship in this plan; do not create a
+  surfaced `JoinSpine` type/field merely because the phrase is useful here;
+- **execution capsule** is architectural shorthand unless implementation chooses a canonical,
+  role-specific surfaced name after the vocabulary/occupancy check;
+- **run envelope** should not compete with established source-run / `gha-source-run` vocabulary;
+- **configuration** must remain qualified. Do not recreate a generic aggregate that collapses
+  attempt configuration, routing regime, solver stage, resource envelope, seed and protocol;
+- **runtime projection**, **hint-ingestion receipt**, **semantic discovery event** and **occurrence
+  lineage** must remain role-qualified if they become surfaced schema/API names.
+
+If implementation discovers that a proposed name needs repeated disclaimers to explain what it is
+not, treat that as a naming-design failure and choose a more literal role name before the new
+surface becomes persistent.
 
 ## 14. Implementation methodology and dependency-ordered sequence
 
