@@ -24,13 +24,14 @@ The existing census planner already supports an EW1 tier and the combiner alread
 
 Default EW1 contract:
 
-- 60 frozen production-unsolved levels;
+- frozen pre-dispatch production boundary `35066677597` (101/102 C1, 1,169/1,700 C2), replacing the stale `31918095910` workflow default;
+- 60 production-unsolved levels sampled from that frozen boundary;
 - 10,000,000 canonical work per eligible base technique;
 - independent deterministic seed `20260921`;
 - base techniques only, preserving EW1's role as shallow pricing rather than duplicating T1 variants/pairs;
 - one pre-fan-out EW1 cell canary, specifically protecting the strict work-cap seam that previously exposed an IDA budget-contract defect.
 
-EW1 does not replace T1. T1 asks what isolated techniques can eventually do at the maintained depth ceiling. EW1 asks what they buy cheaply in the common canonical allocation currency.
+EW1 does not replace T1. T1 asks what isolated techniques can eventually do at the maintained depth ceiling. EW1 asks what they buy cheaply in the common canonical allocation currency. The sampling boundary stays frozen even if the concurrently requested stress refresh later establishes a newer solved set, avoiding outcome-selected EW1 membership.
 
 ## Broad-run work-saving policy
 
