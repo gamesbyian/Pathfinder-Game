@@ -131,6 +131,8 @@ assert.throws(
 
 const ownershipGaps = buildResearchQueryView(graph, { view: 'ownership-gaps' });
 assert.ok(Array.isArray(ownershipGaps.capabilityDemandsWithoutQuestion));
+assert.ok(ownershipGaps.decisionSupportUnknownQuestions.includes('WS2-MUST-TURN-LATE-ADDITIVE'),
+  'questions with evidence trails but no authored sufficiency semantics should remain measurable as unknown');
 
 const coverage = buildResearchQueryView(graph, { view: 'coverage' });
 assert.equal(coverage.structuredGateCoverage.unclassified, 0);
