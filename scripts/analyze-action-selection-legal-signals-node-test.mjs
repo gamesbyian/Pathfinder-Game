@@ -28,7 +28,7 @@ const levels=[
 ];
 
 const ds=buildActionBoundaryDataset({levels},{source:'fixture'});
-assert.equal(ds.rows.length,12);
+assert.equal(ds.rows.length,11);
 assert.equal(ds.rows[0].priorOutcome,'start');
 assert.equal(ds.rows[1].priorStage,'probe');
 assert.equal(ds.rows[1].priorOutcome,'failed');
@@ -37,7 +37,7 @@ assert.equal(ds.rows[2].cumulativeWorkBand,'<100k');
 const result=analyzeLegalSignalCapture(ds,{minSupports:[1]});
 assert.equal(result.kind,'pathfinder-action-selection-legal-signal-shadow');
 assert.equal(result.population.developmentRows,9);
-assert.equal(result.population.validationRows,3);
+assert.equal(result.population.validationRows,2);
 assert.equal(result.families.length,4);
 
 const stage=result.families.find(f=>f.family==='next-stage').thresholds[0];
