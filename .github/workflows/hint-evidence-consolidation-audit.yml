@@ -10,12 +10,27 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v5
-      - name: Run consolidation census
+        with:
+          fetch-depth: 0
+      - name: Run current consolidation census
+        env:
+          AUDITED_GIT_SHA: ${{ github.sha }}
         run: node scripts/hint-evidence-consolidation-audit.mjs --out=reports/2026-09-22-hint-evidence-consolidation-census.json
-      - name: Upload census
+      - name: Reconstruct September 11 raw store
+        run: |
+          git worktree add /tmp/pathfinder-sep11 b53a17e30f64107f5a5c4744deea871215398aa2
+          AUDITED_GIT_SHA=b53a17e30f64107f5a5c4744deea871215398aa2 \
+            node scripts/hint-evidence-consolidation-audit.mjs \
+            --root=/tmp/pathfinder-sep11 \
+            --out=/tmp/pathfinder-sep11/reports/2026-09-11-hint-evidence-consolidation-census-reconstructed.json
+          cp /tmp/pathfinder-sep11/reports/2026-09-11-hint-evidence-consolidation-census-reconstructed.json \
+            reports/2026-09-11-hint-evidence-consolidation-census-reconstructed.json
+      - name: Upload censuses
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: hint-evidence-consolidation-census
-          path: reports/2026-09-22-hint-evidence-consolidation-census.json
+          path: |
+            reports/2026-09-22-hint-evidence-consolidation-census.json
+            reports/2026-09-11-hint-evidence-consolidation-census-reconstructed.json
           if-no-files-found: error
