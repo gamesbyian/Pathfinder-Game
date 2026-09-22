@@ -89,27 +89,32 @@
   },
   "capabilities": {
     "lint": {
-      "currentCommand": "check:lint",
+      "packageScript": "check:lint",
+      "workflowStepId": "lint",
       "note": "Kept universal initially; narrow only after source-scope measurements."
     },
     "unit-coverage": {
-      "currentCommand": "test:coverage",
+      "packageScript": "test:coverage",
+      "workflowStepId": "coverage",
       "note": "Current coarse covered implementation population; later partition only if measurements justify it."
     },
     "deep-proofs": {
-      "currentCommand": "test:deep-proofs",
+      "packageScript": "test:deep-proofs",
+      "workflowStepId": "deep_proofs",
       "note": "All production-solver deep proofs remain together initially."
     },
     "solver-canary": {
-      "currentCommand": "solver capability canary",
+      "workflowStepId": "solver_canary",
       "note": "Current nine-level production semantic canary."
     },
     "build": {
-      "currentCommand": "build",
+      "packageScript": "build",
+      "workflowStepId": "build",
       "note": "Production Vite bundle."
     },
     "firestore-boundary": {
-      "currentCommand": "test:firestore-level-fingerprint-boundary",
+      "packageScript": "test:firestore-level-fingerprint-boundary",
+      "workflowStepId": "firestore",
       "note": "Java/Firestore emulator boundary check."
     }
   }
