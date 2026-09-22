@@ -1086,5 +1086,34 @@
       "rule": "counter units are explicit; physical file changes are not semantic evidence counts; success-ingestion receipts are not attempted-population denominators",
       "extensibility": "producer-specific receipt fields allowed; producer research artifacts remain specialist schemas"
     }
+  },
+  "richEvidenceInversion": {
+    "status": "investigation-complete-implementation-guidance",
+    "conclusion": "keep Hint compact; strengthen exact joins to existing richer sibling evidence resources rather than creating a universal discovery record",
+    "existingResources": {
+      "hintProvenance": "accepted path + semantic discovery event",
+      "hintDiscoveryProcess": "run + level + exact stored path + attempt sequence through winner",
+      "compactFailureResponse": "run + level + attempt/stage participation, dose, censoring, termination and failure/solved controls",
+      "searchLossEvidence": "run + level + attempt/stage + selected rich search event",
+      "experimentContracts": "protocol/configuration/population/treatment authority"
+    },
+    "retentionClasses": [
+      "embedded-semantic-core",
+      "durably-joinable-evidence",
+      "reconstructable-authority",
+      "ephemeral-diagnostic"
+    ],
+    "requiredJoinSpine": [
+      "level identity + structural revision",
+      "exact path signature",
+      "semantic discovery-event identity",
+      "source/acquisition run",
+      "immutable solver ref",
+      "protocol/configuration identity",
+      "experiment arm when applicable",
+      "population identity when applicable",
+      "artifact/shard/row locator when durable source exposes one"
+    ],
+    "rule": "schema v4 optimizes physical representation; it must preserve cross-resource join identity and may not become a ceiling on richer future research evidence"
   }
 }
