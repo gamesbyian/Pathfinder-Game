@@ -91,6 +91,14 @@ function commandLocalPaths(command) {
   return matches.map(match => match[1].replace(/^\.\//u, ''));
 }
 
+const TRANSPARENT_PACKAGE_WRAPPERS = new Set([
+  'scripts/run-bundled.mjs',
+]);
+
+function packageScriptOwnedPaths(command) {
+  return commandLocalPaths(command).filter(entrypoint => !TRANSPARENT_PACKAGE_WRAPPERS.has(entrypoint));
+}
+
 function fullPackageImpact(config, reason, changedKeys = []) {
   return {
     full: true,
@@ -135,7 +143,7 @@ export function classifyPackageJsonDocuments(baseDocument, headDocument, config 
   for (const name of changedScripts) {
     const before = baseScripts[name] ?? null;
     const after = headScripts[name] ?? null;
-    const paths = [...new Set([...commandLocalPaths(before), ...commandLocalPaths(after)])];
+    const paths = [...new Set([...packageScriptOwnedPaths(before), ...packageScriptOwnedPaths(after)])];
 
     if (paths.length === 0) {
       return fullPackageImpact(
