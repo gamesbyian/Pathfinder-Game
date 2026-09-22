@@ -261,6 +261,7 @@
     "test:node:research": "node scripts/validation-groups.mjs nodeTests research",
     "test:node:solver": "node scripts/validation-groups.mjs nodeTests solver",
     "test:node:game": "node scripts/validation-groups.mjs nodeTests game",
+    "test:node:persistence": "node scripts/validation-groups.mjs nodeTests persistence",
     "test:node:data": "node scripts/validation-groups.mjs nodeTests data",
     "test:node:shared": "node scripts/validation-groups.mjs nodeTests shared",
     "check:nonlint": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:validators",
