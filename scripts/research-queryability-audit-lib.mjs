@@ -6,11 +6,53 @@ import { buildResearchQueryView } from './research-query-views-lib.mjs';
 import { buildResearchQuerySnapshot, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 import { buildResearchSystemFindingIndex } from './research-system-query-lib.mjs';
 
+const BENCHMARK_EXPECTATIONS = new Set(['supported', 'partial', 'conditional', 'known-gap']);
+const BENCHMARK_KINDS = new Set([
+    'impact',
+    'answerability',
+    'live-successors',
+    'closed-constraints',
+    'shared-measurements',
+    'multi-consumed-blocks',
+    'ownership-gaps',
+    'coverage',
+    'temporal-change',
+    'system-lineage',
+    'system-findings',
+    'support-impact',
+]);
+
+export function queryabilityBenchmarkIssues(registry) {
+    const issues = [];
+    if (registry?.schemaVersion !== 1) issues.push('schemaVersion must be 1');
+    if (!Array.isArray(registry?.benchmarks)) {
+        issues.push('benchmarks must be an array');
+        return issues;
+    }
+    const seen = new Set();
+    registry.benchmarks.forEach((benchmark, index) => {
+        const prefix = `benchmarks[${index}]`;
+        const id = String(benchmark?.id ?? '').trim();
+        if (!id) issues.push(`${prefix}.id is required`);
+        else if (seen.has(id)) issues.push(`${prefix}.id duplicates ${id}`);
+        else seen.add(id);
+        if (!String(benchmark?.question ?? '').trim()) issues.push(`${prefix}.question is required`);
+        if (!BENCHMARK_EXPECTATIONS.has(benchmark?.expected)) {
+            issues.push(`${prefix}.expected is unknown: ${benchmark?.expected ?? '(missing)'}`);
+        }
+        if (!BENCHMARK_KINDS.has(benchmark?.kind)) {
+            issues.push(`${prefix}.kind is unknown: ${benchmark?.kind ?? '(missing)'}`);
+        }
+    });
+    return issues;
+}
+
 function loadBenchmarks(root) {
     const filename = path.join(root, 'docs/research-queryability-benchmarks.json');
     const parsed = JSON.parse(readFileSync(filename, 'utf8'));
-    if (parsed?.schemaVersion !== 1 || !Array.isArray(parsed.benchmarks)) {
-        throw new Error('invalid research queryability benchmark registry');
+    const issues = queryabilityBenchmarkIssues(parsed);
+    if (issues.length) {
+        throw new Error('invalid research queryability benchmark registry: ' + issues.join('; '));
     }
     return parsed;
 }
