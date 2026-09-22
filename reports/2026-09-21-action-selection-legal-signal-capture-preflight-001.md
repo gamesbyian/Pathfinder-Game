@@ -1,9 +1,9 @@
 # Action-selection legal-signal capture preflight 001
 
-> **Status:** active
+> **Status:** concluded-positive; development execution completed in `2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md`.
 > **Last evidence:** 2026-09-21 — pre-winner oracle census found 94.74% C2 and 87.58% C1 solved-row canonical work before the eventual winning attempt.
 > **Decision:** test whether cheap level-blind signals available before each action can capture a material fraction of the pre-winner oracle ceiling in shadow mode.
-> **Remaining gate:** build the smallest action-boundary dataset from current production artifacts, freeze independent development/validation splits, and compare simple legal-signal policies against current order and static action-order baselines.
+> **Remaining gate:** the development gate completed from retained evidence. Freeze the selected prior-response+work+next-stage form at min development support 100 for sample-independent confirmation before any live scheduler treatment.
 > **Evidence role:** discovery
 > **Selection:** current production-boundary C1/C2 attempts; split before fitting or threshold selection.
 > **Population identity:** GitHub Actions run `35066677597`, solver ref `16114b80e54233910f34ec2ea8e2c1a41a859eb4`.
