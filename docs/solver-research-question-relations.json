@@ -912,7 +912,13 @@
       "answeredBy": [
         "reports/2026-09-21-response-guided-premise-nominations-001.md"
       ],
-      "acquisitionNeed": "representation-or-candidate"
+      "acquisitionNeed": "representation-or-candidate",
+      "decisionSupport": {
+        "mode": "all",
+        "refs": [
+          "reports/2026-09-21-response-guided-premise-nominations-001.md"
+        ]
+      }
     },
     {
       "id": "WS2-REPAIR-DEADLINE-ALLOCATION",
@@ -1045,7 +1051,13 @@
       "acquisitionNeed": "telemetry-or-economics",
       "answeredBy": [
         "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md"
-      ]
+      ],
+      "decisionSupport": {
+        "mode": "all",
+        "refs": [
+          "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md"
+        ]
+      }
     },
     {
       "id": "WS2-FORCED-WORK-CAPTURE-ECONOMICS",
