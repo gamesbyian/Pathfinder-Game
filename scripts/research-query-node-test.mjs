@@ -111,8 +111,8 @@ assert.ok(supportImpact.rows.some(row =>
   'authored decisionSupport should distinguish necessary support from answeredBy-only evidence');
 
 const answerability = buildResearchQueryView(graph, { view: 'answerability' });
-assert.ok(answerability.noSolverCompute.some(row => row.workstreamId === 2),
-  'implementation gate should be visible as no-new-solver-compute work');
+assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === 2),
+  'implementation gate should be visible as no-fresh-solver-execution work');
 assert.ok(answerability.boundedCompute.some(row => row.workstreamId === 1),
   'WS1 confirmation should be explicitly classified as bounded compute');
 assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2R'),
@@ -137,7 +137,7 @@ const ws2 = earlier.gates.find(row => row.workstreamId === 2);
 assert.ok(ws2);
 ws2.gateClass = 'bounded-compute';
 const temporal = diffResearchQuerySnapshots(earlier, snapshot);
-assert.ok(temporal.newlyNoSolverCompute.some(row => row.workstreamId === 2),
+assert.ok(temporal.newlyNoFreshSolverExecution.some(row => row.workstreamId === 2),
   'snapshot diff should identify workstreams that became advanceable without solver compute');
 
 const searched = queryResearchGraph(graph, { query: 'portal coarse', limit: 20 });
