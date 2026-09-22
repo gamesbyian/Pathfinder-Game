@@ -1,236 +1,157 @@
-<!-- agent-context-budget: warn=8000 max=10500 -->
+<!-- agent-context-budget: warn=7500 max=9500 -->
 # Research question intake and routing
 
-> **Purpose:** pre-ID front door for a new research idea or question raised in conversation or during investigation.
-> **Authority:** routing/method only. This document does not own question state, execution priority, evidence truth, deferred work, or research-system debt.
-> **Handoff:** solver-science questions that survive intake enter the existing question/dossier/workstream machinery; research-system questions route to their existing methodological, architectural, hygiene, or dated-audit owner.
+> **Purpose:** pre-ID front door for a new research idea/question raised in conversation or investigation.
+> **Authority:** routing/method only. It owns no question state, priority, evidence truth, deferred work, or research-system debt.
+> **Handoff:** surviving solver-science questions enter existing question/workstream machinery; research-system questions route to existing method, architecture, hygiene, or dated-audit owners.
 
-Use this when the question does **not yet have a stable research-question ID**, or when it is unclear whether the idea is actually one question.
-
-Known-ID solver questions skip this front door and start with:
+Use this when there is **no stable research-question ID yet**, or when it is unclear whether the idea is actually one question. Known-ID solver questions start with:
 
 `npm run research:dossier -- --question-id=<id>`
 
-## Goal
-
-Turn conversational curiosity into the smallest useful scientific object without:
-
-- taking the speaker's wording as a finished hypothesis or durable name;
-- creating a queue item before checking whether the repo already answers it;
-- turning one idea into an architecture project;
-- buying solver/reference compute before checking retained evidence and answerability;
-- collapsing distinct interpretations too early;
-- keeping every interesting thought as durable repository state.
-
-The intake flow is:
+## Core flow
 
 `raw question -> decision consequence -> expand -> contextualize -> rivals/inverse -> collapse -> answerability -> discriminator -> observability -> route`
 
-Stop as soon as the question is already answered or no decision-changing ambiguity remains.
+Stop as soon as existing evidence answers the question or no decision-changing ambiguity remains.
 
-## 1. Preserve the raw question, but do not canonize its wording
+### 1. Preserve intent, not accidental terminology
 
-Keep the user's/agent's original wording in working notes so the intent is not lost.
+Keep the original wording in working notes, then restate the uncertainty without assuming its nouns, mechanism, causal direction, or proposed implementation are correct. Conversational wording is provisional: before it becomes a filename, command, schema field, registry ID, or durable term, apply [naming and vocabulary](naming-and-vocabulary.md).
 
-Then restate the underlying uncertainty without assuming the nouns, mechanism, causal direction, or proposed implementation are correct. Before a conversational phrase becomes a filename, command, schema field, registry ID, or durable term, apply [naming and vocabulary](naming-and-vocabulary.md): name the decomposed concept by current role/meaning, not by memorable phrasing or experiment origin.
+### 2. State the decision consequence
 
-## 2. State the decision consequence
-
-Ask first:
+Ask:
 
 > **What would we do differently if this ambiguity resolved one way rather than the other?**
 
-Possible consequences include:
+Possible consequences: choose/reject an intervention, change allocation/order/retention, investigate a missing capability, remove work, alter representation/search object, fix instrumentation/retention, narrow/close/reopen a premise, improve research procedure, or conclude no action is earned.
 
-- choose or reject a solver intervention;
-- change allocation/order/retention;
-- investigate a missing capability;
-- remove avoidable work;
-- alter representation or search object;
-- add/fix instrumentation or retention;
-- narrow/close/reopen a premise;
-- change research-system procedure or authority;
-- conclude that no action is earned.
+If no plausible answer changes a decision, do not manufacture a queue item.
 
-If no plausible answer changes a research or implementation decision, treat the idea as explanatory curiosity unless later evidence gives it consequence. Do not manufacture a queue item.
-
-## 3. Expand before contracting
+### 3. Expand before contracting
 
 Ask:
 
 > **What materially different scientific questions are hiding inside this sentence?**
 
-Expand only along dimensions that could change the answer or next action. Common solver lenses:
+Expand only along dimensions that could change the answer or next action. Useful solver lenses include:
 
-- **incidence/prevalence:** does the phenomenon occur, and on what denominator?
-- **capability:** can the solver derive/do the needed thing at all?
-- **exposure/allocation:** is existing capability offered, reached, participating, and sufficiently dosed?
-- **decision value:** does the fact distinguish choices production currently treats alike?
-- **economics:** how much canonical work is actually removable/displaced after costs?
-- **representation/inference/composition/persistence/action/revision/communication/search object/information:** use the [capability-invention vocabulary](solver-capability-invention-program.md) when a miss suggests absent reasoning.
-- **implementation cost:** is the opportunity algorithmic `workSpent`, wall time, memory, serialization, replay, or bookkeeping?
-- **correctness/soundness:** can the proposed consumer act without changing valid capability?
-- **generalization:** is the claim local, population-bound, parent/family-bound, same-source, or transferable?
+- incidence/opportunity denominator;
+- capability versus exposure/allocation/dose;
+- decision value versus descriptive correlation;
+- canonical-work economics versus wall-time/implementation overhead;
+- representation, inference, composition, persistence, action, revision, communication, search object, or information ([capability invention](solver-capability-invention-program.md));
+- soundness/capability preservation;
+- local versus population/family/transfer scope.
 
-Do not assume local forcedness implies global determinism, isolated capability implies production value, incidence implies removable work, a negative treatment disproves its premise, or wall-time cost equals canonical work.
+Do not assume incidence implies removable work, local forcedness implies global determinism, isolated capability implies production value, or a negative treatment disproves its premise.
 
-For research-system questions, expand along the smallest relevant lenses:
+For **research-system** questions, use only relevant lenses: discoverability/routing; authority/representation; observability/identifiability; retention; join/provenance integrity; lifecycle/propagation; decision quality; operational economics; epistemic coverage/reflexivity. These are lenses, not a second registry.
 
-- **discoverability/routing:** does the repo know something agents cannot reliably find?
-- **authority/representation:** can current owners express the distinction without duplicate or misleading truth?
-- **observability/identifiability:** could the system have seen and discriminated the phenomenon?
-- **retention:** was decision-bearing information discarded, downgraded, or ephemeral?
-- **join/provenance/integrity:** can evidence actually be combined under compatible identity?
-- **lifecycle/propagation:** do changed results reach questions, premises, queues, reopen hooks, and consumers?
-- **decision quality:** does the system route attention to the right next discriminator?
-- **operational economics:** are agent attention, CI, storage, documentation, or compute costs avoidable?
-- **epistemic coverage/reflexivity:** are current instruments/ontologies suppressing questions they cannot easily express?
-
-These are lenses, not a new research-system taxonomy or registry.
-
-## 4. Contextualize against current knowledge before promotion
-
-Use cheap discovery before broad reading or new acquisition.
+### 4. Contextualize before promotion
 
 For solver-science questions:
 
-1. Query likely concepts:
-   `node scripts/research-status-index.mjs --compact --query=<term>`
-2. Check current priority/state in [solver optimization workstreams](solver-optimization-workstreams.md).
-3. Check [solver future work](solver-future-work.md) for explicit deferred/reopen forms.
-4. If a stable question ID emerges, switch to:
-   `npm run research:dossier -- --question-id=<id>`
-5. Use the dossier's stable relations, evidence refs, premises, measurement opportunities, candidate assets/joins, populations, and acquisition recommendation. Lexical hints remain discovery only.
-6. Query tools/assets only as needed:
-   `node scripts/tooling-census.mjs --compact --query=<term>`
-   `node scripts/research-asset-query.mjs --query=<term>`
+1. `node scripts/research-status-index.mjs --compact --query=<term>`
+2. inspect current [workstreams](solver-optimization-workstreams.md) and [future work](solver-future-work.md);
+3. if a stable ID emerges, switch to `research:dossier`;
+4. query tools/assets only as needed with `tooling-census --compact --query=<term>` and `research-asset-query.mjs --query=<term>`.
 
 For research-system questions, start with:
+
 `npm run research:system-inventory -- --view=brief`
-then inspect the relevant current owner, recent audit/report, tooling/workflow, [inference-audit framework](solver-research-inference-audit-framework.md), or [periodic hygiene](periodic-repository-hygiene.md) as appropriate.
 
-Classify the relation to existing work:
+then inspect the relevant owner, recent audit, [inference-audit framework](solver-research-inference-audit-framework.md), or [periodic hygiene](periodic-repository-hygiene.md).
 
-- **already answered**;
-- **same question / existing owner**;
-- **sibling or narrower descendant**;
-- **reopen of a tested/closed form with materially new premise**;
-- **already deferred with a reopen condition**;
-- **genuinely new live ambiguity**;
-- **interesting but not decision-bearing**.
+Classify the idea as: **already answered; existing question/owner; sibling/narrower descendant; materially new reopen; already deferred; genuinely new ambiguity; or non-decision-bearing curiosity.**
 
-Do not create a new ID merely because the wording is new.
+Do not mint a new ID merely because the wording is new.
 
-## 5. Generate rivals and one useful inverse
+### 5. State rivals and one useful inverse
 
-State the strongest decision-relevant rival explanations. Do not require an exhaustive ontology.
-
-Examples:
+Name the strongest decision-relevant rivals, for example:
 
 - capability absent vs present but unoffered/unreached/underdosed;
-- premise false vs implementation form bad;
+- premise false vs tested implementation bad;
 - search quality vs representation/retention failure;
 - algorithmic work vs implementation overhead;
-- local forcedness vs whole-frontier determinism;
 - broad effect vs selected/residual-conditioned effect;
-- real negative vs instrumentation/execution failure.
+- scientific negative vs execution/instrumentation failure.
 
-Also state the nearest **useful inverse** when it exposes directional bias: add/remove, starvation/overexposure, DEAD/LIVE slack, universal/per-instance, failure/success, invention/obsolescence.
+Also state the nearest useful inverse when it exposes directional bias: add/remove, starvation/overexposure, DEAD/LIVE slack, universal/per-instance, failure/success, invention/obsolescence. The inverse is a bias check, not queue entitlement.
 
-The inverse is a bias check or rival nomination, not queue entitlement.
+### 6. Collapse to a live ambiguity
 
-## 6. Collapse to the live ambiguity
+Remove branches already resolved by existing evidence. A surviving solver question should fit the existing question-contract shape:
 
-After contextualization, remove branches that existing evidence already resolves.
+- **live ambiguity**: which materially different interpretations remain?
+- **discriminating observable**: what smallest observation separates them?
+- **outcome interpretation**: what would each meaningful result imply?
 
-A surviving question should be expressible in the existing question-contract shape:
+Promoted questions use the ordinary question authority. Do not create an intake registry.
 
-- **live ambiguity:** which materially different interpretations remain?
-- **discriminating observable:** what smallest observation separates them?
-- **outcome interpretation:** what would each meaningful result imply?
-
-For a solver question that is promoted, use the ordinary stable question authority rather than inventing a parallel intake record.
-
-## 7. Classify answerability before buying compute
+### 7. Classify answerability before compute
 
 Prefer the cheapest truthful route:
 
-1. **Already answered** — report the answer; repair stale routing/state if the repo would mislead the next agent.
-2. **Existing-data analysis** — answer with retained evidence or a valid new join/reducer.
-3. **New instrumentation, no new solver compute** — add/extend production-inert telemetry, reducer, or persistence when existing executions can expose the discriminator.
-4. **Bounded solver/reference acquisition** — only after existing evidence/instrumentation cannot decide the gate.
-5. **Currently unidentifiable** — record the blocker or reopen condition; do not simulate certainty with a larger sweep.
+1. **already answered**: answer it and repair stale routing/state if needed;
+2. **existing-data analysis**: retained evidence or a valid new join/reducer;
+3. **instrument-only**: new/extended production-inert telemetry, reduction, or persistence without new solver acquisition;
+4. **bounded compute**: solver/reference acquisition only after cheaper routes cannot decide;
+5. **blocked/unidentifiable**: record the blocker/reopen condition instead of buying a larger sweep.
 
-For a known/promoted solver question needing acquisition:
+For a promoted solver question needing acquisition:
 
 `npm run research:acquisition-preflight -- --question-id=<id>`
 
 Then use opportunity sizing/population/evaluation machinery before broad compute.
 
-## 8. Prove observability before interpreting a null
+### 8. Prove observability before treating a null as evidence
 
-Co-design discriminator and observability. Check only the axes needed for this decision:
+Check only the axes required by the discriminator: eligibility/applicability, opportunity/headroom, reach, participation/exposure/dose, measurement support, execution fidelity/comparability, coverage/censoring, independent unit/population identity, and observer reactivity where relevant.
 
-- eligibility/applicability;
-- opportunity/headroom;
-- reach;
-- participation/exposure/dose;
-- measurement support;
-- execution fidelity/comparability;
-- coverage/censoring;
-- independent unit/population identity;
-- observer reactivity where relevant.
+If the proposed population/instrument cannot expose the discriminator, change the discriminator or mark the question blocked. Do not scale an unobservable question.
 
-If the discriminator cannot be exposed by the proposed population or instrument, change the discriminator or classify the question as blocked. Do not scale an unobservable question.
+### 9. Route the survivor
 
-## 9. Route the surviving object, not the brainstorming tree
+**Solver science**
 
-### Solver-science disposition
+- existing question -> its dossier/owner;
+- new active question -> ordinary question authority; workstream only if execution is earned;
+- valuable but premature -> deferred/future-work route with explicit reopen condition;
+- tested form already closed -> link/narrow, do not duplicate;
+- answered immediately -> no durable question required.
 
-- **existing question:** use its dossier/owner;
-- **new active question:** add it to the ordinary question authority and attach it to the appropriate current workstream only if it has earned execution;
-- **valuable but premature:** use the ordinary deferred-question/future-work route with an explicit reopen condition and acquisition need;
-- **tested form already closed:** link/narrow; do not create a duplicate question;
-- **answered immediately:** no new durable question required.
+[Solver optimization workstreams](solver-optimization-workstreams.md) remains the only execution-priority owner.
 
-Execution priority remains solely in [solver optimization workstreams](solver-optimization-workstreams.md).
+**Research system**
 
-### Research-system disposition
+Do not place general research-system questions in the solver-science registry merely to gain an ID.
 
-Do **not** put general research-system questions into the solver-science question registry merely to gain an ID.
-
-- local correctness/plumbing defect -> fix + regression;
-- recurring repository/agent entropy -> [periodic repository hygiene](periodic-repository-hygiene.md);
-- durable methodological lesson -> [solver research operating model](solver-research-operating-model.md);
+- local defect -> fix + regression;
+- recurring repo/agent entropy -> [periodic hygiene](periodic-repository-hygiene.md);
+- durable methodological lesson -> [research operating model](solver-research-operating-model.md);
 - structural ownership/debt -> owning architecture/debt authority;
-- bounded unresolved investigation -> dated audit/report with decision, remaining gate, and explicit successor routing;
-- repeated correctness-critical semantic invariant -> extend/extract a shared primitive only after the ordinary repeated-consumer evidence threshold is met;
+- bounded unresolved investigation -> dated audit/report with decision, remaining gate, successor routing;
+- repeated correctness-critical semantic invariant -> shared primitive only after the ordinary repeated-consumer threshold;
 - unearned abstraction -> leave unbuilt.
 
-## 10. Conversational behavior
+## Conversational behavior
 
-The intake is primarily an agent reasoning discipline, not paperwork.
+Do the intake work for the user rather than asking them to formulate a hypothesis/contract. Surface decomposition when it changes the meaning or reveals a stronger question. Answer immediately from existing evidence when possible. Preserve intent while rejecting accidental mechanism/naming assumptions. If investigation is earned, route it into the repo rather than leaving the conclusion only in chat.
 
-When a user introduces a new idea/question:
+A strong intake should usually create **fewer, better** queue entries.
 
-- do not force them to formulate a hypothesis, population, or experiment contract;
-- do not immediately ask for clarification when the repo can disambiguate the idea itself;
-- surface useful decomposition/context back to the user when it changes the meaning or reveals a more promising question;
-- answer immediately from existing evidence when possible;
-- preserve their intent while being willing to reject their proposed mechanism/name;
-- if investigation is earned, carry the question into the existing research system rather than leaving the conclusion only in chat.
+## Optional scratch note
 
-A strong intake should make **fewer** new queue entries while producing better questions.
-
-## Compact working note
-
-This is optional scratch structure, not a registry/schema:
+Not a schema or registry:
 
 ```text
 RAW:
 DECISION:
 EXPANSION:
-EXISTING CONTEXT / NEAREST OWNER:
+EXISTING CONTEXT / OWNER:
 RIVALS + USEFUL INVERSE:
 SURVIVING AMBIGUITY:
 ANSWERABILITY: answered | existing-data | instrument-only | bounded-compute | blocked
@@ -239,4 +160,4 @@ OBSERVABILITY:
 DISPOSITION / OWNER:
 ```
 
-Delete or collapse the scratch note after routing. Durable state belongs to its existing owner.
+Delete/collapse scratch after routing. Durable state belongs to its existing owner.
