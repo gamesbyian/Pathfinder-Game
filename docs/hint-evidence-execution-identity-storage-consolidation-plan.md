@@ -1356,3 +1356,87 @@ The program is complete when:
 - repo checks make new parallel persistence/identity dialects difficult to introduce accidentally;
 - all referee, level-blindness, semantic identity, research applicability, and determinism
   regressions remain green.
+
+## 2026-09-22 continuation hardening findings
+
+These findings were verified against `main` at `0494a0a2c2cc698b8c2a0c40782c88b8983d99ca`, after the isolated-harvester repairs in PRs #1994/#1995.
+
+### Maintained I/O census: current-main corrections
+
+The stale-facade problem is still real and broader than the first spot checks. The planning inventory now records four current writers and three current readers/orchestrators that still depend on removed `readLevelsWithHints`/`writeLevelsWithHints` behavior and/or manually synchronize `.hintRecords` and `.hints`. Several are directly reachable through package commands. Conversely, `scripts/harvest-isolated-report-hints.mjs` is now a current positive example: PRs #1994/#1995 moved it onto the explicit corpus-document API and historical-provenance ingress and added a node smoke boundary. That supports the architecture here: historical semantics should be adapted at ingress, not normalized destructively in storage.
+
+Repository-hosted code search proved incomplete during this audit, so PSC-001 cannot re-close on a grep transcript. Phase -1 must add a repository-local census validator that scans maintained source/package/workflow reachability and fails when a hint persistence seam is unclassified. It should detect removed facade imports, direct canonical hint-file writes, direct `.hintRecords`/`.hints` mutation, manual projection synchronization, and unregistered uses of `setLevelHintRecords`/corpus-document readers/writers.
+
+### Solver request semantics: membership closed, semantics not yet closed
+
+The current `SolveOpts` interface contains 49 fields and `docs/solver-request-semantics-inventory.json` contains exactly those 49: no current field is missing and no retired field remains. This closes the field-membership question but not the identity question. Before canonical request hashing is implemented, every field still needs an explicit canonical effective default and an explicit identity layer classification.
+
+Do not create a second backend-support registry. Direct/worker transport contracts already own their capability boundary; raced execution already owns its narrow boundary in `RACE_LEVEL_OPTS_FIELDS`, `toRaceLevelOpts()`, and `assertRaceLevelOpts()`. Phase -1 should mechanically compare those owners to the semantic inventory and fail when a new common/backend field is unclassified.
+
+Normalization must compare effective values, not input syntax. In particular, omitted ablation flags cannot be expanded with a generic boolean rule: `normalizeAblationConfig()` and `OPT_IN_FEATURES` own the unusual opt-in defaults. Likewise, `primeAttempt` and adaptive per-level allocation are derived effective-input dimensions, not necessarily run-wide request dimensions. Policy-inert observers remain execution-comparability dimensions when a binding wall deadline makes their overhead outcome-reactive.
+
+### Workflow ingestion / lineage
+
+The central harvester already has a useful semantic split:
+- discovery-bearing sources may feed the three current importers;
+- broad confirmation, residual confirmation, static-portfolio confirmation, and recombination are explicitly experiment-only;
+- partial-failure source artifacts are intentionally harvested with `always()` paths;
+- recombination already materializes typed constituent source-run provenance.
+
+Future occurrence lineage should therefore preserve the acquisition/source runs already named by recombination provenance. A combine run is a reconstruction occurrence, not a substitute acquisition identity.
+
+The harvester also contains two stale `workflow_run` trigger names for workflows that no longer exist in the maintained workflow tree: “Solver repair-fallback node-reserve sample A/B” and “Solver elite-prefix-dfs-retry local validation”. Phase -1 should make harvester source ownership mechanically agree with `docs/solver-workflow-lifecycle.json` and the actual workflow tree, rather than allowing historical trigger residue to masquerade as a maintained producer.
+
+### Semantic event versus physical occurrence: concrete target
+
+Keep `provenanceEventIdentity()` as the semantic-dedupe concept, but version/extend its semantic projection once effective execution identity exists. A semantic discovery event should identify the same meaningful observation: same level revision/effective solver input, same path result, and same search semantics required to interpret the find. Wall-host fields and physical run IDs do not distinguish semantic events.
+
+Attach a compact occurrence set to the semantic event when physical lineage is known. The minimum useful occurrence record is:
+- source/acquisition run identity;
+- producer/workflow/experiment arm identity needed to recover the run envelope;
+- artifact/reconstruction lineage when the event was harvested later;
+- observed time only when genuinely observed, not migration-synthesized.
+
+Retry/reharvest of the same acquisition occurrence must dedupe. A later independent run may add an occurrence without adding a second full semantic provenance object. Support/dependency analysis counts semantic evidence according to its scientific independence contract, not raw occurrence count. Determinism auditing can expand occurrences to recover repeat-run observations while keeping rediscovery count separate from independent evidentiary support.
+
+Historical semantic events whose physical occurrence cannot be reconstructed remain valid semantic events with occurrence lineage explicitly unavailable. Do not fabricate a source run.
+
+### Firestore: semantic divergence is structural
+
+PSC-029 is now stronger than “remove the five-hint cap.” Two different evidence-loss mechanisms exist:
+1. `published_levels` still performs `mergeHints(...).slice(0, 5)`, silently truncating semantic Hints after a provenance-preserving merge.
+2. `local_level_hints` is physically one path / one provenance event. Approval keeps only the submitted Hint’s final provenance entry, the deterministic path-hash document is create-only, and `saveLocalLevelHintIfNovel()` rejects already-known signatures. Therefore later rediscovery provenance for an existing supplemental path cannot be represented at all.
+
+There is also no `local_level_hints` ingestion in `scripts/import-published-levels.mjs`; that script only converges `published_levels` into the git corpus. The supplemental backend therefore has a distinct durability/convergence lifecycle that must be made explicit.
+
+The replacement should preserve semantic `Hint` merge behavior first, then choose a physical Firestore layout. A path-keyed semantic-Hint document is the simplest candidate if update authorization/idempotency can be made safe; event-child documents are another option if per-event append semantics prove materially better. Do not choose between them until representative Firestore serialized sizes are measured. Capacity rejection must be distinguishable from duplicate/no-op and surfaced, never represented by silent `false` or `slice()`.
+
+### Runtime delivery: projection is now strongly motivated
+
+At current main, Vite copies:
+- published hints: 160 files / 171,566,523 raw bytes;
+- stress corpus 1 hints: 102 files / 83,920,958 raw bytes;
+- stress corpus 2 hints: 1,700 files / 485,744,016 raw bytes.
+
+That is 741,231,497 raw bytes of provenance-rich hint JSON copied into every `dist`. Published hints are fetched lazily per level. Stress levels/hints are browser-accessed only after the signed-in admin Dev-Mode corpus switcher selects a stress corpus, yet both stress hint trees are shipped in every build.
+
+This makes a generated runtime projection worth pursuing, but adoption remains gated on an exact full-corpus path-only and gzip benchmark. The projection must be generated from canonical decoded Hints, carry/bind a source semantic hash, verify path equivalence, fail the build on stale/missing generation, and remain derived/untracked. Dev/research code that requires provenance continues to use the canonical decoder/source data; player runtime fetches may consume the projection.
+
+### Historical `foundAt` boundary
+
+Commit `7a651d391b49986626ceffbc4612352ddefb9bd4` on 2026-07-11 introduced provenance storage and migrated the then-existing 606 published/stress hint files. Historical samples already establish that previously undated flat metadata later received a narrow migration-time `foundAt` cluster. Treat migration membership/source generation as the primary compatibility signal; timestamp range alone is insufficient as a truth criterion.
+
+Before any v4 sparsification, run a full current-corpus census that reports each provenance field as absent / explicit null / false / true / concrete value and separately identifies migration-synthetic `foundAt` candidates. The adapter/migration decision must be based on exact counts and false-positive analysis. Original discovery time must never be inferred.
+
+### Phase -1 entry gate
+
+Do **not** start physical v4 migration yet. Phase -1 may begin only as semantic-authority and validation work once the remaining empirical gates below are closed or explicitly made Phase -1’s first read-only audits:
+
+1. full current-corpus missingness census, including exact July-11 synthetic-`foundAt` population;
+2. exhaustive per-field effective-default/identity classification for the 49 `SolveOpts` fields plus backend-specific request dimensions;
+3. repository-local maintained hint-I/O census guard;
+4. complete workflow ingestion matrix cross-checked against lifecycle + harvester trigger/source ownership;
+5. representative Firestore serialized-size/capacity measurement;
+6. exact canonical-vs-path-only raw and gzip runtime benchmark.
+
+These are measurement/authority tasks, not v4 storage changes. Once they are green, the semantic architecture described above is sufficiently constrained to implement execution capsules, occurrence lineage, single-ingestion boundaries, and only then the physical v4 codec/migration.
