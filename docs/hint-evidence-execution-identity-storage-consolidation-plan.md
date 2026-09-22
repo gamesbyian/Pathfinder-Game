@@ -1,0 +1,811 @@
+# Hint evidence, execution identity, and storage consolidation plan
+
+> **Status:** planned
+>
+> **Date:** 2026-09-22
+>
+> **Motivation:** the hint-provenance repeat-run determinism audit in
+> [`reports/2026-09-22-hint-provenance-repeat-run-determinism-audit.md`](../reports/2026-09-22-hint-provenance-repeat-run-determinism-audit.md)
+> found zero demonstrated same-effective-input/different-solution cases in the reconstructable
+> population, but exposed a real evidence-model gap: persisted hint provenance does not retain enough
+> run-level effective configuration to distinguish some control/treatment discoveries mechanically.
+> The same review also found substantial storage redundancy in the canonical hint corpus and several
+> parallel persistence/configuration paths that should be consolidated rather than permanently
+> worked around.
+>
+> **Primary goal:** make solver evidence smaller, more queryable, more replay-/audit-friendly, and
+> harder to record incompletely, without losing semantic information, breaking historical data,
+> weakening level-blindness, or coupling offline evidence to production routing.
+
+## 1. Outcomes
+
+A complete implementation should leave the repository with:
+
+1. one canonical, versioned definition of behavior-affecting solver configuration;
+2. explicit and separate identities for solver input, execution protocol, source run, provenance
+   event, path, population, and scheduler action;
+3. one canonical GitHub Actions evidence-ingestion lane for solver discoveries;
+4. one canonical hint-store API/codec shared by Node tooling and the browser;
+5. lossless, backwards-readable hint artifact schema v4 with sparse and optionally interned storage;
+6. stronger provenance that binds a solver discovery to its effective execution context without
+   copying full experiment telemetry into every hint;
+7. research/query surfaces that expose whether an event is fully effective-input-reconstructable;
+8. maintained workflows that no longer use modified canonical hint files as their primary
+   cross-job/run transport format;
+9. migration tooling and tests proving old and new artifacts are semantically equivalent;
+10. a smaller, agent-friendlier canonical hint corpus and lightweight indexes that avoid opening
+    multi-megabyte files for routine questions.
+
+This plan does **not** authorize new solver behavior, level-specific production steering, broad rich
+telemetry retention, or rewriting uncertain historical evidence as known.
+
+## 2. Current architecture and why it should change
+
+### 2.1 Canonical hint semantics are already centralized reasonably well
+
+The semantic in-memory boundary is currently:
+
+- `Hint = { path, provenance }`;
+- `HintProvenanceEntry = { solver, search, context, foundAt }`;
+- normalization and legacy upgrading in `modules/domain/hint-runtime.mjs`;
+- typed wrappers in `modules/domain/hint-types.ts`;
+- shared file/corpus I/O in `scripts/level-data-io.mjs`;
+- semantic merge/deduplication through `mergeHints()` and
+  `provenanceEventIdentity()`.
+
+That shape should be preserved. New compact storage must expand back into the same semantic model
+before ordinary solver/research/application consumers see it.
+
+### 2.2 Effective configuration is currently producer-local
+
+At least two major sweep families independently construct an `effectiveConfig` and
+`effectiveConfigDigest`:
+
+- `scripts/level-blind-capability-sweep.mjs`;
+- `scripts/portfolio-solve-sweep.mjs`.
+
+Those payloads are useful but do not have one shared semantic contract. They can mix:
+
+- behavior-affecting solver options;
+- scheduler/work-budget semantics;
+- level-blind/history-aware execution mode;
+- corpus/population identity;
+- experiment context;
+- output/diagnostic configuration.
+
+That makes them suitable for some run-level comparisons but too coarse or differently scoped for a
+universal “same effective solver inputs?” test.
+
+The 2026-09-22 determinism audit demonstrated the consequence: provenance groups that looked
+identical at the stored attempt level were actually different A/B arms because the run-level
+ablation dimension was absent from the hint event.
+
+### 2.3 There are two primary GHA hint-persistence routes
+
+#### Direct canonical-file transport
+
+Several workflows run solver tools with `--save-hints`, modify
+`data/**/hints*/<id>.json` inside shard checkouts, stage those changed files, upload them as
+artifacts, and later copy/merge them into the canonical store.
+
+Examples include stress refresh, production replay, high-budget sweeps, technique census, CP-SAT
+harvest, and diagnostics.
+
+#### Report reconstruction
+
+Other workflows are deliberately artifact-only. They upload solver result/report artifacts and the
+central `Harvest solver hint evidence` workflow later reconstructs canonical hint provenance via:
+
+- `scripts/harvest-level-blind-report-hints.mjs`;
+- `scripts/harvest-isolated-report-hints.mjs`.
+
+The central harvester also consumes direct hint files via
+`scripts/merge-hint-artifacts.mjs`.
+
+These routes do not carry identical information at the point provenance is constructed.
+`merge-hint-artifacts.mjs` receives source-run metadata but, for successfully parsed incoming hint
+files, generally trusts the provenance already embedded by the shard. Report harvesters reconstruct
+provenance later but currently do not receive one canonical effective-execution envelope either.
+
+This is an architectural inconsistency. The long-term target is one evidence-ingestion lane rather
+than preserving both as equal first-class paths.
+
+### 2.4 Hint storage is much larger than level storage
+
+The principal tracked hint stores are roughly hundreds of megabytes in aggregate, with provenance
+objects dominating many large files. A representative large artifact can contain many repeated
+solver/config and context objects, while paths themselves are already compact packed-key arrays.
+
+By contrast, `data/levels.json` is small. Its repeated level-provenance histories are a genuine
+redundancy but not the first-order storage problem.
+
+Therefore this program should optimize hint evidence first and avoid risky level-format surgery
+until hint architecture is stable.
+
+### 2.5 Browser and Node readers currently differ
+
+Node tools normally load hints through `scripts/level-data-io.mjs`.
+
+The browser loads `data/hints/<id>.json` directly through
+`modules/data-asset-loaders.ts`, currently extracting `parsed.hints` and passing them through
+`upgradeLegacyHints()`.
+
+Therefore an interned/normalized v4 cannot live only inside `level-data-io.mjs`. A compact storage
+schema must have a browser-safe shared decoder, or the shipped game will fail to read the new
+artifacts.
+
+## 3. Target identity model
+
+Do not create one giant identity hash. Different identities answer different research questions and
+must remain separate.
+
+### 3.1 Existing identities to preserve
+
+- **path identity:** `hintPathSignature(path)`;
+- **provenance event identity:** `provenanceEventIdentity(entry)`, used for persistence/merge
+  deduplication;
+- **attempt configuration identity:** canonical grammar in
+  `modules/solver/attempt-identity.mjs`;
+- **scheduler/action identity:** canonical stage + attempt config + relevant seed salt;
+- **level revision identity:** structural fingerprint from `modules/domain/level-fingerprint.ts`;
+- **population identities:** existing corpus/selection/resource-specific owners.
+
+Do not silently redefine `provenanceEventIdentity()` to mean deterministic replay identity. Its
+persistence semantics and historical dedupe behavior are distinct.
+
+### 3.2 New canonical effective solver configuration
+
+Add a shared owner for a versioned `EffectiveSolverConfig` projection.
+
+It should contain every behavior-affecting solver option that can change the search trajectory or
+allocation, normalized through existing semantic owners wherever possible, including:
+
+- canonical normalized ablation configuration;
+- scheduler mode;
+- static-portfolio configuration when applicable;
+- strict-total-work behavior;
+- canonical base work/node allocations and relevant override semantics;
+- behavior-affecting retry/reserve/repair/search overrides;
+- other solver options demonstrated to affect candidate ordering, attempt availability, budgets, or
+  traversal.
+
+It should exclude:
+
+- corpus hash/population identity;
+- workflow/run ID;
+- output filenames;
+- diagnostic-only observer configuration that is proven search-inert;
+- artifact transport details;
+- host/concurrency details already covered by stronger determinism contracts unless they become
+  semantically relevant.
+
+Create a versioned semantic digest from this canonical projection. Reuse shared stable/canonical
+serialization instead of producer-local `stableStringify()` implementations.
+
+### 3.3 Execution protocol
+
+Define a second canonical projection for the execution protocol:
+
+- effective solver configuration identity;
+- solver mode such as level-blind/history-aware;
+- scheduler/work semantics not already represented in effective solver config;
+- named experimental treatment/arm where needed;
+- other meaning-changing execution rules.
+
+This identity answers “are these observations protocol-comparable?” rather than “are the solver
+inputs byte-for-byte equivalent?”.
+
+### 3.4 Run envelope
+
+Define a bounded source/run envelope:
+
+- immutable solver commit/ref;
+- source workflow/tool family;
+- source run ID and run attempt when available;
+- execution protocol identity;
+- effective solver config identity;
+- population/corpus identity or hash;
+- experiment/cohort/arm identity when applicable;
+- source-run lineage for recombined runs.
+
+The run envelope is identity glue, not a telemetry dump. Do not copy full pre-win attempt sequences,
+rich traces, or entire experiment manifests into every hint event.
+
+### 3.5 Effective solver input identity
+
+Add a shared derived helper for determinism/replay analysis, conceptually:
+
+`effectiveSolverInputIdentity(entry)`
+
+Its structured input should include only dimensions that can make two solver discoveries different
+effective attempts, such as:
+
+- level structural revision;
+- solver version;
+- canonical action/config identity;
+- forcing/gate dimensions;
+- relevant work/node allocation;
+- seed/salt when meaningful;
+- effective solver configuration identity.
+
+Prefer returning structured availability information rather than a naked hash, for example:
+
+- `reconstructable: true|false`;
+- `identity` when complete;
+- `missingDimensions` when incomplete.
+
+Historical unknowns remain unknown.
+
+## 4. Target hint provenance model
+
+Extend the semantic provenance model additively with a bounded execution/run binding.
+
+The exact final field names should be chosen during implementation, but the semantic shape should
+support:
+
+- effective solver configuration identity;
+- execution protocol identity;
+- source run identity;
+- optional experiment arm/cohort identity;
+- source-run lineage when an observation comes from a recombined artifact.
+
+Non-solver producers are not required to invent solver-run semantics. Human paths, construction
+witnesses, transformed family witnesses, and external solvers may legitimately leave Pathfinder
+effective-config fields unavailable while retaining their own producer identity.
+
+`makeProvenanceEntry()`, current-solve provenance construction, historical-result upgrading, and
+query/replay helpers should all share this model.
+
+## 5. Canonical GHA evidence-ingestion lane
+
+### 5.1 Long-term target
+
+Maintained solver workflows should transport **solved observations plus execution envelopes**, not
+modified canonical hint files.
+
+Target flow:
+
+```
+solver execution
+  -> solved observation + canonical execution/run envelope
+  -> shard artifact uploaded even on partial failure where useful
+  -> Harvest solver hint evidence
+  -> source/run compatibility checks
+  -> referee validation
+  -> canonical provenance construction
+  -> semantic merge/dedupe
+  -> canonical HintStore writer
+  -> data/**/hints*/<id>.json
+```
+
+The central harvester becomes the single GitHub Actions authority allowed to turn solver-run
+observations into canonical tracked hint evidence.
+
+### 5.2 Preserve partial-failure evidence
+
+Current workflows intentionally retain useful discoveries from timed-out/failed/cancelled shard
+runs. Consolidation must preserve this.
+
+The standardized observation artifact therefore needs to be emitted incrementally or at least
+uploaded through failure-tolerant steps. Do not make evidence durability depend on the final combined
+job succeeding.
+
+### 5.3 Transitional dual path
+
+Do not delete direct hint-file transport immediately.
+
+Migration stages:
+
+1. make direct and report-derived routes emit/retain the same execution envelope;
+2. teach the central harvester to reconstruct canonical hints solely from standardized observations;
+3. in representative workflows, compare report-derived canonical additions against the direct-file
+   route and fail on semantic disagreement;
+4. once parity is demonstrated, remove shard-level canonical hint mutation from that workflow;
+5. repeat by workflow family;
+6. retain `merge-hint-artifacts.mjs` as a historical/mixed-era compatibility importer.
+
+### 5.4 Workflow families to audit/migrate
+
+At minimum inspect and explicitly classify:
+
+- solver stress-corpus refresh;
+- history-aware production replay baseline;
+- high-budget unsolved sweep;
+- level-blind targeted sweep;
+- routing/sample A/B workflows;
+- residual/broad/static-portfolio confirmation;
+- method probe;
+- technique census;
+- CP-SAT hint harvest;
+- diagnostics/hint capture;
+- combined/reconciled sweep runs;
+- any workflow listed by `harvest-solver-evidence.yml`;
+- future workflows registered in the solver workflow lifecycle ledger.
+
+Each maintained harvestable workflow should either:
+
+- emit the canonical observation + envelope contract; or
+- explicitly declare that it cannot yield canonical solver hint evidence.
+
+Enforce this mechanically through workflow/contract checks rather than prose convention alone.
+
+## 6. Shared hint artifact codec and HintStore boundary
+
+### 6.1 Shared codec
+
+Create a browser-safe and Node-safe artifact codec in a neutral module location, conceptually:
+
+- `decodeHintArtifact(parsed) -> Hint[]`;
+- `encodeHintArtifact(records, options?) -> persisted artifact object`.
+
+It must read:
+
+- historical bare path arrays;
+- legacy/transitional hint metadata forms;
+- schema v2;
+- schema v3;
+- schema v4.
+
+Update both:
+
+- `scripts/level-data-io.mjs`;
+- `modules/data-asset-loaders.ts`;
+
+to use the shared decoder.
+
+No ordinary research/application consumer should directly reason about v4 table references.
+
+### 6.2 Canonical writer surface
+
+Node-side HintStore/file I/O remains responsible for filesystem concerns:
+
+- hint directory resolution;
+- per-level file naming;
+- changed-file write sets;
+- canonical formatting;
+- atomic/idempotent writes where needed.
+
+The codec owns storage semantics, not paths.
+
+### 6.3 Storage schema v4
+
+Keep JSON and the existing one-record-per-line diff-friendly outer formatting.
+
+Do not adopt YAML, CBOR, MessagePack, SQLite, Parquet, or checked-in compressed binary artifacts as
+the canonical source format in this program.
+
+Schema v4 should support two lossless physical forms behind the same decoder:
+
+#### Sparse inline
+
+Omit values whose schema-defined semantic default is known, such as selected explicit
+`null`/`false` fields, and reconstruct them during decode.
+
+Do not omit values whose absence is semantically “unknown” rather than the canonical default.
+
+#### Interned tables
+
+For files where it reduces bytes, allow repeated structures to be stored once and referenced from
+events. Strong candidates are:
+
+- solver configurations;
+- contexts;
+- run/execution envelopes.
+
+Search observations are likely higher-cardinality and should remain inline unless corpus
+measurement proves interning useful.
+
+The encoder may deterministically serialize candidate representations and choose the smaller
+canonical form. Avoid arbitrary file-size thresholds when direct byte comparison is cheap.
+
+Keep human-readable semantic field names. Do not trade maintainability for tiny key-name savings.
+
+### 6.4 Paths
+
+Hint paths are already compact packed-key integer arrays and should remain that way initially.
+
+Do not add directional/delta/path compression until provenance compaction is implemented and
+measured. Portal transitions and self-crossing semantics make clever path encodings higher-risk and
+the likely savings are much smaller.
+
+## 7. Producer inventory and remediation
+
+All producers must be reviewed for one of three statuses:
+
+1. produces canonical `Hint` semantics through approved owners;
+2. produces a standardized observation to be harvested later;
+3. noncanonical/legacy producer requiring migration or quarantine.
+
+Important producers include:
+
+- `scripts/hint-capture-lib.mjs`;
+- level-blind capability sweep;
+- portfolio solve sweep;
+- report harvesters;
+- isolated/census harvesters;
+- hint workbench;
+- hint corpus expansion;
+- complete enumeration;
+- hint diversification/candidate tools;
+- CP-SAT/external reference harvesting;
+- family parent replay;
+- family generation/witness propagation;
+- published-level import;
+- browser variety search;
+- human submission/review flows;
+- Firestore local-level hint persistence.
+
+Audit any tool that mutates `.hints` directly before a persistent write. `hintRecords` is the
+canonical persisted semantic state and `.hints` is a derived compatibility projection.
+
+In particular, verify/fix `scripts/hint-candidate-search.mjs --write-levels`, which currently
+appears to append bare paths directly before invoking modern level/hint persistence.
+
+Add a guard/test that prevents new persistent writers from mutating only the bare-path projection.
+
+## 8. Consumer inventory and compatibility
+
+### 8.1 Browser/application
+
+Must continue to work without knowing v4 internals:
+
+- initial level loading;
+- lazy per-level hint loading;
+- Developer-mode corpus switching;
+- hint display/selection/heatmaps;
+- submission and review flows;
+- Firestore supplemental hints.
+
+### 8.2 Node validation and generation
+
+Review at least:
+
+- level/hint validity checks;
+- hint path referee validation;
+- heatmap generation;
+- family generators/replayers;
+- stress witness validation;
+- import tooling;
+- corpus/level utilities.
+
+### 8.3 Research consumers
+
+Maintain semantic behavior for:
+
+- hint query;
+- provenance source taxonomy;
+- provenance applicability/classes;
+- hint discovery replayability;
+- termination semantics;
+- hint cost drift;
+- provenance evidence reports;
+- solution profile generation;
+- hint discovery process;
+- hint/failure process joins;
+- capability/research queries that consume hint provenance.
+
+These should consume expanded semantic events, never v4 storage tables.
+
+## 9. Research-system integration
+
+### 9.1 Determinism audit from PR #1996
+
+The reusable audit from PR #1996 becomes a regression oracle for this program.
+
+After canonical effective-input identity exists:
+
+- replace bespoke recorded-input grouping with the shared identity helper;
+- retain conservative “recorded-input collision” language for incomplete historical events;
+- require the fifteen known 2026-09-09 control/treatment collisions to separate automatically if
+  their run envelopes are mechanically backfilled;
+- otherwise require them to remain explicitly incomplete, not falsely equal;
+- preserve the finding that the reconstructable current population contains zero demonstrated
+  same-effective-input/different-path cases unless new evidence changes it.
+
+### 9.2 Replayability semantics
+
+Do not silently redefine existing historical replayability categories.
+
+Add a stronger derived dimension such as effective-input reconstructability if needed. Historical
+events may remain configuration-reconstructable under the older contract while being incomplete for
+whole effective-input equality.
+
+### 9.3 Asset registry and queryability
+
+Update the structured research asset registry and derived prose so hint provenance advertises:
+
+- effective solver config identity;
+- execution protocol/run binding;
+- effective-input reconstructability;
+- distinct event-vs-input identity;
+- source-run lineage where available.
+
+The registry remains the structured authority.
+
+### 9.4 Lightweight hint-store index
+
+Generate a compact per-level/store index so routine agent queries do not need to open multi-megabyte
+hint files.
+
+Candidate fields:
+
+- level ID;
+- artifact bytes/schema version;
+- hint count;
+- provenance event count;
+- solver IDs;
+- solver version count/range;
+- techniques/retry tiers;
+- source/origin classes;
+- replay/effective-input reconstructability counts;
+- run-envelope coverage;
+- level-revision coverage;
+- work/node summary statistics.
+
+This index is derived and rebuildable. It must not become a competing provenance authority.
+
+## 10. Historical migration and backfill
+
+### 10.1 Read old, write new
+
+All historical v1/v2/v3 hint artifacts remain readable indefinitely through compatibility adapters.
+
+Once v4 is adopted, normal canonical writers should emit v4 only.
+
+### 10.2 Do not fabricate history
+
+Missing effective configuration, run identity, legacy booleans, or execution semantics remain
+unknown unless a durable source can prove them.
+
+Do not infer a treatment from filenames, timestamps, or present-day defaults and persist it as fact.
+
+### 10.3 September 9 determinism collisions
+
+The fifteen #1996 collisions are candidates for targeted backfill only if the event-to-source-run
+mapping is mechanically provable from retained source artifacts/manifests/harvest lineage.
+
+A legitimate backfill should record enough provenance to distinguish that the information was
+recovered after the original discovery rather than falsely implying it was recorded at discovery
+time, if the model needs that distinction.
+
+If proof is insufficient, leave the events incomplete and keep the audit reconciliation report as
+the forensic explanation.
+
+## 11. Levels: bounded follow-up, not the first migration
+
+### 11.1 Safe near-term cleanup
+
+After hint architecture stabilizes, measure sparse omission of level fields whose existing codec
+already normalizes absence safely, especially empty optional arrays/default metadata.
+
+Keep:
+
+- human-readable `{x,y}` coordinates;
+- explicit challenge values where zero is meaningful;
+- stable persistent IDs.
+
+### 11.2 Defer level-provenance interning/sidecars
+
+Level provenance is redundant but the absolute storage saving is small and many corpus consumers
+still parse raw level JSON directly.
+
+Do not introduce corpus-level provenance tables or sidecars until a shared level-corpus codec owns
+all physical representations.
+
+If that later work is justified, first migrate raw consumers such as corpus query/planning/probe
+loaders through the codec, then change the physical representation.
+
+## 12. Tests and acceptance gates
+
+Before migrating tracked data, establish fixtures for representative:
+
+- bare legacy hints;
+- v2 artifacts;
+- v3 artifacts;
+- small family/witness artifacts;
+- large multi-provenance artifacts;
+- current Pathfinder solver events;
+- isolated/census events;
+- external solver events;
+- human/witness events;
+- combined-source-run events;
+- incomplete historical provenance.
+
+Required invariants:
+
+1. v1/v2/v3/v4 decode to the canonical semantic `Hint[]` expected for that source;
+2. v4 encode/decode preserves every path exactly;
+3. v4 encode/decode preserves every provenance semantic field exactly;
+4. sparse omitted defaults re-expand correctly;
+5. interned and sparse-inline encodings decode identically;
+6. encoding is deterministic and byte-stable;
+7. migration is idempotent;
+8. `provenanceEventIdentity()` is unchanged by storage round-trip;
+9. effective-input identity is unchanged by storage round-trip;
+10. source taxonomy/applicability/replay classifications are unchanged unless deliberately extended;
+11. referee validation results are unchanged;
+12. browser and Node decoders agree;
+13. mixed v3/v4 incoming artifacts merge correctly;
+14. direct and observation-harvest paths produce the same semantic additions during transition;
+15. workflow partial-failure evidence remains recoverable;
+16. #1996 determinism audit classifications improve mechanically and do not create false
+    nondeterminism;
+17. level-blindness tests remain green;
+18. no storage-derived history becomes a production solver input.
+
+## 13. Repository hardening
+
+Add a storage-boundary/ownership check that flags new code which:
+
+- directly parses canonical hint artifacts instead of using the shared decoder;
+- writes under canonical hint directories outside approved store/migration owners;
+- persists bare `.hints` mutations without canonical `hintRecords`;
+- creates a new effective-config/protocol hash instead of using the shared identity owner.
+
+Allow explicit compatibility/migration exemptions with comments where necessary.
+
+This turns the architecture into an enforceable repository invariant instead of relying on future
+agents remembering this plan.
+
+## 14. Implementation sequence
+
+### Phase 0 — land and adopt the determinism audit
+
+- reconcile/merge PR #1996 safely;
+- retain its report, reusable library, CLI, and semantic tests;
+- register its findings as the baseline regression oracle;
+- make no historical provenance rewrite yet.
+
+**Exit:** current determinism evidence is durable on main and runnable locally.
+
+### Phase 1 — identity consolidation
+
+- inventory every behavior-affecting `SolveOpts` field and existing identity owner;
+- define/version `EffectiveSolverConfig`;
+- define execution protocol and run-envelope projections;
+- add canonical semantic hashing;
+- add effective solver input identity/reconstructability helper;
+- replace duplicate producer-local stable-hash logic where semantics match;
+- add tests proving population/run metadata does not contaminate solver-input equality.
+
+**Exit:** sweep families can describe the same solver semantics through one owner.
+
+### Phase 2 — provenance envelope plumbing
+
+- extend hint provenance semantics with bounded execution/run binding;
+- update `makeProvenanceEntry()`, typed interfaces, and legacy upgrade paths;
+- update shared hint capture;
+- update current-solve and historical-solve provenance builders;
+- preserve explicit unknowns for older evidence.
+
+**Exit:** every modern Pathfinder solver discovery can carry complete effective-input binding.
+
+### Phase 3 — standardized solved-observation contract
+
+- define a small solved-observation artifact contract;
+- include complete solution path, level identity/revision, winning attempt/action data, execution
+  envelope reference/projection, and enough search observation to construct canonical provenance;
+- make representative direct-save and artifact-only producers emit it;
+- extend solver-sweep result/manifests to preserve it and constituent source lineage;
+- harden workflow contract checks.
+
+**Exit:** the central harvester can persist new evidence without consuming modified canonical hint
+files.
+
+### Phase 4 — centralize GHA persistence
+
+Migrate maintained workflow families incrementally:
+
+- run dual path;
+- compare semantic persistence outputs;
+- remove shard canonical-file mutation after parity;
+- preserve partial-failure upload semantics;
+- retain direct-file importer for historical artifacts.
+
+**Exit:** modern GHA solver evidence has one canonical persistence authority.
+
+### Phase 5 — shared artifact codec
+
+- add shared browser/Node decoder;
+- route `level-data-io.mjs` and browser data asset loading through it;
+- implement deterministic v4 sparse writer;
+- implement optional interning;
+- update formatting and compatibility tests.
+
+**Exit:** v4 can be read everywhere before any tracked store is migrated.
+
+### Phase 6 — research/query integration
+
+- extend hint query and provenance reports;
+- add effective-input reconstruction coverage;
+- integrate #1996 audit with the canonical identity helper;
+- update structured asset registry/queryability/resource-contract docs;
+- add the derived hint-store index.
+
+**Exit:** agents and research scripts can exploit the richer provenance without inspecting raw v4.
+
+### Phase 7 — benchmark and migrate hint stores
+
+Measure on the real principal stores:
+
+- v3 bytes;
+- sparse-only v4;
+- sparse + selected table interning;
+- encode/decode runtime;
+- query/startup effects;
+- diff behavior.
+
+Choose the smallest representation that preserves maintainability and deterministic formatting.
+
+Then migrate canonical stores in a data-focused change and run the full semantic acceptance suite.
+
+**Exit:** tracked hint storage is v4, materially smaller, and all historical readers remain green.
+
+### Phase 8 — historical backfill
+
+- mechanically recover source envelopes where authoritative evidence survives;
+- prioritize the #1996 September 9 collision set and other high-value ambiguous events;
+- retain explicit missingness everywhere else;
+- rerun determinism/provenance coverage reports.
+
+**Exit:** recoverable ambiguity is removed without manufacturing certainty.
+
+### Phase 9 — bounded level cleanup
+
+- benchmark sparse level serialization;
+- implement only already-safe omission rules;
+- leave provenance tables/sidecars deferred unless a later level-corpus-codec project earns them.
+
+## 15. Review and stopping points
+
+This program should be interruptible after each phase.
+
+Do not combine all of the following into one giant PR:
+
+- semantic identity changes;
+- provenance schema changes;
+- workflow persistence changes;
+- physical v4 codec;
+- bulk data migration.
+
+Prefer small prerequisite PRs with strong compatibility tests, followed by a dedicated data migration.
+
+Before removing the old GHA direct-file route, require real parity evidence from representative
+workflow families rather than reasoning alone.
+
+Before choosing an interning layout, benchmark actual corpus bytes rather than optimizing from one
+sample.
+
+Before historical backfill, require authoritative source-run linkage.
+
+## 16. Explicit non-goals
+
+This plan does not:
+
+- change solver search policy or budgets;
+- use historical hint identity for production routing;
+- retain every failed attempt inside every hint;
+- create a monolithic research database;
+- replace existing failure-response/search-loss evidence;
+- rewrite frozen historical artifacts without proof;
+- require all non-Pathfinder producers to pretend to have Pathfinder run envelopes;
+- compress level coordinates into opaque packed storage;
+- remove legacy readers after migration.
+
+## 17. Definition of done
+
+The program is complete when:
+
+- current solver discoveries persist the effective execution dimensions necessary to distinguish
+  control/treatment and replay/determinism inputs;
+- #1996's known collisions no longer require timestamp/source-commit archaeology where authoritative
+  source envelopes survive;
+- maintained GitHub Actions solver workflows share one canonical evidence-ingestion path;
+- no maintained workflow needs to understand the physical hint-store schema;
+- browser and Node consumers use one artifact decoder;
+- canonical hint storage is materially smaller without semantic loss;
+- historical v1-v3 evidence remains readable and honestly incomplete where appropriate;
+- query/research infrastructure exposes the new identities and missingness;
+- repo checks make new parallel persistence/identity dialects difficult to introduce accidentally;
+- all referee, level-blindness, semantic identity, research applicability, and determinism
+  regressions remain green.
