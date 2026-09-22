@@ -148,17 +148,25 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 **Phase 0 is complete.** Validation ownership is exact and mechanically guarded: 27 permanent validators and 164 Node/CLI harnesses are registered without omissions or duplicates.
 
-**Phase 1 source-impact hardening is substantially complete.** The current branch has:
+**Phase 1 source-impact hardening is complete enough for shadow operation.** Current branch state:
 
-- zero unclassified paths across 10,285 tracked blobs;
-- a permanent tracked-path coverage validator;
+- zero unclassified paths across **10,288 tracked blobs**;
+- permanent tracked-path coverage validation;
+- explicit full-impact precedence over derived harness ownership;
 - rename/delete/copy-safe Git change parsing;
 - semantic script-only `package.json` classification with non-script changes remaining full;
 - registered harness entrypoint ownership derived from the validation registry;
-- first-class `persistence` impact so Firestore validation can eventually separate from generic game work;
-- a real `--git-diff <base> <head>` classifier entrypoint;
-- a data-driven validation planner describing validator/harness groups and expensive build/coverage/proof/canary/Firestore capabilities.
+- first-class `persistence` impact, separating Firestore boundary cost from generic game work;
+- real `--git-diff <base> <head>` classification;
+- data-driven validation planning;
+- 27-PR historical replay: **18/27 scoped candidates, 9/27 earned full-impact**.
 
-Checkpoint: [CI impact routing foundation result 001](../reports/2026-09-21-ci-impact-routing-foundation-result-001.md).
+Evidence:
+- [foundation result 001](../reports/2026-09-21-ci-impact-routing-foundation-result-001.md)
+- [historical backtest 002](../reports/2026-09-21-ci-impact-routing-historical-backtest-002.md)
 
-**Next:** run a larger recent-PR Git-diff backtest, investigate repeated broad fallbacks, benchmark bounded `test:node` concurrency, then design a shadow-mode Actions router that computes the scoped plan while the existing full gate still runs. Do not enable skipped validation until shadow evidence shows the router and full oracle agree.
+**Phase 2 measurement/shadowing is active.** `.github/workflows/ci.yml` now contains non-gating, dependency-free `impact-shadow`. It reports what validation would be selected while `fast-gate` and `deep-verification` still run unchanged. Router failure is non-gating during this phase.
+
+The parallel-script runner also supports opt-in `PATHFINDER_PARALLEL_JOBS=<N>` bounded concurrency, but the historical unbounded default remains unchanged until representative 4/8/16/unbounded measurements justify a new default.
+
+**Next:** collect shadow outcomes across real PR shapes, benchmark Node-harness concurrency, then implement scoped execution behind the already-tested planner. Do not enable skipped validation until shadow evidence shows the router behaves coherently and the final required-status design is in place.
