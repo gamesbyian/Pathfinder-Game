@@ -11,8 +11,10 @@
  *
  * Deliberately NOT used to run `check`/`test:coverage`/`test:node` themselves
  * in parallel inside `npm run ci`: each of those three already saturates a
- * typical 4-core box on its own (`test:node` alone fans out ~30 concurrent
- * child processes; `check` fans out over a dozen; vitest spawns its own
+ * typical 4-core box on its own (`test:node` has grown past 160 child scripts;
+ * by default this runner still starts all requested scripts, while
+ * PATHFINDER_PARALLEL_JOBS provides an opt-in bounded pool for measurement;
+ * `check` fans out over a dozen; vitest spawns its own
  * worker pool), so stacking all three at once oversubscribes the machine
  * several times over and made a timing-sensitive solver test fail under the
  * resulting contention in local testing — not a flaky test, a real
@@ -31,6 +33,23 @@ if (requestedNames.length === 0) {
 }
 
 const names = requestedNames;
+
+function concurrencyLimit() {
+  const raw = process.env.PATHFINDER_PARALLEL_JOBS?.trim();
+  if (!raw) return names.length;
+  if (!/^\d+$/u.test(raw)) {
+    console.error('PATHFINDER_PARALLEL_JOBS must be a positive integer');
+    process.exit(2);
+  }
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed) || parsed < 1) {
+    console.error('PATHFINDER_PARALLEL_JOBS must be a positive integer');
+    process.exit(2);
+  }
+  return Math.min(parsed, names.length);
+}
+
+const jobs = concurrencyLimit();
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
@@ -55,9 +74,21 @@ function runScript(name) {
   });
 }
 
-const results = await Promise.all(names.map(runScript));
+const results = new Array(names.length);
+let nextIndex = 0;
 
-console.log('\n--- parallel run summary ---');
+async function worker() {
+  while (true) {
+    const index = nextIndex;
+    nextIndex += 1;
+    if (index >= names.length) return;
+    results[index] = await runScript(names[index]);
+  }
+}
+
+await Promise.all(Array.from({ length: jobs }, () => worker()));
+
+console.log(`\n--- parallel run summary (jobs=${jobs}/${names.length}) ---`);
 for (const { name, code, seconds } of results) {
   console.log(`${code === 0 ? 'PASS' : 'FAIL'}  ${name} (${seconds}s)`);
 }
