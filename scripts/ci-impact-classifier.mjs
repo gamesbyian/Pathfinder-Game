@@ -203,6 +203,44 @@ export function classifyChanges(changes, config = loadImpactRules()) {
   };
 }
 
+
+/**
+ * Whole-change-set composition used by backtests and the future CI router.
+ * package.json is classified semantically when both revisions are supplied; otherwise its ordinary
+ * path rule remains the conservative full-impact fallback.
+ */
+export function classifyChangeSet(
+  changes,
+  { packageBase = null, packageHead = null, config = loadImpactRules() } = {},
+) {
+  const packageTouched = changes.some(change => change.path === 'package.json' || change.previousPath === 'package.json');
+  const ordinaryChanges = packageBase != null && packageHead != null
+    ? changes.filter(change => change.path !== 'package.json' && change.previousPath !== 'package.json')
+    : changes;
+  const ordinary = classifyChanges(ordinaryChanges, config);
+  const selected = new Set(ordinary.surfaces);
+  let full = ordinary.full;
+  let packageImpact = null;
+
+  if (packageTouched && packageBase != null && packageHead != null) {
+    packageImpact = classifyPackageJsonDocuments(packageBase, packageHead, config);
+    if (packageImpact.full) full = true;
+    for (const surface of packageImpact.surfaces) selected.add(surface);
+  }
+
+  if (full) {
+    selected.clear();
+    for (const surface of config.surfaces) selected.add(surface);
+  }
+
+  return {
+    full,
+    surfaces: [...selected].sort(),
+    ordinary,
+    packageImpact,
+  };
+}
+
 function parseArgs(argv) {
   const paths = [];
   let json = false;
