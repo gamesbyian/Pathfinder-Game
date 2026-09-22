@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 
-import { classifyChanges, classifyPackageJsonDocuments, classifyPaths } from './ci-impact-classifier.mjs';
+import { classifyChangeSet, classifyChanges, classifyPackageJsonDocuments, classifyPaths } from './ci-impact-classifier.mjs';
 
 function expect(paths, surfaces, { full = false } = {}) {
   const result = classifyPaths(paths);
@@ -138,5 +138,41 @@ assert.deepEqual(renamedAcrossBoundary.surfaces, ['research', 'solver']);
 const malformedChange = classifyChanges([{ status: 'X', path: 'docs/solver-future-work.md' }]);
 assert.equal(malformedChange.full, true);
 assert.deepEqual(malformedChange.surfaces, ['data', 'game', 'repo', 'research', 'shared', 'solver']);
+
+
+const composedResearchPackage = classifyChangeSet(
+  [
+    { status: 'M', path: 'package.json' },
+    { status: 'A', path: 'scripts/stress/semantic-forcedness-capture.mjs' },
+    { status: 'A', path: 'docs/solver-semantic-forcedness-preflight.md' },
+  ],
+  {
+    packageBase,
+    packageHead: {
+      ...packageBase,
+      scripts: {
+        ...packageBase.scripts,
+        'research:semantic-forcedness-capture': 'node scripts/run-bundled.mjs scripts/stress/semantic-forcedness-capture.mjs',
+      },
+    },
+  },
+);
+assert.equal(composedResearchPackage.full, false);
+assert.deepEqual(composedResearchPackage.surfaces, ['repo', 'research']);
+
+const composedDependencyChange = classifyChangeSet(
+  [{ status: 'M', path: 'package.json' }],
+  {
+    packageBase,
+    packageHead: {
+      ...packageBase,
+      dependencies: { firebase: '^13.0.0' },
+    },
+  },
+);
+assert.equal(composedDependencyChange.full, true);
+
+const packageWithoutDocuments = classifyChangeSet([{ status: 'M', path: 'package.json' }]);
+assert.equal(packageWithoutDocuments.full, true);
 
 console.log('CI impact classifier conservative routing tests passed.');
