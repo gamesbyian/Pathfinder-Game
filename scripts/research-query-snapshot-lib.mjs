@@ -24,6 +24,7 @@ export function buildResearchQuerySnapshot(graph) {
         gateClass: row.gateClass,
     })).sort((a, b) => String(a.workstreamId).localeCompare(String(b.workstreamId)));
 
+    const classifiedGates = gates.filter(row => Boolean(row.gateClass)).length;
     return {
         schemaVersion: 1,
         nodes: graph.nodes.map(node => ({ type: node.type, id: node.id }))
@@ -35,6 +36,11 @@ export function buildResearchQuerySnapshot(graph) {
             strength: edge.strength ?? 'authored',
         })).sort((a, b) => edgeKey(a).localeCompare(edgeKey(b))),
         gates,
+        gateClassCoverage: {
+            total: gates.length,
+            classified: classifiedGates,
+            complete: classifiedGates === gates.length,
+        },
     };
 }
 
@@ -108,6 +114,7 @@ export function diffResearchQuerySnapshots(before, after) {
     }
 
     const noFreshExecution = new Set(['existing-data', 'design', 'implementation']);
+    const gateClassesComparable = Boolean(before.gateClassCoverage?.complete && after.gateClassCoverage?.complete);
     return {
         schemaVersion: 1,
         addedNodes: [...afterNodes.entries()].filter(([id]) => !beforeNodes.has(id)).map(([, row]) => row),
@@ -115,12 +122,20 @@ export function diffResearchQuerySnapshots(before, after) {
         addedEdges: [...afterEdges.entries()].filter(([id]) => !beforeEdges.has(id)).map(([, row]) => row),
         removedEdges: [...beforeEdges.entries()].filter(([id]) => !afterEdges.has(id)).map(([, row]) => row),
         gateChanges,
-        newlyNoFreshSolverExecution: gateChanges.filter(row =>
+        gateClassComparison: {
+            comparable: gateClassesComparable,
+            before: before.gateClassCoverage ?? null,
+            after: after.gateClassCoverage ?? null,
+            note: gateClassesComparable
+                ? 'Gate-class transitions are structurally comparable.'
+                : 'At least one snapshot lacks complete Gate class coverage; answerability-class transitions are withheld.',
+        },
+        newlyNoFreshSolverExecution: gateClassesComparable ? gateChanges.filter(row =>
             row.after && noFreshExecution.has(row.after.gateClass)
-            && (!row.before || !noFreshExecution.has(row.before.gateClass))),
-        newlyInstrumentOnly: gateChanges.filter(row =>
-            row.after?.gateClass === 'instrument-only' && row.before?.gateClass !== 'instrument-only'),
-        newlyBoundedCompute: gateChanges.filter(row =>
-            row.after?.gateClass === 'bounded-compute' && row.before?.gateClass !== 'bounded-compute'),
+            && (!row.before || !noFreshExecution.has(row.before.gateClass))) : [],
+        newlyInstrumentOnly: gateClassesComparable ? gateChanges.filter(row =>
+            row.after?.gateClass === 'instrument-only' && row.before?.gateClass !== 'instrument-only') : [],
+        newlyBoundedCompute: gateClassesComparable ? gateChanges.filter(row =>
+            row.after?.gateClass === 'bounded-compute' && row.before?.gateClass !== 'bounded-compute') : [],
     };
 }
