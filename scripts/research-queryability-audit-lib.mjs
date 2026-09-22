@@ -4,6 +4,7 @@ import path from 'node:path';
 import { buildResearchQueryGraph } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
 import { buildResearchQuerySnapshot, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
+import { buildResearchSystemFindingIndex } from './research-system-query-lib.mjs';
 
 function loadBenchmarks(root) {
     const filename = path.join(root, 'docs/research-queryability-benchmarks.json');
@@ -14,11 +15,18 @@ function loadBenchmarks(root) {
     return parsed;
 }
 
-function evaluateSupported(graph, benchmark) {
+function evaluateSupported(graph, benchmark, root) {
     let view;
     if (benchmark.kind === 'temporal-change') {
         const snapshot = buildResearchQuerySnapshot(graph);
         view = diffResearchQuerySnapshots(snapshot, snapshot);
+    } else if (benchmark.kind === 'system-findings') {
+        view = buildResearchSystemFindingIndex(root);
+    } else if (benchmark.kind === 'system-lineage') {
+        view = {
+            systemFindings: buildResearchSystemFindingIndex(root),
+            reportLineage: buildResearchQueryView(graph, { view: 'non-question-lineage' }),
+        };
     } else {
         view = buildResearchQueryView(graph, {
             view: benchmark.kind,
@@ -49,6 +57,10 @@ function evaluateSupported(graph, benchmark) {
             failures.push('one or more canonical workstream gates are unclassified');
         }
     }
+    if (benchmark.requireNonEmpty) {
+        const count = view.count ?? view.rows?.length ?? view.findings?.length ?? 0;
+        if (count === 0) failures.push('expected a non-empty result');
+    }
 
     return { view, failures };
 }
@@ -71,7 +83,7 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
         }
         let evaluation;
         try {
-            evaluation = evaluateSupported(graph, benchmark);
+            evaluation = evaluateSupported(graph, benchmark, root);
         } catch (error) {
             results.push({
                 id: benchmark.id,
@@ -112,6 +124,15 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
                 if (benchmark.kind === 'coverage') return {
                     unresolvedEdges: view.unresolvedEdges.length,
                     gateUnclassified: view.structuredGateCoverage.unclassified,
+                };
+                if (benchmark.kind === 'system-findings') return { findings: view.count };
+                if (benchmark.kind === 'system-lineage') return {
+                    findings: view.systemFindings.count,
+                    reportLineageRows: view.reportLineage.rows.length,
+                };
+                if (benchmark.kind === 'temporal-change') return {
+                    addedNodes: view.addedNodes.length,
+                    gateChanges: view.gateChanges.length,
                 };
                 return {};
             })(),
