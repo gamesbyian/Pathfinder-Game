@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 
 import { buildResearchQueryGraph, queryResearchGraph } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
-import { buildResearchQuerySnapshot, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
+import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot, diffResearchSystemFindingSnapshots, queryResearchSystemFindings } from './research-system-query-lib.mjs';
 
 const args = process.argv.slice(2);
@@ -57,6 +57,14 @@ if (args.includes('--snapshot')) {
 const compareSnapshot = value('compare-snapshot');
 if (compareSnapshot) {
   const before = JSON.parse(readFileSync(compareSnapshot, 'utf8'));
+  const after = buildResearchQuerySnapshot(graph);
+  console.log(JSON.stringify(diffResearchQuerySnapshots(before, after), null, 2));
+  process.exit(0);
+}
+
+const compareRef = value('compare-ref');
+if (compareRef) {
+  const before = buildResearchQuerySnapshotFromGitRef(process.cwd(), compareRef, { discoverArtifacts: false });
   const after = buildResearchQuerySnapshot(graph);
   console.log(JSON.stringify(diffResearchQuerySnapshots(before, after), null, 2));
   process.exit(0);
