@@ -1,7 +1,10 @@
 # CI impact routing shadow readiness result 002
 
-> **Date:** 2026-09-21
-> **Status:** shadow-mode implementation checkpoint; no validation skipping enabled.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — live shadow routing executed successfully, planner/gate parity was hardened, and durable shadow evidence was persisted while validation skipping remained disabled.
+> **Decision:** the routing system is ready for controlled scoped-execution rehearsal, with full CI still authoritative until activation criteria are met.
+> **Remaining gate:** complete end-to-end scoped dry-run/rehearsal and verify final-status semantics before enabling real validation skipping.
+
 > **PR:** #1965.
 
 ## Current invariants
