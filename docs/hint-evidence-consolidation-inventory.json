@@ -1047,5 +1047,44 @@
     ],
     "finding": "The maintained stale-facade seam is 24 reachable files. Dormant writers remain historical/maintenance debt but should not be allowed to become reachable again without migration.",
     "validationTool": "scripts/hint-evidence-consolidation-audit.mjs computes package/workflow-seeded relative-import reachability; Phase -1 should turn this into a fail-closed guard."
+  },
+  "artifactLayoutAuthority": {
+    "status": "investigation-complete-implementation-pending",
+    "currentOwners": [
+      "scripts/level-data-io.mjs::hintsDirFor/hintFileName/listHintFiles",
+      "modules/data-asset-loaders.ts::createDefaultHintsSource",
+      "modules/dev-corpus.ts::DEV_CORPORA"
+    ],
+    "defect": "corpus-to-hint layout is encoded independently in Node/browser; writable string-id vocabulary is broader than listHintFiles discovery regex",
+    "target": {
+      "authority": "one neutral corpus-layout descriptor consumed by Node and browser adapters",
+      "identity": "derive expected hint artifact names from corpus level identity; directory enumeration verifies expected/missing/orphan files rather than defining identity",
+      "legacy": "numeric positional fallback remains explicit for corpora without permanent ids",
+      "enforcement": "writers and validators must round-trip through the same layout/id contract"
+    }
+  },
+  "ingestionAccountingAuthority": {
+    "status": "investigation-complete-implementation-pending",
+    "currentState": {
+      "levelBlind": "structured selection manifest with importer-specific hard-coded harvester identity",
+      "isolated": "console counters + pending quarantine artifact",
+      "directArtifactCompatibilityImport": "console counters + pending quarantine artifact"
+    },
+    "target": {
+      "artifact": "versioned hint-ingestion receipt shared by canonical ingestion lanes",
+      "commonCounters": [
+        "sourceCandidateObservationsSeen",
+        "eligibleCandidateObservations",
+        "refereeAcceptedObservations",
+        "acceptedAlreadyRepresented",
+        "semanticPathAdditions",
+        "semanticProvenanceEventAdditions",
+        "occurrenceLineageAdditions",
+        "quarantinedObservationsByReason",
+        "physicalArtifactsChanged"
+      ],
+      "rule": "counter units are explicit; physical file changes are not semantic evidence counts; success-ingestion receipts are not attempted-population denominators",
+      "extensibility": "producer-specific receipt fields allowed; producer research artifacts remain specialist schemas"
+    }
   }
 }
