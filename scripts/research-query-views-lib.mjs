@@ -323,6 +323,8 @@ export function buildOwnershipGapsView(graph) {
         queueWithoutQuestionRef: graph.diagnostics?.shapeDebt?.queueWithoutQuestionRef ?? [],
         acquisitionNeedLexicalFallbackQuestions:
             graph.diagnostics?.shapeDebt?.acquisitionNeedLexicalFallbackQuestions ?? [],
+        decisionSupportUnknownQuestions:
+            graph.diagnostics?.shapeDebt?.decisionSupportUnknownQuestions ?? [],
     };
 }
 
