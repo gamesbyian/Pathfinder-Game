@@ -202,4 +202,14 @@ const headDiff = JSON.parse(compareRefCli.stdout);
 assert.equal(headDiff.addedNodes.length, 0);
 assert.equal(headDiff.removedNodes.length, 0);
 
+const compareSystemRefCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--compare-system-ref=HEAD',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(compareSystemRefCli.status, 0, compareSystemRefCli.stderr);
+const systemHeadDiff = JSON.parse(compareSystemRefCli.stdout);
+assert.equal(systemHeadDiff.added.length, 0);
+assert.equal(systemHeadDiff.removed.length, 0);
+assert.equal(systemHeadDiff.changed.length, 0);
+
 console.log('research-query-node-test: ok');
