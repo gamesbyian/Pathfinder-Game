@@ -146,11 +146,11 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 ## Current next gate
 
-**Phase 0 is complete.** Validation ownership is exact and mechanically guarded: 27 permanent validators and 164 Node/CLI harnesses are registered without omissions or duplicates.
+**Phase 0 is complete.** Validation ownership is exact and mechanically guarded: 28 permanent validators and 165 Node/CLI harnesses are registered without omissions or duplicates.
 
 **Phase 1 source-impact hardening is complete enough for shadow operation.** Current branch state:
 
-- zero unclassified paths across **10,288 tracked blobs**;
+- zero unclassified paths across the current tracked tree (latest checkpoint: **10,291 blobs** before execution-plan files were added);
 - permanent tracked-path coverage validation;
 - explicit full-impact precedence over derived harness ownership;
 - rename/delete/copy-safe Git change parsing;
@@ -169,4 +169,14 @@ Evidence:
 
 The parallel-script runner also supports opt-in `PATHFINDER_PARALLEL_JOBS=<N>` bounded concurrency, but the historical unbounded default remains unchanged until representative 4/8/16/unbounded measurements justify a new default.
 
-**Next:** collect shadow outcomes across real PR shapes, benchmark Node-harness concurrency, then implement scoped execution behind the already-tested planner. Do not enable skipped validation until shadow evidence shows the router behaves coherently and the final required-status design is in place.
+The execution layer is now modeled separately in `scripts/ci-execution-plan.json` / `scripts/ci-execution-plan.mjs`:
+
+- `fast-gate` remains the always-materialized installed-dependency lane in the first scoped version;
+- `deep-verification` becomes a whole-job skip candidate only when coverage, deep proofs, and Firestore boundary are all unnecessary;
+- the future single required status is `ci-success`, evaluated with `if: always()`;
+- `impact-shadow` and `fast-gate` must succeed;
+- `deep-verification` may be either `success` or deliberately `skipped`; failure/cancellation is never accepted.
+
+The validation-plan parity checker now also proves every expensive capability belongs to exactly one execution lane and the final-status acceptance contract is structurally conservative.
+
+**Next:** collect shadow outcomes across real non-router PR shapes, benchmark Node-harness concurrency, then implement scoped execution behind these already-tested contracts. Do not enable skipped validation until shadow evidence shows the router behaves coherently and the final required-status job is actually present and protected.
