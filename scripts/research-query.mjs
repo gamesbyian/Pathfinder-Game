@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { buildResearchQueryGraph, queryResearchGraph } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
 import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
-import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot, buildResearchSystemFindingSnapshotFromGitRef, diffResearchSystemFindingSnapshots, queryResearchSystemFindings } from './research-system-query-lib.mjs';
+import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot, buildResearchSystemFindingSnapshotFromGitRef, buildResearchSystemLineageSummary, diffResearchSystemFindingSnapshots, queryResearchSystemFindings } from './research-system-query-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith('--' + name + '='))?.slice(name.length + 3) ?? '';
@@ -38,6 +38,12 @@ if (view === 'system-findings') {
       kind: value('kind'),
     }),
   }, null, 2));
+  process.exit(0);
+}
+if (view === 'system-lineage') {
+  const index = buildResearchSystemFindingIndex(process.cwd());
+  const reportLineage = buildResearchQueryView(graph, { view: 'non-question-lineage' });
+  console.log(JSON.stringify(buildResearchSystemLineageSummary(index, reportLineage.rows), null, 2));
   process.exit(0);
 }
 if (view) {
