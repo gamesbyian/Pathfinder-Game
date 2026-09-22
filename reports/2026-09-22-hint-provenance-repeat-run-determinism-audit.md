@@ -1,8 +1,9 @@
 # Hint provenance repeat-run determinism audit — 2026-09-22
 
-> **Status:** concluded-negative for observed solver nondeterminism; concluded-positive for a provenance-envelope gap
-> **Evidence:** full committed hint corpus audit on PR #1996, GitHub Actions run 35782743823
-> **Question:** does stored hint provenance show the same effective solver input producing different accepted solutions across repeated runs?
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-22 — full committed hint-corpus audit run 35782743823 plus source-run arm reconciliation
+> **Decision:** No same-effective-input/different-solution case is demonstrated in the reconstructable repeat population; the observed collisions are provenance-envelope collisions across differing experiment arms.
+> **Remaining gate:** Future determinism claims require persisted effective execution identity and occurrence/source-run lineage so equality can be established without expiring artifact archaeology.
 
 ## Result
 
