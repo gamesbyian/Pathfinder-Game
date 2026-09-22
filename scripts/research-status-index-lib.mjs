@@ -293,11 +293,17 @@ export function buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable 
             const state = hasGateClassColumn ? fifth : fourth;
             const gate = hasGateClassColumn ? sixth : fifth;
             const questionRef = hasGateClassColumn ? seventh : sixth;
+            if (!hasGateClassColumn && !allowHistoricalWorkstreamTable) {
+                throw new Error(`${workstreamsPath}: current ## Workstream state rows require Gate class (workstream ${id})`);
+            }
             const executionState = String(executionStateRaw ?? '').replaceAll('`', '').trim();
             if (!WORKSTREAM_EXECUTION_STATES.includes(executionState)) {
                 throw new Error(`${workstreamsPath}: unknown workstream execution state ${executionState || '(missing)'} for ${id}`);
             }
             const gateClass = gateClassRaw ? String(gateClassRaw).replaceAll('`', '').trim() : null;
+            if (!gateClass && !allowHistoricalWorkstreamTable) {
+                throw new Error(`${workstreamsPath}: current ## Workstream state Gate class is required for ${id}`);
+            }
             if (gateClass && !WORKSTREAM_GATE_CLASSES.includes(gateClass)) {
                 throw new Error(`${workstreamsPath}: unknown workstream gate class ${gateClass} for ${id}`);
             }
