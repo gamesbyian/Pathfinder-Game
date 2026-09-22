@@ -1409,6 +1409,8 @@ PSC-029 is now stronger than “remove the five-hint cap.” Two different evide
 
 There is also no `local_level_hints` ingestion in `scripts/import-published-levels.mjs`; that script only converges `published_levels` into the git corpus. The supplemental backend therefore has a distinct durability/convergence lifecycle that must be made explicit.
 
+Representative canonical `JSON.stringify(Hint)` samples from five provenance-heavy real files ranged up to 168,521 bytes for one Hint and 215 provenance events, with per-file medians ranging from 361 to 7,526 bytes. That variability makes any fixed path-count cap a poor storage policy; the remaining Firestore measurement must include actual encoded document/field overhead.
+
 The replacement should preserve semantic `Hint` merge behavior first, then choose a physical Firestore layout. A path-keyed semantic-Hint document is the simplest candidate if update authorization/idempotency can be made safe; event-child documents are another option if per-event append semantics prove materially better. Do not choose between them until representative Firestore serialized sizes are measured. Capacity rejection must be distinguishable from duplicate/no-op and surfaced, never represented by silent `false` or `slice()`.
 
 ### Runtime delivery: projection is now strongly motivated
