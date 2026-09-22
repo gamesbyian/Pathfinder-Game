@@ -53,6 +53,96 @@ export function classifyPaths(paths, config = loadImpactRules()) {
   };
 }
 
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function commandLocalPaths(command) {
+  if (typeof command !== 'string') return [];
+  const matches = [...command.matchAll(/(?:^|\s)((?:\.\/)?scripts\/[A-Za-z0-9_./-]+\.(?:mjs|cjs|js|ts|tsx))(?:\s|$)/gu)];
+  return matches.map(match => match[1].replace(/^\.\//u, ''));
+}
+
+function fullPackageImpact(config, reason, changedKeys = []) {
+  return {
+    full: true,
+    surfaces: [...config.surfaces].sort(),
+    reason,
+    changedKeys,
+    scriptChanges: [],
+  };
+}
+
+/**
+ * Classify a package.json change by semantic content rather than treating every script-registration
+ * edit as equivalent to dependency/build/toolchain mutation.
+ *
+ * Safety rule: anything except scripts-only mutation is full impact. A changed script is narrow
+ * only when every changed command resolves to one or more local scripts whose path ownership is
+ * already known. Opaque commands, deleted commands with no surviving local-path evidence, and
+ * commands touching CI/router infrastructure escalate to full.
+ */
+export function classifyPackageJsonDocuments(baseDocument, headDocument, config = loadImpactRules()) {
+  const base = typeof baseDocument === 'string' ? JSON.parse(baseDocument) : baseDocument;
+  const head = typeof headDocument === 'string' ? JSON.parse(headDocument) : headDocument;
+  const keys = [...new Set([...Object.keys(base ?? {}), ...Object.keys(head ?? {})])].sort();
+  const changedKeys = keys.filter(key => stableJson(base?.[key]) !== stableJson(head?.[key]));
+
+  if (changedKeys.length === 0) {
+    return { full: false, surfaces: [], reason: 'package.json unchanged', changedKeys, scriptChanges: [] };
+  }
+  if (changedKeys.some(key => key !== 'scripts')) {
+    return fullPackageImpact(config, 'package metadata/dependency/build authority changed', changedKeys);
+  }
+
+  const baseScripts = base?.scripts ?? {};
+  const headScripts = head?.scripts ?? {};
+  const scriptNames = [...new Set([...Object.keys(baseScripts), ...Object.keys(headScripts)])].sort();
+  const changedScripts = scriptNames.filter(
+    name => baseScripts[name] !== headScripts[name],
+  );
+  const selected = new Set();
+  const scriptChanges = [];
+
+  for (const name of changedScripts) {
+    const before = baseScripts[name] ?? null;
+    const after = headScripts[name] ?? null;
+    const paths = [...new Set([...commandLocalPaths(before), ...commandLocalPaths(after)])];
+
+    if (paths.length === 0) {
+      return fullPackageImpact(
+        config,
+        `package script ${name} changed without classifiable local script entrypoints`,
+        changedKeys,
+      );
+    }
+
+    const classified = classifyPaths(paths, config);
+    scriptChanges.push({ name, before, after, paths, impact: classified });
+    if (classified.full) {
+      return fullPackageImpact(
+        config,
+        `package script ${name} reaches full-impact or unknown entrypoint`,
+        changedKeys,
+      );
+    }
+    for (const surface of classified.surfaces) selected.add(surface);
+  }
+
+  return {
+    full: false,
+    surfaces: [...selected].sort(),
+    reason: 'scripts-only package change classified from local entrypoints',
+    changedKeys,
+    scriptChanges,
+  };
+}
+
 function parseArgs(argv) {
   const paths = [];
   let json = false;
