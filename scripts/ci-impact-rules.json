@@ -32,6 +32,64 @@
       "reason": "dependency/build/type/test/config authority"
     },
     {
+      "id": "git-attribute-authority",
+      "pattern": "^\\.gitattributes$",
+      "surfaces": [
+        "all"
+      ],
+      "reason": "repository-wide Git attribute semantics"
+    },
+    {
+      "id": "repository-root-metadata",
+      "pattern": "^(?:\\.gitignore|CLAUDE\\.md|README\\.md)$",
+      "surfaces": [
+        "repo"
+      ],
+      "reason": "repository metadata/agent/project documentation"
+    },
+    {
+      "id": "game-test-config",
+      "pattern": "^playwright\\.config\\.mjs$",
+      "surfaces": [
+        "game",
+        "repo"
+      ],
+      "reason": "browser test execution configuration"
+    },
+    {
+      "id": "game-tests",
+      "pattern": "^tests/",
+      "surfaces": [
+        "game"
+      ],
+      "reason": "browser/E2E/visual test surface and snapshots"
+    },
+    {
+      "id": "research-archive",
+      "pattern": "^research/",
+      "surfaces": [
+        "research"
+      ],
+      "reason": "research workspace/evidence material"
+    },
+    {
+      "id": "game-security-config",
+      "pattern": "^security/",
+      "surfaces": [
+        "game",
+        "repo"
+      ],
+      "reason": "browser security/CSP policy authority"
+    },
+    {
+      "id": "game-host-config",
+      "pattern": "^(?:firebase-config\\.js|includes/)",
+      "surfaces": [
+        "game"
+      ],
+      "reason": "production client/hosting configuration"
+    },
+    {
       "id": "production-solver",
       "pattern": "^modules/(?:solver(?:/|\\.(?:ts|js)$)|solver\\.ts$)",
       "surfaces": [
