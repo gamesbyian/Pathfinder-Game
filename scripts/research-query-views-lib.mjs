@@ -350,13 +350,18 @@ export function buildQueryabilityCoverageView(graph) {
 }
 
 export function buildResearchQueryView(graph, { view, entity = '', minimum = 2 } = {}) {
+    const threshold = Number(minimum);
+    if (['shared-measurements', 'multi-consumed-blocks'].includes(view)
+        && (!Number.isInteger(threshold) || threshold < 1)) {
+        throw new Error('minimum must be a positive integer for ' + view);
+    }
     switch (view) {
         case 'answerability': return buildAnswerabilityView(graph);
         case 'impact': return buildDependencyImpactView(graph, entity);
         case 'live-successors': return buildLiveSuccessorsView(graph);
         case 'closed-constraints': return buildClosedConstraintsView(graph);
-        case 'shared-measurements': return buildSharedMeasurementView(graph, minimum);
-        case 'multi-consumed-blocks': return buildConsumptionView(graph, minimum);
+        case 'shared-measurements': return buildSharedMeasurementView(graph, threshold);
+        case 'multi-consumed-blocks': return buildConsumptionView(graph, threshold);
         case 'ownership-gaps': return buildOwnershipGapsView(graph);
         case 'non-question-lineage': return buildNonQuestionLineageView(graph);
         case 'support-impact': return buildSupportImpactView(graph, entity);
