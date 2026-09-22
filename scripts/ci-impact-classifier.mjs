@@ -143,6 +143,43 @@ export function classifyPackageJsonDocuments(baseDocument, headDocument, config 
   };
 }
 
+
+/**
+ * Classify Git-style changed-file records. Rename/copy records include both the previous and current
+ * path so ownership cannot be narrowed merely by moving a file across a semantic boundary. Deleted
+ * files retain their old-path impact. Unknown statuses fail broad.
+ */
+export function classifyChanges(changes, config = loadImpactRules()) {
+  const paths = [];
+  let invalidStatus = false;
+  const normalized = [];
+
+  for (const change of changes) {
+    const status = change?.status;
+    const currentPath = change?.path ?? null;
+    const previousPath = change?.previousPath ?? null;
+    if (!['A', 'C', 'D', 'M', 'R', 'T'].includes(status)) invalidStatus = true;
+
+    const ownedPaths = [];
+    if (previousPath) ownedPaths.push(previousPath);
+    if (currentPath) ownedPaths.push(currentPath);
+    if (!ownedPaths.length) invalidStatus = true;
+    paths.push(...ownedPaths);
+    normalized.push({ status, path: currentPath, previousPath, ownedPaths });
+  }
+
+  const impact = classifyPaths([...new Set(paths)], config);
+  if (invalidStatus && !impact.full) {
+    impact.full = true;
+    impact.surfaces = [...config.surfaces].sort();
+  }
+  return {
+    ...impact,
+    changes: normalized,
+    invalidStatus,
+  };
+}
+
 function parseArgs(argv) {
   const paths = [];
   let json = false;
