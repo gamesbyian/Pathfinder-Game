@@ -4,7 +4,7 @@
 > **Last evidence:** 2026-09-21 — exact frozen-model replay against retained pre-promotion run `35043165547`, plus mechanism decomposition of development run `35066677597`.
 > **Decision:** the retained WS1 signal is not broad action selection. It is overwhelmingly repeated late-stage continuation after censored/exhausted work, and the exact frozen rule remains positive across three distinct scoreable retained execution regimes (6.93%–9.91% C2 capture, zero observed winner losses). Keep the model frozen and advance only to sample-independent/current-production confirmation.
 > **Remaining gate:** confirm the exact frozen 15-signature model on sample-independent/current production evidence. Do not refit membership, work bands, support floor, or stage set on challenge data.
-> **Evidence role:** development / temporal robustness
+> **Evidence role:** development
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 > **Frozen model:** `reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json`
 > **Machine challenge:** `reports/stress/action-selection-legal-signal-temporal-challenge-2026-09-21.json`
