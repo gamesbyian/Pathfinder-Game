@@ -67,6 +67,20 @@ The shared script runner has an opt-in `PATHFINDER_PARALLEL_JOBS=<N>` worker poo
 
 No default concurrency change is justified until those measurements exist.
 
+## Execution packing contract
+
+The shadow model now has a separate execution layer:
+
+- `fast-gate` is the first-version always-materialized installed-dependency lane and owns selected validator/Node groups plus lint/build/solver-canary capabilities;
+- `deep-verification` owns coverage, deep solver proofs, and the Firestore boundary and may eventually skip as a whole when none are selected;
+- the intended stable required status is `ci-success` with `if: always()`;
+- `impact-shadow=success` and `fast-gate=success` are mandatory;
+- `deep-verification=success` or deliberate `skipped` are accepted; failure/cancellation are not.
+
+Permanent tests cover research-only, solver, persistence, and full plans plus accepted/rejected final-status result combinations. The parity checker also requires every validation capability to belong to exactly one execution lane.
+
+This contract remains descriptive until `ci-success` and scoped conditions are deliberately activated in the workflow.
+
 ## Remaining activation gates
 
 Before scoped execution becomes authoritative:
