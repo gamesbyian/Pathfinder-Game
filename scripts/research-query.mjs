@@ -56,7 +56,13 @@ if (view) {
 }
 
 if (args.includes('--snapshot')) {
-  console.log(JSON.stringify(buildResearchQuerySnapshot(graph), null, 2));
+  const payload = JSON.stringify(buildResearchQuerySnapshot(graph)) + '\n';
+  await new Promise((resolve, reject) => {
+    process.stdout.write(payload, error => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
   process.exit(0);
 }
 
