@@ -21,6 +21,70 @@ concurrency:
 # only twice. Independent validation steps within a lane continue after ordinary validation failures
 # so one run reports the useful failure set; setup/install failures still stop dependent validation.
 jobs:
+  # Shadow-only impact routing. This job never suppresses validation and planner failures are
+  # non-gating while the existing full CI remains the oracle. It intentionally avoids npm ci:
+  # ownership/routing authorities use Node built-ins and Git metadata only.
+  impact-shadow:
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.impact.outputs.full }}
+      surfaces: ${{ steps.impact.outputs.surfaces }}
+      validator_groups: ${{ steps.impact.outputs.validator_groups }}
+      node_test_groups: ${{ steps.impact.outputs.node_test_groups }}
+      needs_build: ${{ steps.impact.outputs.needs_build }}
+      needs_coverage: ${{ steps.impact.outputs.needs_coverage }}
+      needs_deep_proofs: ${{ steps.impact.outputs.needs_deep_proofs }}
+      needs_solver_canary: ${{ steps.impact.outputs.needs_solver_canary }}
+      needs_firestore: ${{ steps.impact.outputs.needs_firestore }}
+      fast_job_required: ${{ steps.impact.outputs.fast_job_required }}
+      deep_job_required: ${{ steps.impact.outputs.deep_job_required }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /package.json
+            /scripts/ci-impact-classifier.mjs
+            /scripts/ci-impact-rules.json
+            /scripts/ci-impact-shadow-plan.mjs
+            /scripts/ci-execution-plan.json
+            /scripts/ci-execution-plan.mjs
+            /scripts/ci-validation-plan.json
+            /scripts/ci-validation-plan.mjs
+            /scripts/validation-groups.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+      - name: Compute shadow validation plan
+        id: impact
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            node scripts/ci-impact-shadow-plan.mjs --git-diff HEAD^1 HEAD --out=tmp/ci-impact-shadow.json
+          else
+            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/ci-impact-shadow.json
+          fi
+      - name: Upload shadow validation plan
+        if: steps.impact.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-impact-shadow
+          path: tmp/ci-impact-shadow.json
+          retention-days: 14
+      - name: Record shadow planner status
+        if: always()
+        shell: bash
+        env:
+          SHADOW_OUTCOME: ${{ steps.impact.outcome }}
+        run: |
+          echo "Shadow planner outcome: $SHADOW_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$SHADOW_OUTCOME" != "success" ]]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Planner failure is non-gating during shadow mode; the existing full CI jobs remain authoritative." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   fast-gate:
     runs-on: ubuntu-latest
     steps:
@@ -192,7 +256,7 @@ jobs:
         id: build
         continue-on-error: true
         run: npm run build
-      - name: Fail fast-gate if any validation failed
+      - name: Summarize and enforce fast-gate
         if: always()
         shell: bash
         env:
@@ -205,13 +269,33 @@ jobs:
           BUILD: ${{ steps.build.outcome }}
         run: |
           failed=0
+          {
+            echo '## CI fast gate'
+            echo
+            echo '| Validation group | Outcome |'
+            echo '| --- | --- |'
+            echo "| Package/script reachability | `$DEAD_SCRIPTS` |"
+            echo "| Textual source invariants | `$TEXT_SOURCE` |"
+            echo "| Repository/domain validators | `$VALIDATORS` |"
+            echo "| Lint | `$LINT` |"
+            echo "| Node + CLI contracts | `$NODE_TESTS` |"
+            echo "| Solver capability canary | `$SOLVER_CANARY` |"
+            echo "| Production build | `$BUILD` |"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
           for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD; do
             status="${!name}"
             printf '%-14s %s\n' "$name" "$status"
             if [[ "$status" != "success" ]]; then
               failed=1
+              echo "::error::CI fast-gate group $name finished with $status."
             fi
           done
+          if [[ "$failed" == 0 ]]; then
+            echo 'All fast-gate validation groups passed.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'One or more fast-gate groups failed. The table above is the first inspection surface; open only the failed group steps for detail.' >> "$GITHUB_STEP_SUMMARY"
+          fi
           exit "$failed"
 
   # Coverage and the heavyweight implementation proofs share one runner/install. Coverage skips
@@ -261,7 +345,7 @@ jobs:
           emulators:exec --only firestore
           --project demo-pathfinder-fingerprint-boundary
           "npm run test:firestore-level-fingerprint-boundary"
-      - name: Fail deep-verification if any validation failed
+      - name: Summarize and enforce deep-verification
         if: always()
         shell: bash
         env:
@@ -270,11 +354,27 @@ jobs:
           FIRESTORE: ${{ steps.firestore.outcome }}
         run: |
           failed=0
+          {
+            echo '## CI deep verification'
+            echo
+            echo '| Validation group | Outcome |'
+            echo '| --- | --- |'
+            echo "| Covered ordinary implementation tests | `$COVERAGE` |"
+            echo "| Heavyweight solver proofs | `$DEEP_PROOFS` |"
+            echo "| Firestore persistence boundary | `$FIRESTORE` |"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
           for name in COVERAGE DEEP_PROOFS FIRESTORE; do
             status="${!name}"
             printf '%-12s %s\n' "$name" "$status"
             if [[ "$status" != "success" ]]; then
               failed=1
+              echo "::error::CI deep-verification group $name finished with $status."
             fi
           done
+          if [[ "$failed" == 0 ]]; then
+            echo 'All deep-verification groups passed.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'One or more deep-verification groups failed. The table above identifies the failed semantic stage(s).' >> "$GITHUB_STEP_SUMMARY"
+          fi
           exit "$failed"
