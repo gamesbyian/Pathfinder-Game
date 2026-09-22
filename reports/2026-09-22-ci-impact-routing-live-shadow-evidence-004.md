@@ -1,7 +1,10 @@
 # CI impact routing live shadow evidence 004
 
-> **Date:** 2026-09-22
-> **Status:** concluded-positive for routing/lane-boundary shadow evidence; scoped PR execution remains disabled.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-22 — real post-foundation CI supplied research-only scoped, solver-scoped, and full-impact routing examples with observed failure distribution.
+> **Decision:** the live shadow-shape gate is satisfied; the semantic routing and lane boundaries behaved coherently on the inspected real PRs, so no classifier or lane-policy change is warranted before activation rehearsal.
+> **Remaining gate:** establish a green current-main broad baseline, then run representative manual scoped dry-runs and verify final-status semantics before enabling ordinary PR validation skipping.
+
 > **Question:** do real post-foundation PRs select the expected semantic surfaces and lane requirements, and do full-CI failures appear inside the selected obligations rather than only in work the router would skip?
 
 ## Evidence set
