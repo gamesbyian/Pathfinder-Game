@@ -1,6 +1,6 @@
 # Technique census budget and broad-run reconciliation 001
 
-> **Status:** completed
+> **Status:** active
 > **Last evidence:** 2026-09-21 — current production refresh remains 50M nodes/level; EW1 remains the validated shallow cross-technique pricing instrument at 10M canonical work.
 > **Decision:** keep T1/T3/T4 at 50M nodes; make a bounded 60-level / 10M-work EW1 tranche part of the normal census dispatch, with an independent frozen seed and a dedicated pre-fan-out work-cap canary.
 > **Remaining gate:** after the next stress refresh + census complete, reconcile the fresh capability boundary, EW1 shallow pricing, T1 deep capability, failure-response evidence, and WS1 frozen-model challenge before changing scheduler or census budgets.

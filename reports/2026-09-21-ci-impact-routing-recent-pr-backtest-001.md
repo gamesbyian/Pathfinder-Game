@@ -1,7 +1,10 @@
 # CI impact routing recent-PR backtest 001
 
-> **Date:** 2026-09-21
-> **Status:** Phase-1 classifier development evidence; no CI skipping enabled.
+> **Status:** superseded
+> **Last evidence:** 2026-09-21 — nine recent PRs were replayed through the first conservative classifier, then a broader 27-PR historical backtest replaced this as the current calibration set.
+> **Decision:** preserve this as early classifier-development evidence; use the broader historical backtest for current routing conclusions.
+> **Remaining gate:** none for this superseded sample; successor evidence is `2026-09-21-ci-impact-routing-historical-backtest-002.md`.
+
 > **Classifier:** `scripts/ci-impact-rules.json` schema v1 on PR #1965 branch.
 
 ## Question

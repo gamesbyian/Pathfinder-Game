@@ -1,7 +1,10 @@
 # CI impact routing historical backtest 002
 
-> **Date:** 2026-09-21
-> **Status:** pre-skip shadow evidence.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — 27 recent merged PRs (#1964 through #1926, excluding closed/unmerged PRs) were replayed through the current impact rules with semantic package inspection where needed.
+> **Decision:** the conservative classifier is selective enough to continue toward shadow/scoped execution without weakening full-impact fallbacks.
+> **Remaining gate:** verify the modeled routing against live shadow observations and execution-plan parity before activation.
+
 > **Scope:** 27 recent merged PRs, #1964 through #1926 (excluding closed/unmerged PRs).
 > **Authority:** current PR #1965 impact rules plus semantic inspection of actual `package.json` patches where package registration affected classification.
 

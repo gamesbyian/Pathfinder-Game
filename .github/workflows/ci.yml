@@ -274,13 +274,13 @@ jobs:
             echo
             echo '| Validation group | Outcome |'
             echo '| --- | --- |'
-            echo "| Package/script reachability | `$DEAD_SCRIPTS` |"
-            echo "| Textual source invariants | `$TEXT_SOURCE` |"
-            echo "| Repository/domain validators | `$VALIDATORS` |"
-            echo "| Lint | `$LINT` |"
-            echo "| Node + CLI contracts | `$NODE_TESTS` |"
-            echo "| Solver capability canary | `$SOLVER_CANARY` |"
-            echo "| Production build | `$BUILD` |"
+            printf '| Package/script reachability | `%s` |\n' "$DEAD_SCRIPTS"
+            printf '| Textual source invariants | `%s` |\n' "$TEXT_SOURCE"
+            printf '| Repository/domain validators | `%s` |\n' "$VALIDATORS"
+            printf '| Lint | `%s` |\n' "$LINT"
+            printf '| Node + CLI contracts | `%s` |\n' "$NODE_TESTS"
+            printf '| Solver capability canary | `%s` |\n' "$SOLVER_CANARY"
+            printf '| Production build | `%s` |\n' "$BUILD"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
           for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD; do
@@ -359,9 +359,9 @@ jobs:
             echo
             echo '| Validation group | Outcome |'
             echo '| --- | --- |'
-            echo "| Covered ordinary implementation tests | `$COVERAGE` |"
-            echo "| Heavyweight solver proofs | `$DEEP_PROOFS` |"
-            echo "| Firestore persistence boundary | `$FIRESTORE` |"
+            printf '| Covered ordinary implementation tests | `%s` |\n' "$COVERAGE"
+            printf '| Heavyweight solver proofs | `%s` |\n' "$DEEP_PROOFS"
+            printf '| Firestore persistence boundary | `%s` |\n' "$FIRESTORE"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
           for name in COVERAGE DEEP_PROOFS FIRESTORE; do

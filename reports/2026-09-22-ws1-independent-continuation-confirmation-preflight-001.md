@@ -1,10 +1,12 @@
 # WS1 late-continuation sample-independent confirmation preflight 001
 
-> **Status:** preflight-complete / no dispatch
-> **Date:** 2026-09-22
+> **Status:** active
+> **Last evidence:** 2026-09-22 — retained WS1 late-continuation evidence remained positive across three scoreable C2 regimes, but no untouched-parent confirmation population existed.
+> **Decision:** acquire a 24-parent development/opportunity canary from a fresh random witness-first block; only if it exercises the frozen seam, acquire the separate untouched 96-parent confirmation block and apply the exact frozen model unchanged.
+> **Remaining gate:** run Stage A under the preregistered seed/protocol and advance to Stage B only if the opportunity and integrity criteria are met.
+
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 > **Gate class:** `bounded-compute`
-> **Decision:** acquire fresh solver-blind random witness-first parents through the existing research-generation front door. Run a 24-parent development/opportunity canary first; only if it exercises the frozen late-continuation seam, acquire a separate untouched 96-parent confirmation block. Apply the exact frozen 15-signature model unchanged. No live scheduling treatment is authorized.
 > **Compute status:** not dispatched.
 
 ## Why fresh acquisition is now earned

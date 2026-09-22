@@ -1,7 +1,10 @@
 # CI scoped execution historical economics 003
 
-> **Date:** 2026-09-21
-> **Status:** modeled execution economics from the 27-PR backtest; scoped PR CI is not enabled.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — the 27-PR historical backtest was translated through the current validation planner and execution-lane packing to quantify modeled runner/capability savings.
+> **Decision:** scoped execution has enough modeled economic value to justify rehearsal, while these numbers remain modeled rather than measured runtime savings.
+> **Remaining gate:** validate the execution plan in a controlled dry run and preserve fail-closed final-status semantics before activation.
+
 > **Inputs:** current validation ownership, validation planner, execution-plan packing, and `historical-backtest-002`.
 
 ## Question

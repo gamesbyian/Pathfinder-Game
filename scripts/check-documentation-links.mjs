@@ -287,7 +287,7 @@ const allowedWorkstreamExecutionStates = new Set([
   'active', 'supporting', 'method-complete', 'subsumed', 'closed', 'on-demand',
 ]);
 const workstreamRows = [...workstreamStateSection.matchAll(
-  /^\| ([^|]+?) \| ([^|]+?) \| `([a-z-]+)` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|$/gmu,
+  /^\| ([^|]+?) \| ([^|]+?) \| `([a-z-]+)` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|$/gmu,
 )];
 if (workstreamRows.length === 0) {
   failures.push('docs/solver-optimization-workstreams.md: missing structured Workstream state rows with explicit execution state');
