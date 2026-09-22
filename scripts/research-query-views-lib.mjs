@@ -115,6 +115,13 @@ export function buildDependencyImpactView(graph, selector) {
                     record(qEdge.to, [edge, qEdge], 'evidence-premise');
                 }
             }
+            if (edge.from.type === 'measurementOpportunities') {
+                for (const qEdge of edgesTo(graph, 'measurementOpportunities', edge.from.id, 'measurementOpportunity')) {
+                    if (qEdge.from.type === 'questions') {
+                        record(qEdge.from, [edge, qEdge], 'premise-measurement-opportunity-question');
+                    }
+                }
+            }
         }
     }
 
