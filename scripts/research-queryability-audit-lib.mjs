@@ -117,7 +117,8 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
             summary: (() => {
                 const view = evaluation.view;
                 if (benchmark.kind === 'answerability') return {
-                    noSolverCompute: view.noSolverCompute.length,
+                    noFreshSolverExecution: view.noFreshSolverExecution.length,
+                    instrumentOnly: view.instrumentOnly.length,
                     boundedCompute: view.boundedCompute.length,
                     dormantOrConditional: view.dormantOrConditional.length,
                     unclassified: view.unclassified.length,
