@@ -44,9 +44,10 @@
       "dependenceModel": "Raw provenance-event volume is not support volume. Repeated same-regime/config rediscoveries and family replay clouds share causal ancestry; use the shared dependency-stratum helper before interpreting corroboration.",
       "missingnessSemantics": [
         "absent legacy booleans are unknown, not modern false",
+        "a later canonical-file rewrite may have materialized upgradeProvenanceEntry()'s synthesized false values for legacy capability booleans; physical false is therefore not historical proof of observed false unless source-generation/ingress semantics establish that field was actually recorded",
         "missing producer/config/run/work context is unknown and cannot be upgraded into current-capability or performance evidence",
         "absence of a provenance event does not establish solver failure",
-        "migration-derived foundAt timestamps from the 2026-07-11 schema-v1 hintMetadata migration are not historical discovery times; chronology consumers must treat mechanically identified migrated timestamps as unknown/migration-derived"
+        "migration-derived foundAt timestamps from the 2026-07-11 schema-v1 hintMetadata migration are not historical discovery times; the mechanically reconstructed cohort is 662 events across 102 stress-1 files in the 2026-07-11T01:44:17.863Z..18.004Z normalization window, stable in the September-11 store and the current store"
       ],
       "freshnessRevisionContract": [
         "age alone does not make an event stale",
@@ -78,6 +79,19 @@
       "prospectiveProducerFixes": [
         "where practical, reference the originating experiment/run manifest so attempted denominator, failures, protocol identity and work semantics can be recovered",
         "preserve discovery-time missingness explicitly; compatibility adapters must not synthesize read/migration time as foundAt"
+      ],
+      "knownIrreversibleInformationLoss": [
+        "schema-v1 stress hintMetadata did not retain original discovery time; 662 surviving observations across 102 stress-1 files carry migration-time foundAt values from the 2026-07-11 normalization, so original chronology is irrecoverable unless another independent source proves it",
+        "for legacy capability-context fields whose absence was later persisted as false by read-normalize-write cycles, current storage alone cannot reconstruct whether false was originally observed or synthesized; source-generation cohort semantics must supply unknown where the historical producer did not retain the field"
+      ],
+      "prospectiveProducerGaps": [
+        "preserve semantic missingness through read/write round trips; compatibility adapters must never turn historical unknown capability context into a persistable modern false",
+        "preserve discovery-time missingness explicitly; compatibility adapters must not synthesize read/migration time as foundAt",
+        "retain semantic discovery identity separately from physical occurrence/source-run lineage so retries/reharvests dedupe without losing repeat-run provenance"
+      ],
+      "auditEvidence": [
+        "docs/hint-evidence-consolidation-inventory.json",
+        "reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md"
       ]
     },
     {
