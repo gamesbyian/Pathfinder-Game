@@ -25,7 +25,9 @@
         "scripts/hint-diversification.mjs",
         "scripts/hint-workbench.mjs",
         "scripts/import-published-levels.mjs",
-        "scripts/hint-candidate-search.mjs"
+        "scripts/hint-candidate-search.mjs",
+        "scripts/stress/cpsat-hint-harvest.mjs",
+        "scripts/stress/cpsat-hint-harvest-sweep.mjs"
       ],
       "forms": [
         "level.hints bare paths",
@@ -37,8 +39,8 @@
       "persistedExternalRequirement": false,
       "treatment": "single-mutable-authority",
       "status": "in-progress",
-      "retirementGate": "Reopened 2026-09-22: scripts/hint-candidate-search.mjs still imports removed readLevelsWithHints/writeLevelsWithHints APIs and mutates level.hints directly under --write-levels. Re-close only after every maintained writer uses canonical hintRecords/setLevelHintRecords plus the explicit corpus-document writer, with a guard preventing projection-only persistence.",
-      "progress": "Reopened by the hint evidence/storage consolidation audit. The prior closeout remains valid for the previously exercised writers, but the supported targeted candidate-search path was missed and is stale against the current I/O contract."
+      "retirementGate": "Re-close only after a fresh maintained-writer census proves every current writer uses canonical hintRecords/setLevelHintRecords plus explicit corpus-document/HintStore persistence, removed readLevelsWithHints/writeLevelsWithHints imports are gone from maintained code, and a guard prevents projection-only `.hints` persistence.",
+      "progress": "Reopened by the hint evidence/storage consolidation audit. The prior closeout remains valid for the previously exercised writers, but at least two supported current paths were missed: targeted candidate search and CP-SAT hint harvesting still depend on the removed corpus I/O facade; both also bypass or manually mirror the canonical hintRecords mutation boundary."
     },
     {
       "id": "PSC-002",
@@ -700,8 +702,8 @@
       "persistedExternalRequirement": true,
       "treatment": "investigate",
       "status": "in-progress",
-      "retirementGate": "Document one semantic adapter/capacity contract per external persistence surface, audit the 5-hint truncation for intentionality, and guarantee that backend limits cannot silently discard merged provenance. Physical Firestore/git schemas may remain different when required.",
-      "progress": "Opened 2026-09-22. Physical divergence is partly legitimate, but current capacity and merge behavior differ materially across published Firestore, local supplemental hints, submissions, and git-backed canonical storage."
+      "retirementGate": "Remove the legacy five-hint storage truncation or replace it with an explicit provenance-aware Firestore capacity policy based on backend limits. Display curation remains separate. Any intentional backend cap must preserve semantic merge/provenance up to that declared capacity and must surface, not silently discard, overflow.",
+      "progress": "Strengthened 2026-09-22 by historical/current-path audit. Firestore approveHintAddition()'s `mergeHints(...).slice(0, 5)` predates provenance and survived later migrations without a provenance-era rationale. It now conflicts with submission's explicit 1,000-hint Firestore safety margin, local_level_hints' 5,000 soft cap, and player display curation's independent default cap of 15."
     },
     {
       "id": "PSC-030",
@@ -726,7 +728,7 @@
       "treatment": "investigate",
       "status": "in-progress",
       "retirementGate": "Before sparse hint schema v4, every provenance field has an explicit semantic missingness/default contract. Only true canonical defaults may be omitted and reconstructed; historical absence remains unknown where required; consumers use shared helpers rather than interpreting omission locally.",
-      "progress": "Opened 2026-09-22. The hardening pass found that safe sparse encoding depends on distinguishing default, unknown, not-applicable, and not-observed states rather than treating null/omission/false as interchangeable."
+      "progress": "Strengthened 2026-09-22 with measured historical evidence: the September 11 all-corpus audit found 505,993 provenance events omitting at least isolatedTechnique and 57,497 nominally cold events with legacy-ambiguous capability context. Current nested upgrade still fills missing capability booleans with false, so the semantic defect is both large-population and migration-blocking."
     }
   ],
   "lastUpdated": "2026-09-22",
