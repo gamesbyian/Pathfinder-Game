@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-22",
+  "purpose": "Planning inventory for canonical solver request/execution identity. Classification is prospective and must be enforced by tests before becoming an identity authority.",
+  "commonSolveOpts": [
+    {
+      "field": "timeBudgetMs",
+      "semanticClass": "execution-budget",
+      "effect": "outcome-affecting-when-binding"
+    },
+    {
+      "field": "yieldFn",
+      "semanticClass": "execution-control",
+      "effect": "can-cancel/direct-only"
+    },
+    {
+      "field": "ablation",
+      "semanticClass": "solver-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "forcedFirstStepKey",
+      "semanticClass": "level-specific-forcing",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "forcedPortalExitKey",
+      "semanticClass": "level-specific-forcing",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "nodeBudget",
+      "semanticClass": "deterministic-budget",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "baseWorkBudget",
+      "semanticClass": "deterministic-budget",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "strictTotalWorkBudget",
+      "semanticClass": "budget-semantics",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "attemptBudgetTelemetry",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive-until-parity-proven"
+    },
+    {
+      "field": "lifecycleTelemetry",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive-until-parity-proven"
+    },
+    {
+      "field": "schedulerMode",
+      "semanticClass": "scheduler-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "staticPortfolio",
+      "semanticClass": "scheduler-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "attemptSearchForTesting",
+      "semanticClass": "test-implementation-substitution",
+      "effect": "outcome-affecting/test-only"
+    },
+    {
+      "field": "beamResearchObserver",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "beamFlowCounters",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "pruneDiagnostics",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "failureProgressObserver",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "connectivityRejectionObserver",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "connectivityCertificateShadowObserver",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "parityCapacityObserver",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "parityPhaseDistanceObserver",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "jointObligationObserver",
+      "semanticClass": "observer",
+      "effect": "policy-inert-but-wall-reactive"
+    },
+    {
+      "field": "legacyLatencyPortfolioExperiment",
+      "semanticClass": "scheduler-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "repairAdditiveBudgetMultiplierOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "goalAttractionDisabledRetryBudgetFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "coarseStateNearTieRetentionRetryBudgetFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "coarseStateNearTieRetentionRetryNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "admissibleOrderNonDefaultRetryBudgetFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "admissibleOrderNonDefaultRetryNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "connectivityAxisExhaustedRetryBudgetFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "connectivityAxisExhaustedRetryNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "repairElitePrefixDfsRetryBudgetFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "repairElitePrefixDfsRetryNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "mcNeighborBudgetRetryBudgetFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "mcNeighborBudgetRetryNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "repairLateProbeNodeBudgetOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "repairLateProbeMultiSeedRetrySeedCountOverride",
+      "semanticClass": "solver-search-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "admissibleOrderBudgetFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "admissibleOrderNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "admissibleOrderProfileNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "repairFallbackNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "repairShrinkRecoveryNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "goalAttractionDisabledRetryNodeReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "mainSearchLateReserveFractionOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "mainSearchLateReserveConfigCountOverride",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "earlyRepairSearchAdaptiveBiasedBadnessGateOverride",
+      "semanticClass": "solver-search-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "earlyRepairSearchAdaptiveBiasedMinScaleOverride",
+      "semanticClass": "solver-search-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "disableExtraBudgetPasses",
+      "semanticClass": "solver-budget-policy",
+      "effect": "outcome-affecting"
+    },
+    {
+      "field": "primeAttempt",
+      "semanticClass": "history-derived-level-specific-policy",
+      "effect": "outcome-affecting"
+    }
+  ],
+  "backendRequests": {
+    "direct": {
+      "common": "SolveOpts",
+      "notes": "Canonical on-thread solver request. Function-valued research/test observers are allowed."
+    },
+    "webWorker": {
+      "common": "SolveOpts",
+      "notes": "Full structured-cloneable SolveOpts forwarded; timeBudgetMs/yieldFn use dedicated transport semantics; function-valued options rejected."
+    },
+    "raced": {
+      "commonProjection": "RACE_LEVEL_OPTS_FIELDS",
+      "supportedCommonFields": [
+        "timeBudgetMs",
+        "ablation",
+        "repairAdditiveBudgetMultiplierOverride",
+        "goalAttractionDisabledRetryBudgetFractionOverride"
+      ],
+      "backendSpecificFields": [
+        {
+          "field": "overallBudgetMs",
+          "semanticClass": "backend-wall-budget",
+          "effect": "outcome-affecting-when-binding",
+          "note": "Not a SolveOpts field; phase-1 hard wall cap for raced engine."
+        },
+        {
+          "field": "poolSize",
+          "semanticClass": "backend-concurrency",
+          "effect": "changes attempt concurrency and first-success winner opportunity"
+        }
+      ],
+      "impliedFields": [
+        {
+          "field": "schedulerMode",
+          "value": "production"
+        }
+      ],
+      "notes": "First-success raced engine supports only main-search + repair-fallback + goal-attraction-disabled-retry stages and does not promise stable winner identity."
+    }
+  },
+  "observerRule": "Read-only/diagnostic instrumentation is policy-inert, not automatically outcome-inert. Under binding wall-clock termination observer overhead can change reached work/opportunity; comparability requires parity evidence or deterministic/non-binding execution conditions.",
+  "identityDesign": {
+    "commonRequestIdentity": "projection of all classified outcome-affecting common fields, preserving semantic defaults and identity algorithm version",
+    "executionIdentity": "common request identity + backend-specific request + backend/reproducibility mode + immutable solver ref",
+    "evidenceIdentity": "execution identity + level revision + per-attempt action/forcing/seed dimensions as needed",
+    "ciRule": "Any new SolveOpts field or backend request field must be classified before identity tests pass."
+  }
+}
