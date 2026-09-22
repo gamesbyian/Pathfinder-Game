@@ -122,9 +122,21 @@ function simplePopulationBindingIssues(manifest, artifactRoot) {
     : ['simple primary result rows no longer match populationIntegrity.expectedIds'];
 }
 
+function isInsideDurableEvidenceBundle(manifestFile) {
+  const bundlePath = path.join(path.dirname(manifestFile), 'bundle.json');
+  if (!fs.existsSync(bundlePath)) return false;
+  try {
+    const bundle = JSON.parse(fs.readFileSync(bundlePath, 'utf8'));
+    return bundle?.kind === 'pathfinder-durable-experiment-evidence-bundle';
+  } catch {
+    return false;
+  }
+}
+
 function findDecisionBearingManifests(root) {
   return walk(root)
     .filter(file => path.basename(file) === 'manifest.json')
+    .filter(file => !isInsideDurableEvidenceBundle(file))
     .map(file => {
       try {
         return { file, manifest: JSON.parse(fs.readFileSync(file, 'utf8')) };
@@ -321,6 +333,19 @@ function selfTest() {
     };
     fs.writeFileSync(path.join(artifact, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
     fs.writeFileSync(path.join(ignored, 'manifest.json'), JSON.stringify({ ...manifest, decisionBearing: false }));
+
+    const alreadyDurable = path.join(staging, 'already-durable');
+    fs.mkdirSync(alreadyDurable, { recursive: true });
+    fs.writeFileSync(path.join(alreadyDurable, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+    fs.writeFileSync(path.join(alreadyDurable, 'bundle.json'), JSON.stringify({
+      schemaVersion: DURABLE_EVIDENCE_BUNDLE_SCHEMA_VERSION,
+      kind: 'pathfinder-durable-experiment-evidence-bundle',
+      experimentId: manifest.experiment.experimentId,
+      workflowRunId: manifest.experiment.workflowRunId,
+      workflowRunAttempt: manifest.experiment.workflowRunAttempt,
+    }));
+    // Deliberately do not place result.json beside the retained source manifest. Durable bundles
+    // store entry bytes under evidence/... and must not be rediscovered as fresh source artifacts.
 
     const retained = persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 });
     assert.equal(retained.length, 1);
