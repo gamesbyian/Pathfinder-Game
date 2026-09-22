@@ -1442,3 +1442,153 @@ Do **not** start physical v4 migration yet. Phase -1 may begin only as semantic-
 6. exact canonical-vs-path-only raw and gzip runtime benchmark.
 
 These are measurement/authority tasks, not v4 storage changes. Once they are green, the semantic architecture described above is sufficiently constrained to implement execution capsules, occurrence lineage, single-ingestion boundaries, and only then the physical v4 codec/migration.
+
+## Investigation closure: answers required before Phase -1
+
+The continuation audit has now answered the major semantic questions that were intentionally left open when this plan was first written. These answers are implementation constraints, not suggestions.
+
+### Provenance missingness and historical truth
+
+The full current committed store contains **775,469 provenance events**. Its physical field states prove that current key presence cannot be treated as observation truth for legacy capability context.
+
+The September 11 audit measured **505,993** provenance events with `isolatedTechnique` absent. The current store has only **32,254** events where that field remains absent, alongside **507,334 explicit `false`** values. `usedExistingHints` and `hintGuided` now have zero physical absences. The mechanism is concrete: canonical corpus reads pass historical events through `upgradeProvenanceEntry()`, which fills absent capability booleans with `false`; a later touched-file write can serialize that expanded object. A read-time compatibility convenience has therefore become a mutable historical authority.
+
+Phase -1 must split these concepts:
+- **physical storage value**: what the current JSON happens to contain;
+- **observed semantic value**: what the producer/source generation actually retained;
+- **canonical modern default**: what a current producer means by omission/default.
+
+For affected legacy generations, physical `false` is not evidence that false was observed. The semantic adapter must recover **historically unknown** from producer/source-generation semantics. Do not bulk-infer the missing original values.
+
+The July 11 synthetic `foundAt` question is also closed. The migration-time window contains exactly **662 events in 102 stress-corpus-1 files**, and the same 662/102 cohort is present in a reconstruction of the September 11 store. No published or stress-corpus-2 event belongs to that cluster. The compatibility predicate should use the proven legacy migration/source cohort plus the timestamp window, not the timestamp alone. Those events' semantic discovery time is **unknown**. Their original timestamps must not be invented.
+
+### Request and execution identity
+
+The canonical `SolveOpts` surface has **49 fields**, and all 49 are now classified in `docs/solver-request-semantics-inventory.json` by:
+- source-owned effective default semantics;
+- identity layer;
+- direct execution support;
+- Web Worker support;
+- raced-backend support.
+
+`scripts/solver-request-semantics-inventory-node-test.mjs` now fails when `SolveOpts` membership or `RACE_LEVEL_OPTS_FIELDS` changes without a matching semantic classification.
+
+Canonical request identity must hash **normalized effective values**, not raw request syntax. In particular:
+- omitted `timeBudgetMs` means 30,000 ms;
+- omitted `nodeBudget` means infinity;
+- omitted `baseWorkBudget` derives effective work from `timeBudgetMs`;
+- ablation defaults come from `normalizeAblationConfig()` / the opt-in registry;
+- override defaults come from the canonical budget-policy constants/cascade;
+- level-derived `primeAttempt`, forcing, and adaptive allocation belong in effective level/attempt identity rather than a run-wide request hash.
+
+The raced backend's effective identity includes its narrow supported request projection, effective `overallBudgetMs`, effective worker pool size, supported stage subset, and first-success scheduling semantics. Stable winner/path identity is not promised.
+
+A newly discovered worker seam must be fixed in Phase -1: `beamFlowCounters` and `pruneDiagnostics` are mutable plain objects, so the worker accepts and structured-clones them, the worker mutates only its private clone, and no updated object is returned. They are therefore not semantically equivalent to direct execution. Either reject them as direct-only or return an explicit telemetry projection.
+
+### Semantic discovery event versus occurrence lineage
+
+One semantic discovery event means one interpretation-equivalent solver discovery of a path under the same effective level/search semantics. Its identity includes the dimensions required to interpret the search outcome, including effective execution semantics when those alter search behavior. It deliberately excludes:
+- source run ID;
+- harvester/reconstruction run ID;
+- host identity;
+- `foundAt`;
+- wall-only timing noise already excluded by the current dedupe rule.
+
+A semantic event may carry a compact set of **physical occurrences**. A modern occurrence should retain, where known:
+- acquisition/source run identity;
+- workflow/producer and experiment arm needed to recover the run envelope;
+- artifact/shard/row locator sufficient for an exact join;
+- genuine observation time when the producer actually observed it;
+- reconstruction/harvest lineage separately when persistence occurred later.
+
+Reharvesting the same acquisition occurrence dedupes. A later independent acquisition may add an occurrence to the same semantic event without duplicating the full semantic provenance object.
+
+Occurrence count is not support count. Existing research independence/dependency semantics remain authoritative for evidentiary support. Determinism/replay tooling may expand distinct acquisition occurrences to identify repeat runs, but must not equate those occurrences with independent corroboration.
+
+Historical events whose acquisition occurrence cannot be recovered remain valid semantic events with **occurrence lineage unknown**. The representation must distinguish unknown occurrence history from a known empty occurrence set.
+
+Combined/reconciliation workflows already retain constituent source runs. A combine run must never replace those acquisition identities.
+
+### Workflow ingestion
+
+The maintained harvester-relevant workflow matrix is now explicit in `docs/hint-evidence-consolidation-inventory.json`. The desired endpoint is semantic centralization, not one universal artifact schema.
+
+- Stress refresh, production replay, high-budget sweep, targeted level-blind sweep, routing A/B, method probe, and technique census can converge on central semantic ingestion once their common execution/occurrence capsule is projected consistently.
+- CP-SAT remains an approved specialist direct producer until its specialist artifact carries an exact successful path plus enough execution/config lineage to reconstruct the same semantic Hint centrally.
+- Solver diagnostics remains an approved direct producer until artifact parity is demonstrated.
+- Broad confirmation, residual confirmation, static-portfolio confirmation, and cross-run recombination remain experiment/reconciliation evidence only and are deliberately excluded from canonical hint ingestion.
+
+Partial-failure artifact upload remains a hard requirement. The harvester's source vocabulary must also be checked against the workflow lifecycle/tree; two current trigger names are stale historical residue and should not masquerade as maintained producers.
+
+### Firestore retention and capacity
+
+The Firestore question is no longer “what should the five-hint cap become?”
+
+Current JSON-size proxies show:
+- one semantic Hint: median **1,437 B**, p99 **27,784 B**, maximum **574,971 B**;
+- one local path + single provenance-event document: median **1,892 B**, maximum **3,440 B**;
+- one published-level encoded Hint array: median **1,149,023 B**, p99 **2,044,991 B**, maximum **5,269,927 B**, before the rest of `levelData` and Firestore encoding/index overhead.
+
+This disproves fixed path-count limits as a capacity contract. The current five-hint cap silently destroys semantic evidence, while 1,000 submitted paths and 5,000 local supplemental paths do not guarantee document safety.
+
+The supplemental backend is also semantically incomplete: it is create-only and path-keyed, stores one provenance event, rejects a rediscovered path, and has no canonical-git convergence path equivalent to `published_levels`.
+
+Phase -1 should specify a **bounded-growth persistence unit** and byte-aware preflight. Event/occurrence child documents are favored by the measured size distribution because their growth is naturally bounded; a full semantic-Hint-per-path document risks eventually crossing document limits as provenance accumulates. The exact Firestore SDK/emulator encoded-size check belongs in implementation validation, but no further empirical evidence is needed to reject silent truncation/count caps as the semantic policy.
+
+Any overflow must be explicit and durable:
+- duplicate/no-op;
+- capacity rejected;
+- transient write failure;
+- successfully persisted
+
+must be distinguishable outcomes.
+
+### Runtime delivery
+
+A generated runtime path projection is earned by measurement.
+
+Across all three deployed hint trees:
+- canonical raw JSON: **741,231,497 B**;
+- minified path-only projection: **149,368,243 B**, **79.85% smaller**;
+- pretty path-only projection: **308,947,047 B**, **58.32% smaller**;
+- summed per-file canonical gzip: **21,176,345 B**;
+- summed per-file path-only gzip: **4,924,828 B**, **76.74% smaller**.
+
+The runtime projection should therefore be implemented after the semantic decoder/authority work, with these invariants:
+1. generated only from canonical decoded Hints;
+2. untracked/rebuildable;
+3. bound to canonical source/content hashes;
+4. path-equivalence checked for every source file;
+5. build fails closed when generation or validation is stale;
+6. ordinary player/runtime consumers may use the projection, while research/dev consumers that need provenance use canonical evidence.
+
+This is a delivery optimization, never a second evidence authority.
+
+### Maintained reader/writer census
+
+The exhaustive source census exposed **56 source/workflow files** still mentioning the removed `readLevelsWithHints`/`writeLevelsWithHints` facade names. At least **19 are directly referenced by package.json**. This is materially broader than the original seven-file spot census.
+
+That number includes dormant/historical research tools, so the correct retirement criterion is **maintained-entrypoint reachability**, not raw grep count. The audit tool now seeds package/workflow entrypoints and follows relative imports to classify the live set. Phase -1 should turn that classification into a permanent guard and migrate every maintained reachable stale seam before PSC-001 closes.
+
+### Phase -1 readiness decision
+
+The architecture is now specified enough to begin **Phase -1 semantic/authority implementation**.
+
+Phase -1 may implement:
+- source-generation-aware provenance compatibility semantics;
+- request/execution identity value objects and drift tests;
+- semantic-event + occurrence-lineage representation;
+- maintained hint-I/O census enforcement and stale-current seam migration;
+- common execution capsules and central-ingestion adapters;
+- Firestore bounded-growth/explicit-capacity semantics;
+- generated runtime path projection with equivalence checks.
+
+Physical hint schema v4 bulk migration is **still later**. It remains gated on Phase -1 proving that:
+- historical unknown survives canonical decode/encode without becoming false/null/default;
+- the 662 synthetic-`foundAt` events decode as unknown discovery time;
+- current producers emit complete execution/occurrence capsules;
+- old/new semantic round trips are referee-equivalent;
+- Firestore and GHA adapters preserve the same semantic Hint;
+- the runtime projection is demonstrably derived only.
+
+The remaining questions are implementation-validation questions, not architecture-discovery blockers: exact Firestore wire/emulator byte overhead, the final maintained-reachability list produced by the new census guard, and migration/referee dry-run hashes once the Phase -1 semantic codec exists.
