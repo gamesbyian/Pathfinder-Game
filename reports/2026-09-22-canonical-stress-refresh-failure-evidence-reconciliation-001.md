@@ -64,6 +64,39 @@ The run supplies a full current denominator for existing allocation questions. S
 
 These are descriptive current-run totals, not marginal-value estimates. A stage with few direct wins can still be prerequisite or capability-protecting; removal still needs a controlled substitutability/removable-work question.
 
+## Contrastive solved-control digest
+
+The obvious next cheap analysis was run against the fresh compact resource: compare the 532 unsolved parents with the **1,010 solved parents that themselves contain failed attempts**.
+
+A raw stage-reach comparison looks dramatic because every current miss falls through many late portfolio stages while successful parents stop when they solve. That is sequence/outcome conditioning, not a mechanism diagnosis. The useful control is therefore narrower: among parents that reached a stage **and that stage itself failed**, compare work/cap behavior between eventually-unsolved parents and eventually-solved parents.
+
+That conditioning removes most apparent separation.
+
+Examples:
+
+| Failed stage | Unsolved parents | Solved-parent failed controls | Median work, unsolved | Median work, solved controls | Node-cap rate, unsolved | Node-cap rate, solved controls |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| main-search | 532 | 349 | 29.23M | 30.33M | 70.5% | 71.9% |
+| early-repair-search | 383 | 510 | 23.01M | 22.88M | 100% | 100% |
+| connectivity-axis-prune-disabled-retry | 532 | 194 | 23.24M | 23.33M | 100% | 100% |
+| admissible-order-fallback | 532 | 246 | 14.35M | 15.18M | 100% | 100% |
+| admissible-order-alternate-tiebreak-retry | 532 | 198 | 14.47M | 15.50M | 100% | 100% |
+| coarse-state-near-tie-retention-disabled-retry | 532 | 229 | 14.41M | 14.40M | 100% | 100% |
+| guidance-goal-distance-retry | 532 | 155 | 42.20M | 49.63M | 48.7% | 50.3% |
+| late-repair-multiseed-retry | 149 | 33 | 126.83M | 126.91M | 100% | 100% |
+
+The compact layer therefore does its intended job here: it cheaply rules out the idea that current residuals are broadly distinguished by a simple stage-level work/censor/cap signature. The 532 misses are not a visibly separate species at this resolution; successful solve histories commonly traverse the same failed/capped regimes before a later success.
+
+This changes the follow-up:
+
+- do **not** spend another broad run collecting more of the same compact fields;
+- do **not** turn stage reach into a causal phenotype, because it is heavily conditioned by earlier failure/success;
+- keep narrow allocation questions already supported by independent evidence (repair deadline, admissible-order reserve) under their existing owners;
+- for the broader capability-invention question, the next information purchase should move **one rung richer**: mechanically sampled first-loss / operational-divergence evidence outside the capability-selected Class-3 cohort, using the compact resource to freeze/stratify the sample and preserve solved controls;
+- exact/reference work should remain downstream of that richer sample rather than being sprayed across all 532 misses.
+
+This is a useful negative result: the new failure corpus narrows the search for explanatory structure instead of merely enlarging the archive.
+
 ## Frozen WS1 challenge
 
 The same refresh replayed the already-frozen WS1 legal-signal model without refitting it.
@@ -83,7 +116,7 @@ C2 alone is 9.908% captured pre-winner work with zero observed winner endangerme
 ## Immediate research implications
 
 1. **Do not launch another generic failure-data acquisition.** The present compact denominator is already complete enough to support cheap current-parent joins.
-2. **Run a contrastive failure-response digest before richer first-loss work.** Compare current unsolved parents against solved parents that also experienced failed/capped attempts, stratified by normalized action/stage and protocol. Look for parent-level response patterns that discriminate current residuals instead of merely identifying common solver behavior.
+2. **Contrastive compact digest complete:** after conditioning on the same stage failing, work/cap profiles are broadly similar between current misses and solved-parent failed controls. Treat this compact rung as exhausted for a generic discriminator and advance the broader capability-invention question to mechanically sampled first-loss / operational-divergence evidence rather than collecting more of the same compact telemetry.
 3. **Use this run as the fresh production-side input to the maintained broad-evidence reconciliation consumer once census `35687337464` finishes and its canonical second-order outputs exist.**
 4. **Do not revise census depth, scheduler policy, or stage removal from the stress run alone.** The planned T1/EW1 side is still required for isolated-capability and cheap-pricing comparisons.
 5. **Preserve the distinction between invocation-level node limitation and mechanism-specific underdose.** Every current miss is node-limited at the parent outcome layer, but many solved parents also encounter capped attempts. Mechanism claims require action-specific dose/reach comparisons.
