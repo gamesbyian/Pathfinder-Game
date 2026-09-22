@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-action-selection-legal-signal-temporal-challenge",
+  "researchQuestion": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+  "frozenModel": "reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json",
+  "development": {
+    "workflowRunId": 35066677597,
+    "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+    "productionRegime": "post Class-4 portal coarse dead-last retry promotion",
+    "attemptSequenceDigest": "sha256:393c58d75161d54a4242558c105d144226b6499f33fda04d627a74dd2e8fe6ef",
+    "c2": {
+      "validationSolvedLevels": 356,
+      "preWinnerWork": 21174173891,
+      "nominatedPreWinnerWork": 2097886124,
+      "capturedPreWinnerWorkShare": 0.09907759021907808,
+      "endangeredWinnerLevels": 0,
+      "sameStageContinuationWorkShare": 0.9647698441996082,
+      "censoredPriorWorkShare": 0.8594038701025318
+    },
+    "c1": {
+      "capturedPreWinnerWorkShare": 0,
+      "endangeredWinnerLevels": 0
+    }
+  },
+  "challenge": {
+    "workflowRunId": 35043165547,
+    "solverRef": "4421bd8fcf0f4a948a901082accfab0d151c6369",
+    "productionRegime": "pre Class-4 portal coarse dead-last retry promotion",
+    "attemptSequenceDigest": "sha256:2a861c7ed7f45b1253a9f7ca92939ebd7bf43a7795dbb7d07551cab59e6a88b1",
+    "c2": {
+      "validationSolvedLevels": 318,
+      "preWinnerWork": 10990577048,
+      "nominatedPreWinnerWork": 768613833,
+      "capturedPreWinnerWorkShare": 0.06993389242832047,
+      "endangeredWinnerLevels": 0,
+      "sameStageContinuationWorkShare": 0.9525719178671093,
+      "censoredPriorWorkShare": 0.9009462024605535
+    },
+    "c1": {
+      "capturedPreWinnerWorkShare": 0,
+      "endangeredWinnerLevels": 0
+    }
+  },
+  "duplicateHistoricalCheck": {
+    "workflowRunId": 34683011115,
+    "solverRef": "5973d6e4141f1480a5ebe58618e7e0d59dae9b8e",
+    "attemptSequenceDigest": "sha256:2a861c7ed7f45b1253a9f7ca92939ebd7bf43a7795dbb7d07551cab59e6a88b1",
+    "disposition": "attempt-sequence identical to run 35043165547; not counted as an independent replication"
+  },
+  "interpretation": {
+    "decision": "historical temporal/portfolio robustness positive across three distinct scoreable attempt regimes",
+    "scope": "same level population across three distinct scoreable execution regimes; two earlier artifacts are telemetry-inapplicable and one later pre-promotion run duplicates an earlier attempt regime; still not independent-population confirmation",
+    "nextGate": "sample-independent/current-production confirmation of the exact frozen model before any live scheduler treatment"
+  },
+  "historicalLadder": [
+    {
+      "workflowRunId": 33824275953,
+      "solverRef": "1b7353955cf67df93cd35a8083546adfc670ad94",
+      "solvedC2": 975,
+      "applicability": "inapplicable",
+      "reason": "attempt rows predate retained canonical workSpent; frozen work-band model and captured-work estimand cannot be reconstructed truthfully"
+    },
+    {
+      "workflowRunId": 34531412380,
+      "solverRef": "92c3155837c695312e9e14b95b631b750a25ac0a",
+      "solvedC2": 1029,
+      "applicability": "applicable-distinct-regime",
+      "attemptSequenceDigest": "sha256:f28d02cd58c10d4279d7f8ea2040cf56523d66f60bc3a920aa82bba45e2b118d",
+      "c2": {
+        "validationSolvedLevels": 310,
+        "capturedPreWinnerWorkShare": 0.06932365228009763,
+        "endangeredWinnerLevels": 0,
+        "sameStageContinuationWorkShare": 0.9532194476581958,
+        "censoredPriorWorkShare": 0.9022988464372393
+      },
+      "c1": {
+        "capturedPreWinnerWorkShare": 0,
+        "endangeredWinnerLevels": 0
+      }
+    },
+    {
+      "workflowRunId": 34674256538,
+      "solverRef": "51715da5d04c45af3811fff5a3e26107676592ea",
+      "solvedC2": 1048,
+      "applicability": "inapplicable",
+      "reason": "attempt rows in this artifact omit canonical workSpent; do not reinterpret missing work as zero"
+    },
+    {
+      "workflowRunId": 34683011115,
+      "solverRef": "5973d6e4141f1480a5ebe58618e7e0d59dae9b8e",
+      "solvedC2": 1048,
+      "applicability": "applicable-distinct-regime",
+      "attemptSequenceDigest": "sha256:2a861c7ed7f45b1253a9f7ca92939ebd7bf43a7795dbb7d07551cab59e6a88b1",
+      "c2": {
+        "validationSolvedLevels": 318,
+        "capturedPreWinnerWorkShare": 0.06993389242832047,
+        "endangeredWinnerLevels": 0,
+        "sameStageContinuationWorkShare": 0.9525719178671093,
+        "censoredPriorWorkShare": 0.9009462024605535
+      },
+      "c1": {
+        "capturedPreWinnerWorkShare": 0,
+        "endangeredWinnerLevels": 0
+      }
+    },
+    {
+      "workflowRunId": 35043165547,
+      "solverRef": "4421bd8fcf0f4a948a901082accfab0d151c6369",
+      "solvedC2": 1048,
+      "applicability": "duplicate-attempt-regime",
+      "attemptSequenceDigest": "sha256:2a861c7ed7f45b1253a9f7ca92939ebd7bf43a7795dbb7d07551cab59e6a88b1",
+      "duplicateOf": 34683011115
+    },
+    {
+      "workflowRunId": 35066677597,
+      "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+      "solvedC2": 1169,
+      "applicability": "development-distinct-regime",
+      "attemptSequenceDigest": "sha256:393c58d75161d54a4242558c105d144226b6499f33fda04d627a74dd2e8fe6ef",
+      "c2": {
+        "validationSolvedLevels": 356,
+        "capturedPreWinnerWorkShare": 0.09907759021907808,
+        "endangeredWinnerLevels": 0,
+        "sameStageContinuationWorkShare": 0.9647698441996082,
+        "censoredPriorWorkShare": 0.8594038701025318
+      },
+      "c1": {
+        "capturedPreWinnerWorkShare": 0,
+        "endangeredWinnerLevels": 0
+      }
+    }
+  ]
+}
