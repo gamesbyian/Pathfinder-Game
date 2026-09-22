@@ -78,7 +78,10 @@
       ],
       "prospectiveProducerFixes": [
         "where practical, reference the originating experiment/run manifest so attempted denominator, failures, protocol identity and work semantics can be recovered",
-        "preserve discovery-time missingness explicitly; compatibility adapters must not synthesize read/migration time as foundAt"
+        "preserve discovery-time missingness explicitly; compatibility adapters must not synthesize read/migration time as foundAt",
+        "preserve exact modern occurrence join keys sufficient to bind a stored path discovery to its owning experiment/run contract and, when present, hint-discovery-process evidence without copying attempt sequences into Hint",
+        "treat execution/occurrence capsules as a durable cross-resource join spine: level revision + exact path signature + immutable solver/protocol/configuration/run identity must fail closed rather than be reconstructed from filenames, timestamps or approximate configuration similarity",
+        "keep richer successful-process, failure-response and search-loss payloads at their existing natural grains; expand Hint only for semantics intrinsic to the accepted path observation"
       ],
       "knownIrreversibleInformationLoss": [
         "schema-v1 stress hintMetadata did not retain original discovery time; 662 surviving observations across 102 stress-1 files carry migration-time foundAt values from the 2026-07-11 normalization, so original chronology is irrecoverable unless another independent source proves it",
