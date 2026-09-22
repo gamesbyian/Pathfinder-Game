@@ -21,7 +21,7 @@ const ROOT = process.cwd();
 const REGISTRY_PATH = path.join(ROOT, 'scripts', 'validation-groups.json');
 const PACKAGE_PATH = path.join(ROOT, 'package.json');
 const VALID_FAMILIES = new Set(['validators', 'nodeTests']);
-const VALID_GROUPS = new Set(['repo', 'game', 'solver', 'research', 'data', 'shared']);
+const VALID_GROUPS = new Set(['repo', 'game', 'persistence', 'solver', 'research', 'data', 'shared']);
 
 function fail(message) {
   console.error(message);
