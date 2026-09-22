@@ -437,8 +437,11 @@ function currentState(model) {
     };
 }
 
-export function buildResearchSystemInventory(root = process.cwd()) {
-    const model = buildResearchRelations(root, { discoverArtifacts: true });
+export function buildResearchSystemInventory(root = process.cwd(), { allowHistoricalWorkstreamTable = false } = {}) {
+    const model = buildResearchRelations(root, {
+        discoverArtifacts: true,
+        allowHistoricalWorkstreamTable,
+    });
     const rawCommands = researchCommandRoots(root);
     const currentReferences = currentDocumentationReferences(root);
     const plans = planLifecycle(root, currentReferences);
