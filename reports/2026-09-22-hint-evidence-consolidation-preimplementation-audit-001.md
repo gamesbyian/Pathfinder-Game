@@ -1,5 +1,10 @@
 # Hint evidence consolidation pre-implementation audit 001
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-22 — full-corpus census, workflow/source reachability audit, Firestore sizing proxy, and request-semantics classification completed on PR #1996
+> **Decision:** The semantic architecture is sufficiently specified to begin Phase -1 authority/validation implementation; physical hint-schema-v4 migration remains blocked.
+> **Remaining gate:** Phase -1 must prove historical-unknown round trips, execution/occurrence lineage, Firestore/GHA semantic parity, referee equivalence, and runtime-projection freshness before physical v4 migration.
+
 > **Date:** 2026-09-22  
 > **Scope:** empirical pre-implementation checks for the hint evidence / execution identity / storage consolidation plan.  
 > **Branch:** `chatgpt/hint-determinism-provenance-audit-2026-09-22`  
