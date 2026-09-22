@@ -19,7 +19,7 @@ function filesUnder(root) {
         .sort();
 }
 
-const summary = {
+// Recorded-input collisions use only fields persisted in hint provenance. Full effective-config\n// identity is absent, so reconcile collisions to source experiment arms before interpreting them.\nconst summary = {
     schemaVersion: 1,
     roots,
     files: 0,
@@ -28,10 +28,10 @@ const summary = {
     comparableEvents: 0,
     repeatRunComparableGroups: 0,
     repeatRunStableGroups: 0,
-    repeatRunInputDivergenceGroups: 0,
+    repeatRunRecordedInputCollisionGroups: 0,
     exactEventCrossPathGroups: 0,
     excludedReasons: {},
-    samples: { exactEventCrossPath: [], repeatRunInputDivergence: [] },
+    samples: { exactEventCrossPath: [], repeatRunRecordedInputCollision: [] },
 };
 
 for (const root of roots) {
@@ -44,9 +44,9 @@ for (const root of roots) {
         summary.provenanceEvents += result.provenanceEvents;
         summary.comparableEvents += result.comparableEvents;
         summary.exactEventCrossPathGroups += result.exactEventCrossPath.length;
-        summary.repeatRunInputDivergenceGroups += result.repeatRunInputDivergence.length;
+        summary.repeatRunRecordedInputCollisionGroups += result.repeatRunRecordedInputCollision.length;
         summary.repeatRunStableGroups += result.repeatRunStable.length;
-        summary.repeatRunComparableGroups += result.repeatRunInputDivergence.length + result.repeatRunStable.length;
+        summary.repeatRunComparableGroups += result.repeatRunRecordedInputCollision.length + result.repeatRunStable.length;
         for (const [reason, count] of Object.entries(result.excludedReasons)) {
             summary.excludedReasons[reason] = (summary.excludedReasons[reason] ?? 0) + count;
         }
@@ -55,9 +55,9 @@ for (const root of roots) {
                 summary.samples.exactEventCrossPath.push({ file, ...row });
             }
         }
-        for (const row of result.repeatRunInputDivergence) {
-            if (summary.samples.repeatRunInputDivergence.length < sampleLimit) {
-                summary.samples.repeatRunInputDivergence.push({ file, ...row });
+        for (const row of result.repeatRunRecordedInputCollision) {
+            if (summary.samples.repeatRunRecordedInputCollision.length < sampleLimit) {
+                summary.samples.repeatRunRecordedInputCollision.push({ file, ...row });
             }
         }
     }
