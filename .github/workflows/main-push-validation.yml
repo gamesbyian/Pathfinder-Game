@@ -41,6 +41,7 @@ jobs:
         with:
           node-version: '20'
       - name: Compute main-push shadow validation plan
+        id: impact
         continue-on-error: true
         shell: bash
         env:
@@ -48,10 +49,18 @@ jobs:
           AFTER: ${{ github.sha }}
         run: |
           if [[ "$BEFORE" =~ ^0+$ ]]; then
-            node scripts/ci-impact-shadow-plan.mjs --full
+            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/ci-impact-shadow.json
           else
-            node scripts/ci-impact-shadow-plan.mjs --git-diff "$BEFORE" "$AFTER"
+            node scripts/ci-impact-shadow-plan.mjs --git-diff "$BEFORE" "$AFTER" --out=tmp/ci-impact-shadow.json
           fi
+
+      - name: Upload shadow validation plan
+        if: steps.impact.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-impact-shadow
+          path: tmp/ci-impact-shadow.json
+          retention-days: 14
 
   validate:
     runs-on: ubuntu-latest
