@@ -52,8 +52,11 @@ function median(values) {
 
 const { variants, repeats } = parseArgs(process.argv.slice(2));
 const rows = [];
-for (const variant of variants) {
-  for (let repeat = 1; repeat <= repeats; repeat += 1) rows.push(await runVariant(variant, repeat));
+for (let repeat = 1; repeat <= repeats; repeat += 1) {
+  const shift = (repeat - 1) % variants.length;
+  const order = [...variants.slice(shift), ...variants.slice(0, shift)];
+  console.log(`\n=== benchmark round ${repeat}/${repeats}: ${order.join(' -> ')} ===`);
+  for (const variant of order) rows.push(await runVariant(variant, repeat));
 }
 
 const summary = variants.map(variant => {
@@ -80,7 +83,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     '|---:|---:|---:|---:|---:|',
     ...summary.map(row => `| ${row.jobs} | ${row.passed}/${row.runs} | ${row.medianSeconds ?? 'n/a'} | ${row.minSeconds ?? 'n/a'} | ${row.maxSeconds ?? 'n/a'} |`),
     '',
-    'All variants execute the same `npm run test:node` population sequentially on this runner. ',
+    'All variants execute the same `npm run test:node` population sequentially on this runner. Variant order rotates deterministically across repeats to reduce warm-cache/order bias. ',
     'Use repeated runs before changing the default; runner state/order effects still make this a benchmark, not a correctness proof.',
     '',
   ];
