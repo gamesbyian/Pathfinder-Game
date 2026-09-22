@@ -90,4 +90,5 @@ jobs:
               echo 'The Pages deployment did not complete successfully.'
               [[ "$DEPLOY" == failure ]] && echo '::error::GitHub Pages deployment failed.'
             fi
+          :
           } >> "$GITHUB_STEP_SUMMARY"
