@@ -1592,3 +1592,52 @@ Physical hint schema v4 bulk migration is **still later**. It remains gated on P
 - the runtime projection is demonstrably derived only.
 
 The remaining questions are implementation-validation questions, not architecture-discovery blockers: exact Firestore wire/emulator byte overhead, the final maintained-reachability list produced by the new census guard, and migration/referee dry-run hashes once the Phase -1 semantic codec exists.
+
+
+### Artifact layout/discovery authority
+
+PSC-025 is now architecturally closed even though implementation remains pending.
+
+The current split is concrete:
+
+- Node derives a hint directory from the corpus filename in `hintsDirFor()`;
+- the browser independently supplies `basePath` + `hintsDirName` through `DEV_CORPORA`;
+- `hintFileName()` accepts any non-empty string level id verbatim;
+- `listHintFiles()` discovers only names matching `^[A-Za-z]?\d{3,}\.json$`.
+
+That means writable identity and discoverable identity are different contracts, and corpus-to-hint layout is encoded twice.
+
+Phase -1 should replace directory-regex discovery with an explicit corpus layout authority:
+
+1. one neutral corpus-layout descriptor maps each maintained corpus to its level artifact and hint artifact location;
+2. Node and browser adapters consume that descriptor instead of re-encoding the mapping independently;
+3. expected canonical hint filenames are derived from corpus level identity via `hintKeyForLevel()` / the shared level-id contract, not guessed from directory contents;
+4. validators/indexers compare the expected set to actual files and classify extras/orphans explicitly;
+5. legacy numeric fallback remains a named compatibility path for corpora without permanent ids;
+6. writers reject ids that cannot round-trip through the same layout/identity contract.
+
+No new empirical corpus measurement is needed before implementing this. The defect is an authority mismatch, not uncertainty about the present filename population.
+
+### Ingestion accounting authority
+
+PSC-028 is also specified enough for implementation.
+
+Today only the level-blind report importer emits a structured hint-harvest selection manifest, and that schema hard-codes `source.harvester = harvest-level-blind-report-hints`. The isolated importer and direct hint-artifact merger expose different funnels through console counters plus pending/quarantine files. The underlying semantic stages overlap but the names and units do not.
+
+Phase -1 should add one small, versioned **hint-ingestion receipt** emitted by every canonical ingestion lane. It is an accounting envelope, not a universal producer artifact. The common vocabulary should distinguish at least:
+
+- source candidate observations seen;
+- candidate observations structurally/semantically eligible for this importer;
+- referee-accepted observations;
+- accepted observations already represented semantically;
+- new semantic path additions;
+- new semantic provenance-event additions;
+- new physical occurrence-lineage additions once PSC-031 lands;
+- quarantined/rejected observations with reason counts;
+- persisted artifact/file changes as an operational consequence, not a semantic evidence count.
+
+Producer-specific fields may extend the receipt, but the common counters must preserve units explicitly. In particular, `filesChanged` is never a substitute for persisted semantic evidence, and a report-level quarantine containing many solved rows must record row weight rather than only object count.
+
+The existing level-blind selection manifest should migrate into this shared receipt or become a producer-specific extension of it. Isolated harvesting and direct-artifact compatibility import should emit the same core receipt. Attempted-population/failure denominators remain separate research evidence and must not be inferred from these success-selected ingestion receipts.
+
+With PSC-025 and PSC-028 reduced to these contracts, there are no remaining architecture-discovery blockers before Phase -1. Their implementation and regression checks belong in Phase -1 alongside the already-measured semantic/storage repairs.
