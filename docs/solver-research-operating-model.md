@@ -22,21 +22,19 @@ Correctness bugs may go directly to fix + regression/soundness validation. Specu
 
 Reuse the smallest common semantic owners where their meaning genuinely matches:
 
-- `research-semantic-identity-lib.mjs` — canonical semantic hashing only; each specialist owner still defines its hash domain.
-- `research-population-identity-lib.mjs` — canonical identity sets/parsing, population hashes, and same-domain set relations; callers still prove identity-basis compatibility.
-- `research-observation-integrity-lib.mjs` — generic row outcomes and structural/decision-valid completeness; specialist verdicts stay separate.
-- `research-question-contract-lib.mjs` — live ambiguity, discriminating observable, outcome interpretation, and MO syntax.
-- `research-evidence-applicability-lib.mjs` — the shared purpose-local admissible/context-bound/inadmissible lattice plus conservative meet; evidence purposes and classifiers remain specialist.
-- `research-evaluation-evidence-role-lib.mjs` — development/confirmation/transfer evaluation roles; broader report roles stay separate.
-- `research-claim-lib.mjs` — claim identity, material edges, bounded reverse invalidation; payloads stay specialist.
-- `research-resolution-envelope-lib.mjs` — observability axes/blockers/readiness; producers own derivation/discriminator/verdict.
-- `research-independence-vector-lib.mjs` — causal-independence axes/shape only; no aggregate score.
-- `research-unit-topology-lib.mjs` — observation/opportunity/assignment/dependence/analysis/generalization role shape only; studies own the actual units and estimands.
-- `research-repository-ref-lib.mjs` — exact repository-reference syntax/optional tracked existence; consumers own allowed roots, relation semantics, and off-main policy.
+- `research-semantic-identity-lib.mjs` — semantic hashing; specialists define hash domains.
+- `research-population-identity-lib.mjs` — identity sets/hashes/set relations; callers prove basis compatibility.
+- `research-observation-integrity-lib.mjs` — generic row outcomes/completeness; specialist verdicts stay separate.
+- `research-question-contract-lib.mjs` — live ambiguity, discriminator, outcome interpretation, MO syntax.
+- `research-evidence-applicability-lib.mjs` — purpose-local applicability lattice + conservative meet.
+- `research-evaluation-evidence-role-lib.mjs` — development/confirmation/transfer roles.
+- `research-claim-lib.mjs` — claim identity, material edges, bounded reverse invalidation.
+- `research-resolution-envelope-lib.mjs` — observability axes/blockers/readiness.
+- `research-independence-vector-lib.mjs` — causal-independence shape, no aggregate score.
+- `research-unit-topology-lib.mjs` — observation/opportunity/assignment/dependence/analysis/generalization roles.
+- `research-repository-ref-lib.mjs` — repository-reference syntax/existence; consumers own semantics.
 
-Do not route a specialist contract through one of these merely because field names resemble each other. Shared ownership applies only to the exact semantic invariant named above.
-
-Algebraic/compositional hardening of these primitives is tracked in [the research-system algebra audit](solver-research-system-algebra-audit.md). Add operators one semantic law at a time; do not build a generic algebra framework.
+Shared ownership applies only to the named invariant, not similar field names. Algebraic/compositional hardening lives in [the research-system algebra audit](solver-research-system-algebra-audit.md); add one semantic law at a time, not a generic framework.
 
 ## Research authority ownership
 
@@ -55,11 +53,9 @@ At every cross-artifact scientific join (result/integrity, control/treatment, re
 
 ### Prose versus machine state
 
-Prose is not a defect by itself. Keep scientific reasoning, nuanced constraints, caveats, and open-ended reopen predicates in prose when no machine consumer can honestly evaluate them.
+Keep nuanced/open-ended scientific reasoning in prose when no machine consumer can evaluate it. Stable categorical meaning used by software or multiple authorities needs an enum, ID, relation, or structured capsule rather than prose parsing; consumers use the machine owner. See `reports/2026-09-19-research-prose-authority-audit-001.md`.
 
-But when software or multiple authorities need a stable categorical meaning, prose must not become an undocumented API. Prefer an explicit enum, stable ID, relation, or structured capsule over keyword-parsing arbitrary sentences. If prose merely explains an existing machine-owned fact, consumers use the machine owner and may validate the prose mirror. See `reports/2026-09-19-research-prose-authority-audit-001.md`.
-
-The same rule applies to relationships: if a stable ID/edge exists, join on it rather than lexical similarity. When only lexical similarity exists, label the result as discovery/fallback rather than authority, and do not backfill a stable relation by inference alone.
+Likewise, join on stable IDs/edges when available. Lexical similarity is discovery/fallback only and must not silently manufacture authority.
 
 For relationship quality, prefer: validated authored ID/edge > authored one-way path/ID with referential integrity > embedded contract identity discovered from candidate files > explicitly labelled lexical/path discovery. If both endpoints author the same relation, check agreement. Co-location, filenames, hyperlinks and shared vocabulary may discover candidates but do not define membership or scientific ancestry. See `reports/2026-09-19-research-relation-authority-audit-001.md`.
 
