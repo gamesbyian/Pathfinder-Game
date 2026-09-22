@@ -87,6 +87,15 @@ const reportImpact = buildResearchQueryView(graph, {
 assert.ok(reportImpact.impactedQuestions.some(row =>
   row.questionId === 'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE'));
 
+const supportImpact = buildResearchQueryView(graph, {
+  view: 'support-impact',
+  entity: 'repositoryRefs:reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md',
+});
+assert.ok(supportImpact.rows.some(row =>
+  row.questionId === 'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE'
+  && row.disposition === 'necessary'),
+  'authored decisionSupport should distinguish necessary support from answeredBy-only evidence');
+
 const answerability = buildResearchQueryView(graph, { view: 'answerability' });
 assert.ok(answerability.noSolverCompute.some(row => row.workstreamId === 2),
   'implementation gate should be visible as no-new-solver-compute work');
