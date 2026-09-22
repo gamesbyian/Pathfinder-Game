@@ -99,9 +99,9 @@ jobs:
             echo
             echo "| Check | Outcome |"
             echo "| --- | --- |"
-            echo "| Fast repository + contract validation | `$FAST` |"
-            echo "| Production build | `$BUILD` |"
-            echo "| Solver capability canary | `$SOLVER_CANARY` |"
+            printf '| Fast repository + contract validation | `%s` |\n' "$FAST"
+            printf '| Production build | `%s` |\n' "$BUILD"
+            printf '| Solver capability canary | `%s` |\n' "$SOLVER_CANARY"
             echo
             if [[ "$FAST" == success && "$BUILD" == success && "$SOLVER_CANARY" == success ]]; then
               echo 'All post-merge safety-net checks passed.'
