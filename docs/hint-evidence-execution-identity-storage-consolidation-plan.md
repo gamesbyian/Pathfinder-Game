@@ -1641,3 +1641,126 @@ Producer-specific fields may extend the receipt, but the common counters must pr
 The existing level-blind selection manifest should migrate into this shared receipt or become a producer-specific extension of it. Isolated harvesting and direct-artifact compatibility import should emit the same core receipt. Attempted-population/failure denominators remain separate research evidence and must not be inferred from these success-selected ingestion receipts.
 
 With PSC-025 and PSC-028 reduced to these contracts, there are no remaining architecture-discovery blockers before Phase -1. Their implementation and regression checks belong in Phase -1 alongside the already-measured semantic/storage repairs.
+
+
+## Inversion pressure test: preserve richer evidence without bloating Hint
+
+The storage-consolidation program was pressure-tested with the opposite question: if Pathfinder wanted to
+retain **more** solver-discovery information rather than less, where should that information live?
+
+The repository already contains the answer. Do not turn `Hint` into a universal research record.
+
+Current evidence topology already separates materially different grains:
+
+- **hint provenance** — accepted path × semantic discovery event;
+- **hint discovery process** — run × level × exact stored path × attempt sequence through the winner;
+- **compact failure response** — run × level × failed/solved attempt or stage response;
+- **search-loss evidence** — run × level × attempt/stage × selected rich search event;
+- **experiment manifests/contracts** — protocol, population, execution and treatment authority.
+
+That decomposition is desirable. The richer hypothetical therefore strengthens the consolidation plan rather
+than arguing for a larger Hint schema.
+
+### Optimize duplication, not epistemic richness
+
+Physical storage work should remove repeated representation while preserving the ability to add richer
+research evidence later.
+
+A small canonical Hint should retain the information that is intrinsically part of the accepted path
+observation. Rich process, failure and search-state evidence should remain sibling resources at their natural
+grain.
+
+Schema v4 is therefore a **physical codec**, not a ceiling on future semantic evidence.
+
+### Durable join spine
+
+Modern solver discoveries should preserve enough identity to join a Hint occurrence exactly to richer evidence
+when that evidence exists. The durable join spine should include, directly or through the bounded execution /
+occurrence capsule:
+
+- level identity and structural revision;
+- exact complete path signature;
+- semantic discovery-event identity;
+- acquisition/source run identity;
+- immutable solver ref;
+- canonical execution/protocol/configuration identities;
+- experiment arm where applicable;
+- population identity where applicable;
+- artifact/shard/row locator when a durable source resource exposes one.
+
+The join must remain exact and fail closed. Do not reconstruct scientific identity later from timestamps,
+filenames, directory order or approximate configuration similarity.
+
+The existing `hint-discovery-process` contract is the precedent: it binds by exact path equality and preserves
+only a bounded run-envelope projection while leaving the experiment contract authoritative.
+
+### Retention classes
+
+Before adding a new provenance/execution field, classify it by retention need:
+
+1. **embedded semantic core** — required to interpret or deduplicate the Hint itself and therefore survives in
+   canonical hint evidence;
+2. **durably joinable evidence** — useful recurring research evidence at another natural grain; preserve an
+   exact join key and retain the sibling resource when its decision/reuse horizon warrants it;
+3. **reconstructable authority** — need not be copied when a durable authoritative contract/resource can
+   reconstruct it exactly from a stable identity;
+4. **ephemeral diagnostic** — may expire when no declared research consumer/reuse horizon earns durable
+   retention.
+
+Historical absence remains honest missingness. A retention class never licenses synthetic reconstruction.
+
+### Existing rich-evidence resources remain separate
+
+Do **not** copy attempt sequences into every Hint. `hint-discovery-process` already owns the successful
+attempt-sequence-through-winner grain.
+
+Do **not** append failed attempts to successful Hint provenance. `compact-failure-response` owns compact
+participation/dose/censoring/termination evidence and provides the attempted/negative context that
+success-selected hints cannot.
+
+Do **not** embed selected frontier/search-state capsules into Hint. `search-loss-evidence` owns that richer,
+bounded forensic grain.
+
+Instead, Phase -1 execution/occurrence identity should make joins among these resources cheaper and more
+reliable.
+
+### Evidence richness is consumer-earned
+
+The inversion does not authorize blanket telemetry retention. The operating model's existing rule still applies:
+a new durable store, observer or broad evidence surface needs a real consumer and stop rule.
+
+When a future research question wants richer discovery evidence:
+
+1. ask whether an existing sibling resource already owns the grain;
+2. extend its producer prospectively if the missing field recurs;
+3. preserve only the smallest decision-bearing/reconstructable bundle;
+4. add a new durable resource only when materially different recurring consumers justify a new grain.
+
+This prevents both failure modes: an anemic Hint that destroys future joins, and a provenance blob that becomes
+a second unstructured research warehouse.
+
+### Consequences for this plan
+
+Phase -1 should treat the execution capsule and occurrence lineage as a **join contract** as well as provenance.
+Acceptance tests should prove that a modern Hint occurrence can be joined, when corresponding resources are
+present, to:
+
+- its owning experiment/run contract;
+- hint-discovery-process evidence by exact path;
+- compact failure-response evidence by run/protocol/level identity;
+- later richer resources without changing physical Hint schema.
+
+The shared ingestion receipt from PSC-028 should expose identifiers needed to follow this lineage but should not
+duplicate the sibling evidence payloads.
+
+The v4 benchmark/migration must compare not only decoded Hint semantic equality but preservation of these join
+identities. Compression that keeps paths/provenance readable while breaking durable cross-resource joins is a
+semantic regression.
+
+### Design principle
+
+> **Preserve epistemic optionality; compress representation.**
+>
+> Put universally required meaning in the Hint, keep richer evidence at its natural grain, and make the joins
+> exact enough that future research can become more sophisticated without making the canonical Hint store a
+> warehouse.
