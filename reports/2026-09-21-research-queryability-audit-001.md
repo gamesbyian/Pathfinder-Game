@@ -102,9 +102,9 @@ Absent `decisionSupport` means sufficiency is unknown. `answeredBy` remains an e
 `docs/research-queryability-benchmarks.json` contains stable decision-relevant query classes and `npm run research:queryability-audit` executes them.
 
 Current target after this pass:
-- 10 fully supported;
+- 11 fully supported;
 - 2 partial by design;
-- 1 conditional on a prior snapshot;
+- 0 conditional;
 - 0 fully unmodeled.
 
 The graph remains rebuildable and read-only. No query artifact becomes a parallel truth store.
