@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
     buildResearchSystemFindingIndex,
     buildResearchSystemFindingSnapshot,
+    buildResearchSystemFindingSnapshotFromGitRef,
     diffResearchSystemFindingSnapshots,
     queryResearchSystemFindings,
 } from './research-system-query-lib.mjs';
@@ -28,6 +29,10 @@ assert.ok(queryResearchSystemFindings(first, { query: 'workstream' }).length >= 
 const snapshot = buildResearchSystemFindingSnapshot(first);
 assert.equal(snapshot.schemaVersion, 1);
 assert.equal(snapshot.findings.length, first.count);
+
+const headSnapshot = buildResearchSystemFindingSnapshotFromGitRef(process.cwd(), 'HEAD');
+assert.deepEqual(headSnapshot, snapshot,
+    'Git-ref reconstruction of HEAD should preserve current research-system findings');
 
 const changedSnapshot = structuredClone(snapshot);
 assert.ok(changedSnapshot.findings.length > 0);
