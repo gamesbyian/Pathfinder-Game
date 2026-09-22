@@ -63,9 +63,9 @@ on:
   workflow_dispatch:
     inputs:
       baseline:
-        description: 'Frozen capability-baseline summary.json (defines corpus-1''s currently-unsolved set, used only for the guaranteed-inclusion levels on a smaller test-drive sample) -- see reports/stress/capability-runs/RUN_ID/summary.json'
+        description: 'Frozen pre-dispatch production-boundary summary.json. It classifies solved/unsolved T1 rows and defines the EW1 production-unsolved sampling frame; keep it frozen for the run rather than outcome-selecting from the new refresh.'
         required: false
-        default: 'reports/stress/capability-runs/31918095910/summary.json'
+        default: 'reports/stress/capability-runs/35066677597/summary.json'
       t1_sample_size:
         description: '''all'' (default, full-parity revision): EVERY level in all 3 real corpora, solved and unsolved alike, no sampling. A number instead caps it to that many levels (corpus-1''s unsolved levels + a few research-flagged levels guaranteed in first, the rest a seeded random draw across the WHOLE population) for a smaller/faster test-drive run. See reports/2026-08-19-technique-census-design.md''s full-parity addendum for the calibrated trade.'
         required: false
