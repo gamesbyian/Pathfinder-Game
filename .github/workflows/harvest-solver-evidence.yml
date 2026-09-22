@@ -240,4 +240,5 @@ jobs:
                 [[ "$MERGE" == failure ]] && echo '::error::Solver evidence harvest failed during semantic merge or persistence.'
                 ;;
             esac
+          :
           } >> "$GITHUB_STEP_SUMMARY"

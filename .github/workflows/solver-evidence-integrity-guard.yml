@@ -66,4 +66,5 @@ jobs:
               echo 'The integrity audit itself did not complete successfully. Inspect the rebuild step before interpreting freshness.'
               [[ "$REBUILD" == failure ]] && echo '::error::Solver evidence integrity audit failed before freshness could be established.'
             fi
+          :
           } >> "$GITHUB_STEP_SUMMARY"

@@ -85,4 +85,5 @@ jobs:
               [[ "$V2" == failure ]] && echo '::error::Reconciled v2 premise-map structure audit failed.'
               [[ "$SOURCE_COVERAGE" == failure ]] && echo '::error::Reciprocal premise-source coverage audit failed.'
             fi
+          :
           } >> "$GITHUB_STEP_SUMMARY"

@@ -115,4 +115,5 @@ jobs:
               echo 'The remote Firestore rules deployment did not complete successfully. Inspect the deployment step for the HTTP/API response.'
               echo '::error::Firestore rules deployment failed.'
             fi
+          :
           } >> "$GITHUB_STEP_SUMMARY"

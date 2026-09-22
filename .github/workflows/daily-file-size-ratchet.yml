@@ -43,4 +43,5 @@ jobs:
               echo 'The repository-wide file-size ratchet failed. Open the **Enforce repository-wide file-size ratchet** step for the violating paths and thresholds.'
               echo '::error::Repository-wide file-size ratchet failed; inspect the ratchet step for violating paths and thresholds.'
             fi
+          :
           } >> "$GITHUB_STEP_SUMMARY"
