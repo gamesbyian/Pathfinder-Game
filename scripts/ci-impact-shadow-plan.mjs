@@ -91,6 +91,17 @@ try {
   const result = mode.full ? fullImpact() : classifyGitDiff(mode.base, mode.head);
   const plan = planValidation(result.surfaces);
   const payload = { impact: result, plan };
+  console.log(
+    'CI impact shadow:',
+    JSON.stringify({
+      full: result.full,
+      surfaces: plan.surfaces,
+      validatorGroups: plan.validatorGroups,
+      nodeTestGroups: plan.nodeTestGroups,
+      capabilities: plan.capabilities,
+      packageReason: result.packageImpact?.reason ?? null,
+    }),
+  );
   writeGithubOutputs(result, plan);
   writeSummary(result, plan);
   if (json || !process.env.GITHUB_STEP_SUMMARY) console.log(JSON.stringify(payload, null, 2));
