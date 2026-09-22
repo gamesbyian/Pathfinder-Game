@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 
-const ROOT = process.cwd();
+const ROOT = path.resolve(process.argv.find(a => a.startsWith('--root='))?.slice(7) || process.cwd());
 const OUT = process.argv.find(a => a.startsWith('--out='))?.slice(6)
   || 'reports/2026-09-22-hint-evidence-consolidation-census.json';
 
@@ -27,6 +27,7 @@ const stateTemplate = () => ({ absent:0, null:0, false:0, true:0, concrete:0 });
 const states = Object.fromEntries(fields.map(f => [f, stateTemplate()]));
 const byCorpus = Object.fromEntries(hintRoots.map(([name]) => [name, {
   files:0, bytes:0, hints:0, events:0, canonicalGzipBytes:0,
+  fieldStates:Object.fromEntries(fields.map(f => [f, stateTemplate()])),
   pathOnlyMinifiedBytes:0, pathOnlyPrettyBytes:0, pathOnlyGzipBytes:0,
   foundAtMigrationCandidates:0, migrationCandidateFiles:new Set(),
   schemaVersions:{}, firestoreEncodedHintArrayBytes:[],
@@ -35,7 +36,7 @@ const foundAtWindow = {
   min: Date.parse('2026-07-11T01:44:17.863Z'),
   max: Date.parse('2026-07-11T01:44:18.004Z'),
 };
-const foundAtMigration = { count:0, files:new Set(), corpora:{}, timestamps:new Map(), bySchemaVersion:{} };
+const foundAtMigration = { count:0, files:new Set(), corpora:{}, timestamps:new Map(), bySchemaVersion:{}, fieldStates:Object.fromEntries(fields.map(f => [f, stateTemplate()])) };
 const hintBytes = [];
 const eventDocBytes = [];
 let totalEvents = 0;
@@ -104,8 +105,9 @@ for (const [corpus, rel] of hintRoots) {
         totalEvents++; c.events++;
         for (const field of fields) {
           const r=get(event,field);
-          if (!r.present) states[field].absent++;
-          else states[field][classify(r.value)]++;
+          const bucket = !r.present ? 'absent' : classify(r.value);
+          states[field][bucket]++;
+          c.fieldStates[field][bucket]++;
         }
         if (event && typeof event === 'object') {
           const prov=event;
@@ -118,6 +120,11 @@ for (const [corpus, rel] of hintRoots) {
           if (Number.isFinite(ms) && ms>=foundAtWindow.min && ms<=foundAtWindow.max) {
             const relFile=path.relative(ROOT,file).replaceAll('\\','/');
             foundAtMigration.count++;
+            for (const field of fields) {
+              const mr=get(event,field);
+              const mb=!mr.present ? 'absent' : classify(mr.value);
+              foundAtMigration.fieldStates[field][mb]++;
+            }
             foundAtMigration.files.add(relFile);
             foundAtMigration.corpora[corpus]=(foundAtMigration.corpora[corpus]||0)+1;
             foundAtMigration.timestamps.set(fa.value,(foundAtMigration.timestamps.get(fa.value)||0)+1);
@@ -133,7 +140,13 @@ for (const [corpus, rel] of hintRoots) {
 
 for (const [name,c] of Object.entries(byCorpus)) {
   c.migrationCandidateFiles=[...c.migrationCandidateFiles].sort();
-  c.firestoreEncodedHintArrayBytes=summarize(c.firestoreEncodedHintArrayBytes);
+  const firestoreSizes=[...c.firestoreEncodedHintArrayBytes];
+  c.firestoreEncodedHintArrayThresholds={
+    over900k:firestoreSizes.filter(n=>n>900000).length,
+    over1MiB:firestoreSizes.filter(n=>n>1048576).length,
+    over950k:firestoreSizes.filter(n=>n>950000).length,
+  };
+  c.firestoreEncodedHintArrayBytes=summarize(firestoreSizes);
 }
 
 const sourceRoots=['scripts','modules','.github/workflows'];
@@ -173,7 +186,8 @@ const publishedFirestore=byCorpus.published.firestoreEncodedHintArrayBytes;
 const result={
   schemaVersion:1,
   generatedAt:new Date().toISOString(),
-  gitSha:process.env.GITHUB_SHA || null,
+  gitSha:process.env.AUDITED_GIT_SHA || process.env.GITHUB_SHA || null,
+  auditedRoot:ROOT,
   hintCorpus:{totalHints,totalEvents,byCorpus},
   provenanceFieldStates:states,
   migrationSyntheticFoundAt:{
