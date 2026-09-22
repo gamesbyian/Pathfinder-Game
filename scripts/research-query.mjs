@@ -1,6 +1,9 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
+
 import { buildResearchQueryGraph, queryResearchGraph } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
+import { buildResearchQuerySnapshot, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith('--' + name + '='))?.slice(name.length + 3) ?? '';
@@ -28,6 +31,19 @@ if (view) {
     entity: value('entity'),
     minimum: value('minimum') ? Number(value('minimum')) : 2,
   }), null, 2));
+  process.exit(0);
+}
+
+if (args.includes('--snapshot')) {
+  console.log(JSON.stringify(buildResearchQuerySnapshot(graph), null, 2));
+  process.exit(0);
+}
+
+const compareSnapshot = value('compare-snapshot');
+if (compareSnapshot) {
+  const before = JSON.parse(readFileSync(compareSnapshot, 'utf8'));
+  const after = buildResearchQuerySnapshot(graph);
+  console.log(JSON.stringify(diffResearchQuerySnapshots(before, after), null, 2));
   process.exit(0);
 }
 
