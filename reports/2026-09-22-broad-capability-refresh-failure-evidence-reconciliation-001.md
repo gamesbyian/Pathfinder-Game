@@ -73,6 +73,19 @@ The same refresh applied the already-frozen action-selection model without refit
 
 This is a fresh temporal/portfolio reproduction of the late-continuation signal. It strengthens robustness of the existing premise but does not replace the precommitted independent-parent confirmation gate.
 
+## Equal-work headroom already visible on the production side
+
+The refresh-side equal-work/production reach join is decision-valid and fully bound to the fresh production attempt identities. On its 60-level frozen pricing population:
+
+- 12 levels are EW1-solvable;
+- 27 are solved by production;
+- **2 current production misses are solved by EW1 techniques that production never offered on those levels**;
+- no production level in the frozen sample is missing from the join.
+
+Those two rows are allocation/routing nominations, not promotion evidence. One is solved by the 5,000-wide mechanic-bucket intersection-harvest beam at about 3.06M work; the other is solved by three 2,000-wide beam configurations at about 0.60-0.66M work. The proper next question is why the applicable actions were not offered, and whether a legal generic routing/allocation rule can expose that cheap capability without harmful displacement. Exact historical level identity remains offline evidence only.
+
+At technique level, the join also finds currently participating configurations with zero recorded production wins, including `finishFirst`, `nearClosureRescue`, `closureCommitment`, and two 2,000-wide beam profiles. Some retain EW1 solves. This is not enough to remove them: zero wins can still hide prerequisite or capability-protecting value. The fresh census and broad reconciliation consumer must separate cheap unique capability, deep-only capability, and genuinely dominated work.
+
 ## Technique-census boundary
 
 Technique census run `35687337464` was dispatched from the same solver ref as the refresh with T1/T3/T4 at the maintained 50M-node depth plus the bounded EW1 60-level / 10M-work tranche.
