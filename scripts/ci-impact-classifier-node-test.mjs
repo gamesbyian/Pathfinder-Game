@@ -67,6 +67,19 @@ const mixed = expect(
 assert.deepEqual(mixed.files.map(file => file.rule), ['solver-research-docs', 'production-solver']);
 
 
+
+const registeredRepoHarness = expect(
+  ['scripts/documentation-index-lib-node-test.mjs'],
+  ['repo'],
+);
+assert.equal(registeredRepoHarness.files[0].rule, 'registered-validation-entrypoint');
+
+const registeredGameHarness = expect(
+  ['scripts/firestore-rules-test.mjs'],
+  ['game'],
+);
+assert.equal(registeredGameHarness.files[0].rule, 'registered-validation-entrypoint');
+
 const packageBase = {
   name: 'pathfinder-game',
   private: true,
