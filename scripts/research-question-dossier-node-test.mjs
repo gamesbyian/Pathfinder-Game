@@ -14,7 +14,8 @@ assert.ok(Array.isArray(dossier.currentAuthorityMatches.queue));
 assert.equal(dossier.currentAuthorityMatches.queueMatchMode, 'stable-question-id');
 assert.equal(dossier.currentAuthorityMatches.evidenceApplicability.status, 'not-assessed');
 assert.match(dossier.currentAuthorityMatches.evidenceApplicability.note, /freshness.*protocol.*population.*admissibility/u);
-assert.equal(dossier.currentAuthorityMatches.experimentMatchMode, 'lexical-discovery-only');
+assert.equal(dossier.currentAuthorityMatches.experimentMatchMode, 'none');
+assert.equal(dossier.currentAuthorityMatches.experimentDiscoveryMode, 'lexical-discovery-only');
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
 assert.ok(Array.isArray(dossier.answerRefs));
 assert.ok(Array.isArray(dossier.constraintRefs));
@@ -50,6 +51,11 @@ assert.equal(run.status, 0, run.stderr);
 const cli = JSON.parse(run.stdout);
 assert.equal(cli.question.id, questionId);
 assert.equal(cli.authority.kind, 'derived-read-only');
+
+const stableExperimentDossier = buildQuestionDossier(process.cwd(), { questionId: 'WS2-MUST-TURN-LATE-ADDITIVE' });
+assert.ok(stableExperimentDossier.currentAuthorityMatches.experiments.some(row =>
+    row.experimentId === 'STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY'));
+assert.equal(stableExperimentDossier.currentAuthorityMatches.experimentMatchMode, 'stable-question-id');
 
 const constrained = buildQuestionDossier(process.cwd(), { questionId: 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION' });
 assert.ok(constrained.questionRelations.outgoing.some(edge =>
