@@ -83,9 +83,14 @@
     {
       "id": "QB-012",
       "question": "Which conclusions would actually become unsupported if one evidence source were withdrawn, accounting for redundant support?",
-      "kind": "support-redundancy",
-      "expected": "known-gap",
-      "gap": "The graph can enumerate dependency paths, but scientific sufficiency/redundancy is not yet authored as machine-readable support sets and must not be inferred from edge count."
+      "kind": "support-impact",
+      "expected": "partial",
+      "gap": "Explicit decisionSupport semantics now distinguish necessity/redundancy where authored. Most historical questions still expose answeredBy evidence trails without sufficiency semantics, so support-withdrawal consequences remain unknown there.",
+      "entity": "repositoryRefs:reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md",
+      "mustIncludeSupport": {
+        "questionId": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+        "disposition": "necessary"
+      }
     },
     {
       "id": "QB-013",
