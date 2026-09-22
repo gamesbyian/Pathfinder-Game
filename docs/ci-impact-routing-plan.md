@@ -146,8 +146,19 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 ## Current next gate
 
-**Phase 0 foundation is implemented on PR #1965.** The ownership registry is in exact parity with 26 permanent validators and 163 Node/CLI harnesses, and the existing structural gate checks that parity. Universal CI remains unchanged.
+**Phase 0 is complete.** Validation ownership is exact and mechanically guarded: 27 permanent validators and 164 Node/CLI harnesses are registered without omissions or duplicates.
 
-**Phase 1 is active.** The conservative source-impact classifier and its first tests are present, and the nine-PR backtest is recorded in `reports/2026-09-21-ci-impact-routing-recent-pr-backtest-001.md`. The dominant false-broadening seam is now measured: research-heavy PRs that modify `package.json` solely to register tooling still escalate to full impact.
+**Phase 1 source-impact hardening is substantially complete.** The current branch has:
 
-Next: inventory current tracked-path coverage/unknowns, inspect `package.json` and generic-script ownership seams, harden rename/delete/config-mutation behavior, then rerun a larger historical backtest. Do not enable CI skipping until those gates close.
+- zero unclassified paths across 10,285 tracked blobs;
+- a permanent tracked-path coverage validator;
+- rename/delete/copy-safe Git change parsing;
+- semantic script-only `package.json` classification with non-script changes remaining full;
+- registered harness entrypoint ownership derived from the validation registry;
+- first-class `persistence` impact so Firestore validation can eventually separate from generic game work;
+- a real `--git-diff <base> <head>` classifier entrypoint;
+- a data-driven validation planner describing validator/harness groups and expensive build/coverage/proof/canary/Firestore capabilities.
+
+Checkpoint: [CI impact routing foundation result 001](../reports/2026-09-21-ci-impact-routing-foundation-result-001.md).
+
+**Next:** run a larger recent-PR Git-diff backtest, investigate repeated broad fallbacks, benchmark bounded `test:node` concurrency, then design a shadow-mode Actions router that computes the scoped plan while the existing full gate still runs. Do not enable skipped validation until shadow evidence shows the router and full oracle agree.
