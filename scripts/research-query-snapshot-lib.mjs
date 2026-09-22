@@ -6,7 +6,8 @@ const edgeKey = edge => [key(edge.from), edge.relation, key(edge.to)].join('|');
 export function buildResearchQuerySnapshot(graph) {
     const answerability = buildAnswerabilityView(graph);
     const gates = [
-        ...answerability.noSolverCompute,
+        ...answerability.noFreshSolverExecution,
+        ...answerability.instrumentOnly,
         ...answerability.boundedCompute,
         ...answerability.dormantOrConditional,
         ...answerability.unclassified,
@@ -59,7 +60,7 @@ export function diffResearchQuerySnapshots(before, after) {
         if (!afterGates.has(id)) gateChanges.push({ workstreamId: previous.workstreamId, before: previous, after: null });
     }
 
-    const noCompute = new Set(['existing-data', 'instrument-only', 'design', 'implementation']);
+    const noFreshExecution = new Set(['existing-data', 'design', 'implementation']);
     return {
         schemaVersion: 1,
         addedNodes: [...afterNodes.entries()].filter(([id]) => !beforeNodes.has(id)).map(([, row]) => row),
@@ -67,9 +68,11 @@ export function diffResearchQuerySnapshots(before, after) {
         addedEdges: [...afterEdges.entries()].filter(([id]) => !beforeEdges.has(id)).map(([, row]) => row),
         removedEdges: [...beforeEdges.entries()].filter(([id]) => !afterEdges.has(id)).map(([, row]) => row),
         gateChanges,
-        newlyNoSolverCompute: gateChanges.filter(row =>
-            row.after && noCompute.has(row.after.gateClass)
-            && (!row.before || !noCompute.has(row.before.gateClass))),
+        newlyNoFreshSolverExecution: gateChanges.filter(row =>
+            row.after && noFreshExecution.has(row.after.gateClass)
+            && (!row.before || !noFreshExecution.has(row.before.gateClass))),
+        newlyInstrumentOnly: gateChanges.filter(row =>
+            row.after?.gateClass === 'instrument-only' && row.before?.gateClass !== 'instrument-only'),
         newlyBoundedCompute: gateChanges.filter(row =>
             row.after?.gateClass === 'bounded-compute' && row.before?.gateClass !== 'bounded-compute'),
     };
