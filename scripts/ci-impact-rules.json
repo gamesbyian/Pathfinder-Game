@@ -3,6 +3,7 @@
   "surfaces": [
     "repo",
     "game",
+    "persistence",
     "solver",
     "research",
     "data",
@@ -25,7 +26,7 @@
     },
     {
       "id": "package-build-authority",
-      "pattern": "^(?:package(?:-lock)?\\.json|tsconfig(?:\\.[^/]+)?\\.json|vite\\.config\\.[^/]+|vitest\\.config\\.[^/]+|eslint\\.config\\.[^/]+|firebase\\.json|firestore\\.(?:rules|indexes\\.json))$",
+      "pattern": "^(?:package(?:-lock)?\\.json|tsconfig(?:\\.[^/]+)?\\.json|vite\\.config\\.[^/]+|vitest\\.config\\.[^/]+|eslint\\.config\\.[^/]+)$",
       "surfaces": [
         "all"
       ],
@@ -83,11 +84,38 @@
     },
     {
       "id": "game-host-config",
-      "pattern": "^(?:firebase-config\\.js|includes/)",
+      "pattern": "^includes/",
       "surfaces": [
         "game"
       ],
       "reason": "production client/hosting configuration"
+    },
+    {
+      "id": "firestore-authority",
+      "pattern": "^(?:firebase\\.json|firestore\\.(?:rules|indexes\\.json))$",
+      "surfaces": [
+        "repo",
+        "persistence"
+      ],
+      "reason": "Firestore deployment/emulator authority"
+    },
+    {
+      "id": "firebase-client-config",
+      "pattern": "^firebase-config\\.js$",
+      "surfaces": [
+        "game",
+        "persistence"
+      ],
+      "reason": "production Firebase client configuration"
+    },
+    {
+      "id": "persistence-modules",
+      "pattern": "^modules/persistence(?:/|\\.)",
+      "surfaces": [
+        "game",
+        "persistence"
+      ],
+      "reason": "production persistence implementation"
     },
     {
       "id": "production-solver",
