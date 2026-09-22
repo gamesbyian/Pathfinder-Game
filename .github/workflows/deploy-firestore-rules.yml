@@ -101,13 +101,13 @@ jobs:
             echo
             echo "| Stage | Outcome |"
             echo "| --- | --- |"
-            echo "| Rules characterization | `$CHARACTERIZE` |"
-            echo "| Remote deployment | `$DEPLOY` |"
+            printf '| Rules characterization | `%s` |\n' "$CHARACTERIZE"
+            printf '| Remote deployment | `%s` |\n' "$DEPLOY"
             echo
             if [[ "$DEPLOY" == success ]]; then
-              echo "Deployed ruleset: `${RULESET:-unknown}`"
+              printf 'Deployed ruleset: `%s`\n' "${RULESET:-unknown}"
               echo
-              echo "Source commit: `$GITHUB_SHA`"
+              printf 'Source commit: `%s`\n' "$GITHUB_SHA"
             elif [[ "$CHARACTERIZE" == failure ]]; then
               echo 'Deployment did not proceed because the local Firestore rules characterization failed.'
               echo '::error::Firestore rules characterization failed; no successful deployment was established.'
