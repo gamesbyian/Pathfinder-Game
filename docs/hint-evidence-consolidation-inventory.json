@@ -17,7 +17,7 @@
       "mode": "writer",
       "issue": "imports removed facade; mutates hintRecords but persists through removed writer",
       "target": "migrate to explicit corpus-document API; preserve changed-level write intent",
-      "reachability": "maintained utility; package-command reachability must be mechanically checked"
+      "reachability": "maintained source utility; no package.json command found"
     },
     {
       "path": "scripts/family-parent-hint-replay-batch.mjs",
@@ -25,7 +25,7 @@
       "mode": "writer",
       "issue": "imports removed facade and manually mirrors parent.hintRecords to parent.hints",
       "target": "use setLevelHintRecords and explicit corpus-document writer",
-      "reachability": "batch utility; no direct package command found in the current package excerpt"
+      "reachability": "maintained batch source utility; no package.json command found"
     },
     {
       "path": "scripts/stress/cpsat-hint-harvest.mjs",
@@ -33,7 +33,7 @@
       "mode": "writer",
       "issue": "imports removed facade and manually mirrors hintRecords to hints",
       "target": "use canonical HintStore boundary; if run in GHA, emit exact external-solver discovery observations before retiring direct transport",
-      "reachability": "maintained CP-SAT workflow producer"
+      "reachability": "maintained CP-SAT workflow producer; no direct package.json alias required"
     },
     {
       "path": "scripts/family-parent-hint-replay.mjs",
@@ -442,6 +442,59 @@
     ],
     "totalRawBytes": 741231497,
     "loadingSemantics": "published hints are per-level lazy; stress corpora are fetched only after the signed-in admin Dev-Mode corpus switcher selects them, but all three provenance-rich trees are still copied into dist",
-    "pathOnlyBenchmarkStatus": "pending exact full-corpus encoder/gzip benchmark before adopting a runtime projection"
+    "pathOnlyBenchmarkStatus": "pending exact full-corpus encoder/gzip benchmark before adopting a runtime projection",
+    "largeFilePathOnlySamples": {
+      "sampleBasis": "ten large real files across all three copied trees, decoded from Git blobs",
+      "pathOnlyRawRatioRange": [
+        0.0582,
+        0.375
+      ],
+      "rawSavingsPercentRange": [
+        62.5,
+        94.2
+      ],
+      "warning": "materiality sample only; exact full-corpus raw+gzip benchmark remains required"
+    }
+  },
+  "firestoreSerializedSamples": {
+    "basis": "JSON.stringify(Hint) sizes from five provenance-rich real files; excludes Firestore document/field encoding overhead",
+    "files": [
+      {
+        "path": "data/hints/P00160.json",
+        "medianHintBytes": 3142,
+        "p99HintBytes": 17229,
+        "maxHintBytes": 110010,
+        "maxProvenanceEvents": 145
+      },
+      {
+        "path": "data/hints/P00161.json",
+        "medianHintBytes": 361,
+        "p99HintBytes": 12323,
+        "maxHintBytes": 147122,
+        "maxProvenanceEvents": 194
+      },
+      {
+        "path": "data/hints/P00063.json",
+        "medianHintBytes": 987,
+        "p99HintBytes": 19437,
+        "maxHintBytes": 168521,
+        "maxProvenanceEvents": 215
+      },
+      {
+        "path": "data/stress/hints/S00030.json",
+        "medianHintBytes": 7526,
+        "p99HintBytes": 12809,
+        "maxHintBytes": 43687,
+        "maxProvenanceEvents": 60
+      },
+      {
+        "path": "data/stress/hints-random/R02197.json",
+        "medianHintBytes": 1620,
+        "p99HintBytes": 7311,
+        "maxHintBytes": 69154,
+        "maxProvenanceEvents": 94
+      }
+    ],
+    "implication": "capacity cannot be safely expressed as a fixed path count; provenance-rich Hint size varies by orders of magnitude. Measure encoded Firestore document bytes and enforce a byte-aware surfaced failure policy."
   }
 }
