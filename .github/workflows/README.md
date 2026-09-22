@@ -34,6 +34,20 @@ This retention layer is a safety net. Individual workflows may still save hints 
 
 ## Agent result retrieval
 
+### Completion digests
+
+A maintained workflow should not require log archaeology to answer what happened. Terminal jobs should write a bounded `$GITHUB_STEP_SUMMARY` digest that names the semantic stages, reports their outcomes, surfaces the few identifiers or metrics needed to interpret success, and points to the evidence or failed step when more detail is required.
+
+Use this order of preference:
+
+1. Put the human answer in the run summary. A green/red badge alone is not a sufficient report for workflows whose semantic result is richer than process exit.
+2. Use stable step ids and an `if: always()` summary step so failed or skipped semantic stages remain visible.
+3. Emit GitHub `::error::` annotations for failed aggregate/invariant stages when the actionable failure would otherwise be buried in a step log.
+4. For workflows that persist or deploy something, report the durable destination, source run/SHA, deployment URL, ruleset id, or persistence commit when available.
+5. Keep large artifacts as evidence, not the front door. Do not create a second artifact family solely to repeat information already present in a summary or durable repo result.
+
+Solver/research sweeps additionally use the standardized `solver-sweep-result` contract below; its publisher already appends the standard human summary to `$GITHUB_STEP_SUMMARY`.
+
 Every maintained solver/research sweep publishes a predictable front-door artifact named `solver-sweep-result`. This is the first place agents should read after a run completes.
 
 The artifact contains:
