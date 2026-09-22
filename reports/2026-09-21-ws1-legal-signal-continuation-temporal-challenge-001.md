@@ -138,6 +138,17 @@ The post-promotion development run has a different normalized attempt digest:
 
 This preserves the correct evidence count: two distinct execution regimes, not three.
 
+The maintained frozen-model tooling emits an `actionBoundaryDigest` over the normalized reachable action-boundary rows used by this analysis, independent of input path. For the two duplicate pre-promotion artifacts it is identical:
+
+- run `34683011115`: `sha256:6bd7d06c6f1952ba1fc82da6289e4e05681b2ea62c9acde8caaea4a27685819f`;
+- run `35043165547`: `sha256:6bd7d06c6f1952ba1fc82da6289e4e05681b2ea62c9acde8caaea4a27685819f`.
+
+The post-promotion development regime differs:
+
+- run `35066677597`: `sha256:7de29bbf6b979088ffc13f04b556856be083fc00be19e75922b5b47d767f2d09`.
+
+Different workflow-run IDs or commit SHAs are therefore not sufficient to claim another evidence unit for this question; the normalized action-boundary evidence must differ.
+
 ## Historical retained-refresh ladder
 
 The exact frozen model was then checked against the retained full-refresh history where the attempt contract is sufficient.
@@ -162,6 +173,21 @@ The frozen rule is directionally stable across all three:
 
 The two telemetry-inapplicable runs are important negative-space evidence about the research system itself: older solver compute exists, but the exact canonical-work question cannot be reconstructed because the necessary field was not retained. They are not zeros and they are not failed replications.
 
+
+
+## Independent retained-population availability check
+
+Before accepting fresh acquisition as the next gate, retained family/variant evidence was checked for a genuinely independent population that could score the frozen model without solver execution.
+
+The durable `reports/stress/phase-c-family-variant-results.json` asset is not protocol-compatible: it uses the July legacy scheduler, and its attempt rows do not retain modern `stageId` or canonical `workSpent`. Repository search found no newer family/variant result carrying both fields required to reconstruct the frozen signatures and captured-work estimand.
+
+Current-main published-parent family manifests provide 18 manifests but only **9 unique independent parents**. They are structurally diverse enough for a smoke canary, but not enough parent support for the intended safety/generalization claim.
+
+The much larger off-main variant resource is the appropriate eventual source for a family-based confirmation, but any decision-bearing sample should be a prospectively frozen whole-parent block through the existing population/family substrate rather than an ad hoc historical slice.
+
+This closes the useful retained-evidence route for independent-population confirmation. Re-splitting C2, translating legacy attempt vocabularies into current stages, or treating missing work as zero would manufacture pseudo-independence.
+
+The next gate is therefore genuinely acquisitional: sample-independent/current-production action-boundary evidence under the exact frozen model.
 
 ## Interpretation
 
