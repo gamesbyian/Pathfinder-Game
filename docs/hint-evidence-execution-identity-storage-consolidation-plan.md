@@ -1184,124 +1184,256 @@ The browser-safe canonical decoder is still required for development, compatibil
 authoring surface that reads canonical artifacts directly; the runtime projection is not a license
 to let Node/browser semantic decoding diverge.
 
-## 14. Implementation sequence
+## 14. Implementation methodology and dependency-ordered sequence
 
-### Phase -1 — repair confirmed semantic/storage-boundary regressions
+The phases below are ordered by **semantic dependency**, not by how visible or easy a change is.
 
-- fix maintained writers still using removed hint/corpus persistence facades;
-- restore one canonical hint mutation/write authority across candidate-search and CP-SAT paths;
-- define and repair provenance missingness so historical absence is not promoted into factual modern false;
-- remove or replace the legacy Firestore five-hint persistence truncation with an explicit capacity policy;
-- add regression/static guards before relying on these boundaries for the migration.
+A later phase may start only when the authorities it consumes are stable enough to serve as its test
+oracle. Independent leaf work may proceed in parallel only when it cannot pre-decide a later semantic
+choice.
 
-**Exit:** current producers obey the semantic/storage contracts the later phases assume.
+### 14.1 Method used in every phase
 
-### Phase 0 — land and adopt the determinism audit
+Every phase that changes a durable authority must use the same migration discipline:
+
+1. **Name the authority and invariant.** State which current owner is authoritative, what semantic
+   invariant must survive, and which later phases depend on it.
+2. **Freeze a before-state oracle.** Retain representative fixtures plus machine semantic hashes /
+   counts needed to prove no accidental reinterpretation.
+3. **Add the new owner beside the old path.** Prefer adapters, dual-read, shadow projection or
+   dual-write comparison before destructive replacement.
+4. **Exercise the real surface.** Test maintained CLIs/workflows/browser paths, not only helper
+   functions.
+5. **Compare semantics, not incidental bytes.** Referee validity, missingness, identity, occurrence
+   lineage, joinability, selection accounting and partial-failure behavior are first-class depending
+   on the phase.
+6. **Test recovery/idempotency.** Retry, partial persistence, mixed-era input and corrupt/missing
+   source cases must have explicit outcomes where the phase touches persistence.
+7. **Move consumers before deleting compatibility.** A new authority is not complete while a
+   maintained consumer still silently implements the old meaning.
+8. **Retire the old path only after demonstrated parity.** Record remaining historical adapters
+   explicitly rather than treating them as current alternatives.
+9. **Leave a machine-enforced guard.** New fields/producers/layouts must fail closed when they bypass
+   the canonical owner.
+10. **Record exit evidence.** The phase exit is a test/report/manifest or other reconstructable proof,
+    not “implementation appears complete.”
+
+Unknown historical values remain unknown throughout. No phase may gain apparent completeness by
+imputing missing history.
+
+### Phase 0 — adopt the audit, freeze the baseline, rescue expiring authority
+
+Do this before semantic implementation.
 
 - reconcile/merge PR #1996 safely;
-- retain its report, reusable library, CLI, and semantic tests;
-- register its findings as the baseline regression oracle;
-- make no historical provenance rewrite yet.
+- retain its determinism report, reusable audit library, CLI and semantic tests;
+- freeze baseline corpus semantic hashes/counts and the known collision/reconstruction fixtures;
+- **rescue the minimal authoritative evidence bundle for high-value source runs whose GHA artifacts
+  can expire**, beginning with the September 9 runs used to reconcile #1996;
+- preserve source contracts/manifests, exact solved rows/paths, arm/configuration identity and
+  artifact locators sufficient for later semantic backfill;
+- do not yet rewrite canonical historical Hint provenance.
 
-**Exit:** current determinism evidence is durable on main and runnable locally.
+This separates urgent evidence preservation from later interpretation. Capturing an authoritative
+source bundle now does not commit the final execution-capsule schema.
 
-### Phase 1 — identity consolidation
+**Exit:** the baseline and currently recoverable high-value source evidence remain reconstructable
+without depending on future GHA retention.
 
-- inventory every canonical `SolveOpts` field, execution backend and existing identity owner;
-- define a complete-by-default, versioned solver-request field-classification contract;
-- define the canonical solver-request capsule and its purpose-specific identity projections;
-- define execution protocol, reproducibility class and run-envelope projections;
-- add canonical semantic hashing;
-- add effective solver input identity/reconstructability helper;
-- replace duplicate producer-local stable-hash logic where semantics match;
-- add tests proving population/run metadata does not contaminate solver-input equality.
+### Phase 1 — repair current boundaries and establish one semantic ingress
 
-**Exit:** sweep families can describe the same solver semantics through one owner.
+Repair current correctness seams before introducing richer identity.
 
-### Phase 2 — provenance envelope plumbing
+- migrate maintained readers/writers off removed hint/corpus persistence facades;
+- restore one canonical mutation/write authority and add the maintained-reachability guard;
+- implement source-generation-aware historical missingness adapters so decode/read/write cannot
+  launder unknown into modern false/default;
+- make the July-11 synthetic-`foundAt` cohort decode as unknown discovery time;
+- introduce the shared browser/Node **v1-v3 semantic decoder boundary now**, without v4 encoding;
+- consolidate corpus-to-hint layout authority enough that Node/browser readers resolve the same
+  corpus/id semantics;
+- repair worker side-channel parity (`beamFlowCounters`, `pruneDiagnostics`) or classify the
+  fields direct-only;
+- contain Firestore evidence loss immediately: no silent `slice()`, no silent provenance discard,
+  and capacity/duplicate/failure outcomes must be distinguishable. Do not prematurely choose the
+  final occurrence-storage layout.
 
-- extend hint provenance semantics with bounded execution/run binding;
-- update `makeProvenanceEntry()`, typed interfaces, and legacy upgrade paths;
-- update shared hint capture;
-- update current-solve and historical-solve provenance builders;
-- preserve explicit unknowns for older evidence.
+**Exit:** all maintained current reads/writes pass through honest semantic ingress/mutation
+boundaries, and existing storage paths fail explicitly rather than silently destroying evidence.
 
-**Exit:** every modern Pathfinder solver discovery can carry complete effective-input binding.
+### Phase 2 — identity and durable join-spine consolidation
 
-### Phase 3 — standardized hint-ingestion projection
+Build the semantic identities that later provenance and ingestion must carry.
 
-- define a small canonical hint-discovery ingestion interface over specialist producer artifacts, not a universal research artifact schema;
-- require complete solution path, level identity/revision, winning attempt/action data, the common execution capsule, source-run lineage, and enough search observation to construct canonical provenance;
-- make representative direct-save and artifact-only producers emit it;
-- extend solver-sweep result/manifests to preserve it and constituent source lineage;
-- harden workflow contract checks.
+- adopt the complete 49-field SolveOpts classification and backend-specific request dimensions;
+- define canonical normalized solver-request projections and effective defaults;
+- define purpose-specific request/effective-input identity, execution protocol and reproducibility
+  class;
+- define the bounded run/execution capsule;
+- define the durable cross-resource join spine: level revision, exact path signature, semantic
+  discovery identity, acquisition run, immutable solver ref, protocol/configuration, arm/population
+  and exact artifact locator where applicable;
+- reuse canonical research hashing and existing backend/experiment authorities rather than minting
+  duplicate registries;
+- prove population/run metadata does not contaminate solver-input equality and observer-reactive
+  execution is classified correctly.
 
-**Exit:** the central harvester can persist new evidence without consuming modified canonical hint
-files.
+**Exit:** producers, provenance, determinism tooling and sibling evidence resources can name the same
+execution semantics through one versioned owner.
 
-### Phase 4 — centralize GHA persistence
+### Phase 3 — provenance semantics and occurrence lineage
 
-Migrate maintained workflow families incrementally:
+Only after identity is stable, extend the Hint semantic model.
 
-- run dual path;
-- compare semantic persistence outputs;
-- remove shard canonical-file mutation after parity;
+- add bounded execution binding to provenance;
+- separate semantic discovery-event identity from physical acquisition occurrences;
+- update `makeProvenanceEntry()`, types, hint capture and historical/current solve builders;
+- preserve explicit unknown / not-observed / not-applicable / default distinctions;
+- preserve exact occurrence locators when known without turning run ID into semantic-event identity;
+- define the final semantic merge rules and bounded-growth unit needed by Firestore/GHA persistence;
+- now choose/implement the Firestore semantic layout consistent with occurrence lineage, using
+  byte-aware preflight and explicit overflow behavior.
+
+Acceptance must include:
+- legacy unknown round-trip;
+- 662 synthetic-`foundAt` events remain semantically undated;
+- reharvest of one acquisition occurrence is idempotent;
+- independent reacquisition adds occurrence lineage without duplicate semantic provenance;
+- cross-resource join keys survive merge and persistence.
+
+**Exit:** the in-memory semantic model is final enough for producer migration and physical encoding.
+
+### Phase 4 — expose the new semantics through research/query surfaces
+
+Make the new model observable **before** changing every producer.
+
+- extend hint query/provenance reports with effective-input reconstructability, occurrence lineage,
+  missing dimensions and join locators;
+- integrate the #1996 determinism audit with canonical identity helpers;
+- expose the retention/join semantics through research asset/resource-contract/queryability surfaces;
+- add cross-resource join checks against experiment contracts, hint-discovery-process and compact
+  failure-response fixtures;
+- define the minimal derived hint index and freshness binding only for demonstrated recurring
+  queries.
+
+This phase serves as a consumer-side oracle for the producer/workflow migration that follows.
+
+**Exit:** a fresh agent can inspect the new semantics and detect incomplete/wrong producer output
+without opening raw storage internals.
+
+### Phase 5 — standardized ingestion projection and receipt
+
+With semantic identities and query oracles stable, define how producers enter the store.
+
+- define the small canonical hint-discovery ingestion projection over specialist producer artifacts;
+- define the shared versioned hint-ingestion receipt with explicit units for candidate, eligible,
+  referee-accepted, already-represented, path/event/occurrence additions, quarantine and physical
+  changes;
+- require complete path, level revision, winning action/attempt semantics, execution/join capsule and
+  acquisition lineage where available;
+- adapt representative direct-save, level-blind and isolated producers;
+- make CP-SAT emit a sufficient exact successful-discovery artifact before retiring its direct path;
 - preserve partial-failure upload semantics;
-- retain direct-file importer for historical artifacts.
+- add producer completeness/static ownership checks.
 
-**Exit:** modern GHA solver evidence has one canonical persistence authority.
+**Exit:** representative producers can be persisted centrally and their funnel/accounting can be
+queried mechanically.
 
-### Phase 5 — shared artifact codec
+### Phase 6 — centralize GitHub Actions persistence incrementally
 
-- add shared browser/Node decoder;
-- route `level-data-io.mjs` and browser data asset loading through it;
-- implement deterministic v4 sparse writer;
-- implement optional interning;
-- update formatting and compatibility tests.
+Migrate workflow families one at a time.
 
-**Exit:** v4 can be read everywhere before any tracked store is migrated.
+For each family:
 
-### Phase 6 — research/query integration
+1. keep the old direct-file route;
+2. emit the new specialist observation + execution capsule;
+3. central-harvest it;
+4. compare semantic Hint additions, occurrence lineage and ingestion receipt;
+5. exercise partial failure and reharvest;
+6. remove shard canonical-file mutation only after parity.
 
-- extend hint query and provenance reports;
-- add effective-input reconstruction coverage;
-- integrate #1996 audit with the canonical identity helper;
-- update structured asset registry/queryability/resource-contract docs;
-- add the derived hint-store index.
+Retain `merge-hint-artifacts.mjs` as a historical/mixed-era compatibility importer, not a peer
+modern authority.
 
-**Exit:** agents and research scripts can exploit the richer provenance without inspecting raw v4.
+**Exit:** modern GHA solver discovery has one canonical persistence authority and no maintained
+workflow needs physical hint-store knowledge.
 
-### Phase 7 — benchmark and migrate hint stores
+### Phase 7 — authoritative historical enrichment
 
-Measure on the real principal stores:
+Now that the semantic model and ingestion path are stable, apply only **proved** historical recovery.
 
-- v3 bytes;
-- sparse-only v4;
-- sparse + selected table interning;
-- encode/decode runtime;
-- query/startup effects;
-- diff behavior.
+- consume the Phase-0 rescued source bundles and any other still-authoritative durable evidence;
+- backfill execution/occurrence envelopes only where exact linkage is proved;
+- prioritize the #1996 collision set and high-value ambiguous events;
+- leave unrecoverable values explicitly unknown;
+- produce a backfill manifest with source authority, semantic before/after hashes and join checks;
+- rerun determinism/reconstructability reports.
 
-Choose the smallest representation that preserves maintainability and deterministic formatting.
+Doing this before physical v4 benchmarking avoids benchmarking/migrating a corpus that will
+immediately be semantically rewritten again.
 
-Then migrate canonical stores in a data-focused change and run the full semantic acceptance suite.
+**Exit:** recoverable historical ambiguity is removed, unrecoverable ambiguity is explicit, and the
+semantic corpus has reached the intended pre-v4 state.
 
-**Exit:** tracked hint storage is v4, materially smaller, and all historical readers remain green.
+### Phase 8 — design, benchmark and migrate physical hint schema v4
 
-### Phase 8 — historical backfill
+Only now optimize bytes.
 
-- mechanically recover source envelopes where authoritative evidence survives;
-- prioritize the #1996 September 9 collision set and other high-value ambiguous events;
-- retain explicit missingness everywhere else;
-- rerun determinism/provenance coverage reports.
+- extend the already-shared semantic decoder with explicit v4 dispatch;
+- implement deterministic sparse encoding and optional local interning;
+- benchmark v3, sparse v4 and sparse+interned v4 on the **post-enrichment real corpus**;
+- measure raw/gzip bytes, encode/decode runtime, diff behavior, query/startup/build effects;
+- require semantic Hint equality **and preservation of cross-resource join identity**;
+- produce the reversible migration manifest with before/after hashes, counts and referee results;
+- migrate canonical stores in a data-focused change;
+- preserve v1-v3 readers.
 
-**Exit:** recoverable ambiguity is removed without manufacturing certainty.
+Choose the representation from measured economics; do not pre-commit to interning where sparse form
+is better.
 
-### Phase 9 — bounded level cleanup
+**Exit:** tracked hint storage is materially smaller, deterministically encoded, fully backward
+readable and semantically/join equivalent.
+
+### Phase 9 — generated runtime projection
+
+This is a derived-delivery optimization, not evidence migration.
+
+- generate path-only runtime artifacts from canonical decoded Hints;
+- bind them to canonical semantic/content hashes;
+- verify path equivalence per file;
+- fail build on stale/missing generation;
+- measure build/deploy/runtime effects;
+- keep the projection untracked/rebuildable and keep research/dev consumers on canonical evidence
+  when they need provenance.
+
+This phase may be developed in parallel after Phase 1's shared decoder exists, but adoption should
+not block or pre-decide semantic phases 2-8.
+
+**Exit:** player delivery no longer carries research-only provenance payload while canonical
+evidence remains single-authority.
+
+### Phase 10 — bounded level cleanup
+
+Only after hint semantics/storage have stabilized:
 
 - benchmark sparse level serialization;
 - implement only already-safe omission rules;
-- leave provenance tables/sidecars deferred unless a later level-corpus-codec project earns them.
+- leave provenance tables/sidecars deferred unless a separate level-corpus-codec project earns them.
+
+### 14.2 Dependency summary
+
+The critical path is:
+
+`baseline/rescue -> honest semantic ingress -> identity/join spine -> provenance/occurrence semantics
+-> query oracle -> ingestion contract -> workflow centralization -> proved historical enrichment ->
+physical v4 migration`.
+
+Runtime path projection is a parallel leaf after shared decoding. Bounded level cleanup is a later,
+separate optimization.
+
+The ordering rule is simple: **never optimize or migrate a representation before the semantic
+authority that will judge the migration exists, and never defer preservation of expiring authority
+until after the evidence needed to interpret it may be gone.**
 
 ## 15. Review and stopping points
 
