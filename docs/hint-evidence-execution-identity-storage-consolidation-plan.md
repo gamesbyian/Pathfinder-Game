@@ -1113,6 +1113,45 @@ Read-only observers are policy-inert, not automatically outcome-inert. The resea
 already requires OFF/ON parity or non-binding deterministic execution before treating observer
 overhead as irrelevant. Identity/comparability helpers should reuse that doctrine.
 
+### W. Separate semantic discovery identity from occurrence/run lineage
+
+Current `provenanceEventIdentity()` deliberately collapses a retried workflow when solver
+commit/config/seed/forcing/termination/deterministic search result are the same, ignoring
+`foundAt` and host/wall allocation fields. That persistence invariant is useful and should not be
+destroyed merely to add run provenance.
+
+Therefore do **not** put physical source-run ID directly into semantic discovery identity.
+
+Model two layers:
+
+1. **semantic discovery event** — path-independent evidence about what effective solver input/search
+   trajectory produced a success. Its identity includes the canonical execution/request semantics
+   needed to distinguish materially different runs/arms;
+2. **occurrence lineage** — one or more observations of that same semantic event, carrying source-run
+   locator, observed timestamp when genuinely known, and other physical provenance that should not
+   make a new semantic event.
+
+Merging the same semantic event from another run should merge occurrence lineage rather than append
+a duplicate full provenance object.
+
+This preserves:
+
+- compact storage;
+- the existing semantic-dedupe invariant;
+- exact source-run joins for denominator/process evidence;
+- repeat-run counts needed by reproducibility audits;
+- separation between “same semantic discovery” and “observed in another workflow run”.
+
+The physical v4 representation may intern run/occurrence records separately. Before choosing
+whether to retain every run reference versus count/first/last plus selected locators, measure actual
+repeat volume and recurring query needs. Decision-bearing run joins require exact locators; do not
+replace them with counts where later reconstruction depends on the exact source.
+
+#1996 should explicitly note that the current hint corpus is not a complete rerun ledger:
+semantically identical same-path rediscoveries can already have been deduplicated. Future
+reproducibility evidence should use occurrence lineage or dedicated run artifacts rather than infer
+“only one run happened” from one persisted semantic event.
+
 ## 14. Implementation sequence
 
 ### Phase -1 — repair confirmed semantic/storage-boundary regressions
