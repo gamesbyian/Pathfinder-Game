@@ -398,7 +398,7 @@ Possible routing:
 
 **Exit:** one current queue-authorized discriminator is selected with a dated preflight, or all remain unjustified.
 
-**2026-09-22 reuse note:** the canonical stress refresh now supplies a full current-population Stage-A denominator. Before any new Stage-B compact acquisition, reduce this retained resource contrastively at the parent level. In particular, treat solved parents with failed/capped attempts as controls so common censoring, node-cap contact, or stage participation is not mislabeled as a failure phenotype.
+**2026-09-22 reuse note:** the canonical stress refresh supplies a full current-population Stage-A denominator, and the contrastive parent-level reduction has been performed. Same-stage failed controls show that common censoring, node-cap contact and stage-level work are not sufficient generic discriminators. Do not repeat Stage B merely to collect more of these compact fields. Use the retained denominator to freeze/stratify a richer first-loss / operational-divergence sample when the live queue calls for it.
 
 ### Phase 4 — immediate existing-question integrations
 
