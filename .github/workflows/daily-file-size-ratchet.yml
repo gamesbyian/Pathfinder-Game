@@ -35,7 +35,7 @@ jobs:
             echo
             echo "| Check | Outcome |"
             echo "| --- | --- |"
-            echo "| Repository-wide size/debt scan | `$RATCHET` |"
+            printf '| Repository-wide size/debt scan | `%s` |\n' "$RATCHET"
             echo
             if [[ "$RATCHET" == success ]]; then
               echo 'No repository-wide file-size ratchet violation was detected.'
