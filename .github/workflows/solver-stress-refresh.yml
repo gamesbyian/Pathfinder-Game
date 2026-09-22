@@ -395,6 +395,10 @@ jobs:
             enableFlags: process.env.ENABLE_FLAGS,
             disableFlags: process.env.DISABLE_FLAGS,
             deterministic: process.env.DETERMINISTIC,
+            lifecycleTelemetry: process.env.LIFECYCLE === 'true',
+            mainLoopLateReserveFraction: process.env.LATE_RESERVE_FRACTION || null,
+            mainLoopLateReserveConfigCount: process.env.LATE_RESERVE_CONFIG_COUNT || null,
+            repairLateProbeNodeBudget: process.env.REPAIR_LATE_PROBE_NODE_BUDGET || null,
             persistHints: true,
             corpus1: summarize(c1),
             corpus2: summarize(c2),
@@ -409,6 +413,10 @@ jobs:
           ENABLE_FLAGS: ${{ inputs.enable_flags }}
           DISABLE_FLAGS: ${{ inputs.disable_flags }}
           DETERMINISTIC: ${{ inputs.deterministic }}
+          LIFECYCLE: ${{ inputs.lifecycle_telemetry }}
+          LATE_RESERVE_FRACTION: ${{ inputs.main_loop_late_reserve_fraction }}
+          LATE_RESERVE_CONFIG_COUNT: ${{ inputs.main_loop_late_reserve_config_count }}
+          REPAIR_LATE_PROBE_NODE_BUDGET: ${{ inputs.repair_late_probe_node_budget }}
 
       - name: Append compact longitudinal solver-health record
         if: steps.coverage.outputs.complete == 'true'
@@ -431,6 +439,15 @@ jobs:
             --in=reports/stress/solver-corpus2-latest.json \
             --out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2.json" \
             --summary-out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2-summary.md"
+
+      - name: Apply frozen WS1 legal-signal model and seal action-boundary identity
+        if: steps.coverage.outputs.complete == 'true'
+        shell: bash
+        run: |
+          node scripts/apply-action-selection-legal-signal-model.mjs \
+            --inputs=reports/stress/solver-corpus1-latest.json,reports/stress/solver-corpus2-latest.json \
+            --model=reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json \
+            --out="reports/stress/capability-runs/${{ github.run_id }}/action-selection-legal-signal-challenge.json"
 
       - name: Join durable EW1 pricing to exact-current production reach/work
         if: steps.coverage.outputs.complete == 'true' && inputs.lifecycle_telemetry == 'true'
@@ -490,7 +507,21 @@ jobs:
             if (fs.existsSync(file)) observedExecution[name] = JSON.parse(fs.readFileSync(file, 'utf8')).configurationHash ?? null;
           }
           const deterministic = process.env.DETERMINISTIC === 'true';
-          const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE), corpus2NodeBudget: Number(process.env.C2_NODE), corpus1DeadlineMs: deterministic ? 86400000 : Number(process.env.C1_MS), corpus2DeadlineMs: deterministic ? 86400000 : Number(process.env.C2_MS), strictTotalWorkBudget: process.env.STRICT === 'true', enableFlags: process.env.ENABLE, disableFlags: process.env.DISABLE, observedExecution };
+          const optionalNumber = value => String(value ?? '').trim() === '' ? null : Number(value);
+          const configuration = {
+            corpus1NodeBudget: Number(process.env.C1_NODE),
+            corpus2NodeBudget: Number(process.env.C2_NODE),
+            corpus1DeadlineMs: deterministic ? 86400000 : Number(process.env.C1_MS),
+            corpus2DeadlineMs: deterministic ? 86400000 : Number(process.env.C2_MS),
+            strictTotalWorkBudget: process.env.STRICT === 'true',
+            enableFlags: process.env.ENABLE,
+            disableFlags: process.env.DISABLE,
+            lifecycleTelemetry: process.env.LIFECYCLE === 'true',
+            mainLoopLateReserveFraction: optionalNumber(process.env.LATE_RESERVE_FRACTION),
+            mainLoopLateReserveConfigCount: optionalNumber(process.env.LATE_RESERVE_CONFIG_COUNT),
+            repairLateProbeNodeBudget: optionalNumber(process.env.REPAIR_LATE_PROBE_NODE_BUDGET),
+            observedExecution,
+          };
           fs.writeFileSync('logs/solver-sweep-result-inputs/experiment-contract-spec.json', `${JSON.stringify({
             configuration,
             workflowFamily: 'solver-stress-refresh',
@@ -499,15 +530,28 @@ jobs:
             population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
             execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: deterministic, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
             limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: !deterministic, representation: { kind: 'heterogeneous-by-corpus', corpora: { 'corpus-1': { nodeCeiling: configuration.corpus1NodeBudget, wallSafetyDeadlineMs: configuration.corpus1DeadlineMs }, 'corpus-2': { nodeCeiling: configuration.corpus2NodeBudget, wallSafetyDeadlineMs: configuration.corpus2DeadlineMs } } } },
-            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: process.env.DETERMINISTIC === 'true' ? 'none' : 'refresh', telemetry: 'compact', reports: 'report-write' },
+            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: process.env.DETERMINISTIC === 'true' ? 'none' : 'refresh', telemetry: configuration.lifecycleTelemetry ? 'lifecycle+compact' : 'compact', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
           node scripts/write-solver-experiment-contract.mjs \
             --spec=logs/solver-sweep-result-inputs/experiment-contract-spec.json \
             --out=logs/solver-sweep-result-inputs/experiment-contract.json
-          node scripts/sweep-publish.mjs --failure-in=p,i \
+          extras=()
+          for evidence in \
+            "reports/stress/capability-runs/${{ github.run_id }}/summary.json" \
+            "reports/stress/capability-runs/${{ github.run_id }}/action-selection-legal-signal-challenge.json" \
+            "reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus1.json" \
+            "reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2.json" \
+            "reports/stress/capability-runs/${{ github.run_id }}/equal-work-production-reach.json"; do
+            [[ -f "$evidence" ]] && extras+=("--include=$evidence")
+          done
+          node scripts/sweep-publish.mjs \
+            --failure-source="reports/stress/solver-corpus1-latest.json" \
+            --failure-source="reports/stress/solver-corpus2-latest.json" \
+            --failure-response-out="reports/stress/capability-runs/${{ github.run_id }}/compact-failure-response.json" \
             --primary="reports/stress/solver-corpus1-latest.json" \
             --include="reports/stress/solver-corpus2-latest.json" \
+            "${extras[@]}" \
             --shards-expected="${{ inputs.shard_count }}" \
             --shards-observed="$(find logs/solver-corpus2-batches -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
             --integrity-file="logs/solver-sweep-result-inputs/population-integrity.json" \
@@ -523,6 +567,10 @@ jobs:
           ENABLE: ${{ inputs.enable_flags }}
           DISABLE: ${{ inputs.disable_flags }}
           DETERMINISTIC: ${{ inputs.deterministic }}
+          LIFECYCLE: ${{ inputs.lifecycle_telemetry }}
+          LATE_RESERVE_FRACTION: ${{ inputs.main_loop_late_reserve_fraction }}
+          LATE_RESERVE_CONFIG_COUNT: ${{ inputs.main_loop_late_reserve_config_count }}
+          REPAIR_LATE_PROBE_NODE_BUDGET: ${{ inputs.repair_late_probe_node_budget }}
 
       - name: Upload standard solver sweep result
         if: always()
