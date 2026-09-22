@@ -30,7 +30,20 @@ Unknown paths and CI/package/build/router authorities deliberately escalate to `
 | #1937 | protocol contraction across game/domain/solver/research | all | **yes** | genuine cross-domain change plus `package.json` |
 | #1964 | agent-context maintenance policy/tooling | all | **yes** | `package.json` plus repository tooling |
 
-Summary: **4/9** samples route to a scoped set under the deliberately conservative v1 model; **5/9** escalate to full. Three of those five are research-heavy PRs whose full escalation is caused by `package.json`, not by product/solver implementation changes.
+Initial path-only summary: **4/9** samples route to a scoped set; **5/9** escalate to full. Three of those five are research-heavy PRs whose only broadening seam is `package.json`.
+
+## Semantic package reclassification
+
+A second pass compared the actual base/head `package.json` documents for the four sampled PRs that changed it.
+
+- **#1961:** only `scripts` changed; three research/test commands were added, all targeting research tooling.
+- **#1960:** only `scripts` changed; two research/test commands were added, both targeting the forced-work research tooling.
+- **#1954:** only `scripts` changed; two research/test commands were added, both targeting the pre-winner research analyzer.
+- **#1964:** only `scripts` changed, but the universal `check:validators` composition itself changed and therefore reaches CI-routing infrastructure.
+
+The new semantic package classifier therefore narrows #1961/#1960/#1954 while preserving #1964 as full-impact. Dependency, engine, package metadata, opaque command, and router-wrapper changes remain full-impact.
+
+With that refinement, the historical sample's meaningful false-full rate drops from three research-heavy cases to zero among these package examples. This still does **not** authorize scoped CI; tracked-path coverage and broader backtesting remain open.
 
 ## Findings
 
@@ -38,11 +51,11 @@ Summary: **4/9** samples route to a scoped set under the deliberately conservati
 
 The easy research-only cases stay narrow without special-casing individual PRs. A genuine production-solver change (#1947) acquires solver/research obligations without automatically acquiring game/persistence validation. The broad protocol-contraction change (#1937) correctly reaches full impact.
 
-### 2. package.json is the dominant false-broadening seam
+### 2. package.json was the dominant false-broadening seam; semantic diffing addresses the sampled cases
 
 #1961, #1960, and #1954 are the clearest examples. Their research code and data are downstream consumers, but adding or changing package-script registration touches the same file that owns dependencies/build metadata. The conservative classifier therefore cannot distinguish "new research harness command" from "changed production dependency/toolchain" without looking inside the diff.
 
-This is now measured implementation debt, not merely architectural taste.
+This is now measured implementation debt with an implemented conservative mitigation. Longer-term separation of product dependency/build authority from research-tool registration may still simplify the repository, but it is no longer required merely to avoid full CI for the sampled script-only edits.
 
 Preferred repair order:
 
