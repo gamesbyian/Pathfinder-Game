@@ -24,6 +24,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
 | [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md) | Observer-first test of whether DEAD near-misses trace to a compact dependency-defined commitment set, not path-distance rollback |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
+| [`research-queryability.md`](research-queryability.md) | Derived research query model, semantic views, temporal comparison, source-shape hardening, and queryability benchmark contract |
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
 | [`solver-research-data-assets.json`](solver-research-data-assets.json) | Structured per-asset locations, authorities, joins, relationships, roles, and caveats |
@@ -66,7 +67,7 @@ Before broad catalogs, reports, corpora, or histories:
 - new/unregistered research question: [`research-question-intake.md`](research-question-intake.md), then `node scripts/research-status-index.mjs --compact --query=<term>`;
 - prior evidence / known question discovery: `node scripts/research-status-index.mjs --compact --query=<term>`;
 - research-system orientation: `npm run research:system-inventory -- --view=brief`;
-- cross-family/reverse research lookup: `npm run research:query -- --entity=<type:id> [--direction=in|out|both] [--depth=N]`;
+- cross-family/reverse/semantic research lookup: [`research-queryability.md`](research-queryability.md), then `npm run research:query -- --entity=<type:id> [--direction=in|out|both] [--depth=N]` or a named `--view=...`; queryability regressions: `npm run research:queryability-audit`;
 - machine inputs/findings: `npm run research:system-inventory -- --view=brief-inputs|findings`;
 - historical solver premise/disposition memory: [`solver-archaeology-register.md`](solver-archaeology-register.md) when the question is explicitly about old/retired work;
 - existing tooling: `node scripts/tooling-census.mjs --compact --query=<term>`;

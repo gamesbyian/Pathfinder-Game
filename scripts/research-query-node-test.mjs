@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 
 import { buildResearchQueryGraph, queryResearchGraph, resolveResearchEntity } from './research-query-lib.mjs';
+import { buildResearchQueryView } from './research-query-views-lib.mjs';
+import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 
 const graph = buildResearchQueryGraph(process.cwd(), { discoverArtifacts: false });
 assert.equal(graph.authority.kind, 'derived-read-only');
@@ -17,6 +19,20 @@ assert.ok(!graph.diagnostics.shapeDebt.acquisitionNeedLexicalFallbackQuestions.i
 
 const question = resolveResearchEntity(graph, 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION');
 assert.ok(question.some(node => node.type === 'questions'));
+
+const ambiguousGraph = {
+  ...graph,
+  nodes: [
+    ...graph.nodes,
+    { type: 'fixtureA', id: 'AMBIGUOUS-ID', row: {}, source: {} },
+    { type: 'fixtureB', id: 'AMBIGUOUS-ID', row: {}, source: {} },
+  ],
+};
+assert.throws(
+  () => buildResearchQueryView(ambiguousGraph, { view: 'impact', entity: 'AMBIGUOUS-ID' }),
+  /ambiguous research entity/,
+  'semantic views must reject ambiguous bare IDs instead of relying on node order',
+);
 
 const outgoing = queryResearchGraph(graph, {
   entity: 'questions:WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION',
@@ -74,6 +90,77 @@ const experimentReverse = queryResearchGraph(graph, {
 assert.ok(experimentReverse.nodes.some(node =>
   node.type === 'experiments' && node.id === 'STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY'));
 
+const premiseImpact = buildResearchQueryView(graph, { view: 'impact', entity: 'premises:P204' });
+assert.ok(premiseImpact.impactedQuestions.some(row => row.questionId === 'WS2-D1-PRODUCTION-INERT-OBSERVATION'),
+  'premise impact must compose through measurement opportunities when no direct question-premise edge exists');
+
+const reportImpact = buildResearchQueryView(graph, {
+  view: 'impact',
+  entity: 'repositoryRefs:reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md',
+});
+assert.ok(reportImpact.impactedQuestions.some(row =>
+  row.questionId === 'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE'));
+
+const supportImpact = buildResearchQueryView(graph, {
+  view: 'support-impact',
+  entity: 'repositoryRefs:reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md',
+});
+assert.ok(supportImpact.rows.some(row =>
+  row.questionId === 'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE'
+  && row.disposition === 'necessary'),
+  'authored decisionSupport should distinguish necessary support from answeredBy-only evidence');
+
+const answerability = buildResearchQueryView(graph, { view: 'answerability' });
+assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === 2),
+  'implementation gate should be visible as no-fresh-solver-execution work');
+assert.ok(answerability.boundedCompute.some(row => row.workstreamId === 1),
+  'WS1 confirmation should be explicitly classified as bounded compute');
+assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2R'),
+  'reopen-only parity lane should not appear as an active execution gate');
+assert.equal(answerability.unclassified.length, 0,
+  'canonical workstream table should classify every immediate gate');
+
+const sharedMeasurements = buildResearchQueryView(graph, { view: 'shared-measurements', minimum: 2 });
+assert.ok(sharedMeasurements.rows.some(row =>
+  row.measurementOpportunityId === 'MO-004' && row.consumerCount >= 2));
+
+assert.throws(
+  () => buildResearchQueryView(graph, { view: 'shared-measurements', minimum: 0 }),
+  /minimum must be a positive integer/,
+);
+
+const ownershipGaps = buildResearchQueryView(graph, { view: 'ownership-gaps' });
+assert.ok(Array.isArray(ownershipGaps.capabilityDemandsWithoutQuestion));
+assert.ok(ownershipGaps.decisionSupportUnknownQuestions.includes('WS2-MUST-TURN-LATE-ADDITIVE'),
+  'questions with evidence trails but no authored sufficiency semantics should remain measurable as unknown');
+
+const coverage = buildResearchQueryView(graph, { view: 'coverage' });
+assert.equal(coverage.structuredGateCoverage.unclassified, 0);
+assert.equal(coverage.unresolvedEdges.length, 0);
+
+const snapshot = buildResearchQuerySnapshot(graph);
+const headSnapshot = buildResearchQuerySnapshotFromGitRef(process.cwd(), 'HEAD');
+assert.deepEqual(headSnapshot.gates, snapshot.gates,
+  'Git-ref reconstruction of HEAD should preserve current workstream gate state');
+const earlier = structuredClone(snapshot);
+const ws2 = earlier.gates.find(row => row.workstreamId === 2);
+assert.ok(ws2);
+ws2.gateClass = 'bounded-compute';
+const temporal = diffResearchQuerySnapshots(earlier, snapshot);
+assert.equal(temporal.gateClassComparison.comparable, true);
+assert.ok(temporal.newlyNoFreshSolverExecution.some(row => row.workstreamId === 2),
+  'snapshot diff should identify workstreams that became advanceable without solver compute');
+
+const preGateClass = structuredClone(snapshot);
+preGateClass.gates[0].gateClass = null;
+preGateClass.gateClassCoverage.classified -= 1;
+preGateClass.gateClassCoverage.complete = false;
+const preGateDiff = diffResearchQuerySnapshots(preGateClass, snapshot);
+assert.equal(preGateDiff.gateClassComparison.comparable, false);
+assert.deepEqual(preGateDiff.newlyNoFreshSolverExecution, [],
+  'historical refs without complete gate classification must not manufacture answerability transitions');
+assert.deepEqual(preGateDiff.newlyBoundedCompute, []);
+
 const searched = queryResearchGraph(graph, { query: 'portal coarse', limit: 20 });
 assert.ok(searched.nodes.some(node => node.type === 'questions'));
 
@@ -98,5 +185,49 @@ const cli = spawnSync(process.execPath, [
 ], { cwd: process.cwd(), encoding: 'utf8' });
 assert.equal(cli.status, 0, cli.stderr);
 assert.equal(JSON.parse(cli.stdout).mode, 'traverse');
+
+const viewCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--view=answerability',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(viewCli.status, 0, viewCli.stderr);
+assert.equal(JSON.parse(viewCli.stdout).view, 'answerability');
+
+const systemLineageCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--view=system-lineage',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(systemLineageCli.status, 0, systemLineageCli.stderr);
+const systemLineage = JSON.parse(systemLineageCli.stdout);
+assert.equal(systemLineage.view, 'system-lineage');
+assert.ok(systemLineage.findingsWithoutPerFindingLineage.length > 0);
+assert.ok(systemLineage.reportLineageRows.some(row =>
+  row.report === 'reports/2026-09-21-research-queryability-audit-001.md'));
+
+const snapshotCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--snapshot',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(snapshotCli.status, 0, snapshotCli.stderr);
+assert.equal(JSON.parse(snapshotCli.stdout).schemaVersion, 1);
+
+const compareRefCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--compare-ref=HEAD',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(compareRefCli.status, 0, compareRefCli.stderr);
+const headDiff = JSON.parse(compareRefCli.stdout);
+assert.equal(headDiff.addedNodes.length, 0);
+assert.equal(headDiff.removedNodes.length, 0);
+
+const compareSystemRefCli = spawnSync(process.execPath, [
+  'scripts/research-query.mjs',
+  '--compare-system-ref=HEAD',
+], { cwd: process.cwd(), encoding: 'utf8' });
+assert.equal(compareSystemRefCli.status, 0, compareSystemRefCli.stderr);
+const systemHeadDiff = JSON.parse(compareSystemRefCli.stdout);
+assert.equal(systemHeadDiff.added.length, 0);
+assert.equal(systemHeadDiff.removed.length, 0);
+assert.equal(systemHeadDiff.changed.length, 0);
 
 console.log('research-query-node-test: ok');

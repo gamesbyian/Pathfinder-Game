@@ -1,10 +1,12 @@
 # Research queryability audit 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-21 — typed-edge query implementation, reverse-traversal benchmark, experiment/question source hardening, provenance diagnostics, and current neighboring PR reconciliation.
-> **Decision:** treat queryability as a joint interface-and-source-shape problem. Preserve existing authorities, add a derived typed-edge read model, and use unresolved or weak edges to identify structures that deserve hardening at their source.
-> **Remaining gate:** validate the current-head query substrate in CI, reconcile it with the moving retained-evidence work, then decide whether a separately structured answerability/next-evidence dimension is earned.
-> **Scope:** current solver-research control plane and derived research relations; no solver behavior or scientific disposition changes.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-21 — the queryability stack now has strict workstream Gate classes, semantic views, direct Git-ref temporal reconstruction, stable research-system finding identities, explicit decision-support semantics, a canonical queryability guide, and a 13-question executable benchmark targeting 11 passed / 2 bounded partial / 0 conditional / 0 unmodeled.
+> **Decision:** conclude the audit and retain queryability as a maintained research capability. Preserve existing authorities; expose authored relationships through a derived read model; give recurring cross-system questions named semantic views; and regression-gate the benchmark rather than reopening broad query-platform design.
+> **Remaining gate:** maintenance only: keep fully supported benchmarks green, harden source relationships when repeated real consumers earn stronger semantics, and preserve the two current partials until their owners can author more than the graph legitimately knows.
+> **Scope:** research-system/queryability architecture only; no solver behavior or solver-science disposition changes.
+
+<!-- research-closeout {"schema":"pathfinder.research-closeout/v1","status":"concluded-positive","lastEvidenceDate":"2026-09-21","decision":"The research system now has a maintained derived query layer with explicit source-shape ownership, named semantic views, direct Git-ref temporal comparison, research-system finding identities and an executable queryability benchmark. Broad query-platform construction is not earned.","remainingGate":"Maintain the benchmark and canonical queryability contract; strengthen the two partial semantic surfaces only when a real repeated consumer earns source-authored successor or support-sufficiency metadata.","joins":{"researchQuestion":null,"premiseRefs":[],"measurementOpportunity":null},"evidenceRole":"development","scope":{"populationIdentity":"current Pathfinder solver-research and research-system control-plane authorities on PR #1971","selection":"decision-relevant queryability audit and benchmark construction","inferenceScope":"research-system architecture/queryability only; no solver-science or production-policy claim"},"claimRefs":[],"sourceArtifacts":["scripts/research-query-lib.mjs","scripts/research-query-views-lib.mjs","scripts/research-query-snapshot-lib.mjs","scripts/research-system-query-lib.mjs","scripts/research-queryability-audit-lib.mjs","docs/research-queryability-benchmarks.json"],"successors":{"questions":[],"artifacts":["docs/research-queryability.md","docs/research-queryability-benchmarks.json"]},"prospective":{"expectation":"existing structured research identities and provenance would support a thin compositional read layer rather than a new database","surprise":"making relationships queryable immediately exposed stale experiment lifecycle state and several source-shape/propagation seams; direct Git-ref reconstruction also removes the need for pre-saved temporal snapshots","anomaly":"per-finding research-system successor semantics and historical scientific support sufficiency remain intentionally partial because their source owners do not yet author those claims"}} -->
 
 ## Why this audit exists
 
@@ -55,16 +57,59 @@ This is acceptable at authority boundaries. The read model should normalize it. 
 
 Known examples include experiment discovery in the question dossier and several historical or report discovery paths. These should remain labelled discovery-only until the owning artifacts have stable relationship IDs. The query layer must not silently upgrade lexical similarity into authority.
 
-## Implementation started
+## Implemented queryability stack
 
-This branch adds:
+The first graph layer is now only the lowest tier.
 
-- scripts/research-query-lib.mjs: derived graph construction and bounded traversal;
-- scripts/research-query.mjs: one agent-facing query surface for entity search, reverse lookup and multi-hop traversal;
-- scripts/research-query-node-test.mjs: coverage for question, report/path and premise traversal;
-- npm and documentation routing.
+### Primitive read model
 
-The graph is deliberately rebuildable from current owners. It creates no mutable truth store.
+- `scripts/research-query-lib.mjs` rebuilds typed nodes/edges from existing owners and retains edge provenance.
+- `research:query -- --entity=<type:id>` supports reverse and bounded multi-hop traversal.
+- lexical/path discovery remains explicitly weaker than authored identities and does not become graph authority.
+
+### Named semantic views
+
+`research:query -- --view=...` now owns recurring cross-system questions that should not be reimplemented ad hoc:
+
+- `answerability`: current workstream gates split into no-fresh-solver/reference-execution, instrument-only observation, bounded-compute, dormant/conditional, and unclassified;
+- `impact`: bounded dependency/support paths from a premise, question, measurement opportunity, or repository artifact;
+- `live-successors`: reports with structured successor questions still live;
+- `closed-constraints`: terminal questions constraining live descendants;
+- `shared-measurements`: measurement opportunities consumed by multiple questions;
+- `multi-consumed-blocks`: frozen research blocks consumed by multiple questions;
+- `ownership-gaps`: stable-owner/provenance gaps and lexical-fallback surfaces;
+- `non-question-lineage`: structured questionless reports that author successor edges;
+- `support-impact`: necessary/redundant/unknown withdrawal impact, but only where explicit question `decisionSupport` semantics exist;
+- `coverage`: graph relation counts, unresolved edges, workstream gate classification and provenance gaps;
+- `system-findings`: stable derived identities for current research-system architecture/lifecycle findings.
+
+### Temporal queryability
+
+`research:query -- --snapshot` emits a compact current graph/gate snapshot. `--compare-snapshot=<file>` reports node/edge additions/removals and workstream gate transitions, including gates that became newly advanceable without fresh solver/reference execution; instrument-only transitions are reported separately because observation may still require fresh runs.
+
+Research-system findings have a separate `--system-snapshot` / `--compare-system-snapshot=<file>` surface. Finding identity hashes stable keys; a separate content fingerprint reports changed findings without turning content mutation into a new identity.
+
+### Source-shape changes earned by consumers
+
+The canonical workstream table now owns an immediate `Gate class`, deliberately separate from question lifecycle and `acquisitionNeed`.
+
+The question registry may optionally own `decisionSupport`:
+- `mode: all`: every listed ref is required for the current disposition;
+- `mode: any`: each listed ref is independently sufficient.
+
+Absent `decisionSupport` means sufficiency is unknown. `answeredBy` remains an evidence trail and is never upgraded by edge count.
+
+### Executable benchmark ratchet
+
+`docs/research-queryability-benchmarks.json` contains stable decision-relevant query classes and `npm run research:queryability-audit` executes them.
+
+Current target after this pass:
+- 11 fully supported;
+- 2 partial by design;
+- 0 conditional;
+- 0 fully unmodeled.
+
+The graph remains rebuildable and read-only. No query artifact becomes a parallel truth store.
 
 ## Structural hardening rubric
 
@@ -196,7 +241,9 @@ research:system-inventory already owns architecture/lifecycle findings, many of 
 
 ## Immediate next gates
 
-1. validate the typed-edge query surface against CI and keep unresolved authored references at zero;
-2. continue the benchmark with anti-join and answerability questions before adding broader operators;
-3. harden only the source relationships that have repeated real consumers, beginning with stable experiment/question ownership if a real consumer needs it;
-4. decide whether a higher-level composed answerability view is earned from the benchmark rather than adding generic query syntax preemptively.
+1. keep every fully supported benchmark executable and regression-gated; a supported query class may not silently fall back to manual spelunking;
+2. preserve the partial label for research-system finding lineage until an actual consumer needs per-finding `resolvedBy`/successor semantics;
+3. expand `decisionSupport` only when a current disposition has clear, reviewable sufficiency semantics; do not bulk-backfill historical questions from citation count;
+4. use snapshots when temporal questions matter, and retain/reconstruct a baseline instead of pretending the current graph knows its own history;
+5. inspect ownership/provenance-gap output periodically and harden sources only where repeated real consumers justify it;
+6. resist a generic SQL/graph-query language unless named semantic views demonstrably stop scaling.

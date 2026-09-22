@@ -56,7 +56,7 @@ For solver-science questions:
 1. `node scripts/research-status-index.mjs --compact --query=<term>`
 2. inspect current [workstreams](solver-optimization-workstreams.md) and [future work](solver-future-work.md);
 3. if a stable ID emerges, switch to `research:dossier`;
-4. when the ambiguity crosses question/premise/evidence/asset boundaries or needs a reverse lookup, use `npm run research:query -- --entity=<type:id>` or `--query=<term>`;
+4. when the ambiguity crosses question/premise/evidence/asset boundaries or needs a reverse lookup, use `npm run research:query -- --entity=<type:id>` or a semantic view such as `--view=impact`, `--view=answerability`, or `--view=coverage`; use `npm run research:queryability-audit` when the question is whether the research system can answer a class of queries at all;
 5. query tools/assets only as needed with `tooling-census --compact --query=<term>` and `research-asset-query.mjs --query=<term>`.
 
 For research-system questions, start with:
@@ -101,6 +101,13 @@ Prefer the cheapest truthful route:
 3. **instrument-only**: new/extended production-inert telemetry, reduction, or persistence without new solver acquisition;
 4. **bounded compute**: solver/reference acquisition only after cheaper routes cannot decide;
 5. **blocked/unidentifiable**: record the blocker/reopen condition instead of buying a larger sweep.
+
+For a promoted solver question, keep two machine dimensions separate:
+
+- **workstream Gate class** owns the immediate operational route: `existing-data`, `instrument-only`, `bounded-compute`, `design`, `implementation`, `blocked`, `reopen-only`, `method`, `subsumed`, or `service`;
+- **question acquisitionNeed** owns population/generation acquisition semantics when that question contract requires them.
+
+Do not infer one from the other. If the question becomes an executable workstream, set/update its Gate class whenever the immediate gate changes.
 
 For a promoted solver question needing acquisition:
 

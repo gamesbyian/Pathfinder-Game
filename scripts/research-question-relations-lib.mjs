@@ -93,6 +93,45 @@ export function validateResearchQuestionRegistry(registry, { root = null } = {})
                 errors.push(`${prefix}.${field} must be a string array when present`);
             }
         }
+        if (question?.decisionSupport != null) {
+            const support = question.decisionSupport;
+            if (!support || typeof support !== 'object' || Array.isArray(support)) {
+                errors.push(`${prefix}.decisionSupport must be an object when present`);
+            } else {
+                if (!['all', 'any'].includes(support.mode)) {
+                    errors.push(`${prefix}.decisionSupport.mode must be all or any`);
+                }
+                if (!Array.isArray(support.refs) || support.refs.length === 0) {
+                    errors.push(`${prefix}.decisionSupport.refs must be a non-empty array`);
+                } else {
+                    const seenSupportRefs = new Set();
+                    for (const value of support.refs) {
+                        const ref = typeof value === 'string' ? value.trim() : '';
+                        const refIssues = researchRepositoryRefIssues(ref, {
+                            root,
+                            requireFile: Boolean(root),
+                            label: `${prefix}.decisionSupport.refs`,
+                        });
+                        if (refIssues.length) {
+                            errors.push(...refIssues);
+                            break;
+                        }
+                        if (seenSupportRefs.has(ref)) {
+                            errors.push(`${prefix}.decisionSupport.refs duplicates ${ref}`);
+                            break;
+                        }
+                        seenSupportRefs.add(ref);
+                    }
+                    const answeredBy = new Set(Array.isArray(question.answeredBy) ? question.answeredBy : []);
+                    for (const ref of seenSupportRefs) {
+                        if (!answeredBy.has(ref)) {
+                            errors.push(`${prefix}.decisionSupport ref must also appear in answeredBy: ${ref}`);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         if (question?.answeredBy != null) {
             if (!Array.isArray(question.answeredBy)) {
                 errors.push(`${prefix}.answeredBy must be an array when present`);

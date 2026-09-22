@@ -130,6 +130,7 @@ A canonical attempt identity must not be rewritten as though its search-family t
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
 assert.equal(index.queue[0].executionState, 'active');
+assert.equal(index.queue[0].gateClass, 'existing-data');
 assert.equal(index.queue[0].questionRef, 'WS2-CURRENT');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), [
     'FLAG_ONE', 'FLAG_TWO', 'FLAG_THREE', 'FLAG_FOUR',
@@ -212,6 +213,7 @@ assert.equal(compact.count, 1);
 assert.equal(compact.entries[0].kind, 'queue');
 assert.equal(compact.entries[0].authority, 'docs/solver-optimization-workstreams.md');
 assert.equal(compact.entries[0].workstreamId, 2, 'workstream ID is identity, not a priority rank');
+assert.equal(compact.entries[0].gateClass, 'existing-data');
 
 {
     const workstreamPath = path.join(root, 'docs/solver-optimization-workstreams.md');
@@ -230,6 +232,36 @@ assert.equal(compact.entries[0].workstreamId, 2, 'workstream ID is identity, not
     const historicalIndex = buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable: true });
     assert.equal(historicalIndex.queue[0].executionState, null);
     assert.equal(historicalIndex.queue[0].status, 'active');
+    writeFileSync(workstreamPath, structuredWorkstreams);
+}
+
+{
+    const workstreamPath = path.join(root, 'docs/solver-optimization-workstreams.md');
+    const structuredWorkstreams = readFileSync(workstreamPath, 'utf8');
+    writeFileSync(workstreamPath, structuredWorkstreams.replace('`existing-data`', '`mystery-route`'));
+    assert.throws(
+        () => buildResearchStatusIndex(root),
+        /unknown workstream gate class mystery-route/,
+        'current workstream gate classes must use the bounded machine vocabulary',
+    );
+    writeFileSync(workstreamPath, structuredWorkstreams);
+}
+
+{
+    const workstreamPath = path.join(root, 'docs/solver-optimization-workstreams.md');
+    const structuredWorkstreams = readFileSync(workstreamPath, 'utf8');
+    writeFileSync(workstreamPath, structuredWorkstreams
+        .replace('| Gate class |', '')
+        .replace('|---|---|---|---|---|---|---|', '|---|---|---|---|---|---|')
+        .replace('| 2 | Current question | `active` | `existing-data` | **ACTIVE** | Run current gate. | `WS2-CURRENT` |',
+            '| 2 | Current question | `active` | **ACTIVE** | Run current gate. | `WS2-CURRENT` |'));
+    assert.throws(
+        () => buildResearchStatusIndex(root),
+        /current ## Workstream state rows require Gate class/,
+        'current workstream authority must not silently fall back to legacy six-column routing',
+    );
+    const historicalStructured = buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable: true });
+    assert.equal(historicalStructured.queue[0].gateClass, null);
     writeFileSync(workstreamPath, structuredWorkstreams);
 }
 
@@ -268,6 +300,38 @@ invalidAcquisition.questions[0].acquisitionNeed = 'generate-something';
 assert.deepEqual(validateResearchQuestionRegistry(invalidAcquisition), [
     'questions[0].acquisitionNeed is unknown: generate-something',
 ]);
+
+const validDecisionSupport = JSON.parse(JSON.stringify(questionRegistry));
+validDecisionSupport.questions[0].decisionSupport = {
+    mode: 'all',
+    refs: ['reports/2026-08-21-example.md'],
+};
+assert.deepEqual(validateResearchQuestionRegistry(validDecisionSupport, { root }), []);
+
+const invalidDecisionSupportMode = JSON.parse(JSON.stringify(questionRegistry));
+invalidDecisionSupportMode.questions[0].decisionSupport = {
+    mode: 'majority',
+    refs: ['reports/2026-08-21-example.md'],
+};
+assert.ok(validateResearchQuestionRegistry(invalidDecisionSupportMode, { root })
+    .some(error => error.includes('decisionSupport.mode must be all or any')));
+
+const duplicateDecisionSupport = JSON.parse(JSON.stringify(questionRegistry));
+duplicateDecisionSupport.questions[0].decisionSupport = {
+    mode: 'all',
+    refs: ['reports/2026-08-21-example.md', 'reports/2026-08-21-example.md'],
+};
+assert.ok(validateResearchQuestionRegistry(duplicateDecisionSupport, { root })
+    .some(error => error.includes('decisionSupport.refs duplicates')));
+
+const supportOutsideEvidenceTrail = JSON.parse(JSON.stringify(questionRegistry));
+supportOutsideEvidenceTrail.questions[0].decisionSupport = {
+    mode: 'all',
+    refs: ['reports/2026-08-21-example.md'],
+};
+supportOutsideEvidenceTrail.questions[0].answeredBy = [];
+assert.ok(validateResearchQuestionRegistry(supportOutsideEvidenceTrail, { root })
+    .some(error => error.includes('decisionSupport ref must also appear in answeredBy')));
 
 const invalidAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
 invalidAnsweredBy.questions[0].answeredBy = ['not-a-repository-edge'];

@@ -303,6 +303,7 @@ function frontDoorInputs(model, plans, documentRoles = []) {
                 workstreamId: row.workstreamId ?? null,
                 question: row.question ?? null,
                 executionState: row.executionState ?? null,
+                gateClass: row.gateClass ?? null,
                 state: row.state ?? row.status ?? null,
                 remainingGate: row.remainingGate ?? null,
                 questionRef: row.questionRef ?? null,
@@ -436,8 +437,11 @@ function currentState(model) {
     };
 }
 
-export function buildResearchSystemInventory(root = process.cwd()) {
-    const model = buildResearchRelations(root, { discoverArtifacts: true });
+export function buildResearchSystemInventory(root = process.cwd(), { allowHistoricalWorkstreamTable = false } = {}) {
+    const model = buildResearchRelations(root, {
+        discoverArtifacts: true,
+        allowHistoricalWorkstreamTable,
+    });
     const rawCommands = researchCommandRoots(root);
     const currentReferences = currentDocumentationReferences(root);
     const plans = planLifecycle(root, currentReferences);
@@ -461,6 +465,8 @@ export function buildResearchSystemInventory(root = process.cwd()) {
         .filter(row => row.metadataSource === 'legacy-status-block').length;
     const structuredWorkstreamExecutionStateCount = (model.relations.queue ?? [])
         .filter(row => Boolean(row.executionState)).length;
+    const structuredWorkstreamGateClassCount = (model.relations.queue ?? [])
+        .filter(row => Boolean(row.gateClass)).length;
     const structuredExperimentPromotionStateCount = (model.relations.experiments ?? [])
         .filter(row => Boolean(row.promotionState)).length;
     const deferredQuestionCount = (model.relations.questions ?? [])
@@ -551,6 +557,7 @@ export function buildResearchSystemInventory(root = process.cwd()) {
             structuredCloseoutEvidenceCount,
             legacyStatusBlockEvidenceCount,
             structuredWorkstreamExecutionStateCount,
+            structuredWorkstreamGateClassCount,
             structuredExperimentPromotionStateCount,
             deferredQuestionCount,
             authoredAcquisitionRelationCount,
@@ -624,7 +631,8 @@ export function renderResearchSystemBrief(inventory) {
             const questionLifecycle = row.questionRef
                 ? `; question: ${compactBriefValue(row.questionState)} (${compactBriefValue(row.questionExecutionRelation)})`
                 : '';
-            lines.push(`- ${id}${questionRef} [${compactBriefValue(row.state)}]: ${compactBriefValue(row.question)}; gate: ${compactBriefValue(row.remainingGate)}${questionLifecycle}`);
+            const gateClass = row.gateClass ? `; route: ${row.gateClass}` : '';
+            lines.push(`- ${id}${questionRef} [${compactBriefValue(row.state)}]: ${compactBriefValue(row.question)}; gate: ${compactBriefValue(row.remainingGate)}${gateClass}${questionLifecycle}`);
         }
     }
 

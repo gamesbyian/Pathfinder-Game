@@ -83,6 +83,19 @@ const WORKSTREAM_EXECUTION_STATES = Object.freeze([
     'on-demand',
 ]);
 
+export const WORKSTREAM_GATE_CLASSES = Object.freeze([
+    'existing-data',
+    'instrument-only',
+    'bounded-compute',
+    'design',
+    'implementation',
+    'blocked',
+    'reopen-only',
+    'method',
+    'subsumed',
+    'service',
+]);
+
 function workstreamStatusFromExecutionState(value) {
     switch (value) {
         case 'active': return 'active';
@@ -273,16 +286,33 @@ export function buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable 
         ? []
         : tableRows(workstreamsSource, '## Active workstreams');
     const queue = structuredWorkstreamRows.length
-        ? structuredWorkstreamRows.map(([id, question, executionStateRaw, state, gate, questionRef]) => {
+        ? structuredWorkstreamRows.map(row => {
+            const [id, question, executionStateRaw, fourth, fifth, sixth, seventh] = row;
+            const hasGateClassColumn = row.length >= 7;
+            const gateClassRaw = hasGateClassColumn ? fourth : null;
+            const state = hasGateClassColumn ? fifth : fourth;
+            const gate = hasGateClassColumn ? sixth : fifth;
+            const questionRef = hasGateClassColumn ? seventh : sixth;
+            if (!hasGateClassColumn && !allowHistoricalWorkstreamTable) {
+                throw new Error(`${workstreamsPath}: current ## Workstream state rows require Gate class (workstream ${id})`);
+            }
             const executionState = String(executionStateRaw ?? '').replaceAll('`', '').trim();
             if (!WORKSTREAM_EXECUTION_STATES.includes(executionState)) {
                 throw new Error(`${workstreamsPath}: unknown workstream execution state ${executionState || '(missing)'} for ${id}`);
+            }
+            const gateClass = gateClassRaw ? String(gateClassRaw).replaceAll('`', '').trim() : null;
+            if (!gateClass && !allowHistoricalWorkstreamTable) {
+                throw new Error(`${workstreamsPath}: current ## Workstream state Gate class is required for ${id}`);
+            }
+            if (gateClass && !WORKSTREAM_GATE_CLASSES.includes(gateClass)) {
+                throw new Error(`${workstreamsPath}: unknown workstream gate class ${gateClass} for ${id}`);
             }
             return {
                 topicId: `workstream-${id}`,
                 workstreamId: /^\d+$/u.test(id) ? Number(id) : id,
                 question,
                 executionState,
+                gateClass,
                 status: workstreamStatusFromExecutionState(executionState),
                 authority: workstreamsPath,
                 authorityKind: 'workstreams',
@@ -358,7 +388,7 @@ export function buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable 
 
 function compactEntry(kind, entry) {
     if (kind === 'queue') return { kind, id: entry.topicId, workstreamId: entry.workstreamId ?? null, status: entry.status,
-        executionState: entry.executionState ?? null,
+        executionState: entry.executionState ?? null, gateClass: entry.gateClass ?? null,
         question: entry.question, questionRef: entry.questionRef ?? null, gate: entry.remainingGate, authority: entry.authority };
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
         promotionState: entry.promotionState ?? null, questionRef: entry.questionRef ?? null,

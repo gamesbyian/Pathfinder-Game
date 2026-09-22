@@ -279,7 +279,10 @@ export function normalizePremiseAdmissions(doc) {
     });
 }
 
-export function buildResearchRelations(root = process.cwd(), { artifactPaths = [], eligibility = null, discoverArtifacts = false } = {}) {
+export function buildResearchRelations(root = process.cwd(), {
+    artifactPaths = [], eligibility = null, discoverArtifacts = false,
+    allowHistoricalWorkstreamTable = false,
+} = {}) {
     const questions = loadResearchQuestionRegistry(root);
     const questionErrors = validateResearchQuestionRegistry(questions);
     if (questionErrors.length) {
@@ -307,7 +310,7 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
     }
     const evidenceIntegrity = readJson(root, 'reports/stress/solver-evidence-integrity-index.json', { optional: true });
     const integrityRecords = evidenceIntegrity?.records ?? [];
-    const status = buildResearchStatusIndex(root);
+    const status = buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable });
     const knownQuestionIds = new Set(questions.questions.map(question => String(question.id)));
     for (const experiment of status.experiments ?? []) {
         if (experiment.questionRef && !knownQuestionIds.has(String(experiment.questionRef))) {

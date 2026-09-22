@@ -1,5 +1,10 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
+
 import { buildResearchQueryGraph, queryResearchGraph } from './research-query-lib.mjs';
+import { buildResearchQueryView } from './research-query-views-lib.mjs';
+import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
+import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot, buildResearchSystemFindingSnapshotFromGitRef, buildResearchSystemLineageSummary, diffResearchSystemFindingSnapshots, queryResearchSystemFindings } from './research-system-query-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith('--' + name + '='))?.slice(name.length + 3) ?? '';
@@ -17,6 +22,79 @@ if (args.includes('--stats')) {
       .map(relation => [relation, graph.edges.filter(e => e.relation === relation).length])),
     diagnostics: graph.diagnostics,
   }, null, 2));
+  process.exit(0);
+}
+
+const view = value('view');
+if (view === 'system-findings') {
+  const index = buildResearchSystemFindingIndex(process.cwd());
+  console.log(JSON.stringify({
+    view,
+    count: index.count,
+    findings: queryResearchSystemFindings(index, {
+      query: value('query'),
+      category: value('category'),
+      family: value('family'),
+      kind: value('kind'),
+    }),
+  }, null, 2));
+  process.exit(0);
+}
+if (view === 'system-lineage') {
+  const index = buildResearchSystemFindingIndex(process.cwd());
+  const reportLineage = buildResearchQueryView(graph, { view: 'non-question-lineage' });
+  console.log(JSON.stringify(buildResearchSystemLineageSummary(index, reportLineage.rows), null, 2));
+  process.exit(0);
+}
+if (view) {
+  console.log(JSON.stringify(buildResearchQueryView(graph, {
+    view,
+    entity: value('entity'),
+    minimum: value('minimum') ? Number(value('minimum')) : 2,
+  }), null, 2));
+  process.exit(0);
+}
+
+if (args.includes('--snapshot')) {
+  console.log(JSON.stringify(buildResearchQuerySnapshot(graph), null, 2));
+  process.exit(0);
+}
+
+const compareSnapshot = value('compare-snapshot');
+if (compareSnapshot) {
+  const before = JSON.parse(readFileSync(compareSnapshot, 'utf8'));
+  const after = buildResearchQuerySnapshot(graph);
+  console.log(JSON.stringify(diffResearchQuerySnapshots(before, after), null, 2));
+  process.exit(0);
+}
+
+const compareRef = value('compare-ref');
+if (compareRef) {
+  const before = buildResearchQuerySnapshotFromGitRef(process.cwd(), compareRef, { discoverArtifacts: false });
+  const after = buildResearchQuerySnapshot(graph);
+  console.log(JSON.stringify(diffResearchQuerySnapshots(before, after), null, 2));
+  process.exit(0);
+}
+
+if (args.includes('--system-snapshot')) {
+  const index = buildResearchSystemFindingIndex(process.cwd());
+  console.log(JSON.stringify(buildResearchSystemFindingSnapshot(index), null, 2));
+  process.exit(0);
+}
+
+const compareSystemSnapshot = value('compare-system-snapshot');
+if (compareSystemSnapshot) {
+  const before = JSON.parse(readFileSync(compareSystemSnapshot, 'utf8'));
+  const after = buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(process.cwd()));
+  console.log(JSON.stringify(diffResearchSystemFindingSnapshots(before, after), null, 2));
+  process.exit(0);
+}
+
+const compareSystemRef = value('compare-system-ref');
+if (compareSystemRef) {
+  const before = buildResearchSystemFindingSnapshotFromGitRef(process.cwd(), compareSystemRef);
+  const after = buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(process.cwd()));
+  console.log(JSON.stringify(diffResearchSystemFindingSnapshots(before, after), null, 2));
   process.exit(0);
 }
 

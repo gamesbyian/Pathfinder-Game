@@ -54,6 +54,7 @@ function authoredEdges(model) {
         value, sourceFor(q, 'questions'));
     }
     for (const value of arr(q.answeredBy)) add('questions', q.id, 'answeredBy', 'repositoryRefs', value, sourceFor(q, 'questions'));
+    for (const value of arr(q.decisionSupport?.refs)) add('questions', q.id, 'decisionSupport', 'repositoryRefs', value, sourceFor(q, 'questions'));
     for (const value of arr(q.premiseRefs ?? q.premiseIds ?? q.mappedPremises)) {
       add('questions', q.id, 'premise', 'premises', value, sourceFor(q, 'questions'));
     }
@@ -194,7 +195,10 @@ function repositoryRefNodes(edges) {
 }
 
 export function buildResearchQueryGraph(root = process.cwd(), options = {}) {
-  const model = buildResearchRelations(root, { discoverArtifacts: options.discoverArtifacts ?? true });
+  const model = buildResearchRelations(root, {
+    discoverArtifacts: options.discoverArtifacts ?? true,
+    allowHistoricalWorkstreamTable: options.allowHistoricalWorkstreamTable ?? false,
+  });
   const edges = authoredEdges(model);
   const nodes = [...rowNodes(model), ...repositoryRefNodes(edges)];
   const nodeMap = new Map(nodes.map(node => [key(node), node]));
@@ -217,6 +221,9 @@ export function buildResearchQueryGraph(root = process.cwd(), options = {}) {
       const lifecycle = researchQuestionLifecycleClass(String(row.state ?? '').toLowerCase());
       return ['active', 'mixed'].includes(lifecycle) && !row.acquisitionNeed;
     }).map(row => row.id),
+    decisionSupportUnknownQuestions: (model.relations.questions ?? [])
+      .filter(row => (row.answeredBy ?? []).length > 0 && !row.decisionSupport)
+      .map(row => row.id),
     openExperimentsOnTerminalQuestions: (model.relations.experiments ?? []).filter(row => {
       if (row.promotionState !== 'open' || !row.questionRef) return false;
       const question = questionById.get(String(row.questionRef));
