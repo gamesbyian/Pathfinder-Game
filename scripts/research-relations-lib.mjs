@@ -308,6 +308,12 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
     const evidenceIntegrity = readJson(root, 'reports/stress/solver-evidence-integrity-index.json', { optional: true });
     const integrityRecords = evidenceIntegrity?.records ?? [];
     const status = buildResearchStatusIndex(root);
+    const knownQuestionIds = new Set(questions.questions.map(question => String(question.id)));
+    for (const experiment of status.experiments ?? []) {
+        if (experiment.questionRef && !knownQuestionIds.has(String(experiment.questionRef))) {
+            throw new Error(`experiment ${experiment.experimentId} references unknown research question ${experiment.questionRef}`);
+        }
+    }
     const v1 = readJson(root, 'docs/solver-premise-map-snapshot-v1.json', { optional: true });
     const v2 = readJson(root, 'docs/solver-premise-map-snapshot-v2.json', { optional: true });
     const admissions = readJson(root, 'docs/solver-premise-map-v2-admissions.json', { optional: true });
