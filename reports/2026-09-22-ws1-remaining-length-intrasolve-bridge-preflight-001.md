@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-22 — preflight and inert implementation recovered onto current mainline; no experiment dispatched.
 > **Decision:** do not jump directly from the confirmed cross-row remaining-length effect to a production selector. First test the missing transport step inside one solve: reorder the existing elite-prefix completion candidate pool by ascending remaining length under identical candidates, per-candidate caps and total node budget.
-> **Remaining gate:** run the frozen 20-level Stage A matched-work bridge with candidate-attribution telemetry; a negative closes this tested intra-solve form without retuning.
+> **Remaining gate:** validate the dedicated frozen Stage A harness, then run the 20-level matched-work bridge with candidate-attribution telemetry; a negative closes this tested intra-solve form without retuning.
 > **Date:** 2026-09-22
 > **Research question:** `WS1-REMAINING-LENGTH-INTRA-SOLVE-BRIDGE`
 > **Triggered by:** `WS1-REMAINING-LENGTH-ALLOCATION`
@@ -245,4 +245,10 @@ Recovery implementation is now complete for:
 3. candidate-level attribution trace including frozen index-depth residual plus observational exact counted residual / portal-jump count;
 4. tests that both orderings contain the exact same candidate multiset and that false/default preserves legacy order.
 
-The remaining implementation item is the focused 20-level A/B harness that emits the frozen decision evidence without changing the treatment. After that harness is validated, dispatch only the frozen Stage A population.
+The focused direct A/B harness is now implemented at `scripts/stress/ws1-remaining-length-intrasolve-bridge.mjs`. It emits the frozen solve/work decision evidence plus candidate attribution without changing the treatment or introducing a production flag.
+
+Remaining before evidence acquisition:
+
+1. validate the harness against current CI/type/lint and the historical control contract;
+2. dispatch only the frozen Stage A population;
+3. apply the frozen decision rule without retuning.
