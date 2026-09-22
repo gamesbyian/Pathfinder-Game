@@ -1092,6 +1092,37 @@
       "premiseRefs": [],
       "measurementOpportunities": [],
       "acquisitionNeed": "telemetry-or-economics"
+    },
+    {
+      "id": "WS1-REMAINING-LENGTH-INTRA-SOLVE-BRIDGE",
+      "question": "Within one repairSearchFromGate invocation, does globally ordering the existing elite-prefix bounded-completion candidate pool by ascending remaining path length improve solve/work under the identical candidate set and fixed shared node budget?",
+      "owner": "WS1",
+      "state": "active-candidate",
+      "aliases": [
+        "remaining-length intra-solve bridge",
+        "elite-prefix length order",
+        "length-first completion candidates"
+      ],
+      "triggeredBy": [
+        "WS1-REMAINING-LENGTH-ALLOCATION"
+      ],
+      "constrainedBy": [
+        "reports/2026-09-20-h3-independent-transfer-result-001.md",
+        "reports/2026-08-07-repair-elite-prefix-dfs.md",
+        "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md"
+      ],
+      "result": "Preflight only. H3's remaining-length allocation effect is confirmed across disjoint row populations, but that shared budget was allocated across levels. The exact H3 production call site has only one current dead-end candidate. elitePrefixDfsRepair supplies the missing intra-solve candidate pool (3 elites x 4 prefix fractions, 15k/candidate, 90k total) and currently tries longer residuals before shorter ones. The old operator is closed negative in its legacy order; this successor tests only whether the later-confirmed remaining-length premise is the materially different candidate-ordering signal the old operator lacked.",
+      "constrains": [
+        "Do not treat the confirmed cross-row H3 transfer as proof of intra-solve allocation value.",
+        "Control and treatment must use the exact same elite-prefix candidate multiset, per-candidate cap, total cap, outer repair cap and seed; only candidate order may differ.",
+        "A negative frozen bridge does not reopen elite-prefix DFS for further tuning and does not invalidate the earlier cross-row H3 result."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [
+        "P065",
+        "P123"
+      ],
+      "acquisitionNeed": "telemetry-or-economics"
     }
   ]
 }
