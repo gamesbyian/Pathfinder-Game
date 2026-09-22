@@ -41,11 +41,23 @@ Production-inert piggybacking is allowed only where the observer already has a c
 
 BC1 removable-work economics and forced-work singleton-chain economics remain separate bounded acquisitions because their next instruments require specific beam-hosted populations and attribution semantics rather than whole-corpus firehoses.
 
+## Machine reconciliation consumer
+
+The mandatory post-run composition now has a maintained derived consumer:
+
+`scripts/reconcile-broad-solver-evidence.mjs`
+
+It joins the canonical production-side equal-work reach summary, deep T1 census analysis, production summary, and frozen WS1 challenge into one machine artifact while keeping their evidence currencies and scopes separate.
+
+Use it **after** the component analyzers, before prose interpretation. Its nomination sets are inputs to question intake, not automatic scheduler/removal decisions.
+
+See [broad reconciliation consumer](2026-09-21-broad-solver-evidence-reconciliation-consumer-001.md).
+
 ## Required post-run reconciliation
 
 After both broad runs complete, the next solver-research pass must:
 
-1. establish the new production capability boundary from the stress refresh, including solved-set churn, lifecycle/failure map, compact failure response, and solver-health record;
+1. establish the new production capability boundary from the stress refresh, including solved-set churn, lifecycle/failure map, compact failure response, and solver-health record, then run the maintained broad-evidence reconciliation consumer once the census-side derived analysis is available;
 2. inspect the frozen WS1 action-selection challenge from the same refresh without refitting the model;
 3. compare fresh T1 deep capability with the prior census, including gains/losses, exclusive capability, newly capped cells, and technique/flag regressions;
 4. compare fresh EW1 equal-work pricing with the August 28 pilot under exact current protocol identity, separating naturally exhausted cheap screens from cap-bound continuations;
