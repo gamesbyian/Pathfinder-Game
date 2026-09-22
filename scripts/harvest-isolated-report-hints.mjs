@@ -105,7 +105,7 @@ async function harvestRows({ corpusRel, rows, budgetMs = null, identity }) {
             totalMs: row.totalMs ?? row.elapsedMs ?? undefined,
             workSpent: row.workSpent ?? undefined,
         };
-        if (capture.record(entry.level, result)) changes += 1;
+        if (capture.recordHistorical(entry.level, result)) changes += 1;
     }
     capture.flush(state.corpusPath, state.document);
 }

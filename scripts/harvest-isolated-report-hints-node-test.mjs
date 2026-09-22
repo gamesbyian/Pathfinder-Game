@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
+const harvesterSource = readFileSync(path.join(scriptsDir, 'harvest-isolated-report-hints.mjs'), 'utf8');
 const root = path.resolve(scriptsDir, '..');
+assert.match(harvesterSource, /capture\.recordHistorical\(/, 'persisted isolated reports must use the historical provenance ingress');
+assert.doesNotMatch(harvesterSource, /capture\.record\(/, 'persisted isolated reports must not use the current-attempt provenance ingress');
 const stagingDir = mkdtempSync(path.join(tmpdir(), 'pathfinder-harvest-isolated-'));
 
 try {
