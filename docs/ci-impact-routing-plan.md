@@ -150,7 +150,7 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 **Phase 1 source-impact hardening is complete enough for shadow operation.** Current branch state:
 
-- zero unclassified paths across the current tracked tree (latest checkpoint: **10,291 blobs** before execution-plan files were added);
+- zero unclassified paths across the current tracked tree (**10,296 blobs** at the latest structural sweep);
 - permanent tracked-path coverage validation;
 - explicit full-impact precedence over derived harness ownership;
 - rename/delete/copy-safe Git change parsing;
@@ -159,11 +159,14 @@ The program succeeds when common research-only work avoids unrelated game/solver
 - first-class `persistence` impact, separating Firestore boundary cost from generic game work;
 - real `--git-diff <base> <head>` classification;
 - data-driven validation planning;
-- 27-PR historical replay: **18/27 scoped candidates, 9/27 earned full-impact**.
+- 27-PR historical replay: **18/27 scoped candidates, 9/27 earned full-impact**;
+- modeled execution consequence: **16/27** historical PRs skip the deep runner, **17/27** skip build/canary/heavy solver proofs, and **18/27** skip Firestore.
 
 Evidence:
 - [foundation result 001](../reports/2026-09-21-ci-impact-routing-foundation-result-001.md)
 - [historical backtest 002](../reports/2026-09-21-ci-impact-routing-historical-backtest-002.md)
+- [shadow readiness result 002](../reports/2026-09-21-ci-impact-routing-shadow-readiness-result-002.md)
+- [scoped execution historical economics 003](../reports/2026-09-21-ci-scoped-execution-historical-economics-003.md)
 
 **Phase 2 measurement/shadowing is active.** `.github/workflows/ci.yml` now contains non-gating, dependency-free `impact-shadow`. It reports what validation would be selected while `fast-gate` and `deep-verification` still run unchanged. Router failure is non-gating during this phase.
 
@@ -179,4 +182,6 @@ The execution layer is now modeled separately in `scripts/ci-execution-plan.json
 
 The validation-plan parity checker now also proves every expensive capability belongs to exactly one execution lane and the final-status acceptance contract is structurally conservative.
 
-**Next:** collect shadow outcomes across real non-router PR shapes, benchmark Node-harness concurrency, then implement scoped execution behind these already-tested contracts. Do not enable skipped validation until shadow evidence shows the router behaves coherently and the final required-status job is actually present and protected.
+`ci-scoped-dry-run.yml` now provides a manual end-to-end activation rehearsal over explicit base/head refs. Its job/capability/always-on/final-status structure is mechanically checked against the execution plan. Ordinary PR CI remains unchanged.
+
+**Next:** collect shadow outcomes across real non-router PR shapes, run representative manual scoped dry-runs, and benchmark Node-harness concurrency. Do not enable skipped validation until those empirical gates are green and the final required status is deliberately promoted into ordinary PR CI.
