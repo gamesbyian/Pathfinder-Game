@@ -174,6 +174,24 @@ The frozen rule is directionally stable across all three:
 The two telemetry-inapplicable runs are important negative-space evidence about the research system itself: older solver compute exists, but the exact canonical-work question cannot be reconstructed because the necessary field was not retained. They are not zeros and they are not failed replications.
 
 
+
+## Independent retained-population availability check
+
+Before accepting fresh acquisition as the next gate, the repository's retained family/variant evidence was checked for a genuinely independent population that could score the frozen model without solver execution.
+
+The obvious durable family asset, `reports/stress/phase-c-family-variant-results.json`, is not protocol-compatible:
+
+- it is a July legacy-scheduler run, not the current production action ladder;
+- attempt rows do not carry modern `stageId`;
+- attempt rows do not carry canonical `workSpent`;
+- its historical attempt vocabulary therefore cannot reconstruct either the frozen signature membership or the captured-work estimand.
+
+Repository searches for family/variant retained results carrying both `stageId` and `workSpent` found no newer compatible asset.
+
+This closes the useful retained-evidence route for **independent-population confirmation**. Re-splitting the current C2 population, treating legacy missing work as zero, or translating old profile names into modern stages would create pseudo-independence rather than evidence.
+
+Therefore the next gate remains genuinely acquisitional: obtain sample-independent/current-production action-boundary evidence under the frozen model, without changing model membership or feature bins.
+
 ## Interpretation
 
 The evidence now supports a narrower statement than the original WS1 framing:
