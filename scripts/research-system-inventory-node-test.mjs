@@ -12,6 +12,7 @@ assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-
 const ws2Live = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2');
 assert.ok(ws2Live);
 assert.equal(ws2Live.executionState, 'active');
+assert.equal(ws2Live.gateClass, 'implementation');
 assert.equal(ws2Live.questionRef, 'WS2-REPAIR-DEADLINE-ALLOCATION');
 assert.equal(ws2Live.questionState, 'active-candidate');
 assert.equal(ws2Live.questionExecutionRelation, 'active-question');
@@ -114,6 +115,8 @@ assert.ok(inventory.frontDoorInputs.structuredCloseouts.some(row =>
 assert.ok(Number.isInteger(inventory.documentation.legacyStatusBlockEvidenceCount));
 assert.equal(inventory.documentation.structuredWorkstreamExecutionStateCount, inventory.currentState.queueEntries,
     'every current workstream row should carry explicit execution state');
+assert.equal(inventory.documentation.structuredWorkstreamGateClassCount, inventory.currentState.queueEntries,
+    'every current workstream row should carry an explicit immediate gate class');
 assert.equal(inventory.documentation.structuredExperimentPromotionStateCount, inventory.relations
     .find(row => row.relation === 'experiments')?.rows ?? 0,
     'every default-off experiment row should carry explicit promotion state');
@@ -175,7 +178,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
 assert.match(brief, /^## Live queue$/m);
-assert.match(brief, /WS2-REPAIR-DEADLINE-ALLOCATION[\s\S]*active-question/u);
+assert.match(brief, /WS2-REPAIR-DEADLINE-ALLOCATION[\s\S]*route: implementation[\s\S]*active-question/u);
 assert.match(brief, /^## Recent structured closeouts$/m);
 assert.match(brief, /^## Unfinished execution references$/m);
 assert.match(brief, /acquisition: telemetry-or-economics|acquisition: fresh-independent-parents/u);
