@@ -221,6 +221,33 @@ export function buildConsumptionView(graph, minimumQuestionConsumers = 2) {
     return { view: 'multi-consumed-blocks', minimumQuestionConsumers, rows };
 }
 
+export function buildNonQuestionLineageView(graph) {
+    const rows = [];
+    for (const evidence of graph.nodes.filter(node => node.type === 'evidence')) {
+        const questionEdges = edgesFrom(graph, 'evidence', evidence.id, 'question');
+        if (questionEdges.length) continue;
+        const successorQuestions = edgesFrom(graph, 'evidence', evidence.id, 'successorQuestion')
+            .map(edge => edge.to.id);
+        const successorArtifacts = edgesFrom(graph, 'evidence', evidence.id, 'successorArtifact')
+            .map(edge => edge.to.id);
+        if (!successorQuestions.length && !successorArtifacts.length) continue;
+        rows.push({
+            evidenceId: evidence.id,
+            report: evidence.row?.latestEvidence?.report ?? null,
+            status: evidence.row?.status ?? null,
+            title: evidence.row?.title ?? null,
+            inferenceScope: evidence.row?.inferenceScope ?? null,
+            successorQuestions,
+            successorArtifacts,
+        });
+    }
+    return {
+        view: 'non-question-lineage',
+        rows,
+        interpretation: 'Structured closeouts with authored successor edges but no solver-question ownership. This covers report-level research-system lineage without inventing stable identities for individual architecture findings inside a report.',
+    };
+}
+
 export function buildOwnershipGapsView(graph) {
     const capabilityDemands = graph.nodes.filter(node => node.type === 'capabilityDemands')
         .filter(node => !edgesFrom(graph, 'capabilityDemands', node.id, 'question').length)
@@ -272,6 +299,7 @@ export function buildResearchQueryView(graph, { view, entity = '', minimum = 2 }
         case 'shared-measurements': return buildSharedMeasurementView(graph, minimum);
         case 'multi-consumed-blocks': return buildConsumptionView(graph, minimum);
         case 'ownership-gaps': return buildOwnershipGapsView(graph);
+        case 'non-question-lineage': return buildNonQuestionLineageView(graph);
         case 'coverage': return buildQueryabilityCoverageView(graph);
         default: throw new Error('unknown research query view: ' + view);
     }
