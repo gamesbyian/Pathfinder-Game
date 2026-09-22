@@ -172,7 +172,17 @@
       "currentHintMode": "direct canonical hint files in shard artifacts",
       "centralHarvester": true,
       "target": "first emit exact successful CP-SAT discovery observations; then centralize persistence",
-      "partialFailureEvidence": true
+      "partialFailureEvidence": true,
+      "producerEntrypoint": "scripts/stress/cpsat-hint-harvest-sweep.mjs -> scripts/stress/cpsat-hint-harvest.mjs",
+      "executionClass": "external CP-SAT reference probe; cold with optional forcing grid",
+      "exactSuccessfulPathInSpecialistArtifact": false,
+      "winningAttemptConfigInSpecialistArtifact": false,
+      "levelRevisionAvailability": "canonical hint file carries current level association; sweep summary does not bind an explicit level revision",
+      "effectiveExecutionConfigAvailability": "partial in command/workflow inputs; not emitted with each successful observation",
+      "sourceRunLineageAvailability": "workflow artifact/run metadata only; not attached to each successful observation",
+      "artifactSufficientForFutureSemanticHint": false,
+      "reason": "inner harvester parses/referee-validates exact PATH but stores it only in in-memory pending before direct HintStore write; its optional JSON result row omits the path, and the sweep does not request --out. Sweep summary retains only status/added/rediscovered counts.",
+      "migrationTarget": "specialist direct producer temporarily; first emit a referee-valid discovery artifact containing exact path + forcing + effective CP-SAT request + level revision/source lineage, then centralize persistence"
     },
     {
       "workflow": "solver-diagnostics.yml",
