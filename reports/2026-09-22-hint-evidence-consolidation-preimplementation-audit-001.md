@@ -150,6 +150,23 @@ Instead:
 This is an example of why provenance semantic version/missingness must be separate from physical
 artifact schema version.
 
+### Historical prevalence check
+
+A bounded head/tail check shows this was the normal old stress-hint format, not one file:
+
+- pre-migration files `001.json` through `010.json` all had schema-v1 `hintMetadata` and zero
+  metadata timestamps;
+- file 009 already carried seven metadata observations from both targeted enumeration and witness
+  production, none dated;
+- tail files 448-450 likewise had 18, 1, and 20 undated metadata observations;
+- after the migration, every sampled observation was assigned `foundAt` in one narrow migration
+  interval from `2026-07-11T01:44:17.863Z` through
+  `2026-07-11T01:44:18.004Z`.
+
+This makes a mechanical historical correction feasible. Prefer proving event correspondence from the
+pre-migration commit and marking those migrated timestamps as unknown/migration-derived. Do not
+classify arbitrary events solely because they happen to fall on July 11.
+
 ## 3. Source-run durability and reconstructability
 
 The current tracked hint schema has no source-run field.
