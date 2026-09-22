@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-22",
+  "purpose": "Pre-implementation executable inventory for hint evidence consolidation. This file is descriptive planning input, not a runtime authority.",
+  "writerCensus": [
+    {
+      "path": "scripts/hint-candidate-search.mjs",
+      "status": "current-regression",
+      "mode": "writer",
+      "issue": "imports removed readLevelsWithHints/writeLevelsWithHints facade and mutates bare .hints directly",
+      "target": "migrate to readLevelCorpusDocumentWithHints + setLevelHintRecords + writeLevelCorpusDocumentWithHints"
+    },
+    {
+      "path": "scripts/dedupe-hint-provenance.mjs",
+      "status": "current-regression",
+      "mode": "writer",
+      "issue": "imports removed facade; mutates hintRecords but persists through removed writer",
+      "target": "migrate to explicit corpus-document API; preserve changed-level write intent"
+    },
+    {
+      "path": "scripts/family-parent-hint-replay-batch.mjs",
+      "status": "current-regression",
+      "mode": "writer",
+      "issue": "imports removed facade and manually mirrors parent.hintRecords to parent.hints",
+      "target": "use setLevelHintRecords and explicit corpus-document writer"
+    },
+    {
+      "path": "scripts/stress/cpsat-hint-harvest.mjs",
+      "status": "current-regression",
+      "mode": "writer",
+      "issue": "imports removed facade and manually mirrors hintRecords to hints",
+      "target": "use canonical HintStore boundary; if run in GHA, emit exact external-solver discovery observations before retiring direct transport"
+    },
+    {
+      "path": "scripts/family-parent-hint-replay.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical setLevelHintRecords + explicit changedHintLevels path"
+    },
+    {
+      "path": "scripts/hint-complete-enumeration-sharded.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical boundary; later add execution capsule where solver provenance applies"
+    },
+    {
+      "path": "scripts/hint-corpus-expand.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical boundary"
+    },
+    {
+      "path": "scripts/hint-diversification.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical boundary"
+    },
+    {
+      "path": "scripts/hint-workbench.mjs",
+      "status": "current",
+      "mode": "writer",
+      "issue": null,
+      "target": "retain canonical boundary"
+    },
+    {
+      "path": "scripts/merge-hint-artifacts.mjs",
+      "status": "current-transition",
+      "mode": "central-import-writer",
+      "issue": "primary modern GHA path today; source-run metadata is not embedded into already-formed incoming provenance",
+      "target": "become central semantic importer/compatibility reader; modern producers project through common execution capsule"
+    },
+    {
+      "path": "scripts/migrate-hint-schema-v2.mjs",
+      "status": "historical-migration",
+      "mode": "writer",
+      "issue": "writes canonical current stringify output from historical inputs",
+      "target": "leave historical semantics frozen; add separate v4 migrator"
+    },
+    {
+      "path": "scripts/hint-expansion-audit.mjs",
+      "status": "current-regression",
+      "mode": "reader",
+      "issue": "imports removed readLevelsWithHints facade",
+      "target": "migrate to explicit corpus-document reader"
+    },
+    {
+      "path": "scripts/hint-workbench-parallel.mjs",
+      "status": "current-regression",
+      "mode": "reader/orchestrator",
+      "issue": "imports removed readLevelsWithHints and comments rely on removed writer semantics",
+      "target": "migrate reader and concurrency commentary to changedHintLevels contract"
+    },
+    {
+      "path": "scripts/validate-hint-paths.mjs",
+      "status": "current-regression",
+      "mode": "reader",
+      "issue": "imports removed readLevelsWithHints facade",
+      "target": "migrate to explicit corpus-document reader"
+    }
+  ],
+  "workflowIngestion": [
+    {
+      "workflow": "solver-stress-refresh.yml",
+      "currentHintMode": "direct hint files + report artifacts",
+      "centralHarvester": true,
+      "target": "report/discovery projection -> central persistence",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "solver-production-replay-baseline.yml",
+      "currentHintMode": "direct hint files + report artifacts",
+      "centralHarvester": true,
+      "target": "report/discovery projection -> central persistence",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "solver-highbudget-unsolved-sweep.yml",
+      "currentHintMode": "direct hint files + report artifacts",
+      "centralHarvester": true,
+      "target": "report/discovery projection -> central persistence",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "solver-level-blind-targeted-sweep.yml",
+      "currentHintMode": "artifact-only level-blind reports",
+      "centralHarvester": true,
+      "target": "retain central report harvest; add canonical execution capsule",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "solver-routing-regime-sample-ab.yml",
+      "currentHintMode": "artifact-only level-blind reports",
+      "centralHarvester": true,
+      "target": "retain central report harvest; add canonical execution capsule",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "method-probe-sweep.yml",
+      "currentHintMode": "artifact-only isolated reports",
+      "centralHarvester": true,
+      "target": "retain isolated semantic projection; add common execution capsule",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "technique-census.yml",
+      "currentHintMode": "isolated/census report evidence plus current combine-side hint handling",
+      "centralHarvester": true,
+      "target": "one central isolated ingestion authority",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "cpsat-hint-harvest-sweep.yml",
+      "currentHintMode": "direct canonical hint files in shard artifacts",
+      "centralHarvester": true,
+      "target": "first emit exact successful CP-SAT discovery observations; then centralize persistence",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "solver-diagnostics.yml",
+      "currentHintMode": "direct canonical hint capture",
+      "centralHarvester": true,
+      "target": "centralize only if diagnostics artifact preserves complete successful observations; otherwise retain approved local writer semantics",
+      "partialFailureEvidence": false
+    },
+    {
+      "workflow": "solver-broad-confirmation.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain experiment evidence only",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "solver-residual-confirmation.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain experiment evidence only",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "static-portfolio-confirmation.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain experiment evidence only",
+      "partialFailureEvidence": true
+    },
+    {
+      "workflow": "solver-combine-sweep-runs.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain reconciliation/experiment evidence only; preserve constituent source lineage",
+      "partialFailureEvidence": true
+    }
+  ],
+  "provenanceMissingness": [
+    {
+      "field": "solver.id",
+      "freshDefault": "pathfinder-solver",
+      "historicalAbsence": "unknown producer unless legacy adapter can prove",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.version",
+      "freshDefault": null,
+      "historicalAbsence": "unknown solver revision",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.technique",
+      "freshDefault": "required argument / legacy may be unknown",
+      "historicalAbsence": "unknown technique",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.scoringProfileId",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.orderingBiasId",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.beamWidth",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-applicable depends on technique",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.mechanicBucketRetention",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-applicable depends on technique",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.gateKey",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained or not-applicable",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.forcing",
+      "freshDefault": null,
+      "historicalAbsence": "unknown forcing availability vs no forcing concept",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "solver.attemptIndex",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.nodesExpanded",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.elapsedMs",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.budgetMs",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.workSpent",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.workBudget",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.cumulativeNodesExpanded",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.cumulativeElapsedMs",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.cumulativeBudgetMs",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.termination",
+      "freshDefault": "unknown",
+      "historicalAbsence": "unknown; witness legacy may normalize to witness",
+      "sparseOmitSafe": true
+    },
+    {
+      "field": "search.randomSeed",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained or not-applicable",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "search.seedSalt",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-retained or not-applicable",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "context.usedExistingHints",
+      "freshDefault": false,
+      "historicalAbsence": "unknown per audited resource contract",
+      "sparseOmitSafe": "current-only after semantic versioning; unsafe for untagged historical events"
+    },
+    {
+      "field": "context.hintGuided",
+      "freshDefault": false,
+      "historicalAbsence": "unknown per audited resource contract",
+      "sparseOmitSafe": "current-only after semantic versioning; unsafe for untagged historical events"
+    },
+    {
+      "field": "context.levelRevision",
+      "freshDefault": null,
+      "historicalAbsence": "unknown revision",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "context.isolatedTechnique",
+      "freshDefault": false,
+      "historicalAbsence": "unknown per audited resource contract",
+      "sparseOmitSafe": "current-only after semantic versioning; unsafe for untagged historical events"
+    },
+    {
+      "field": "context.techniqueCensusCell",
+      "freshDefault": null,
+      "historicalAbsence": "unknown/not-applicable",
+      "sparseOmitSafe": false
+    },
+    {
+      "field": "foundAt",
+      "freshDefault": "current timestamp",
+      "historicalAbsence": "unknown discovery time; flat legacy adapter currently synthesizes upgrade-time timestamp",
+      "sparseOmitSafe": false
+    }
+  ],
+  "measuredHistoricalContext": {
+    "source": "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md",
+    "totalEventsAtAudit": 675233,
+    "eventsOmittingAtLeastIsolatedTechnique": 505993,
+    "nominalStrictColdWithLegacyAmbiguousContext": 57497,
+    "strictColdWithCompleteCapabilityContext": 24998
+  }
+}
