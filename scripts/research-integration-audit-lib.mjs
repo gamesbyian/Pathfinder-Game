@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { repositoryPathKind } from './repository-file-view.mjs';
 import path from 'node:path';
 
 import { buildResearchRelations } from './research-relations-lib.mjs';
@@ -13,6 +14,17 @@ import { buildQuestionDossier } from './research-question-dossier-lib.mjs';
 import { GENERATION_METHODS, GENERATION_SUITES, crossConstructionStatus } from './research-level-generation-lib.mjs';
 import { isResearchEvaluationEvidenceRole } from './research-evaluation-evidence-role-lib.mjs';
 import { validateSolverResearchDataAssets } from './solver-research-data-assets-lib.mjs';
+
+function repositoryPathExists(root, relativePath) {
+    if (existsSync(path.join(root, relativePath))) return true;
+    try {
+        return repositoryPathKind(root, relativePath) !== null;
+    } catch {
+        // Synthetic/unit-test roots need not be Git repositories. In that case the
+        // materialized working tree remains the only available authority.
+        return false;
+    }
+}
 
 function refIds(question, keys) {
     return keys.flatMap(key => {
@@ -76,7 +88,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         for (const field of ['answeredBy', 'constrainedBy']) {
             for (const value of question[field] ?? []) {
                 if (!/^(?:docs|reports|scripts|data|logs)\//u.test(String(value))) continue;
-                if (!existsSync(path.join(root, value))) {
+                if (!repositoryPathExists(root, value)) {
                     errors.push(`${question.id}.${field} references missing repository path ${value}`);
                 }
             }
@@ -131,19 +143,19 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
         for (const ref of demand.evidenceRefs ?? []) {
             if (/^(?:docs|reports|scripts|data|logs)\//u.test(String(ref))
-                && !existsSync(path.join(root, ref))) {
+                && !repositoryPathExists(root, ref)) {
                 errors.push(`capability demand ${demand.id} references missing evidenceRef ${ref}`);
             }
         }
         if (demand.resolutionRef
             && /^(?:docs|reports|scripts|data|logs)\//u.test(String(demand.resolutionRef))
-            && !existsSync(path.join(root, demand.resolutionRef))) {
+            && !repositoryPathExists(root, demand.resolutionRef)) {
             errors.push(`capability demand ${demand.id} references missing resolutionRef ${demand.resolutionRef}`);
         }
     }
 
     for (const promotion of model.relations.promotions ?? []) {
-        if (promotion.decisionEvidenceRef && !existsSync(path.join(root, promotion.decisionEvidenceRef))) {
+        if (promotion.decisionEvidenceRef && !repositoryPathExists(root, promotion.decisionEvidenceRef)) {
             errors.push(`promotion ${promotion.promotionId} references missing decision evidence ${promotion.decisionEvidenceRef}`);
         }
     }
@@ -159,7 +171,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
             if (!measurementIds.has(moId)) errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown measurement opportunity ${moId}`);
         }
         for (const ref of evidence.sourceArtifacts ?? []) {
-            if (!existsSync(path.join(root, ref))) {
+            if (!repositoryPathExists(root, ref)) {
                 errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references missing sourceArtifact ${ref}`);
             }
         }
@@ -169,7 +181,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
             }
         }
         for (const successorArtifact of evidence.successorArtifacts ?? []) {
-            if (!existsSync(path.join(root, successorArtifact))) {
+            if (!repositoryPathExists(root, successorArtifact)) {
                 errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references missing successor artifact ${successorArtifact}`);
             }
         }
@@ -180,7 +192,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     const assetIds = new Set((assetsDocument.assets ?? []).map(asset => asset.id));
     const resourceAudits = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-resource-contract-audits.json'), 'utf8'));
     for (const topLevelPath of [resourceAudits.registry, resourceAudits.contractDocument]) {
-        if (topLevelPath && !existsSync(path.join(root, topLevelPath))) {
+        if (topLevelPath && !repositoryPathExists(root, topLevelPath)) {
             errors.push(`resource contract registry references missing repository path ${topLevelPath}`);
         }
     }
@@ -191,7 +203,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         if (!assetIds.has(audit.assetId)) errors.push(`resource contract audit references unknown asset ${audit.assetId}`);
         for (const field of ['historicalClaimBlastRadius', 'auditAuthorities']) {
             for (const ref of audit[field] ?? []) {
-                if (!existsSync(path.join(root, ref))) {
+                if (!repositoryPathExists(root, ref)) {
                     errors.push(`resource contract audit ${audit.assetId}.${field} references missing repository path ${ref}`);
                 }
             }
@@ -201,7 +213,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
             if (/^(?:docs|reports|scripts|data|logs|modules)\//u.test(value)) {
                 if (!/^(?:docs|reports|scripts|data|logs|modules)\/[A-Za-z0-9._/-]+$/u.test(value)) {
                     errors.push(`resource contract audit ${audit.assetId}.producerAuthority must be one exact repository path, not prose: ${value}`);
-                } else if (!existsSync(path.join(root, value))) {
+                } else if (!repositoryPathExists(root, value)) {
                     errors.push(`resource contract audit ${audit.assetId}.producerAuthority references missing repository path ${value}`);
                 }
             }
@@ -238,7 +250,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
                 errors.push(`research block ${block.blockId} consumptionEvents[${index}] references unknown question ${event.questionId}`);
             }
             if (/^(?:docs|reports|scripts|data|logs)\//u.test(String(event.decisionRef ?? ''))
-                && !existsSync(path.join(root, event.decisionRef))) {
+                && !repositoryPathExists(root, event.decisionRef)) {
                 errors.push(`research block ${block.blockId} consumptionEvents[${index}] references missing decisionRef ${event.decisionRef}`);
             }
             if (event?.scope?.kind === 'block' && String(event.scope.id) !== String(block.blockId)) {
