@@ -77,6 +77,24 @@ export const signatureFamilies = {
 
 function keyOf(parts){return parts.join('\u001f');}
 
+export function actionBoundaryDigest(dataset) {
+  const rows=(dataset?.rows ?? []).map(r=>[
+    r.levelId,
+    r.boundaryIndex,
+    r.nextStage,
+    r.nextConfigFamily,
+    r.priorStage,
+    r.priorOutcome,
+    r.priorWorkBand,
+    r.cumulativeWorkBand,
+    r.nextAttemptWork,
+    r.offlineIsWinner,
+    r.offlinePreWinner,
+    r.levelSolved,
+  ]);
+  return `sha256:${createHash('sha256').update(JSON.stringify(rows)).digest('hex')}`;
+}
+
 
 export function applyFrozenLegalSignalModel(dataset, model) {
   const rows=dataset.rows ?? [];
