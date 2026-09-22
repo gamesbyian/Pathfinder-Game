@@ -221,6 +221,9 @@ export function buildResearchQueryGraph(root = process.cwd(), options = {}) {
       const lifecycle = researchQuestionLifecycleClass(String(row.state ?? '').toLowerCase());
       return ['active', 'mixed'].includes(lifecycle) && !row.acquisitionNeed;
     }).map(row => row.id),
+    decisionSupportUnknownQuestions: (model.relations.questions ?? [])
+      .filter(row => (row.answeredBy ?? []).length > 0 && !row.decisionSupport)
+      .map(row => row.id),
     openExperimentsOnTerminalQuestions: (model.relations.experiments ?? []).filter(row => {
       if (row.promotionState !== 'open' || !row.questionRef) return false;
       const question = questionById.get(String(row.questionRef));
