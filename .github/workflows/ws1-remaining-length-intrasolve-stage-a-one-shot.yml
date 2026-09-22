@@ -1,0 +1,122 @@
+name: WS1 remaining-length intra-solve Stage A
+
+run-name: WS1 Stage A · frozen 20-level bridge · ${{ github.sha }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ws1-remaining-length-intrasolve-stage-a
+  cancel-in-progress: false
+
+jobs:
+  stage-a:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run frozen Stage A
+        shell: bash
+        run: |
+          npm run research:ws1-remaining-length-intrasolve-stage-a -- \
+            --out=reports/stress/ws1-remaining-length-intrasolve-stage-a-001.json
+
+      - name: Verify frozen result shape
+        if: always()
+        shell: bash
+        run: |
+          if [ ! -f reports/stress/ws1-remaining-length-intrasolve-stage-a-001.json ]; then
+            echo "::error::Frozen Stage A result file was not produced"
+            exit 1
+          fi
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const p = 'reports/stress/ws1-remaining-length-intrasolve-stage-a-001.json';
+          const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+          const expected = [
+            'R00440','R01397','R01698','R01860','R02003','R02022','R02088','R02123','R02220','R02239',
+            'R00342','R00786','R00877','R00886','R00893','R01341','R02106','R02118','R02137','R02275',
+          ];
+          if (d.kind !== 'ws1-remaining-length-intrasolve-bridge-stage-a') throw new Error('unexpected result kind');
+          if (d.treatment?.frozenOrderingKey !== 'requiredLength - destroyIdx') throw new Error('frozen ordering key drifted');
+          if (JSON.stringify(d.population?.ids) !== JSON.stringify(expected)) throw new Error('frozen population drifted');
+          if (!Array.isArray(d.rows) || d.rows.length !== 20) throw new Error('expected exactly 20 result rows');
+          for (const row of d.rows) {
+            for (const arm of ['control', 'treatment']) {
+              if (!Number.isFinite(row[arm]?.workSpent)) throw new Error(`${row.id}: missing ${arm} canonical work`);
+              if (!row[arm]?.trace || !Array.isArray(row[arm].trace.calls)) throw new Error(`${row.id}: missing ${arm} candidate attribution`);
+            }
+          }
+          NODE
+
+      - name: Publish standard solver result
+        if: always()
+        shell: bash
+        run: |
+          if [ -f reports/stress/ws1-remaining-length-intrasolve-stage-a-001.json ]; then
+            node scripts/publish-solver-sweep-result.mjs \
+              --primary="reports/stress/ws1-remaining-length-intrasolve-stage-a-001.json" \
+              --source-artifact="ws1-remaining-length-intrasolve-stage-a"
+          fi
+
+      - name: Upload raw Stage A evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ws1-remaining-length-intrasolve-stage-a
+          path: reports/stress/ws1-remaining-length-intrasolve-stage-a-001.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Summarize Stage A
+        if: always()
+        shell: bash
+        run: |
+          if [ -f reports/stress/ws1-remaining-length-intrasolve-stage-a-001.json ]; then
+            node - <<'NODE'
+          const fs = require('node:fs');
+          const d = JSON.parse(fs.readFileSync('reports/stress/ws1-remaining-length-intrasolve-stage-a-001.json', 'utf8'));
+          const s = d.summary;
+          const ratioPct = Number.isFinite(s.treatmentVsControlWorkRatio)
+            ? ((s.treatmentVsControlWorkRatio - 1) * 100).toFixed(2)
+            : 'n/a';
+          const lines = [
+            '# WS1 remaining-length intra-solve Stage A',
+            '',
+            '- frozen population: 20 levels',
+            '- control solves: ' + s.controlSolved.length + ' [' + s.controlSolved.join(', ') + ']',
+            '- treatment solves: ' + s.treatmentSolved.length + ' [' + s.treatmentSolved.join(', ') + ']',
+            '- treatment-only: ' + s.treatmentOnly.length + ' [' + s.treatmentOnly.join(', ') + ']',
+            '- control-only: ' + s.controlOnly.length + ' [' + s.controlOnly.join(', ') + ']',
+            '- control canonical work: ' + s.controlWork,
+            '- treatment canonical work: ' + s.treatmentWork,
+            '- treatment work delta: ' + ratioPct + '%',
+            '- proxy/exact residual disagreements: ' + s.proxyExactDisagreements,
+            '',
+            'Scientific verdict is intentionally not auto-declared here. Apply the preregistered Stage A rule after checking legacy-control reproduction and candidate-level attribution.',
+          ];
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          NODE
+          fi
