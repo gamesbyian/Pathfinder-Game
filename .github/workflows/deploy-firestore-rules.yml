@@ -30,6 +30,7 @@ jobs:
         run: npm ci
 
       - name: Characterize Firestore rules before deploy
+        id: characterize
         run: npm run test:firestore-rules
 
       - uses: google-github-actions/auth@v2
@@ -37,6 +38,7 @@ jobs:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Deploy Firestore rules
+        id: deploy_rules
         run: |
           set -e
           TOKEN=$(gcloud auth print-access-token)
@@ -53,6 +55,7 @@ jobs:
 
           RULESET_NAME=$(echo "$RULESET" | jq -r '.name')
           echo "Created ruleset: $RULESET_NAME"
+          echo "ruleset_name=$RULESET_NAME" >> "$GITHUB_OUTPUT"
 
           RELEASE_BODY=$(jq -n \
             --arg n "projects/$PROJECT/releases/cloud.firestore" \
@@ -84,3 +87,32 @@ jobs:
           fi
 
           echo "Firestore rules deployed successfully."
+
+      - name: Summarize Firestore rules deployment
+        if: always()
+        shell: bash
+        env:
+          CHARACTERIZE: ${{ steps.characterize.outcome }}
+          DEPLOY: ${{ steps.deploy_rules.outcome }}
+          RULESET: ${{ steps.deploy_rules.outputs.ruleset_name }}
+        run: |
+          {
+            echo '## Firestore rules deployment'
+            echo
+            echo "| Stage | Outcome |"
+            echo "| --- | --- |"
+            echo "| Rules characterization | `$CHARACTERIZE` |"
+            echo "| Remote deployment | `$DEPLOY` |"
+            echo
+            if [[ "$DEPLOY" == success ]]; then
+              echo "Deployed ruleset: `${RULESET:-unknown}`"
+              echo
+              echo "Source commit: `$GITHUB_SHA`"
+            elif [[ "$CHARACTERIZE" == failure ]]; then
+              echo 'Deployment did not proceed because the local Firestore rules characterization failed.'
+              echo '::error::Firestore rules characterization failed; no successful deployment was established.'
+            else
+              echo 'The remote Firestore rules deployment did not complete successfully. Inspect the deployment step for the HTTP/API response.'
+              echo '::error::Firestore rules deployment failed.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
