@@ -44,5 +44,6 @@
       ]
     },
     "note": "Single stable required status. A skipped deep lane is acceptable only because routing decides it was unnecessary; router and fast gate must succeed."
-  }
+  },
+  "activationWorkflow": ".github/workflows/ci-scoped-dry-run.yml"
 }
