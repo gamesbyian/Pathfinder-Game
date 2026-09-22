@@ -159,7 +159,7 @@ export function reconcileBroadEvidence({productionSummary=null, equalWorkReach, 
     techniques,
     nominations:{
       cheapMissCandidates,
-      zeroWinProductionParticipants,
+      zeroWinProductionParticipants:zeroWinParticipants,
       deepCapabilityNoEw1SampleWin:deepNoCheapSample,
     },
     interpretation:{
