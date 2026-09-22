@@ -56,7 +56,8 @@ For solver-science questions:
 1. `node scripts/research-status-index.mjs --compact --query=<term>`
 2. inspect current [workstreams](solver-optimization-workstreams.md) and [future work](solver-future-work.md);
 3. if a stable ID emerges, switch to `research:dossier`;
-4. query tools/assets only as needed with `tooling-census --compact --query=<term>` and `research-asset-query.mjs --query=<term>`.
+4. when the ambiguity crosses question/premise/evidence/asset boundaries or needs a reverse lookup, use `npm run research:query -- --entity=<type:id>` or `--query=<term>`;
+5. query tools/assets only as needed with `tooling-census --compact --query=<term>` and `research-asset-query.mjs --query=<term>`.
 
 For research-system questions, start with:
 
