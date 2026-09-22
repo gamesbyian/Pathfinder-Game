@@ -23,9 +23,12 @@ function bool(value) {
 function parseArgs(argv) {
   let mode = null;
   let json = false;
+  let out = null;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--json') { json = true; continue; }
+    if (arg === '--out') { out = argv[++i]; continue; }
+    if (arg.startsWith('--out=')) { out = arg.slice('--out='.length); continue; }
     if (arg === '--full') { mode = { full: true }; continue; }
     if (arg === '--git-diff') {
       const base = argv[i + 1];
@@ -38,7 +41,7 @@ function parseArgs(argv) {
     throw new Error(`unknown argument: ${arg}`);
   }
   if (!mode) throw new Error('use --full or --git-diff <base-ref> <head-ref>');
-  return { mode, json };
+  return { mode, json, out };
 }
 
 function writeGithubOutputs(result, plan, execution) {
@@ -96,7 +99,19 @@ try {
   const result = mode.full ? fullImpact() : classifyGitDiff(mode.base, mode.head);
   const plan = planValidation(result.surfaces);
   const execution = packValidationPlan(plan);
-  const payload = { impact: result, plan, execution };
+  const payload = {
+    schemaVersion: 1,
+    context: {
+      eventName: process.env.GITHUB_EVENT_NAME ?? null,
+      sha: process.env.GITHUB_SHA ?? null,
+      ref: process.env.GITHUB_REF ?? null,
+      runId: process.env.GITHUB_RUN_ID ?? null,
+      runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
+    },
+    impact: result,
+    plan,
+    execution,
+  };
   console.log(
     'CI impact shadow:',
     JSON.stringify({
@@ -109,6 +124,10 @@ try {
       jobs: Object.fromEntries(Object.entries(execution.jobs).map(([name, job]) => [name, { required: job.required, capabilities: job.capabilities }])),
     }),
   );
+  if (out) {
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    fs.writeFileSync(out, `${JSON.stringify(payload, null, 2)}\n`);
+  }
   writeGithubOutputs(result, plan, execution);
   writeSummary(result, plan, execution);
   if (json || !process.env.GITHUB_STEP_SUMMARY) console.log(JSON.stringify(payload, null, 2));
