@@ -1,0 +1,180 @@
+name: CI Scoped Dry Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: Base ref/SHA for impact classification
+        required: true
+        type: string
+      head_ref:
+        description: Head ref/SHA to validate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  impact-shadow:
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.plan.outputs.full }}
+      surfaces: ${{ steps.plan.outputs.surfaces }}
+      validator_groups: ${{ steps.plan.outputs.validator_groups }}
+      node_test_groups: ${{ steps.plan.outputs.node_test_groups }}
+      needs_build: ${{ steps.plan.outputs.needs_build }}
+      needs_coverage: ${{ steps.plan.outputs.needs_coverage }}
+      needs_deep_proofs: ${{ steps.plan.outputs.needs_deep_proofs }}
+      needs_solver_canary: ${{ steps.plan.outputs.needs_solver_canary }}
+      needs_firestore: ${{ steps.plan.outputs.needs_firestore }}
+      fast_job_required: ${{ steps.plan.outputs.fast_job_required }}
+      deep_job_required: ${{ steps.plan.outputs.deep_job_required }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.head_ref }}
+          fetch-depth: 0
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /package.json
+            /scripts/ci-execution-plan.json
+            /scripts/ci-execution-plan.mjs
+            /scripts/ci-impact-classifier.mjs
+            /scripts/ci-impact-rules.json
+            /scripts/ci-impact-shadow-plan.mjs
+            /scripts/ci-validation-plan.json
+            /scripts/ci-validation-plan.mjs
+            /scripts/validation-groups.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+      - name: Compute scoped validation plan
+        id: plan
+        run: >-
+          node scripts/ci-impact-shadow-plan.mjs
+          --git-diff "${{ inputs.base_ref }}" "${{ inputs.head_ref }}" --out=tmp/ci-impact-shadow.json
+
+      - name: Upload scoped impact plan
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-impact-shadow
+          path: tmp/ci-impact-shadow.json
+          retention-days: 14
+
+  fast-gate:
+    needs: impact-shadow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.head_ref }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies from the npm cache
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Check package-script reachability
+        run: npm run check:dead-scripts
+      - name: Check textual source invariants
+        run: npm run check:text-source-files
+        env:
+          PATHFINDER_PR_INCREMENTAL: '0'
+      - name: Check validation ownership registry
+        run: npm run check:validation-groups
+      - name: Check CI impact inventory
+        run: npm run check:ci-impact-inventory
+      - name: Run selected non-lint validators
+        if: needs.impact-shadow.outputs.validator_groups != ''
+        shell: bash
+        env:
+          VALIDATOR_GROUPS: ${{ needs.impact-shadow.outputs.validator_groups }}
+          PATHFINDER_PR_INCREMENTAL: '0'
+        run: |
+          groups="${VALIDATOR_GROUPS//,/ }"
+          node scripts/validation-groups.mjs validators $groups
+      - name: Run lint
+        id: lint
+        run: npm run check:lint
+      - name: Run selected Node and CLI contract tests
+        if: needs.impact-shadow.outputs.node_test_groups != ''
+        shell: bash
+        env:
+          NODE_TEST_GROUPS: ${{ needs.impact-shadow.outputs.node_test_groups }}
+        run: |
+          groups="${NODE_TEST_GROUPS//,/ }"
+          node scripts/validation-groups.mjs nodeTests $groups
+      - name: Solver capability canary
+        id: solver_canary
+        if: needs.impact-shadow.outputs.needs_solver_canary == 'true'
+        run: |
+          node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
+            --baseline=logs/solver-canary-baseline.json \
+            --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
+            --budget-ms=15000 --work-budget=5000000
+      - name: Build production bundle
+        id: build
+        if: needs.impact-shadow.outputs.needs_build == 'true'
+        run: npm run build
+
+  deep-verification:
+    needs: impact-shadow
+    if: needs.impact-shadow.outputs.deep_job_required == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.head_ref }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies from the npm cache
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Run covered ordinary test population
+        id: coverage
+        if: needs.impact-shadow.outputs.needs_coverage == 'true'
+        run: npm run test:coverage
+        env:
+          SOLVER_DEADLOCK_PROOF_SKIP: '1'
+          SOLVER_R02560_PROOF_SKIP: '1'
+      - name: Run heavyweight implementation proofs
+        id: deep_proofs
+        if: needs.impact-shadow.outputs.needs_deep_proofs == 'true'
+        run: npm run test:deep-proofs
+      - uses: actions/setup-java@v5
+        if: needs.impact-shadow.outputs.needs_firestore == 'true'
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Exercise level-fingerprint repository identity through Firestore emulator
+        id: firestore
+        if: needs.impact-shadow.outputs.needs_firestore == 'true'
+        run: >-
+          npx --yes firebase-tools@15.28.2
+          emulators:exec --only firestore
+          --project demo-pathfinder-fingerprint-boundary
+          "npm run test:firestore-level-fingerprint-boundary"
+
+  ci-success:
+    needs:
+      - impact-shadow
+      - fast-gate
+      - deep-verification
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce scoped CI result contract
+        shell: bash
+        env:
+          ROUTE_RESULT: ${{ needs.impact-shadow.result }}
+          FAST_RESULT: ${{ needs.fast-gate.result }}
+          DEEP_RESULT: ${{ needs.deep-verification.result }}
+        run: |
+          printf '%-18s %s\n' route "$ROUTE_RESULT"
+          printf '%-18s %s\n' fast-gate "$FAST_RESULT"
+          printf '%-18s %s\n' deep-verification "$DEEP_RESULT"
+          [[ "$ROUTE_RESULT" == "success" ]]
+          [[ "$FAST_RESULT" == "success" ]]
+          [[ "$DEEP_RESULT" == "success" || "$DEEP_RESULT" == "skipped" ]]
