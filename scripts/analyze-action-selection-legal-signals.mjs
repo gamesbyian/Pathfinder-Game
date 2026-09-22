@@ -49,7 +49,8 @@ export function buildActionBoundaryDataset(document, { source='input' }={}) {
     const attempts=Array.isArray(level?.attempts) ? level.attempts : [];
     const winnerIndex=attempts.findIndex(success);
     let cumulativeWork=0;
-    for (let i=0;i<attempts.length;i++) {
+    const reachableAttemptCount = winnerIndex >= 0 ? winnerIndex + 1 : attempts.length;
+    for (let i=0;i<reachableAttemptCount;i++) {
       const next=attempts[i], prev=i>0 ? attempts[i-1] : null;
       rows.push({
         source, levelId, split:splitRole(levelId), boundaryIndex:i,
