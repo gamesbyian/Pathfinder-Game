@@ -40,7 +40,7 @@
       "treatment": "single-mutable-authority",
       "status": "in-progress",
       "retirementGate": "Re-close only after a fresh maintained-writer census proves every current writer uses canonical hintRecords/setLevelHintRecords plus explicit corpus-document/HintStore persistence, removed readLevelsWithHints/writeLevelsWithHints imports are gone from maintained code, and a guard prevents projection-only `.hints` persistence.",
-      "progress": "Current-main continuation audit widened the stale-I/O seam from seven spot-checked paths to 56 source/workflow files mentioning the removed readLevelsWithHints/writeLevelsWithHints facades; at least 19 of those files are directly referenced by package.json. Raw file count mixes maintained and dormant research utilities, so scripts/hint-evidence-consolidation-audit.mjs now computes package/workflow-seeded import-graph reachability. Re-close only from that mechanically classified maintained set, not grep."
+      "progress": "Mechanically classified continuation census: 56 source/workflow files mention the removed hint I/O facades, but package/workflow-seeded relative-import reachability narrows the maintained live migration target to 24 files (19 directly referenced by package.json, 4 directly by workflows, plus one reachable library). The other 32 are dormant/unreachable today; notable dormant writers include dedupe-hint-provenance, family-parent-hint-replay-batch, and minizinc-probe and must not become reachable again without migration. Re-close only when all 24 maintained reachable seams use the explicit corpus/HintStore boundary and a guard blocks regression."
     },
     {
       "id": "PSC-002",
