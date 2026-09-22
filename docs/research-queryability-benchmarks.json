@@ -70,15 +70,15 @@
       "id": "QB-010",
       "question": "What became newly answerable after a specific asset, observer, capability, or commit was added?",
       "kind": "temporal-change",
-      "expected": "known-gap",
-      "gap": "The current read model represents current state but does not yet compare two research-graph snapshots or refs."
+      "expected": "conditional",
+      "gap": "Snapshot/diff support now exists, but answering a concrete historical change requires a saved or reconstructed baseline snapshot from before the change."
     },
     {
       "id": "QB-011",
       "question": "Which research-system audits or architecture findings still have live successors or unpropagated lessons?",
-      "kind": "research-system-lineage",
-      "expected": "known-gap",
-      "gap": "Research-system findings intentionally remain outside the solver-science graph and do not yet have stable finding identities/successor edges."
+      "kind": "non-question-lineage",
+      "expected": "partial",
+      "gap": "Structured questionless closeouts with authored successor edges are queryable; individual architecture findings produced ephemerally by research:system-inventory still lack stable finding identities and successor edges."
     },
     {
       "id": "QB-012",
