@@ -54,8 +54,8 @@ jobs:
             echo
             echo "| Check | Outcome |"
             echo "| --- | --- |"
-            echo "| Rebuild integrity index | `$REBUILD` |"
-            echo "| Checked-in authority matches rebuilt index | `$FRESHNESS` |"
+            printf '| Rebuild integrity index | `%s` |\n' "$REBUILD"
+            printf '| Checked-in authority matches rebuilt index | `%s` |\n' "$FRESHNESS"
             echo
             if [[ "$REBUILD" == success && "$FRESHNESS" == success ]]; then
               echo 'The checked-in solver evidence-integrity authority is fresh.'
