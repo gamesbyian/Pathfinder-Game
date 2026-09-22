@@ -30,6 +30,30 @@ assert.ok(queryabilityBenchmarkIssues({
     ],
 }).some(issue => issue.includes('expected is unknown')));
 
+assert.deepEqual(queryabilityBenchmarkIssues({
+    schemaVersion: 1,
+    benchmarks: [
+        {
+            id: 'QB-GAP',
+            question: 'Can a future unimplemented query class be recorded?',
+            kind: 'future-unimplemented-kind',
+            expected: 'known-gap',
+            gap: 'No implementation exists yet.',
+        },
+    ],
+}), []);
+assert.ok(queryabilityBenchmarkIssues({
+    schemaVersion: 1,
+    benchmarks: [
+        {
+            id: 'QB-GAP',
+            question: 'Missing gap explanation',
+            kind: 'future-unimplemented-kind',
+            expected: 'known-gap',
+        },
+    ],
+}).some(issue => issue.includes('gap is required')));
+
 const result = runResearchQueryabilityAudit(process.cwd(), { discoverArtifacts: false });
 assert.equal(result.failed, 0, JSON.stringify(result.results.filter(row => row.status === 'failed'), null, 2));
 assert.equal(result.knownGaps, 0);
