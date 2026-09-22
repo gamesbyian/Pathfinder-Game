@@ -47,7 +47,7 @@ const divergent = auditHintFile('P1', [
 assert.equal(divergent.repeatRunRecordedInputCollision.length, 1);
 
 const exactA = entry({ foundAt: '2026-01-01T00:00:00Z' });
-const exactB = structuredClone(exactA);
+const exactB = JSON.parse(JSON.stringify(exactA));
 exactB.foundAt = '2026-01-03T00:00:00Z';
 const exact = auditHintFile('P1', [
     { path: [1, 2, 3], provenance: [exactA] },
