@@ -57,13 +57,15 @@ The two-lane topology is intentional tail-latency control. In August 2026 the re
 
 ## Validation ownership inventory
 
-The CI impact-routing program is tracked in [`ci-impact-routing-plan.md`](ci-impact-routing-plan.md). Phase 0 is observational: the universal PR gate remains unchanged while `scripts/validation-groups.json` classifies the existing `check:validators` and `test:node` members into `repo`, `game`, `solver`, `research`, `data`, and conservative `shared` groups.
+The CI impact-routing program is tracked in [`ci-impact-routing-plan.md`](ci-impact-routing-plan.md). Phase 0 is observational: the universal PR gate remains unchanged while `scripts/validation-groups.json` classifies the existing `check:validators` and `test:node` members into `repo`, `game`, `persistence`, `solver`, `research`, `data`, and conservative `shared` groups.
 
 `node scripts/validation-groups.mjs --check` requires the registry to be an exact non-duplicating partition of the current authoritative aggregates. `check:dead-scripts` runs that parity check, so adding/removing an ordinary permanent validator or Node/CLI harness requires an explicit ownership decision rather than silently changing the inventory.
 
 For targeted local diagnosis, semantic groups are available as `npm run check:validators:<group>` and `npm run test:node:<group>`. These are convenience/profiling surfaces only until scoped CI is deliberately enabled. They do not replace the documented local finish lines or authorize skipping unaffected-looking validation by hand.
 
 Ambiguous ownership belongs in `shared` until inspected. Unknown impact must broaden future routing rather than narrowing it.
+
+Persistence is intentionally separate from generic game ownership. Firestore emulator/rules validation is expensive infrastructure with a narrow contract; UI/render/input changes should not eventually pay Java/Firestore startup merely because both ship in the same application. `modules/persistence/**` carries both game and persistence impact, while Firestore authority/harnesses carry persistence explicitly.
 
 ## Fast vs deep
 
@@ -100,6 +102,7 @@ Measure before guessing:
 
 - `test:coverage` writes `tmp/vitest-timings.json` and reports slow files/tests via `vitest-slow-test-report.mjs`; file-level proof partitioning uses Vitest's ordinary worker scheduling rather than another runner layer.
 - `check`/`test:node` use `run-scripts-parallel.mjs`, which reports subcommand time.
+  The runner's historical default remains unbounded fan-out for compatibility, but `PATHFINDER_PARALLEL_JOBS=<N>` enables an opt-in bounded worker pool for measurement. The Node graph has grown past 160 child scripts, so compare representative values (for example 4/8/16/unbounded) before changing the default. Measure total wall time, tail command time, memory/process pressure, and failure behavior; do not turn a one-run timing win into a correctness rule.
 - Actions has two PR-gate jobs. `fast-gate` runs `check:nonlint`, `check:lint`, `test:node`, and `build` serially after one checkout/setup/install. `deep-verification` runs covered ordinary Vitest and then `test:deep-proofs` after one checkout/setup/install. The two jobs race each other; cheap subcommands inside each lane stay serial because their internal concurrency already uses the runner and extra hosted-runner fan-out has high tail-latency variance.
 - Both Actions lanes use setup-node's npm content cache plus `npm ci --prefer-offline --no-audit --fund=false`. `--prefer-offline` avoids unnecessary registry freshness checks when cached package content is available; missing content can still be fetched. npm's informational audit/funding requests are not CI gates here; explicit repository security checks remain authoritative.
 - ESLint's content-addressed per-file cache lives at `.cache/eslint`. Local runs reuse it directly; `fast-gate` restores the newest Actions cache from the same config/package-lock generation and saves a per-commit successor, so the same invalidation rules apply in both environments.
