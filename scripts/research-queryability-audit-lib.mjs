@@ -4,7 +4,7 @@ import path from 'node:path';
 import { buildResearchQueryGraph } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
 import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
-import { buildResearchSystemFindingIndex } from './research-system-query-lib.mjs';
+import { buildResearchSystemFindingIndex, buildResearchSystemLineageSummary } from './research-system-query-lib.mjs';
 
 const BENCHMARK_EXPECTATIONS = new Set(['supported', 'partial', 'conditional', 'known-gap']);
 const BENCHMARK_KINDS = new Set([
@@ -67,10 +67,9 @@ function evaluateSupported(graph, benchmark, root) {
     } else if (benchmark.kind === 'system-findings') {
         view = buildResearchSystemFindingIndex(root);
     } else if (benchmark.kind === 'system-lineage') {
-        view = {
-            systemFindings: buildResearchSystemFindingIndex(root),
-            reportLineage: buildResearchQueryView(graph, { view: 'non-question-lineage' }),
-        };
+        const index = buildResearchSystemFindingIndex(root);
+        const reportLineage = buildResearchQueryView(graph, { view: 'non-question-lineage' });
+        view = buildResearchSystemLineageSummary(index, reportLineage.rows);
     } else {
         view = buildResearchQueryView(graph, {
             view: benchmark.kind,
@@ -116,7 +115,7 @@ function evaluateSupported(graph, benchmark, root) {
         }
     }
     if (benchmark.mustIncludeReport) {
-        const rows = view.reportLineage?.rows ?? view.rows ?? [];
+        const rows = view.reportLineageRows ?? view.rows ?? [];
         if (!rows.some(row => row.report === benchmark.mustIncludeReport)) {
             failures.push('missing required report-lineage witness ' + benchmark.mustIncludeReport);
         }
@@ -189,8 +188,9 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
                 };
                 if (benchmark.kind === 'system-findings') return { findings: view.count };
                 if (benchmark.kind === 'system-lineage') return {
-                    findings: view.systemFindings.count,
-                    reportLineageRows: view.reportLineage.rows.length,
+                    findings: view.findingCount,
+                    findingsWithoutPerFindingLineage: view.findingsWithoutPerFindingLineage.length,
+                    reportLineageRows: view.reportLineageRows.length,
                 };
                 if (benchmark.kind === 'temporal-change') return {
                     addedNodes: view.addedNodes.length,
