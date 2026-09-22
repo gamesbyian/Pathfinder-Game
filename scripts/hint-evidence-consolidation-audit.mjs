@@ -164,17 +164,58 @@ const patterns={
   uploadArtifact:/actions\/upload-artifact@/g,
 };
 const sourceCensus=[];
+const sourceTexts=new Map();
 for (const root of sourceRoots) {
   for (const file of walkFiles(path.join(ROOT,root),p=>/\.(?:mjs|js|ts|tsx|ya?ml)$/.test(p))) {
     if (/(?:node_modules|dist)\//.test(file)) continue;
+    const rel=path.relative(ROOT,file).replaceAll('\\','/');
     const text=fs.readFileSync(file,'utf8');
+    sourceTexts.set(rel,text);
     const hits={};
     for (const [name,re] of Object.entries(patterns)) {
       const n=[...text.matchAll(re)].length;
       if (n) hits[name]=n;
     }
-    if (Object.keys(hits).length) sourceCensus.push({path:path.relative(ROOT,file).replaceAll('\\','/'),hits});
+    if (Object.keys(hits).length) sourceCensus.push({path:rel,hits});
   }
+}
+// Reachability, not filename folklore: seed current package/workflow entrypoints, then follow
+// relative imports. This lets the census separate maintained stale seams from dormant historical
+// scripts without pretending every file under scripts/ is equally live.
+const packageText=fs.existsSync(path.join(ROOT,'package.json')) ? fs.readFileSync(path.join(ROOT,'package.json'),'utf8') : '';
+const workflowText=[...sourceTexts.entries()].filter(([p])=>p.startsWith('.github/workflows/')).map(([,t])=>t).join('\n');
+const known=new Set(sourceTexts.keys());
+function resolveImport(from,spec) {
+  if (!spec.startsWith('.')) return null;
+  const base=path.posix.normalize(path.posix.join(path.posix.dirname(from),spec));
+  const candidates=[base,base+'.mjs',base+'.js',base+'.ts',base+'.tsx',
+    base.replace(/\.js$/u,'.ts'),base.replace(/\.js$/u,'.tsx'),base.replace(/\.mjs$/u,'.mjs')];
+  return candidates.find(x=>known.has(x))||null;
+}
+const graph=new Map();
+for (const [rel,text] of sourceTexts) {
+  const deps=new Set();
+  for (const m of text.matchAll(/(?:from\s+|import\s*\()\s*['"]([^'"]+)['"]/g)) {
+    const dep=resolveImport(rel,m[1]); if (dep) deps.add(dep);
+  }
+  graph.set(rel,[...deps]);
+}
+const seeds=new Set();
+for (const rel of known) {
+  if (packageText.includes(rel) || workflowText.includes(rel)) seeds.add(rel);
+}
+const reachable=new Set(seeds);
+const queue=[...seeds];
+while (queue.length) {
+  const cur=queue.shift();
+  for (const dep of graph.get(cur)||[]) if (!reachable.has(dep)) { reachable.add(dep); queue.push(dep); }
+}
+for (const row of sourceCensus) {
+  row.reachability={
+    directPackageReference:packageText.includes(row.path),
+    directWorkflowReference:workflowText.includes(row.path),
+    maintainedEntrypointReachable:reachable.has(row.path),
+  };
 }
 
 const runtimeTotals=Object.values(byCorpus).reduce((a,c)=>{
