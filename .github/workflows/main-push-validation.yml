@@ -111,4 +111,5 @@ jobs:
               [[ "$BUILD" == failure ]] && echo '::error::Main-push production build failed.'
               [[ "$SOLVER_CANARY" == failure ]] && echo '::error::Main-push solver capability canary failed.'
             fi
+          :
           } >> "$GITHUB_STEP_SUMMARY"
