@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildActionBoundaryDataset, applyFrozenLegalSignalModel } from './analyze-action-selection-legal-signals.mjs';
+import { actionBoundaryDigest, buildActionBoundaryDataset, applyFrozenLegalSignalModel } from './analyze-action-selection-legal-signals.mjs';
 
 const doc={levels:[
   {id:'L11',ok:true,attempts:[
@@ -22,4 +22,7 @@ assert.equal(result.capturedPreWinnerWorkShare,3000000/5000000);
 assert.equal(result.endangeredWinnerLevels,0);
 assert.equal(result.diagnostics.nominatedSameStageContinuationWorkShare,1);
 assert.equal(result.diagnostics.nominatedByPriorOutcome[0].key,'censored');
+const digest=actionBoundaryDigest(ds);
+assert.match(digest,/^sha256:[0-9a-f]{64}$/);
+assert.equal(digest,actionBoundaryDigest(buildActionBoundaryDataset(JSON.parse(JSON.stringify(doc)),{source:'different-path'})));
 console.log('apply-action-selection-legal-signal-model: ok');
