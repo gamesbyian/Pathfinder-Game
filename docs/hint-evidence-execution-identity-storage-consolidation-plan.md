@@ -15,6 +15,8 @@
 >
 > **Pre-implementation empirical audit:** [`reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md`](../reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md) verifies request/backend semantics, provenance missingness, source-run reconstructability, producer observation sufficiency, stale writers, and Firestore retention behavior.
 >
+> **Structured implementation inventories:** [`docs/hint-evidence-consolidation-inventory.json`](hint-evidence-consolidation-inventory.json) and [`docs/solver-request-semantics-inventory.json`](solver-request-semantics-inventory.json).
+>
 > **Primary goal:** make solver evidence smaller, more queryable, more replay-/audit-friendly, and
 > harder to record incompletely, without losing semantic information, breaking historical data,
 > weakening level-blindness, or coupling offline evidence to production routing.
@@ -1071,6 +1073,45 @@ If null currently carries more than one of these meanings, either retain that li
 for historical events or introduce a small tagged representation where a real recurring consumer
 needs the distinction. Do not bulk-enrich history merely to make the model visually uniform.
 
+
+### U. Legacy migration timestamps must not masquerade as discovery chronology
+
+A historical before/after check found that the July 11 provenance migration converted flat
+schema-v1 `hintMetadata` lacking discovery time into schema-v3 provenance with a newly generated
+`foundAt` equal to migration/normalization time. Plain bare-path legacy hints correctly became
+unattributed `provenance: []`; the chronology defect is specific to flat metadata upgraded through
+`makeProvenanceEntry()`.
+
+This is materially relevant because solution-profile chronology and longitudinal applicability treat
+parseable `foundAt` as dated evidence.
+
+Prospective rules:
+
+- historical absence of discovery time remains unknown;
+- compatibility adapters must never stamp read/upgrade time as event time;
+- migration-derived timestamps that can be proven from repository history must be marked/excluded
+  from chronology completeness rather than guessed backwards;
+- preserve the underlying event and its real solver/technique metadata;
+- add the chronology limitation to the hint-provenance Resource Contract and solution-profile
+  missingness semantics.
+
+### V. Execution identity must include backend-specific request semantics and observer reactivity
+
+The canonical request owner starts from `SolveOpts`, but that is not the entire execution request
+universe. The raced backend also accepts backend-specific `overallBudgetMs` and `poolSize`, and
+its stage set / first-success concurrency differ materially from sequential execution.
+
+The execution capsule should therefore compose:
+
+- canonical common solver request;
+- backend identifier and backend-specific request projection;
+- reproducibility mode;
+- observer/telemetry configuration when its cost can affect a binding wall deadline;
+- immutable solver implementation identity.
+
+Read-only observers are policy-inert, not automatically outcome-inert. The research operating model
+already requires OFF/ON parity or non-binding deterministic execution before treating observer
+overhead as irrelevant. Identity/comparability helpers should reuse that doctrine.
 
 ## 14. Implementation sequence
 
