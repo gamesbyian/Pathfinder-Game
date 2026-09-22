@@ -355,8 +355,9 @@
     {
       "field": "foundAt",
       "freshDefault": "current timestamp",
-      "historicalAbsence": "unknown discovery time; flat legacy adapter currently synthesizes upgrade-time timestamp",
-      "sparseOmitSafe": false
+      "historicalAbsence": "unknown discovery time; schema-v1 flat hintMetadata migration on 2026-07-11 is proven to have stamped migration time into foundAt",
+      "sparseOmitSafe": false,
+      "measuredEvidence": "sampled pre-migration stress files 001-010 and 448-450 had undated hintMetadata; their migrated events were stamped within 2026-07-11T01:44:17.863Z..18.004Z"
     }
   ],
   "measuredHistoricalContext": {
@@ -365,5 +366,28 @@
     "eventsOmittingAtLeastIsolatedTechnique": 505993,
     "nominalStrictColdWithLegacyAmbiguousContext": 57497,
     "strictColdWithCompleteCapabilityContext": 24998
-  }
+  },
+  "firestoreFindings": [
+    {
+      "surface": "published_levels hint addition",
+      "physicalShape": "Hint[] encoded as JSON strings inside levelData.hints",
+      "mergeSemantics": "mergeHints preserves all provenance on submitted novel paths",
+      "capacity": "legacy slice(0,5) after merge",
+      "finding": "five-path cap predates provenance and is an evidence-loss defect"
+    },
+    {
+      "surface": "local_level_hints supplemental store",
+      "physicalShape": "one document per novel path with singular provenance entry",
+      "mergeSemantics": "approveLocalHintAddition selects only hint.provenance[last] and saveLocalLevelHintIfNovel rejects already-known path signatures",
+      "capacity": "MAX_HINTS_PER_LEVEL=5000",
+      "finding": "a novel semantic Hint carrying multiple provenance entries is truncated to one provenance event; backend semantics diverge from published_levels"
+    },
+    {
+      "surface": "submission",
+      "physicalShape": "semantic Hint[] built by reconcileHints after path novelty filtering",
+      "mergeSemantics": "novel path may carry multiple known provenance events before persistence",
+      "capacity": "up to 1000 submitted paths",
+      "finding": "downstream local Firestore storage can lose provenance already present in the submitted semantic Hint"
+    }
+  ]
 }
