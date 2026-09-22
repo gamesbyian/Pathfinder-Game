@@ -748,6 +748,20 @@ export interface ElitePrefixDfsCandidatePlanRow {
     legacyOrdinal: number;
 }
 
+export interface ElitePrefixDfsTraceEvent {
+    callOrdinal: number;
+    candidateOrdinal: number;
+    eliteIndex: number;
+    fraction: number;
+    destroyIdx: number;
+    remainingLength: number;
+    legacyOrdinal: number;
+    nodeBudget: number;
+    nodesUsed: number;
+    solved: boolean;
+    bestBadness: number | null;
+}
+
 /**
  * Pure candidate-plan builder for elitePrefixDfsRepair. The legacy plan is byte-order-equivalent
  * to the historical nested loops. Research treatment may reorder the exact same multiset by
@@ -774,11 +788,12 @@ export function buildElitePrefixDfsCandidatePlan(elites: { path: number[] }[], r
     return rows.slice().sort((a, b) => a.remainingLength - b.remainingLength || a.legacyOrdinal - b.legacyOrdinal);
 }
 
-export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias: StructuralOrderingBias | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], elites: { path: number[]; badness: number }[], startKey: number, totalNodeBudget: number, orderByRemainingLength = false): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number } {
+export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias: StructuralOrderingBias | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], elites: { path: number[]; badness: number }[], startKey: number, totalNodeBudget: number, orderByRemainingLength = false, researchTrace: ElitePrefixDfsTraceEvent[] | null = null, callOrdinal = 0): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number } {
     let totalNodes = 0;
     let bestBadness = Infinity, bestPath: number[] | null = null;
     const candidatePlan = buildElitePrefixDfsCandidatePlan(elites, level.requiredLength, orderByRemainingLength);
-    for (const candidate of candidatePlan) {
+    for (let candidateOrdinal = 0; candidateOrdinal < candidatePlan.length; candidateOrdinal++) {
+        const candidate = candidatePlan[candidateOrdinal];
         if (totalNodes >= totalNodeBudget) break;
         const elitePath = elites[candidate.eliteIndex].path;
         const prefix = elitePath.slice(0, candidate.destroyIdx + 1);
@@ -788,6 +803,19 @@ export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLev
         if (remaining <= 0) break;
         const result = boundedDfsFromHere(ws, level, prep, profile, orderingBias, cfg, liveUndo, floor, remaining);
         totalNodes += result.nodes;
+        researchTrace?.push({
+            callOrdinal,
+            candidateOrdinal,
+            eliteIndex: candidate.eliteIndex,
+            fraction: candidate.fraction,
+            destroyIdx: candidate.destroyIdx,
+            remainingLength: candidate.remainingLength,
+            legacyOrdinal: candidate.legacyOrdinal,
+            nodeBudget: remaining,
+            nodesUsed: result.nodes,
+            solved: result.solved,
+            bestBadness: Number.isFinite(result.bestBadness) ? result.bestBadness : null,
+        });
         if (result.solved) return { solved: true, nodes: totalNodes, bestPath: null, bestBadness: 0 };
         if (result.bestPath && result.bestBadness < bestBadness) { bestBadness = result.bestBadness; bestPath = result.bestPath; }
     }
@@ -1037,7 +1065,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // when-off guarantee (gated, consumes no rand). ON arms, on a must-turn stagnation, a turn-aware bias
 // at the move out of a pending must-turn cell (reward the required-turn exit, penalize the others) —
 // the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; stopReason?: RepairStopReason } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false, enableBeamSeed = false, enableElitePrefixLengthOrder = false): Promise<number[] | null> {
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; stopReason?: RepairStopReason } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false, enableBeamSeed = false, enableElitePrefixLengthOrder = false, elitePrefixResearchTrace: ElitePrefixDfsTraceEvent[] | null = null): Promise<number[] | null> {
     const cfg = prep._cfg;
     const eliteResearch = prep._repairEliteResearchObserver;
     const ws = createState(startKey, level, prep, STATE_BUF_REPAIR);
@@ -1132,6 +1160,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     const featBySig = _SIG_DEBUG ? new Map<string, Map<string, number>>() : null; // signature -> (feature -> count)
     const sigBadness = _SIG_DEBUG ? new Map<string, number>() : null;       // signature -> min computeBadness seen at it
     let sigRestarts = 0;
+    let elitePrefixCallOrdinal = 0;
 
     // Stage 2 prototype (see enablePlateauPenalty) — null/inert on a normal run.
     const shapeTotal = enablePlateauPenalty ? new Map<string, number>() : null;            // shape -> restarts landing there
@@ -1388,7 +1417,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             // scattered across the top elites' own paths, not just this restart's own dead end.
             if ((!cfg || cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS) && enableElitePrefixDfs && elites.length > 0 && nodesExpandedLocal < nodeBudget) {
                 const epdBudget = Math.min(ELITE_PREFIX_DFS_TOTAL_BUDGET, nodeBudget - nodesExpandedLocal);
-                const epd = elitePrefixDfsRepair(ws, level, prep, profile, orderingBias, cfg, liveUndo, elites, startKey, epdBudget, enableElitePrefixLengthOrder);
+                const epd = elitePrefixDfsRepair(ws, level, prep, profile, orderingBias, cfg, liveUndo, elites, startKey, epdBudget, enableElitePrefixLengthOrder, elitePrefixResearchTrace, elitePrefixCallOrdinal++);
                 nodesExpandedLocal += epd.nodes;
                 if (prep._metrics) prep._metrics.nodesExpanded += epd.nodes;
                 if (_ELITE_PREFIX_DFS_DEBUG) {
