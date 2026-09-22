@@ -247,6 +247,24 @@ assert.equal(compact.entries[0].gateClass, 'existing-data');
     writeFileSync(workstreamPath, structuredWorkstreams);
 }
 
+{
+    const workstreamPath = path.join(root, 'docs/solver-optimization-workstreams.md');
+    const structuredWorkstreams = readFileSync(workstreamPath, 'utf8');
+    writeFileSync(workstreamPath, structuredWorkstreams
+        .replace('| Gate class |', '')
+        .replace('|---|---|---|---|---|---|---|', '|---|---|---|---|---|---|')
+        .replace('| 2 | Current question | `active` | `existing-data` | **ACTIVE** | Run current gate. | `WS2-CURRENT` |',
+            '| 2 | Current question | `active` | **ACTIVE** | Run current gate. | `WS2-CURRENT` |'));
+    assert.throws(
+        () => buildResearchStatusIndex(root),
+        /current ## Workstream state rows require Gate class/,
+        'current workstream authority must not silently fall back to legacy six-column routing',
+    );
+    const historicalStructured = buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable: true });
+    assert.equal(historicalStructured.queue[0].gateClass, null);
+    writeFileSync(workstreamPath, structuredWorkstreams);
+}
+
 const questionRegistry = loadResearchQuestionRegistry(root);
 assert.deepEqual(validateResearchQuestionRegistry(questionRegistry), []);
 assert.equal(normalizeResearchQuestionStatus('active-candidate'), 'active');
