@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 
-import { classifyPaths } from './ci-impact-classifier.mjs';
+import { classifyPackageJsonDocuments, classifyPaths } from './ci-impact-classifier.mjs';
 
 function expect(paths, surfaces, { full = false } = {}) {
   const result = classifyPaths(paths);
@@ -65,5 +65,48 @@ const mixed = expect(
   ['repo', 'research', 'solver'],
 );
 assert.deepEqual(mixed.files.map(file => file.rule), ['solver-research-docs', 'production-solver']);
+
+
+const packageBase = {
+  name: 'pathfinder-game',
+  private: true,
+  type: 'module',
+  scripts: {
+    existing: 'node scripts/research-status-index.mjs',
+  },
+  dependencies: { firebase: '^12.15.0' },
+};
+
+const researchScriptOnly = classifyPackageJsonDocuments(packageBase, {
+  ...packageBase,
+  scripts: {
+    ...packageBase.scripts,
+    'research:semantic-forcedness-capture': 'node scripts/run-bundled.mjs scripts/stress/semantic-forcedness-capture.mjs',
+    'test:semantic-forcedness': 'node scripts/stress/semantic-forcedness-lib-node-test.mjs',
+  },
+});
+assert.equal(researchScriptOnly.full, false);
+assert.deepEqual(researchScriptOnly.surfaces, ['research']);
+
+const dependencyChange = classifyPackageJsonDocuments(packageBase, {
+  ...packageBase,
+  dependencies: { firebase: '^13.0.0' },
+});
+assert.equal(dependencyChange.full, true);
+
+const opaqueScriptChange = classifyPackageJsonDocuments(packageBase, {
+  ...packageBase,
+  scripts: { ...packageBase.scripts, build: 'vite build' },
+});
+assert.equal(opaqueScriptChange.full, true);
+
+const ciScriptChange = classifyPackageJsonDocuments(packageBase, {
+  ...packageBase,
+  scripts: {
+    ...packageBase.scripts,
+    'check:dead-scripts': 'node scripts/check-package-scripts.mjs',
+  },
+});
+assert.equal(ciScriptChange.full, true);
 
 console.log('CI impact classifier conservative routing tests passed.');
