@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import process from 'node:process';
 
 import { classifyGitDiff, loadImpactRules } from './ci-impact-classifier.mjs';
+import { packValidationPlan } from './ci-execution-plan.mjs';
 import { planValidation } from './ci-validation-plan.mjs';
 
 function fullImpact() {
@@ -40,7 +41,7 @@ function parseArgs(argv) {
   return { mode, json };
 }
 
-function writeGithubOutputs(result, plan) {
+function writeGithubOutputs(result, plan, execution) {
   const output = process.env.GITHUB_OUTPUT;
   if (!output) return;
   const capability = name => plan.capabilities.includes(name);
@@ -54,11 +55,13 @@ function writeGithubOutputs(result, plan) {
     `needs_deep_proofs=${bool(capability('deep-proofs'))}`,
     `needs_solver_canary=${bool(capability('solver-canary'))}`,
     `needs_firestore=${bool(capability('firestore-boundary'))}`,
+    `fast_job_required=${bool(execution.jobs['fast-gate']?.required)}`,
+    `deep_job_required=${bool(execution.jobs['deep-verification']?.required)}`,
   ];
   fs.appendFileSync(output, `${lines.join('\n')}\n`);
 }
 
-function writeSummary(result, plan) {
+function writeSummary(result, plan, execution) {
   const summary = process.env.GITHUB_STEP_SUMMARY;
   if (!summary) return;
   const ordinaryFiles = result.ordinary?.files ?? result.files ?? [];
@@ -77,6 +80,8 @@ function writeSummary(result, plan) {
     `**Node/CLI groups:** ${plan.nodeTestGroups.join(', ') || '(none)'}`,
     `**Always/package scripts:** ${plan.packageScripts.join(', ') || '(none)'}`,
     `**Capabilities:** ${plan.capabilities.join(', ') || '(none)'}`,
+    `**Fast lane:** ${execution.jobs['fast-gate']?.required ? 'required' : 'skip candidate'}`,
+    `**Deep lane:** ${execution.jobs['deep-verification']?.required ? 'required' : 'skip candidate'}`,
     packageLine,
     'This is shadow-only. The existing full CI gate remains authoritative and no validation is skipped.',
     '',
@@ -90,7 +95,8 @@ try {
   const { mode, json } = parseArgs(process.argv.slice(2));
   const result = mode.full ? fullImpact() : classifyGitDiff(mode.base, mode.head);
   const plan = planValidation(result.surfaces);
-  const payload = { impact: result, plan };
+  const execution = packValidationPlan(plan);
+  const payload = { impact: result, plan, execution };
   console.log(
     'CI impact shadow:',
     JSON.stringify({
@@ -100,10 +106,11 @@ try {
       nodeTestGroups: plan.nodeTestGroups,
       capabilities: plan.capabilities,
       packageReason: result.packageImpact?.reason ?? null,
+      jobs: Object.fromEntries(Object.entries(execution.jobs).map(([name, job]) => [name, { required: job.required, capabilities: job.capabilities }])),
     }),
   );
-  writeGithubOutputs(result, plan);
-  writeSummary(result, plan);
+  writeGithubOutputs(result, plan, execution);
+  writeSummary(result, plan, execution);
   if (json || !process.env.GITHUB_STEP_SUMMARY) console.log(JSON.stringify(payload, null, 2));
 } catch (error) {
   console.error(error.stack ?? error.message);
