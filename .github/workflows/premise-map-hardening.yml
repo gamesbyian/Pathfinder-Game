@@ -51,8 +51,38 @@ jobs:
         with:
           node-version: 20
       - name: Audit frozen v1 premise-map structure
+        id: v1
         run: node scripts/audit-solver-premise-map.mjs
       - name: Audit reconciled v2 premise-map structure
+        id: v2
         run: node scripts/audit-solver-premise-map-v2.mjs
       - name: Audit reciprocal premise-source coverage
+        id: source_coverage
         run: node scripts/audit-solver-premise-source-coverage.mjs
+
+      - name: Summarize premise-map hardening
+        if: always()
+        shell: bash
+        env:
+          V1: ${{ steps.v1.outcome }}
+          V2: ${{ steps.v2.outcome }}
+          SOURCE_COVERAGE: ${{ steps.source_coverage.outcome }}
+        run: |
+          {
+            echo '## Premise map hardening'
+            echo
+            echo "| Audit | Outcome |"
+            echo "| --- | --- |"
+            echo "| Frozen v1 structure | `$V1` |"
+            echo "| Reconciled v2 structure | `$V2` |"
+            echo "| Reciprocal premise-source coverage | `$SOURCE_COVERAGE` |"
+            echo
+            if [[ "$V1" == success && "$V2" == success && "$SOURCE_COVERAGE" == success ]]; then
+              echo 'All maintained premise-map invariants passed.'
+            else
+              echo 'A premise-map invariant failed or was skipped after an earlier failure. Inspect the named audit step from the table above.'
+              [[ "$V1" == failure ]] && echo '::error::Frozen v1 premise-map structure audit failed.'
+              [[ "$V2" == failure ]] && echo '::error::Reconciled v2 premise-map structure audit failed.'
+              [[ "$SOURCE_COVERAGE" == failure ]] && echo '::error::Reciprocal premise-source coverage audit failed.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
