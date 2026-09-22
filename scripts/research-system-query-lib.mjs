@@ -84,6 +84,22 @@ export function queryResearchSystemFindings(index, { query = '', category = '', 
     });
 }
 
+export function buildResearchSystemLineageSummary(index, reportLineageRows = []) {
+    return {
+        view: 'system-lineage',
+        findingCount: index.count,
+        findingsWithoutPerFindingLineage: index.findings.map(row => ({
+            id: row.id,
+            category: row.category,
+            family: row.family,
+            kind: row.kind,
+        })),
+        perFindingLineageAuthored: 0,
+        reportLineageRows,
+        interpretation: 'Current system findings have stable derived identity but no per-finding authored resolvedBy/successor semantics. Structured questionless report closeouts provide report-level lineage separately.',
+    };
+}
+
 export function buildResearchSystemFindingSnapshot(index) {
     return {
         schemaVersion: 1,
