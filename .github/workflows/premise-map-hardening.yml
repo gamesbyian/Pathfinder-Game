@@ -73,9 +73,9 @@ jobs:
             echo
             echo "| Audit | Outcome |"
             echo "| --- | --- |"
-            echo "| Frozen v1 structure | `$V1` |"
-            echo "| Reconciled v2 structure | `$V2` |"
-            echo "| Reciprocal premise-source coverage | `$SOURCE_COVERAGE` |"
+            printf '| Frozen v1 structure | `%s` |\n' "$V1"
+            printf '| Reconciled v2 structure | `%s` |\n' "$V2"
+            printf '| Reciprocal premise-source coverage | `%s` |\n' "$SOURCE_COVERAGE"
             echo
             if [[ "$V1" == success && "$V2" == success && "$SOURCE_COVERAGE" == success ]]; then
               echo 'All maintained premise-map invariants passed.'

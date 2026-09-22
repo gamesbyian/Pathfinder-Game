@@ -213,11 +213,11 @@ jobs:
             echo
             echo "| Stage | Outcome |"
             echo "| --- | --- |"
-            echo "| Resolve source identity | `$SOURCE_IDENTITY` |"
-            echo "| Download source artifacts | `$DOWNLOAD` |"
-            echo "| Semantic merge / persistence | `$MERGE` |"
+            printf '| Resolve source identity | `%s` |\n' "$SOURCE_IDENTITY"
+            printf '| Download source artifacts | `%s` |\n' "$DOWNLOAD"
+            printf '| Semantic merge / persistence | `%s` |\n' "$MERGE"
             echo
-            echo "Source run: `$SOURCE_RUN_ID`"
+            printf 'Source run: `%s`\n' "$SOURCE_RUN_ID"
             [[ -n "${SOURCE_WORKFLOW:-}" ]] && echo "Source workflow: `$SOURCE_WORKFLOW`"
             [[ -n "${SOURCE_SHA:-}" ]] && echo "Source SHA: `$SOURCE_SHA`"
             echo

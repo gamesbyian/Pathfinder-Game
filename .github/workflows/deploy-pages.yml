@@ -76,13 +76,13 @@ jobs:
             echo
             echo "| Stage | Outcome |"
             echo "| --- | --- |"
-            echo "| Build + artifact upload | `$BUILD` |"
-            echo "| Pages deployment | `$DEPLOY` |"
+            printf '| Build + artifact upload | `%s` |\n' "$BUILD"
+            printf '| Pages deployment | `%s` |\n' "$DEPLOY"
             echo
             if [[ "$DEPLOY" == success ]]; then
               echo "Published: $PAGE_URL"
               echo
-              echo "Source commit: `$GITHUB_SHA`"
+              printf 'Source commit: `%s`\n' "$GITHUB_SHA"
             elif [[ "$BUILD" == failure ]]; then
               echo 'The site was not deployed because the production build or Pages artifact upload failed.'
               echo '::error::GitHub Pages build/artifact stage failed.'

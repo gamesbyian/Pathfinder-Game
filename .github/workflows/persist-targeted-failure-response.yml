@@ -80,8 +80,8 @@ jobs:
           {
             echo '## Targeted-sweep failure-response persistence'
             echo
-            echo "Persistence step: `$PERSIST`"
-            echo "Source run: `$GITHUB_RUN_ID` (attempt `$GITHUB_RUN_ATTEMPT`)"
+            printf 'Persistence step: `%s`\n' "$PERSIST"
+            printf 'Source run: `%s` (attempt `%s`)\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
             [[ -n "${FAILURE_RESPONSE_DEST:-}" ]] && echo "Destination: `$FAILURE_RESPONSE_DEST`"
             echo
             case "${FAILURE_RESPONSE_RESULT:-unknown}" in
