@@ -118,6 +118,8 @@ npm run research:query -- --compare-ref=<commit-or-ref>
 
 Git-ref reconstruction uses a temporary detached worktree and historical workstream-table compatibility; current authority parsing remains strict.
 
+Snapshots record Gate-class coverage. If either side predates complete Gate-class classification, the diff still reports node/edge and execution/question-owner changes, but **withholds answerability-class transition claims**. Adding the schema later is not evidence that the historical gate itself changed.
+
 Temporal output includes:
 - added/removed nodes;
 - added/removed typed edges;
