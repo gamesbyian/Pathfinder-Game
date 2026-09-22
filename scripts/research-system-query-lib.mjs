@@ -2,10 +2,30 @@ import { createHash } from 'node:crypto';
 
 import { buildResearchSystemInventory } from './research-system-inventory-lib.mjs';
 
+function stableFindingIdentity(category, family, row) {
+    const identity = {
+        category,
+        family,
+        kind: row.kind ?? family,
+        path: row.path ?? null,
+        workstreamId: row.workstreamId ?? null,
+        questionRef: row.questionRef ?? null,
+        dependency: row.dependency ?? null,
+        relation: row.relation ?? null,
+        source: row.source ?? null,
+        workflow: row.workflow ?? null,
+    };
+    const hasSpecificKey = Object.entries(identity)
+        .some(([key, value]) => !['category', 'family', 'kind'].includes(key) && value != null);
+    return hasSpecificKey ? identity : { ...identity, fallback: row };
+}
+
+function digest(value) {
+    return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+
 function stableFindingId(category, family, row) {
-    const material = JSON.stringify({ category, family, row });
-    const digest = createHash('sha256').update(material).digest('hex').slice(0, 12);
-    return 'SYS-' + digest;
+    return 'SYS-' + digest(stableFindingIdentity(category, family, row)).slice(0, 12);
 }
 
 function flattenFindingFamilies(container, category) {
@@ -17,6 +37,7 @@ function flattenFindingFamilies(container, category) {
                 category,
                 family,
                 kind: row.kind ?? family,
+                fingerprint: digest(row).slice(0, 16),
                 row,
             });
         }
@@ -63,6 +84,7 @@ export function buildResearchSystemFindingSnapshot(index) {
             category: row.category,
             family: row.family,
             kind: row.kind,
+            fingerprint: row.fingerprint,
         })),
     };
 }
@@ -70,10 +92,15 @@ export function buildResearchSystemFindingSnapshot(index) {
 export function diffResearchSystemFindingSnapshots(before, after) {
     const beforeMap = new Map((before.findings ?? []).map(row => [row.id, row]));
     const afterMap = new Map((after.findings ?? []).map(row => [row.id, row]));
+    const changed = [...afterMap.entries()].filter(([id, row]) =>
+        beforeMap.has(id) && beforeMap.get(id).fingerprint !== row.fingerprint)
+        .map(([id, row]) => ({ id, before: beforeMap.get(id), after: row }));
     return {
         schemaVersion: 1,
         added: [...afterMap.entries()].filter(([id]) => !beforeMap.has(id)).map(([, row]) => row),
         removed: [...beforeMap.entries()].filter(([id]) => !afterMap.has(id)).map(([, row]) => row),
-        retained: [...afterMap.keys()].filter(id => beforeMap.has(id)).length,
+        changed,
+        retainedUnchanged: [...afterMap.keys()].filter(id =>
+            beforeMap.has(id) && beforeMap.get(id).fingerprint === afterMap.get(id).fingerprint).length,
     };
 }
