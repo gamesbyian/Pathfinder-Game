@@ -106,6 +106,50 @@ Before v4:
 
 Do not bulk-rewrite old evidence merely to make it visually uniform.
 
+## 2.1 Historical `foundAt` migration timestamps are not always discovery timestamps
+
+A before/after check across the July 11 provenance migration found a concrete chronology
+reinterpretation.
+
+Before commit `7a651d391b49986626ceffbc4612352ddefb9bd4`,
+`data/stress/hints/001.json` was schema v1 with:
+
+- one bare hint path;
+- aligned `hintMetadata` containing `solverTechnique=stress-generator-witness`,
+  `nodesExpanded=0`, `solveTimeMs=0`, and `metadataStatus=witness`;
+- **no discovery timestamp**.
+
+After the migration, the same observation became schema v3 provenance with:
+
+`foundAt: "2026-07-11T01:44:17.863Z"`.
+
+That value is the migration/normalization time, not a retained historical discovery time.
+
+Plain legacy path arrays did not receive this treatment: sampled
+`data/hints/001.json` paths migrated to `provenance: []`. The defect is specifically the flat
+legacy-metadata adapter path, where `upgradeProvenanceEntry()` calls
+`makeProvenanceEntry(..., { foundAt: undefined })` and the constructor supplies `new Date()`.
+
+This matters because `solution-profile-lib.mjs` treats every parseable `foundAt` as dated
+chronology and can set `chronologyComplete=true`; the longitudinal-process classifier likewise
+uses presence of `foundAt` as part of “fully dated” evidence.
+
+### Required correction
+
+Do not delete the historical witness/event. Its solver/technique metadata remains real.
+
+Instead:
+
+- make historical normalization capable of representing unknown discovery time;
+- identify migration-derived timestamps where mechanically provable from pre-migration data/history;
+- exclude such timestamps from chronology completeness/frontier claims;
+- record the limitation in the hint-provenance Resource Contract and solution-profile chronology
+  semantics;
+- do not replace the timestamp with a guessed earlier date.
+
+This is an example of why provenance semantic version/missingness must be separate from physical
+artifact schema version.
+
 ## 3. Source-run durability and reconstructability
 
 The current tracked hint schema has no source-run field.
