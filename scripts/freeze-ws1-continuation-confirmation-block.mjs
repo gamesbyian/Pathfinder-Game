@@ -72,6 +72,7 @@ export function collectWs1ConfirmationCandidates(datasetRoot, {
     skippedMissingFamilyData:0,
     skippedFamilyDataParse:0,
     skippedVariantMismatch:0,
+    skippedParentIdentityConflict:0,
   };
 
   for(const manifestPath of filesBelow(roots.families,file=>file.endsWith('-manifest.json'))){
@@ -123,6 +124,11 @@ export function collectWs1ConfirmationCandidates(datasetRoot, {
 
   const candidates=[];
   for(const [parentId,families] of byParent){
+    const parentContentIdentities=new Set(families.map(row=>row.parentContentIdentity));
+    if(parentContentIdentities.size!==1){
+      diagnostics.skippedParentIdentityConflict++;
+      continue;
+    }
     const family=[...families].sort((a,b)=>
       hash(`family\u001f${manifestIdentity(a)}`).localeCompare(hash(`family\u001f${manifestIdentity(b)}`))
       || a.relativeManifestPath.localeCompare(b.relativeManifestPath)
@@ -194,7 +200,7 @@ export function freezeWs1ConfirmationBlocks(datasetRoot,{
   const stageA=candidates.slice(0,stageAParents);
   const full=candidates.slice(0,totalParents);
   const make=(selected,stage)=>{
-    const manifestRef=`${manifestRefPrefix}-${stage.toLowerCase()}-001.json`;
+    const manifestRef=`${manifestRefPrefix}-stage-${stage.toLowerCase()}-001.json`;
     const block=blockPayload(selected,{stage,sourceRevision,datasetRootLabel,manifestRef});
     return {
       schemaVersion:1,
