@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Phase-1/2 validation-plan model. Observational until scoped CI is explicitly enabled.",
+  "always": {
+    "packageScripts": [
+      "check:dead-scripts",
+      "check:text-source-files",
+      "check:validation-groups",
+      "check:ci-impact-inventory"
+    ],
+    "capabilities": [
+      "lint"
+    ]
+  },
+  "surfaces": {
+    "repo": {
+      "validatorGroups": [
+        "repo"
+      ],
+      "nodeTestGroups": [
+        "repo"
+      ],
+      "capabilities": []
+    },
+    "research": {
+      "validatorGroups": [
+        "research"
+      ],
+      "nodeTestGroups": [
+        "research"
+      ],
+      "capabilities": []
+    },
+    "data": {
+      "validatorGroups": [
+        "data"
+      ],
+      "nodeTestGroups": [
+        "data"
+      ],
+      "capabilities": []
+    },
+    "game": {
+      "validatorGroups": [
+        "game"
+      ],
+      "nodeTestGroups": [
+        "game"
+      ],
+      "capabilities": [
+        "unit-coverage",
+        "build"
+      ]
+    },
+    "persistence": {
+      "validatorGroups": [],
+      "nodeTestGroups": [
+        "persistence"
+      ],
+      "capabilities": [
+        "firestore-boundary"
+      ]
+    },
+    "solver": {
+      "validatorGroups": [
+        "solver"
+      ],
+      "nodeTestGroups": [
+        "solver"
+      ],
+      "capabilities": [
+        "unit-coverage",
+        "deep-proofs",
+        "solver-canary",
+        "build"
+      ]
+    },
+    "shared": {
+      "validatorGroups": [
+        "shared"
+      ],
+      "nodeTestGroups": [
+        "shared"
+      ],
+      "capabilities": [
+        "unit-coverage"
+      ]
+    }
+  },
+  "capabilities": {
+    "lint": {
+      "currentCommand": "check:lint",
+      "note": "Kept universal initially; narrow only after source-scope measurements."
+    },
+    "unit-coverage": {
+      "currentCommand": "test:coverage",
+      "note": "Current coarse covered implementation population; later partition only if measurements justify it."
+    },
+    "deep-proofs": {
+      "currentCommand": "test:deep-proofs",
+      "note": "All production-solver deep proofs remain together initially."
+    },
+    "solver-canary": {
+      "currentCommand": "solver capability canary",
+      "note": "Current nine-level production semantic canary."
+    },
+    "build": {
+      "currentCommand": "build",
+      "note": "Production Vite bundle."
+    },
+    "firestore-boundary": {
+      "currentCommand": "test:firestore-level-fingerprint-boundary",
+      "note": "Java/Firestore emulator boundary check."
+    }
+  }
+}
