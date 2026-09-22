@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -249,13 +250,95 @@ export function classifyChangeSet(
   };
 }
 
+
+export function parseGitNameStatusZ(output) {
+  const tokens = output.split('\0').filter(token => token !== '');
+  const changes = [];
+  for (let index = 0; index < tokens.length;) {
+    const rawStatus = tokens[index++];
+    const status = rawStatus?.[0] ?? '';
+    if (status === 'R' || status === 'C') {
+      const previousPath = tokens[index++];
+      const path = tokens[index++];
+      if (!previousPath || !path) {
+        changes.push({ status: 'X', path: path ?? previousPath ?? null, previousPath: previousPath ?? null });
+        break;
+      }
+      changes.push({ status, path, previousPath });
+      continue;
+    }
+    const path = tokens[index++];
+    changes.push({ status, path: path ?? null });
+  }
+  return changes;
+}
+
+export function gitChanges(baseRef, headRef, root = ROOT) {
+  const output = execFileSync(
+    'git',
+    ['diff', '--name-status', '-z', '--find-renames=50%', baseRef, headRef],
+    { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 },
+  );
+  return parseGitNameStatusZ(output);
+}
+
+function gitText(ref, relativePath, root = ROOT) {
+  return execFileSync(
+    'git',
+    ['show', `${ref}:${relativePath}`],
+    { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+  );
+}
+
+export function classifyGitDiff(baseRef, headRef, root = ROOT) {
+  const config = loadImpactRules(root);
+  const changes = gitChanges(baseRef, headRef, root);
+  const packageTouched = changes.some(
+    change => change.path === 'package.json' || change.previousPath === 'package.json',
+  );
+
+  let packageBase = null;
+  let packageHead = null;
+  if (packageTouched) {
+    try {
+      packageBase = gitText(baseRef, 'package.json', root);
+      packageHead = gitText(headRef, 'package.json', root);
+    } catch {
+      // A package authority that was added/deleted or cannot be read is deliberately broad.
+      return {
+        ...classifyChanges(changes, config),
+        full: true,
+        surfaces: [...config.surfaces].sort(),
+        packageImpact: {
+          full: true,
+          surfaces: [...config.surfaces].sort(),
+          reason: 'package.json revision could not be read at both refs',
+          changedKeys: [],
+          scriptChanges: [],
+        },
+      };
+    }
+  }
+
+  return classifyChangeSet(changes, { packageBase, packageHead, config });
+}
+
 function parseArgs(argv) {
   const paths = [];
   let json = false;
+  let gitDiff = null;
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--json') {
       json = true;
+      continue;
+    }
+    if (arg === '--git-diff') {
+      const baseRef = argv[index + 1];
+      const headRef = argv[index + 2];
+      if (!baseRef || !headRef) throw new Error('--git-diff requires <base-ref> <head-ref>');
+      gitDiff = { baseRef, headRef };
+      index += 2;
       continue;
     }
     if (arg === '--file') {
@@ -275,17 +358,22 @@ function parseArgs(argv) {
     }
     throw new Error(`unknown argument: ${arg}`);
   }
-  return { paths, json };
+  return { paths, json, gitDiff };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   try {
-    const { paths, json } = parseArgs(process.argv.slice(2));
-    if (!paths.length) {
-      console.error('usage: node scripts/ci-impact-classifier.mjs [--json] (--file <path> | --files-from <file>)...');
+    const { paths, json, gitDiff } = parseArgs(process.argv.slice(2));
+    if (!paths.length && !gitDiff) {
+      console.error(
+        'usage: node scripts/ci-impact-classifier.mjs [--json] '
+        + '(--file <path> | --files-from <file> | --git-diff <base-ref> <head-ref>)...',
+      );
       process.exit(2);
     }
-    const result = classifyPaths(paths);
+    const result = gitDiff
+      ? classifyGitDiff(gitDiff.baseRef, gitDiff.headRef)
+      : classifyPaths(paths);
     if (json) {
       console.log(JSON.stringify(result, null, 2));
     } else {
