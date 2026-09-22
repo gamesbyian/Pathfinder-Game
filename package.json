@@ -248,6 +248,8 @@
     "check:text-source-files": "node scripts/check-text-source-files.mjs",
     "check:validators": "node scripts/run-scripts-parallel.mjs check:research-integration check:current-level-facts check:solver-budget-boundaries check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:solver-sweep-results check:workflow-actions check:cli-option-contracts check:plain-node-import-boundaries check:agent-context-budget check:file-size-ratchet check:browser-external-dependencies check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:level-metric-boundaries check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting check:failure-evidence-disposition",
     "check:validation-groups": "node scripts/validation-groups.mjs --check",
+    "ci:impact:inventory": "node scripts/ci-impact-inventory.mjs",
+    "ci:impact:inventory:strict": "node scripts/ci-impact-inventory.mjs --require-zero-unclassified",
     "check:validators:repo": "node scripts/validation-groups.mjs validators repo",
     "check:validators:research": "node scripts/validation-groups.mjs validators research",
     "check:validators:solver": "node scripts/validation-groups.mjs validators solver",
