@@ -6,247 +6,590 @@
     {
       "field": "timeBudgetMs",
       "semanticClass": "execution-budget",
-      "effect": "outcome-affecting-when-binding"
+      "effect": "outcome-affecting-when-binding",
+      "canonicalDefaultSemantics": "positive Number(value), else 30000; if baseWorkBudget is absent this also derives effective workBudget via legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK)",
+      "identityParticipation": "conditional: effective request allocation when baseWorkBudget absent; execution/reproducibility wall deadline always",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "supported by RACE_LEVEL_OPTS_FIELDS"
+      }
     },
     {
       "field": "yieldFn",
       "semanticClass": "execution-control",
-      "effect": "can-cancel/direct-only"
+      "effect": "can-cancel/direct-only",
+      "canonicalDefaultSemantics": "null / no caller cancellation callback",
+      "identityParticipation": "execution/cancellation envelope only; callback object identity is not semantic evidence identity",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "special cancellation bridge; callback itself is not transported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "ablation",
       "semanticClass": "solver-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "null means production defaults; sparse non-null input normalizes through normalizeAblationConfig() and OPT_IN_FEATURES/default polarity",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "supported by RACE_LEVEL_OPTS_FIELDS"
+      }
     },
     {
       "field": "forcedFirstStepKey",
       "semanticClass": "level-specific-forcing",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "null",
+      "identityParticipation": "effective level/attempt input identity; do not flatten into run-wide request hash",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "forcedPortalExitKey",
       "semanticClass": "level-specific-forcing",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "null",
+      "identityParticipation": "effective level/attempt input identity; do not flatten into run-wide request hash",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "nodeBudget",
       "semanticClass": "deterministic-budget",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "Infinity",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "baseWorkBudget",
       "semanticClass": "deterministic-budget",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "absent/null => effective workBudget derived from effective timeBudgetMs via legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK)",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "strictTotalWorkBudget",
       "semanticClass": "budget-semantics",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "false",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "attemptBudgetTelemetry",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive-until-parity-proven"
+      "effect": "policy-inert-but-wall-reactive-until-parity-proven",
+      "canonicalDefaultSemantics": "false",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "lifecycleTelemetry",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive-until-parity-proven"
+      "effect": "policy-inert-but-wall-reactive-until-parity-proven",
+      "canonicalDefaultSemantics": "false",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "schedulerMode",
       "semanticClass": "scheduler-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "production",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "production only; implied constant and rejected if non-production"
+      }
     },
     {
       "field": "staticPortfolio",
       "semanticClass": "scheduler-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "not applicable unless schedulerMode=static-portfolio; then required. nested attemptBudgetMs defaults to STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS (600000), resumableResidualPass defaults false, absent per-technique caps mean uncapped",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "attemptSearchForTesting",
       "semanticClass": "test-implementation-substitution",
-      "effect": "outcome-affecting/test-only"
+      "effect": "outcome-affecting/test-only",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "test-only request identity; canonical research evidence must not silently use it",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "beamResearchObserver",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "beamFlowCounters",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "currently transported as a structured-cloned mutable object, but worker mutations are not returned to the caller; semantically not a usable side-channel observer",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "pruneDiagnostics",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "currently transported as a structured-cloned mutable object, but worker mutations are not returned to the caller; semantically not a usable side-channel observer",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "failureProgressObserver",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "connectivityRejectionObserver",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "connectivityCertificateShadowObserver",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "parityCapacityObserver",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "parityPhaseDistanceObserver",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "jointObligationObserver",
       "semanticClass": "observer",
-      "effect": "policy-inert-but-wall-reactive"
+      "effect": "policy-inert-but-wall-reactive",
+      "canonicalDefaultSemantics": "absent",
+      "identityParticipation": "execution/comparability only; policy-inert but wall-reactive when deadline binds",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "legacyLatencyPortfolioExperiment",
       "semanticClass": "scheduler-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "when schedulerMode=legacy-latency-portfolio-experiment, absent resolves to LEGACY_LATENCY_PORTFOLIO_EXPERIMENT; otherwise not applicable",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "repairAdditiveBudgetMultiplierOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "REPAIR_ADDITIVE_BUDGET_MULTIPLIER (6.0); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "supported by RACE_LEVEL_OPTS_FIELDS"
+      }
     },
     {
       "field": "goalAttractionDisabledRetryBudgetFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION (1.0); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "supported by RACE_LEVEL_OPTS_FIELDS"
+      }
     },
     {
       "field": "coarseStateNearTieRetentionRetryBudgetFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION (1.0); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "coarseStateNearTieRetentionRetryNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION (0.25)",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "admissibleOrderNonDefaultRetryBudgetFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION (1.0); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "admissibleOrderNonDefaultRetryNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION (0.5)",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "connectivityAxisExhaustedRetryBudgetFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION (1.0); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "connectivityAxisExhaustedRetryNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION (0.5)",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "repairElitePrefixDfsRetryBudgetFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION (1.0); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "repairElitePrefixDfsRetryNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION (0.5)",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "mcNeighborBudgetRetryBudgetFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION (1.0); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "mcNeighborBudgetRetryNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION (0.5)",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "repairLateProbeNodeBudgetOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "REPAIR_LATE_PROBE_NODE_BUDGET (5000000); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "repairLateProbeMultiSeedRetrySeedCountOverride",
       "semanticClass": "solver-search-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "full REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS array (7 salts); only integer 0..7 overrides",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "admissibleOrderBudgetFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "ADMISSIBLE_ORDER_BUDGET_FRACTION (1.0); disableExtraBudgetPasses=true supplies effective override 0",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "admissibleOrderNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION (0.25)",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "admissibleOrderProfileNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION (0.15), clamped to [0,1]",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "repairFallbackNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "REPAIR_FALLBACK_NODE_RESERVE_FRACTION (0.15), clamped to [0,1]",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "repairShrinkRecoveryNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION (0.5), clamped to [0,1]",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "goalAttractionDisabledRetryNodeReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION (0.15), clamped to [0,1]",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "mainSearchLateReserveFractionOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "MAIN_SEARCH_LATE_RESERVE_FRACTION (0.15), clamped to [0,1]",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "mainSearchLateReserveConfigCountOverride",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "min(mainConfigsCount, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT=5), or +1 when STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE is effectively true; explicit override wins and is floored/clamped to 0..mainConfigsCount",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "earlyRepairSearchAdaptiveBiasedBadnessGateOverride",
       "semanticClass": "solver-search-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "earlyRepairSearchAdaptiveBiasedMinScaleOverride",
       "semanticClass": "solver-search-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "disableExtraBudgetPasses",
       "semanticClass": "solver-budget-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "false; when true supplies 0 to the defined additive budget/late-probe override cascade but does not zero independent reserve-fraction overrides",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     },
     {
       "field": "primeAttempt",
       "semanticClass": "history-derived-level-specific-policy",
-      "effect": "outcome-affecting"
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "absent; when present, nested nodeBudget falls back to effective solve nodeBudget and seedSalt defaults to 0",
+      "identityParticipation": "effective level/attempt input identity; do not flatten into run-wide request hash",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      }
     }
   ],
   "backendRequests": {
@@ -314,6 +657,18 @@
     "canonicalDefaults": "not yet exhaustive; must be derived from canonical normalization/solver behavior rather than guessed from interface optionality",
     "identityParticipation": "not yet explicit per field",
     "backendSupport": "direct/worker contracts are canonical; raced support is mechanically owned by RACE_LEVEL_OPTS_FIELDS/toRaceLevelOpts and must not be copied into a second hand-maintained allowlist",
-    "phaseMinus1Gate": "add a validator that fails when SolveOpts membership, race boundary fields, or backend-specific request fields change without a matching semantic classification"
-  }
+    "phaseMinus1Gate": "add a validator that fails when SolveOpts membership, race boundary fields, or backend-specific request fields change without a matching semantic classification",
+    "identityClassification": "all 49 SolveOpts fields now have a source-owned default-semantics statement, identity layer, and direct/worker/raced support classification; validation script still needed to fail CI on drift"
+  },
+  "backendSemanticGaps": [
+    {
+      "id": "worker-mutable-observer-side-channel",
+      "fields": [
+        "beamFlowCounters",
+        "pruneDiagnostics"
+      ],
+      "finding": "buildWorkerSolveOpts forwards these plain mutable objects because they are structured-cloneable, but the worker mutates only its clone and SolveResult does not return them. A caller can therefore request them without an error and observe no updates.",
+      "target": "classify them direct-only and reject at worker ingress, or add an explicit returned telemetry projection; do not call structured-clone transport equivalent to direct side-effect semantics."
+    }
+  ]
 }
