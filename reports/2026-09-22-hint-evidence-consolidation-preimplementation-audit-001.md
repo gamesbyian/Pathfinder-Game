@@ -406,3 +406,81 @@ The evidence now favors:
 6. a generated runtime path projection, if the exact full-corpus/gzip benchmark confirms the sampled savings.
 
 Physical schema v4 remains intentionally blocked.
+
+## Continuation findings: empirical closure
+
+The continuation pass converted the remaining planning questions into measured constraints.
+
+### Full current-store field-state census
+
+Current committed hint evidence contains **267,046 semantic Hints and 775,469 provenance events across 1,962 files**.
+
+The complete machine-readable counts live in `docs/hint-evidence-consolidation-inventory.json`. The most consequential result is historical capability-context laundering:
+
+- September 11 measured **505,993 events omitting `isolatedTechnique`**.
+- Current raw storage has only **32,254 absent `isolatedTechnique`** entries.
+- It now has **507,334 explicit `isolatedTechnique:false`** entries.
+- `usedExistingHints` and `hintGuided` now have **zero physical absences**.
+
+The code path explains the transition: `upgradeProvenanceEntry()` substitutes `false` for absent legacy capability booleans, and a later canonical-file write can persist the expanded event. Therefore a current physical `false` is not sufficient evidence that a legacy producer observed false. Historical source-generation semantics must remain part of canonical interpretation.
+
+This is stronger than the original audit conclusion. The semantic bug is not merely that readers can misinterpret omission; read-time normalization has been able to rewrite unknown history into an apparently observed modern value.
+
+### July 11 migration chronology
+
+The migration-stamped `foundAt` population is now exact:
+
+- **662 provenance events**;
+- **102 stress-corpus-1 hint files**;
+- timestamp window `2026-07-11T01:44:17.863Z` through `2026-07-11T01:44:18.004Z`;
+- zero members from published hints or stress corpus 2.
+
+A reconstruction of the repository at the September 11 audit commit contains the same **662 events / 102 files**, confirming that this is a stable historical cohort rather than a recent artifact of file rewrites.
+
+The semantic correction should therefore be an ingress compatibility rule keyed to the proven migration/source cohort, with the narrow timestamp cluster as corroboration. These values mean “migration time retained where original discovery time was unavailable,” not historical discovery time.
+
+### Runtime delivery economics
+
+The build currently copies **741,231,497 raw bytes** of provenance-rich hint JSON into `dist`.
+
+A full-corpus path-only benchmark gives:
+
+| Representation | Bytes | Reduction |
+| --- | ---: | ---: |
+| Canonical raw JSON | 741,231,497 | — |
+| Minified path-only JSON | 149,368,243 | 79.85% |
+| Pretty path-only JSON | 308,947,047 | 58.32% |
+| Canonical per-file gzip total | 21,176,345 | — |
+| Path-only per-file gzip total | 4,924,828 | 76.74% |
+
+A generated runtime path projection is therefore justified. The measurement does **not** justify a second tracked hint store.
+
+### Firestore capacity economics
+
+Representative current JSON-size proxies:
+
+| Unit | p50 | p99 | max |
+| --- | ---: | ---: | ---: |
+| semantic Hint | 1,437 B | 27,784 B | 574,971 B |
+| local path + one event document | 1,892 B | 2,797 B | 3,440 B |
+| published encoded Hint array per level | 1,149,023 B | 2,044,991 B | 5,269,927 B |
+
+These are UTF-8 JSON payload measurements before Firestore field/index overhead and, for published levels, before the rest of `levelData`.
+
+The current five-hint `slice()`, 1,000-submission safety margin, and 5,000 supplemental soft cap therefore describe path counts, not storage safety. A future persistence design needs byte-aware preflight and a bounded-growth unit. The very small one-event document distribution makes event/occurrence children attractive; a full semantic Hint per path can grow toward a document limit as provenance accumulates.
+
+### Maintained hint-I/O surface
+
+The source-tree census found **56 source/workflow files** still mentioning the removed `readLevelsWithHints`/`writeLevelsWithHints` names, with at least **19 directly referenced from `package.json`**. The original seven-file list was not exhaustive.
+
+Raw grep count is deliberately not being promoted to an authority: the new audit tool classifies package/workflow-seeded import-graph reachability so historical/dormant utilities can be separated from maintained current paths. That mechanically classified live set is the PSC-001 migration target.
+
+### Solver request/backend semantics
+
+The `SolveOpts` inventory now matches all **49 current fields** exactly and records effective defaults, identity participation, and direct/worker/raced support. A repository test now makes future unclassified fields fail.
+
+One additional parity defect was discovered: `beamFlowCounters` and `pruneDiagnostics` are mutable structured-cloneable objects. Web Worker execution accepts them, but mutations occur only on the worker's private clone and are not returned in `SolveResult`. They are therefore not equivalent to direct execution despite crossing transport successfully.
+
+### Outcome
+
+The semantic architecture is sufficiently specified for Phase -1 implementation. The remaining work before physical schema-v4 migration is implementation validation, not missing architectural discovery: make historical missingness first-class, add occurrence lineage, converge maintained persistence paths, validate Firestore wire limits, and prove reversible semantic/referee equivalence.
