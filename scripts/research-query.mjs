@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { buildResearchQueryGraph, queryResearchGraph } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
 import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
-import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot, diffResearchSystemFindingSnapshots, queryResearchSystemFindings } from './research-system-query-lib.mjs';
+import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot, buildResearchSystemFindingSnapshotFromGitRef, diffResearchSystemFindingSnapshots, queryResearchSystemFindings } from './research-system-query-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith('--' + name + '='))?.slice(name.length + 3) ?? '';
@@ -79,6 +79,14 @@ if (args.includes('--system-snapshot')) {
 const compareSystemSnapshot = value('compare-system-snapshot');
 if (compareSystemSnapshot) {
   const before = JSON.parse(readFileSync(compareSystemSnapshot, 'utf8'));
+  const after = buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(process.cwd()));
+  console.log(JSON.stringify(diffResearchSystemFindingSnapshots(before, after), null, 2));
+  process.exit(0);
+}
+
+const compareSystemRef = value('compare-system-ref');
+if (compareSystemRef) {
+  const before = buildResearchSystemFindingSnapshotFromGitRef(process.cwd(), compareSystemRef);
   const after = buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(process.cwd()));
   console.log(JSON.stringify(diffResearchSystemFindingSnapshots(before, after), null, 2));
   process.exit(0);
