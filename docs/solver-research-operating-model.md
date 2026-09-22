@@ -41,7 +41,10 @@ Shared ownership applies only to the named invariant, not similar field names. A
 Do not collapse distinct kinds of state merely because they describe the same line of work.
 
 - **Execution priority/next gate:** `solver-optimization-workstreams.md`.
+- **Immediate operational route:** the workstream table's `Gate class`; this classifies whether the current gate is existing-data, instrument-only, bounded-compute, design/implementation, blocked/conditional, methodological, subsumed, or service-like. It is not question lifecycle and it is not population acquisition.
 - **Question lifecycle/reopen:** `solver-research-question-relations.json`.
+- **Population/generation acquisition:** question `acquisitionNeed` where required; do not reinterpret it as immediate answerability.
+- **Decision-support sufficiency:** optional question `decisionSupport` may declare a small explicit sufficiency relation over repository refs. `mode: all` means every listed ref is required for the current disposition; `mode: any` means any listed ref is independently sufficient. Absent metadata means unknown, even if `answeredBy` contains several reports.
 - **Report status/decision/gate:** `pathfinder.research-closeout/v1`; Markdown is the human mirror/legacy fallback.
 - **Evidence applicability:** purpose/regime-local classifier + shared lattice; no timeless global flag.
 - **Claim validity:** claim + material derivation dependencies, not report summary.
@@ -55,7 +58,7 @@ At cross-artifact scientific joins, prove identity at the consumer. Filenames, l
 
 Keep nuanced/open-ended scientific reasoning in prose when no machine consumer can evaluate it. Stable categorical meaning used by software or multiple authorities needs an enum, ID, relation, or structured capsule rather than prose parsing; consumers use the machine owner. See `reports/2026-09-19-research-prose-authority-audit-001.md`.
 
-Likewise, join on stable IDs/edges when available. Lexical similarity is discovery/fallback only and must not silently manufacture authority.
+Likewise, join on stable IDs/edges when available. Lexical similarity is discovery/fallback only and must not silently manufacture authority. The derived `research:query` graph may reverse authored relationships and compose named read-only views, but it must not upgrade `answeredBy` into scientific necessity/redundancy without explicit `decisionSupport`, or infer historical change without a saved/reconstructed comparison snapshot.
 
 Relationship quality: validated authored edge > authored path/ID > embedded contract identity > labelled lexical/path discovery. Dual-authored relations must agree; co-location/names/links/vocabulary discover candidates but do not define ancestry. See `reports/2026-09-19-research-relation-authority-audit-001.md`.
 
