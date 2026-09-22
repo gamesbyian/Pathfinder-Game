@@ -76,9 +76,9 @@
     {
       "id": "QB-011",
       "question": "Which research-system audits or architecture findings still have live successors or unpropagated lessons?",
-      "kind": "non-question-lineage",
+      "kind": "system-lineage",
       "expected": "partial",
-      "gap": "Structured questionless closeouts with authored successor edges are queryable; individual architecture findings produced ephemerally by research:system-inventory still lack stable finding identities and successor edges."
+      "gap": "Current research-system findings now have stable derived IDs and snapshots, and structured questionless reports expose report-level successors; individual architecture findings still do not author resolvedBy/successor links."
     },
     {
       "id": "QB-012",
@@ -86,6 +86,13 @@
       "kind": "support-redundancy",
       "expected": "known-gap",
       "gap": "The graph can enumerate dependency paths, but scientific sufficiency/redundancy is not yet authored as machine-readable support sets and must not be inferred from edge count."
+    },
+    {
+      "id": "QB-013",
+      "question": "Can current research-system architecture/lifecycle findings be addressed by stable machine identity and diffed over time?",
+      "kind": "system-findings",
+      "expected": "supported",
+      "requireNonEmpty": true
     }
   ]
 }
