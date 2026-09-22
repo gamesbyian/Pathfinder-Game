@@ -5,8 +5,6 @@ import path from 'node:path';
 import process from 'node:process';
 
 const ROOT = process.cwd();
-const RULES_PATH = path.join(ROOT, 'scripts', 'ci-impact-rules.json');
-
 function deriveRegisteredEntrypointOwnership(root) {
   const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   const registry = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'validation-groups.json'), 'utf8'));
@@ -378,8 +376,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log(JSON.stringify(result, null, 2));
     } else {
       console.log(`CI impact: ${result.full ? 'FULL' : result.surfaces.join(', ')}`);
-      for (const file of result.files) {
+      const fileDetails = result.files ?? result.ordinary?.files ?? [];
+      for (const file of fileDetails) {
         console.log(`  ${file.path}: ${file.rule ?? 'UNCLASSIFIED'} -> ${file.surfaces.join(', ')}`);
+      }
+      if (result.packageImpact) {
+        console.log(`  package.json: ${result.packageImpact.reason} -> ${result.packageImpact.surfaces.join(', ')}`);
       }
     }
   } catch (error) {
