@@ -90,12 +90,24 @@ PR shadowing, main-push shadowing, and the manual activation rehearsal now write
 
 Ordinary shadow jobs intentionally remain non-gating while the existing full gates are authoritative. The activation rehearsal is different: its `impact-shadow` job must fail closed, and the parity checker rejects `continue-on-error: true` inside that router job. The future required-status contract therefore cannot mistake a classifier failure for a successful routing decision.
 
+## Live-shadow gate update
+
+The non-router live-shadow requirement is now satisfied by real post-foundation PRs:
+
+- #1974 and #1975: `repo + research`, deep lane not required; all observed failures were in retained fast/research obligations while full deep verification passed.
+- #1982: `repo + research + solver`, deep lane required for coverage/proofs while Firestore was not selected.
+- repeated CI/package/workflow authority changes remained full-impact.
+
+See [live shadow evidence 004](2026-09-22-ci-impact-routing-live-shadow-evidence-004.md).
+
 ## Remaining activation gates
 
 Before scoped execution becomes authoritative:
 
-1. collect live shadow decisions on PRs that are not themselves CI/router changes;
-2. run the concurrency benchmark enough times to distinguish a stable win from runner noise;
-3. encode/test the intended lane-packing and final required-status contract;
+1. establish a green current-main broad baseline;
+2. run manual scoped dry-run/rehearsal for representative research-only, solver, and full-impact refs;
+3. verify final-status semantics when deep verification is deliberately skipped and when required;
 4. activate scoped execution with conservative fallback to full on router failure or ambiguity;
 5. retain periodic/manual full-oracle validation after activation.
+
+The Node-concurrency benchmark remains required before changing the fan-out default, but is independent of the scoped-routing activation decision.
