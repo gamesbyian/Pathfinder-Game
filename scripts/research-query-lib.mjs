@@ -54,6 +54,7 @@ function authoredEdges(model) {
         value, sourceFor(q, 'questions'));
     }
     for (const value of arr(q.answeredBy)) add('questions', q.id, 'answeredBy', 'repositoryRefs', value, sourceFor(q, 'questions'));
+    for (const value of arr(q.decisionSupport?.refs)) add('questions', q.id, 'decisionSupport', 'repositoryRefs', value, sourceFor(q, 'questions'));
     for (const value of arr(q.premiseRefs ?? q.premiseIds ?? q.mappedPremises)) {
       add('questions', q.id, 'premise', 'premises', value, sourceFor(q, 'questions'));
     }
