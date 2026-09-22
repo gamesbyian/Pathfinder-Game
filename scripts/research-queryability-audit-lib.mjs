@@ -115,6 +115,12 @@ function evaluateSupported(graph, benchmark, root) {
                 + benchmark.mustIncludeSupport.disposition);
         }
     }
+    if (benchmark.mustIncludeReport) {
+        const rows = view.reportLineage?.rows ?? view.rows ?? [];
+        if (!rows.some(row => row.report === benchmark.mustIncludeReport)) {
+            failures.push('missing required report-lineage witness ' + benchmark.mustIncludeReport);
+        }
+    }
 
     return { view, failures };
 }
