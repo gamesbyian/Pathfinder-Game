@@ -21,7 +21,7 @@ function outcomeClass(a) {
   if (!a) return 'start';
   if (success(a)) return 'success';
   const raw = String(a.outcome ?? a.status ?? a.reason ?? a.stopReason ?? '').toLowerCase();
-  if (a.censored === true || /timeout|deadline|budget|censor|cap/.test(raw)) return 'censored';
+  if (a.censored === true || a.timedOut === true || a.deadlineTruncated === true || /timeout|timed-out|deadline|budget|starved|censor|cap/.test(raw)) return 'censored';
   if (/exhaust|complete|finished/.test(raw)) return 'exhausted';
   if (/unsupported|error|invalid/.test(raw)) return 'invalid';
   return 'failed';
