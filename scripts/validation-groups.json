@@ -68,6 +68,7 @@
       "test:loader"
     ],
     "solver": [
+      "test:harvest-isolated-report-hints",
       "test:publish-solver-sweep-result",
       "test:validate-solver-sweep-integrity",
       "test:ablation-toolchain",
