@@ -73,6 +73,13 @@ assert.deepEqual(mixed.files.map(file => file.rule), ['solver-research-docs', 'p
 
 
 
+const routerSelfTest = expect(
+  ['scripts/ci-impact-classifier-node-test.mjs'],
+  ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver'],
+  { full: true },
+);
+assert.equal(routerSelfTest.files[0].rule, 'ci-routing-infrastructure');
+
 const registeredRepoHarness = expect(
   ['scripts/documentation-index-lib-node-test.mjs'],
   ['repo'],
