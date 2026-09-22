@@ -124,6 +124,11 @@ const sharedMeasurements = buildResearchQueryView(graph, { view: 'shared-measure
 assert.ok(sharedMeasurements.rows.some(row =>
   row.measurementOpportunityId === 'MO-004' && row.consumerCount >= 2));
 
+assert.throws(
+  () => buildResearchQueryView(graph, { view: 'shared-measurements', minimum: 0 }),
+  /minimum must be a positive integer/,
+);
+
 const ownershipGaps = buildResearchQueryView(graph, { view: 'ownership-gaps' });
 assert.ok(Array.isArray(ownershipGaps.capabilityDemandsWithoutQuestion));
 
