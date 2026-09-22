@@ -105,6 +105,14 @@
       "reason": "solver research/architecture authorities and premise inputs"
     },
     {
+      "id": "research-forensic-scripts",
+      "pattern": "^scripts/(?:connectivity-|append-solver-health-record)",
+      "surfaces": [
+        "research"
+      ],
+      "reason": "research-only forensic/health tooling downstream of production solver"
+    },
+    {
       "id": "research-scripts",
       "pattern": "^scripts/(?:stress/|research-|analyze-|capture-|annotate-|combine-|family-|hint-|solver-|ablation-|technique-|experiment-|failure-|sweep-|portfolio-|method-|cpsat-|known-|class|reserve-|capability-|freeze-|write-solver|publish-solver|validate-solver)",
       "surfaces": [
