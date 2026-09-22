@@ -26,6 +26,16 @@ jobs:
   # ownership/routing authorities use Node built-ins and Git metadata only.
   impact-shadow:
     runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.impact.outputs.full }}
+      surfaces: ${{ steps.impact.outputs.surfaces }}
+      validator_groups: ${{ steps.impact.outputs.validator_groups }}
+      node_test_groups: ${{ steps.impact.outputs.node_test_groups }}
+      needs_build: ${{ steps.impact.outputs.needs_build }}
+      needs_coverage: ${{ steps.impact.outputs.needs_coverage }}
+      needs_deep_proofs: ${{ steps.impact.outputs.needs_deep_proofs }}
+      needs_solver_canary: ${{ steps.impact.outputs.needs_solver_canary }}
+      needs_firestore: ${{ steps.impact.outputs.needs_firestore }}
     steps:
       - uses: actions/checkout@v7
         with:
