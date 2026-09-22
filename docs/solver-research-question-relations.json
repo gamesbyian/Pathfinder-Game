@@ -1112,14 +1112,15 @@
         "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md",
         "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md"
       ],
-      "result": "Preflight + static semantics audit complete; default-inert implementation and attribution trace are present, no dispatch yet. H3's independently transferred allocation signal used exact counted remaining length across rows, while the recovered elite-prefix treatment is frozen as an index-depth proxy that can diverge on portal-bearing prefixes. Static analysis narrows the causal seam: candidate searches are independently rebuilt/deterministic within one elitePrefixDfsRepair call, so ordering can matter only through the shared 90k candidate budget frontier or an earlier successful return. Stage A therefore remains the earned discriminator; its trace records exact counted residual + portal jumps observationally without refitting the sort key.",
+      "result": "Preflight + static semantics audit complete; default-inert implementation, attribution trace, and dedicated frozen 20-level direct A/B harness are present, but no Stage A outcome has been acquired. H3's independently transferred allocation signal used exact counted remaining length across rows, while the recovered elite-prefix treatment is frozen as an index-depth proxy that can diverge on portal-bearing prefixes. Static analysis narrows the causal seam: candidate searches are independently rebuilt/deterministic within one elitePrefixDfsRepair call, so ordering can matter only through the shared 90k candidate budget frontier or an earlier successful return. The harness records exact counted residual + portal jumps observationally without refitting the sort key.",
       "constrains": [
         "Do not treat the confirmed cross-row H3 transfer as proof of intra-solve allocation value.",
         "Control and treatment must use the exact same elite-prefix candidate multiset, per-candidate cap, total cap, outer repair cap and seed; only candidate order may differ.",
         "Freeze the Stage A ordering key as requiredLength - destroyIdx. Exact countedRemainingLength and portalJumps are explanatory telemetry only and must not affect Stage A ordering or selection.",
         "Do not interpret the frozen index-depth proxy as exact remaining-length feasibility; Pathfinder counted length excludes free portal jumps and feasibility also depends on non-length obligations/geometry.",
         "A negative frozen bridge does not reopen elite-prefix DFS for further tuning and does not invalidate the earlier cross-row H3 result.",
-        "The research-only ordering switch and attribution trace are inert unless explicitly enabled by a dedicated harness; no production caller is authorized to enable them."
+        "The research-only ordering switch and attribution trace are inert unless explicitly enabled by a dedicated harness; no production caller is authorized to enable them.",
+        "Use scripts/stress/ws1-remaining-length-intrasolve-bridge.mjs for the frozen Stage A; do not substitute the legacy generic elite-prefix A/B script, which cannot express this research-only ordering treatment."
       ],
       "reopensOn": null,
       "premiseRefs": [
