@@ -489,3 +489,33 @@ One additional parity defect was discovered: `beamFlowCounters` and `pruneDiagno
 ### Outcome
 
 The semantic architecture is sufficiently specified for Phase -1 implementation. The remaining work before physical schema-v4 migration is implementation validation, not missing architectural discovery: make historical missingness first-class, add occurrence lineage, converge maintained persistence paths, validate Firestore wire limits, and prove reversible semantic/referee equivalence.
+
+
+## Artifact-layout and ingestion-accounting closure
+
+Two registry items still carried `investigate` wording after the six empirical entry gates had been closed. A final source pass resolves both to implementation contracts.
+
+### PSC-025 — artifact layout/discovery
+
+Current authorities disagree by construction:
+
+- `scripts/level-data-io.mjs::hintsDirFor()` derives hint directories from corpus filenames;
+- `modules/dev-corpus.ts` + `createDefaultHintsSource()` duplicate the browser-side mapping through `basePath` / `hintsDirName`;
+- `hintFileName()` writes arbitrary string ids verbatim;
+- `listHintFiles()` discovers only `^[A-Za-z]?\d{3,}\.json$`.
+
+So a file can be legal to write yet invisible to generic listing/validation, and the corpus-layout rule has two owners.
+
+The implementation target is one shared corpus-layout descriptor plus expected-file derivation from corpus level ids. Directory enumeration becomes verification (expected / missing / orphan), not the identity authority. Legacy numeric fallback remains explicit.
+
+### PSC-028 — ingestion accounting
+
+The level-blind importer has the only structured selection manifest, whose schema is intentionally scoped to that importer and hard-codes its harvester identity. The isolated importer and direct-artifact merger expose different counters and quarantine objects without an equivalent common receipt.
+
+The common semantic funnel is nevertheless clear enough to standardize without standardizing producer artifacts themselves. A versioned ingestion receipt should report explicit units for candidate observations, eligibility, referee acceptance, semantic no-op/already represented, path additions, provenance-event additions, future occurrence additions, quarantine reasons, and physical artifact/file mutations.
+
+This receipt is success-ingestion accounting only. It must continue to state that it is not an attempted-population denominator and cannot be used to infer solve rates.
+
+### Closure result
+
+PSC-025 and PSC-028 require implementation, not further architectural investigation. Together with the earlier full-corpus measurements, this closes the pre-implementation investigation phase: Phase -1 can proceed without another broad audit. New read-only investigation should be triggered only by an implementation contradiction, failed parity test, or newly discovered producer/backend dialect.
