@@ -111,13 +111,13 @@ npm run research:query -- --snapshot > /tmp/query-snapshot.json
 npm run research:query -- --compare-snapshot=/tmp/query-snapshot.json
 ```
 
-Reachable Git refs can be reconstructed directly:
+Reachable Git refs that remain readable under the current research relation contracts can be reconstructed directly:
 
 ```text
 npm run research:query -- --compare-ref=<commit-or-ref>
 ```
 
-Git-ref reconstruction uses a temporary detached worktree and historical workstream-table compatibility; current authority parsing remains strict.
+Git-ref reconstruction uses a temporary detached worktree and explicit historical workstream-table compatibility; current authority parsing remains strict. Very old refs may still be unreconstructable if they predate other required research authorities/contracts, in which case the command fails rather than silently weakening those contracts.
 
 Snapshots record Gate-class coverage. If either side predates complete Gate-class classification, the diff still reports node/edge and execution/question-owner changes, but **withholds answerability-class transition claims**. Adding the schema later is not evidence that the historical gate itself changed.
 
@@ -171,8 +171,8 @@ Do not convert partials into passes by inventing metadata. Improve the owning so
 
 Two partial surfaces are intentional:
 
-1. **Research-system finding lineage:** current architecture/lifecycle findings have stable derived IDs and diffable fingerprints, while structured questionless reports expose report-level successor edges. Individual derived findings do not yet author `resolvedBy`/successor links.
-2. **Historical support redundancy:** `support-impact` is exact where `decisionSupport` exists. Most historical `answeredBy` trails intentionally remain “unknown sufficiency.”
+1. **Research-system finding lineage:** `--view=system-lineage` measures the boundary directly: current architecture/lifecycle findings have stable derived IDs and diffable fingerprints, while structured questionless reports expose report-level successor edges. Individual derived findings do not yet author `resolvedBy`/successor links.
+2. **Historical support redundancy:** `support-impact` is exact where `decisionSupport` exists, and `--view=ownership-gaps` exposes `decisionSupportUnknownQuestions` for evidence trails whose sufficiency remains unknown. Most historical `answeredBy` trails intentionally stay in that state.
 
 These are reopen conditions, not invitations to bulk-normalize history.
 
