@@ -14,6 +14,8 @@ const second = buildResearchSystemFindingIndex(process.cwd());
 assert.equal(first.schemaVersion, 1);
 assert.equal(first.authority.kind, 'derived-read-only');
 assert.ok(first.count > 0);
+assert.equal(new Set(first.findings.map(row => row.id)).size, first.count,
+    'current derived system finding identities must be unique');
 assert.deepEqual(
     first.findings.map(row => row.id),
     second.findings.map(row => row.id),
