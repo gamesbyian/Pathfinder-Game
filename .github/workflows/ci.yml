@@ -36,6 +36,8 @@ jobs:
       needs_deep_proofs: ${{ steps.impact.outputs.needs_deep_proofs }}
       needs_solver_canary: ${{ steps.impact.outputs.needs_solver_canary }}
       needs_firestore: ${{ steps.impact.outputs.needs_firestore }}
+      fast_job_required: ${{ steps.impact.outputs.fast_job_required }}
+      deep_job_required: ${{ steps.impact.outputs.deep_job_required }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -46,6 +48,8 @@ jobs:
             /scripts/ci-impact-classifier.mjs
             /scripts/ci-impact-rules.json
             /scripts/ci-impact-shadow-plan.mjs
+            /scripts/ci-execution-plan.json
+            /scripts/ci-execution-plan.mjs
             /scripts/ci-validation-plan.json
             /scripts/ci-validation-plan.mjs
             /scripts/validation-groups.json
