@@ -61,8 +61,8 @@
         "docs/research-queryability.md",
         "docs/solver-research-inference-audit-framework.md"
       ],
-      "warnBytes": 26000,
-      "maxBytes": 36000
+      "targetBytes": 26000,
+      "compactAtBytes": 52000
     },
     {
       "id": "solver-research",
