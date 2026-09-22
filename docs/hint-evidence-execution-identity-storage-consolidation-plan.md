@@ -874,7 +874,7 @@ can report different winning attempts because worker scheduling changes which va
 first. Historical wall-clock-budgeted solver eras have another reproducibility contract. Seeded
 randomized search has another.
 
-Add a small, explicit reproducibility/execution class, for example conceptually:
+Reuse and extend the repository's existing experiment execution contract rather than creating a hint-only namespace. It already carries `execution.reproducibilityExpected`; evolve that contract/shared value object with a small explicit reproducibility/execution mode, for example conceptually:
 
 - deterministic-work;
 - seeded-deterministic;
@@ -883,7 +883,7 @@ Add a small, explicit reproducibility/execution class, for example conceptually:
 - externally-determined;
 - unknown.
 
-Exact vocabulary should be derived from actual maintained execution families.
+Exact vocabulary should be derived from actual maintained execution families. Historical contracts with only the boolean `reproducibilityExpected` remain readable; the richer mode is prospective and versioned independently.
 
 This class belongs in the execution/run semantic capsule and in determinism auditing. A
 different-path repeat is suspicious only when the compared execution class promises path-stable
