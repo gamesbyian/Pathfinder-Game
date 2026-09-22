@@ -1095,7 +1095,7 @@
     },
     {
       "id": "WS1-REMAINING-LENGTH-INTRA-SOLVE-BRIDGE",
-      "question": "Within one repairSearchFromGate invocation, does globally ordering the existing elite-prefix bounded-completion candidate pool by ascending remaining path length improve solve/work under the identical candidate set and fixed shared node budget?",
+      "question": "Within one repairSearchFromGate invocation, does globally ordering the existing elite-prefix bounded-completion candidate pool by the frozen ascending index-depth proxy (`requiredLength - destroyIdx`) improve solve/work under the identical candidate set and fixed shared node budget?",
       "owner": "WS1",
       "state": "active-candidate",
       "aliases": [
@@ -1109,12 +1109,15 @@
       "constrainedBy": [
         "reports/2026-09-20-h3-independent-transfer-result-001.md",
         "reports/2026-08-07-repair-elite-prefix-dfs.md",
-        "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md"
+        "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md",
+        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md"
       ],
-      "result": "Preflight complete; implementation seam rescued on current main, no dispatch yet. H3's remaining-length allocation effect is confirmed across disjoint row populations, but that shared budget was allocated across levels. The exact H3 production call site has only one current dead-end candidate. elitePrefixDfsRepair supplies the missing intra-solve candidate pool (3 elites x 4 prefix fractions, 15k/candidate, 90k total) and currently tries longer residuals before shorter ones. The old operator is closed negative in its legacy order; this successor tests only whether the later-confirmed remaining-length premise is the materially different candidate-ordering signal the old operator lacked.",
+      "result": "Preflight + static semantics audit complete; default-inert implementation and attribution trace are present, no dispatch yet. H3's independently transferred allocation signal used exact counted remaining length across rows, while the recovered elite-prefix treatment is frozen as an index-depth proxy that can diverge on portal-bearing prefixes. Static analysis narrows the causal seam: candidate searches are independently rebuilt/deterministic within one elitePrefixDfsRepair call, so ordering can matter only through the shared 90k candidate budget frontier or an earlier successful return. Stage A therefore remains the earned discriminator; its trace records exact counted residual + portal jumps observationally without refitting the sort key.",
       "constrains": [
         "Do not treat the confirmed cross-row H3 transfer as proof of intra-solve allocation value.",
         "Control and treatment must use the exact same elite-prefix candidate multiset, per-candidate cap, total cap, outer repair cap and seed; only candidate order may differ.",
+        "Freeze the Stage A ordering key as requiredLength - destroyIdx. Exact countedRemainingLength and portalJumps are explanatory telemetry only and must not affect Stage A ordering or selection.",
+        "Do not interpret the frozen index-depth proxy as exact remaining-length feasibility; Pathfinder counted length excludes free portal jumps and feasibility also depends on non-length obligations/geometry.",
         "A negative frozen bridge does not reopen elite-prefix DFS for further tuning and does not invalidate the earlier cross-row H3 result.",
         "The research-only ordering switch and attribution trace are inert unless explicitly enabled by a dedicated harness; no production caller is authorized to enable them."
       ],
@@ -1126,7 +1129,8 @@
       "measurementOpportunities": [],
       "acquisitionNeed": "telemetry-or-economics",
       "answeredBy": [
-        "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md"
+        "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md",
+        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md"
       ]
     }
   ]
