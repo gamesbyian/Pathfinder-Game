@@ -30,6 +30,34 @@ function metadataList(source, label) {
     return value.split(',').map(item => item.replaceAll('`', '').trim()).filter(Boolean);
 }
 
+function splitMarkdownTableRow(line) {
+    const cells = [];
+    let current = '';
+    let codeFence = 0;
+    for (let i = 1; i < line.length - 1;) {
+        const ch = line[i];
+        if (ch === '`') {
+            let run = 1;
+            while (line[i + run] === '`') run += 1;
+            current += line.slice(i, i + run);
+            if (codeFence === 0) codeFence = run;
+            else if (codeFence === run) codeFence = 0;
+            i += run;
+            continue;
+        }
+        if (ch === '|' && codeFence === 0 && line[i - 1] !== '\\') {
+            cells.push(current.trim());
+            current = '';
+            i += 1;
+            continue;
+        }
+        current += ch;
+        i += 1;
+    }
+    cells.push(current.trim());
+    return cells;
+}
+
 function tableRows(source, heading) {
     const start = source.indexOf(heading);
     if (start < 0) return [];
@@ -41,7 +69,7 @@ function tableRows(source, heading) {
         if (!line.startsWith('|')) { if (entered && line.trim()) break; continue; }
         entered = true;
         if (/^\|[ :|-]+\|$/u.test(line)) continue;
-        rows.push(line.split('|').slice(1, -1).map(cell => cell.trim()));
+        rows.push(splitMarkdownTableRow(line));
     }
     return rows.slice(1);
 }
@@ -273,15 +301,23 @@ export function buildResearchStatusIndex(root, { allowHistoricalWorkstreamTable 
     const ledgerPath = 'docs/solver-opt-in-experiment-ledger.md';
     const ledgerSource = existsSync(path.join(root, ledgerPath)) ? readFileSync(path.join(root, ledgerPath), 'utf8') : '';
     const experiments = tableRows(ledgerSource, '## Current production-default-OFF flags')
-        .map(([flag, promotionStateRaw, disposition]) => {
+        .map(row => {
+            const [flag, promotionStateRaw, third, fourth] = row;
+            const hasQuestionRefColumn = row.length >= 4;
+            const questionRefRaw = hasQuestionRefColumn ? third : null;
+            const disposition = hasQuestionRefColumn ? fourth : third;
             const promotionState = String(promotionStateRaw ?? '').replaceAll('`', '').trim();
             if (!EXPERIMENT_PROMOTION_STATES.includes(promotionState)) {
                 throw new Error(`${ledgerPath}: unknown promotion state ${promotionState || '(missing)'} for ${flag}`);
             }
+            const questionRef = questionRefRaw && questionRefRaw !== '—'
+                ? String(questionRefRaw).replaceAll('`', '').trim()
+                : null;
             return {
                 experimentId: flag.replace(/`/g, ''),
                 promotionState,
                 status: experimentStatusFromPromotionState(promotionState),
+                questionRef,
                 disposition,
                 latestEvidenceOrGate: disposition,
                 authority: ledgerPath,
@@ -325,7 +361,7 @@ function compactEntry(kind, entry) {
         executionState: entry.executionState ?? null,
         question: entry.question, questionRef: entry.questionRef ?? null, gate: entry.remainingGate, authority: entry.authority };
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
-        promotionState: entry.promotionState ?? null,
+        promotionState: entry.promotionState ?? null, questionRef: entry.questionRef ?? null,
         decision: entry.disposition, evidence: entry.latestEvidenceOrGate, authority: entry.authority };
     if (kind === 'promotion') return { kind, id: entry.promotionId, status: entry.status,
         mechanisms: entry.mechanisms ?? [], decisionEvidenceRef: entry.decisionEvidenceRef ?? null,

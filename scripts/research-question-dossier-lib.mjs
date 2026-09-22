@@ -119,6 +119,10 @@ export function buildQuestionDossier(root = process.cwd(), {
     const lexicalEvidenceHints = model.relations.evidence
         .filter(authorityMatch)
         .filter(row => !authoritativeEvidenceIds.has(row.latestEvidence?.report ?? row.topicId));
+    const exactExperiments = model.relations.experiments.filter(row => row.questionRef === questionId);
+    const lexicalExperimentHints = model.relations.experiments
+        .filter(authorityMatch)
+        .filter(row => row.questionRef !== questionId);
 
     const acquisition = chooseAcquisitionRoute({ question, eligibleBlocks });
     const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
@@ -166,8 +170,10 @@ export function buildQuestionDossier(root = process.cwd(), {
             },
             evidenceDiscoveryHints: lexicalEvidenceHints,
             evidenceDiscoveryMode: 'lexical-discovery-only',
-            experiments: model.relations.experiments.filter(authorityMatch),
-            experimentMatchMode: 'lexical-discovery-only',
+            experiments: exactExperiments,
+            experimentMatchMode: exactExperiments.length ? 'stable-question-id' : 'none',
+            experimentDiscoveryHints: lexicalExperimentHints,
+            experimentDiscoveryMode: 'lexical-discovery-only',
             capabilityDemands,
             capabilityDemandMatchMode: capabilityDemandOwnerMatches.length && capabilityDemandEvidenceMatches.length
                 ? 'owning-question-id+exact-evidence-ref'

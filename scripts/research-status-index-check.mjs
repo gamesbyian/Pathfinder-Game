@@ -29,7 +29,7 @@ writeFileSync(path.join(root, 'docs/solver-opt-in-experiment-ledger.md'), `# Led
 | Flag | Promotion state | Disposition / reopen condition |
 |---|---|---|
 | \`FLAG_ONE\` | \`closed\` | **CLOSED NEGATIVE.** Historical test rejected it. |
-| \`FLAG_TWO\` | \`open\` | **OPEN.** Awaiting a bounded promotion test. |
+| \`FLAG_TWO\` | \`open\` | **OPEN.** Awaiting a bounded promotion test for \`beam|score=fixture\`. |
 | \`FLAG_THREE\` | \`no-current-gate\` | **RETAINED, NO CURRENT PROMOTION GATE.** Counterfactual only. |
 | \`FLAG_FOUR\` | \`not-promotion-candidate\` | **NEW architecture prerequisite, not itself a promotion candidate.** |
 
@@ -137,6 +137,8 @@ assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x =
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_ONE')?.promotionState, 'closed');
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_TWO')?.promotionState, 'open');
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_TWO')?.status, 'active');
+assert.match(index.experiments.find(row => row.experimentId === 'FLAG_TWO')?.disposition ?? '', /beam\|score=fixture/u,
+    'inline-code pipes inside table cells must survive status-index parsing');
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_THREE')?.promotionState, 'no-current-gate');
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_THREE')?.status, 'pending');
 assert.equal(index.experiments.find(row => row.experimentId === 'FLAG_FOUR')?.promotionState, 'not-promotion-candidate');
@@ -374,6 +376,12 @@ assert.equal(repositoryIndex.queue.find(row => String(row.workstreamId) === '2')
     'active WS2 gate must carry the stable question reference');
 assert.ok(repositoryIndex.queue.some(row => row.workstreamId === '6/7'),
     'composite workstream identities must survive indexing without numeric coercion');
+const mustTurnExperiment = repositoryIndex.experiments.find(row =>
+    row.experimentId === 'STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY');
+assert.equal(mustTurnExperiment?.questionRef, 'WS2-MUST-TURN-LATE-ADDITIVE',
+    'opt-in ledger question ownership must survive status indexing');
+assert.equal(mustTurnExperiment?.promotionState, 'closed',
+    'must-turn promotion state must agree with the concluded economics result');
 
 const repositoryRegistry = loadResearchQuestionRegistry(process.cwd());
 assert.deepEqual(validateResearchQuestionRegistry(repositoryRegistry), [],

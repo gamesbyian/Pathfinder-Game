@@ -66,6 +66,7 @@ Before broad catalogs, reports, corpora, or histories:
 - new/unregistered research question: [`research-question-intake.md`](research-question-intake.md), then `node scripts/research-status-index.mjs --compact --query=<term>`;
 - prior evidence / known question discovery: `node scripts/research-status-index.mjs --compact --query=<term>`;
 - research-system orientation: `npm run research:system-inventory -- --view=brief`;
+- cross-family/reverse research lookup: `npm run research:query -- --entity=<type:id> [--direction=in|out|both] [--depth=N]`;
 - machine inputs/findings: `npm run research:system-inventory -- --view=brief-inputs|findings`;
 - historical solver premise/disposition memory: [`solver-archaeology-register.md`](solver-archaeology-register.md) when the question is explicitly about old/retired work;
 - existing tooling: `node scripts/tooling-census.mjs --compact --query=<term>`;
