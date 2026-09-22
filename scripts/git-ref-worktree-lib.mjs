@@ -14,7 +14,7 @@ export function withDetachedGitWorktree(root, ref, callback) {
         stdio: ['ignore', 'pipe', 'pipe'],
     }).trim();
     const tempRoot = mkdtempSync(path.join(tmpdir(), 'pathfinder-git-ref-'));
-    const worktree = path.join(tempRoot, 'repo');
+    const worktree = path.join(tempRoot, path.basename(tempRoot));
     let added = false;
 
     try {
