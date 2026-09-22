@@ -285,7 +285,9 @@
           "value": "production"
         }
       ],
-      "notes": "First-success raced engine supports only main-search + repair-fallback + goal-attraction-disabled-retry stages and does not promise stable winner identity."
+      "notes": "First-success raced engine supports only main-search + repair-fallback + goal-attraction-disabled-retry stages and does not promise stable winner identity.",
+      "boundaryAuthority": "scripts/solver-parallel/race-opts.mjs::RACE_LEVEL_OPTS_FIELDS + toRaceLevelOpts/assertRaceLevelOpts",
+      "reproducibilitySemantics": "first-success-wins; pool scheduling may change the winning attempt/path even with otherwise equivalent request content"
     }
   },
   "observerRule": "Read-only/diagnostic instrumentation is policy-inert, not automatically outcome-inert. Under binding wall-clock termination observer overhead can change reached work/opportunity; comparability requires parity evidence or deterministic/non-binding execution conditions.",
@@ -293,6 +295,25 @@
     "commonRequestIdentity": "projection of all classified outcome-affecting common fields, preserving semantic defaults and identity algorithm version",
     "executionIdentity": "common request identity + backend-specific request + backend/reproducibility mode + immutable solver ref",
     "evidenceIdentity": "execution identity + level revision + per-attempt action/forcing/seed dimensions as needed",
-    "ciRule": "Any new SolveOpts field or backend request field must be classified before identity tests pass."
+    "ciRule": "Any new SolveOpts field or backend request field must be classified before identity tests pass.",
+    "defaultRule": "Identity canonicalization must operate on normalized effective values. Omitted input and explicit canonical default compare equal only where the canonical owner proves they are semantically equivalent; ablation opt-in defaults must come from normalizeAblationConfig/OPT_IN_FEATURES, never generic boolean filling.",
+    "levelDerivedRule": "primeAttempt and adaptive/per-level allocations must be represented at effective-input/evidence identity after derivation, not confused with run-wide request identity.",
+    "wallReactiveObserverRule": "Observer/counter presence belongs in execution comparability whenever a binding wall deadline can make observer overhead outcome-affecting, even if the observer is search-policy inert."
+  },
+  "verifiedAgainstMain": "0494a0a2c2cc698b8c2a0c40782c88b8983d99ca",
+  "solveOptsMembershipVerification": {
+    "source": "modules/solver/orchestration-contracts.ts::SolveOpts",
+    "fieldCount": 49,
+    "inventoryCount": 49,
+    "missingFromInventory": [],
+    "extraInInventory": [],
+    "status": "exact-membership-parity"
+  },
+  "enforcementStatus": {
+    "membership": "verified but not yet CI-enforced",
+    "canonicalDefaults": "not yet exhaustive; must be derived from canonical normalization/solver behavior rather than guessed from interface optionality",
+    "identityParticipation": "not yet explicit per field",
+    "backendSupport": "direct/worker contracts are canonical; raced support is mechanically owned by RACE_LEVEL_OPTS_FIELDS/toRaceLevelOpts and must not be copied into a second hand-maintained allowlist",
+    "phaseMinus1Gate": "add a validator that fails when SolveOpts membership, race boundary fields, or backend-specific request fields change without a matching semantic classification"
   }
 }
