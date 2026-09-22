@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { buildResearchQueryGraph } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
+import { buildResearchQuerySnapshot, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 
 function loadBenchmarks(root) {
     const filename = path.join(root, 'docs/research-queryability-benchmarks.json');
@@ -14,11 +15,17 @@ function loadBenchmarks(root) {
 }
 
 function evaluateSupported(graph, benchmark) {
-    const view = buildResearchQueryView(graph, {
-        view: benchmark.kind,
-        entity: benchmark.entity ?? '',
-        minimum: benchmark.minimum ?? 2,
-    });
+    let view;
+    if (benchmark.kind === 'temporal-change') {
+        const snapshot = buildResearchQuerySnapshot(graph);
+        view = diffResearchQuerySnapshots(snapshot, snapshot);
+    } else {
+        view = buildResearchQueryView(graph, {
+            view: benchmark.kind,
+            entity: benchmark.entity ?? '',
+            minimum: benchmark.minimum ?? 2,
+        });
+    }
 
     const failures = [];
     if (benchmark.mustIncludeQuestion) {
@@ -75,11 +82,15 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
             });
             continue;
         }
+        const supportedStatus = benchmark.expected === 'partial'
+            ? 'partial'
+            : benchmark.expected === 'conditional' ? 'conditional' : 'passed';
         results.push({
             id: benchmark.id,
             question: benchmark.question,
             expected: benchmark.expected,
-            status: evaluation.failures.length ? 'failed' : 'passed',
+            status: evaluation.failures.length ? 'failed' : supportedStatus,
+            gap: benchmark.gap ?? null,
             failures: evaluation.failures,
             summary: (() => {
                 const view = evaluation.view;
@@ -108,12 +119,16 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
     }
 
     const passed = results.filter(row => row.status === 'passed').length;
+    const partial = results.filter(row => row.status === 'partial').length;
+    const conditional = results.filter(row => row.status === 'conditional').length;
     const failed = results.filter(row => row.status === 'failed').length;
     const knownGaps = results.filter(row => row.status === 'known-gap').length;
     return {
         schemaVersion: 1,
         benchmarkCount: results.length,
         passed,
+        partial,
+        conditional,
         failed,
         knownGaps,
         results,
