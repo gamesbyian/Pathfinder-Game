@@ -138,6 +138,17 @@ The post-promotion development run has a different normalized attempt digest:
 
 This preserves the correct evidence count: two distinct execution regimes, not three.
 
+The maintained frozen-model tooling now emits an `actionBoundaryDigest` over the normalized, reachable action-boundary rows used by this analysis. That digest is deliberately independent of file path and workflow-run identity. For these two pre-promotion artifacts it is identical:
+
+- run `34683011115`: `sha256:6bd7d06c6f1952ba1fc82da6289e4e05681b2ea62c9acde8caaea4a27685819f`;
+- run `35043165547`: `sha256:6bd7d06c6f1952ba1fc82da6289e4e05681b2ea62c9acde8caaea4a27685819f`.
+
+The post-promotion development regime differs:
+
+- run `35066677597`: `sha256:7de29bbf6b979088ffc13f04b556856be083fc00be19e75922b5b47d767f2d09`.
+
+This makes evidence-unit deduplication a property of the maintained reducer rather than a one-off forensic judgment. Different run IDs or commit SHAs are not sufficient to claim another independent execution regime for this question.
+
 ## Historical retained-refresh ladder
 
 The exact frozen model was then checked against the retained full-refresh history where the attempt contract is sufficient.
