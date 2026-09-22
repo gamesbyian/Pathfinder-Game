@@ -235,6 +235,18 @@ assert.equal(compact.entries[0].gateClass, 'existing-data');
     writeFileSync(workstreamPath, structuredWorkstreams);
 }
 
+{
+    const workstreamPath = path.join(root, 'docs/solver-optimization-workstreams.md');
+    const structuredWorkstreams = readFileSync(workstreamPath, 'utf8');
+    writeFileSync(workstreamPath, structuredWorkstreams.replace('`existing-data`', '`mystery-route`'));
+    assert.throws(
+        () => buildResearchStatusIndex(root),
+        /unknown workstream gate class mystery-route/,
+        'current workstream gate classes must use the bounded machine vocabulary',
+    );
+    writeFileSync(workstreamPath, structuredWorkstreams);
+}
+
 const questionRegistry = loadResearchQuestionRegistry(root);
 assert.deepEqual(validateResearchQuestionRegistry(questionRegistry), []);
 assert.equal(normalizeResearchQuestionStatus('active-candidate'), 'active');
@@ -270,6 +282,29 @@ invalidAcquisition.questions[0].acquisitionNeed = 'generate-something';
 assert.deepEqual(validateResearchQuestionRegistry(invalidAcquisition), [
     'questions[0].acquisitionNeed is unknown: generate-something',
 ]);
+
+const validDecisionSupport = JSON.parse(JSON.stringify(questionRegistry));
+validDecisionSupport.questions[0].decisionSupport = {
+    mode: 'all',
+    refs: ['reports/2026-08-21-example.md'],
+};
+assert.deepEqual(validateResearchQuestionRegistry(validDecisionSupport, { root }), []);
+
+const invalidDecisionSupportMode = JSON.parse(JSON.stringify(questionRegistry));
+invalidDecisionSupportMode.questions[0].decisionSupport = {
+    mode: 'majority',
+    refs: ['reports/2026-08-21-example.md'],
+};
+assert.ok(validateResearchQuestionRegistry(invalidDecisionSupportMode, { root })
+    .some(error => error.includes('decisionSupport.mode must be all or any')));
+
+const duplicateDecisionSupport = JSON.parse(JSON.stringify(questionRegistry));
+duplicateDecisionSupport.questions[0].decisionSupport = {
+    mode: 'all',
+    refs: ['reports/2026-08-21-example.md', 'reports/2026-08-21-example.md'],
+};
+assert.ok(validateResearchQuestionRegistry(duplicateDecisionSupport, { root })
+    .some(error => error.includes('decisionSupport.refs duplicates')));
 
 const invalidAnsweredBy = JSON.parse(JSON.stringify(questionRegistry));
 invalidAnsweredBy.questions[0].answeredBy = ['not-a-repository-edge'];
