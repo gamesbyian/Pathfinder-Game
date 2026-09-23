@@ -217,6 +217,7 @@ function runOneAttempt(id, found, label, prefixKeys, timeLimitForThis, forcing, 
             row.rejectReason = verdict.reason;
         } else {
             row.solution = verdict.path;
+            row.foundAt = new Date().toISOString();
             row.levelRevision = levelRevision;
             row.solverId = EXTERNAL_SOLVER_ID;
             row.technique = 'cpsat-reference-probe';
@@ -293,6 +294,17 @@ if (saveHints && pending.size > 0) {
 if (outFile) {
     const abs = path.resolve(root, outFile);
     mkdirSync(path.dirname(abs), { recursive: true });
-    writeFileSync(abs, JSON.stringify({ generatedAt: new Date().toISOString(), timeLimitSec: timeLimit, forcedGrid, comboTimeLimit, maxCombos, levels: results }, null, 1));
+    writeFileSync(abs, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'pathfinder-cpsat-hint-discovery-report',
+        producer: 'cpsat-hint-harvest',
+        corpus: corpusFile,
+        generatedAt: new Date().toISOString(),
+        timeLimitSec: timeLimit,
+        forcedGrid,
+        comboTimeLimit,
+        maxCombos,
+        levels: results,
+    }, null, 1));
     console.log(`Wrote ${outFile}`);
 }
