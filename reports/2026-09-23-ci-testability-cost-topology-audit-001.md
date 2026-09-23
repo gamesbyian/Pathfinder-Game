@@ -748,3 +748,46 @@ Experiment:
 Safety properties stay unchanged because the key is already derived from exact Git object IDs. The optimization is publication timing, not weaker cache identity.
 
 This may be one of the highest-return setup fixes because a warm hit collapses tens of seconds of sparse-checkout/materialization work to a few seconds.
+
+
+## Dependency-free preflight cohort
+
+All **10 current repo validators** are plain-`node` commands:
+
+- secret hygiene;
+- audit artifacts;
+- documentation links;
+- workflow actions;
+- CLI option contracts;
+- plain-Node import boundaries;
+- agent-context budget;
+- file-size ratchet;
+- CI impact inventory;
+- CI validation-plan parity.
+
+A source pass over their entrypoints found no direct external npm-package imports. Several use Git/subprocesses or local helpers, so a final transitive dependency proof should be derived from the generic import graph before activation, but the cohort is a strong candidate for execution before `npm ci`.
+
+Historical context:
+
+- **296** repair episodes yielded parsed detector signatures;
+- current repo-validator identities appeared in **211** distinct representative episodes.
+
+Those counts are correlated and do not mean 211 independent regressions. They do show that repo/authority failures are a common early red signal.
+
+### Proposed experiment
+
+Within the existing fast-gate runner:
+
+1. checkout the source/docs authority needed by repo validators;
+2. setup Node;
+3. run the complete dependency-free repo-preflight cohort and collect **all** failures in that cohort;
+4. only on preflight success, restore/materialize runtime data, run `npm ci`, and enter installed-dependency validation.
+
+This is deliberately not generic fail-fast. It preserves multi-error reporting inside the preflight cohort and stops only at a clear dependency boundary.
+
+Tradeoff to measure:
+
+- **benefit:** red authority/docs/CI PRs avoid install, 173 Node harnesses, canary, and build;
+- **cost:** downstream independent failures are not reported until preflight is repaired.
+
+Before activation, replay historically long repair episodes to estimate how often a preflight-red head also contained an independent installed-dependency failure. If that overlap is common, retain current collect-all behavior or provide a manual/full diagnostic mode.
