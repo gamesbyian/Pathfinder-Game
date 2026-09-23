@@ -51,6 +51,7 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
     const failuresByKey = new Map();
     let failureRecordsObserved = 0;
     let ambiguousFailureRecords = 0;
+    let failureRecordsMissingComparabilityIdentity = 0;
 
     for (const document of failureDocuments ?? []) {
         const populationIdentity = failurePopulationIdentity(document);
@@ -65,7 +66,10 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
             }
             const joinKey = key(populationIdentity, parentId,
                 failureProtocol(document, row), failureSolverRef(document, row));
-            if (!joinKey) continue;
+            if (!joinKey) {
+                failureRecordsMissingComparabilityIdentity += 1;
+                continue;
+            }
             const list = failuresByKey.get(joinKey) ?? [];
             list.push({
                 identity: row.identity ?? null,
@@ -89,6 +93,7 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
     let discoveryRecordsObserved = 0;
     let discoveryRecordsWithoutComparableFailure = 0;
     let discoveryRecordsMissingPopulationIdentity = 0;
+    let discoveryRecordsMissingComparabilityIdentity = 0;
     const matchedParents = new Set();
 
     for (const document of discoveryDocuments ?? []) {
@@ -97,6 +102,7 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
             discoveryRecordsObserved += 1;
             if (!run.populationIdentity) discoveryRecordsMissingPopulationIdentity += 1;
             const joinKey = key(run.populationIdentity, discovery?.parentId, run.protocolHash, run.solverRef);
+            if (!joinKey) discoveryRecordsMissingComparabilityIdentity += 1;
             const failures = joinKey ? (failuresByKey.get(joinKey) ?? []) : [];
             if (!failures.length) {
                 discoveryRecordsWithoutComparableFailure += 1;
@@ -132,9 +138,11 @@ export function joinHintDiscoveryAndFailureProcesses(discoveryDocuments, failure
             discoveryRecordsObserved,
             failureRecordsObserved,
             ambiguousFailureRecords,
+            failureRecordsMissingComparabilityIdentity,
             joinedDiscoveryRecords: rows.length,
             discoveryRecordsWithoutComparableFailure,
             discoveryRecordsMissingPopulationIdentity,
+            discoveryRecordsMissingComparabilityIdentity,
             independentMatchedParents: matchedParents.size,
         },
         rows,
