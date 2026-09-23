@@ -6,12 +6,17 @@ on:
       job_counts:
         description: Comma-separated PATHFINDER_PARALLEL_JOBS values; use unbounded for historical default
         required: true
-        default: '4,8,16,unbounded'
+        default: '4'
+        type: string
+      execution_modes:
+        description: Comma-separated child package-script modes (npm or direct)
+        required: true
+        default: 'npm,direct'
         type: string
       repeats:
         description: Repeats per worker-pool size on the same runner
         required: true
-        default: '2'
+        default: '4'
         type: string
 
 permissions:
@@ -32,4 +37,5 @@ jobs:
         run: >-
           npm run ci:benchmark-node-concurrency --
           --jobs="${{ inputs.job_counts }}"
+          --modes="${{ inputs.execution_modes }}"
           --repeats="${{ inputs.repeats }}"
