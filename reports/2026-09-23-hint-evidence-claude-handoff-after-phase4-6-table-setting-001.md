@@ -12,9 +12,9 @@
 
 The program is now materially beyond the architectural-foundation stage.
 
-A reasonable implementation-progress estimate is **roughly 65–70% of the entire dependency-ordered
-plan**, with the important asymmetry that the semantic foundation is much further along than the
-remaining physical/workflow migration volume.
+A reasonable implementation-progress estimate is now **roughly 70–75% of the entire
+dependency-ordered plan**, with the important asymmetry that the semantic foundation and Phase-5
+ingestion contract are much further along than the remaining physical/workflow migration volume.
 
 It would be misleading to call the full plan 75% complete before the remaining Phase-3 storage
 semantics are settled and at least one real Phase-6 dual-path family has passed parity/reharvest and
@@ -94,7 +94,7 @@ demonstrated repeated query that earns another persistent projection.
 
 ### Phase 5 — standardized ingestion projection / receipt
 
-**Substantially implemented, not fully closed.**
+**Implementation-complete on this descendant, pending execution/live-workflow validation.**
 
 Complete:
 
@@ -107,16 +107,30 @@ Complete:
 - CP-SAT specialist artifact is now sufficient for exact central reconstruction;
 - CP-SAT specialist central adapter exists in shadow/dual-path mode.
 
+Added after the first handoff draft:
+
+- one small canonical `pathfinder-hint-discovery-ingestion-observation` envelope now owns the final
+  specialist-artifact -> Hint boundary;
+- CP-SAT and diagnostics both normalize through it rather than carrying bespoke final envelopes;
+- diagnostics artifacts now retain exact accepted path, source level revision, discovery time,
+  request identity/reproducibility mode, winning attempts and work fields;
+- diagnostics now has a central shadow adapter and shared receipt, so it is no longer an approved
+  opaque direct-writer exception;
+- a workflow completeness guard requires every maintained central-ingestion target to have central
+  ownership and a sufficient durable discovery artifact;
+- a live shadow/reharvest parity gate now checks the meaningful specialist invariant without comparing
+  unlike candidate denominators.
+
 Still open:
 
-- decide whether a separately surfaced canonical successful-discovery projection is needed beyond the
-  current specialist-artifact -> canonical adapter boundaries;
-- complete producer/static completeness checks if the real workflow migrations expose a need;
-- prove CP-SAT shadow parity on one bounded real run.
+- execute one bounded CP-SAT shadow run and one diagnostics shadow run;
+- exercise reharvest idempotency;
+- only then remove their direct canonical mutation routes.
 
 ### Phase 6 — incremental GHA persistence centralization
 
-**Meaningfully started, still a large remaining phase.**
+**Well table-set and dual-path for both specialist exceptions; live family retirement remains the
+largest remaining workflow phase.**
 
 Complete infrastructure:
 
@@ -203,3 +217,27 @@ Every one of those would violate the program's core methodology.
 The remaining distance to a defensible ~75% is therefore best earned by **Claude validating this branch,
 closing Phase 3 storage semantics, and retiring at least the first one or two real dual-path workflow
 families**. The plumbing and oracles needed to do that are now present.
+
+
+## Additional mechanical closeout after the original handoff draft
+
+The descendant now also:
+
+- removes two retired workflow names from the central harvester trigger list;
+- guards every central `workflow_run` source display name against the actual workflow tree;
+- exposes run-scoped ingestion accounting directly in the harvest job summary;
+- provides `scripts/hint-ingestion-shadow-parity.mjs` for first-pass shadow and reharvest gates;
+- makes the diagnostics source artifact sufficient for central reconstruction and adds the diagnostics
+  dual path;
+- routes both CP-SAT and diagnostics specialist observations through one canonical successful-discovery
+  ingestion projection;
+- corrects the CP-SAT adapter's repository-relative import/root paths found during this continuation;
+- adds a fail-closed workflow-ingestion completeness audit.
+
+These changes move Phase 5 from "substantially implemented" to "implementation-complete pending
+execution validation" and eliminate diagnostics as an unresolved artifact-sufficiency exception.
+
+The remaining route to a defensible full-plan 75%+ is now mostly **real evidence**, not more schema
+design: run the new validation floor, run bounded specialist dual-path canaries/reharvests, settle the
+Phase-3 bounded Firestore/occurrence representation, and retire the first direct workflow routes only
+after those gates pass.
