@@ -590,3 +590,33 @@ Correctness gate:
 - measure warm and cold Actions timings before deciding whether the extra cache surface is worth maintaining.
 
 Project references / splitting production and test program construction remain a second-stage option only if build-info reuse does not materially reduce the duplicated parse/check cost.
+
+
+## Intra-group incrementality
+
+Impact routing answers whether the **data** group should run. It does not imply every selected data validator must rescan the entire repository.
+
+`check:corpus-level-formatting` is a strong pilot:
+
+- it checks four corpus files plus every discovered hint artifact;
+- its invariant is byte-local: each file must equal canonical serialization of its own parsed contents;
+- latest clean CI reports ~11.7 s for the command;
+- historical representative logs show 334 observed executions and only one representative detector appearance.
+
+For PR execution, added/modified corpus/hint paths can be checked directly from the Git diff. Untouched files cannot become misformatted because another file changed. Deleted files require no formatting proof.
+
+Keep a full-tree mode for:
+
+- main/nightly/full-oracle validation;
+- manual audit;
+- router/config changes that deliberately request full validation.
+
+This suggests a broader taxonomy inside each semantic group:
+
+1. **file-local invariants** — safely incremental by changed path;
+2. **dependency-local invariants** — incremental using explicit producer/consumer edges;
+3. **global invariants** — require whole-authority/repository view.
+
+Do not treat every validator as global merely because its first implementation walked the whole tree.
+
+The existing `PATHFINDER_PR_INCREMENTAL` mechanism used by textual-source checks provides a precedent. The topology/contract registry should eventually record incremental class and, where safe, changed-path selectors.
