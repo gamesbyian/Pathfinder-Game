@@ -49,7 +49,7 @@ export function prepareSolverExperimentPreflight(
     argv,
     {
         root = process.cwd(),
-        productionFlags = defaultConfig(),
+        productionFlags = null,
         now = () => new Date().toISOString(),
         git = (...gitArgs) => execFileSync('git', gitArgs, { cwd: root, encoding: 'utf8' }).trim(),
     } = {},
@@ -78,6 +78,7 @@ export function prepareSolverExperimentPreflight(
         return { kind: 'compare', result };
     }
 
+    const effectiveProductionFlags = productionFlags ?? defaultConfig();
     const corpus = required('--corpus');
     const arm = required('--arm');
     const output = required('--output');
@@ -89,12 +90,12 @@ export function prepareSolverExperimentPreflight(
     if (missing.length) throw new Error(`selected levels absent from corpus: ${missing.slice(0, 5).join(',')}`);
 
     const flags = parseAssignments(args.get('--flags'), { coerceBooleans: true });
-    const unknownFlags = Object.keys(flags).filter(key => !(key in productionFlags));
+    const unknownFlags = Object.keys(flags).filter(key => !(key in effectiveProductionFlags));
     if (unknownFlags.length) throw new Error(`unknown solver flags: ${unknownFlags.join(',')}`);
 
     const workflow = args.get('--workflow') ?? 'direct';
     const workflowInputs = parseWorkflowInputs(args);
-    const solverFlags = { ...productionFlags, ...flags };
+    const solverFlags = { ...effectiveProductionFlags, ...flags };
     const budgetProtocol = args.get('--budget-protocol') ?? 'production-additive';
 
     const researchQuestionInputs = {
@@ -156,7 +157,7 @@ export function prepareSolverExperimentPreflight(
     if (workflow === 'solver-stress-refresh') {
         const enabled = (workflowInputs.enable_flags ?? '').split(',').filter(Boolean);
         const disabled = (workflowInputs.disable_flags ?? '').split(',').filter(Boolean);
-        const unknownDispatchFlags = [...enabled, ...disabled].filter(flag => !(flag in productionFlags));
+        const unknownDispatchFlags = [...enabled, ...disabled].filter(flag => !(flag in effectiveProductionFlags));
         if (unknownDispatchFlags.length) {
             throw new Error(
                 `unknown solver flags in workflow inputs: ${[...new Set(unknownDispatchFlags)].join(',')}`,
@@ -168,10 +169,10 @@ export function prepareSolverExperimentPreflight(
                 `workflow enables and disables the same solver flag: ${[...new Set(overlap)].join(',')}`,
             );
         }
-        const workflowConfig = { ...productionFlags };
+        const workflowConfig = { ...effectiveProductionFlags };
         for (const flag of enabled) workflowConfig[flag] = true;
         for (const flag of disabled) workflowConfig[flag] = false;
-        const drift = Object.keys(productionFlags)
+        const drift = Object.keys(effectiveProductionFlags)
             .filter(flag => workflowConfig[flag] !== solverFlags[flag]);
         if (drift.length) {
             throw new Error(
