@@ -675,3 +675,20 @@ This should complement, not replace, semantic surface routing:
 1. semantic surfaces establish blast-radius policy;
 2. the import graph narrows direct code consumers within a selected surface;
 3. explicit non-code dependency metadata closes the graph where static imports cannot see.
+
+
+## Package-authority correction
+
+The impact-routing backtest already contains an important mitigation: **script-only `package.json` registration does not by itself force full impact** when the changed local entrypoints have known narrow ownership.
+
+Historical backtest examples show full-impact package cases primarily when the permanent validation aggregate/composition itself changed, not merely because a research script alias was added.
+
+Therefore validation-registration decoupling remains desirable for:
+
+- clearer contract metadata;
+- eliminating the giant hand-maintained aggregate command;
+- direct entrypoint execution without an npm intermediary;
+- separating execution metadata from product dependency/build authority;
+- easier dependency/surface derivation;
+
+but it should **not** be prioritized on the claim that every script-only package edit currently causes full CI. The current semantic package diff has already removed much of that routing penalty.
