@@ -657,21 +657,23 @@
       "treatment": "single-mutable-authority",
       "status": "in-progress",
       "retirementGate": "Modern GHA solver discoveries use one central semantic hint-ingestion authority from specialist discovery artifacts projected through a common execution capsule. Do not force failure/exact/family/search-loss evidence into one universal artifact schema. Direct hint-file import remains historical/mixed-era compatibility after parity and partial-failure recovery are demonstrated.",
-      "progress": "Workflow matrix now names producer entrypoint, level/history semantics, persistence lane, path/config/revision availability, source lineage, partial-failure behavior, artifact sufficiency, and migration target for all harvester-relevant maintained workflows. Central harvester deliberately excludes broad/residual/static-portfolio/recombination from canonical hints. Recombination already retains constituent acquisition runs. Two harvester workflow_run names have no maintained workflow file and are stale trigger residue."
+      "progress": "Central harvest now resolves source run attempt as well as run id/workflow/SHA; report-based level-blind and isolated/import lanes reconstruct physical occurrence lineage from those exact source-run facts and emit durable versioned ingestion receipts under reports/stress/hint-ingestion-receipts. The retry/reset loop regenerates and persists those receipts from immutable source artifacts. Direct transported canonical hint-file merging remains a compatibility lane without a receipt, and workflow-family-by-family retirement/parity remains Phase 6 work."
     },
     {
       "id": "PSC-028",
       "concept": "hint ingestion selection/retention accounting",
       "owners": [
+        "scripts/hint-ingestion-receipt-lib.mjs",
+        "scripts/hint-ingestion-receipt-query.mjs",
         "scripts/hint-harvest-selection-manifest-lib.mjs",
         "scripts/harvest-level-blind-report-hints.mjs",
         "scripts/harvest-isolated-report-hints.mjs",
         "scripts/merge-hint-artifacts.mjs"
       ],
       "forms": [
-        "level-blind selection manifest",
-        "isolated-harvest counters/quarantine",
-        "direct artifact merger counters/quarantine"
+        "canonical hint-ingestion receipt",
+        "historical level-blind selection manifest compatibility projection",
+        "direct artifact merger counters/quarantine (remaining migration gap)"
       ],
       "currentWritesMultipleForms": true,
       "currentInputsMultipleForms": false,
@@ -680,7 +682,7 @@
       "treatment": "canonical-ingestion-receipt",
       "status": "in-progress",
       "retirementGate": "All modern ingestion lanes expose one minimal canonical funnel vocabulary for observed solved candidates, referee/compatibility rejection, already-represented semantic evidence, quarantine, and persisted changes, with producer-specific extensions allowed.",
-      "progress": "Investigation closed 2026-09-22. Only level-blind harvesting emits a structured selection manifest; isolated and direct-artifact compatibility import expose different log/quarantine counters. Phase -1 will add one versioned hint-ingestion receipt with explicit units for candidate, eligible, referee-accepted, already-represented, path/event/occurrence additions, quarantine reasons, and physical changes. It remains success-ingestion accounting, never an attempted-population denominator."
+      "progress": "Canonical receipt schema v1 is implemented and queryable. It names success-selected candidate/eligible/referee-accepted/already-represented/quarantined observations, quarantine reasons, coarse semantic changes, exact path/provenance-event/occurrence additions when measurable, physical file changes, and explicit null for unmeasured addition units. Level-blind and isolated/report harvesters emit the shared receipt; the old level-blind manifest remains readable and projects into it without historical rewrite. Central GHA harvest persists these receipts deterministically. Remaining gap: merge-hint-artifacts.mjs still needs equivalent accounting before PSC-028 can retire."
     },
     {
       "id": "PSC-029",
