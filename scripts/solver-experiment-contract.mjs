@@ -35,6 +35,42 @@ export function hashConfiguration(configuration) {
   return stableHash(configuration ?? {});
 }
 
+/**
+ * Canonical execution-protocol identity for experiment evidence.
+ *
+ * Configuration identity is deliberately only one component. Two runs can carry the same
+ * experiment.configurationHash while differing in execution mode, reproducibility contract,
+ * historical-input policy, or resource/deadline semantics. Those are protocol differences even
+ * when the experiment's own configured treatment is unchanged.
+ *
+ * Solver revision and source-run identity stay separate: this answers "were these observations
+ * executed under the same semantic protocol?", not "did they come from the same code/run?".
+ */
+export function hashExecutionProtocol(contract, { arm = null } = {}) {
+  const execution = contract?.execution ?? {};
+  const limits = contract?.limits ?? {};
+  return stableHash({
+    schemaVersion: 1,
+    configurationHash: contract?.experiment?.configurationHash ?? null,
+    arm: arm ?? null,
+    execution: {
+      levelBlind: execution.levelBlind ?? null,
+      historyAware: execution.historyAware ?? null,
+      historicalInputs: execution.historicalInputs ?? [],
+      reproducibilityExpected: execution.reproducibilityExpected ?? null,
+      producerFamily: execution.producerFamily ?? null,
+      schedulerMode: execution.schedulerMode ?? null,
+    },
+    limits: {
+      cumulativeNodeCeiling: limits.cumulativeNodeCeiling ?? null,
+      initialWorkAllocation: limits.initialWorkAllocation ?? null,
+      totalWorkCeiling: limits.totalWorkCeiling ?? null,
+      wallSafetyDeadlineMs: limits.wallSafetyDeadlineMs ?? null,
+      wallDeadlineBinding: limits.wallDeadlineBinding ?? null,
+    },
+  });
+}
+
 export const RECOVERY_RECONCILIATION_KINDS = Object.freeze([
   'recombine-only',
   'reanalyze-only',
