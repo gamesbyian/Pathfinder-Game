@@ -20,7 +20,9 @@
       "check:agent-context-budget",
       "check:file-size-ratchet",
       "check:ci-impact-inventory",
-      "check:ci-validation-plan-parity"
+      "check:ci-validation-plan-parity",
+      "check:ci-gate-parity",
+      "check:validation-groups"
     ],
     "research": [
       "check:research-integration",
@@ -62,7 +64,8 @@
       "test:ci-impact-classifier",
       "test:ci-validation-plan",
       "test:ci-execution-plan",
-      "test:validation-groups"
+      "test:validation-groups",
+      "test:run-scripts-parallel"
     ],
     "game": [
       "test:startup-smoke",
