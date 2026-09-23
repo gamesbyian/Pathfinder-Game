@@ -100,6 +100,8 @@ jobs:
       - name: Run Node and CLI contract tests
         id: node_tests
         continue-on-error: true
+        env:
+          PATHFINDER_PARALLEL_JOBS: '4'
         run: npm run test:node
       - name: Build production bundle
         id: build
