@@ -953,3 +953,36 @@ That is useful evidence: further slimming must come from:
 4. cadence changes backed by the historical-value program.
 
 Do not chase more bucket renaming expecting material wall-time savings.
+
+
+## Dependency-local routing shadow audit
+
+Surface-level ownership is still intentionally conservative. The contract-surface pass showed that broad research ownership is real, so further narrowing cannot come from renaming groups.
+
+A new shadow-only dependency-local audit now builds literal local-import closures for every registered validator/Node-test entrypoint and reports where static reachability is incomplete evidence.
+
+For each contract it records:
+
+- resolved local JS/MJS/CJS/TS/TSX/MTS/CTS/JSON closure;
+- unresolved local import edges;
+- nonliteral dynamic-import count;
+- whether the closure touches filesystem APIs;
+- child-process APIs;
+- environment variables;
+- network-like behavior;
+- reverse registered-consumer counts for repository source files.
+
+A contract is labelled a **static-import-sufficient candidate** only when all of the following hold:
+
+1. every observed local literal edge resolves;
+2. there are no nonliteral dynamic imports;
+3. the closure does not touch filesystem, child-process, environment, or network seams.
+
+Even that label is only a candidate. It is not permission to skip the contract.
+
+The topology audit now emits `tmp/ci-dependency-local-routing-audit.json` and summarizes coverage by semantic surface. This should answer two questions before any routing change:
+
+- how much of the permanent test population is even amenable to static dependency invalidation;
+- whether commonly changed modules have substantially smaller mechanically visible consumer sets than their broad semantic surfaces.
+
+Activation requires a second evidence layer for non-import dependencies (data files, generated artifacts, subprocess contracts, environment/configuration) plus historical/fault-injected replay. Static imports alone remain a lower bound.
