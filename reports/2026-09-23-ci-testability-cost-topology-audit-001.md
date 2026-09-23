@@ -1109,3 +1109,57 @@ The topology audit now emits `tmp/ci-dependency-local-routing-audit.json` and su
 - whether commonly changed modules have substantially smaller mechanically visible consumer sets than their broad semantic surfaces.
 
 Activation requires a second evidence layer for non-import dependencies (data files, generated artifacts, subprocess contracts, environment/configuration) plus historical/fault-injected replay. Static imports alone remain a lower bound.
+
+
+## Hidden validation ownership cleanup
+
+The audit found three permanent authority checks hidden inside `check:dead-scripts`:
+
+- agent-context budget;
+- local/GitHub Actions gate parity;
+- validation-group parity.
+
+The agent-context check was also an explicit repo validator, so it was definitely executed twice. A recent green fast-gate log reported the explicit execution at about **1.3 s** after the hidden copy had already run.
+
+A closer authority audit showed that all three checks can have explicit ownership safely:
+
+- edits to `scripts/validation-groups.json`, workflows, router/planner code, and the parallel runner are already classified as full-impact CI authority;
+- edits to `check:validators` / `test:node` package aggregates expose `scripts/run-scripts-parallel.mjs`, which is also classified full impact;
+- a regression test now locks that aggregate-edit property.
+
+The resulting model is:
+
+1. `check:dead-scripts` checks package entrypoint/tooling lifecycle and permanent-gate lifecycle only;
+2. `check:agent-context-budget` remains an explicit repo validator;
+3. `check:ci-gate-parity` is now an explicit repo validator;
+4. `check:validation-groups` is now an explicit repo validator;
+5. the scoped validation plan no longer lists validation-group parity separately as an always-on package script;
+6. the scoped dry-run no longer executes a duplicate standalone validation-group step.
+
+Current universal PR CI and the ordinary local `check` finish line still execute all three authority checks through `check:validators`. Future scoped CI executes them whenever repo/full-impact authority is selected.
+
+This gives each detector one visible execution owner, improves timing/failure attribution, and removes hidden subprocess composition without weakening the authority boundary.
+
+
+## Success-path output compaction
+
+A recent green fast-gate run (35924899131) showed the Node/CLI contract step emitting:
+
+- about **141,059 characters / 2,102 log lines** total;
+- about **128,088 characters / 1,926 lines** before the compact parallel summary;
+- therefore roughly **91% of the step's text** was successful-child output preceding a summary that already records every command's status and elapsed time.
+
+A warning/deprecation scan of that successful step found no operational warning output; the only match was a test assertion whose text contained the word “warning”.
+
+The parallel runner now supports `PATHFINDER_PARALLEL_SUCCESS_OUTPUT=summary`:
+
+- passing child stdout/stderr is suppressed;
+- failed child output remains fully buffered and printed;
+- the final per-command PASS/FAIL/timing summary remains;
+- local/default behavior stays `all` (verbose);
+- invalid modes fail explicitly;
+- the pre-existing spawn-error path is made idempotent so an `error` + `close` sequence cannot resolve/print twice.
+
+CI enables summary mode for validator and Node/CLI parallel populations in PR CI, main-push validation, and scoped dry-run execution.
+
+This is primarily a diagnostic/readability and log-storage improvement. Do not claim a meaningful wall-time speedup without measurement.
