@@ -82,7 +82,8 @@ assert.equal(report.occurrenceRecords, 2);
 assert.equal(report.occurrencesWithContractRef, 1);
 assert.equal(report.occurrenceSourceRunLinks, 2);
 assert.equal(report.missingDimensions.solverStage, 1);
-assert.equal(report.missingDimensions.solverRequestIdentity, 1);
+assert.equal(report.missingDimensions.solverRequestIdentity, undefined,
+    'embedded modern request identity must not be reported missing');
 assert.equal(report.missingDimensions.pathfinderSolverContract, 1);
 assert.equal(report.replayBasisCounts['configuration-reconstructable'], 1);
 assert.equal(report.replayBasisCounts['identity-only'], 1);
