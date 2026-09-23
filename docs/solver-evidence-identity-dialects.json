@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-23",
+  "purpose": "Machine-readable map from existing solver research identity spellings to the canonical identity layers established by the hint-evidence consolidation plan. This is a migration/reader map, not permission to copy legacy names into new outputs.",
+  "canonicalLayers": [
+    {
+      "id": "solver-request",
+      "meaning": "Run-wide Pathfinder solver request semantics after canonical default normalization; excludes level/history-derived forcing, backend scheduling/reproducibility, solver revision, source run and population.",
+      "currentOwner": "modules/solver/solver-request-projection.ts",
+      "status": "implemented-awaiting-execution-validation"
+    },
+    {
+      "id": "effective-solver-input",
+      "meaning": "Per-level/per-attempt effective input identity: level revision + immutable solver version + canonical solver request identity + solver stage/action/config + gate/forcing + relevant resource envelope + seed dimensions.",
+      "currentOwner": "scripts/hint-discovery-replayability-lib.mjs::effectiveSolverInputIdentityStatus (derived availability/query scaffold)",
+      "status": "query-scaffold-implemented; persistence/join population pending"
+    },
+    {
+      "id": "execution-protocol",
+      "meaning": "Protocol comparability semantics across observations: configuration identity plus execution mode, history policy, reproducibility contract, scheduler and declared limits. Does not include solver revision or source-run identity.",
+      "currentOwner": "scripts/solver-experiment-contract.mjs::hashExecutionProtocol",
+      "status": "implemented-awaiting-execution-validation"
+    },
+    {
+      "id": "source-run-binding",
+      "meaning": "Bounded identity glue for one acquisition run: run/attempt, immutable solver ref, configuration/protocol identity, producer/workflow/entrypoint, population/corpus, arm and source-run lineage.",
+      "currentOwner": "scripts/solver-experiment-contract.mjs::sourceRunBindingFromContract",
+      "status": "implemented-awaiting-execution-validation"
+    },
+    {
+      "id": "immutable-solver-ref",
+      "meaning": "Immutable 40-hex execution revision of the solver code actually used.",
+      "currentOwner": "experiment.resolvedSha / experiment.arms.<arm>.resolvedSha at the experiment contract boundary",
+      "status": "canonical-existing"
+    },
+    {
+      "id": "population",
+      "meaning": "Population/selection identity and corpus binding; intentionally separate from solver request and execution protocol.",
+      "currentOwner": "solver experiment contract population.identityHash / population.corpusIdentity",
+      "status": "canonical-existing"
+    }
+  ],
+  "spellings": [
+    {
+      "spelling": "summary.effectiveConfig",
+      "owners": [
+        "scripts/level-blind-capability-sweep.mjs",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/combine-solver-sweep-reports.mjs"
+      ],
+      "observedMeaning": "Producer-local literal/effective SolveOpts-adjacent execution projection recorded by sweep reports.",
+      "canonicalLayer": "solver-request",
+      "migration": "transitional producer output. Preserve historical readers. New producers should emit the canonical solver-request projection/identity rather than inventing another effectiveConfig shape.",
+      "status": "transitional-current"
+    },
+    {
+      "spelling": "summary.effectiveConfigDigest",
+      "owners": [
+        "scripts/level-blind-capability-sweep.mjs",
+        "scripts/portfolio-solve-sweep.mjs",
+        "scripts/check-effective-config-agreement.mjs",
+        "scripts/combine-solver-sweep-reports.mjs"
+      ],
+      "observedMeaning": "SHA-256 over producer-local effectiveConfig using canonical/stable serialization. Useful for shard/treatment agreement, but not a complete canonical solver-request identity.",
+      "canonicalLayer": "solver-request",
+      "migration": "read historically; migrate maintained writers/consumers to the canonical solver-request identity after runtime bridge/parity is validated.",
+      "status": "transitional-current"
+    },
+    {
+      "spelling": "experiment.configurationHash",
+      "owners": [
+        "scripts/solver-experiment-contract.mjs",
+        "scripts/publish-solver-sweep-result.mjs",
+        "scripts/combine-solver-sweep-reports.mjs"
+      ],
+      "observedMeaning": "Experiment configuration/treatment identity declared by the owning experiment contract.",
+      "canonicalLayer": "experiment-configuration",
+      "migration": "retain as a distinct specialist identity. It is one input to execution-protocol identity and must not be renamed to solver-request identity unless a specific producer proves semantic equivalence.",
+      "status": "canonical-existing-specialist"
+    },
+    {
+      "spelling": "configurationHash",
+      "owners": [
+        "solver sweep result artifacts",
+        "hint-discovery-process evidence"
+      ],
+      "observedMeaning": "Artifact-local projection of experiment configuration identity.",
+      "canonicalLayer": "experiment-configuration",
+      "migration": "retain only where the owning artifact explicitly means experiment configuration; historical reader spelling otherwise.",
+      "status": "current-specialist"
+    },
+    {
+      "spelling": "protocolHash",
+      "owners": [
+        "scripts/hint-discovery-process-evidence-lib.mjs"
+      ],
+      "observedMeaning": "Execution-protocol identity.",
+      "canonicalLayer": "execution-protocol",
+      "migration": "now generated by hashExecutionProtocol(). Before 2026-09-23 it incorrectly duplicated configurationHash; historical documents from that generation must be treated as configuration-only protocol evidence, not proof of full protocol equality.",
+      "status": "canonicalized-2026-09-23"
+    },
+    {
+      "spelling": "experiment.sourceProtocolHash",
+      "owners": [
+        "scripts/publish-solver-sweep-result.mjs",
+        "reconciliation experiment contracts"
+      ],
+      "observedMeaning": "Lineage reference to a source experiment/protocol used by a reconciliation/recombination run.",
+      "canonicalLayer": "source-run-lineage",
+      "migration": "do not reinterpret as the current run's protocolHash. Preserve as lineage metadata and normalize through source-run binding/reconciliation readers.",
+      "status": "lineage-specialist"
+    },
+    {
+      "spelling": "experiment.resolvedSha",
+      "owners": [
+        "scripts/solver-experiment-contract.mjs",
+        "scripts/publish-solver-sweep-result.mjs"
+      ],
+      "observedMeaning": "Immutable solver execution revision for a single-SHA experiment.",
+      "canonicalLayer": "immutable-solver-ref",
+      "migration": "canonical source when no per-arm SHA exists.",
+      "status": "canonical-existing"
+    },
+    {
+      "spelling": "experiment.arms.<arm>.resolvedSha",
+      "owners": [
+        "scripts/solver-experiment-contract.mjs"
+      ],
+      "observedMeaning": "Immutable solver execution revision for one experiment arm.",
+      "canonicalLayer": "immutable-solver-ref",
+      "migration": "canonical source for arm-specific solverRef.",
+      "status": "canonical-existing"
+    },
+    {
+      "spelling": "solverRef",
+      "owners": [
+        "hint-discovery-process evidence",
+        "specialist result artifacts"
+      ],
+      "observedMeaning": "Artifact-local immutable solver revision projection.",
+      "canonicalLayer": "immutable-solver-ref",
+      "migration": "acceptable role-qualified projection when sourced from resolvedSha; do not populate from mutable branch/ref names.",
+      "status": "current-projection"
+    },
+    {
+      "spelling": "commitSha / summary.commit / commit",
+      "owners": [
+        "specialist solver result artifacts",
+        "scripts/publish-solver-sweep-result.mjs"
+      ],
+      "observedMeaning": "Mixed-era result spellings for execution revision. Publisher already checks these when binding declared resolvedSha.",
+      "canonicalLayer": "immutable-solver-ref",
+      "migration": "historical/current specialist readers only; normalize at ingress and prefer resolvedSha/solverRef in new identity bindings.",
+      "status": "mixed-era-reader"
+    },
+    {
+      "spelling": "manifest.sha",
+      "owners": [
+        "scripts/publish-solver-sweep-result.mjs"
+      ],
+      "observedMeaning": "GitHub workflow checkout SHA (GITHUB_SHA), which may differ from the solver code revision when a workflow performs a custom checkout.",
+      "canonicalLayer": "source-run-transport",
+      "migration": "never substitute for immutable solverRef unless equality is explicitly proved. Keep as workflow/source-run transport provenance.",
+      "status": "canonical-transport"
+    },
+    {
+      "spelling": "manifest.runId / experiment.workflowRunId / runId",
+      "owners": [
+        "scripts/publish-solver-sweep-result.mjs",
+        "hint-discovery-process evidence",
+        "pathfinder-gha-source-run sidecars"
+      ],
+      "observedMeaning": "Physical acquisition/workflow run identifier.",
+      "canonicalLayer": "source-run-binding",
+      "migration": "normalize into sourceRunBinding.runId; do not include in semantic provenance-event identity.",
+      "status": "current-multiple-projections"
+    },
+    {
+      "spelling": "runAttempt / experiment.workflowRunAttempt",
+      "owners": [
+        "scripts/publish-solver-sweep-result.mjs",
+        "pathfinder-gha-source-run sidecars"
+      ],
+      "observedMeaning": "Attempt number of the physical workflow acquisition run.",
+      "canonicalLayer": "source-run-binding",
+      "migration": "normalize into sourceRunBinding.runAttempt where available.",
+      "status": "current-multiple-projections"
+    },
+    {
+      "spelling": "experiment.sourceRuns / reconciliationRun.sourceRuns",
+      "owners": [
+        "scripts/solver-experiment-contract.mjs"
+      ],
+      "observedMeaning": "Constituent acquisition-run lineage for recombined/reconciled evidence.",
+      "canonicalLayer": "source-run-binding",
+      "migration": "preserve as sourceRunBinding.sourceRuns; never collapse constituent lineage to only the recombination run id.",
+      "status": "canonical-existing-lineage"
+    },
+    {
+      "spelling": "population.identityHash / population.corpusIdentity",
+      "owners": [
+        "scripts/solver-experiment-contract.mjs",
+        "scripts/publish-solver-sweep-result.mjs"
+      ],
+      "observedMeaning": "Population and corpus identity.",
+      "canonicalLayer": "population",
+      "migration": "remain separate from solver request/protocol identity; source-run binding references them.",
+      "status": "canonical-existing"
+    }
+  ],
+  "knownHistoricalCaveats": [
+    {
+      "id": "protocol-hash-collapsed-to-configuration-hash",
+      "affectedGeneration": "hint-discovery-process schema v1 documents emitted before the 2026-09-23 hashExecutionProtocol fix",
+      "effect": "protocolHash cannot prove execution-protocol equality because it was copied from configurationHash",
+      "handling": "treat as configuration-only historical evidence unless the owning experiment contract is available and protocolHash can be recomputed exactly"
+    },
+    {
+      "id": "workflow-sha-not-solver-sha",
+      "effect": "GITHUB_SHA/manifest.sha may identify the workflow checkout rather than a custom solver checkout",
+      "handling": "bind immutable solver identity through experiment.resolvedSha or arm.resolvedSha and verify against primary result execution revision"
+    }
+  ]
+}
