@@ -711,11 +711,11 @@
   },
   "enforcementStatus": {
     "membership": "CI-enforced by scripts/solver-request-semantics-inventory-node-test.mjs (test:solver-request-semantics-inventory, wired into test:node): fails when SolveOpts membership drifts from this file's commonSolveOpts, or when RACE_LEVEL_OPTS_FIELDS drifts from backendRequests.raced.supportedCommonFields",
-    "canonicalDefaults": "not yet exhaustive; must be derived from canonical normalization/solver behavior rather than guessed from interface optionality -- this is prose only until the canonical request-projection builder (plan section 3.2) actually resolves effective values",
+    "canonicalDefaults": "canonical run-wide defaults now have an executable owner in modules/solver/solver-request-projection.ts; omitted and explicit canonical defaults compare equal where that owner can prove equivalence. Level-dependent eligibility/clamping and history-derived forcing remain intentionally deferred to effective-input identity rather than guessed into this run-wide projection.",
     "identityParticipation": "CI-enforced as of 2026-09-23: every commonSolveOpts row and every raced backendSpecificFields row now carries an explicit identityLayer, one of solver-semantic / observation-semantic / transport-execution / level-specific-history-derived / non-semantic-output-control (plan section 13.2.J's five-bucket taxonomy, derived from each row's pre-existing semanticClass). See reports/2026-09-23-hint-evidence-phase2-identity-layer-taxonomy-001.md.",
     "backendSupport": "direct/worker contracts are canonical; raced support is mechanically owned by RACE_LEVEL_OPTS_FIELDS/toRaceLevelOpts and must not be copied into a second hand-maintained allowlist",
     "phaseMinus1Gate": "implemented: scripts/solver-request-semantics-inventory-node-test.mjs fails when SolveOpts membership, race boundary fields, or backend-specific request fields change without a matching semantic classification",
-    "identityClassification": "all 49 SolveOpts fields plus both raced backend-specific fields now have a source-owned default-semantics statement, an explicit CI-enforced identityLayer, and a direct/worker/raced support classification. Still missing: the actual canonical request-projection/digest builder that consumes this classification (plan section 3.2) -- this file remains a classification authority, not yet a runtime identity implementation."
+    "identityClassification": "all 49 SolveOpts fields plus both raced backend-specific fields carry an explicit CI-enforced identityLayer. modules/solver/solver-request-projection.ts now consumes exactly the solver-semantic subset through a field-parity test and emits a versioned canonical run-wide projection/string. Still pending: Node digest adapter/integration into producers, per-level effective-input identity, and backend/execution reproducibility identity."
   },
   "backendSemanticGaps": [
     {
@@ -725,7 +725,9 @@
         "pruneDiagnostics"
       ],
       "finding": "buildWorkerSolveOpts forwards these plain mutable objects because they are structured-cloneable, but the worker mutates only its clone and SolveResult does not return them. A caller can therefore request them without an error and observe no updates.",
-      "target": "classify them direct-only and reject at worker ingress, or add an explicit returned telemetry projection; do not call structured-clone transport equivalent to direct side-effect semantics."
+      "target": "classify them direct-only and reject at worker ingress, or add an explicit returned telemetry projection; do not call structured-clone transport equivalent to direct side-effect semantics.",
+      "status": "resolved-2026-09-23",
+      "resolution": "modules/solver/solver-worker-client.ts now explicitly rejects beamFlowCounters/pruneDiagnostics rather than transporting a structured-cloned mutable side channel whose mutations cannot return; covered by solver-worker-client tests and documented in reports/2026-09-23-hint-evidence-phase1-worker-observer-parity-001.md."
     }
   ]
 }
