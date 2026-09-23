@@ -148,6 +148,19 @@ jobs:
                 --source-workflow="$SOURCE_WORKFLOW" \
                 --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-captured-artifacts.json"
 
+              # CP-SAT is an external specialist producer. Its workflow still transports canonical
+              # hint files during the Phase-6 parity window, but its self-describing discovery
+              # reports can now reconstruct the same semantic events centrally while preserving
+              # external-solver identity and source-run occurrence lineage.
+              if [[ "$SOURCE_WORKFLOW" == 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)' ]]; then
+                node scripts/run-bundled.mjs scripts/harvest-cpsat-discovery-reports.mjs -- \
+                  --staging-dir=artifact-staging \
+                  --source-run-id="$SOURCE_RUN_ID" \
+                  --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
+                  --source-workflow="$SOURCE_WORKFLOW" \
+                  --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-cpsat-discoveries.json"
+              fi
+
               # Artifact-only level-blind workflows still retain solved paths and winning attempts in
               # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
               # quarantined on main, never discarded or attributed to the wrong level revision.
