@@ -80,6 +80,7 @@ jobs:
           source_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID")"
           source_workflow="$(jq -r '.name' <<<"$source_json")"
           source_sha="$(jq -r '.head_sha' <<<"$source_json")"
+          source_run_attempt="$(jq -r '.run_attempt // 1' <<<"$source_json")"
           if [[ -n "$EXPECTED_WORKFLOW" && "$EXPECTED_WORKFLOW" != "$source_workflow" ]]; then
             echo "Expected source workflow '$EXPECTED_WORKFLOW' but run $SOURCE_RUN_ID belongs to '$source_workflow'." >&2
             exit 1
@@ -90,6 +91,7 @@ jobs:
           fi
           printf 'SOURCE_WORKFLOW=%s\n' "$source_workflow" >> "$GITHUB_ENV"
           printf 'SOURCE_SHA=%s\n' "$source_sha" >> "$GITHUB_ENV"
+          printf 'SOURCE_RUN_ATTEMPT=%s\n' "$source_run_attempt" >> "$GITHUB_ENV"
 
       - name: Download every artifact from the source solver run
         id: download
@@ -150,6 +152,7 @@ jobs:
               node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
+                --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
                 --source-workflow="$SOURCE_WORKFLOW" \
                 --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-level-blind.json"
 
@@ -159,6 +162,7 @@ jobs:
               node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
+                --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
                 --source-workflow="$SOURCE_WORKFLOW" \
                 --source-sha="$SOURCE_SHA" \
                 --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-isolated.json"
@@ -224,6 +228,7 @@ jobs:
             echo
             printf 'Source run: `%s`\n' "$SOURCE_RUN_ID"
             [[ -n "${SOURCE_WORKFLOW:-}" ]] && echo "Source workflow: `$SOURCE_WORKFLOW`"
+            [[ -n "${SOURCE_RUN_ATTEMPT:-}" ]] && echo "Source run attempt: `$SOURCE_RUN_ATTEMPT`"
             [[ -n "${SOURCE_SHA:-}" ]] && echo "Source SHA: `$SOURCE_SHA`"
             echo
             case "${HARVEST_RESULT:-unknown}" in
