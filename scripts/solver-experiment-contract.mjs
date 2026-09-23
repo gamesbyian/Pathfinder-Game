@@ -2,6 +2,7 @@ import { buildResearchPopulationIntegrity, classifyResearchObservationOutcome, r
 import { canonicalizeResearchIdentities, hashResearchPopulation, parseResearchIdentityLines } from './research-population-identity-lib.mjs';
 import { researchQuestionContractIssues } from './research-question-contract-lib.mjs';
 import { researchSemanticHash } from './research-semantic-identity-lib.mjs';
+import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
 
 export const EXPERIMENT_SCHEMA_VERSION = 3;
 export const EXPERIMENT_RESULT_KIND = 'pathfinder-solver-experiment-result';
@@ -45,12 +46,20 @@ export function hashConfiguration(configuration) {
  *
  * Solver revision and source-run identity stay separate: this answers "were these observations
  * executed under the same semantic protocol?", not "did they come from the same code/run?".
+ *
+ * `backend` (direct/webWorker/raced/external -- modules/solver/reproducibility-mode.mjs) is an
+ * optional caller-supplied dimension, not part of `contract.execution`'s own schema-validated shape:
+ * no current contract-building producer records a backend concept yet (plan section 3.3/K's
+ * "TypeScript to plain-Node bridge audit" follow-up), so it defaults to `null`, which
+ * classifyReproducibilityMode() honestly reports as 'unknown' rather than assuming determinism.
+ * schemaVersion bumped 1 -> 2 for this hash-input change; no real production evidence recorded a v1
+ * protocolHash before this bump (hashExecutionProtocol was introduced this same implementation phase).
  */
-export function hashExecutionProtocol(contract, { arm = null } = {}) {
+export function hashExecutionProtocol(contract, { arm = null, backend = null } = {}) {
   const execution = contract?.execution ?? {};
   const limits = contract?.limits ?? {};
   return stableHash({
-    schemaVersion: 1,
+    schemaVersion: 2,
     configurationHash: contract?.experiment?.configurationHash ?? null,
     arm: arm ?? null,
     execution: {
@@ -60,6 +69,8 @@ export function hashExecutionProtocol(contract, { arm = null } = {}) {
       reproducibilityExpected: execution.reproducibilityExpected ?? null,
       producerFamily: execution.producerFamily ?? null,
       schedulerMode: execution.schedulerMode ?? null,
+      backend: backend ?? null,
+      reproducibilityMode: classifyReproducibilityMode({ schedulerMode: execution.schedulerMode ?? null, backend }),
     },
     limits: {
       cumulativeNodeCeiling: limits.cumulativeNodeCeiling ?? null,
@@ -91,6 +102,7 @@ export function sourceRunBindingFromContract(contract, {
   runAttempt = null,
   contractRef = null,
   arm = null,
+  backend = null,
 } = {}) {
   const issues = decisionContractIssues(contract);
   if (issues.length) {
@@ -120,7 +132,7 @@ export function sourceRunBindingFromContract(contract, {
     entrypoint: contract.experiment.entrypoint,
     solverRef,
     configurationHash: contract.experiment.configurationHash,
-    protocolHash: hashExecutionProtocol(contract, { arm }),
+    protocolHash: hashExecutionProtocol(contract, { arm, backend }),
     populationIdentity: contract.population.identityHash,
     corpusIdentity: contract.population.corpusIdentity ?? null,
     arm: arm ?? null,

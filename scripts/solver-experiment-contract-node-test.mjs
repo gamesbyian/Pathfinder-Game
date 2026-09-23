@@ -7,10 +7,12 @@ import {
   decisionContractIssues,
   declaredDecisionContractIssues,
   hashConfiguration,
+  hashExecutionProtocol,
   hashPopulation,
   isDecisionBearingExperimentResult,
   isImmutableCommitSha,
   parseIdentityLines,
+  sourceRunBindingFromContract,
 } from './solver-experiment-contract.mjs';
 
 const a = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: ['b', 'a'] });
@@ -218,5 +220,32 @@ assert.throws(
   () => assertCompatibleExperiments(common, { ...clone(common), execution: { ...common.execution, reproducibilityExpected: false } }, { paired: true }),
   /execution.reproducibilityExpected/,
 );
+
+// hashExecutionProtocol's optional `backend` (modules/solver/reproducibility-mode.mjs): folds
+// reproducibility-mode classification into execution-protocol identity without touching the
+// schema-validated contract.execution shape itself (backend is a caller-supplied parameter, never
+// persisted as a contract.execution field).
+assert.equal(hashExecutionProtocol(common), hashExecutionProtocol(common),
+  'identical input must hash identically (determinism sanity check)');
+assert.equal(hashExecutionProtocol(common, { backend: null }), hashExecutionProtocol(common),
+  'omitted backend and explicit null backend must be the same identity');
+assert.notEqual(
+  hashExecutionProtocol(common, { backend: 'direct' }),
+  hashExecutionProtocol(common, { backend: 'raced' }),
+  'direct (deterministic-work) and raced (first-success-race) are different execution protocols even with identical configuration/execution fields otherwise',
+);
+assert.notEqual(
+  hashExecutionProtocol(common),
+  hashExecutionProtocol(common, { backend: 'direct' }),
+  'unknown (no backend declared) must not collapse into deterministic-work merely because the scheduler happens to be production',
+);
+// sourceRunBindingFromContract forwards `backend` through to its own protocolHash rather than
+// silently dropping it -- the exact "prove value transport, not merely field existence" check this
+// plan's own predicted-failure-mode list (section 14.3.F) calls for.
+const directBinding = sourceRunBindingFromContract(common, { runId: 'run-1', backend: 'direct' });
+const racedBinding = sourceRunBindingFromContract(common, { runId: 'run-1', backend: 'raced' });
+assert.notEqual(directBinding.protocolHash, racedBinding.protocolHash,
+  'sourceRunBindingFromContract must not silently drop the backend dimension it was given');
+assert.equal(directBinding.protocolHash, hashExecutionProtocol(common, { backend: 'direct' }));
 
 console.log('solver experiment contract tests passed');
