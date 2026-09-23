@@ -102,3 +102,23 @@ consumer/discovery contract explicitly rather than falling back to copying canon
 
 Once the real build is green and path equivalence is confirmed over the full generated tree, Phase 9's
 implementation exit criterion is met independently of Phase 8.
+
+
+## Real CI build measurement
+
+PR CI run 35922344055 executed the production Vite build successfully with the generated runtime
+projection enabled.
+
+Measured across the full tracked runtime Hint population:
+
+- canonical source bytes: **769,032,924**;
+- generated path-only runtime bytes: **150,198,857**;
+- reduction: **80.5%**.
+
+The production bundle itself completed successfully. The CI run later failed in unrelated validation
+groups, so this measurement is valid build evidence but not yet proof that the entire descendant branch
+is green.
+
+Phase 9's remaining gate is therefore narrowed to ordinary branch-green confirmation and any browser
+consumer regression exposed by that full validation, not uncertainty about whether the projection can
+build the real corpus.
