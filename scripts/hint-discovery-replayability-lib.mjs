@@ -1,4 +1,5 @@
 import { formatAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+import { normalizeHistoricalSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 
 /**
  * Derived replayability classification for stored hint discovery provenance.
@@ -184,7 +185,12 @@ export function effectiveSolverInputIdentityStatus(entry, {
     if (!nonEmpty(context.levelRevision)) missingDimensions.push('levelRevision');
     if (!nonEmpty(solver.version)) missingDimensions.push('solverVersion');
     if (!attemptConfigIdentity) missingDimensions.push('attemptConfigIdentity');
+    let canonicalSolverStageId = null;
     if (!nonEmpty(solverStageId)) missingDimensions.push('solverStage');
+    else {
+        try { canonicalSolverStageId = normalizeHistoricalSolverStageId(solverStageId); }
+        catch { missingDimensions.push('solverStage'); }
+    }
     if (!Number.isFinite(solver.gateKey)) missingDimensions.push('gateKey');
     if (!nonEmpty(solverRequestIdentity)) missingDimensions.push('solverRequestIdentity');
     if (!hasSearchEnvelope(entry)) missingDimensions.push('resourceEnvelope');
@@ -207,7 +213,7 @@ export function effectiveSolverInputIdentityStatus(entry, {
             levelRevision: context.levelRevision,
             solverVersion: solver.version,
             solverRequestIdentity,
-            solverStageId,
+            solverStageId: canonicalSolverStageId,
             attemptConfigIdentity,
             gateKey: solver.gateKey,
             forcing: solver.forcing ?? null,
