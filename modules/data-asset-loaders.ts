@@ -4,6 +4,7 @@
 // since app.ts's dependency graph eventually reaches the input controllers that own the
 // Dev-Mode corpus switcher UI).
 import { decodeHintArtifact } from './domain/hint-types.js';
+import { hintArtifactFileName, hintDirectoryNameForLevelsFile } from './hint-artifact-layout.mjs';
 
 export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
     return async () => {
@@ -34,19 +35,32 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
  * `{hints: paths[], hintMetadata: [...]}` shape that the Node side already handled). It also
  * tolerates a bare path array, so an older cached/CDN-served copy of the file still parses.
  *
- * `basePath` also lets a caller point this at an alternate corpus's hints directory (e.g.
- * `./data/stress` for the Dev-Mode stress-corpus switcher — see modules/dev-corpus.ts) since
- * every corpus's hints live at `<basePath>/<hintsDirName>/<id>.json`. `hintsDirName` defaults to
- * `hints`; the one exception is stress-corpus-2, which shares `basePath` with stress-corpus-1 but
- * numbers levels independently, so it uses the sibling `hints-random` directory instead (see
- * scripts/level-data-io.mjs's `hintsDirFor`, which applies the same naming rule on the Node side).
+ * `basePath` also lets a caller point this at an alternate corpus (e.g. `./data/stress`
+ * for the Dev-Mode stress-corpus switcher). The hint directory is derived from `levelsFile` by
+ * modules/hint-artifact-layout.mjs, the same neutral authority used by Node persistence/validators.
+ *
+ * `hintsDirName` is accepted only as a compatibility assertion for older callers: it may equal
+ * the derived directory but cannot override it. This keeps old call shapes working without leaving
+ * a second authority capable of choosing a conflicting physical layout.
  */
-export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePath = './data', hintsDirName = 'hints' }: any = {}) {
+export function createDefaultHintsSource({
+    fetchImpl = globalThis?.fetch,
+    basePath = './data',
+    levelsFile = 'levels.json',
+    hintsDirName,
+}: any = {}) {
+    const derivedHintsDirName = hintDirectoryNameForLevelsFile(levelsFile);
+    if (hintsDirName !== undefined && hintsDirName !== derivedHintsDirName) {
+        throw new Error(
+            `createDefaultHintsSource: hintsDirName ${JSON.stringify(hintsDirName)} conflicts with `
+            + `layout-derived directory ${JSON.stringify(derivedHintsDirName)} for ${JSON.stringify(levelsFile)}`,
+        );
+    }
     return async (id: string) => {
         if (typeof fetchImpl !== 'function') return [];
-        const name = `${id}.json`;
-        const response = await fetchImpl(`${basePath}/${hintsDirName}/${name}`);
-        if (!response?.ok) throw new Error(`Failed to load ${basePath}/${hintsDirName}/${name}`);
+        const name = hintArtifactFileName(id);
+        const response = await fetchImpl(`${basePath}/${derivedHintsDirName}/${name}`);
+        if (!response?.ok) throw new Error(`Failed to load ${basePath}/${derivedHintsDirName}/${name}`);
         const parsed = await response.json();
         return decodeHintArtifact(parsed);
     };
