@@ -5,7 +5,7 @@
  * The owning experiment contract remains authoritative for protocol/configuration/population
  * semantics. This document carries only the small identity projection needed to join later.
  */
-import { decisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
+import { decisionContractIssues, hashExecutionProtocol, stableHash } from './solver-experiment-contract.mjs';
 
 export const HINT_DISCOVERY_PROCESS_EVIDENCE_KIND = 'pathfinder-hint-discovery-process-evidence';
 export const HINT_DISCOVERY_PROCESS_EVIDENCE_SCHEMA_VERSION = 1;
@@ -45,7 +45,7 @@ export function discoveryProcessEnvelopeFromContract(contract, {
         workflowFamily: contract.experiment.workflowFamily,
         producer: contract.experiment.producer,
         entrypoint: contract.experiment.entrypoint,
-        protocolHash: contract.experiment.configurationHash,
+        protocolHash: hashExecutionProtocol(contract, { arm }),
         configurationHash: contract.experiment.configurationHash,
         solverRef,
         populationIdentity: contract.population.identityHash,
