@@ -692,3 +692,30 @@ Therefore validation-registration decoupling remains desirable for:
 - easier dependency/surface derivation;
 
 but it should **not** be prioritized on the claim that every script-only package edit currently causes full CI. The current semantic package diff has already removed much of that routing penalty.
+
+
+## Hidden nested validation and detector ownership
+
+A small but concrete duplication exists in the current static-check graph:
+
+- `check:dead-scripts` executes `scripts/check-package-scripts.mjs`;
+- that script synchronously invokes the agent-context budget check, CI gate parity, and validation-group parity;
+- `check:validators` separately includes `check:agent-context-budget`.
+
+So the agent-context detector is executed twice in one fast gate, and other always-on contracts are hidden as transitive behavior of a command whose name suggests a narrower responsibility.
+
+This is not a major wall-time item by itself. It matters because hidden nested execution makes:
+
+- timing attribution ambiguous;
+- impact routing coarser;
+- historical detector identity harder to interpret;
+- future direct execution/batching harder to reason about.
+
+Direction:
+
+1. make permanent detector commands single-purpose where practical;
+2. represent composition explicitly in the validation registry/execution plan;
+3. keep local convenience aliases free to compose those detector commands;
+4. avoid one detector being both a top-level member and a hidden child of another permanent detector.
+
+The same audit should search for other `spawnSync(process.execPath, ...)` / `npm run ...` nesting among permanent validators and harnesses.
