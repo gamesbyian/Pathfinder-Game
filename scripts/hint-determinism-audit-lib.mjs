@@ -5,7 +5,14 @@ export function hintDiscoveryInputIdentity(entry) {
     const solver = entry?.solver ?? {};
     const search = entry?.search ?? {};
     const context = entry?.context ?? {};
+    const execution = entry?.execution ?? {};
     return stableStringify({
+        execution: {
+            solverRequestIdentity: execution.solverRequestIdentity ?? null,
+            protocolHash: execution.protocolHash ?? null,
+            reproducibilityMode: execution.reproducibilityMode ?? null,
+            arm: execution.arm ?? null,
+        },
         solver: {
             id: solver.id ?? null,
             version: solver.version ?? null,
@@ -46,23 +53,30 @@ export function inputComparability(entry) {
     const solver = entry?.solver ?? {};
     const search = entry?.search ?? {};
     const context = entry?.context ?? {};
+    const execution = entry?.execution ?? {};
     if (solver.id !== 'pathfinder-solver') return { comparable: false, reason: 'non-pathfinder-producer' };
     if (!solver.version) return { comparable: false, reason: 'missing-solver-version' };
     if (!context.levelRevision) return { comparable: false, reason: 'missing-level-revision' };
     if (context.usedExistingHints !== false || context.hintGuided !== false) {
         return { comparable: false, reason: 'hint-dependent-or-ambiguous' };
     }
+    if (execution.reproducibilityMode === 'first-success-race') {
+        return { comparable: false, reason: 'first-success-race-not-path-deterministic' };
+    }
     if (!Number.isFinite(search.workBudget)) return { comparable: false, reason: 'missing-deterministic-work-budget' };
     if (randomizedTechnique(solver.technique) && !Number.isFinite(search.randomSeed)) {
         return { comparable: false, reason: 'missing-random-seed' };
     }
-    return { comparable: true, reason: 'deterministic-input-envelope' };
+    const identityBasis = typeof execution.solverRequestIdentity === 'string' && execution.solverRequestIdentity.length > 0
+        ? 'canonical-solver-request'
+        : 'legacy-recorded-input';
+    return { comparable: true, reason: 'deterministic-input-envelope', identityBasis };
 }
 
-function addObservation(map, key, pathSignature, entry) {
+function addObservation(map, key, pathSignature, entry, identityBasis = null) {
     let group = map.get(key);
     if (!group) {
-        group = { paths: new Set(), foundAt: new Set(), observations: 0, example: entry };
+        group = { paths: new Set(), foundAt: new Set(), observations: 0, example: entry, identityBasis };
         map.set(key, group);
     }
     group.paths.add(pathSignature);
@@ -76,6 +90,8 @@ export function auditHintFile(levelId, hints) {
     const reasonCounts = new Map();
     let provenanceEvents = 0;
     let comparableEvents = 0;
+    let canonicalComparableEvents = 0;
+    let legacyComparableEvents = 0;
 
     for (const hint of hints ?? []) {
         const pathSignature = (hint?.path ?? []).join(',');
@@ -88,7 +104,9 @@ export function auditHintFile(levelId, hints) {
                 continue;
             }
             comparableEvents += 1;
-            addObservation(inputs, hintDiscoveryInputIdentity(entry), pathSignature, entry);
+            if (comparison.identityBasis === 'canonical-solver-request') canonicalComparableEvents += 1;
+            else legacyComparableEvents += 1;
+            addObservation(inputs, hintDiscoveryInputIdentity(entry), pathSignature, entry, comparison.identityBasis);
         }
     }
 
@@ -96,7 +114,7 @@ export function auditHintFile(levelId, hints) {
     for (const [identity, group] of exact) {
         if (group.paths.size > 1) exactEventCrossPath.push({
             levelId, identity, paths: group.paths.size, runTimestamps: group.foundAt.size,
-            observations: group.observations, example: group.example,
+            observations: group.observations, identityBasis: group.identityBasis ?? null, example: group.example,
         });
     }
 
@@ -117,6 +135,8 @@ export function auditHintFile(levelId, hints) {
         hints: hints?.length ?? 0,
         provenanceEvents,
         comparableEvents,
+        canonicalComparableEvents,
+        legacyComparableEvents,
         excludedReasons: Object.fromEntries([...reasonCounts].sort()),
         exactEventCrossPath,
         repeatRunRecordedInputCollision,
