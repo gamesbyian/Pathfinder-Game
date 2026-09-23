@@ -12,6 +12,7 @@ const root = path.resolve(scriptsDir, '..');
 assert.match(harvesterSource, /capture\.recordHistorical\(/, 'persisted isolated reports must use the historical provenance ingress');
 assert.doesNotMatch(harvesterSource, /capture\.record\(/, 'persisted isolated reports must not use the current-attempt provenance ingress');
 const stagingDir = mkdtempSync(path.join(tmpdir(), 'pathfinder-harvest-isolated-'));
+const receiptPath = path.join(stagingDir, 'ingestion-receipt.json');
 
 try {
     const result = spawnSync(
@@ -24,6 +25,7 @@ try {
             '--source-run-id=regression-test',
             '--source-workflow=regression-test',
             '--source-sha=regression-test',
+            `--ingestion-receipt-out=${receiptPath}`,
         ],
         {
             cwd: root,
@@ -38,8 +40,15 @@ try {
     );
     assert.match(
         result.stdout,
-        /Isolated evidence harvest: 0 report group\(s\), 0 solved row\(s\), 0 canonical hint\/provenance change\(s\), 0 pending row\(s\)\./,
+        /Isolated evidence harvest: 0 report group\(s\), 0 solved row\(s\), 0 eligible row\(s\), 0 referee-accepted row\(s\), 0 canonical hint\/provenance change\(s\), 0 pending row\(s\)\./,
     );
+    const receipt = JSON.parse(readFileSync(receiptPath, 'utf8'));
+    assert.equal(receipt.kind, 'pathfinder-hint-ingestion-receipt');
+    assert.equal(receipt.source.producer, 'harvest-isolated-report-hints');
+    assert.equal(receipt.funnel.candidateObservations, 0);
+    assert.equal(receipt.additions.semanticRecordChanges, 0);
+    assert.equal(receipt.additions.paths, null);
+    assert.equal(receipt.semantics.notAttemptedPopulation, true);
 } finally {
     rmSync(stagingDir, { recursive: true, force: true });
 }
