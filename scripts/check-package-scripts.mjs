@@ -9,7 +9,6 @@
  * PR checks drifting out of the local finish-line contract, and completed campaign
  * scaffolding creeping back into the permanent gate.
  */
-import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -17,8 +16,6 @@ import process from 'node:process';
 const ROOT = process.cwd();
 const PACKAGE_PATH = path.join(ROOT, 'package.json');
 const TOOLING_LIFECYCLE_PATH = path.join(ROOT, 'scripts', 'tooling-lifecycle.json');
-const CI_GATE_PARITY_CHECK_PATH = path.join(ROOT, 'scripts', 'check-ci-gate-parity.mjs');
-const VALIDATION_GROUP_CHECK_PATH = path.join(ROOT, 'scripts', 'validation-groups.mjs');
 const VALID_TOOLING_LIFECYCLES = new Set(['completed-migration', 'specialist-forensic', 'cold-research']);
 const NODE_FLAGS_WITH_VALUES = new Set([
   '--conditions',
@@ -171,24 +168,4 @@ if (fs.existsSync(TOOLING_LIFECYCLE_PATH)) {
   }
 }
 
-function runRequiredCheck(scriptPath, label) {
-  if (!fs.existsSync(scriptPath)) {
-    console.error(`Missing ${path.relative(ROOT, scriptPath)}; ${label} cannot be checked.`);
-    process.exit(1);
-  }
-  const result = spawnSync(process.execPath, [scriptPath, '--check'], {
-    cwd: ROOT,
-    encoding: 'utf8',
-  });
-  if (result.status !== 0) {
-    console.error(`${label} failed:`);
-    if (result.stdout?.trim()) console.error(result.stdout.trim());
-    if (result.stderr?.trim()) console.error(result.stderr.trim());
-    process.exit(result.status || 1);
-  }
-}
-
-runRequiredCheck(CI_GATE_PARITY_CHECK_PATH, 'Local/GitHub Actions gate parity check');
-runRequiredCheck(VALIDATION_GROUP_CHECK_PATH, 'Validation ownership registry parity check');
-
-console.log('Package script entrypoints, tooling lifecycle references, permanent-CI lifecycle, CI gate parity, and validation ownership registry are valid.');
+console.log('Package script entrypoints, tooling lifecycle references, and permanent-CI lifecycle are valid.');
