@@ -527,3 +527,38 @@ This strengthens an important architectural distinction:
 > **Make selection fine-grained, but keep execution packing coarse-grained.**
 
 Do not express semantic ownership by creating one hosted runner per validation group. The impact planner should select contracts/capabilities precisely, then pack the selected work into a small number of runners so checkout/setup/install costs are amortized.
+
+
+## Superseded-head admission control
+
+The historical cancellation population suggests another optimization axis: **when expensive runners are admitted**, not merely which validations they execute.
+
+Across the current fast/deep era, retained detailed cancelled jobs already account for at least:
+
+- **20.7 fast-gate runner-hours** across 1,806 observed cancelled fast jobs;
+- **19.5 deep-verification runner-hours** across 1,806 observed cancelled deep jobs.
+
+These are lower bounds because historical job detail is incomplete.
+
+Supersession timing across all 3,522 retained cancelled PR-CI runs:
+
+| next same-branch run arrives within | cancelled runs |
+|---|---:|
+| 5 s | 14.7% |
+| 10 s | 34.8% |
+| 15 s | 47.7% |
+| 20 s | 57.1% |
+| 30 s | 71.6% |
+| 45 s | 84.0% |
+| 60 s | 89.0% |
+
+Do **not** add a sleeping hosted-runner debounce: sleeping still consumes a runner and adds fixed latency to final heads.
+
+Instead, scoped-CI activation provides a natural admission-control point. Once the impact plan is authoritative, expensive fast/deep work must depend on the planner result. A superseded head can therefore be cancelled while only the lightweight dependency-free planner is running, before one or both installed-dependency lanes are admitted.
+
+This has two benefits from the same architectural dependency:
+
+1. the planner selects only relevant obligations;
+2. it also suppresses a material fraction of transient-head runner fan-out.
+
+Measure the post-activation cancellation runner-hours explicitly; do not add artificial delay unless the natural planner gate proves insufficient.
