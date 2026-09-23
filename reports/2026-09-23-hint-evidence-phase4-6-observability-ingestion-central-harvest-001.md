@@ -194,3 +194,44 @@ accepting it.
    exact sibling-evidence join;
 4. use the now-complete receipt coverage to enumerate any maintained ingestion lane that still bypasses the canonical accounting vocabulary;
 5. use the new query/receipt oracles as the gates for producer/workflow-family Phase-5/6 migration.
+
+
+## Diagnostics specialist closeout to dual-path status
+
+The remaining approved diagnostics exception was investigated rather than left as a vague
+"artifact sufficiency varies" carve-out.
+
+The source workflow's real direct producer, `run-solver-direct.mjs`, already knew every fact needed
+to persist canonical provenance but its JSON result discarded the accepted solution path and source
+level revision. `analyze-solver-diagnostics.mjs` then discarded additional request/replay facts while
+producing the uploaded `latest.json`.
+
+This branch now makes the durable diagnostics artifact self-describing for successful observations:
+
+- exact accepted path;
+- stable level id/position;
+- exact structural level revision;
+- source-observed discovery time;
+- serialized winning-attempt history;
+- cumulative work/nodes fields used by provenance;
+- canonical solver-request projection/identity;
+- backend and reproducibility mode;
+- immutable solver commit.
+
+Added `scripts/harvest-solver-diagnostics-reports.mjs`, which:
+
+1. accepts only the explicit diagnostics report kind/producer/corpus;
+2. requires exact level revision + source discovery time;
+3. referee-validates the exact path against current canonical main;
+4. reconstructs native Pathfinder provenance through the existing historical-attempt normalization
+   boundary instead of hand-writing technique metadata;
+5. preserves solver-request/reproducibility facts that truly exist and leaves protocol/arm absent
+   because this ad hoc diagnostics workflow has no experiment contract;
+6. binds the exact GHA source run id/attempt as physical occurrence lineage;
+7. reports exact path/provenance-event/occurrence deltas through the canonical ingestion receipt.
+
+The central harvester invokes this adapter only for `Solver diagnostics and hint capture`.
+
+The source workflow's direct `--save-hints` path remains intact. Diagnostics is now a Phase-6
+**dual-path family**, not an approved opaque specialist exception. A real source run must prove
+semantic/occurrence parity and reharvest idempotency before the direct writer is retired.
