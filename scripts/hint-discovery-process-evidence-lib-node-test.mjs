@@ -5,7 +5,7 @@ import {
     discoveryProcessEnvelopeFromContract,
     validateHintDiscoveryProcessEvidence,
 } from './hint-discovery-process-evidence-lib.mjs';
-import { hashConfiguration, hashPopulation } from './solver-experiment-contract.mjs';
+import { hashConfiguration, hashExecutionProtocol, hashPopulation } from './solver-experiment-contract.mjs';
 
 const population = hashPopulation({
     kind: 'explicit-ids',
@@ -55,10 +55,22 @@ const envelope = discoveryProcessEnvelopeFromContract(contract, {
     contractRef: 'manifest.json#experimentContract',
 });
 assert.equal(envelope.runId, 'run-123');
-assert.equal(envelope.protocolHash, contract.experiment.configurationHash);
+assert.equal(envelope.configurationHash, contract.experiment.configurationHash);
+assert.equal(envelope.protocolHash, hashExecutionProtocol(contract));
+assert.notEqual(envelope.protocolHash, envelope.configurationHash,
+    'protocol identity must not collapse to configuration identity');
 assert.equal(envelope.solverRef, 'a'.repeat(40));
 assert.equal(envelope.populationIdentity, population.identityHash);
 assert.equal(envelope.contractRef, 'manifest.json#experimentContract');
+
+
+const changedExecutionContract = {
+    ...contract,
+    execution: { ...contract.execution, levelBlind: false, historyAware: true },
+};
+assert.equal(changedExecutionContract.experiment.configurationHash, contract.experiment.configurationHash);
+assert.notEqual(hashExecutionProtocol(changedExecutionContract), hashExecutionProtocol(contract),
+    'execution semantics must participate in protocol identity even when configurationHash is unchanged');
 
 const joinResult = {
     summary: {
