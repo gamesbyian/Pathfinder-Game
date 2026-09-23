@@ -89,6 +89,13 @@ assert.equal(completeIdentity.reconstructable, true);
 assert.equal(completeIdentity.identity.attemptConfigIdentity, 'dfs|score=default|bias=none');
 assert.equal(completeIdentity.identity.gateKey, 17);
 assert.equal(completeIdentity.identity.solverStageId, 'main-search');
+
+const legacyStageIdentity = effectiveSolverInputIdentityStatus(baseEntry(), {
+    solverRequestIdentity: 'sha256:' + '5'.repeat(64),
+    solverStageId: 'early-repair-search',
+});
+assert.equal(legacyStageIdentity.reconstructable, true);
+assert.equal(legacyStageIdentity.identity.solverStageId, 'repair-shrink-recovery');
 assert.equal(completeIdentity.identity.solverRequestIdentity, 'sha256:' + '2'.repeat(64));
 
 const repairIdentity = effectiveSolverInputIdentityStatus(baseEntry({
