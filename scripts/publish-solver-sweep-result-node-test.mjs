@@ -95,6 +95,8 @@ try {
   assert.equal(manifest.population.independentUnit, 'parent-level');
   assert.equal(manifest.decisionBearing, true);
   assert.deepEqual(manifest.decisionContractIssues, []);
+  assert.equal('sourceRunBinding' in manifest, false,
+    'no GITHUB_RUN_ID in this invocation -- the canonical source-run binding must be omitted, not fabricated from a missing run identity');
   assert.deepEqual(manifest.sideEffects, { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' });
   assert.equal(manifest.failureEvidence.disposition, 'none');
   assert.equal(manifest.failureEvidence.compactPresent, false);
@@ -506,6 +508,30 @@ try {
   const richCaptureOut = path.join(temp, 'rich-capture-out');
   execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--include=${captureFile}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${contractFile}`, `--out=${richCaptureOut}`], { cwd: root });
   assert.equal(JSON.parse(fs.readFileSync(path.join(richCaptureOut, 'manifest.json'))).failureEvidence.richCapturePresent, true);
+
+  // Canonical bounded source-run binding (docs/hint-evidence-execution-identity-storage-
+  // consolidation-plan.md section 3.4), dual-written alongside the existing ad-hoc manifest/sidecar
+  // fields when the invocation actually supplies a real workflow run identity (GITHUB_RUN_ID), reusing
+  // the same decision-grade `contractFile` fixture already proven decisionBearing above.
+  const sourceRunOut = path.join(temp, 'source-run-binding-out');
+  const provenanceOut = path.join(temp, 'source-run-binding-sidecar.json');
+  execFileSync('node', [
+    'scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`,
+    `--outcome-file=${outcome}`, `--contract-file=${contractFile}`, `--out=${sourceRunOut}`,
+    `--provenance-out=${provenanceOut}`,
+  ], { cwd: root, env: { ...process.env, GITHUB_RUN_ID: '424242', GITHUB_RUN_ATTEMPT: '2' } });
+  const sourceRunManifest = JSON.parse(fs.readFileSync(path.join(sourceRunOut, 'manifest.json')));
+  assert.equal(sourceRunManifest.sourceRunBinding.kind, 'pathfinder-solver-source-run-binding');
+  assert.equal(sourceRunManifest.sourceRunBinding.runId, '424242');
+  assert.equal(sourceRunManifest.sourceRunBinding.runAttempt, '2');
+  assert.equal(sourceRunManifest.sourceRunBinding.solverRef, 'b'.repeat(40));
+  assert.equal(sourceRunManifest.sourceRunBinding.configurationHash, sourceRunManifest.experiment.configurationHash);
+  assert.equal(sourceRunManifest.sourceRunBinding.contractRef, 'manifest.json#experimentContract');
+  assert.notEqual(sourceRunManifest.sourceRunBinding.protocolHash, sourceRunManifest.sourceRunBinding.configurationHash,
+    'execution-protocol identity and configuration identity are distinct even inside the binding');
+  const sourceRunSidecar = JSON.parse(fs.readFileSync(provenanceOut, 'utf8'));
+  assert.deepEqual(sourceRunSidecar.sourceRunBinding, sourceRunManifest.sourceRunBinding,
+    'the sidecar must carry the exact same binding as the manifest, not a second independently-built copy');
 
   console.log('publish solver sweep result tests passed');
 } finally {

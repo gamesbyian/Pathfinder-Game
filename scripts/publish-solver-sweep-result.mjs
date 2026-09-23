@@ -12,6 +12,7 @@ import {
   decisionContractIssues,
   declaredDecisionContractIssues,
   isImmutableCommitSha,
+  sourceRunBindingFromContract,
 } from './solver-experiment-contract.mjs';
 import { FAILURE_RESPONSE_SCHEMA_VERSION, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
 import { SEARCH_LOSS_CAPTURE_KIND } from './solver-search-loss-evidence-lib.mjs';
@@ -504,6 +505,23 @@ const contractIssues = declaredContract
   : ['missing declared experiment contract'];
 const contractDecisionEligible = contractIssues.length === 0;
 const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
+// Canonical bounded source-run binding (docs/hint-evidence-execution-identity-storage-consolidation-
+// plan.md section 3.4), added ADDITIVELY alongside the existing ad-hoc manifest/sidecar fields below
+// rather than replacing them -- mechanical-migration-audit's own disposition for this file ("exact
+// semantic duplicate of much of the future bounded binding; highest-priority mechanical migration...
+// preserve manifest and sidecar schemas as projections"). sourceRunBindingFromContract() already
+// throws on an incomplete/non-decision-grade contract or a missing runId/immutable solverRef; every
+// one of those is a real, common, non-error state for this general-purpose publisher (local runs,
+// undeclared contracts, missing resolvedSha), so the binding is simply omitted rather than failing the
+// publish, matching every other optional projection in this manifest.
+let sourceRunBinding = null;
+try {
+  sourceRunBinding = sourceRunBindingFromContract(contract, {
+    runId: process.env.GITHUB_RUN_ID,
+    runAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
+    contractRef: 'manifest.json#experimentContract',
+  });
+} catch { sourceRunBinding = null; }
 const manifest = {
   schemaVersion: EXPERIMENT_SCHEMA_VERSION,
   kind: EXPERIMENT_RESULT_KIND,
@@ -538,6 +556,7 @@ const manifest = {
   ...contract,
   researchOutcome,
   entries,
+  ...(sourceRunBinding ? { sourceRunBinding } : {}),
 };
 manifest.decisionBearing = decisionBearingExperimentResultIssues(manifest).length === 0;
 fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
@@ -548,6 +567,7 @@ if (provenanceOut) {
     kind: 'pathfinder-gha-source-run', workflow: manifest.workflow, runId: manifest.runId,
     runAttempt: manifest.runAttempt, runUrl: manifest.runUrl, sha: manifest.sha, ref: manifest.ref,
     refName: manifest.refName, event: manifest.event, dispatchInputs, artifactCoverage, populationIntegrity, researchOutcome,
+    ...(sourceRunBinding ? { sourceRunBinding } : {}),
   }, null, 2) + '\n');
 }
 
