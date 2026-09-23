@@ -176,6 +176,7 @@ if (ingestionReceiptOut) {
     const receipt = buildHintIngestionReceipt({
         producer: 'harvest-isolated-report-hints',
         sourceRunId,
+        sourceRunAttempt,
         sourceWorkflow,
         candidateObservations: solvedSeen,
         eligibleObservations: eligibleRows,
