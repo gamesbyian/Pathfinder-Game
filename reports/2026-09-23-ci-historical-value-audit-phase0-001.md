@@ -461,3 +461,121 @@ Current-registry detector appearances in this sample are dominated by research t
 The sampled logs also support runtime/evidence comparisons. Cheap frequent examples include `check:documentation-links` (~4.0s median, 39 representative episodes), `check:research-integration` (~4.3s, 29), and `test:workflow-lifecycle` (~8.1s, 26). More expensive low-frequency examples in this recent research-heavy window include `test:append-solver-health-record` (~13.5s, 3), `test:combine-solver-sweep-reports` (~27.7s, 2), `check:types:tests` (~13.2s, 3), and `check:types` (~10.6s, 1).
 
 This sample is intentionally recent and reflects a research-heavy development period. It is evidence that the extractor is healthy, not a final cadence ranking. The next gate is a full recoverable representative-signature pass across all 865 repair episodes, with retention gaps reported explicitly.
+
+
+## Full representative-signature pass — run 35911214948
+
+The full second-stage pass processed all **865** mechanical PR-CI repair episodes from the retained corpus.
+
+Availability:
+
+- episodes requested: **865**;
+- episodes with parsed detector signatures: **296**;
+- representative job-log retrieval gaps: **421**;
+- episodes with at least one retrievable representative failed-job log: **438**;
+- oldest representative episode with retrievable job logs: **2026-07-09**;
+- oldest episode with modern parsed `check:*` / `test:*` signatures: **2026-08-21**;
+- the 421 explicit log gaps are concentrated in the oldest history, from **2026-03-23 through 2026-06-16**.
+
+The correct denominator for detector-level cadence analysis is therefore the recoverable modern window, not all 865 episodes. Older run/job outcome evidence still informs lane-level conclusions, but missing logs are never counted as zero catches.
+
+### Full-pass detector recurrence
+
+Most frequently observed representative detector identities:
+
+| detector | representative episodes |
+|---|---:|
+| `check:documentation-links` | **201** |
+| `test:research-index` | **39** |
+| `test:research-system-consolidation-closeout` | **35** |
+| `test:research-system-inventory` | **35** |
+| `test:workflow-lifecycle` | **34** |
+| `check:research-integration` | **33** |
+| `check:types:tests` | **33** |
+| `test:research-integration-audit` | **32** |
+| `test:research-relations` | **31** |
+| `test:research-portfolio-retrospective` | **30** |
+| `test:research-question-dossier` | **27** |
+| `test:research-consumption-link` | **25** |
+| `test:research-acquisition-preflight` | **24** |
+| `check:level-metric-boundaries` | **19** |
+| `test:research-query` | **19** |
+| `check:types` | **17** |
+
+These are representative-episode appearances, not unique independent regressions. Correlated repository/research contracts still frequently fail together.
+
+### Distinct representative episodes by current semantic group
+
+Using the current validation registry to classify only detectors that still exist today:
+
+| current group | distinct representative episodes with at least one detector |
+|---|---:|
+| validator / repo | **211** |
+| test / research | **73** |
+| validator / research | **40** |
+| test / repo | **35** |
+| validator / shared | **33** |
+| test / solver | **24** |
+| validator / data | **20** |
+| test / data | **10** |
+| validator / solver | **4** |
+| test / shared | **3** |
+
+No current game or persistence detector appears as a parsed representative failure in this recoverable modern sample.
+
+### Zero-/low-hit runtime tail
+
+Representative failed-job logs also expose a large population of commands that executed repeatedly while never appearing as the representative failing detector.
+
+Examples with **zero** representative detector appearances in the recoverable sample include:
+
+- `test:portfolio-solve-sweep-worker`: 174 observed executions, ~3,822 aggregate sampled seconds, ~21.4s median;
+- `test:stress-topology-generator`: 185 executions, ~3,529s, ~18.2s median;
+- `test:family-parent-hint-replay`: 190 executions, ~3,378s, ~17.3s median;
+- `test:select-routing-regime-sample-cli`: 174 executions, ~2,854s, ~15.7s median;
+- `test:lifecycle-failure-map`: 175 executions, ~2,751s, ~15.0s median;
+- `test:level-blind-capability-sweep-cli`: 174 executions, ~2,520s, ~13.7s median;
+- `test:early-repair-search-badness-report`: 174 executions, ~2,474s, ~13.6s median;
+- `test:loader`: 190 executions, ~2,241s, ~11.2s median;
+- `test:hint-query-lib`: 174 executions, ~2,234s, ~12.1s median;
+- `test:firestore-rules`: 190 executions, ~1,134s, ~5.8s median.
+
+Low-hit examples include `check:corpus-level-formatting` (1 representative detector appearance across 334 observed executions), `test:experiment-manifest` (1 / 190), `test:family-generate` (1 / 190), `test:hint-complete-sharded` (1 / 190), and `test:publish-solver-sweep-result` (1 / 138).
+
+These numbers do **not** mean the zero-hit checks are useless. The sample is conditioned on representative failing runs, detector lineage changed over time, and absence of observed failure is not proof of absence of latent value. They do show that universal cadence has a substantial cost tail that now requires positive justification.
+
+## Provisional cadence disposition after the full pass
+
+### Keep universal for now
+
+**Cheap repository invariants.** Repository validators, especially documentation/workflow/authority checks, have high representative catch frequency and low per-command runtime. They are strong candidates to remain universal.
+
+**Cross-cutting type validation.** `check:types` and `check:types:tests` have 17 and 33 representative detector appearances respectively. Their cost is material, but current evidence does not support demoting them before a more specific dependency-aware alternative exists.
+
+### Shadow impact-scoped PR cadence
+
+**Research tests.** They are highly valuable on research-system work, but 87 current research harnesses make up half the permanent Node/CLI population. The evidence supports running the research group when research/research-evidence/workflow surfaces are impacted, backed by a periodic full oracle.
+
+**Data/family/hint tests.** The current data group contains many of the largest zero-/low-hit runtime consumers. Run these on data, corpus, family, hint, and related solver-research surfaces rather than universally.
+
+**Solver tests and deep verification.** Preserve on solver-impacting changes. The only demonstrated current-era genuine deep-only branch-caused episode (#1722) is selected by the existing solver impact rules, so impact scoping retains the known unique class.
+
+### Reclassify before cadence decisions
+
+**Shared Node tests.** Current shared tests produced only 3 representative detector appearances across two detector identities, while several shared commands are among the more expensive always-running harnesses. Because `shared` is explicitly the conservative unknown-ownership bucket, the right next move is to reduce that ambiguity, not blindly demote the whole group.
+
+### Require fault injection / explicit backstop before demotion
+
+**Game and persistence validation.** No current game/persistence detector appears as a parsed representative failure in the recoverable modern sample. That is insufficient evidence to remove universal protection for production boot/browser/security-sensitive surfaces. Before changing cadence, inject representative faults and prove the scoped router plus periodic full oracle catches them.
+
+## Recommended activation sequence
+
+1. Keep repo invariants and type checks universal.
+2. Turn existing impact-shadow output into a **shadow comparison for research/data/solver group execution**, without changing required checks yet.
+3. Reclassify the expensive `shared` tail into narrower ownership groups.
+4. Fault-inject representative solver, game, persistence, and router-authority defects.
+5. Compare shadow-selected groups against all subsequent real CI failures for a defined observation window.
+6. If no misses are observed and injected faults route correctly, activate impact-scoped research/data/solver PR validation.
+7. Preserve full validation on periodic main/nightly cadence as the oracle and for direct-to-main changes until main-push scoping has equivalent evidence.
+
+The audit now supports changing **when** large validation populations run. It does not yet support deleting large classes of validation.
