@@ -59,5 +59,6 @@ assert.equal(report.totals.occurrencesUnknownReceipts, 1);
 assert.deepEqual(report.quarantineReasons, { mismatch: 2 });
 assert.deepEqual(report.producers['level-blind'].sourceRuns, ['1', '2']);
 assert.equal(report.semantics.notAttemptedPopulation, true);
+assert.equal(report.runIdFilter, null);
 
 console.log('hint-ingestion-receipt-query-node-test: ok');
