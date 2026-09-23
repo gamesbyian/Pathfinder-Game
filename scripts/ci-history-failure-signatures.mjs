@@ -49,6 +49,20 @@ function jobLog(repo, runId, jobId) {
   }
 }
 
+function extractCommandTimings(log) {
+  const rows = [];
+  for (const line of log.split('\n')) {
+    const match = line.match(/\b(PASS|FAIL)\s+((?:check|test):[A-Za-z0-9:_-]+)\s+\(([0-9.]+)s\)/u);
+    if (!match) continue;
+    rows.push({
+      conclusion: match[1] === 'PASS' ? 'success' : 'failure',
+      name: match[2],
+      durationSeconds: Number(match[3]),
+    });
+  }
+  return rows;
+}
+
 function extractDetectors(log) {
   const detectors = [];
   const seen = new Set();
@@ -72,6 +86,31 @@ function extractDetectors(log) {
     }
   }
   return detectors;
+}
+
+function summarizeTimings(rows) {
+  const commands = new Map();
+  for (const row of rows) {
+    for (const job of row.jobs ?? []) {
+      for (const timing of job.commandTimings ?? []) {
+        if (!commands.has(timing.name)) commands.set(timing.name, []);
+        commands.get(timing.name).push(timing.durationSeconds);
+      }
+    }
+  }
+  const percentile = (values, p) => {
+    const sorted = [...values].sort((a, b) => a - b);
+    if (!sorted.length) return null;
+    const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+    return sorted[index];
+  };
+  return [...commands.entries()].map(([name, values]) => ({
+    name,
+    observedExecutions: values.length,
+    observedTotalSeconds: values.reduce((sum, value) => sum + value, 0),
+    medianSeconds: percentile(values, 50),
+    p90Seconds: percentile(values, 90),
+  })).sort((a, b) => b.observedTotalSeconds - a.observedTotalSeconds || a.name.localeCompare(b.name));
 }
 
 function summarize(rows) {
@@ -117,11 +156,13 @@ for (let index = 0; index < episodes.length; index += 1) {
       continue;
     }
     const found = extractDetectors(log);
+    const commandTimings = extractCommandTimings(log);
     jobRows.push({
       jobId: failedJob.jobId,
       jobName: failedJob.name,
       failedSteps: failedJob.failedSteps ?? [],
       detectors: found,
+      commandTimings,
     });
     for (const detector of found) {
       const key = `${detector.kind}:${detector.name}`;
@@ -157,6 +198,7 @@ const output = {
   episodesWithSignatures: rows.filter(row => row.detectors.length > 0).length,
   gaps,
   detectorSummary: summarize(rows),
+  commandTimingSummary: summarizeTimings(rows),
   episodes: rows,
 };
 
@@ -167,4 +209,5 @@ console.log(JSON.stringify({
   episodesWithSignatures: output.episodesWithSignatures,
   retrievalGaps: gaps.length,
   topDetectors: output.detectorSummary.slice(0, 20),
+  topObservedCost: output.commandTimingSummary.slice(0, 20),
 }, null, 2));
