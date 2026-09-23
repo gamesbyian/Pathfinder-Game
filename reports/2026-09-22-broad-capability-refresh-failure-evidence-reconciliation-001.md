@@ -1,9 +1,9 @@
 # Broad capability refresh and failure-evidence reconciliation 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-22 — canonical stress refresh run `35687363645`, solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`.
-> **Decision:** the production capability boundary is unchanged, but the refresh materially strengthens the diagnostic substrate. Use the complete compact failure-response and exact action/configuration identity joins to screen residual hypotheses before buying richer trace/exact work. Do not interpret censoring alone as a failure phenotype.
-> **Remaining gate:** finish technique census run `35687337464`, run the maintained broad-evidence reconciliation consumer, then close T1/EW1 capability and budget implications.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-22 — canonical stress refresh `35687363645` plus completed 120/120 technique census `35687337464`, both from solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`.
+> **Decision:** the production boundary is unchanged, generic compact failure response is exhausted as a broad discriminator, and the completed census confirms substantial isolated headroom plus narrower cheap allocation mismatches. Advance to sampled first-loss / operational-divergence and routing questions rather than more generic compact telemetry or a deeper standing census.
+> **Remaining gate:** preserve production-policy changes behind controlled confirmation; separately harden the census standard-result provenance contract and regenerate durable second-order derived material.
 
 ## Production boundary
 
@@ -117,19 +117,19 @@ Those two rows are allocation/routing nominations, not promotion evidence. One i
 
 At technique level, the join also finds currently participating configurations with zero recorded production wins, including `finishFirst`, `nearClosureRescue`, `closureCommitment`, and two 2,000-wide beam profiles. Some retain EW1 solves. This is not enough to remove them: zero wins can still hide prerequisite or capability-protecting value. The fresh census and broad reconciliation consumer must separate cheap unique capability, deep-only capability, and genuinely dominated work.
 
-## Technique-census boundary
+## Technique-census closeout
 
-Technique census run `35687337464` was dispatched from the same solver ref as the refresh with T1/T3/T4 at the maintained 50M-node depth plus the bounded EW1 60-level / 10M-work tranche.
+Technique census run `35687337464` completed all **120/120 shards** from the same solver ref as the stress refresh. The specialized combine is complete: **80,538 unique cells**, no missing/partial shards, and 20,453 solved cells.
 
-At the time of this reconciliation the run is still incomplete, with one long-running shard preventing the combined analysis. Do not infer final T1 churn, EW1 pricing, census-budget changes, or cross-source nominations from the partial shard set.
+Against the current frozen production boundary, T1 isolated techniques solve **83/532 (15.6%)** production misses at the maintained 50M-node depth; **449** misses have zero T1 solve, and **47 of the 83 rescuable misses have singleton T1 support**. The fresh census also records **140/1,430 production-solved levels with zero T1 isolated solver**, reinforcing that isolated coverage is not a production-safety substitute.
 
-Once it completes:
+The bounded EW1 tranche completed 2,024 cells across 60 frozen misses at 10M canonical work with zero deadline truncation. Combined with the fresh production-side equal-work reach join, it nominates cheap-capability / routing mismatches without licensing promotion or removal.
 
-1. regenerate/consume the canonical census second-order analysis;
-2. run `research:reconcile-broad-solver-evidence` using the fresh production summary, equal-work production reach, census analysis, and frozen WS1 challenge;
-3. inspect cheap-isolated/no-production-win, production-participation/no-win, and deep-only nomination sets;
-4. compare T1 capability churn with the prior census and EW1 with the August 28 pilot;
-5. change scheduler or standing census depth only if the resulting discriminator is decision-limiting.
+The workflow's final red state came after scientific combine, during a large hint-persistence rebase conflict. Automatic harvesting subsequently preserved the discoveries on current `main` at `afd744a195b2177a865670d3ec3afc00ed5352a7`; no census rerun is warranted.
+
+One integration defect remains: the generic `solver-sweep-result` front door labels the census primary result non-decision-bearing because the combined result does not expose the immutable execution SHA through the newer result contract. Treat the complete specialized artifact as observational census evidence, keep scheduler changes behind controlled confirmation, and fix that contract before the next standing census.
+
+Full closeout: [technique census and broad-evidence closeout 001](2026-09-22-technique-census-broad-evidence-closeout-001.md).
 
 ## Queue effect
 
@@ -139,4 +139,4 @@ The refresh does **not** reorder the active solver queue on solve-count evidence
 - keep WS1 independent confirmation next despite the stronger temporal reproduction;
 - keep repair-deadline, reserve-repricing, first-loss, and capability-invention work scoped to their existing premises;
 - require solved controls for any failure-response phenotype nomination;
-- defer final technique-budget/allocation interpretation until the census combiner and broad reconciliation consumer complete.
+- treat the broad acquisition as scientifically closed: keep 50M T1/T3/T4 and the 60×10M EW1 tranche; route the 83 T1-rescuable / 47 singleton-supported misses and cheap zero-production-win identities into sampled first-loss and allocation question intake. Census provenance-contract hardening is infrastructure follow-up, not a reason to repeat the acquisition.
