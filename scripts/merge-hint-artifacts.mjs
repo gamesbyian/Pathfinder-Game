@@ -18,6 +18,7 @@ import { mergeHints } from '../modules/domain/hint-types.ts';
 import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
 import {
     buildHintIngestionReceipt,
+    countHintStoreSemanticUnits,
     validateHintIngestionReceipt,
 } from './hint-ingestion-receipt-lib.mjs';
 
@@ -63,14 +64,6 @@ function dedupeSemantic(hints) {
         }
         return { path: hint.path, provenance };
     });
-}
-function semanticCounts(hints) {
-    return {
-        paths: hints.length,
-        provenanceEvents: hints.reduce((sum, hint) => sum + (hint.provenance?.length ?? 0), 0),
-        occurrences: hints.reduce((sum, hint) => sum + (hint.provenance ?? [])
-            .reduce((eventSum, event) => eventSum + (event.occurrences?.length ?? 0), 0), 0),
-    };
 }
 function corpusIndex(corpusPath) {
     const raw = JSON.parse(readFileSync(corpusPath, 'utf8'));
@@ -167,9 +160,9 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
             }
 
             refereeAcceptedObservations += 1;
-            const before = semanticCounts(merged);
+            const before = countHintStoreSemanticUnits(merged);
             const nextMerged = dedupeSemantic(mergeHints(merged, [hint]));
-            const after = semanticCounts(nextMerged);
+            const after = countHintStoreSemanticUnits(nextMerged);
             const pathDelta = after.paths - before.paths;
             const provenanceDelta = after.provenanceEvents - before.provenanceEvents;
             const occurrenceDelta = after.occurrences - before.occurrences;
