@@ -11,6 +11,19 @@
 export const HINT_INGESTION_RECEIPT_KIND = 'pathfinder-hint-ingestion-receipt';
 export const HINT_INGESTION_RECEIPT_SCHEMA_VERSION = 1;
 
+/**
+ * Count the semantic storage units Phase-5 receipts distinguish.
+ * The caller should supply an already-canonical/deduplicated Hint[] when using this for deltas.
+ */
+export function countHintStoreSemanticUnits(hints) {
+    return {
+        paths: (hints ?? []).length,
+        provenanceEvents: (hints ?? []).reduce((sum, hint) => sum + (hint?.provenance?.length ?? 0), 0),
+        occurrences: (hints ?? []).reduce((sum, hint) => sum + (hint?.provenance ?? [])
+            .reduce((eventSum, event) => eventSum + (event?.occurrences?.length ?? 0), 0), 0),
+    };
+}
+
 function nonNegativeIntegerOrNull(name, value) {
     if (value == null) return null;
     if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${name} must be null or a non-negative integer`);
