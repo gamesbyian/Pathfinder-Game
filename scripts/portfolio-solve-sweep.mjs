@@ -46,6 +46,8 @@ import { readLevelCorpusDocumentWithHints, parseLevelPositions } from './level-d
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
+import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.js';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
 import { toRaceLevelOpts } from './solver-parallel/race-opts.mjs';
@@ -622,6 +624,20 @@ const effectiveConfig = {
 };
 const effectiveConfigDigest = createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
 
+// Canonical run-wide solver-request identity (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.2), dual-written alongside the legacy effectiveConfig pair above
+// rather than replacing it -- effectiveConfig above deliberately mixes solver-request semantics with
+// population identity (corpusSha256), execution backend/pool (engine/racePoolSize), and adaptive/
+// prime-winner history-derived per-level policy, which the canonical projection keeps separate
+// (raced-backend fields and level-specific/history-derived fields are excluded by design; see
+// solver-request-projection.ts's own doc comment). Built from the RAW base `solveOpts` (not
+// `effectiveSolveOpts`, which JSON-serializes legacyLatencyPortfolioExperiment's Set fields for the
+// legacy pair only) -- buildCanonicalSolverRequestProjection() already normalizes that itself. Uses
+// `solveOpts`, never a per-level solveOptsFor() result, matching effectiveConfig's own choice: this is
+// run-wide request identity, not per-level effective-input identity.
+const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
+const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
+
 // Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs (the CI
 // audit pass). Only the SCHEDULING of writes stays here -- this tool persists incrementally after
 // every level so a killed multi-hour run keeps its finds, which is deliberately different from the
@@ -768,6 +784,8 @@ function writeReport() {
         disableFlags,
         effectiveConfig,
         effectiveConfigDigest,
+        solverRequestProjection,
+        solverRequestIdentity,
     };
 
     mkdirSync(path.dirname(outFile), { recursive: true });
