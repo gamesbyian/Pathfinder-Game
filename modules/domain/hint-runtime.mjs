@@ -228,12 +228,25 @@ export function upgradeProvenanceEntry(raw) {
             solver,
             search: legacySolver.technique === WITNESS_GENERATOR_ID && legacySolver.id !== WITNESS_GENERATOR_ID
                 ? { ...raw.search, termination: 'witness' } : raw.search,
+            // usedExistingHints/hintGuided/isolatedTechnique are deliberately NOT defaulted here.
+            // Historical absence of these capability booleans means the legacy producer never
+            // tracked the dimension at all -- it is unknown, not observed-false. Filling them with
+            // `?? false` on every read (as this used to do) is exactly the "read-time convenience
+            // becomes a mutable historical authority" defect described in
+            // docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 13.1.B /
+            // "Investigation closure: Provenance missingness and historical truth": a touched-file
+            // write could then persist the laundered `false` as if it had been genuinely recorded,
+            // which is measurably why the current corpus has ~507k explicit `isolatedTechnique:false`
+            // against only ~32k still-absent, versus 505,993 absent at the September 11 audit.
+            // `hasOwnBoolean`/`hasExplicitCapabilityContext` (scripts/hint-discovery-replayability-lib.mjs,
+            // scripts/stress/provenance-source-taxonomy.mjs) already exist specifically to detect
+            // "was this field ever actually recorded" via `Object.hasOwn` + typeof checks; defaulting
+            // here silently defeated their entire purpose. `levelRevision`/`techniqueCensusCell` keep
+            // `?? null` because null is their genuine canonical "no value" sentinel, not a laundered
+            // boolean -- makeProvenanceEntry()'s own fresh-construction default already agrees.
             context: {
                 ...(raw.context || {}),
-                usedExistingHints: raw.context?.usedExistingHints ?? false,
-                hintGuided: raw.context?.hintGuided ?? false,
                 levelRevision: raw.context?.levelRevision ?? null,
-                isolatedTechnique: raw.context?.isolatedTechnique ?? false,
                 techniqueCensusCell: raw.context?.techniqueCensusCell ?? null,
             },
         };

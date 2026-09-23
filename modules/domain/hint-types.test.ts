@@ -105,3 +105,31 @@ test('upgradeProvenanceEntry dual-reads historical nested profile/template/diver
   assert.equal(Object.hasOwn(upgraded.solver, 'template'), false);
   assert.equal(Object.hasOwn(upgraded.solver, 'diverseBeam'), false);
 });
+
+test('upgradeProvenanceEntry preserves historical absence of capability booleans instead of laundering it to false', () => {
+  // Regression test for docs/hint-evidence-execution-identity-storage-consolidation-plan.md section
+  // 13.1.B: a legacy nested entry that never tracked usedExistingHints/hintGuided/isolatedTechnique
+  // must stay genuinely absent (Object.hasOwn === false) through upgrade, not become a modern
+  // false that later callers (hasExplicitCapabilityContext / hasOwnBoolean) would misread as an
+  // explicit observation. levelRevision/techniqueCensusCell keep their `null` default since null is
+  // their real canonical "no value", not a laundered boolean.
+  const upgraded = upgradeProvenanceEntry({
+    solver: { id: 'pathfinder-solver', version: 'abc', technique: 'beam', beamWidth: 2000, gateKey: 12, forcing: null, attemptIndex: 3 },
+    search: { nodesExpanded: 10, elapsedMs: 1, budgetMs: 2, workSpent: null, workBudget: null, cumulativeNodesExpanded: 10, cumulativeElapsedMs: 1, cumulativeBudgetMs: 2, termination: 'solved', randomSeed: null, seedSalt: null },
+    context: {},
+    foundAt: '2026-01-01T00:00:00.000Z',
+  });
+  assert.equal(Object.hasOwn(upgraded.context, 'usedExistingHints'), false);
+  assert.equal(Object.hasOwn(upgraded.context, 'hintGuided'), false);
+  assert.equal(Object.hasOwn(upgraded.context, 'isolatedTechnique'), false);
+  assert.equal(upgraded.context.levelRevision, null);
+
+  const explicit = upgradeProvenanceEntry({
+    solver: { id: 'pathfinder-solver', version: 'abc', technique: 'beam', beamWidth: 2000, gateKey: 12, forcing: null, attemptIndex: 3 },
+    search: { nodesExpanded: 10, elapsedMs: 1, budgetMs: 2, workSpent: null, workBudget: null, cumulativeNodesExpanded: 10, cumulativeElapsedMs: 1, cumulativeBudgetMs: 2, termination: 'solved', randomSeed: null, seedSalt: null },
+    context: { usedExistingHints: false, hintGuided: true, isolatedTechnique: false },
+    foundAt: '2026-01-01T00:00:00.000Z',
+  });
+  assert.equal(explicit.context.usedExistingHints, false, 'an already-explicit false is passed through unchanged, not stripped');
+  assert.equal(explicit.context.hintGuided, true);
+});
