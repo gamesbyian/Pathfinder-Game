@@ -177,6 +177,7 @@ export function hintIngestionReceiptFromSelectionManifest(manifest) {
     return buildHintIngestionReceipt({
         producer: manifest.source?.harvester ?? 'harvest-level-blind-report-hints',
         sourceRunId: manifest.source?.runId ?? null,
+        sourceRunAttempt: manifest.source?.runAttempt ?? null,
         sourceWorkflow: manifest.source?.workflow ?? null,
         candidateObservations: manifest.source?.sourceRowsSeen ?? 0,
         eligibleObservations: manifest.selection?.solvedCandidateRowsSeen ?? 0,
