@@ -8,8 +8,6 @@ on:
       - 'Solver high-budget sweep (unsolved-only, both corpora)'
       - 'Solver level-blind targeted sweep'
       - 'Solver routing-regime-gated routing sample A/B'
-      - 'Solver repair-fallback node-reserve sample A/B'
-      - 'Solver elite-prefix-dfs-retry local validation'
       - 'method-probe sweep (isolated single-method corpus test)'
       - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
       - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
