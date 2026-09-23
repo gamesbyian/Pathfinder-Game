@@ -208,6 +208,7 @@ for (const file of walk(stagingDir).sort()) {
 if (selectionManifestOut || ingestionReceiptOut) {
     const selectionManifest = buildHintHarvestSelectionManifest({
         sourceRunId,
+        sourceRunAttempt,
         sourceWorkflow,
         sourceReportsSeen: reportsSeen,
         sourceRowsSeen,
