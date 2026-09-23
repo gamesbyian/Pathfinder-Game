@@ -53,17 +53,24 @@ export function queryabilityBenchmarkIssues(registry) {
     return issues;
 }
 
-function loadBenchmarks(root) {
-    const filename = path.join(root, 'docs/research-queryability-benchmarks.json');
-    const parsed = JSON.parse(readFileSync(filename, 'utf8'));
-    const issues = queryabilityBenchmarkIssues(parsed);
+function validateBenchmarkRegistry(registry, source = 'research queryability benchmark registry') {
+    const issues = queryabilityBenchmarkIssues(registry);
     if (issues.length) {
-        throw new Error('invalid research queryability benchmark registry: ' + issues.join('; '));
+        throw new Error('invalid ' + source + ': ' + issues.join('; '));
     }
-    return parsed;
+    return registry;
 }
 
-function evaluateSupported(graph, benchmark, root) {
+function loadBenchmarks(root) {
+    const filename = path.join(root, 'docs/research-queryability-benchmarks.json');
+    return validateBenchmarkRegistry(
+        JSON.parse(readFileSync(filename, 'utf8')),
+        path.relative(root, filename),
+    );
+}
+
+function evaluateSupported(benchmark, root, { getGraph, getSystemFindingIndex }) {
+    const graph = benchmark.kind === 'system-findings' ? null : getGraph();
     let view;
     if (benchmark.kind === 'temporal-change') {
         if (!benchmark.gitRef) throw new Error('temporal-change benchmark requires gitRef');
@@ -71,9 +78,9 @@ function evaluateSupported(graph, benchmark, root) {
         const after = buildResearchQuerySnapshot(graph);
         view = diffResearchQuerySnapshots(before, after);
     } else if (benchmark.kind === 'system-findings') {
-        view = buildResearchSystemFindingIndex(root);
+        view = getSystemFindingIndex();
     } else if (benchmark.kind === 'system-lineage') {
-        const index = buildResearchSystemFindingIndex(root);
+        const index = getSystemFindingIndex();
         const reportLineage = buildResearchQueryView(graph, { view: 'non-question-lineage' });
         view = buildResearchSystemLineageSummary(index, reportLineage.rows);
     } else {
@@ -130,9 +137,23 @@ function evaluateSupported(graph, benchmark, root) {
     return { view, failures };
 }
 
-export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArtifacts = false } = {}) {
-    const registry = loadBenchmarks(root);
-    const graph = buildResearchQueryGraph(root, { discoverArtifacts });
+export function runResearchQueryabilityAudit(
+    root = process.cwd(),
+    { discoverArtifacts = false, registry: suppliedRegistry = null } = {},
+) {
+    const registry = suppliedRegistry
+        ? validateBenchmarkRegistry(suppliedRegistry, 'supplied research queryability benchmark registry')
+        : loadBenchmarks(root);
+    let graph = null;
+    let systemFindingIndex = null;
+    const getGraph = () => {
+        graph ??= buildResearchQueryGraph(root, { discoverArtifacts });
+        return graph;
+    };
+    const getSystemFindingIndex = () => {
+        systemFindingIndex ??= buildResearchSystemFindingIndex(root);
+        return systemFindingIndex;
+    };
     const results = [];
 
     for (const benchmark of registry.benchmarks) {
@@ -148,7 +169,7 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
         }
         let evaluation;
         try {
-            evaluation = evaluateSupported(graph, benchmark, root);
+            evaluation = evaluateSupported(benchmark, root, { getGraph, getSystemFindingIndex });
         } catch (error) {
             results.push({
                 id: benchmark.id,
@@ -221,6 +242,6 @@ export function runResearchQueryabilityAudit(root = process.cwd(), { discoverArt
         failed,
         knownGaps,
         results,
-        graphDiagnostics: graph.diagnostics,
+        graphDiagnostics: graph?.diagnostics ?? null,
     };
 }
