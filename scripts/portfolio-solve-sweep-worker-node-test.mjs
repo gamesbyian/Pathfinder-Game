@@ -48,8 +48,17 @@ function adjacentGoalRawLevel(reqLen, reqInt) {
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'portfolio-solve-sweep-worker-test-'));
-const corpusPath = path.join(dir, 'corpus.json');
-writeFileSync(corpusPath, JSON.stringify([parityPreservingInfeasibleRawLevel()]));
+function corpus(name, level) {
+    const corpusPath = path.join(dir, `${name}.json`);
+    writeFileSync(corpusPath, JSON.stringify([level]));
+    return corpusPath;
+}
+
+const parityCorpusPath = corpus('parity', parityPreservingInfeasibleRawLevel());
+const repairCorpusPath = corpus('repair', repairEligibleInfeasibleRawLevel());
+const adjacentControlCorpusPath = corpus('adjacent-control', adjacentGoalRawLevel(1, 0));
+const impossibleLengthCorpusPath = corpus('adjacent-impossible-length', adjacentGoalRawLevel(2, 0));
+const impossibleIntersectionCorpusPath = corpus('adjacent-impossible-intersection', adjacentGoalRawLevel(1, 1));
 
 let passed = 0;
 async function test(name, fn) {
@@ -57,17 +66,24 @@ async function test(name, fn) {
     catch (err) { console.error(`  ✗ ${name}\n    ${err.stack || err.message}`); process.exitCode = 1; }
 }
 
-async function raceLevel(solveOpts) {
-    const [{ result }] = await runWorkerPool({
-        workerScript: 'scripts/portfolio-solve-sweep-worker.mjs',
-        tasks: [{ corpusPath, levelNumber: 1, solveOpts, racePoolSize: 2 }],
-        concurrency: 1,
-    });
-    return result;
-}
+const racedCases = [
+    { corpusPath: parityCorpusPath, solveOpts: { timeBudgetMs: 500, goalAttractionDisabledRetryBudgetFractionOverride: 0 } },
+    { corpusPath: parityCorpusPath, solveOpts: { timeBudgetMs: 500 } },
+    { corpusPath: repairCorpusPath, solveOpts: { timeBudgetMs: 1000, repairAdditiveBudgetMultiplierOverride: 3 } },
+    { corpusPath: adjacentControlCorpusPath, solveOpts: { timeBudgetMs: 500 } },
+    { corpusPath: impossibleLengthCorpusPath, solveOpts: { timeBudgetMs: 500 } },
+    { corpusPath: impossibleIntersectionCorpusPath, solveOpts: { timeBudgetMs: 500 } },
+];
+const racedResults = (await runWorkerPool({
+    workerScript: 'scripts/portfolio-solve-sweep-worker.mjs',
+    tasks: racedCases.map(({ corpusPath, solveOpts }) => ({ corpusPath, levelNumber: 1, solveOpts, racePoolSize: 2 })),
+    concurrency: 1,
+})).map(({ result }) => result);
+const [suppressedDiversityResult, defaultDiversityResult, repairOverrideResult,
+    adjacentControlResult, impossibleLengthResult, impossibleIntersectionResult] = racedResults;
 
 await test('a canonical-only goalAttractionDisabledRetryBudgetFractionOverride reaches the raced solver through the worker', async () => {
-    const result = await raceLevel({ timeBudgetMs: 500, goalAttractionDisabledRetryBudgetFractionOverride: 0 });
+    const result = suppressedDiversityResult;
     assert.equal(result.ok, false);
     const diversityAttempts = (result.attempts || []).filter(a => a.stageId === 'goal-attraction-disabled-retry');
     assert.equal(diversityAttempts.length, 0,
@@ -75,7 +91,7 @@ await test('a canonical-only goalAttractionDisabledRetryBudgetFractionOverride r
 });
 
 await test('without an override the raced diversity phase still runs (control for the test above)', async () => {
-    const result = await raceLevel({ timeBudgetMs: 500 });
+    const result = defaultDiversityResult;
     assert.equal(result.ok, false);
     const diversityAttempts = (result.attempts || []).filter(a => a.stageId === 'goal-attraction-disabled-retry');
     assert.ok(diversityAttempts.length > 0, 'expected the raced diversity phase to run without a suppressing override');
@@ -123,13 +139,12 @@ await test('toRaceLevelOpts rejects a SolveOpts field the raced engine cannot ho
 });
 
 await test('an explicit repair override controls the real worker-race repair allocation without sibling substitution', async () => {
-    writeFileSync(corpusPath, JSON.stringify([repairEligibleInfeasibleRawLevel()]));
-    const solveOpts = { timeBudgetMs: 1000, repairAdditiveBudgetMultiplierOverride: 3 };
+    const solveOpts = racedCases[2].solveOpts;
     const retiredResolvedLocal = ['repairBudget', 'Fraction'].join('');
     assert.equal(retiredResolvedLocal in solveOpts, false);
     assert.equal('legacyRepairBudgetFractionOverride' in solveOpts, false);
 
-    const result = await raceLevel(solveOpts);
+    const result = repairOverrideResult;
     assert.equal(result.ok, false);
     const repairAttempts = (result.attempts || []).filter(a => a.stageId === 'repair-fallback');
     assert.ok(repairAttempts.length > 0, 'repair-eligible fixture must reach the raced repair solver');
@@ -140,18 +155,13 @@ await test('an explicit repair override controls the real worker-race repair all
 });
 
 await test('raw challenge metrics survive the real parent-worker-race transport and constrain the solve', async () => {
-    writeFileSync(corpusPath, JSON.stringify([adjacentGoalRawLevel(1, 0)]));
-    const control = await raceLevel({ timeBudgetMs: 500 });
-    assert.equal(control.ok, true, 'adjacent goal is solvable with its transported length/intersection metrics');
-    assert.equal(control.solution.length, 2, 'returned path includes gate plus the transported one-cell requirement');
-
-    writeFileSync(corpusPath, JSON.stringify([adjacentGoalRawLevel(2, 0)]));
-    const impossibleLength = await raceLevel({ timeBudgetMs: 500 });
-    assert.equal(impossibleLength.ok, false, 'changing only transported reqLen changes the worker solve result');
-
-    writeFileSync(corpusPath, JSON.stringify([adjacentGoalRawLevel(1, 1)]));
-    const impossibleIntersection = await raceLevel({ timeBudgetMs: 500 });
-    assert.equal(impossibleIntersection.ok, false, 'changing only transported reqInt changes the worker solve result');
+    assert.equal(adjacentControlResult.ok, true, 'adjacent goal is solvable with its transported length/intersection metrics');
+    assert.equal(adjacentControlResult.solution.length, 2,
+        'returned path includes gate plus the transported one-cell requirement');
+    assert.equal(impossibleLengthResult.ok, false,
+        'changing only transported reqLen changes the worker solve result');
+    assert.equal(impossibleIntersectionResult.ok, false,
+        'changing only transported reqInt changes the worker solve result');
 });
 
 console.log(`\nportfolio-solve-sweep-worker tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);
