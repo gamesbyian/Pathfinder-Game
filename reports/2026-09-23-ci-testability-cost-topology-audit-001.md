@@ -1080,20 +1080,29 @@ Use this only in shadow mode until replay against historical/real failures demon
 
 ## Hidden validation ownership cleanup
 
-The audit found one confirmed duplicate detector execution in the ordinary fast gate:
+The audit found three permanent authority checks hidden inside `check:dead-scripts`:
 
-- `check:dead-scripts` internally invoked the agent-context budget check;
-- `check:validators` separately owns `check:agent-context-budget` in the repo validator group.
-
-A recent green fast-gate log reported the explicit `check:agent-context-budget` execution at about **1.3 s**, after `check:dead-scripts` had already run the same detector.
-
-`check:dead-scripts` no longer invokes agent-context validation internally. The explicit repo validator remains authoritative, so current universal PR CI and the normal local `check` finish line retain the invariant once rather than twice.
-
-Two nested authority checks remain intentionally inside `check:dead-scripts` for now:
-
+- agent-context budget;
 - local/GitHub Actions gate parity;
 - validation-group parity.
 
-They protect orchestration authority itself and are currently part of the always-on scoped-CI package-script path. Moving them to repo-only ownership prematurely could create a gap for narrow semantic `package.json` aggregate edits that alter validation composition without otherwise selecting the repo surface.
+The agent-context check was also an explicit repo validator, so it was definitely executed twice. A recent green fast-gate log reported the explicit execution at about **1.3 s** after the hidden copy had already run.
 
-Follow-up before further separation: harden package-aggregate classification so edits to `check:validators` / `test:node` / CI composition authority force the repo/orchestration surface. Then give each parity detector one explicit execution owner.
+A closer authority audit showed that all three checks can have explicit ownership safely:
+
+- edits to `scripts/validation-groups.json`, workflows, router/planner code, and the parallel runner are already classified as full-impact CI authority;
+- edits to `check:validators` / `test:node` package aggregates expose `scripts/run-scripts-parallel.mjs`, which is also classified full impact;
+- a regression test now locks that aggregate-edit property.
+
+The resulting model is:
+
+1. `check:dead-scripts` checks package entrypoint/tooling lifecycle and permanent-gate lifecycle only;
+2. `check:agent-context-budget` remains an explicit repo validator;
+3. `check:ci-gate-parity` is now an explicit repo validator;
+4. `check:validation-groups` is now an explicit repo validator;
+5. the scoped validation plan no longer lists validation-group parity separately as an always-on package script;
+6. the scoped dry-run no longer executes a duplicate standalone validation-group step.
+
+Current universal PR CI and the ordinary local `check` finish line still execute all three authority checks through `check:validators`. Future scoped CI executes them whenever repo/full-impact authority is selected.
+
+This gives each detector one visible execution owner, improves timing/failure attribution, and removes hidden subprocess composition without weakening the authority boundary.
