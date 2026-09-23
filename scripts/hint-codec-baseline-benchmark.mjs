@@ -85,19 +85,28 @@ export function benchmarkHintCodecBaseline(root=process.cwd()) {
     const rows=files(dir).map(name=>measureHintArtifact(readFileSync(path.join(dir,name),'utf8')));
     corpora.push({ corpus:spec.corpus, dir:spec.dir, ...summarizeMeasurements(rows) });
   }
-  const all=corpora.map(c=>({
-    hints:c.hints, provenanceEvents:c.provenanceEvents,
-    rawBytes:c.bytes.raw, rawGzipBytes:c.bytes.rawGzip,
-    semanticBytes:c.bytes.decodedSemantic, pathOnlyBytes:c.bytes.pathOnly,
-    pathOnlyGzipBytes:c.bytes.pathOnlyGzip, decodeMs:c.decodeMs.total,
-  }));
+  const totals = {
+    files: corpora.reduce((n,c)=>n+c.files,0),
+    hints: corpora.reduce((n,c)=>n+c.hints,0),
+    provenanceEvents: corpora.reduce((n,c)=>n+c.provenanceEvents,0),
+    bytes: {
+      raw: corpora.reduce((n,c)=>n+c.bytes.raw,0),
+      rawGzip: corpora.reduce((n,c)=>n+c.bytes.rawGzip,0),
+      decodedSemantic: corpora.reduce((n,c)=>n+c.bytes.decodedSemantic,0),
+      pathOnly: corpora.reduce((n,c)=>n+c.bytes.pathOnly,0),
+      pathOnlyGzip: corpora.reduce((n,c)=>n+c.bytes.pathOnlyGzip,0),
+    },
+    decodeMs: {
+      total: Number(corpora.reduce((n,c)=>n+c.decodeMs.total,0).toFixed(3)),
+    },
+  };
   return {
     schemaVersion:1,
     kind:'pathfinder-hint-codec-baseline-benchmark',
     codec:'current-v1-v3-compatible-canonical-json',
     generatedAt:new Date().toISOString(),
     corpora,
-    totals:summarizeMeasurements(all),
+    totals,
     semantics:{
       purpose:'pre-v4 measurement baseline only; no encoding choice implied',
       equalityBoundary:'all candidates must decode to the same ordered semantic Hint[]',
