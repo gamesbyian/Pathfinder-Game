@@ -25,8 +25,11 @@ import { provenanceFromHistoricalSolveResult } from '../modules/solver/hint-prov
 import {
     mergeHints,
     setLevelHintRecords,
-    toHint,
 } from '../modules/domain/hint-types.ts';
+import {
+    buildHintDiscoveryIngestionObservation,
+    hintFromDiscoveryIngestionObservation,
+} from './hint-discovery-ingestion-projection-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => {
     const [key, ...rest] = arg.split('=');
@@ -183,9 +186,20 @@ for (const file of walk(stagingDir).sort()) {
                 : {}),
         });
 
+        const observation = buildHintDiscoveryIngestionObservation({
+            producer: 'solver-diagnostics',
+            sourceArtifact: path.relative(stagingDir, file),
+            sourceRunId: sourceRunId !== 'unknown' ? sourceRunId : null,
+            sourceRunAttempt,
+            corpus: CORPUS,
+            levelId: String(entry.level.id ?? row.levelId ?? row.level),
+            levelRevision: row.levelRevision,
+            path: verdict.path,
+            provenance,
+        });
         const beforeHints = entry.level.hintRecords ?? [];
         const before = countHintStoreSemanticUnits(beforeHints);
-        const merged = mergeHints(beforeHints, [toHint(verdict.path, [provenance])]);
+        const merged = mergeHints(beforeHints, [hintFromDiscoveryIngestionObservation(observation)]);
         const after = countHintStoreSemanticUnits(merged);
         const pathDelta = after.paths - before.paths;
         const provenanceDelta = after.provenanceEvents - before.provenanceEvents;
