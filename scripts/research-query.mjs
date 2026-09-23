@@ -1,121 +1,14 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import process from 'node:process';
 
-import { buildResearchQueryGraph, queryResearchGraph } from './research-query-lib.mjs';
-import { buildResearchQueryView } from './research-query-views-lib.mjs';
-import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
-import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot, buildResearchSystemFindingSnapshotFromGitRef, buildResearchSystemLineageSummary, diffResearchSystemFindingSnapshots, queryResearchSystemFindings } from './research-system-query-lib.mjs';
+import { runResearchQueryCommand } from './research-query-cli-lib.mjs';
 
-const args = process.argv.slice(2);
-const value = name => args.find(arg => arg.startsWith('--' + name + '='))?.slice(name.length + 3) ?? '';
-const depthRaw = value('depth');
-const limitRaw = value('limit');
-const graph = buildResearchQueryGraph(process.cwd(), { discoverArtifacts: !args.includes('--no-discover') });
+const result = runResearchQueryCommand(process.argv.slice(2), { root: process.cwd() });
+const payload = JSON.stringify(result.payload, null, result.compact ? 0 : 2) + '\n';
 
-if (args.includes('--stats')) {
-  console.log(JSON.stringify({
-    schemaVersion: graph.schemaVersion,
-    authority: graph.authority,
-    nodeTypes: Object.fromEntries([...new Set(graph.nodes.map(n => n.type))].sort()
-      .map(type => [type, graph.nodes.filter(n => n.type === type).length])),
-    relations: Object.fromEntries([...new Set(graph.edges.map(e => e.relation))].sort()
-      .map(relation => [relation, graph.edges.filter(e => e.relation === relation).length])),
-    diagnostics: graph.diagnostics,
-  }, null, 2));
-  process.exit(0);
-}
-
-const view = value('view');
-if (view === 'system-findings') {
-  const index = buildResearchSystemFindingIndex(process.cwd());
-  console.log(JSON.stringify({
-    view,
-    count: index.count,
-    findings: queryResearchSystemFindings(index, {
-      query: value('query'),
-      category: value('category'),
-      family: value('family'),
-      kind: value('kind'),
-    }),
-  }, null, 2));
-  process.exit(0);
-}
-if (view === 'system-lineage') {
-  const index = buildResearchSystemFindingIndex(process.cwd());
-  const reportLineage = buildResearchQueryView(graph, { view: 'non-question-lineage' });
-  console.log(JSON.stringify(buildResearchSystemLineageSummary(index, reportLineage.rows), null, 2));
-  process.exit(0);
-}
-if (view) {
-  console.log(JSON.stringify(buildResearchQueryView(graph, {
-    view,
-    entity: value('entity'),
-    minimum: value('minimum') ? Number(value('minimum')) : 2,
-  }), null, 2));
-  process.exit(0);
-}
-
-if (args.includes('--snapshot')) {
-  // Snapshots can be large. Emit compact JSON and wait for the pipe to drain before exiting;
-  // process.exit() can otherwise truncate buffered stdout under CI capture.
-  const payload = JSON.stringify(buildResearchQuerySnapshot(graph)) + '\n';
-  await new Promise((resolve, reject) => {
+await new Promise((resolve, reject) => {
     process.stdout.write(payload, error => {
-      if (error) reject(error);
-      else resolve();
+        if (error) reject(error);
+        else resolve();
     });
-  });
-  process.exit(0);
-}
-
-const compareSnapshot = value('compare-snapshot');
-if (compareSnapshot) {
-  const before = JSON.parse(readFileSync(compareSnapshot, 'utf8'));
-  const after = buildResearchQuerySnapshot(graph);
-  console.log(JSON.stringify(diffResearchQuerySnapshots(before, after), null, 2));
-  process.exit(0);
-}
-
-const compareRef = value('compare-ref');
-if (compareRef) {
-  const before = buildResearchQuerySnapshotFromGitRef(process.cwd(), compareRef, { discoverArtifacts: false });
-  const after = buildResearchQuerySnapshot(graph);
-  console.log(JSON.stringify(diffResearchQuerySnapshots(before, after), null, 2));
-  process.exit(0);
-}
-
-if (args.includes('--system-snapshot')) {
-  const index = buildResearchSystemFindingIndex(process.cwd());
-  console.log(JSON.stringify(buildResearchSystemFindingSnapshot(index), null, 2));
-  process.exit(0);
-}
-
-const compareSystemSnapshot = value('compare-system-snapshot');
-if (compareSystemSnapshot) {
-  const before = JSON.parse(readFileSync(compareSystemSnapshot, 'utf8'));
-  const after = buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(process.cwd()));
-  console.log(JSON.stringify(diffResearchSystemFindingSnapshots(before, after), null, 2));
-  process.exit(0);
-}
-
-const compareSystemRef = value('compare-system-ref');
-if (compareSystemRef) {
-  const before = buildResearchSystemFindingSnapshotFromGitRef(process.cwd(), compareSystemRef);
-  const after = buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(process.cwd()));
-  console.log(JSON.stringify(diffResearchSystemFindingSnapshots(before, after), null, 2));
-  process.exit(0);
-}
-
-const result = queryResearchGraph(graph, {
-  entity: value('entity') || null,
-  query: value('query'),
-  relation: value('relation'),
-  direction: value('direction') || 'both',
-  depth: depthRaw ? Number(depthRaw) : 1,
-  limit: limitRaw ? Number(limitRaw) : 100,
-  type: value('type'),
-  status: value('status'),
-  edgeRelation: value('edge-relation'),
-  minDegree: value('min-degree') ? Number(value('min-degree')) : 0,
 });
-console.log(JSON.stringify(result, null, 2));
