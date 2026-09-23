@@ -102,6 +102,7 @@ jobs:
         shell: bash
         env:
           NODE_TEST_GROUPS: ${{ needs.impact-shadow.outputs.node_test_groups }}
+          PATHFINDER_PARALLEL_JOBS: '4'
         run: |
           groups="${NODE_TEST_GROUPS//,/ }"
           node scripts/validation-groups.mjs nodeTests $groups

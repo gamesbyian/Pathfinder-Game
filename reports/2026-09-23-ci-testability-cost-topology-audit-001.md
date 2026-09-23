@@ -1,9 +1,9 @@
 # CI testability and cost topology audit — initial pass
 
 > **Status:** active
-> **Last evidence:** 2026-09-23 — structural/source-level audit identified process-fanout, cache-stampede, shared-ownership, preflight, and fixture/incrementality opportunities; topology/economics manual run remains pending.
+> **Last evidence:** 2026-09-23 — topology/economics run 35920722800 and four-repeat Node-concurrency benchmark 35919350094 completed; 4-way fan-out was fastest and structural refactor queues are now measured.
 > **Decision:** continue as an active CI testability/cost audit; do not change production CI cadence or remove checks from this report alone.
-> **Remaining gate:** merge the audit tooling, run the topology + historical-economics join and bounded Node-concurrency benchmark, then prioritize measured refactor experiments.  
+> **Remaining gate:** land the measured 4-way CI fan-out, then run bounded direct-module/CLI/fixture refactor pilots and continue shared-ownership decomposition before broader CI activation.  
 > **Related:** `reports/2026-09-23-ci-historical-value-audit-phase0-001.md`, `docs/ci-impact-routing-plan.md`, `docs/testing.md`.
 
 ## Objective
@@ -793,3 +793,107 @@ Tradeoff to measure:
 - **cost:** downstream independent failures are not reported until preflight is repaired.
 
 Before activation, replay historically long repair episodes to estimate how often a preflight-red head also contained an independent installed-dependency failure. If that overlap is common, retain current collect-all behavior or provide a manual/full diagnostic mode.
+
+
+## Measured topology + concurrency results
+
+### Topology audit run 35920722800
+
+The first successful topology/economics join completed against historical audit run 35911214948.
+
+Permanent validation population:
+
+- **201** contracts total;
+- **28** validators;
+- **173** Node/CLI harnesses.
+
+Invocation modes:
+
+- **176** plain Node;
+- **17** tsx;
+- **5** run-bundled;
+- **2** tsc;
+- **1** Vitest command.
+
+Static structural traits across local entrypoints:
+
+- **69** use child processes;
+- **84** read files;
+- **76** write/remove filesystem state;
+- **73** use temporary-file patterns;
+- **51** reference repository data/report/log assets;
+- **17** invoke bundling machinery;
+- **13** inspect source text structurally.
+
+Refactor-candidate counts:
+
+- **90** direct-module / batch-runner candidates;
+- **69** CLI/subprocess seam candidates;
+- **76** filesystem-fixture candidates;
+- **51** repository-data fixture candidates;
+- **22** bundle-once/direct-library seam candidates;
+- **25** shared-ownership disambiguation candidates.
+
+The structural result confirms that process topology is not a marginal issue: nearly half the permanent contract population is statically simple enough to investigate for direct-module/batched execution.
+
+### Historical economics joined to topology
+
+Selected group totals from recoverable representative logs:
+
+| group | observed command-seconds | representative detector appearances | zero-hit observed contracts |
+| --- | ---: | ---: | ---: |
+| research tests | **87,925.7** | **386** | 54 / 87 |
+| data tests | **62,467.7** | **23** | 21 / 33 |
+| shared tests | **30,059.6** | **3** | 23 / 25 |
+| solver tests | **25,823.1** | **32** | 10 / 16 |
+| shared validators / type checks | **7,350.5** | **50** | 0 / 2 |
+| data validators | **6,769.3** | **21** | 2 / 5 |
+| repo tests | **5,371.9** | **35** | 7 / 9 |
+| repo validators | **4,068.4** | **254** | 2 / 10 |
+
+Do not interpret the ratio as a keep/delete score. Exposure is conditioned on retained failing-run logs and detector appearances are correlated. It is a prioritization map.
+
+The strongest structural/economic queues are:
+
+1. **shared tests** — classification ambiguity plus 23/25 zero-hit contracts in this representative history;
+2. **data tests** — high observed cost, 24 filesystem-fixture candidates, 20 subprocess seam candidates, 16 repository-data candidates;
+3. **solver tests** — narrower population but high per-contract cost and frequent subprocess/filesystem structure;
+4. **research tests** — largest absolute cost, but also abundant real catch evidence; optimize through scoping, batching, snapshot reuse, and seam extraction rather than aggressive removal.
+
+### Node concurrency benchmark run 35919350094
+
+Four complete repeats of the identical 173-harness population:
+
+| jobs | median wall s | min | max | speedup vs unbounded |
+| --- | ---: | ---: | ---: | ---: |
+| **4** | **46.13** | 45.87 | 48.25 | **1.119×** |
+| 8 | 47.98 | 47.21 | 48.61 | 1.076× |
+| 12 | 50.52 | 50.16 | 50.61 | 1.022× |
+| 16 | 51.28 | 51.18 | 51.81 | 1.007× |
+| 24 | 51.34 | 51.26 | 52.95 | 1.006× |
+| unbounded / 173 | 51.63 | 51.57 | 52.26 | baseline |
+
+All 24 benchmark executions passed.
+
+This is sufficiently consistent to change the hosted-runner default **in CI only** to `PATHFINDER_PARALLEL_JOBS=4`.
+
+The local runner retains its existing default so developer machines with different resources are not forced to inherit the public GitHub runner's 4-vCPU optimum.
+
+Apply the 4-way cap consistently to:
+
+- ordinary PR `test:node`;
+- main-push `test:node`;
+- selected Node-test groups in the scoped dry-run/activation path.
+
+### Next structural implementation pilots
+
+The concurrency cap is an immediate ~11% Node-harness wall-time win, but it does not address the root process tax.
+
+Prioritize small before/after pilots from different topology classes:
+
+1. **Direct-module batching:** `test:loader`, `test:early-repair-search-badness-report`, and one simple research library harness.
+2. **CLI seam extraction:** `test:select-routing-regime-sample-cli` and/or `test:family-boundary-cli`.
+3. **Filesystem/data fixture narrowing:** `test:stress-topology-generator`, `test:family-parent-hint-replay`, or `test:experiment-manifest`.
+4. **Shared ownership decomposition:** begin with `test:portfolio-solve-sweep-lib` / worker and solver-analysis libraries that already have obvious solver/research/data surfaces.
+
+Measure contract wall time and failure quality before/after; preserve at least one executable-boundary smoke wherever CLI/worker wiring is a genuine contract.
