@@ -1,8 +1,8 @@
 # CI testability and cost topology audit — initial pass
 
-> **Status:** active  
-> **Last evidence:** 2026-09-23 — structural/source-level audit identified process-fanout, cache-stampede, shared-ownership, preflight, and fixture/incrementality opportunities; topology/economics manual run remains pending.  
-> **Decision:** continue as an active CI testability/cost audit; do not change production CI cadence or remove checks from this report alone.  
+> **Status:** active
+> **Last evidence:** 2026-09-23 — structural/source-level audit identified process-fanout, cache-stampede, shared-ownership, preflight, and fixture/incrementality opportunities; topology/economics manual run remains pending.
+> **Decision:** continue as an active CI testability/cost audit; do not change production CI cadence or remove checks from this report alone.
 > **Remaining gate:** merge the audit tooling, run the topology + historical-economics join and bounded Node-concurrency benchmark, then prioritize measured refactor experiments.  
 > **Related:** `reports/2026-09-23-ci-historical-value-audit-phase0-001.md`, `docs/ci-impact-routing-plan.md`, `docs/testing.md`.
 
