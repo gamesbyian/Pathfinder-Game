@@ -46,13 +46,19 @@ const membership = buildMembership(registry);
 const groupSummary = new Map();
 const detectorRows = [];
 const unclassified = [];
+const timingByCommand = new Map((signatures.commandTimingSummary ?? []).map(row => [row.name, row]));
 
 for (const detector of signatures.detectorSummary ?? []) {
   const member = membership.get(detector.name) ?? null;
+  const timing = timingByCommand.get(detector.name) ?? null;
   const row = {
     ...detector,
     registryFamily: member?.family ?? null,
     validationGroup: member?.group ?? null,
+    observedExecutions: timing?.observedExecutions ?? null,
+    observedTotalSeconds: timing?.observedTotalSeconds ?? null,
+    medianSeconds: timing?.medianSeconds ?? null,
+    p90Seconds: timing?.p90Seconds ?? null,
   };
   detectorRows.push(row);
   if (!member) {
@@ -67,14 +73,23 @@ for (const detector of signatures.detectorSummary ?? []) {
       representativeDetectorHits: 0,
       detectorCount: 0,
       detectors: [],
+      observedExecutionSeconds: 0,
+      observedExecutions: 0,
     });
   }
   const group = groupSummary.get(key);
   group.representativeDetectorHits += detector.representativeEpisodes;
   group.detectorCount += 1;
+  if (timing) {
+    group.observedExecutionSeconds += timing.observedTotalSeconds;
+    group.observedExecutions += timing.observedExecutions;
+  }
   group.detectors.push({
     name: detector.name,
     representativeEpisodes: detector.representativeEpisodes,
+    observedExecutions: timing?.observedExecutions ?? null,
+    observedTotalSeconds: timing?.observedTotalSeconds ?? null,
+    medianSeconds: timing?.medianSeconds ?? null,
   });
 }
 
@@ -85,7 +100,13 @@ const output = {
   episodesRequested: signatures.episodesRequested ?? null,
   episodesWithSignatures: signatures.episodesWithSignatures ?? null,
   retrievalGapCount: signatures.gaps?.length ?? 0,
-  groupSummary: [...groupSummary.values()].sort((a, b) =>
+  groupSummary: [...groupSummary.values()].map(group => ({
+    ...group,
+    observedSecondsPerRepresentativeDetectorHit:
+      group.representativeDetectorHits > 0
+        ? group.observedExecutionSeconds / group.representativeDetectorHits
+        : null,
+  })).sort((a, b) =>
     b.representativeDetectorHits - a.representativeDetectorHits ||
     a.validationGroup.localeCompare(b.validationGroup)),
   detectors: detectorRows,
