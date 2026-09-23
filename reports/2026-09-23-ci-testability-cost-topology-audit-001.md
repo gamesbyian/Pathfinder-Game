@@ -641,3 +641,37 @@ A safe opt-in runner experiment:
 - do not suppress warnings solely because exit code is zero unless warning semantics are explicitly classified.
 
 Primary benefit is diagnosis/readability; any Actions log-I/O wall-time reduction is secondary and should be measured rather than assumed.
+
+
+## Generic dependency-graph opportunity
+
+The repository already contains overlapping import/dependency tracing implementations:
+
+- `scripts/check-plain-node-import-boundaries.mjs` discovers plain-Node roots from package/workflow commands, parses literal static/dynamic local imports, resolves repository targets, and walks transitive script dependencies;
+- `scripts/research-system-inventory-lib.mjs` independently implements `localImports()` and `dependencyClosure()` for research command entrypoints.
+
+This is both duplicated logic and an opportunity for finer test selection.
+
+Extract a small, dependency-free repository import-graph library with explicit runtime modes:
+
+- native Node resolution;
+- tsx/TypeScript source resolution;
+- bundled entrypoint resolution;
+- static versus dynamic literal edges;
+- unresolved/dynamic-unknown edge reporting.
+
+Potential consumers:
+
+- plain-Node import boundary;
+- dead-script/reachability checks;
+- research-system dependency inventory;
+- CI impact analysis;
+- validation-contract dependency derivation.
+
+For direct-import contracts, a changed source file can then mechanically identify transitive consumer tests. Explicit contract metadata remains necessary for dependencies invisible to imports: filesystem authorities, data/report paths, subprocess targets, generated files, environment variables, persistence/network boundaries, and reflective/dynamic loading.
+
+This should complement, not replace, semantic surface routing:
+
+1. semantic surfaces establish blast-radius policy;
+2. the import graph narrows direct code consumers within a selected surface;
+3. explicit non-code dependency metadata closes the graph where static imports cannot see.
