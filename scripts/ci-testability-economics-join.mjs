@@ -59,6 +59,7 @@ const rows = topology.contracts.map(contract => {
   return {
     family: contract.family,
     group: contract.group,
+    surfaces: contract.surfaces ?? [contract.group],
     name: contract.name,
     invocation: contract.invocation,
     entrypoint: contract.entrypoint,
