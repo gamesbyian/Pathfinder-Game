@@ -202,6 +202,16 @@
         "mode": "automatic-harvest",
         "reason": null
       }
+    },
+    {
+      "id": "ws1-remaining-length-intrasolve-stage-a-one-shot",
+      "workflow": ".github/workflows/ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
+      "disposition": "unsupported",
+      "reason": "Frozen paired WS1 elite-prefix ordering harness emits purpose-built control/treatment trace rows rather than the ordinary attempt-shaped compact failure-response population.",
+      "durability": {
+        "mode": "artifact-only",
+        "reason": "This one-shot Stage A experiment publishes its frozen result and standard solver-sweep artifact; it is not a recurring compact failure-response producer."
+      }
     }
   ]
 }

@@ -196,6 +196,13 @@
       "status": "maintained",
       "currentConsumer": "solver research program",
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "WS1 remaining-length intra-solve Stage A bridge",
+      "retirementTrigger": "retire after the frozen Stage A result is reconciled and no successor requires this exact one-shot execution surface"
     }
   ],
   "retiredWorkflows": [
