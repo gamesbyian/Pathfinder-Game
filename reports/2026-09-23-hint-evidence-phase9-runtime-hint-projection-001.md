@@ -1,5 +1,11 @@
 # Hint evidence consolidation — Phase 9 generated runtime hint projection — 001
 
+> **Status:** active
+> **Last evidence:** 2026-09-23 — Retained and reconciled as part of the active hint-evidence consolidation implementation.
+> **Decision:** Preserve this report as durable implementation/audit evidence; current code and later reconciliation records remain authoritative where they supersede earlier details.
+> **Remaining gate:** Apply the current phase-specific validation and closeout gates before treating this report as proof of whole-program completion.
+
+
 > **Status:** implementation-complete on descendant branch; real build validation/measurement pending
 >
 > **Date:** 2026-09-23
