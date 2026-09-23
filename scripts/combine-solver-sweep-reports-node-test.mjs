@@ -40,6 +40,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
         execution: { schedulerMode: 'production', levelBlind: true, historyAware: false },
         producer: 'fixture-producer',
         workflowFamily: 'fixture-workflow',
+        solverRequestProjection: {
+            schemaVersion: 1,
+            kind: 'pathfinder-solver-request-projection',
+            scheduler: { mode: 'production' },
+        },
+        solverRequestIdentity: 'sha256:' + '2'.repeat(64),
         levels: [{ id: 'R2' }],
     };
     const flatBefore = JSON.stringify(flat);
@@ -51,6 +57,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
     assert.equal(normalizedFlat.summary.historyAware, false);
     assert.equal(normalizedFlat.summary.producer, 'fixture-producer');
     assert.equal(normalizedFlat.summary.workflowFamily, 'fixture-workflow');
+    assert.deepEqual(normalizedFlat.summary.solverRequestProjection, flat.solverRequestProjection);
+    assert.equal(normalizedFlat.summary.solverRequestIdentity, flat.solverRequestIdentity);
     assert.equal(JSON.stringify(flat), flatBefore, 'normalization must not mutate source documents');
 
     assert.throws(
