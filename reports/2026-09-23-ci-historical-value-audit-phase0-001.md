@@ -349,3 +349,32 @@ Evidence now supports the following **shadow candidate**, not yet a production c
 - **main push:** preserve as a direct-main/integration backstop, then scope it with the same impact authority rather than deleting it.
 
 Before activation, fault injection should reproduce at least the PR #1722 failure class and prove the scoped route selects/catches it.
+
+
+## Fast-gate family sampling — why semantic scoping matters inside the lane
+
+The largest current-era repair episodes were sampled by fetching the first failing fast-gate log for each episode rather than every repeated red SHA. The 16 largest mechanical episodes alone account for **188 failed PR-CI runs**.
+
+Representative failures include:
+
+- `test:experiment-manifest` on the 24-run research-domain episode;
+- `check:types:tests`, `check:documentation-links`, and `check:level-metric-boundaries` during the solver-audit campaign;
+- `check:file-size-ratchet` on a 10-run workflow-remediation episode;
+- `check:documentation-links` on several research/documentation episodes;
+- `check:workflow-actions` and `test:workflow-lifecycle` on hint/workflow-authoring work;
+- `test:append-solver-health-record` and `test:combine-solver-sweep-reports` on solver-research information-retention work.
+
+In these sampled long episodes, production build and solver canary were repeatedly green while a small number of repository/research contracts were red. Large numbers of unrelated Node/CLI harnesses also passed around the actual failing contract.
+
+This is direct evidence for the impact-routing program's core premise: the fast lane itself contains useful checks, but **universal execution of every semantic group is not the same thing as useful detection**. The audit should demote by relevance/cadence before deleting individual contracts.
+
+## Reproducible repair-episode analyzer
+
+The branch now includes `scripts/ci-history-repair-episodes.mjs`. It consumes the normalized `history.jsonl` corpus and emits:
+
+- whole-history candidate repair episodes;
+- current-era fast/deep lane episode categories;
+- cancellation supersession timing;
+- per-episode failing job/step identities.
+
+The existing manual `ci-historical-value-audit.yml` workflow invokes this analyzer after history collection, so future audit runs produce `repair-episodes.json` in the same artifact without adding any new ordinary PR-CI obligation.
