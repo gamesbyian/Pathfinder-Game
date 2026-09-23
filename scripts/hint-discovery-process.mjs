@@ -8,7 +8,7 @@
  * Usage:
  *   node scripts/hint-discovery-process.mjs --in=<solver-report.json> [--levels=data/levels.json]
  *     [--parent=P00001] [--contract=<experiment-contract.json>] [--run-id=<id>]
- *     [--contract-ref=<artifact-ref>] [--arm=<name>] [--out=tmp/hint-discovery-process.json]
+ *     [--run-attempt=<n>] [--contract-ref=<artifact-ref>] [--arm=<name>] [--out=tmp/hint-discovery-process.json]
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -31,10 +31,11 @@ const parentFilter = args.get('parent') ?? null;
 const outFile = args.get('out') ?? null;
 const contractFile = args.get('contract') ?? null;
 const runId = args.get('run-id') ?? null;
+const runAttempt = args.get('run-attempt') ?? null;
 const contractRef = args.get('contract-ref') ?? contractFile;
 const arm = args.get('arm') ?? null;
 if (!inputFile) {
-    console.error('Usage: node scripts/hint-discovery-process.mjs --in=<solver-report.json> [--levels=<levels.json>] [--parent=<id>] [--contract=<json> --run-id=<id>] [--out=<json>]');
+    console.error('Usage: node scripts/hint-discovery-process.mjs --in=<solver-report.json> [--levels=<levels.json>] [--parent=<id>] [--contract=<json> --run-id=<id> [--run-attempt=<n>]] [--out=<json>]');
     process.exit(2);
 }
 
@@ -68,6 +69,7 @@ if (contractFile || runId) {
         levels: levelsFile,
         contract,
         runId,
+        runAttempt,
         contractRef,
         arm,
     });
