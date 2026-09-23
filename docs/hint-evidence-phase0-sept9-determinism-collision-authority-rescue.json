@@ -195,4 +195,199 @@
               "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
               "gateKey": 393219,
               "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,    "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 6684,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 358244,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02349",
+          "level": 680,
+          "solutionLength": 80,
+          "solutionSha256": "ba47039cce2143c881663b3a060f73c002be62fcbe88a02d344e9b02ca9302fc",
+          "refereeValid": true,
+          "nodesExpanded": 125070,
+          "workSpent": 1600445,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655362,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655362,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 2189,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 125070
+            }
+          ]
+        },
+        {
+          "id": "R02314",
+          "level": 645,
+          "solutionLength": 87,
+          "solutionSha256": "9ce21bfc5254b2e2da2036b93da8525df90dd8ea6b054f7900f2f1c1054807d0",
+          "refereeValid": true,
+          "nodesExpanded": 10125815,
+          "workSpent": 32077759,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 327691,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 327691,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1435,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 125789
+            }
+          ]
+        },
+        {
+          "id": "R02510",
+          "level": 841,
+          "solutionLength": 81,
+          "solutionSha256": "9a11921cec742bd9f5301d962e7f81b28529cf5a471bd6cfd2faab4aafb64823",
+          "refereeValid": true,
+          "nodesExpanded": 614530,
+          "workSpent": 8031900,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 589834,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 589834,
+              "scoringProfileId": "intersectionHarvest",
               "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3705,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396710,
+              "nodesExpanded": 339958,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02515",
+          "level": 846,
+          "solutionLength": 81,
+          "solutionSha256": "fa88b8de6fa972258b3eb97523ae8fc86467f964ea22c0265c0194de8f2721f2",
+          "refereeValid": true,
+          "nodesExpanded": 27813767,
+          "workSpent": 48907665,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655361,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655361,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1533,
+              "outcome": "success",
+              "allocatedBudgetMs": 86361264,
+              "nodesExpanded": 123653,
+              "mainSearchLateReserve": true
+            }
+          ]
+        },
+        {
+          "id": "R02699",
+          "level": 1030,
+          "solutionLength": 83,
+          "solutionSha256": "cfcf0c48e6eaf25d5ba8d3e6be9028c0c5192ce1be6bd4e093c4e858a1bf016b",
+          "refereeValid": true,
+          "nodesExpanded": 33352609,
+          "workSpent": 23325615,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "winningActionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "gateKey": 65547,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+              "gateKey": 65547,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4341,
+              "outcome": "success",
+              "allocatedBudgetMs": 86325440,
+              "nodesExpanded": 352558,
+              "mainSearchLateReserve": true
+            }
+          ]
+        },
+        {
+          "id": "R03001",
+          "level": 1332,
+          "solutionLength": 74,
+          "solutionSha256": "3d936dd1fb68443ab7cc6d7af44bbca28f9c3ce78438aadc44e0cf21b4f63100",
+          "refereeValid": true,
+          "nodesExpanded": 4829263,
+          "workSpent": 16045640,
+          "winningConfig": "repair|score=repair|guidance=must-turn-biased",
+          "winningActionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+          "gateKey": 589824,
+          "winningAttempts": [
+            {
+              "stageId": "early-repair-search",
+              "actionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+              "gateKey": 589824,
+              "scoringProfileId": "repair",
+              "orderingBiasId": null,
+              "beamWidth": null,
+              "ok": true,
+              "elapsedMs": 11514,
+              "outcome": "success",
+              "allocatedBudgetMs": 1200000,
+              "nodesExpanded": 829253,
+              "repair": true,
+              "repairMustTurnBiased": true,
+              "randomSeed": 1194917888
+            }
+          ]
+        },
+        {
+          "id": "R03267",
+          "level": 1598,
+          "solutionLength": 75,
+          "solutionSha256": "56ae5e16bdf139f2e773db9f1f54b50de6bc3d845c5b567daed49d4a3f050f95",
+          "refereeValid": true,
+          "nodesExpanded": 10537405,
+          "workSpent": 40001130,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 131078,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 131078,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBia
