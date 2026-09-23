@@ -25,6 +25,11 @@ function refIds(question, keys) {
 
 export function buildResearchIntegrationAuditContext(root = process.cwd()) {
     const questionRegistry = loadResearchQuestionRegistry(root);
+    const premiseMap = loadPremiseMap(root);
+    const measurement = JSON.parse(readFileSync(
+        path.join(root, 'docs/solver-premise-map-measurement-opportunities.json'),
+        'utf8',
+    ));
     const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
     const resourceAudits = JSON.parse(readFileSync(
         path.join(root, 'docs/solver-research-resource-contract-audits.json'),
@@ -82,7 +87,6 @@ export function auditResearchIntegration(
     const questionIds = new Set(questionRegistry.questions.map(question => question.id));
     const questionById = new Map(questionRegistry.questions.map(question => [question.id, question]));
 
-    const premiseMap = loadPremiseMap(root);
     const premiseIds = new Set(premiseMap.premises.map(row => row.premiseId));
     for (const edge of premiseMap.edges) {
         if (edge.fromKind === 'premise' && !premiseIds.has(edge.from)) {
@@ -101,10 +105,6 @@ export function auditResearchIntegration(
         }
     }
 
-    const measurement = JSON.parse(readFileSync(
-        path.join(root, 'docs/solver-premise-map-measurement-opportunities.json'),
-        'utf8',
-    ));
     if (measurement.governingPremise && !premiseIds.has(measurement.governingPremise)) {
         errors.push(`measurement overlay governingPremise references unknown premise ${measurement.governingPremise}`);
     }
