@@ -415,3 +415,18 @@ This stage is intended to answer:
 3. which failures are repeatedly co-detected by multiple contracts in the same representative run;
 4. which current permanent groups have little or no observed representative catch evidence;
 5. where cadence/scoping can reduce execution without deleting the underlying contract.
+
+
+## Representative runtime economics
+
+The second-stage failure-signature analyzer also extracts the per-command durations already printed by the fast-gate parallel runner for every `PASS` / `FAIL` `check:*` and `test:*` line in the representative job logs.
+
+The semantic grouper therefore reports, for each detector/group represented in the episode sample:
+
+- representative repair episodes in which the detector was red;
+- observed executions in the sampled logs;
+- observed aggregate runtime seconds;
+- median and p90 command runtime where available;
+- observed execution seconds per representative detector hit.
+
+These are **not** causal “cost per bug” scores. A representative log contains many unrelated green commands, correlated detectors can share a root cause, and the sample deliberately selects first failures rather than every execution. The purpose is to expose obvious cadence mismatches such as expensive groups with little representative catch evidence, then validate any proposed demotion with router counterfactuals and fault injection.
