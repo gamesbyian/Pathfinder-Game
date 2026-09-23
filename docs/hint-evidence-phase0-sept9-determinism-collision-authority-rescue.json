@@ -1373,4 +1373,212 @@
               "beamWidth": 5000,
               "ok": true,
               "elapsedMs": 3047,
+              "outcome": "success",      "allocatedBudgetMs": 86396379,
+              "nodesExpanded": 207077,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R01930",
+          "level": 320,
+          "solutionLength": 99,
+          "solutionSha256": "3b763efb487f19fbf339ddc072f1a5c5b60e22daf71ac23f1edc04c66f9ece68",
+          "refereeValid": true,
+          "nodesExpanded": 9197649,
+          "workSpent": 39206870,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 6,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 6,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 6025,
               "outcome": "success",
+              "allocatedBudgetMs": 86395162,
+              "nodesExpanded": 419530,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": "34337871124",
+      "runAttempt": "1",
+      "workflow": "Solver level-blind targeted sweep",
+      "sourceArtifact": "targeted-sweep-combined",
+      "repository": "gamesbyian/Pathfinder-Game",
+      "ref": "refs/heads/claude/solver-portal-restoration-queue-3boq68",
+      "solverRef": "423e4a09517787adb935136a29781f1f8234861e",
+      "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337871124",
+      "manifestSha256": "d611598e845454d55e2890fa9a808d2f2f92d95c6778b8fc5cca343fbf89ae83",
+      "resultSha256": "91eeab673b002f44b2086643e346a46a2ab795113705a3233f3e8c45b456512b",
+      "dispatchInputs": {
+        "ids_file": "data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt",
+        "corpus": "data/stress/stress-levels-random.json",
+        "node_budget": "50000000",
+        "node_budget_advisory_only": "false",
+        "strict_total_work_budget": "false",
+        "budget_ms": "86400000",
+        "workers": "4",
+        "target_wall_minutes": "1",
+        "solo_threshold_multiplier": "2.5",
+        "enable_flags": "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL",
+        "min_participating_levels": "1",
+        "concurrency_suffix": "gapfill2"
+      },
+      "shardCompleteness": {
+        "expected": 5,
+        "observed": 5,
+        "complete": true,
+        "basis": "exact expected population validated separately"
+      },
+      "resultContext": {
+        "timestamp": "2026-09-09T10:26:16.921Z",
+        "commitSha": "423e4a09517787adb935136a29781f1f8234861e",
+        "corpus": "data/stress/stress-levels-random.json",
+        "budgetMs": 86400000,
+        "nodeBudget": 50000000,
+        "workBudget": 67000000,
+        "executionConfig": {
+          "levelBlind": true,
+          "historicalInputs": [],
+          "solverInputFields": [
+            "grid",
+            "gates",
+            "goal",
+            "reqLen",
+            "reqInt",
+            "blocks",
+            "geese",
+            "falseGoals",
+            "mustPass",
+            "mustCross",
+            "landmarks",
+            "filters",
+            "flippingFilters",
+            "portals"
+          ],
+          "workers": 4,
+          "enableFlags": [
+            "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL"
+          ],
+          "disableFlags": [],
+          "strictTotalWorkBudget": false,
+          "attemptBudgetTelemetry": false,
+          "lifecycleTelemetry": false,
+          "mainSearchLateReserveFraction": null,
+          "mainSearchLateReserveConfigCount": null,
+          "admissibleOrderNodeReserveFraction": null,
+          "admissibleOrderNonDefaultRetryBudgetFraction": null,
+          "earlyRepairSearchAdaptiveBadnessGate": null,
+          "earlyRepairSearchAdaptiveMinScale": null,
+          "repairLateProbeNodeBudget": null
+        },
+        "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 5 batch report(s))"
+      },
+      "affectedSolvedRows": [
+        {
+          "id": "R03304",
+          "level": 1635,
+          "solutionLength": 92,
+          "solutionSha256": "ed8ffdae094e7ad81219295ac428e07bbbbc62bd98a1ee22db8f36719e7b45a1",
+          "refereeValid": true,
+          "nodesExpanded": 544899,
+          "workSpent": 6254640,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 458764,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 458764,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4510,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396499,
+              "nodesExpanded": 329536,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": "34337880617",
+      "runAttempt": "1",
+      "workflow": "Solver level-blind targeted sweep",
+      "sourceArtifact": "targeted-sweep-combined",
+      "repository": "gamesbyian/Pathfinder-Game",
+      "ref": "refs/heads/claude/solver-portal-restoration-queue-3boq68",
+      "solverRef": "423e4a09517787adb935136a29781f1f8234861e",
+      "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337880617",
+      "manifestSha256": "6c40090d20a2f9b29d36df759ca6ea26125b20ce63d9def753ef6a9b6023c619",
+      "resultSha256": "0eac30ce1e805b738d87fbf341e6283dd316752e6a9d49d7adf549591da0495b",
+      "dispatchInputs": {
+        "ids_file": "data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt",
+        "corpus": "data/stress/stress-levels-random.json",
+        "node_budget": "50000000",
+        "node_budget_advisory_only": "false",
+        "strict_total_work_budget": "false",
+        "budget_ms": "86400000",
+        "workers": "4",
+        "target_wall_minutes": "1",
+        "solo_threshold_multiplier": "2.5",
+        "min_participating_levels": "1",
+        "concurrency_suffix": "gapfill2"
+      },
+      "shardCompleteness": {
+        "expected": 5,
+        "observed": 5,
+        "complete": true,
+        "basis": "exact expected population validated separately"
+      },
+      "resultContext": {
+        "timestamp": "2026-09-09T10:42:12.047Z",
+        "commitSha": "423e4a09517787adb935136a29781f1f8234861e",
+        "corpus": "data/stress/stress-levels-random.json",
+        "budgetMs": 86400000,
+        "nodeBudget": 50000000,
+        "workBudget": 67000000,
+        "executionConfig": {
+          "levelBlind": true,
+          "historicalInputs": [],
+          "solverInputFields": [
+            "grid",
+            "gates",
+            "goal",
+            "reqLen",
+            "reqInt",
+            "blocks",
+            "geese",
+            "falseGoals",
+            "mustPass",
+            "mustCross",
+            "landmarks",
+            "filters",
+            "flippingFilters",
+            "portals"
+          ],
+          "workers": 4,
+          "enableFlags": [],
+          "disableFlags": [],
+          "strictTotalWorkBudget": false,
+          "attemptBudgetTelemetry": false,
+          "lifecycleTelemetry": false,
+          "mainSearchLateReserveFraction": null,
+          "mainSearchLateReserveConfigCount": null,
+          "admissibleOrderNodeReserveFraction": null,
+          "admissibleOrderNonDefaultRetryBudgetFraction": null,
+          "earlyRepairSearchAdaptiveBadnessGate
