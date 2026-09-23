@@ -13,7 +13,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "supported by RACE_LEVEL_OPTS_FIELDS"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "yieldFn",
@@ -25,7 +26,8 @@
         "direct": "supported",
         "webWorker": "special cancellation bridge; callback itself is not transported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "transport-execution"
     },
     {
       "field": "ablation",
@@ -37,7 +39,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "supported by RACE_LEVEL_OPTS_FIELDS"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "forcedFirstStepKey",
@@ -49,7 +52,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "level-specific-history-derived"
     },
     {
       "field": "forcedPortalExitKey",
@@ -61,7 +65,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "level-specific-history-derived"
     },
     {
       "field": "nodeBudget",
@@ -73,7 +78,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "baseWorkBudget",
@@ -85,7 +91,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "strictTotalWorkBudget",
@@ -97,7 +104,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "attemptBudgetTelemetry",
@@ -109,7 +117,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "lifecycleTelemetry",
@@ -121,7 +130,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "schedulerMode",
@@ -133,7 +143,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "production only; implied constant and rejected if non-production"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "staticPortfolio",
@@ -145,7 +156,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "attemptSearchForTesting",
@@ -157,7 +169,8 @@
         "direct": "supported",
         "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "transport-execution"
     },
     {
       "field": "beamResearchObserver",
@@ -169,7 +182,8 @@
         "direct": "supported",
         "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "beamFlowCounters",
@@ -181,7 +195,8 @@
         "direct": "supported",
         "webWorker": "explicitly rejected by buildWorkerSolveOpts() (solver-worker-client.ts) -- 2026-09-23 fix; previously silently transported but worker mutations were never returned, discarding the counters",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "pruneDiagnostics",
@@ -193,7 +208,8 @@
         "direct": "supported",
         "webWorker": "explicitly rejected by buildWorkerSolveOpts() (solver-worker-client.ts) -- 2026-09-23 fix; previously silently transported but worker mutations were never returned, discarding the counters",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "failureProgressObserver",
@@ -205,7 +221,8 @@
         "direct": "supported",
         "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "connectivityRejectionObserver",
@@ -217,7 +234,8 @@
         "direct": "supported",
         "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "connectivityCertificateShadowObserver",
@@ -229,7 +247,8 @@
         "direct": "supported",
         "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "parityCapacityObserver",
@@ -241,7 +260,8 @@
         "direct": "supported",
         "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "parityPhaseDistanceObserver",
@@ -253,7 +273,8 @@
         "direct": "supported",
         "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "jointObligationObserver",
@@ -265,7 +286,8 @@
         "direct": "supported",
         "webWorker": "direct-only function-valued option; buildWorkerSolveOpts fails loudly",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "observation-semantic"
     },
     {
       "field": "legacyLatencyPortfolioExperiment",
@@ -277,7 +299,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "repairAdditiveBudgetMultiplierOverride",
@@ -289,7 +312,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "supported by RACE_LEVEL_OPTS_FIELDS"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "goalAttractionDisabledRetryBudgetFractionOverride",
@@ -301,7 +325,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "supported by RACE_LEVEL_OPTS_FIELDS"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "coarseStateNearTieRetentionRetryBudgetFractionOverride",
@@ -313,7 +338,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "coarseStateNearTieRetentionRetryNodeReserveFractionOverride",
@@ -325,7 +351,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "admissibleOrderNonDefaultRetryBudgetFractionOverride",
@@ -337,7 +364,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "admissibleOrderNonDefaultRetryNodeReserveFractionOverride",
@@ -349,7 +377,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "connectivityAxisExhaustedRetryBudgetFractionOverride",
@@ -361,7 +390,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "connectivityAxisExhaustedRetryNodeReserveFractionOverride",
@@ -373,7 +403,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "repairElitePrefixDfsRetryBudgetFractionOverride",
@@ -385,7 +416,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "repairElitePrefixDfsRetryNodeReserveFractionOverride",
@@ -397,7 +429,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "mcNeighborBudgetRetryBudgetFractionOverride",
@@ -409,7 +442,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "mcNeighborBudgetRetryNodeReserveFractionOverride",
@@ -421,7 +455,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "repairLateProbeNodeBudgetOverride",
@@ -433,7 +468,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "repairLateProbeMultiSeedRetrySeedCountOverride",
@@ -445,7 +481,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "admissibleOrderBudgetFractionOverride",
@@ -457,7 +494,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "admissibleOrderNodeReserveFractionOverride",
@@ -469,7 +507,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "admissibleOrderProfileNodeReserveFractionOverride",
@@ -481,7 +520,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "repairFallbackNodeReserveFractionOverride",
@@ -493,7 +533,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "repairShrinkRecoveryNodeReserveFractionOverride",
@@ -505,7 +546,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "goalAttractionDisabledRetryNodeReserveFractionOverride",
@@ -517,7 +559,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "mainSearchLateReserveFractionOverride",
@@ -529,7 +572,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "mainSearchLateReserveConfigCountOverride",
@@ -541,7 +585,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "earlyRepairSearchAdaptiveBiasedBadnessGateOverride",
@@ -553,7 +598,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "earlyRepairSearchAdaptiveBiasedMinScaleOverride",
@@ -565,7 +611,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "disableExtraBudgetPasses",
@@ -577,7 +624,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "solver-semantic"
     },
     {
       "field": "primeAttempt",
@@ -589,7 +637,8 @@
         "direct": "supported",
         "webWorker": "structured-clone-supported",
         "raced": "unsupported"
-      }
+      },
+      "identityLayer": "level-specific-history-derived"
     }
   ],
   "backendRequests": {
@@ -616,14 +665,16 @@
           "effect": "outcome-affecting-when-binding",
           "note": "Not a SolveOpts field; phase-1 hard wall cap for raced engine.",
           "canonicalDefaultSemantics": "absent => ceil(effective timeBudgetMs * (effective repairAdditiveBudgetMultiplier + 1)); hard wall cap for raced phase 1",
-          "identityParticipation": "execution/reproducibility identity; outcome-affecting when binding"
+          "identityParticipation": "execution/reproducibility identity; outcome-affecting when binding",
+          "identityLayer": "transport-execution"
         },
         {
           "field": "poolSize",
           "semanticClass": "backend-concurrency",
           "effect": "changes attempt concurrency and first-success winner opportunity",
           "canonicalDefaultSemantics": "absent => max(1, availableParallelism()-1); explicit values clamp to at least 1",
-          "identityParticipation": "execution/reproducibility identity using the effective worker count, never the omitted/raw syntax"
+          "identityParticipation": "execution/reproducibility identity using the effective worker count, never the omitted/raw syntax",
+          "identityLayer": "transport-execution"
         }
       ],
       "impliedFields": [
@@ -659,12 +710,12 @@
     "status": "exact-membership-parity"
   },
   "enforcementStatus": {
-    "membership": "verified but not yet CI-enforced",
-    "canonicalDefaults": "not yet exhaustive; must be derived from canonical normalization/solver behavior rather than guessed from interface optionality",
-    "identityParticipation": "not yet explicit per field",
+    "membership": "CI-enforced by scripts/solver-request-semantics-inventory-node-test.mjs (test:solver-request-semantics-inventory, wired into test:node): fails when SolveOpts membership drifts from this file's commonSolveOpts, or when RACE_LEVEL_OPTS_FIELDS drifts from backendRequests.raced.supportedCommonFields",
+    "canonicalDefaults": "not yet exhaustive; must be derived from canonical normalization/solver behavior rather than guessed from interface optionality -- this is prose only until the canonical request-projection builder (plan section 3.2) actually resolves effective values",
+    "identityParticipation": "CI-enforced as of 2026-09-23: every commonSolveOpts row and every raced backendSpecificFields row now carries an explicit identityLayer, one of solver-semantic / observation-semantic / transport-execution / level-specific-history-derived / non-semantic-output-control (plan section 13.2.J's five-bucket taxonomy, derived from each row's pre-existing semanticClass). See reports/2026-09-23-hint-evidence-phase2-identity-layer-taxonomy-001.md.",
     "backendSupport": "direct/worker contracts are canonical; raced support is mechanically owned by RACE_LEVEL_OPTS_FIELDS/toRaceLevelOpts and must not be copied into a second hand-maintained allowlist",
-    "phaseMinus1Gate": "add a validator that fails when SolveOpts membership, race boundary fields, or backend-specific request fields change without a matching semantic classification",
-    "identityClassification": "all 49 SolveOpts fields now have a source-owned default-semantics statement, identity layer, and direct/worker/raced support classification; validation script still needed to fail CI on drift"
+    "phaseMinus1Gate": "implemented: scripts/solver-request-semantics-inventory-node-test.mjs fails when SolveOpts membership, race boundary fields, or backend-specific request fields change without a matching semantic classification",
+    "identityClassification": "all 49 SolveOpts fields plus both raced backend-specific fields now have a source-owned default-semantics statement, an explicit CI-enforced identityLayer, and a direct/worker/raced support classification. Still missing: the actual canonical request-projection/digest builder that consumes this classification (plan section 3.2) -- this file remains a classification authority, not yet a runtime identity implementation."
   },
   "backendSemanticGaps": [
     {
