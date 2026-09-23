@@ -23,22 +23,22 @@ import {
     countHintStoreSemanticUnits,
     validateHintIngestionReceipt,
 } from '../hint-ingestion-receipt-lib.mjs';
-import { parseRawLevel } from '../../modules/domain/level-codec.js';
-import { validateCandidatePath } from '../../modules/domain/path-validator.ts';
-import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.ts';
+import { parseRawLevel } from '../modules/domain/level-codec.js';
+import { validateCandidatePath } from '../modules/domain/path-validator.ts';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 import {
     EXTERNAL_SOLVER_ID,
     makeProvenanceEntry,
     mergeHints,
     setLevelHintRecords,
     toHint,
-} from '../../modules/domain/hint-types.ts';
+} from '../modules/domain/hint-types.ts';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => {
     const [key, ...rest] = arg.split('=');
     return [key, rest.join('=')];
 }));
-const root = path.resolve(new URL('../..', import.meta.url).pathname);
+const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
 const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_RUN_ATTEMPT || null;
