@@ -5,7 +5,7 @@ import {
     discoveryProcessEnvelopeFromContract,
     validateHintDiscoveryProcessEvidence,
 } from './hint-discovery-process-evidence-lib.mjs';
-import { hashConfiguration, hashExecutionProtocol, hashPopulation } from './solver-experiment-contract.mjs';
+import { hashConfiguration, hashExecutionProtocol, hashPopulation, sourceRunBindingFromContract } from './solver-experiment-contract.mjs';
 
 const population = hashPopulation({
     kind: 'explicit-ids',
@@ -62,6 +62,20 @@ assert.notEqual(envelope.protocolHash, envelope.configurationHash,
 assert.equal(envelope.solverRef, 'a'.repeat(40));
 assert.equal(envelope.populationIdentity, population.identityHash);
 assert.equal(envelope.contractRef, 'manifest.json#experimentContract');
+assert.equal(envelope.kind, 'pathfinder-solver-source-run-binding');
+assert.equal(envelope.schemaVersion, 1);
+assert.deepEqual(envelope.sourceRuns, []);
+
+const directBinding = sourceRunBindingFromContract(contract, {
+    runId: 'run-123',
+    runAttempt: 2,
+    contractRef: 'manifest.json#experimentContract',
+});
+assert.equal(directBinding.runAttempt, '2');
+assert.equal(directBinding.protocolHash, envelope.protocolHash);
+assert.equal(directBinding.configurationHash, envelope.configurationHash);
+assert.equal(directBinding.populationIdentity, envelope.populationIdentity);
+
 
 
 const changedExecutionContract = {
@@ -133,3 +147,8 @@ assert.throws(() => discoveryProcessEnvelopeFromContract({
 }, { runId: 'x' }), /decision-grade/);
 
 console.log('hint-discovery-process-evidence-lib-node-test: ok');
+
+assert.throws(
+    () => sourceRunBindingFromContract(contract, { runId: '' }),
+    /requires runId/,
+);
