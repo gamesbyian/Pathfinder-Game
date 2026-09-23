@@ -52,6 +52,8 @@ export function buildHintIngestionReceipt({
     occurrenceAdditions = null,
     filesChanged = null,
     pending = [],
+    quarantinedObservations = null,
+    quarantineReasons = null,
     corpusScope = null,
     notes = null,
 } = {}) {
@@ -79,6 +81,15 @@ export function buildHintIngestionReceipt({
     };
     const physicalFilesChanged = nonNegativeIntegerOrNull('filesChanged', filesChanged);
 
+    const measuredQuarantined = quarantinedObservations == null
+        ? quarantineObservationCount(pending)
+        : requiredNonNegativeInteger('quarantinedObservations', quarantinedObservations);
+    const measuredQuarantineReasons = quarantineReasons == null
+        ? countQuarantineReasons(pending)
+        : Object.fromEntries(Object.entries(quarantineReasons).map(([reason, count]) => {
+            return [String(reason), requiredNonNegativeInteger(`quarantineReasons.${reason}`, count)];
+        }).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])));
+
     return {
         schemaVersion: HINT_INGESTION_RECEIPT_SCHEMA_VERSION,
         kind: HINT_INGESTION_RECEIPT_KIND,
@@ -97,8 +108,8 @@ export function buildHintIngestionReceipt({
             eligibleObservations: eligible,
             refereeAcceptedObservations: accepted,
             acceptedAlreadyRepresented: already,
-            quarantinedObservations: quarantineObservationCount(pending),
-            quarantineReasons: countQuarantineReasons(pending),
+            quarantinedObservations: measuredQuarantined,
+            quarantineReasons: measuredQuarantineReasons,
         },
         additions,
         physical: {
@@ -172,8 +183,8 @@ export function hintIngestionReceiptFromSelectionManifest(manifest) {
         refereeAcceptedObservations: manifest.selection?.refereeAcceptedRows ?? 0,
         acceptedAlreadyRepresented: manifest.selection?.acceptedButAlreadyRepresented ?? 0,
         semanticRecordChanges: manifest.selection?.persistedRecordChanges ?? 0,
-        pending: Object.entries(manifest.selection?.quarantineReasons ?? {}).flatMap(([reason, count]) =>
-            Array.from({ length: Number(count) || 0 }, () => ({ reason }))),
+        quarantinedObservations: manifest.selection?.quarantinedRows ?? 0,
+        quarantineReasons: manifest.selection?.quarantineReasons ?? {},
         corpusScope: manifest.selection?.corpusScope ?? null,
         notes: 'compatibility projection from pathfinder-hint-harvest-selection-manifest; detailed path/event/occurrence addition units were not measured by that producer',
     });
