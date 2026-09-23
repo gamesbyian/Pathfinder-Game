@@ -897,3 +897,31 @@ Prioritize small before/after pilots from different topology classes:
 4. **Shared ownership decomposition:** begin with `test:portfolio-solve-sweep-lib` / worker and solver-analysis libraries that already have obvious solver/research/data surfaces.
 
 Measure contract wall time and failure quality before/after; preserve at least one executable-boundary smoke wherever CLI/worker wiring is a genuine contract.
+
+
+## npm-wrapper versus direct child execution experiment
+
+The 173-command `test:node` population is structurally simple:
+
+- **157** package scripts begin with `node`;
+- **15** begin with `tsx`;
+- **1** begins with `vitest`;
+- **172 / 173** are single simple commands;
+- only `test:family-index` contains shell composition (`&&`).
+
+The parallel runner currently launches `npm run <name>` for every child, so each logical test pays an npm process before its actual Node/tsx/Vitest process.
+
+An opt-in `PATHFINDER_DIRECT_PACKAGE_SCRIPTS=1` mode now exists for benchmarking only. In direct mode the runner:
+
+- reads the authoritative package script text;
+- prepends `node_modules/.bin` to PATH;
+- executes the same command through the platform shell;
+- preserves buffered per-script output, exit status, timings, and 4-way pooling.
+
+The production default remains npm-wrapped.
+
+The manual Node benchmark now supports `--modes=npm,direct` and defaults to the already-established optimum `jobs=4`, four repeats. The next question is narrow:
+
+> How much of the remaining 4-way wall time is npm-wrapper overhead?
+
+Adopt direct mode only if all 173 contracts pass in every repeat and the wall-time gain is clear. If the gain is small, skip this abstraction and focus on true in-process batching/model reuse.
