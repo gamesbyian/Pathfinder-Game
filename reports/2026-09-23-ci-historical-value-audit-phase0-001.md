@@ -276,3 +276,45 @@ The historical evidence therefore supports testing a policy of:
 4. fault-inject the #1722-style solver regressions to prove the scoped route still catches the demonstrated unique class.
 
 This is still a hypothesis to shadow, not yet a production CI change.
+
+
+## Whole-history repair-family compression
+
+Applying the same conservative branch/time repair-episode rule across all **2,978 failed PR-CI runs** collapses them to **865 candidate repair episodes**.
+
+That is a **3.44× raw-run inflation factor** before any semantic root-cause deduplication. The median episode contains 2 failed runs; the upper tail is much larger because some active branches accumulate long repair sequences.
+
+This does not claim there were exactly 865 independent regressions. It is an upper-bound candidate-family count: semantic adjudication can split a heterogeneous episode or merge related episodes across branches. The important result is that **2,978 is definitely not an honest regression count**.
+
+### Cancellation churn
+
+The **3,522 cancelled PR-CI runs** are overwhelmingly superseded work rather than detector evidence:
+
+- every retained cancellation in this corpus had a later run on the same branch;
+- median time to the next run: about **17 seconds**;
+- 75th percentile: about **34 seconds**;
+- 90th percentile: about **64 seconds**;
+- **99.86%** were followed by another same-branch run within ten minutes.
+
+Cancelled runs therefore belong in compute/cost accounting, but not in regression-catch accounting unless a specific cancelled job had already produced durable failure evidence before cancellation.
+
+## Main-push validation — distinct role and cadence question
+
+The retained main-push workflow has:
+
+- **307** runs;
+- **158** successes;
+- **105** failures;
+- **44** cancellations.
+
+The 105 failures collapse to **22 failure streaks** when a success closes the streak. This is another large raw-count inflation: repeated red pushes while main is being repaired must not be counted as 105 independent catches.
+
+The first commit in each of those 22 streaks was inspected. **13 / 22** were single-parent commits on main rather than merge commits; **9 / 22** were merge commits.
+
+That matters because direct-to-main changes do not necessarily have an equivalent PR-CI exposure on the exact commit. Main-push validation therefore has a real safety role in Pathfinder's current operating model. The evidence does **not** support simply deleting it as duplicate post-merge CI.
+
+The useful cadence question is instead:
+
+> Can main-push validation become an impact-scoped backstop for direct-main changes and merge/integration-sensitive surfaces, while periodic full validation supplies the broader oracle?
+
+This should be evaluated separately from PR deep-verification scoping.
