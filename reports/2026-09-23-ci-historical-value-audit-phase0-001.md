@@ -1,7 +1,10 @@
 # CI historical value audit — Phase 0 implementation and incident seed
 
-**Date:** 2026-09-23  
-**Status:** active investigation  
+> **Status:** active
+> **Last evidence:** 2026-09-23 — Phase 0 collector/lineage infrastructure implemented; PR #1993 and PRs #1981–#1990 seeded as historical incident/failure-family evidence.
+> **Decision:** Continue historical collection and adjudication before making cadence or retirement changes.
+> **Remaining gate:** Exhaust retained CI/main-push history, cluster red runs into root-cause/failure families, quantify marginal detector value and cost, then shadow any proposed demotions.
+
 **Plan:** [CI historical value and cadence audit](../docs/ci-historical-value-audit-plan.md)
 
 ## What now exists
