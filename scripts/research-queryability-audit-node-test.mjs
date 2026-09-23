@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { queryabilityBenchmarkIssues, runResearchQueryabilityAudit } from './research-queryability-audit-lib.mjs';
 
@@ -70,11 +72,32 @@ assert.equal(answerability?.summary?.unclassified, 0);
 const p204 = result.results.find(row => row.id === 'QB-001');
 assert.equal(p204?.status, 'passed');
 
-const cli = spawnSync(process.execPath, ['scripts/research-queryability-audit.mjs'], {
+const cliFixtureDir = path.join(process.cwd(), 'tmp', 'research-queryability-cli-smoke');
+const cliFixturePath = path.join(cliFixtureDir, 'benchmarks.json');
+fs.mkdirSync(cliFixtureDir, { recursive: true });
+fs.writeFileSync(cliFixturePath, JSON.stringify({
+    schemaVersion: 1,
+    benchmarks: [{
+        id: 'QB-CLI-SMOKE',
+        question: 'Can the CLI load and report a supplied benchmark registry?',
+        kind: 'future-unimplemented-kind',
+        expected: 'known-gap',
+        gap: 'CLI smoke intentionally avoids rebuilding the full repository model.',
+    }],
+}, null, 2));
+const cli = spawnSync(process.execPath, [
+    'scripts/research-queryability-audit.mjs',
+    '--benchmarks=tmp/research-queryability-cli-smoke/benchmarks.json',
+], {
     cwd: process.cwd(),
     encoding: 'utf8',
 });
+fs.rmSync(cliFixtureDir, { recursive: true, force: true });
 assert.equal(cli.status, 0, cli.stderr);
-assert.equal(JSON.parse(cli.stdout).failed, 0);
+const cliResult = JSON.parse(cli.stdout);
+assert.equal(cliResult.failed, 0);
+assert.equal(cliResult.knownGaps, 1);
+assert.equal(cliResult.benchmarkCount, 1);
+assert.equal(cliResult.graphDiagnostics, null, 'known-gap-only CLI smoke should not build the research graph');
 
 console.log('research-queryability-audit-node-test: ok');
