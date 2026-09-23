@@ -20,6 +20,10 @@ import {
     buildHintHarvestSelectionManifest,
     validateHintHarvestSelectionManifest,
 } from './hint-harvest-selection-manifest-lib.mjs';
+import {
+    hintIngestionReceiptFromSelectionManifest,
+    validateHintIngestionReceipt,
+} from './hint-ingestion-receipt-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [key, ...rest] = a.split('=');
@@ -34,6 +38,8 @@ const selectionManifestOut = selectionManifestArg ? path.resolve(selectionManife
     : (sourceRunId !== 'unknown'
         ? path.join(root, 'reports/stress/hint-harvest-selection', `run-${sourceRunId}.json`)
         : null);
+const ingestionReceiptArg = args.get('--ingestion-receipt-out');
+const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const ALLOWED_CORPORA = new Set([
@@ -181,7 +187,7 @@ for (const file of walk(stagingDir).sort()) {
     reportsHarvested += 1;
 }
 
-if (selectionManifestOut) {
+if (selectionManifestOut || ingestionReceiptOut) {
     const selectionManifest = buildHintHarvestSelectionManifest({
         sourceRunId,
         sourceWorkflow,
@@ -196,9 +202,18 @@ if (selectionManifestOut) {
         corpusScope: [...ALLOWED_CORPORA].sort(),
     });
     validateHintHarvestSelectionManifest(selectionManifest);
-    mkdirSync(path.dirname(selectionManifestOut), { recursive: true });
-    writeFileSync(selectionManifestOut, `${JSON.stringify(selectionManifest, null, 2)}\n`);
-    console.log(`Wrote hint-harvest selection manifest to ${path.relative(root, selectionManifestOut)}.`);
+    if (selectionManifestOut) {
+        mkdirSync(path.dirname(selectionManifestOut), { recursive: true });
+        writeFileSync(selectionManifestOut, `${JSON.stringify(selectionManifest, null, 2)}\n`);
+        console.log(`Wrote hint-harvest selection manifest to ${path.relative(root, selectionManifestOut)}.`);
+    }
+    if (ingestionReceiptOut) {
+        const receipt = hintIngestionReceiptFromSelectionManifest(selectionManifest);
+        validateHintIngestionReceipt(receipt);
+        mkdirSync(path.dirname(ingestionReceiptOut), { recursive: true });
+        writeFileSync(ingestionReceiptOut, `${JSON.stringify(receipt, null, 2)}\n`);
+        console.log(`Wrote hint-ingestion receipt to ${path.relative(root, ingestionReceiptOut)}.`);
+    }
 }
 
 if (pending.length > 0) {
