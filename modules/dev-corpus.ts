@@ -13,16 +13,15 @@ export interface DevCorpusConfig {
     basePath: string;
     levelsFile: string;
     hasHints: boolean;
-    hintsDirName?: string;
 }
 
 export const DEV_CORPORA: DevCorpusConfig[] = [
     { id: 'published', label: 'Published', basePath: './data', levelsFile: 'levels.json', hasHints: true },
     { id: 'stress1', label: 'Stress Corpus 1 (hypothesis)', basePath: './data/stress', levelsFile: 'stress-levels.json', hasHints: true },
-    // Shares basePath with corpus 1 but numbers levels independently, so its hints live in a
-    // sibling `hints-random/` dir rather than colliding with corpus 1's `hints/` (see
-    // scripts/level-data-io.mjs's hintsDirFor).
-    { id: 'stress2', label: 'Stress Corpus 2 (random)', basePath: './data/stress', levelsFile: 'stress-levels-random.json', hasHints: true, hintsDirName: 'hints-random' },
+    // Shares basePath with corpus 1 but numbers levels independently. The shared artifact-layout
+    // authority derives hints-random/ from stress-levels-random.json, so this registry does not
+    // duplicate a physical hint-directory name.
+    { id: 'stress2', label: 'Stress Corpus 2 (random)', basePath: './data/stress', levelsFile: 'stress-levels-random.json', hasHints: true },
 ];
 
 async function fetchCorpusLevels(cfg: DevCorpusConfig, fetchImpl: any): Promise<any[]> {
@@ -72,7 +71,7 @@ export function createDevCorpusSwitcher({ data, fetchImpl = globalThis?.fetch, g
         } else {
             const levels = await fetchCorpusLevels(cfg, fetchImpl);
             data.ingest({ levels, themes });
-            data.setHintsSource(cfg.hasHints ? createDefaultHintsSource({ fetchImpl, basePath: cfg.basePath, hintsDirName: cfg.hintsDirName }) : null);
+            data.setHintsSource(cfg.hasHints ? createDefaultHintsSource({ fetchImpl, basePath: cfg.basePath, levelsFile: cfg.levelsFile }) : null);
             data.setFirestoreHintsSource(null);
         }
         current = corpusId;
