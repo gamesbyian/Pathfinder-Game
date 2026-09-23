@@ -199,7 +199,7 @@ Among the **519 completed failing runs where both fast and deep lane outcomes ar
 
 Thus the deep lane was the only failing lane in **2 / 519 observable completed failures (0.39%)**. Conversely, fast gate alone exposed 468 failures that deep verification did not.
 
-This is strong evidence against treating the two lanes as equal-value universal detectors. It is not evidence that deep verification is useless: the two unique catches are real and semantically important.
+Repair-family adjudication further weakens the raw two-run count: one deep-only run (#1693) is not branch-caused, while the other (#1722) is a genuine solver-semantic catch. Current evidence therefore contains **one demonstrated branch-caused deep-only repair episode**.
 
 Observed runner time in retained detailed current-era jobs is already substantial:
 
@@ -208,13 +208,18 @@ Observed runner time in retained detailed current-era jobs is already substantia
 
 These are **lower bounds**, because the exhaustive collector intentionally skipped full job details for ordinary successful runs. Completed non-cancelled observed medians were roughly 112s for fast gate and 91s for deep verification.
 
-### Deep-only incident A — PR #1693 / run 34405094061
+### Deep-only run A — PR #1693 / run 34405094061
 
-PR #1693, **“Retire obsolete CI and completed campaign scaffolding,”** passed fast gate but failed deep verification's ordinary covered test population.
+PR #1693, **“Retire obsolete CI and completed campaign scaffolding,”** passed fast gate but failed deep verification's ordinary covered test population on a solver-orchestration expectation.
 
-The unique deep catch was a solver orchestration regression in the compatibility contract for legacy repair-probe option names normalizing to canonical early-repair-search overrides.
+Further family/commit tracing changes the classification. The immediately preceding failing head (`e26c540...`) had deep verification green. The two commits from that head to the deep-only head (`55f4fa7...`) changed only:
 
-This is a real regression catch, not infrastructure or flake evidence.
+- `reports/2026-09-09-ci-test-lifecycle-audit.md`; and
+- `scripts/check-solver-sweep-result-contract.mjs`.
+
+Neither touched solver implementation, solver tests, test configuration, dependencies, or the deep-verification workflow. The next successful head changed only the Firestore fingerprint-boundary workflow/test naming. Therefore the solver-orchestration failure cannot reasonably be credited as a branch-caused regression catch for PR #1693.
+
+**Classification:** test/harness nondeterminism or inherited-state failure, not a demonstrated branch-caused regression. It still matters as evidence that deep verification can go red independently, but it earns no regression-prevention credit.
 
 ### Deep-only incident B — PR #1722 / run 34573749717
 
@@ -235,3 +240,39 @@ The evidence now supports a narrower question than “keep or delete deep verifi
 > Can ordinary/deep solver verification become **impact-scoped PR validation** for solver-affecting surfaces, with a periodic full oracle, while preserving these two demonstrated unique catch classes?
 
 That hypothesis must be tested against historical diffs/router behavior and fault injection before changing cadence.
+
+
+## Current-era repair-episode clustering
+
+A first mechanical clustering pass groups failing PR-CI runs by head branch into repair episodes. A success closes an episode; a gap longer than six hours starts a new episode; cancellations do not count as discoveries and do not themselves split the repair sequence.
+
+This is deliberately conservative. It can still merge distinct root causes within a long repair burst, so later semantic adjudication may split an episode. Its purpose is to stop repeated red SHAs from being counted as independent incidence.
+
+For the current fast/deep era the **536 failure rows represented by this branch/time clustering collapse to 215 repair episodes**:
+
+| episode lane behavior | repair episodes |
+|---|---:|
+| fast fails while deep stays green throughout | **193** |
+| both lanes fail at some point, no deep-only transition | **13** |
+| episode contains a fast-green/deep-red transition | **2** |
+| incomplete/legacy-transition lane visibility | **7** |
+
+Of the two episodes containing a deep-only transition:
+
+- PR #1693 is reclassified as non-branch-caused test/harness/inherited-state evidence;
+- PR #1722 is a genuine branch-caused solver-semantic episode and changed core solver implementation/tests.
+
+This episode-level view is materially different from raw run counting. Deep verification has one currently demonstrated branch-caused episode in which it supplied unique marginal evidence after the fast lane was green.
+
+### Cadence hypothesis strengthened
+
+The surviving genuine deep-only case is exactly the kind of change an impact router should classify as solver-affecting: PR #1722 changed `modules/solver/orchestration.ts`, `modules/solver.ts`, `modules/solver/search.ts`, stage-budget/executor code, worker code, and associated solver tests.
+
+The historical evidence therefore supports testing a policy of:
+
+1. run deep verification on solver/runtime/high-blast-radius changes selected by deterministic impact routing;
+2. do not run it universally on unrelated documentation/research-governance changes;
+3. retain a periodic full deep oracle (main-push/nightly) as a backstop for router omissions and cross-surface coupling;
+4. fault-inject the #1722-style solver regressions to prove the scoped route still catches the demonstrated unique class.
+
+This is still a hypothesis to shadow, not yet a production CI change.
