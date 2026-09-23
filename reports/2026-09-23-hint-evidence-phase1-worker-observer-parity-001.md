@@ -1,5 +1,11 @@
 # Hint evidence consolidation — Phase 1 worker beamFlowCounters/pruneDiagnostics parity — 001
 
+> **Status:** active
+> **Last evidence:** 2026-09-23 — Retained and reconciled as part of the active hint-evidence consolidation implementation.
+> **Decision:** Preserve this report as durable implementation/audit evidence; current code and later reconciliation records remain authoritative where they supersede earlier details.
+> **Remaining gate:** Apply the current phase-specific validation and closeout gates before treating this report as proof of whole-program completion.
+
+
 > **Status:** concluded-positive
 >
 > **Date:** 2026-09-23
