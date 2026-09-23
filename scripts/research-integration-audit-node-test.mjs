@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-
 import { auditResearchIntegration } from './research-integration-audit-lib.mjs';
 import { buildResearchRelations } from './research-relations-lib.mjs';
 
-const result = auditResearchIntegration(process.cwd());
+// The permanent check:research-integration validator owns the executable/full autonomous-build
+// integration proof. This Node test builds the relation model once, then exercises the library
+// contract and mutation/error cases against that immutable baseline.
+const prebuiltModel = buildResearchRelations(process.cwd(), { discoverArtifacts: true });
+const result = auditResearchIntegration(process.cwd(), { model: prebuiltModel });
 assert.equal(result.errorCount, 0, JSON.stringify(result.errors, null, 2));
 assert.equal(result.premiseCount, 148);
 assert.equal(result.premiseRelationCount, 184);
@@ -13,11 +15,6 @@ assert.ok(result.semanticJoinCoverage.authoredAssetRelationships >= 16);
 assert.ok(result.semanticJoinCoverage.questionsWithPremiseRefs >= 5);
 assert.ok(result.semanticJoinCoverage.questionsWithMeasurementOpportunities >= 4);
 assert.ok(result.errorCount === 0);
-const prebuiltModel = buildResearchRelations(process.cwd(), { discoverArtifacts: true });
-const prebuiltResult = auditResearchIntegration(process.cwd(), { model: prebuiltModel });
-assert.deepEqual(prebuiltResult, result,
-    'integration audit must be identical when the inventory supplies the already-built relation model');
-
 const withQueueRef = questionRef => ({
     ...prebuiltModel,
     relations: {
@@ -153,11 +150,5 @@ assert.ok(badParentScope.errors.some(error =>
     /consumptionEvents\[0\] parent scope names unknown parent PARENT-2/u.test(error)));
 
 
-const run = spawnSync(process.execPath, ['scripts/research-integration-audit.mjs'], {
-    cwd: process.cwd(),
-    encoding: 'utf8',
-});
-assert.equal(run.status, 0, run.stderr);
-assert.equal(JSON.parse(run.stdout).errorCount, 0);
 
 console.log('research-integration-audit-node-test: ok');
