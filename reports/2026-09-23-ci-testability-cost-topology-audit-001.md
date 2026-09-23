@@ -897,3 +897,29 @@ Prioritize small before/after pilots from different topology classes:
 4. **Shared ownership decomposition:** begin with `test:portfolio-solve-sweep-lib` / worker and solver-analysis libraries that already have obvious solver/research/data surfaces.
 
 Measure contract wall time and failure quality before/after; preserve at least one executable-boundary smoke wherever CLI/worker wiring is a genuine contract.
+
+
+## Runtime-data cache publication timing implementation
+
+Recent CI exposed a cold-key stampede on the exact same runtime-data cache identity:
+
+| run | cache result | fast checkout → setup-node |
+| --- | --- | ---: |
+| 35909830438 | miss | ~58 s |
+| 35911152785 | miss | ~55 s |
+| 35914130423 | hit | ~5 s |
+
+The first two runs used the same content-derived key but both missed before a completed job had published the cache.
+
+The fast gate now uses separate cache restore/save actions:
+
+1. restore exact `runtime-data-<content-hash>`;
+2. on miss, materialize the same sparse runtime-data tree;
+3. save that exact key **immediately after materialization**;
+4. continue into Node setup/install/validation.
+
+The content identity and no-fallback policy are unchanged. This only moves publication earlier.
+
+Expected effect: nearby runs that start after the first materialization completes can hit the cache instead of independently paying the sparse-checkout expansion. Concurrent runs that materialize at exactly the same time may still race; the existing PR concurrency cancellation plus eager publication should materially narrow that window.
+
+Measure future cold-key sequences explicitly before claiming the stampede is eliminated.
