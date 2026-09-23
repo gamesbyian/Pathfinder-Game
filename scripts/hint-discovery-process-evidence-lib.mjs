@@ -20,6 +20,10 @@ export function discoveryProcessEnvelopeFromContract(contract, {
     contractRef = null,
     arm = null,
 } = {}) {
+    // Deliberately no `backend` (modules/solver/reproducibility-mode.mjs): hint-discovery-process.mjs
+    // joins already-produced solver reports to hint provenance and never runs the solver itself, so it
+    // has no ground-truth backend signal to supply. Omitted stays honestly 'unknown' rather than
+    // assuming 'direct'.
     const sourceRun = sourceRunBindingFromContract(contract, {
         runId,
         runAttempt,

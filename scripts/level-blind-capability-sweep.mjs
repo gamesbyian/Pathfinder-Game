@@ -26,6 +26,7 @@ import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from '../modules/solver
 import { stableStringify } from '../modules/canonical-json.mjs';
 import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.js';
 import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -227,6 +228,17 @@ const effectiveConfigDigest = createHash('sha256').update(stableStringify(effect
 const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
 const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
 
+// Execution backend/reproducibility class (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.3/K, modules/solver/reproducibility-mode.mjs). This tool has no
+// --race-pool-size flag and never can: every level dispatches through runWorkerPool for cross-LEVEL
+// throughput only (parallelizing DIFFERENT levels across worker_threads), never racing multiple
+// attempts at the SAME level for a first-success winner, so each individual level's solveLevel() call
+// is exactly as deterministic as calling it directly on this thread. `direct` is therefore a real,
+// certain fact here, not a guess -- unlike scripts/publish-solver-sweep-result.mjs and friends, which
+// consume already-produced reports and genuinely do not know their upstream backend.
+const backend = 'direct';
+const reproducibilityMode = classifyReproducibilityMode({ schedulerMode: solveOpts.schedulerMode, backend });
+
 const rows = new Map();
 let hintChanges = 0;
 function writeReport() {
@@ -257,6 +269,7 @@ function writeReport() {
         artifactCompletedAt: new Date().toISOString(),
         effectiveConfig, effectiveConfigDigest,
         solverRequestProjection, solverRequestIdentity,
+        backend, reproducibilityMode,
     };
     mkdirSync(path.dirname(outFile), { recursive: true });
     const artifact = JSON.stringify({ summary, levels }, null, 2) + '\n';

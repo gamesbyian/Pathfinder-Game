@@ -77,6 +77,11 @@ assert.equal(
 assert.notEqual(report.summary.solverRequestIdentity, report.summary.effectiveConfigDigest,
     'canonical solver-request identity and the legacy effectiveConfig digest are different identities and must not collapse to the same value');
 
+// Execution backend/reproducibility class (modules/solver/reproducibility-mode.mjs): this tool has no
+// --race-pool-size flag, so `direct`/`deterministic-work` is a certain fact here, not a guess.
+assert.equal(report.summary.backend, 'direct');
+assert.equal(report.summary.reproducibilityMode, 'deterministic-work');
+
 assert.equal(report.summary.experimentId, 'fixture-experiment');
 assert.equal(report.summary.researchQuestion, 'fixture-question');
 assert.equal(report.summary.preflight, 'reports/fixture.md');

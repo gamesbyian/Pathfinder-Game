@@ -48,6 +48,7 @@ import { createHintCapture } from './hint-capture-lib.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
 import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.js';
 import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
 import { toRaceLevelOpts } from './solver-parallel/race-opts.mjs';
@@ -638,6 +639,16 @@ const effectiveConfigDigest = createHash('sha256').update(stableStringify(effect
 const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
 const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
 
+// Execution backend/reproducibility class (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.3/K, modules/solver/reproducibility-mode.mjs). This is the one
+// currently-maintained producer that can actually race (--race-pool-size), so it is also the one
+// place a real, ground-truth `backend` value is known at the point of dispatch rather than guessed
+// downstream -- the legacy `engine`/`racePoolSize` fields above already carry the same fact; this adds
+// its canonical counterpart using the shared vocabulary/classifier every other producer will reuse
+// once it too has a real signal.
+const backend = racePoolSize > 0 ? 'raced' : 'direct';
+const reproducibilityMode = classifyReproducibilityMode({ schedulerMode, backend });
+
 // Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs (the CI
 // audit pass). Only the SCHEDULING of writes stays here -- this tool persists incrementally after
 // every level so a killed multi-hour run keeps its finds, which is deliberately different from the
@@ -786,6 +797,8 @@ function writeReport() {
         effectiveConfigDigest,
         solverRequestProjection,
         solverRequestIdentity,
+        backend,
+        reproducibilityMode,
     };
 
     mkdirSync(path.dirname(outFile), { recursive: true });

@@ -514,6 +514,14 @@ const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
 // one of those is a real, common, non-error state for this general-purpose publisher (local runs,
 // undeclared contracts, missing resolvedSha), so the binding is simply omitted rather than failing the
 // publish, matching every other optional projection in this manifest.
+// Deliberately no `backend` (modules/solver/reproducibility-mode.mjs): this publisher only reads
+// `declaredContract` and `primaryDocument`, neither of which currently records a backend/engine
+// concept, and no maintained GHA workflow combines --race-pool-size with this publish path today.
+// Guessing 'direct' would fabricate a fact this general-purpose publisher does not actually verify for
+// any given invocation; classifyReproducibilityMode()'s own absent-backend rule already reports the
+// honest 'unknown' here. Revisit if/when a real raced producer's report reaches this publisher with a
+// genuine signal to read (see reports/2026-09-23-hint-evidence-phase2-execution-protocol-backend-
+// wiring-001.md's "next work").
 let sourceRunBinding = null;
 try {
   sourceRunBinding = sourceRunBindingFromContract(contract, {

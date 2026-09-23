@@ -64,4 +64,26 @@ assert.notEqual(report.summary.solverRequestIdentity, report.summary.effectiveCo
 assert.ok(typeof report.summary.effectiveConfig === 'object' && report.summary.effectiveConfig,
     'legacy effectiveConfig must still be present; this is a dual-write, not a replacement');
 
+// Execution backend/reproducibility class (modules/solver/reproducibility-mode.mjs): sequential
+// dispatch is a certain, known fact at this producer, not a guess.
+assert.equal(report.summary.backend, 'direct');
+assert.equal(report.summary.reproducibilityMode, 'deterministic-work');
+
+// This is the one currently-maintained producer that can actually race -- proves --race-pool-size
+// really does flip the canonical backend/reproducibilityMode, matching the legacy engine:'raced' fact
+// it already reports, rather than the canonical fields staying stuck on their sequential default.
+const racedOutFile = path.join(dir, 'raced-report.json');
+const racedSummaryOutFile = path.join(dir, 'raced-report-summary.md');
+const racedCheckpointPath = path.join(dir, 'raced-checkpoint.jsonl');
+await execFile(process.execPath, [
+    'scripts/run-bundled.mjs', 'scripts/portfolio-solve-sweep.mjs',
+    `--corpus=${corpusPath}`, '--scheduler-mode=production', '--budget-ms=5000', '--race-pool-size=2',
+    `--checkpoint=${racedCheckpointPath}`,
+    `--out=${racedOutFile}`, `--summary-out=${racedSummaryOutFile}`,
+], { cwd: ROOT });
+const racedReport = JSON.parse(await readFile(racedOutFile, 'utf8'));
+assert.equal(racedReport.summary.engine, 'raced', 'sanity check: the legacy field must also agree this run raced');
+assert.equal(racedReport.summary.backend, 'raced');
+assert.equal(racedReport.summary.reproducibilityMode, 'first-success-race');
+
 console.log('portfolio-solve-sweep CLI: solver request identity dual-write verified');
