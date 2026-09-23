@@ -719,3 +719,32 @@ Direction:
 4. avoid one detector being both a top-level member and a hidden child of another permanent detector.
 
 The same audit should search for other `spawnSync(process.execPath, ...)` / `npm run ...` nesting among permanent validators and harnesses.
+
+
+## Runtime-data cache stampede
+
+The runtime-data cache is highly effective **when warm**, but recent runs expose a cold-cache publication race.
+
+Three adjacent successful CI runs using the same runtime-data key
+`runtime-data-a19b9c95b62526c8ac98de9dfe93aa782680d46a3ab88d022ed5e14d9d330dc3`:
+
+| run | cache | fast checkout → setup-node |
+|---|---|---:|
+| 35909830438 | miss | ~58 s |
+| 35911152785 | miss | ~55 s |
+| 35914130423 | hit | ~5 s |
+
+The first two runs were close enough that both missed the identical key and independently materialized the runtime-data tree before a completed job had published the cache.
+
+Current `actions/cache@v5` combined restore/save semantics publish a newly-created cache during post-job cleanup. In a repo with frequent superseding commits, that invites a cache stampede.
+
+Experiment:
+
+1. replace the combined runtime-data cache action with explicit restore semantics;
+2. after a miss and successful materialization, issue an explicit cache-save step immediately;
+3. keep the exact content-addressed key and no fallback reuse;
+4. compare cold-key concurrent runs before/after.
+
+Safety properties stay unchanged because the key is already derived from exact Git object IDs. The optimization is publication timing, not weaker cache identity.
+
+This may be one of the highest-return setup fixes because a warm hit collapses tens of seconds of sparse-checkout/materialization work to a few seconds.
