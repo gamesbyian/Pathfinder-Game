@@ -363,3 +363,74 @@ without reducing:
 - periodic full-oracle coverage.
 
 The desired end state is not “fewer tests” as such. It is **smaller, sharper contracts that make fewer irrelevant executions necessary**.
+
+
+## Shared-bucket inspection
+
+A direct source pass over the 25 current `shared` Node tests shows that the bucket is largely classification debt rather than a coherent universal surface.
+
+Examples:
+
+- `test:production-search-frontier-sampler` — solver/research;
+- `test:sweep-publish` — solver/research, with a subprocess boundary;
+- `test:known-prefix-oracle-set-manifest` — data/solver contract;
+- `test:method-probe-staging-lib` — research filesystem staging;
+- `test:cpsat-branch-label-eligibility` — data/solver eligibility;
+- `test:verify-canary-cell` — research canary CLI/integration;
+- `test:portfolio-solve-sweep-lib` / `worker` — solver/research, with the worker test intentionally exercising real worker dispatch;
+- known-solution-prefix survival collection/analysis — solver/data/research;
+- `test:divergence-lib` and `test:operational-similarity-lib` — direct solver-analysis libraries;
+- structural holdout/static portfolio/equal-work reach — research/data/solver analyses;
+- CPSAT explicit-prefix reference pipeline/lib/integrity — data/solver reference tooling;
+- class-3 dose exposure/expectations — solver/research analysis.
+
+Only a minority of the inspected shared tests need a real subprocess boundary; many are direct imports over synthetic values.
+
+The current routing consequence is larger than the label suggests: `shared` selects all shared validators/tests **plus unit coverage**, and `modules/domain/**` conservatively maps to `shared + game + solver + research`.
+
+### Direction
+
+The next registry generation should support **explicit surface arrays per contract**, separating semantic ownership from execution grouping.
+
+For example, a contract could declare:
+
+```json
+{
+  "name": "test:production-search-frontier-sampler",
+  "surfaces": ["solver", "research"],
+  "executionClass": "direct-module"
+}
+```
+
+That is better than inventing ever more composite buckets such as `solver-research`, `research-data`, etc.
+
+The impact planner can select a contract when any declared invalidation surface requires it, while execution packing can still batch contracts into a small number of runner processes.
+
+## Historical-economics join
+
+The topology workflow now accepts an optional `historical_audit_run_id`.
+
+When provided, it downloads the retained `ci-historical-audit-corpus` artifact and runs `scripts/ci-testability-economics-join.mjs`.
+
+The joined artifact preserves separate dimensions for every permanent contract:
+
+- observed execution count/time;
+- median/p90 command duration;
+- representative detector episodes;
+- semantic group;
+- invocation/process topology;
+- fixture/filesystem/repository coupling;
+- refactor-candidate labels.
+
+It intentionally does not collapse these into a single score.
+
+Useful queues include:
+
+- highest observed cost;
+- low-hit/high-exposure;
+- direct-module batching candidates;
+- CLI/subprocess seam candidates;
+- bundle-once/direct-library seam candidates;
+- filesystem fixture candidates;
+- repository-data fixture candidates;
+- shared ownership candidates.
