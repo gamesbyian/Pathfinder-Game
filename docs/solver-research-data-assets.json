@@ -238,7 +238,9 @@
         "scripts/hint-discovery-process-lib.mjs",
         "scripts/hint-discovery-process-evidence-lib.mjs",
         "scripts/hint-discovery-process.mjs",
-        "docs/solver-evaluation-evidence.md"
+        "docs/solver-evaluation-evidence.md",
+        "scripts/solver-experiment-contract.mjs::hashExecutionProtocol",
+        "scripts/solver-experiment-contract.mjs::sourceRunBindingFromContract"
       ],
       "queryEntryPoints": [
         "node scripts/research-asset-query.mjs --id=hint-discovery-process",
@@ -248,8 +250,9 @@
       "joinKeys": [
         "parentId/levelId",
         "exact complete hint path signature",
-        "runId",
-        "protocol/configuration hash",
+        "canonical source-run binding (runId/runAttempt + immutable solver ref + protocol/configuration + population/corpus + arm/sourceRuns)",
+        "protocolHash (execution-protocol identity)",
+        "configurationHash (experiment configuration identity; distinct from protocolHash)",
         "immutable solver ref",
         "population identity"
       ],
@@ -269,7 +272,9 @@
         "Recover which failed attempts and work preceded an exact stored solution-path discovery without bloating every persisted hint event.",
         "Link success-selected hint history to the owning immutable experiment/run envelope when that envelope exists.",
         "Compare successful discovery process with compact failed-attempt evidence under shared run/protocol/action identities.",
-        "Strictly join successful discovery processes to comparable failed observations by parent + protocol/configuration hash + immutable solver ref."
+        "Strictly join successful discovery processes to comparable failed observations by parent + protocol/configuration hash + immutable solver ref.",
+        "Use the shared source-run binding instead of reconstructing run/config/protocol/solver/population identity independently in each consumer.",
+        "Distinguish experiment configuration equality from execution-protocol equality when joining success and failure/process evidence."
       ],
       "caveats": [
         "Binding to a hint requires exact complete path equality; no fuzzy level/config/path inference is allowed.",
@@ -277,7 +282,9 @@
         "An unmatched solved row is unavailable join evidence, not a negative statement about hint validity or discovery.",
         "Historical process evidence does not establish current capability merely because the path remains referee-valid.",
         "Parent level remains the default independent unit unless the owning experiment contract declares a different independent unit.",
-        "This is offline research evidence and may not become exact-level production steering."
+        "This is offline research evidence and may not become exact-level production steering.",
+        "Historical schema-v1 documents emitted before the 2026-09-23 protocol-hash fix copied configurationHash into protocolHash; those values do not independently prove execution-protocol equality and should be recomputed from the owning experiment contract when available.",
+        "A source-run binding is acquisition identity glue, not semantic provenance-event identity; retries/reharvests may add occurrence lineage without creating a new semantic discovery event."
       ]
     },
     {
