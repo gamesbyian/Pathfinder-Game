@@ -19,6 +19,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 }));
 const root = path.resolve(String(args.get('--root') || 'reports/stress/hint-ingestion-receipts'));
 const json = args.has('--json');
+const runIdFilter = args.get('--run-id') ? String(args.get('--run-id')) : null;
 
 function add(target, field, value) {
     if (Number.isSafeInteger(value)) target[field] = (target[field] ?? 0) + value;
@@ -40,6 +41,7 @@ function rows() {
             validateHintIngestionReceipt(doc);
             return { file: entry.name, doc };
         })
+        .filter(row => runIdFilter == null || row.doc.source?.runId === runIdFilter)
         .sort((a, b) => a.file.localeCompare(b.file));
 }
 
@@ -117,6 +119,7 @@ export function summarizeHintIngestionReceipts(receipts) {
 
     return {
         root,
+        runIdFilter,
         semantics: {
             successSelected: true,
             notAttemptedPopulation: true,
