@@ -1076,3 +1076,27 @@ First extract/measure a generic repository import graph that:
 - treats filesystem/data/subprocess/generated/env dependencies as explicit metadata outside the static import graph.
 
 Use this only in shadow mode until replay against historical/real failures demonstrates that it does not miss consumers.
+
+
+## Success-path output compaction
+
+A recent green fast-gate run (35924899131) showed the Node/CLI contract step emitting:
+
+- about **141,059 characters / 2,102 log lines** total;
+- about **128,088 characters / 1,926 lines** before the compact parallel summary;
+- therefore roughly **91% of the step's text** was successful-child output preceding a summary that already records every command's status and elapsed time.
+
+A warning/deprecation scan of that successful step found no operational warning output; the only match was a test assertion whose text contained the word “warning”.
+
+The parallel runner now supports `PATHFINDER_PARALLEL_SUCCESS_OUTPUT=summary`:
+
+- passing child stdout/stderr is suppressed;
+- failed child output remains fully buffered and printed;
+- the final per-command PASS/FAIL/timing summary remains;
+- local/default behavior stays `all` (verbose);
+- invalid modes fail explicitly;
+- the pre-existing spawn-error path is made idempotent so an `error` + `close` sequence cannot resolve/print twice.
+
+CI enables summary mode for validator and Node/CLI parallel populations in PR CI, main-push validation, and scoped dry-run execution.
+
+This is primarily a diagnostic/readability and log-storage improvement. Do not claim a meaningful wall-time speedup without measurement.
