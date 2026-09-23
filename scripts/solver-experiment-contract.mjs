@@ -71,6 +71,63 @@ export function hashExecutionProtocol(contract, { arm = null } = {}) {
   });
 }
 
+function resolvedSolverRefForContract(contract, arm) {
+  if (arm != null) return contract?.experiment?.arms?.[arm]?.resolvedSha ?? null;
+  return contract?.experiment?.resolvedSha ?? null;
+}
+
+/**
+ * Canonical bounded source-run binding for solver research evidence.
+ *
+ * This is intentionally identity glue rather than a telemetry envelope. Specialist artifacts keep
+ * their own rich process/failure data; this projection gives them one shared way to name the run,
+ * immutable solver revision, protocol/request-era configuration identity, population and lineage.
+ *
+ * @param {object} contract decision-grade experiment contract
+ * @param {object} options
+ */
+export function sourceRunBindingFromContract(contract, {
+  runId,
+  runAttempt = null,
+  contractRef = null,
+  arm = null,
+} = {}) {
+  const issues = decisionContractIssues(contract);
+  if (issues.length) {
+    throw new Error(`experiment contract is not decision-grade: ${issues.join(', ')}`);
+  }
+  if (!isNonEmptyString(runId)) throw new Error('source-run binding requires runId');
+  if (runAttempt != null && !isNonEmptyString(String(runAttempt))) {
+    throw new Error('source-run binding runAttempt must be null or non-empty');
+  }
+  if (arm != null && !contract?.experiment?.arms?.[arm]) {
+    throw new Error(`unknown experiment arm: ${arm}`);
+  }
+
+  const solverRef = resolvedSolverRefForContract(contract, arm);
+  if (!isImmutableCommitSha(solverRef)) {
+    throw new Error('source-run binding requires one immutable solver ref');
+  }
+
+  return {
+    schemaVersion: 1,
+    kind: 'pathfinder-solver-source-run-binding',
+    runId: String(runId),
+    runAttempt: runAttempt == null ? null : String(runAttempt),
+    contractRef: contractRef ?? null,
+    workflowFamily: contract.experiment.workflowFamily,
+    producer: contract.experiment.producer,
+    entrypoint: contract.experiment.entrypoint,
+    solverRef,
+    configurationHash: contract.experiment.configurationHash,
+    protocolHash: hashExecutionProtocol(contract, { arm }),
+    populationIdentity: contract.population.identityHash,
+    corpusIdentity: contract.population.corpusIdentity ?? null,
+    arm: arm ?? null,
+    sourceRuns: [...(contract.experiment.sourceRuns ?? [])],
+  };
+}
+
 export const RECOVERY_RECONCILIATION_KINDS = Object.freeze([
   'recombine-only',
   'reanalyze-only',
