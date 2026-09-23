@@ -1,9 +1,9 @@
 # CI historical value audit — Phase 0 implementation and incident seed
 
 > **Status:** active
-> **Last evidence:** 2026-09-23 — Phase 0 collector/lineage infrastructure implemented; PR #1993 and PRs #1981–#1990 seeded as historical incident/failure-family evidence.
-> **Decision:** Continue historical collection and adjudication before making cadence or retirement changes.
-> **Remaining gate:** Exhaust retained CI/main-push history, cluster red runs into root-cause/failure families, quantify marginal detector value and cost, then shadow any proposed demotions.
+> **Last evidence:** 2026-09-23 — Exhaustive retained-history collection completed: 7,905 CI/main-push runs recovered with zero recorded retrieval gaps; current fast/deep era lane comparison and the two deep-only completed failures adjudicated.
+> **Decision:** Historical collection is complete enough to enter value/cadence adjudication. Do not retire protections yet; quantify marginal detector value by workflow era and root-cause family, then shadow proposed cadence changes.
+> **Remaining gate:** Cluster red runs into root-cause/failure families, complete current-era detector/cost accounting, repair historical PR association coverage where needed, and shadow any proposed demotions before changing required CI.
 
 **Plan:** [CI historical value and cadence audit](../docs/ci-historical-value-audit-plan.md)
 
@@ -11,7 +11,7 @@
 
 Phase 0 has executable infrastructure rather than only a plan:
 
-- `scripts/ci-history-collector.mjs` exhausts retained `ci.yml` and `main-push-validation.yml` run history through the GitHub API, walks attempts/jobs/steps, attaches PR changed-file metadata, and records retrieval gaps explicitly.
+- `scripts/ci-history-collector.mjs` exhausts retained `ci.yml` and `main-push-validation.yml` run history through the GitHub API, retains every run as exposure/timing evidence, expands detailed attempts/jobs/steps for non-successful or rerun cases, joins represented PRs from a repository-wide PR index, and records retrieval gaps explicitly.
 - `scripts/ci-check-lineage.mjs` walks git history for the CI authority files and produces a name-based executable/check lineage with add/remove intervals.
 - `.github/workflows/ci-historical-value-audit.yml` is a manual collection entrypoint that runs both tools with full git history and an authenticated read-only GitHub token, then uploads the normalized corpus.
 - The collector defaults to metadata rather than bulk job-log retention. Failure adjudication can fetch logs only for distinct red incidents, avoiding a large raw-log artifact whose duplication would add little analytical value.
@@ -124,3 +124,114 @@ A useful incident schema therefore needs both:
 
 - `rootCauseIncidentId` for correlated failures inside one run; and
 - `failureFamilyId` for the same underlying debt/fix sequence spanning multiple PR heads.
+
+
+## Exhaustive collection result — run 35829858794
+
+The uncapped manual collector completed successfully against current `main`.
+
+Recovered availability window:
+
+- oldest retained run: **2026-03-23 01:56:09Z**;
+- newest retained run: **2026-09-23 06:55:45Z**;
+- total runs: **7,905**;
+- `ci.yml`: **7,598** runs;
+- `main-push-validation.yml`: **307** runs;
+- attempts represented: **7,915**;
+- detailed jobs retained: **12,231**;
+- failed jobs in retained detailed trees: **9,536**;
+- indexed PRs: **2,000**;
+- PRs associated by the current collector join: **1,426**;
+- runs with detailed non-success/rerun job trees: **5,303**;
+- successful runs intentionally retaining run-level rather than job-level detail: **1,249**;
+- recorded retrieval gaps: **0**.
+
+Run conclusions across the recovered corpus:
+
+| conclusion | runs |
+|---|---:|
+| success | 1,256 |
+| failure | 3,083 |
+| cancelled | 3,566 |
+
+For PR CI alone:
+
+| conclusion | runs |
+|---|---:|
+| success | 1,098 |
+| failure | 2,978 |
+| cancelled | 3,522 |
+
+This distribution makes raw red-run counts actively misleading. Most historical CI outcomes are non-success, and cancellations plus repair-sequence churn dominate the visible surface. Root-cause/failure-family clustering is not an analytical refinement; it is necessary for the audit to mean anything.
+
+### Historical PR-association caveat
+
+The repository-wide head-SHA join fixed the rehearsal's zero-PR bug, but it associates only **1,425 distinct PRs across 7,598 PR-CI runs**. That is expected to under-associate older intermediate commits from PRs whose final head later moved. Historical diff-sensitive analysis therefore must not treat an unassociated run as a non-PR run. For red incidents requiring changed-file/router counterfactuals, resolve the PR from preserved head branch / commit-to-PR evidence before adjudication.
+
+## Workflow eras
+
+The retained job identities show several materially different CI eras:
+
+- `solver-checks`: 2026-03-23 through 2026-05-28;
+- monolithic `checks`: 2026-06-16 through 2026-09-04;
+- split `checks-lint` / `node-tests` / `deep-proofs`: 2026-08-27 through 2026-09-04;
+- current `fast-gate` / `deep-verification`: from 2026-09-04;
+- `impact-shadow`: from 2026-09-22.
+
+Detector value must be compared within these eras before semantic lineage is used to bridge equivalent protections across renames/repackaging.
+
+## Current fast/deep era — marginal lane evidence
+
+From the introduction of `fast-gate` on 2026-09-04 through the end of the recovered corpus:
+
+- PR-CI runs: **3,710**;
+- successes: **304**;
+- failures: **532**;
+- cancellations: **2,874**.
+
+Among the **519 completed failing runs where both fast and deep lane outcomes are observable**:
+
+| fast gate | deep verification | runs |
+|---|---|---:|
+| failure | success | **468** |
+| failure | failure | **49** |
+| success | failure | **2** |
+
+Thus the deep lane was the only failing lane in **2 / 519 observable completed failures (0.39%)**. Conversely, fast gate alone exposed 468 failures that deep verification did not.
+
+This is strong evidence against treating the two lanes as equal-value universal detectors. It is not evidence that deep verification is useless: the two unique catches are real and semantically important.
+
+Observed runner time in retained detailed current-era jobs is already substantial:
+
+- `fast-gate`: about **36.2 runner-hours**;
+- `deep-verification`: about **32.1 runner-hours**.
+
+These are **lower bounds**, because the exhaustive collector intentionally skipped full job details for ordinary successful runs. Completed non-cancelled observed medians were roughly 112s for fast gate and 91s for deep verification.
+
+### Deep-only incident A — PR #1693 / run 34405094061
+
+PR #1693, **“Retire obsolete CI and completed campaign scaffolding,”** passed fast gate but failed deep verification's ordinary covered test population.
+
+The unique deep catch was a solver orchestration regression in the compatibility contract for legacy repair-probe option names normalizing to canonical early-repair-search overrides.
+
+This is a real regression catch, not infrastructure or flake evidence.
+
+### Deep-only incident B — PR #1722 / run 34573749717
+
+PR #1722, **“Solver system audit campaign: correctness, identity, evidence and harness hardening,”** passed fast gate but failed deep verification's ordinary covered test population.
+
+The deep lane caught three solver orchestration regressions, including:
+
+- a node-budget-exhaustion contract that should suppress a later diversity pass;
+- sparse unrelated ablation configuration failing to preserve a promoted default-on retry;
+- a second promoted/default-on solver-routing expectation in the same orchestration surface.
+
+Again, this is a real solver-semantic catch, not infrastructure noise.
+
+### Current implication
+
+The evidence now supports a narrower question than “keep or delete deep verification”:
+
+> Can ordinary/deep solver verification become **impact-scoped PR validation** for solver-affecting surfaces, with a periodic full oracle, while preserving these two demonstrated unique catch classes?
+
+That hypothesis must be tested against historical diffs/router behavior and fault injection before changing cadence.
