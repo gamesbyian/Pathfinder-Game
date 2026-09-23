@@ -24,6 +24,8 @@ import { runWorkerPool } from './solver-worker-pool.mjs';
 import { canonicalAblationFeatureName, FEATURES } from '../modules/solver/ablation-config.js';
 import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from '../modules/solver/stage-budget.js';
 import { stableStringify } from '../modules/canonical-json.mjs';
+import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.js';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -214,6 +216,17 @@ const {
 const effectiveConfig = { corpusSha256, levelBlind: true, ...semanticSolveOpts };
 const effectiveConfigDigest = createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
 
+// Canonical run-wide solver-request identity (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.2), dual-written alongside the legacy effectiveConfig pair above
+// rather than replacing it: `effectiveConfig` mixes solver-request semantics with population identity
+// (corpusSha256) and execution-protocol context (levelBlind), which the canonical projection
+// deliberately keeps separate (level-specific/history-derived and observer-only fields excluded; see
+// solver-request-projection.ts's own doc comment). Built from the SAME literal `solveOpts` object
+// handed to the solver below, for the same reason effectiveConfig is: proving what actually reached
+// the execution boundary, not what argv/CLI intent implied.
+const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
+const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
+
 const rows = new Map();
 let hintChanges = 0;
 function writeReport() {
@@ -243,6 +256,7 @@ function writeReport() {
         unsolvedCount: levels.length - solved, saveHints, hintChanges,
         artifactCompletedAt: new Date().toISOString(),
         effectiveConfig, effectiveConfigDigest,
+        solverRequestProjection, solverRequestIdentity,
     };
     mkdirSync(path.dirname(outFile), { recursive: true });
     const artifact = JSON.stringify({ summary, levels }, null, 2) + '\n';

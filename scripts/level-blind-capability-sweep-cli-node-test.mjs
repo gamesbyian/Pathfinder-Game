@@ -17,6 +17,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 import { analyzeEqualWorkProductionReach } from './stress/analyze-equal-work-production-reach.mjs';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -61,6 +62,21 @@ for (const state of Object.values(report.levels[0].failureInformation.progress))
     assert.ok(Number.isSafeInteger(state.observed) && state.observed >= state.retained);
     assert.ok(state.retained <= 16, 'ordinary compact progress telemetry must remain bounded');
 }
+// Canonical solver-request identity dual-write (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.2): proves the value actually reaches the real bundled invocation
+// boundary and round-trips through the plain-Node digest owner, not merely that the fields exist.
+assert.equal(report.summary.solverRequestProjection?.kind, 'pathfinder-solver-request-projection');
+assert.equal(report.summary.solverRequestProjection?.resourceEnvelope?.timeBudgetMs, 5000,
+    '--budget-ms=5000 must reach the canonical projection unchanged');
+assert.equal(report.summary.solverRequestProjection?.scheduler?.mode, 'production');
+assert.equal(
+    report.summary.solverRequestIdentity,
+    solverRequestIdentityFromProjection(report.summary.solverRequestProjection),
+    'the persisted identity must match a fresh recomputation from the persisted projection',
+);
+assert.notEqual(report.summary.solverRequestIdentity, report.summary.effectiveConfigDigest,
+    'canonical solver-request identity and the legacy effectiveConfig digest are different identities and must not collapse to the same value');
+
 assert.equal(report.summary.experimentId, 'fixture-experiment');
 assert.equal(report.summary.researchQuestion, 'fixture-question');
 assert.equal(report.summary.preflight, 'reports/fixture.md');
