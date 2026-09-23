@@ -2,9 +2,11 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 
+import { runResearchQueryCommand } from './research-query-cli-lib.mjs';
 import { buildResearchQueryGraph, queryResearchGraph, resolveResearchEntity } from './research-query-lib.mjs';
 import { buildResearchQueryView } from './research-query-views-lib.mjs';
 import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
+import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot } from './research-system-query-lib.mjs';
 
 const CLI_OPTIONS = { cwd: process.cwd(), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 };
 
@@ -184,56 +186,74 @@ const multiEvidenceQuestions = queryResearchGraph(graph, {
 });
 assert.ok(multiEvidenceQuestions.nodes.some(node => node.id === 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION'));
 
+const cliDispatch = runResearchQueryCommand([
+  '--entity=questions:WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION',
+  '--depth=1',
+], { root: process.cwd(), graph });
+assert.equal(cliDispatch.payload.mode, 'traverse');
+
+const viewDispatch = runResearchQueryCommand(['--view=answerability'], {
+  root: process.cwd(),
+  graph,
+});
+assert.equal(viewDispatch.payload.view, 'answerability');
+
+const systemIndex = buildResearchSystemFindingIndex(process.cwd());
+const systemLineageDispatch = runResearchQueryCommand(['--view=system-lineage'], {
+  root: process.cwd(),
+  graph,
+  systemIndex,
+});
+assert.equal(systemLineageDispatch.payload.view, 'system-lineage');
+assert.ok(systemLineageDispatch.payload.findingsWithoutPerFindingLineage.length > 0);
+assert.ok(systemLineageDispatch.payload.reportLineageRows.some(row =>
+  row.report === 'reports/2026-09-21-research-queryability-audit-001.md'));
+
+const snapshotDispatch = runResearchQueryCommand(['--snapshot'], {
+  root: process.cwd(),
+  graph,
+});
+assert.equal(snapshotDispatch.payload.schemaVersion, 1);
+assert.equal(snapshotDispatch.compact, true);
+
+const compareRefDispatch = runResearchQueryCommand(['--compare-ref=HEAD'], {
+  root: process.cwd(),
+  graph,
+  buildQuerySnapshotFromRef: () => snapshot,
+});
+assert.equal(compareRefDispatch.payload.addedNodes.length, 0);
+assert.equal(compareRefDispatch.payload.removedNodes.length, 0);
+
+const systemSnapshot = buildResearchSystemFindingSnapshot(systemIndex);
+const compareSystemRefDispatch = runResearchQueryCommand(['--compare-system-ref=HEAD'], {
+  root: process.cwd(),
+  systemIndex,
+  buildSystemSnapshotFromRef: () => systemSnapshot,
+});
+assert.equal(compareSystemRefDispatch.payload.added.length, 0);
+assert.equal(compareSystemRefDispatch.payload.removed.length, 0);
+assert.equal(compareSystemRefDispatch.payload.changed.length, 0);
+
+const systemFindingsWithoutGraph = runResearchQueryCommand(['--view=system-findings'], {
+  root: process.cwd(),
+  systemIndex,
+  buildGraph: () => {
+    throw new Error('system-findings must not build the research graph');
+  },
+});
+assert.equal(systemFindingsWithoutGraph.payload.view, 'system-findings');
+assert.equal(systemFindingsWithoutGraph.payload.count, systemIndex.count);
+
+// One real subprocess is enough to prove the executable wrapper, argv parsing, JSON stdout,
+// and exit status. The in-process dispatcher assertions above cover the remaining CLI modes
+// without rebuilding repository state six more times.
 const cli = spawnSync(process.execPath, [
   'scripts/research-query.mjs',
   '--entity=questions:WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION',
   '--depth=1',
+  '--no-discover',
 ], CLI_OPTIONS);
 assert.equal(cli.status, 0, cli.stderr);
 assert.equal(JSON.parse(cli.stdout).mode, 'traverse');
-
-const viewCli = spawnSync(process.execPath, [
-  'scripts/research-query.mjs',
-  '--view=answerability',
-], CLI_OPTIONS);
-assert.equal(viewCli.status, 0, viewCli.stderr);
-assert.equal(JSON.parse(viewCli.stdout).view, 'answerability');
-
-const systemLineageCli = spawnSync(process.execPath, [
-  'scripts/research-query.mjs',
-  '--view=system-lineage',
-], CLI_OPTIONS);
-assert.equal(systemLineageCli.status, 0, systemLineageCli.stderr);
-const systemLineage = JSON.parse(systemLineageCli.stdout);
-assert.equal(systemLineage.view, 'system-lineage');
-assert.ok(systemLineage.findingsWithoutPerFindingLineage.length > 0);
-assert.ok(systemLineage.reportLineageRows.some(row =>
-  row.report === 'reports/2026-09-21-research-queryability-audit-001.md'));
-
-const snapshotCli = spawnSync(process.execPath, [
-  'scripts/research-query.mjs',
-  '--snapshot',
-], CLI_OPTIONS);
-assert.equal(snapshotCli.status, 0, snapshotCli.stderr);
-assert.equal(JSON.parse(snapshotCli.stdout).schemaVersion, 1);
-
-const compareRefCli = spawnSync(process.execPath, [
-  'scripts/research-query.mjs',
-  '--compare-ref=HEAD',
-], CLI_OPTIONS);
-assert.equal(compareRefCli.status, 0, compareRefCli.stderr);
-const headDiff = JSON.parse(compareRefCli.stdout);
-assert.equal(headDiff.addedNodes.length, 0);
-assert.equal(headDiff.removedNodes.length, 0);
-
-const compareSystemRefCli = spawnSync(process.execPath, [
-  'scripts/research-query.mjs',
-  '--compare-system-ref=HEAD',
-], CLI_OPTIONS);
-assert.equal(compareSystemRefCli.status, 0, compareSystemRefCli.stderr);
-const systemHeadDiff = JSON.parse(compareSystemRefCli.stdout);
-assert.equal(systemHeadDiff.added.length, 0);
-assert.equal(systemHeadDiff.removed.length, 0);
-assert.equal(systemHeadDiff.changed.length, 0);
 
 console.log('research-query-node-test: ok');
