@@ -2,6 +2,13 @@
   "schemaVersion": 1,
   "workflows": [
     {
+      "workflow": "ci-historical-value-audit.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual historical CI value/cadence audit collection",
+      "retirementTrigger": "retire when the historical audit is complete and any recurring CI-value telemetry has moved into an intentionally maintained surface"
+    },
+    {
       "workflow": "ci-node-concurrency-benchmark.yml",
       "role": "operational",
       "status": "maintained",
