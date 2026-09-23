@@ -255,7 +255,8 @@
       "test:hint-ingestion-shadow-parity",
       "test:hint-discovery-ingestion-projection",
       "test:hint-ingestion-workflow-completeness",
-      "test:hint-historical-enrichment-plan"
+      "test:hint-historical-enrichment-plan",
+      "test:hint-codec-baseline-benchmark"
     ],
     "persistence": [
       "test:firestore-rules"
