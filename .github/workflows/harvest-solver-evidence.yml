@@ -150,7 +150,8 @@ jobs:
               node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
-                --source-workflow="$SOURCE_WORKFLOW"
+                --source-workflow="$SOURCE_WORKFLOW" \
+                --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-level-blind.json"
 
               # Direct/isolated tools serialize their valid paths too. Keep them with
               # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
@@ -159,7 +160,8 @@ jobs:
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
                 --source-workflow="$SOURCE_WORKFLOW" \
-                --source-sha="$SOURCE_SHA"
+                --source-sha="$SOURCE_SHA" \
+                --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-isolated.json"
             fi
 
             # A decision-bearing v3 result has already passed the experiment contract, population
@@ -170,8 +172,8 @@ jobs:
               --staging-dir=artifact-staging \
               --out-root=reports/stress/experiment-evidence
 
-            if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ 2>/dev/null)" ]; then
-              echo 'No new canonical hint/provenance, selection, pending, or decision-bearing experiment evidence to persist.'
+            if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ reports/stress/hint-ingestion-receipts/ 2>/dev/null)" ]; then
+              echo 'No new canonical hint/provenance, ingestion-receipt, selection, pending, or decision-bearing experiment evidence to persist.'
               echo 'HARVEST_RESULT=no-new-evidence' >> "$GITHUB_ENV"
               exit 0
             fi
@@ -185,6 +187,9 @@ jobs:
             fi
             if [ -d reports/stress/hint-harvest-selection ]; then
               git add reports/stress/hint-harvest-selection/
+            fi
+            if [ -d reports/stress/hint-ingestion-receipts ]; then
+              git add reports/stress/hint-ingestion-receipts/
             fi
             git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
             if git push origin HEAD:main; then
