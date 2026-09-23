@@ -620,3 +620,24 @@ This suggests a broader taxonomy inside each semantic group:
 Do not treat every validator as global merely because its first implementation walked the whole tree.
 
 The existing `PATHFINDER_PR_INCREMENTAL` mechanism used by textual-source checks provides a precedent. The topology/contract registry should eventually record incremental class and, where safe, changed-path selectors.
+
+
+## Success-log volume
+
+The parallel runner currently buffers every child command's stdout/stderr and prints it in full regardless of outcome.
+
+On clean CI run 35914130423:
+
+- complete fast-gate log: ~196 KB / 2,896 lines;
+- `test:node` segment: ~145 KB / 2,147 lines;
+- pre-summary child output inside that segment: ~127 KB / 1,910 lines;
+- compact summary/tail: ~18 KB / 237 lines.
+
+A safe opt-in runner experiment:
+
+- preserve full buffered output for every failed command;
+- for successful commands, emit only the existing summary identity + duration;
+- keep a local/default verbose mode if developers value successful command output;
+- do not suppress warnings solely because exit code is zero unless warning semantics are explicitly classified.
+
+Primary benefit is diagnosis/readability; any Actions log-I/O wall-time reduction is secondary and should be measured rather than assumed.
