@@ -1,13 +1,13 @@
 {
-  "schemaVersion": 1,
-  "purpose": "Phase-0 semantic ownership inventory for permanent validation. Classification does not yet reduce CI; shared is the conservative bucket.",
+  "schemaVersion": 2,
+  "purpose": "Semantic validation ownership inventory for permanent validation. Exclusive group ownership remains the packing/parity view; contractSurfaces can declare additional invalidation surfaces for precise scoped selection.",
   "policy": {
     "unknownOwnership": "shared",
     "sourceOfTruthUntilScopedCiLands": [
       "package.json#scripts.check:validators",
       "package.json#scripts.test:node"
     ],
-    "note": "Every current member must appear exactly once in its registry family. The parity checker rejects omissions, duplicates, and stale script names."
+    "note": "Every current member must appear exactly once in its registry family. contractSurfaces may add semantic invalidation surfaces without duplicating execution ownership. Selecting shared remains a conservative request for the whole shared owner bucket."
   },
   "validators": {
     "repo": [
@@ -61,7 +61,8 @@
       "test:repository-file-view",
       "test:ci-impact-classifier",
       "test:ci-validation-plan",
-      "test:ci-execution-plan"
+      "test:ci-execution-plan",
+      "test:validation-groups"
     ],
     "game": [
       "test:startup-smoke",
@@ -239,5 +240,113 @@
     "persistence": [
       "test:firestore-rules"
     ]
+  },
+  "contractSurfaces": {
+    "nodeTests": {
+      "test:signature-collision-analysis": [
+        "research"
+      ],
+      "test:production-search-frontier-sampler": [
+        "solver",
+        "research"
+      ],
+      "test:sweep-publish": [
+        "research"
+      ],
+      "test:known-prefix-oracle-set-manifest": [
+        "solver",
+        "research"
+      ],
+      "test:method-probe-staging-lib": [
+        "research"
+      ],
+      "test:cpsat-branch-label-eligibility": [
+        "data",
+        "research"
+      ],
+      "test:verify-canary-cell": [
+        "solver",
+        "research"
+      ],
+      "test:portfolio-solve-sweep-lib": [
+        "solver",
+        "research"
+      ],
+      "test:portfolio-solve-sweep-worker": [
+        "solver",
+        "research"
+      ],
+      "test:collect-known-solution-prefix-survival-cli": [
+        "solver",
+        "research",
+        "data"
+      ],
+      "test:analyze-known-solution-prefix-survival-cli": [
+        "solver",
+        "research",
+        "data"
+      ],
+      "test:divergence-lib": [
+        "solver",
+        "research"
+      ],
+      "test:analyze-structural-holdout-replication": [
+        "research",
+        "data"
+      ],
+      "test:analyze-ew1-static-portfolio": [
+        "solver",
+        "research"
+      ],
+      "test:build-static-portfolio-plan": [
+        "solver",
+        "research",
+        "data"
+      ],
+      "test:select-random-sample": [
+        "research",
+        "data"
+      ],
+      "test:equal-work-production-reach": [
+        "solver",
+        "research"
+      ],
+      "test:operational-similarity-lib": [
+        "solver",
+        "research"
+      ],
+      "test:cpsat-explicit-prefix-reference-pipeline": [
+        "solver",
+        "research",
+        "data"
+      ],
+      "test:cpsat-explicit-prefix-reference-lib": [
+        "solver",
+        "research",
+        "data"
+      ],
+      "test:cpsat-prefix-reference-integrity": [
+        "solver",
+        "research",
+        "data"
+      ],
+      "test:select-highbudget-gap-fill-ids": [
+        "solver",
+        "research",
+        "data"
+      ],
+      "test:known-support-extinction": [
+        "solver",
+        "research"
+      ],
+      "test:class3-dose-exposure": [
+        "solver",
+        "research"
+      ],
+      "test:class3-dose-expectations": [
+        "solver",
+        "research"
+      ]
+    }
   }
 }

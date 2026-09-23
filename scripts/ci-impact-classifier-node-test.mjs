@@ -42,7 +42,7 @@ expect(
 
 expect(
   ['modules/domain/path-validator.ts'],
-  ['game', 'research', 'shared', 'solver'],
+  ['game', 'research', 'solver'],
 );
 
 expect(
@@ -91,6 +91,18 @@ const registeredPersistenceHarness = expect(
   ['persistence'],
 );
 assert.equal(registeredPersistenceHarness.files[0].rule, 'registered-validation-entrypoint');
+
+const registeredCrossSurfaceHarness = expect(
+  ['scripts/portfolio-solve-sweep-lib-node-test.mjs'],
+  ['research', 'solver'],
+);
+assert.equal(registeredCrossSurfaceHarness.files[0].rule, 'registered-validation-entrypoint');
+
+const registeredResearchOnlyFormerSharedHarness = expect(
+  ['scripts/signature-collision-analysis-node-test.mjs'],
+  ['research'],
+);
+assert.equal(registeredResearchOnlyFormerSharedHarness.files[0].rule, 'registered-validation-entrypoint');
 
 const packageBase = {
   name: 'pathfinder-game',

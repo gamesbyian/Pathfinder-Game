@@ -11,6 +11,7 @@
  *   node scripts/validation-groups.mjs --check
  *   node scripts/validation-groups.mjs validators repo research
  *   node scripts/validation-groups.mjs nodeTests research shared
+ *   node scripts/validation-groups.mjs nodeTests research --list
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -68,7 +69,7 @@ function compareExact(label, registered, authoritative) {
 if (!fs.existsSync(REGISTRY_PATH)) fail('missing scripts/validation-groups.json');
 const registry = JSON.parse(fs.readFileSync(REGISTRY_PATH, 'utf8'));
 const packageJson = JSON.parse(fs.readFileSync(PACKAGE_PATH, 'utf8'));
-if (registry.schemaVersion !== 1) fail(`unsupported validation-groups schemaVersion ${registry.schemaVersion}`);
+if (![1, 2].includes(registry.schemaVersion)) fail(`unsupported validation-groups schemaVersion ${registry.schemaVersion}`);
 
 for (const familyName of VALID_FAMILIES) {
   if (!registry[familyName] || typeof registry[familyName] !== 'object') {
@@ -78,6 +79,40 @@ for (const familyName of VALID_FAMILIES) {
 
 const validatorInventory = flattenFamily(registry.validators);
 const nodeInventory = flattenFamily(registry.nodeTests);
+const inventories = { validators: validatorInventory, nodeTests: nodeInventory };
+const contractSurfaces = registry.contractSurfaces ?? {};
+
+function validateContractSurfaces() {
+  for (const [familyName, mappings] of Object.entries(contractSurfaces)) {
+    if (!VALID_FAMILIES.has(familyName)) fail(`validation registry: contractSurfaces has unknown family ${familyName}`);
+    if (!mappings || typeof mappings !== 'object' || Array.isArray(mappings)) {
+      fail(`validation registry: contractSurfaces.${familyName} must be an object`);
+    }
+    for (const [member, surfaces] of Object.entries(mappings)) {
+      if (!inventories[familyName].seen.has(member)) {
+        fail(`validation registry: contractSurfaces.${familyName} names unregistered contract ${member}`);
+      }
+      if (!Array.isArray(surfaces) || surfaces.length === 0) {
+        fail(`validation registry: contractSurfaces.${familyName}.${member} must be a non-empty array`);
+      }
+      const unique = new Set();
+      for (const surface of surfaces) {
+        if (!VALID_GROUPS.has(surface) || surface === 'shared') {
+          fail(`validation registry: invalid semantic surface ${surface} for ${member}`);
+        }
+        if (unique.has(surface)) fail(`validation registry: duplicate semantic surface ${surface} for ${member}`);
+        unique.add(surface);
+      }
+    }
+  }
+}
+validateContractSurfaces();
+
+function semanticSurfacesFor(familyName, member) {
+  const explicit = contractSurfaces?.[familyName]?.[member];
+  if (explicit) return explicit;
+  return [inventories[familyName].seen.get(member)];
+}
 const validatorAuthority = directParallelMembers(packageJson.scripts?.['check:validators'], 'check:validators');
 const nodeAuthority = directParallelMembers(packageJson.scripts?.['test:node'], 'test:node');
 
@@ -100,7 +135,8 @@ if (process.argv.includes('--check')) {
   if (!process.exitCode) {
     console.log(
       `Validation ownership registry is in exact parity: ${validatorInventory.flat.length} validators, `
-      + `${nodeInventory.flat.length} Node/CLI harnesses.`,
+      + `${nodeInventory.flat.length} Node/CLI harnesses; `
+      + `${Object.values(contractSurfaces).reduce((sum, mappings) => sum + Object.keys(mappings ?? {}).length, 0)} contract(s) declare explicit multi-surface ownership.`,
     );
   }
   process.exit(process.exitCode ?? 0);
@@ -109,9 +145,11 @@ if (process.argv.includes('--check')) {
 if (process.exitCode) process.exit(process.exitCode);
 
 const args = process.argv.slice(2);
+const listOnly = args.includes('--list');
+if (listOnly) args.splice(args.indexOf('--list'), 1);
 const familyName = args.shift();
 if (!VALID_FAMILIES.has(familyName)) {
-  fail('usage: validation-groups.mjs --check | <validators|nodeTests> <group> [group ...]');
+  fail('usage: validation-groups.mjs --check | <validators|nodeTests> <group> [group ...] [--list]');
 }
 if (args.length === 0) fail('select at least one validation group');
 
@@ -119,8 +157,15 @@ const selected = [];
 const selectedSet = new Set();
 for (const group of args) {
   if (!VALID_GROUPS.has(group)) fail(`unknown validation group: ${group}`);
-  for (const member of registry[familyName][group] ?? []) {
-    if (!selectedSet.has(member)) {
+
+  // "shared" is retained as the conservative execution-owner request: when the
+  // classifier cannot narrow ownership, run the whole shared bucket exactly as
+  // before. Named semantic surfaces additionally select any explicitly
+  // multi-surface contracts whose contractSurfaces declaration intersects.
+  for (const member of inventories[familyName].flat) {
+    const ownedByRequestedShared = group === 'shared' && inventories[familyName].seen.get(member) === 'shared';
+    const touchesRequestedSurface = semanticSurfacesFor(familyName, member).includes(group);
+    if ((ownedByRequestedShared || touchesRequestedSurface) && !selectedSet.has(member)) {
       selectedSet.add(member);
       selected.push(member);
     }
@@ -129,6 +174,15 @@ for (const group of args) {
 
 if (selected.length === 0) {
   console.log(`No ${familyName} members selected.`);
+  process.exit(0);
+}
+
+if (listOnly) {
+  console.log(JSON.stringify({
+    family: familyName,
+    requestedSurfaces: args,
+    selected,
+  }, null, 2));
   process.exit(0);
 }
 

@@ -160,9 +160,12 @@ for (const [family, groups] of [
           features = sourceFeatures(fs.readFileSync(full, 'utf8'));
         }
       }
+      const contractFamily = family === 'validator' ? 'validators' : 'nodeTests';
+      const surfaces = registry.contractSurfaces?.[contractFamily]?.[name] ?? [group];
       const row = {
         family,
         group,
+        surfaces,
         name,
         command,
         invocation: parsed.invocation,
@@ -238,6 +241,7 @@ for (const row of rows) {
     candidateQueues[candidate].push({
       family: row.family,
       group: row.group,
+      surfaces: row.surfaces,
       name: row.name,
       invocation: row.invocation,
       entrypoint: row.entrypoint,

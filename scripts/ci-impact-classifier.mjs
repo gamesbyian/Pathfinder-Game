@@ -14,9 +14,10 @@ function deriveRegisteredEntrypointOwnership(root) {
     for (const [group, members] of Object.entries(registry[familyName] ?? {})) {
       for (const member of members) {
         const command = packageJson.scripts?.[member];
+        const semanticSurfaces = registry.contractSurfaces?.[familyName]?.[member] ?? [group];
         for (const entrypoint of commandLocalPaths(command)) {
           if (!ownership.has(entrypoint)) ownership.set(entrypoint, new Set());
-          ownership.get(entrypoint).add(group);
+          for (const surface of semanticSurfaces) ownership.get(entrypoint).add(surface);
         }
       }
     }
@@ -65,7 +66,7 @@ export function classifyPaths(paths, config = loadImpactRules()) {
       path: file,
       rule: exactSurfaces ? 'registered-validation-entrypoint' : rule.id,
       reason: exactSurfaces
-        ? 'ownership derived from validation-groups.json + package.json'
+        ? 'semantic ownership derived from validation-groups.json + package.json'
         : rule.reason,
       surfaces: fileSurfaces,
     });

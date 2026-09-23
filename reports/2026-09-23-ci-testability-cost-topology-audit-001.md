@@ -897,3 +897,59 @@ Prioritize small before/after pilots from different topology classes:
 4. **Shared ownership decomposition:** begin with `test:portfolio-solve-sweep-lib` / worker and solver-analysis libraries that already have obvious solver/research/data surfaces.
 
 Measure contract wall time and failure quality before/after; preserve at least one executable-boundary smoke wherever CLI/worker wiring is a genuine contract.
+
+
+## Contract-surface ownership refinement
+
+The 25-test `shared` Node bucket was source-inspected rather than mechanically reassigned by filename.
+
+Result: every current shared-owner test is genuinely research-facing, while subsets also depend on solver and/or data semantics:
+
+- **25 / 25** declare `research`;
+- **19 / 25** also declare `solver`;
+- **10 / 25** also declare `data`.
+
+This means the bucket was semantically ambiguous, but not simply irrelevant.
+
+### Registry model
+
+`validation-groups.json` schema v2 preserves the existing exclusive group partition for parity/execution ownership and adds optional per-contract `contractSurfaces`.
+
+The scoped runner now treats requested names as semantic surfaces:
+
+- a normal owned contract defaults to its owner group;
+- an explicitly multi-surface contract runs when any declared surface is requested;
+- requesting `shared` still runs the entire shared owner bucket as the conservative unknown-ownership fallback.
+
+A non-executing `--list` mode plus `test:validation-groups` regression coverage makes surface selection inspectable without running the tests.
+
+The impact classifier consumes the same metadata for registered validation entrypoints, so changing a former-shared test itself classifies to its semantic surfaces rather than back to generic `shared`.
+
+### Selection sizes after explicit surfaces
+
+Current Node/CLI contract selection counts:
+
+| requested surface | contracts |
+| --- | ---: |
+| repo | 10 |
+| game | 2 |
+| persistence | 1 |
+| solver | 35 |
+| research | 112 |
+| data | 43 |
+| shared fallback | 25 |
+
+The `modules/domain/**` classifier no longer needs to request `shared` explicitly: game + solver + research plus contract-surface selection already reaches the relevant cross-surface contracts. Unknown modules/data/scripts retain conservative shared escalation.
+
+### Important negative finding
+
+This ownership cleanup is **not itself a speed win for broad research changes**. Because all 25 former-shared tests are legitimately research-facing, a research surface still selects all of them.
+
+That is useful evidence: further slimming must come from:
+
+1. dependency-local invalidation inside broad semantic surfaces;
+2. cheaper execution through direct-module batching / model reuse;
+3. narrower fixtures and CLI/library seams;
+4. cadence changes backed by the historical-value program.
+
+Do not chase more bucket renaming expecting material wall-time savings.
