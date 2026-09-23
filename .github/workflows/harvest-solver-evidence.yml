@@ -171,6 +171,19 @@ jobs:
                 --source-workflow="$SOURCE_WORKFLOW" \
                 --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-level-blind.json"
 
+              # Solver diagnostics now preserves exact successful paths, level revisions,
+              # winning attempts, request identity and discovery timestamps in its uploaded report.
+              # Keep the source workflow's direct writer during Phase-6 parity, but reconstruct the
+              # same observations centrally as a shadow lane.
+              if [[ "$SOURCE_WORKFLOW" == 'Solver diagnostics and hint capture' ]]; then
+                node scripts/run-bundled.mjs scripts/harvest-solver-diagnostics-reports.mjs -- \
+                  --staging-dir=artifact-staging \
+                  --source-run-id="$SOURCE_RUN_ID" \
+                  --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
+                  --source-workflow="$SOURCE_WORKFLOW" \
+                  --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-diagnostics.json"
+              fi
+
               # Direct/isolated tools serialize their valid paths too. Keep them with
               # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
               # capability evidence.
