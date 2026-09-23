@@ -146,6 +146,19 @@ const ciScriptChange = classifyPackageJsonDocuments(packageBase, {
 });
 assert.equal(ciScriptChange.full, true);
 
+const validationAggregateChange = classifyPackageJsonDocuments(packageBase, {
+  ...packageBase,
+  scripts: {
+    ...packageBase.scripts,
+    'test:node': 'node scripts/run-scripts-parallel.mjs test:research-query',
+  },
+});
+assert.equal(
+  validationAggregateChange.full,
+  true,
+  'validation aggregate composition must remain full-impact CI authority',
+);
+
 
 
 assert.deepEqual(
