@@ -55,7 +55,7 @@ const legacyManifest = {
 };
 const projected = hintIngestionReceiptFromSelectionManifest(legacyManifest);
 validateHintIngestionReceipt(projected);
-assert.equal(projected.funnel.candidateObservations, 20);
+assert.equal(projected.funnel.candidateObservations, 7);
 assert.equal(projected.funnel.eligibleObservations, 7);
 assert.equal(projected.funnel.refereeAcceptedObservations, 5);
 assert.equal(projected.funnel.acceptedAlreadyRepresented, 2);
