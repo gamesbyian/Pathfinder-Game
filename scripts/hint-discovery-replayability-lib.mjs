@@ -1,3 +1,5 @@
+import { formatAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+
 /**
  * Derived replayability classification for stored hint discovery provenance.
  *
@@ -100,6 +102,122 @@ export function classifyHintDiscoveryReplayability(entry) {
     return {
         replayBasis: 'configuration-reconstructable',
         reason: 'versioned-level-bound-config-with-search-envelope',
+    };
+}
+
+
+function attemptConfigIdentityFromProvenance(entry) {
+    const solver = entry?.solver ?? {};
+    const technique = String(solver.technique ?? '');
+    if (!nonEmpty(solver.scoringProfileId)) return null;
+    try {
+        if (technique === 'repair') {
+            return formatAttemptIdentityKey({
+                scoringProfileId: 'repair',
+                orderingBiasId: null,
+                repair: true,
+                repairMustTurnBiased: entry?.solver?.forcing?.repairMustTurnBiased === true,
+                repairTurnBiased: entry?.solver?.forcing?.repairTurnBiased === true,
+            });
+        }
+        if (technique === 'admissible-order-fallback') {
+            return formatAttemptIdentityKey({
+                scoringProfileId: solver.scoringProfileId,
+                orderingBiasId: null,
+                admissibleOrder: true,
+            });
+        }
+        if (technique === 'beam') {
+            if (!Number.isSafeInteger(solver.beamWidth) || solver.beamWidth <= 0) return null;
+            return formatAttemptIdentityKey({
+                scoringProfileId: solver.scoringProfileId,
+                orderingBiasId: solver.orderingBiasId ?? null,
+                beamWidth: solver.beamWidth,
+                mechanicBucketRetention: solver.mechanicBucketRetention === true,
+            });
+        }
+        if (technique === 'dfs') {
+            return formatAttemptIdentityKey({
+                scoringProfileId: solver.scoringProfileId,
+                orderingBiasId: solver.orderingBiasId ?? null,
+            });
+        }
+    } catch {
+        return null;
+    }
+    return null;
+}
+
+/**
+ * Derived effective-input reconstructability for one Pathfinder provenance event.
+ *
+ * This does not mutate/upgrade historical evidence. It names exactly which dimensions are still
+ * unavailable and returns an identity only when every required dimension is present. The caller may
+ * supply solverRequestIdentity and solverStageId from an exact sibling-evidence/source-run join once
+ * those layers are available; historical events do not acquire them by inference.
+ */
+export function effectiveSolverInputIdentityStatus(entry, {
+    solverRequestIdentity = null,
+    solverStageId = null,
+} = {}) {
+    const missingDimensions = [];
+    if (!entry || typeof entry !== 'object') {
+        return {
+            reconstructable: false,
+            identity: null,
+            missingDimensions: ['provenanceEvent'],
+        };
+    }
+
+    const solver = entry.solver ?? {};
+    const search = entry.search ?? {};
+    const context = entry.context ?? {};
+    const attemptConfigIdentity = attemptConfigIdentityFromProvenance(entry);
+
+    if (solver.id !== PATHFINDER_SOLVER_ID) {
+        return {
+            reconstructable: false,
+            identity: null,
+            missingDimensions: ['pathfinderSolverContract'],
+        };
+    }
+    if (!nonEmpty(context.levelRevision)) missingDimensions.push('levelRevision');
+    if (!nonEmpty(solver.version)) missingDimensions.push('solverVersion');
+    if (!attemptConfigIdentity) missingDimensions.push('attemptConfigIdentity');
+    if (!nonEmpty(solverStageId)) missingDimensions.push('solverStage');
+    if (!Number.isFinite(solver.gateKey)) missingDimensions.push('gateKey');
+    if (!nonEmpty(solverRequestIdentity)) missingDimensions.push('solverRequestIdentity');
+    if (!hasSearchEnvelope(entry)) missingDimensions.push('resourceEnvelope');
+    if (!hasReplaySeedWhenNeeded(entry)) missingDimensions.push('randomSeed');
+    if (!hasExplicitCapabilityContext(entry)) missingDimensions.push('capabilityContext');
+
+    if (missingDimensions.length > 0) {
+        return {
+            reconstructable: false,
+            identity: null,
+            missingDimensions,
+        };
+    }
+
+    return {
+        reconstructable: true,
+        missingDimensions: [],
+        identity: {
+            schemaVersion: 1,
+            levelRevision: context.levelRevision,
+            solverVersion: solver.version,
+            solverRequestIdentity,
+            solverStageId,
+            attemptConfigIdentity,
+            gateKey: solver.gateKey,
+            forcing: solver.forcing ?? null,
+            resourceEnvelope: {
+                workBudget: Number.isFinite(search.workBudget) ? search.workBudget : null,
+                budgetMs: Number.isFinite(search.budgetMs) ? search.budgetMs : null,
+            },
+            randomSeed: randomizedTechnique(entry) ? search.randomSeed : null,
+            seedSalt: Number.isFinite(search.seedSalt) ? search.seedSalt : null,
+        },
     };
 }
 
