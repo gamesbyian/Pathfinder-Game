@@ -85,6 +85,7 @@ jobs:
               args+=(--max-episodes "${MAX_EPISODES}")
             fi
             node scripts/ci-history-failure-signatures.mjs "${args[@]}"
+            node scripts/ci-history-failure-groups.mjs
           fi
 
       - name: Summarize recovered audit corpus
