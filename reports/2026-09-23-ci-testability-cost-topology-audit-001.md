@@ -897,3 +897,28 @@ Prioritize small before/after pilots from different topology classes:
 4. **Shared ownership decomposition:** begin with `test:portfolio-solve-sweep-lib` / worker and solver-analysis libraries that already have obvious solver/research/data surfaces.
 
 Measure contract wall time and failure quality before/after; preserve at least one executable-boundary smoke wherever CLI/worker wiring is a genuine contract.
+
+
+## Intra-group incrementality implementation — corpus formatting
+
+`check:corpus-level-formatting` is the first file-local validator converted from whole-tree PR scanning to changed-path PR scanning.
+
+Why it is safe:
+
+- canonical formatting is a property of each individual corpus/hint JSON blob;
+- an unrelated change cannot alter the bytes of an untouched tracked file;
+- `prChangedFiles()` already uses the tested PR merge ref and excludes deletions;
+- sparse-checkout-safe `readRepositoryText()` reads the tested HEAD blob even when the file is not materialized;
+- local/manual/full-oracle execution still scans all four corpora and all hint artifacts.
+
+The checker now exposes pure path classification and canonical-byte validation helpers, covered by `test:corpus-level-formatting`.
+
+Expected economics:
+
+- historical representative logs observed **334** executions;
+- median command time was about **13.3 s**;
+- only **1** representative detector appearance;
+- unrelated PRs should now return immediately with zero relevant paths;
+- a PR changing one hint checks one hint, rather than every hint artifact.
+
+This is a model for other **file-local invariants**: impact routing decides whether the data surface matters; changed-path incrementality then avoids rescanning unrelated members inside that surface.
