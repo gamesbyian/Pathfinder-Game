@@ -11,6 +11,10 @@ import path from 'node:path';
 import process from 'node:process';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
+import {
+    buildHintIngestionReceipt,
+    validateHintIngestionReceipt,
+} from './hint-ingestion-receipt-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [key, ...rest] = a.split('=');
@@ -21,6 +25,8 @@ const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging')
 const sourceSha = args.get('--source-sha') || process.env.SOURCE_SHA || null;
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
 const sourceWorkflow = args.get('--source-workflow') || process.env.SOURCE_WORKFLOW || 'unknown';
+const ingestionReceiptArg = args.get('--ingestion-receipt-out');
+const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const CORPUS_BY_LABEL = {
@@ -61,6 +67,8 @@ function stateFor(corpusRel) {
 const pending = [];
 let documentsSeen = 0;
 let solvedSeen = 0;
+let eligibleRows = 0;
+let refereeAcceptedRows = 0;
 let changes = 0;
 const seenDocument = new Set();
 
@@ -86,11 +94,17 @@ async function harvestRows({ corpusRel, rows, budgetMs = null, identity }) {
             continue;
         }
         const parsed = parseRawLevel(entry.level, entry.index);
-        const verdict = parsed ? validateCandidatePath(parsed, row.solution) : { ok: false, reason: 'level-parse-failed' };
+        if (!parsed) {
+            pending.push({ corpus: corpusRel, reason: 'level-parse-failed', row });
+            continue;
+        }
+        eligibleRows += 1;
+        const verdict = validateCandidatePath(parsed, row.solution);
         if (!verdict.ok) {
             pending.push({ corpus: corpusRel, reason: `main-referee-rejected:${verdict.reason}`, row });
             continue;
         }
+        refereeAcceptedRows += 1;
         resolved.push({ row, entry });
     }
     if (!resolved.length) return;
@@ -146,6 +160,26 @@ for (const file of walk(stagingDir).sort()) {
     }
 }
 
+if (ingestionReceiptOut) {
+    const receipt = buildHintIngestionReceipt({
+        producer: 'harvest-isolated-report-hints',
+        sourceRunId,
+        sourceWorkflow,
+        candidateObservations: solvedSeen,
+        eligibleObservations: eligibleRows,
+        refereeAcceptedObservations: refereeAcceptedRows,
+        acceptedAlreadyRepresented: Math.max(0, refereeAcceptedRows - changes),
+        semanticRecordChanges: changes,
+        pending,
+        corpusScope: [...ALLOWED].sort(),
+        notes: 'isolated/direct historical importer; detailed path/provenance/occurrence addition units are not measured by createHintCapture.recordHistorical()',
+    });
+    validateHintIngestionReceipt(receipt);
+    mkdirSync(path.dirname(ingestionReceiptOut), { recursive: true });
+    writeFileSync(ingestionReceiptOut, `${JSON.stringify(receipt, null, 2)}\n`);
+    console.log(`Wrote hint-ingestion receipt to ${path.relative(root, ingestionReceiptOut)}.`);
+}
+
 if (pending.length) {
     const dir = path.join(root, 'reports/stress/pending-solver-evidence');
     mkdirSync(dir, { recursive: true });
@@ -153,4 +187,4 @@ if (pending.length) {
     writeFileSync(out, `${JSON.stringify({ schemaVersion: 1, sourceRunId, sourceWorkflow, sourceSha, pending }, null, 2)}\n`);
     console.log(`Quarantined ${pending.length} isolated solve(s) that could not be safely merged to ${path.relative(root, out)}.`);
 }
-console.log(`Isolated evidence harvest: ${documentsSeen} report group(s), ${solvedSeen} solved row(s), ${changes} canonical hint/provenance change(s), ${pending.length} pending row(s).`);
+console.log(`Isolated evidence harvest: ${documentsSeen} report group(s), ${solvedSeen} solved row(s), ${eligibleRows} eligible row(s), ${refereeAcceptedRows} referee-accepted row(s), ${changes} canonical hint/provenance change(s), ${pending.length} pending row(s).`);
