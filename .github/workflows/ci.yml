@@ -138,7 +138,7 @@ jobs:
           } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
       - name: Restore exact runtime-data tree
         id: runtime-data-cache
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v5
         with:
           path: |
             data/levels.json
@@ -190,6 +190,22 @@ jobs:
           /data/stress/hints-random/
           /data/stress/hints-envelope/
           EOF
+      - name: Save exact runtime-data tree immediately after materialization
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
