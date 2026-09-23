@@ -5,8 +5,9 @@
  * Design goals:
  * - paginate to exhaustion rather than sampling;
  * - preserve workflow/run/attempt/job/step identities and timings;
- * - fetch PR changed-file metadata once per represented PR;
- * - keep raw job logs out of the default corpus;
+ * - join runs to PRs from one repository-wide PR index rather than per-run lookups;
+ * - fetch detailed job/step trees for non-successful/rerun runs by default;
+ * - keep raw job logs and per-green-run step trees out of the default corpus;
  * - make retention/API gaps explicit instead of treating them as "never happened".
  *
  * Requires an authenticated `gh` CLI with read access to Actions and pull requests.
@@ -135,38 +136,41 @@ function getAttemptJobs(repo, runId, attempt) {
   }
 }
 
-function pullNumber(run) {
-  const prs = run.pull_requests ?? [];
-  return prs.length === 1 ? prs[0].number : null;
-}
-
-function fetchPr(repo, number, cache) {
-  if (!number) return null;
-  if (cache.has(number)) return cache.get(number);
-  const pr = ghJson(`/repos/${repo}/pulls/${number}`);
-  const files = ghPaginated(`/repos/${repo}/pulls/${number}/files`, null);
-  const normalized = {
-    number,
+function normalizePr(pr) {
+  return {
+    number: pr.number,
     state: pr.state ?? null,
-    merged: Boolean(pr.merged),
     mergedAt: pr.merged_at ?? null,
     createdAt: pr.created_at ?? null,
     updatedAt: pr.updated_at ?? null,
     baseSha: pr.base?.sha ?? null,
     headSha: pr.head?.sha ?? null,
     mergeCommitSha: pr.merge_commit_sha ?? null,
-    changedFilesCount: pr.changed_files ?? files.length,
-    changedFiles: files.map(file => ({
-      path: file.filename,
-      status: file.status ?? null,
-      previousPath: file.previous_filename ?? null,
-      additions: file.additions ?? null,
-      deletions: file.deletions ?? null,
-      changes: file.changes ?? null,
-    })),
+    changedFilesCount: pr.changed_files ?? null,
   };
-  cache.set(number, normalized);
-  return normalized;
+}
+
+function loadPullRequestIndex(repo) {
+  const pulls = ghPaginated(`/repos/${repo}/pulls?state=all&sort=created&direction=desc`, null);
+  const byNumber = new Map();
+  const byHeadSha = new Map();
+  for (const pr of pulls) {
+    const normalized = normalizePr(pr);
+    byNumber.set(normalized.number, normalized);
+    if (normalized.headSha && !byHeadSha.has(normalized.headSha)) byHeadSha.set(normalized.headSha, normalized);
+  }
+  return { byNumber, byHeadSha, count: pulls.length };
+}
+
+function resolvePr(run, index) {
+  const refs = run.pull_requests ?? [];
+  if (refs.length === 1 && index.byNumber.has(refs[0].number)) return index.byNumber.get(refs[0].number);
+  if (run.head_sha && index.byHeadSha.has(run.head_sha)) return index.byHeadSha.get(run.head_sha);
+  return null;
+}
+
+function shouldCollectJobs(run) {
+  return run.conclusion !== 'success' || (run.run_attempt ?? 1) > 1;
 }
 
 function normalizedRun(run, workflow, attempts, pr) {
@@ -190,9 +194,10 @@ function normalizedRun(run, workflow, attempts, pr) {
     headBranch: run.head_branch ?? null,
     path: run.path ?? null,
     htmlUrl: run.html_url ?? null,
-    pullRequestNumber: pr?.number ?? pullNumber(run),
+    pullRequestNumber: pr?.number ?? null,
     pullRequest: pr,
     attempts,
+    detailedJobsCollected: attempts.some(attempt => Array.isArray(attempt.jobs) && attempt.jobs.length > 0),
   };
 }
 
@@ -217,6 +222,9 @@ function summarize(records, gaps, startedAt) {
     jobs: jobs.length,
     failedJobs: failedJobs.length,
     pullRequestsRepresented: prNumbers.size,
+    pullRequestsIndexed: prIndex.count,
+    detailedRunJobsCollected: records.filter(run => run.detailedJobsCollected).length,
+    successfulRunJobDetailsSkipped: records.filter(run => run.conclusion === 'success' && !run.detailedJobsCollected).length,
     workflows: Object.fromEntries(
       [...new Set(records.map(run => run.workflowFile))].sort().map(file => [
         file,
@@ -240,7 +248,12 @@ fs.mkdirSync(options.outDir, { recursive: true });
 
 const records = [];
 const gaps = [];
-const prCache = new Map();
+let prIndex = { byNumber: new Map(), byHeadSha: new Map(), count: 0 };
+try {
+  prIndex = loadPullRequestIndex(options.repo);
+} catch (error) {
+  gaps.push({ type: 'pull-request-index-unavailable', error: error.message });
+}
 
 for (const workflow of options.workflows) {
   let runs;
@@ -255,40 +268,30 @@ for (const workflow of options.workflows) {
   for (const run of runs) {
     const attemptCount = Math.max(1, run.run_attempt ?? 1);
     const attempts = [];
-    for (let attempt = 1; attempt <= attemptCount; attempt += 1) {
-      try {
-        const jobs = getAttemptJobs(options.repo, run.id, attempt);
-        attempts.push({
-          attempt,
-          jobs: jobs.map(job => normalizedJob(job, attempt)),
-        });
-      } catch (error) {
-        gaps.push({
-          type: 'attempt-jobs-unavailable',
-          workflow: workflow.file,
-          runId: run.id,
-          attempt,
-          error: error.message,
-        });
-        attempts.push({ attempt, jobs: [], unavailable: true });
+    if (shouldCollectJobs(run)) {
+      for (let attempt = 1; attempt <= attemptCount; attempt += 1) {
+        try {
+          const jobs = getAttemptJobs(options.repo, run.id, attempt);
+          attempts.push({
+            attempt,
+            jobs: jobs.map(job => normalizedJob(job, attempt)),
+          });
+        } catch (error) {
+          gaps.push({
+            type: 'attempt-jobs-unavailable',
+            workflow: workflow.file,
+            runId: run.id,
+            attempt,
+            error: error.message,
+          });
+          attempts.push({ attempt, jobs: [], unavailable: true });
+        }
       }
+    } else {
+      attempts.push({ attempt: attemptCount, jobs: [], detailSkipped: 'successful-run' });
     }
 
-    const number = pullNumber(run);
-    let pr = null;
-    if (number) {
-      try {
-        pr = fetchPr(options.repo, number, prCache);
-      } catch (error) {
-        gaps.push({
-          type: 'pull-request-unavailable',
-          workflow: workflow.file,
-          runId: run.id,
-          pullRequestNumber: number,
-          error: error.message,
-        });
-      }
-    }
+    const pr = resolvePr(run, prIndex);
     records.push(normalizedRun(run, workflow, attempts, pr));
   }
 }
