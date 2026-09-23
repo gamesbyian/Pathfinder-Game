@@ -189,7 +189,7 @@ function buildCombos(raw, level, cap) {
 const results = [];
 const pending = new Map();   // id -> [{ path, elapsedMs, budgetMs, forcing }]
 
-function runOneAttempt(id, found, label, prefixKeys, timeLimitForThis, forcing, knownSigs) {
+function runOneAttempt(id, found, label, prefixKeys, timeLimitForThis, forcing, knownSigs, levelRevision) {
     const t0 = Date.now();
     const args = [PROBE, id, String(timeLimitForThis), '--emit-path', `--corpus=${corpusFile}`];
     if (prefixKeys) args.push(`--prefix=${JSON.stringify(prefixKeys.map(xy))}`);
@@ -216,7 +216,14 @@ function runOneAttempt(id, found, label, prefixKeys, timeLimitForThis, forcing, 
             console.log(`    path REJECTED by validateCandidatePath: ${verdict.reason}  <-- model bug, not stored`);
             row.rejectReason = verdict.reason;
         } else {
+            row.solution = verdict.path;
+            row.levelRevision = levelRevision;
+            row.solverId = EXTERNAL_SOLVER_ID;
+            row.technique = 'cpsat-reference-probe';
+            row.budgetMs = Math.round(timeLimitForThis * 1000);
+            row.forcing = { ...forcing };
             const sig = hintPathSignature(verdict.path);
+            row.solutionSignature = sig;
             row.novel = !knownSigs.has(sig);
             console.log(`    accepted by the referee — ${row.novel ? 'NOVEL' : 'rediscovery'}`);
             if (row.novel) {
@@ -236,8 +243,9 @@ for (const id of levelIds) {
     const found = byId.get(id);
     if (!found) { console.error(`${id}: not in the corpus — skipping.`); continue; }
     const knownSigs = new Set((found.level.hintRecords || []).map(h => hintPathSignature(h.path)));
+    const levelRevision = await getLevelFingerprint(found.level);
 
-    const baselineStatus = runOneAttempt(id, found, 'baseline', null, timeLimit, {}, knownSigs);
+    const baselineStatus = runOneAttempt(id, found, 'baseline', null, timeLimit, {}, knownSigs, levelRevision);
     if (baselineStatus === 'out-of-scope') continue;
 
     if (forcedGrid) {
@@ -246,7 +254,7 @@ for (const id of levelIds) {
         console.log(`  ${id}: ${combos.length} forced combo(s) (cap ${maxCombos})`);
         for (let i = 0; i < combos.length; i++) {
             const { prefixKeys, forcing } = combos[i];
-            runOneAttempt(id, found, `combo ${i + 1}/${combos.length}`, prefixKeys, comboTimeLimit, forcing, knownSigs);
+            runOneAttempt(id, found, `combo ${i + 1}/${combos.length}`, prefixKeys, comboTimeLimit, forcing, knownSigs, levelRevision);
         }
     }
 }
