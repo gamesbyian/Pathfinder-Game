@@ -211,7 +211,7 @@
     "test:family-parent-hint-replay": "tsx scripts/family-parent-hint-replay-node-test.mjs",
     "test:divergence-lib": "node scripts/stress/divergence-lib-node-test.mjs",
     "test:research-analysis-lib": "node scripts/stress/research-analysis-lib-check.mjs",
-    "test:experiment-manifest": "node scripts/experiment-manifest-lib-check.mjs",
+    "test:experiment-manifest": "tsx scripts/experiment-manifest-lib-check.mjs",
     "test:family-run-manifest-producer": "node scripts/family-run-manifest-producer-node-test.mjs",
     "solver:experiment-preflight": "tsx scripts/solver-experiment-preflight.mjs",
     "solver:parity-invariant-shadow": "node scripts/run-bundled.mjs scripts/stress/parity-capacity-shadow.mjs --",
