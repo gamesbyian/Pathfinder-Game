@@ -19,6 +19,7 @@ import fs from 'node:fs';
 import process from 'node:process';
 import { stringifyCorpusJson } from './level-json-format.mjs';
 import { listHintFiles, hintFilePathFor } from './level-data-io.mjs';
+import { expectedHintArtifactFileNames } from '../modules/hint-artifact-layout.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 
@@ -31,6 +32,7 @@ const CORPORA = [
 
 const failures = [];
 let hintFilesChecked = 0;
+let missingHintFiles = 0;
 
 for (const { file, label } of CORPORA) {
     if (!fs.existsSync(file)) {
@@ -44,9 +46,21 @@ for (const { file, label } of CORPORA) {
         failures.push(`${label} (${file}): not in canonical one-line-per-level format`);
     }
 
-    for (const hintFileName of listHintFiles(file)) {
-        // The filename's own basename round-trips through hintFileName() unchanged whether it's
-        // numeric (published, position-keyed) or an id (stress corpora) — no need to distinguish.
+    const levels = Array.isArray(parsed) ? parsed : parsed?.levels;
+    const expectedHintFiles = new Set(expectedHintArtifactFileNames(levels));
+    const actualHintFiles = listHintFiles(file);
+    const actualHintFileSet = new Set(actualHintFiles);
+    const orphanHintFiles = actualHintFiles.filter((name) => !expectedHintFiles.has(name));
+    const missingForCorpus = [...expectedHintFiles].filter((name) => !actualHintFileSet.has(name));
+    // Missing files are valid: levels with no stored hints intentionally have no artifact. Orphans
+    // are not valid because no current level identity can own them.
+    missingHintFiles += missingForCorpus.length;
+    for (const orphan of orphanHintFiles) {
+        failures.push(`${label} hints: orphan artifact ${orphan} has no matching corpus level identity`);
+    }
+
+    for (const hintFileName of actualHintFiles) {
+        // The filename's own basename round-trips through the shared layout authority unchanged.
         const key = hintFileName.replace(/\.json$/, '');
         const hintFile = hintFilePathFor(file, key);
         const hintRaw = fs.readFileSync(hintFile, 'utf8');
@@ -66,4 +80,4 @@ if (failures.length > 0) {
     process.exit(1);
 }
 
-console.log(`All ${CORPORA.length} corpora and ${hintFilesChecked} hint file(s) are in canonical one-record-per-line format.`);
+console.log(`All ${CORPORA.length} corpora and ${hintFilesChecked} hint file(s) are in canonical one-record-per-line format; ${missingHintFiles} level(s) intentionally have no hint artifact.`);
