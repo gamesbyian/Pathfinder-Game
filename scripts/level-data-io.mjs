@@ -9,29 +9,27 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 
 import path from 'node:path';
 import { stringifyCorpusJson } from './level-json-format.mjs';
 import { setLevelHintRecords, upgradeLegacyHints, decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
+import { hintDirectoryNameForLevelsFile, hintArtifactFileName, hintKeyForLevel as canonicalHintKeyForLevel, isHintArtifactFileName } from '../modules/hint-artifact-layout.mjs';
 
 const HINT_SCHEMA_VERSION = 3;
 
-/** Sibling hint dir. `stress-levels-<suffix>.json` maps to `hints-<suffix>/`; others to `hints/`. */
+/** Sibling hint directory derived by the shared browser/Node artifact-layout authority. */
 export function hintsDirFor(levelsJsonPath) {
-    const base = path.basename(levelsJsonPath, '.json');
-    const suffixMatch = /^stress-levels-(.+)$/.exec(base);
-    const dirName = suffixMatch ? `hints-${suffixMatch[1]}` : 'hints';
-    return path.join(path.dirname(levelsJsonPath), dirName);
+    return path.join(path.dirname(levelsJsonPath), hintDirectoryNameForLevelsFile(levelsJsonPath));
 }
 
-/** String ids are used verbatim; numeric fallback keys are zero-padded. */
+/** Compatibility export for existing Node callers; naming semantics live in hint-artifact-layout.mjs. */
 export function hintFileName(key) {
-    return typeof key === 'string' ? `${key}.json` : `${String(key).padStart(5, '0')}.json`;
+    return hintArtifactFileName(key);
 }
 
 export function hintFilePathFor(levelsJsonPath, key) {
     return path.join(hintsDirFor(levelsJsonPath), hintFileName(key));
 }
 
-/** Persistent id when present, else 1-based array position. */
+/** Compatibility export for existing Node callers; identity semantics live in hint-artifact-layout.mjs. */
 export function hintKeyForLevel(level, position) {
-    return (typeof level?.id === 'string' && level.id) ? level.id : position;
+    return canonicalHintKeyForLevel(level, position);
 }
 
 /** Parse current or legacy hint-file shapes into canonical Hint[]. Delegates to the shared
@@ -160,7 +158,7 @@ export function writeLevelCorpusDocumentWithHints(levelsJsonPath, document, { ch
 export function listHintFiles(levelsJsonPath) {
     const dir = hintsDirFor(levelsJsonPath);
     if (!existsSync(dir)) return [];
-    return readdirSync(dir).filter((f) => /^[A-Za-z]?\d{3,}\.json$/.test(f)).sort();
+    return readdirSync(dir).filter(isHintArtifactFileName).sort();
 }
 
 /** Bare numeric/range `--levels` specs are ambiguous and rejected. */
