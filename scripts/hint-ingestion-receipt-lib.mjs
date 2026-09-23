@@ -179,7 +179,7 @@ export function hintIngestionReceiptFromSelectionManifest(manifest) {
         sourceRunId: manifest.source?.runId ?? null,
         sourceRunAttempt: manifest.source?.runAttempt ?? null,
         sourceWorkflow: manifest.source?.workflow ?? null,
-        candidateObservations: manifest.source?.sourceRowsSeen ?? 0,
+        candidateObservations: manifest.selection?.solvedCandidateRowsSeen ?? 0,
         eligibleObservations: manifest.selection?.solvedCandidateRowsSeen ?? 0,
         refereeAcceptedObservations: manifest.selection?.refereeAcceptedRows ?? 0,
         acceptedAlreadyRepresented: manifest.selection?.acceptedButAlreadyRepresented ?? 0,
