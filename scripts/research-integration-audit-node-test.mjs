@@ -111,41 +111,34 @@ const withConsumptionEvent = event => ({
 });
 
 const badConsumptionQuestion = audit(withConsumptionEvent({
-        questionId: 'WS2-NOT-A-REAL-QUESTION',
-        decisionRef: 'logical-decision-ref',
-        scope: { kind: 'block', id: 'AUDIT-BLOCK' },
-    }),
-});
+    questionId: 'WS2-NOT-A-REAL-QUESTION',
+    decisionRef: 'logical-decision-ref',
+    scope: { kind: 'block', id: 'AUDIT-BLOCK' },
+}));
 assert.ok(badConsumptionQuestion.errors.some(error =>
     /consumptionEvents\[0\] references unknown question WS2-NOT-A-REAL-QUESTION/u.test(error)));
 
-const missingConsumptionDecision = auditResearchIntegration(process.cwd(), {
-    model: withConsumptionEvent({
-        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
-        decisionRef: 'reports/not-a-real-decision-report.md',
-        scope: { kind: 'block', id: 'AUDIT-BLOCK' },
-    }),
-});
+const missingConsumptionDecision = audit(withConsumptionEvent({
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    decisionRef: 'reports/not-a-real-decision-report.md',
+    scope: { kind: 'block', id: 'AUDIT-BLOCK' },
+}));
 assert.ok(missingConsumptionDecision.errors.some(error =>
     /consumptionEvents\[0\] references missing decisionRef reports\/not-a-real-decision-report\.md/u.test(error)));
 
-const badBlockScope = auditResearchIntegration(process.cwd(), {
-    model: withConsumptionEvent({
-        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
-        decisionRef: 'logical-decision-ref',
-        scope: { kind: 'block', id: 'OTHER-BLOCK' },
-    }),
-});
+const badBlockScope = audit(withConsumptionEvent({
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    decisionRef: 'logical-decision-ref',
+    scope: { kind: 'block', id: 'OTHER-BLOCK' },
+}));
 assert.ok(badBlockScope.errors.some(error =>
     /consumptionEvents\[0\] block scope names OTHER-BLOCK/u.test(error)));
 
-const badParentScope = auditResearchIntegration(process.cwd(), {
-    model: withConsumptionEvent({
-        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
-        decisionRef: 'logical-decision-ref',
-        scope: { kind: 'parent', id: 'PARENT-2' },
-    }),
-});
+const badParentScope = audit(withConsumptionEvent({
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    decisionRef: 'logical-decision-ref',
+    scope: { kind: 'parent', id: 'PARENT-2' },
+}));
 assert.ok(badParentScope.errors.some(error =>
     /consumptionEvents\[0\] parent scope names unknown parent PARENT-2/u.test(error)));
 
