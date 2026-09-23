@@ -443,3 +443,21 @@ The first 50-episode signature rehearsal (run 35908941294) completed green but w
 The cause was selection order, not extractor failure. Mechanical repair episodes are emitted oldest-first, so the rehearsal sampled March 2026, where GitHub job-log retention is largely exhausted. Direct checks against recent September episodes recovered detailed detector signatures immediately.
 
 The signature analyzer now sorts episodes **newest-first by default** before applying `max_episodes`. It also records the selected order and refuses a bounded rehearsal that recovers zero detector signatures, preventing an availability-empty run from appearing successful.
+
+
+## Newest-first 50-episode signature rehearsal — run 35910435942
+
+The corrected rehearsal is analytically usable:
+
+- 50 newest repair episodes sampled;
+- 48 episodes yielded parsed detector signatures;
+- 0 job-log retrieval gaps;
+- sample spans roughly 2026-09-21 19:52Z through 2026-09-23 06:30Z.
+
+Recent representative evidence is concentrated in repository/research contracts. Top detectors include `check:documentation-links` (39 episodes), `check:research-integration` (29), `test:research-integration-audit` (28), `test:research-system-consolidation-closeout` (28), `test:research-system-inventory` (28), `test:research-index` (27), and `test:workflow-lifecycle` (26).
+
+Current-registry detector appearances in this sample are dominated by research tests (298 appearances across 17 detectors), followed by repo validators (69 across 5), research validators (31 across 2), repo tests (26 across 1), solver tests (5 across 2), and shared validators (4 across 2). These are correlated detector appearances, not unique root-cause counts.
+
+The sampled logs also support runtime/evidence comparisons. Cheap frequent examples include `check:documentation-links` (~4.0s median, 39 representative episodes), `check:research-integration` (~4.3s, 29), and `test:workflow-lifecycle` (~8.1s, 26). More expensive low-frequency examples in this recent research-heavy window include `test:append-solver-health-record` (~13.5s, 3), `test:combine-solver-sweep-reports` (~27.7s, 2), `check:types:tests` (~13.2s, 3), and `check:types` (~10.6s, 1).
+
+This sample is intentionally recent and reflects a research-heavy development period. It is evidence that the extractor is healthy, not a final cadence ranking. The next gate is a full recoverable representative-signature pass across all 865 repair episodes, with retention gaps reported explicitly.
