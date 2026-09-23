@@ -7,6 +7,14 @@ on:
         description: Optional per-workflow run cap for a bounded rehearsal; blank means exhaust retained history
         required: false
         type: string
+      source_run_id:
+        description: Optional prior CI historical value audit run ID; when set, reuse its artifact instead of recollecting history
+        required: false
+        type: string
+      max_episodes:
+        description: Optional repair-episode cap for representative failure-signature collection
+        required: false
+        type: string
 
 permissions:
   actions: read
@@ -30,7 +38,21 @@ jobs:
       - name: Reconstruct mechanical check lineage
         run: node scripts/ci-check-lineage.mjs --out tmp/ci-audit/lineage-mechanical.json
 
+      - name: Reuse prior audit corpus
+        if: ${{ inputs.source_run_id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        shell: bash
+        run: |
+          mkdir -p tmp/ci-audit
+          gh run download "${SOURCE_RUN_ID}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name ci-historical-audit-corpus \
+            --dir tmp/ci-audit
+
       - name: Collect retained CI history
+        if: ${{ inputs.source_run_id == '' }}
         env:
           GH_TOKEN: ${{ github.token }}
           MAX_RUNS: ${{ inputs.max_runs }}
@@ -41,6 +63,30 @@ jobs:
             args+=(--max-runs "${MAX_RUNS}")
           fi
           node scripts/ci-history-collector.mjs "${args[@]}"
+
+      - name: Build mechanical repair episodes
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f tmp/ci-audit/history.jsonl ]]; then
+            node scripts/ci-history-repair-episodes.mjs
+          fi
+
+      - name: Collect representative failure signatures
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAX_EPISODES: ${{ inputs.max_episodes }}
+        shell: bash
+        run: |
+          if [[ -f tmp/ci-audit/repair-episodes.json ]]; then
+            args=(--repo "${GITHUB_REPOSITORY}")
+            if [[ -n "${MAX_EPISODES}" ]]; then
+              args+=(--max-episodes "${MAX_EPISODES}")
+            fi
+            node scripts/ci-history-failure-signatures.mjs "${args[@]}"
+            node scripts/ci-history-failure-groups.mjs
+          fi
 
       - name: Summarize recovered audit corpus
         if: always()
