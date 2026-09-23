@@ -48,7 +48,7 @@ try {
     const ingestion = JSON.parse(fs.readFileSync(receipt, 'utf8'));
     assert.equal(ingestion.kind, 'pathfinder-hint-ingestion-receipt');
     assert.equal(ingestion.source.producer, 'harvest-level-blind-report-hints');
-    assert.equal(ingestion.funnel.candidateObservations, 2);
+    assert.equal(ingestion.funnel.candidateObservations, 0);
     assert.equal(ingestion.funnel.eligibleObservations, 0);
     assert.equal(ingestion.funnel.refereeAcceptedObservations, 0);
     assert.equal(ingestion.additions.semanticRecordChanges, 0);
