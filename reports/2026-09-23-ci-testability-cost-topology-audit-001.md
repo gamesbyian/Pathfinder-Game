@@ -562,3 +562,31 @@ This has two benefits from the same architectural dependency:
 2. it also suppresses a material fraction of transient-head runner fan-out.
 
 Measure the post-activation cancellation runner-hours explicitly; do not add artificial delay unless the natural planner gate proves insufficient.
+
+
+## Type-check cache asymmetry
+
+The two universal type validators currently run:
+
+- `check:types` → `tsc --noEmit -p tsconfig.json`;
+- `check:types:tests` → `tsc --noEmit -p tsconfig.test.json`.
+
+Both configs already enable TypeScript incremental build info, but store it under `node_modules/.cache/`. The config comments explicitly note that this means GitHub Actions starts cold after every `npm ci`; only local reruns reuse the cache.
+
+On recent CI, the two checks report roughly 8–11 s each under the parallel validator load.
+
+Before attempting project-reference restructuring, benchmark an Actions cache for the two `.tsbuildinfo` files with invalidation based on:
+
+- TypeScript/package-lock generation;
+- `tsconfig.json` / `tsconfig.test.json`;
+- a per-head save key with compatible-generation restore prefix.
+
+This is analogous to the existing ESLint result-cache strategy.
+
+Correctness gate:
+
+- a warm incremental check must detect a deliberately injected source type error and a test-only type error;
+- config/dependency changes must invalidate or force the necessary recheck;
+- measure warm and cold Actions timings before deciding whether the extra cache surface is worth maintaining.
+
+Project references / splitting production and test program construction remain a second-stage option only if build-info reuse does not materially reduce the duplicated parse/check cost.
