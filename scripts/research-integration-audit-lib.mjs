@@ -23,22 +23,61 @@ function refIds(question, keys) {
     }).map(String).filter(Boolean);
 }
 
-export function auditResearchIntegration(root = process.cwd(), { model: suppliedModel = null } = {}) {
+export function buildResearchIntegrationAuditContext(root = process.cwd()) {
+    const questionRegistry = loadResearchQuestionRegistry(root);
+    const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
+    const resourceAudits = JSON.parse(readFileSync(
+        path.join(root, 'docs/solver-research-resource-contract-audits.json'),
+        'utf8',
+    ));
+    const dataAssetErrors = validateSolverResearchDataAssets(root);
+    let repositoryFiles = null;
+    const dossierCache = new Map();
+
+    return {
+        questionRegistry,
+        premiseMap,
+        measurement,
+        assetsDocument,
+        resourceAudits,
+        dataAssetErrors,
+        repositoryPathExists(relativePath) {
+            if (existsSync(path.join(root, relativePath))) return true;
+            try {
+                repositoryFiles ??= listRepositoryFiles(root, { includeUntracked: true });
+                return repositoryPathKind(root, relativePath, repositoryFiles) !== null;
+            } catch {
+                // Synthetic/unit-test roots need not be Git repositories. In that case the
+                // materialized working tree remains the only available authority.
+                return false;
+            }
+        },
+        questionDossier(questionId) {
+            if (!dossierCache.has(questionId)) {
+                dossierCache.set(questionId, buildQuestionDossier(root, { questionId }));
+            }
+            return dossierCache.get(questionId);
+        },
+    };
+}
+
+export function auditResearchIntegration(
+    root = process.cwd(),
+    { model: suppliedModel = null, context: suppliedContext = null } = {},
+) {
     const errors = [];
     const warnings = [];
-    let repositoryFiles = null;
-    const repositoryPathExists = relativePath => {
-        if (existsSync(path.join(root, relativePath))) return true;
-        try {
-            repositoryFiles ??= listRepositoryFiles(root, { includeUntracked: true });
-            return repositoryPathKind(root, relativePath, repositoryFiles) !== null;
-        } catch {
-            // Synthetic/unit-test roots need not be Git repositories. In that case the
-            // materialized working tree remains the only available authority.
-            return false;
-        }
-    };
-    const questionRegistry = loadResearchQuestionRegistry(root);
+    const context = suppliedContext ?? buildResearchIntegrationAuditContext(root);
+    const {
+        questionRegistry,
+        premiseMap,
+        measurement,
+        assetsDocument,
+        resourceAudits,
+        dataAssetErrors,
+        repositoryPathExists,
+        questionDossier,
+    } = context;
     errors.push(...validateResearchQuestionRegistry(questionRegistry, { root }));
     const questionIds = new Set(questionRegistry.questions.map(question => question.id));
     const questionById = new Map(questionRegistry.questions.map(question => [question.id, question]));
@@ -188,10 +227,8 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
         }
     }
 
-    const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
-    errors.push(...validateSolverResearchDataAssets(root).map(error => `research asset registry: ${error}`));
+    errors.push(...dataAssetErrors.map(error => `research asset registry: ${error}`));
     const assetIds = new Set((assetsDocument.assets ?? []).map(asset => asset.id));
-    const resourceAudits = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-resource-contract-audits.json'), 'utf8'));
     for (const topLevelPath of [resourceAudits.registry, resourceAudits.contractDocument]) {
         if (topLevelPath && !repositoryPathExists(topLevelPath)) {
             errors.push(`resource contract registry references missing repository path ${topLevelPath}`);
@@ -309,7 +346,7 @@ export function auditResearchIntegration(root = process.cwd(), { model: supplied
     const activeQuestion = questionRegistry.questions.find(question =>
         researchQuestionLifecycleClass(String(question.state ?? '').toLowerCase()) === 'active');
     if (activeQuestion) {
-        const dossier = buildQuestionDossier(root, { questionId: activeQuestion.id });
+        const dossier = questionDossier(activeQuestion.id);
         if (dossier.authority?.kind !== 'derived-read-only') {
             errors.push('question dossier must declare itself derived-read-only');
         }
