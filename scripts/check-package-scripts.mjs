@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 /**
- * Verifies package-script/tooling lifecycle references, local/GitHub Actions gate parity,
- * validation-group parity, and the permanent-CI lifecycle boundary.
+ * Verifies package-script/tooling lifecycle references and the permanent-CI lifecycle boundary.
  *
  * This intentionally checks drift patterns that have hurt this repo: scripts such
  * as `node scripts/foo.mjs` surviving after the target file was removed, explicit
- * Vitest file arguments surviving a rename, invalid lifecycle overrides, deterministic
- * PR checks drifting out of the local finish-line contract, and completed campaign
- * scaffolding creeping back into the permanent gate.
+ * Vitest file arguments surviving a rename, invalid lifecycle overrides, and completed
+ * campaign scaffolding creeping back into the permanent gate.
  */
 import fs from 'node:fs';
 import path from 'node:path';
