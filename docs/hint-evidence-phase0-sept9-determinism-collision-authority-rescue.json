@@ -591,4 +591,199 @@
           "id": "R02076",
           "level": 407,
           "solutionLength": 95,
-          "solutionSha256": "d5c76ec907e14ca8f4a5b0808cc27e35dfb99ac88ccc
+          "solutionSha256": "d5c76ec907e14ca8f4a5b0808cc27e35dfb99ac88ccc27c37759e559c1f380ae",
+          "refereeValid": true,
+          "nodesExpanded": 8376939,
+          "workSpent": 32375975,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 393219,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 393219,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4581,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 376906,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02510",
+          "level": 841,
+          "solutionLength": 82,
+          "solutionSha256": "1acf6a7b72952adfa873b8306f22927b538c694399b9ec9044ad2f25056c4780",
+          "refereeValid": true,
+          "nodesExpanded": 603825,
+          "workSpent": 7648983,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 589834,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 589834,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3510,
+              "outcome": "success",
+              "allocatedBudgetMs": 86397090,
+              "nodesExpanded": 336217,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02515",
+          "level": 846,
+          "solutionLength": 81,
+          "solutionSha256": "4b751e0304a7b1cfaa7539d71a7d85947822c9842a65e4946cca082991221369",
+          "refereeValid": true,
+          "nodesExpanded": 27934106,
+          "workSpent": 48631797,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655361,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655361,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1260,
+              "outcome": "success",
+              "allocatedBudgetMs": 86373589,
+              "nodesExpanded": 120568,
+              "mainSearchLateReserve": true
+            }
+          ]
+        },
+        {
+          "id": "R03001",
+          "level": 1332,
+          "solutionLength": 74,
+          "solutionSha256": "b7b04413279d36c2355af6d6853f80715b8914d3c8843c1f6178b8d1fa654720",
+          "refereeValid": true,
+          "nodesExpanded": 5162099,
+          "workSpent": 17183007,
+          "winningConfig": "repair|score=repair|guidance=must-turn-biased",
+          "winningActionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+          "gateKey": 589824,
+          "winningAttempts": [
+            {
+              "stageId": "early-repair-search",
+              "actionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+              "gateKey": 589824,
+              "scoringProfileId": "repair",
+              "orderingBiasId": null,
+              "beamWidth": null,
+              "ok": true,
+              "elapsedMs": 15603,
+              "outcome": "success",
+              "allocatedBudgetMs": 1200000,
+              "nodesExpanded": 1162089,
+              "repair": true,
+              "repairMustTurnBiased": true,
+              "randomSeed": 1194917888
+            }
+          ]
+        },
+        {
+          "id": "R02269",
+          "level": 600,
+          "solutionLength": 92,
+          "solutionSha256": "c5724bc23b895549cc64afa9ff4715e8e4890628d54c2c491cdd4d399b21e06f",
+          "refereeValid": true,
+          "nodesExpanded": 4140299,
+          "workSpent": 8564886,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 131082,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 131082,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1109,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 140299
+            }
+          ]
+        },
+        {
+          "id": "R02314",
+          "level": 645,
+          "solutionLength": 87,
+          "solutionSha256": "07d4cfa78f412228e98892f3738caa9e37ff553f512e55ff335bbd435cab317d",
+          "refereeValid": true,
+          "nodesExpanded": 10128815,
+          "workSpent": 32180532,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 327691,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 327691,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1082,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 128789
+            }
+          ]
+        },
+        {
+          "id": "R02349",
+          "level": 680,
+          "solutionLength": 79,
+          "solutionSha256": "242413b4ff842a8258eae0da15185d0e1ba0620b341cd5274bfcee4508fff3b8",
+          "refereeValid": true,
+          "nodesExpanded": 125084,
+          "workSpent": 1511465,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655362,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655362,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1033,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 125084
+            }
+          ]
+        },
+        {
+          "id": "R01523",
+          "level": 250,
+          "solutionLength": 104,
+          "solutionSha256": "b8932e80e3b471289e
