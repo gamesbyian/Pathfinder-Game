@@ -19,8 +19,9 @@ function filesUnder(root) {
         .sort();
 }
 
-// Recorded-input collisions use only fields persisted in hint provenance. Full effective-config
-// identity is absent, so reconcile collisions to source experiment arms before interpreting them.
+// Modern Phase-3 provenance can carry canonical solver-request/execution identity directly.
+ // Historical entries still fall back to the older recorded-input approximation, and those
+ // collisions still require source-run/experiment reconciliation before interpretation.
 const summary = {
     schemaVersion: 1,
     roots,
