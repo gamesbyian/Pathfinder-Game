@@ -35,6 +35,7 @@ import { buildPopulationIntegrity, hashConfiguration, hashPopulation, isImmutabl
 import { encodeResearchScopedIdentity } from './research-population-identity-lib.mjs';
 import { normalizeSolverSweepReportInput } from './solver-sweep-report-input.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
+import { solverRequestIdentityAvailability } from './solver-request-identity-compat.mjs';
 
 const EXECUTION_CONFIG_FIELDS = [
     'levelBlind',
@@ -65,6 +66,38 @@ function rawEffectiveConfigDigest(value) {
     return createHash('sha256').update(stableStringify(value)).digest('hex');
 }
 
+// Canonical solver-request identity (docs/hint-evidence-execution-identity-storage-consolidation-
+// plan.md section 3.2) is preferred over legacy effectiveConfig for CROSS-REPORT agreement when every
+// report being combined carries one: mechanical-migration-audit's disposition for this file is
+// "prefer canonical request identity when present... and reject mixed disagreement", stronger than
+// check-effective-config-agreement.mjs's diagnostic-only treatment, because this is a WRITE path --
+// the combined artifact becomes the record other tools read. `invalid-canonical` (malformed, not
+// merely absent) always fails loud rather than being treated as "no canonical identity".
+function validatedSolverRequestIdentity(reports) {
+    const availabilities = reports.map(report => ({ report, availability: solverRequestIdentityAvailability(report.summary) }));
+    const invalid = availabilities.find(a => a.availability.status === 'invalid-canonical');
+    if (invalid) {
+        throw new Error(`${invalid.report.path}: invalid canonical solver-request identity (${invalid.availability.reason}).`);
+    }
+    const canonicalCount = availabilities.filter(a => a.availability.status === 'canonical').length;
+    if (canonicalCount === 0) return { solverRequestProjection: null, solverRequestIdentity: null };
+    if (canonicalCount !== reports.length) {
+        const missing = availabilities.filter(a => a.availability.status !== 'canonical').map(a => a.report.path);
+        throw new Error(`Mismatched canonical solver-request identity: some source reports record it (${canonicalCount}/${reports.length}) and others do not (${missing.join(', ')}).`);
+    }
+    const [first, ...rest] = availabilities;
+    for (const other of rest) {
+        if (other.availability.solverRequestIdentity !== first.availability.solverRequestIdentity) {
+            throw new Error(`Mismatched canonical solver-request identity: ${reports[0].path} and ${other.report.path} did not run the same solver request `
+                + '(legacy effectiveConfig may still agree if the difference is confined to population/protocol dimensions the canonical projection excludes).');
+        }
+    }
+    return {
+        solverRequestProjection: first.availability.solverRequestProjection,
+        solverRequestIdentity: first.availability.solverRequestIdentity,
+    };
+}
+
 function validatedEffectiveConfig(reports) {
     const firstConfig = reports[0].summary.effectiveConfig;
     const firstCanonical = stableStringify(firstConfig);
@@ -78,7 +111,7 @@ function validatedEffectiveConfig(reports) {
             throw new Error(`${report.path}: effectiveConfigDigest does not match effectiveConfig.`);
         }
     }
-    return firstConfig;
+    return { effectiveConfig: firstConfig, ...validatedSolverRequestIdentity(reports) };
 }
 
 function collectEffectiveConfig(reports, { allowMixedCorpora = false } = {}) {
@@ -89,8 +122,11 @@ function collectEffectiveConfig(reports, { allowMixedCorpora = false } = {}) {
     }
 
     let value;
+    let canonical = { solverRequestProjection: null, solverRequestIdentity: null };
     if (!allowMixedCorpora) {
-        value = validatedEffectiveConfig(withConfig);
+        const validated = validatedEffectiveConfig(withConfig);
+        value = validated.effectiveConfig;
+        canonical = { solverRequestProjection: validated.solverRequestProjection, solverRequestIdentity: validated.solverRequestIdentity };
     } else {
         const groups = new Map();
         for (const report of withConfig) {
@@ -99,16 +135,23 @@ function collectEffectiveConfig(reports, { allowMixedCorpora = false } = {}) {
             groups.get(corpusKey).push(report);
         }
         if (groups.size === 1) {
-            value = validatedEffectiveConfig(withConfig);
+            const validated = validatedEffectiveConfig(withConfig);
+            value = validated.effectiveConfig;
+            canonical = { solverRequestProjection: validated.solverRequestProjection, solverRequestIdentity: validated.solverRequestIdentity };
         } else {
+            // Different corpus groups are legitimately different populations/arms and need not share
+            // ANY identity, canonical included -- only intra-group agreement is required (still
+            // enforced, since validatedEffectiveConfig runs per-group). Cross-group canonical identity
+            // is deliberately not propagated into the top-level summary for this rarer, opt-in path;
+            // each group's own effectiveConfig is still available under byCorpus for that purpose.
             const byCorpus = {};
             for (const corpusKey of [...groups.keys()].sort()) {
-                byCorpus[corpusKey] = validatedEffectiveConfig(groups.get(corpusKey));
+                byCorpus[corpusKey] = validatedEffectiveConfig(groups.get(corpusKey)).effectiveConfig;
             }
             value = { byCorpus };
         }
     }
-    return { value, digest: rawEffectiveConfigDigest(value) };
+    return { value, digest: rawEffectiveConfigDigest(value), ...canonical };
 }
 
 function collectExecutionConfig(reports) {
@@ -307,6 +350,10 @@ function main() {
         ...(effectiveConfig ? {
             effectiveConfig: effectiveConfig.value,
             effectiveConfigDigest: effectiveConfig.digest,
+            ...(effectiveConfig.solverRequestProjection ? {
+                solverRequestProjection: effectiveConfig.solverRequestProjection,
+                solverRequestIdentity: effectiveConfig.solverRequestIdentity,
+            } : {}),
         } : {}),
         ...(producerMetadata.entrypoint ? { entrypoint: producerMetadata.entrypoint } : {}),
         ...(producerMetadata.producer ? { producer: producerMetadata.producer } : {}),

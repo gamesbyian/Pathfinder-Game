@@ -18,6 +18,7 @@ import { simulateMakespan, packByMakespan, classifyTelemetry } from './plan-high
 import { calibrateMultipliers } from './backtest-shard-runtime-policy.mjs';
 import { hashConfiguration } from './solver-experiment-contract.mjs';
 import { normalizeSolverSweepReportInput } from './solver-sweep-report-input.mjs';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -429,6 +430,101 @@ async function main() {
             /some source reports record observed solver execution identity and others omit it/u,
         );
         console.log('  ✓ combiner rejects silent downgrade from mixed modern/legacy execution identity');
+
+        // Canonical solver-request identity (docs/hint-evidence-execution-identity-storage-
+        // consolidation-plan.md section 3.2) is validated and propagated ADDITIONALLY to the existing
+        // legacy effectiveConfig gate, not as a replacement for it: legacy effectiveConfig still
+        // carries population identity (corpusSha256) this combiner must keep protecting even when
+        // canonical solver-request identity agrees, since canonical deliberately excludes population/
+        // protocol dimensions by design. When both are present, BOTH must agree.
+        function fakeProjection(sentinel) {
+            return { schemaVersion: 1, kind: 'pathfinder-solver-request-projection', sentinel };
+        }
+        const canonicalProjectionX = fakeProjection('X');
+        const canonicalIdentityX = solverRequestIdentityFromProjection(canonicalProjectionX);
+        const canonicalProjectionY = fakeProjection('Y');
+        const canonicalIdentityY = solverRequestIdentityFromProjection(canonicalProjectionY);
+
+        const canonicalAgreeA = path.join(tempDir, 'canonical-agree-a.json');
+        const canonicalAgreeB = path.join(tempDir, 'canonical-agree-b.json');
+        const canonicalAgreeOut = path.join(tempDir, 'canonical-agree-out.json');
+        await writeFile(canonicalAgreeA, JSON.stringify(batchReport({
+            summary: {
+                effectiveConfig: { corpusSha256: 'aaa' },
+                solverRequestProjection: canonicalProjectionX, solverRequestIdentity: canonicalIdentityX,
+            },
+            levels: [{ level: 31, id: 'R00331', ok: false }],
+        })));
+        await writeFile(canonicalAgreeB, JSON.stringify(batchReport({
+            summary: {
+                effectiveConfig: { corpusSha256: 'aaa' },
+                solverRequestProjection: canonicalProjectionX, solverRequestIdentity: canonicalIdentityX,
+            },
+            levels: [{ level: 32, id: 'R00332', ok: false }],
+        })));
+        await run([`--in=${canonicalAgreeA},${canonicalAgreeB}`, `--out=${canonicalAgreeOut}`]);
+        const canonicalAgreeCombined = JSON.parse(await readFile(canonicalAgreeOut, 'utf8'));
+        assert.deepEqual(canonicalAgreeCombined.summary.solverRequestProjection, canonicalProjectionX);
+        assert.equal(canonicalAgreeCombined.summary.solverRequestIdentity, canonicalIdentityX);
+        console.log('  ✓ combined artifact preserves canonical solver-request identity when both it and legacy effectiveConfig agree');
+
+        const canonicalPopulationDriftB = path.join(tempDir, 'canonical-population-drift-b.json');
+        await writeFile(canonicalPopulationDriftB, JSON.stringify(batchReport({
+            // Different corpusSha256 (population identity, a legacy-only dimension the canonical
+            // projection deliberately excludes) but matching canonical solver-request identity: the
+            // legacy gate must still fail this, since population drift between "same-arm" shards is
+            // exactly the wiring bug this combiner exists to catch, and canonical agreement cannot
+            // vouch for a dimension it does not represent.
+            summary: {
+                effectiveConfig: { corpusSha256: 'bbb' },
+                solverRequestProjection: canonicalProjectionX, solverRequestIdentity: canonicalIdentityX,
+            },
+            levels: [{ level: 36, id: 'R00336', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${canonicalAgreeA},${canonicalPopulationDriftB}`, `--out=${path.join(tempDir, 'canonical-population-drift-out.json')}`]),
+            /Mismatched effectiveConfig/u,
+        );
+        console.log('  ✓ combiner still rejects legacy population drift even when canonical solver-request identity agrees');
+
+        const canonicalDisagreeB = path.join(tempDir, 'canonical-disagree-b.json');
+        await writeFile(canonicalDisagreeB, JSON.stringify(batchReport({
+            summary: {
+                effectiveConfig: { corpusSha256: 'aaa' },
+                solverRequestProjection: canonicalProjectionY, solverRequestIdentity: canonicalIdentityY,
+            },
+            levels: [{ level: 33, id: 'R00333', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${canonicalAgreeA},${canonicalDisagreeB}`, `--out=${path.join(tempDir, 'canonical-disagree-out.json')}`]),
+            /Mismatched canonical solver-request identity/u,
+        );
+        console.log('  ✓ combiner rejects shards with matching legacy effectiveConfig but disagreeing canonical solver-request identity');
+
+        const canonicalMissingB = path.join(tempDir, 'canonical-missing-b.json');
+        await writeFile(canonicalMissingB, JSON.stringify(batchReport({
+            summary: { effectiveConfig: { corpusSha256: 'aaa' } },
+            levels: [{ level: 34, id: 'R00334', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${canonicalAgreeA},${canonicalMissingB}`, `--out=${path.join(tempDir, 'canonical-missing-out.json')}`]),
+            /Mismatched canonical solver-request identity: some source reports record it \(1\/2\)/u,
+        );
+        console.log('  ✓ combiner rejects mixed canonical-identity availability across shards');
+
+        const canonicalInvalidB = path.join(tempDir, 'canonical-invalid-b.json');
+        await writeFile(canonicalInvalidB, JSON.stringify(batchReport({
+            summary: {
+                effectiveConfig: { corpusSha256: 'aaa' },
+                solverRequestProjection: canonicalProjectionX, solverRequestIdentity: 'sha256:not-the-real-hash',
+            },
+            levels: [{ level: 35, id: 'R00335', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${canonicalAgreeA},${canonicalInvalidB}`, `--out=${path.join(tempDir, 'canonical-invalid-out.json')}`]),
+            /invalid canonical solver-request identity/u,
+        );
+        console.log('  ✓ combiner rejects a shard with a recorded solverRequestIdentity that does not match its own projection');
 
         const portfolioSource = await readFile(path.join(ROOT, 'scripts/portfolio-solve-sweep.mjs'), 'utf8');
         assert.match(portfolioSource, /effectiveConfigDigest/u);
