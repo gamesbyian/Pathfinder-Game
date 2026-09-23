@@ -11,6 +11,7 @@
  *   node scripts/validation-groups.mjs --check
  *   node scripts/validation-groups.mjs validators repo research
  *   node scripts/validation-groups.mjs nodeTests research shared
+ *   node scripts/validation-groups.mjs nodeTests research --list
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -144,9 +145,11 @@ if (process.argv.includes('--check')) {
 if (process.exitCode) process.exit(process.exitCode);
 
 const args = process.argv.slice(2);
+const listOnly = args.includes('--list');
+if (listOnly) args.splice(args.indexOf('--list'), 1);
 const familyName = args.shift();
 if (!VALID_FAMILIES.has(familyName)) {
-  fail('usage: validation-groups.mjs --check | <validators|nodeTests> <group> [group ...]');
+  fail('usage: validation-groups.mjs --check | <validators|nodeTests> <group> [group ...] [--list]');
 }
 if (args.length === 0) fail('select at least one validation group');
 
@@ -171,6 +174,15 @@ for (const group of args) {
 
 if (selected.length === 0) {
   console.log(`No ${familyName} members selected.`);
+  process.exit(0);
+}
+
+if (listOnly) {
+  console.log(JSON.stringify({
+    family: familyName,
+    requestedSurfaces: args,
+    selected,
+  }, null, 2));
   process.exit(0);
 }
 
