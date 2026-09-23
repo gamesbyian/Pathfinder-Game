@@ -24,6 +24,7 @@ const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceSha = args.get('--source-sha') || process.env.SOURCE_SHA || null;
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
+const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_RUN_ATTEMPT || null;
 const sourceWorkflow = args.get('--source-workflow') || process.env.SOURCE_WORKFLOW || 'unknown';
 const ingestionReceiptArg = args.get('--ingestion-receipt-out');
 const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
@@ -83,7 +84,18 @@ async function harvestRows({ corpusRel, rows, budgetMs = null, identity }) {
     solvedSeen += solved.length;
 
     const state = stateFor(corpusRel);
-    const capture = await createHintCapture({ solverVersion: sourceSha, budgetMs, enabled: true, isolatedTechnique: true });
+    const capture = await createHintCapture({
+        solverVersion: sourceSha,
+        budgetMs,
+        enabled: true,
+        isolatedTechnique: true,
+        executionContext: sourceRunId !== 'unknown'
+            ? {
+                occurrenceRunId: sourceRunId,
+                ...(sourceRunAttempt ? { occurrenceRunAttempt: sourceRunAttempt } : {}),
+            }
+            : {},
+    });
     const resolved = [];
     for (const row of solved) {
         const id = row.id ?? row.levelId ?? null;
