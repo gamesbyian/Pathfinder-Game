@@ -8,7 +8,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { stringifyCorpusJson } from './level-json-format.mjs';
-import { setLevelHintRecords, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-runtime.mjs';
+import { setLevelHintRecords, upgradeLegacyHints, decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 
 const HINT_SCHEMA_VERSION = 3;
 
@@ -34,19 +34,16 @@ export function hintKeyForLevel(level, position) {
     return (typeof level?.id === 'string' && level.id) ? level.id : position;
 }
 
-/** Parse current or legacy hint-file shapes into canonical Hint[]. */
+/** Parse current or legacy hint-file shapes into canonical Hint[]. Delegates to the shared
+ *  browser/Node decode boundary (decodeHintArtifact, modules/domain/hint-runtime.mjs) so this
+ *  Node-side reader and the browser's modules/data-asset-loaders.ts cannot silently diverge on
+ *  which physical shapes they understand -- see that function's own doc for why this mattered. */
 export function parseHintFileContents(parsed, filePath) {
-    if (Array.isArray(parsed)) return upgradeLegacyHints(parsed);
-    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.hints)) {
-        if (Array.isArray(parsed.hintMetadata)) {
-            return parsed.hints.map((hintPath, i) => {
-                const meta = parsed.hintMetadata[i];
-                return toHint(hintPath, meta ? [upgradeProvenanceEntry(meta)] : []);
-            });
-        }
-        return upgradeLegacyHints(parsed.hints);
+    try {
+        return decodeHintArtifact(parsed);
+    } catch {
+        throw new Error(`${filePath} must contain a JSON array of hint paths or an object with a hints array`);
     }
-    throw new Error(`${filePath} must contain a JSON array of hint paths or an object with a hints array`);
 }
 
 /** Read one level's canonical hints; missing file means no hints. */

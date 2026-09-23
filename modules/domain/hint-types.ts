@@ -24,6 +24,7 @@ import {
     reconcileHints as reconcileHintsRuntime,
     isMigrationSyntheticFoundAt as isMigrationSyntheticFoundAtRuntime,
     MIGRATION_SYNTHETIC_FOUND_AT_WINDOW,
+    decodeHintArtifact as decodeHintArtifactRuntime,
 } from './hint-runtime.mjs';
 
 /** Production solver provenance id. */
@@ -250,6 +251,13 @@ export { MIGRATION_SYNTHETIC_FOUND_AT_WINDOW };
  *  Chronology/longitudinal consumers must treat a matching entry as undated, not drop it entirely. */
 export function isMigrationSyntheticFoundAt(entry: HintProvenanceEntry | null | undefined): boolean {
     return isMigrationSyntheticFoundAtRuntime(entry);
+}
+
+/** Shared browser/Node decode boundary for a hint artifact's parsed JSON content -> Hint[].
+ *  Handles every historically-committed v1-v3 physical shape; see hint-runtime.mjs's own doc for
+ *  why this must be one shared function rather than separately implemented per environment. */
+export function decodeHintArtifact(parsed: unknown): Hint[] {
+    return decodeHintArtifactRuntime(parsed) as Hint[];
 }
 
 /** Reconcile authoritative path membership with provenance keyed by path signature. */

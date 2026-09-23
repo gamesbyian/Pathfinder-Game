@@ -313,6 +313,46 @@ export function upgradeLegacyHints(raw) {
     return out;
 }
 
+/**
+ * Shared browser/Node decode boundary for a hint artifact's already-JSON.parse()d content, into
+ * canonical Hint[]. Handles every historically-committed physical shape:
+ *   - a bare path array (oldest legacy shape);
+ *   - `{ hints: path[] }` (bare paths, no provenance);
+ *   - `{ hints: path[], hintMetadata: [...] }` (transitional sibling-array shape: nested provenance
+ *     reconstructed from the parallel hintMetadata entry at the same index);
+ *   - `{ schemaVersion, hints: Hint[] }` (canonical v2/v3, upgraded via upgradeLegacyHints).
+ *
+ * This exists because scripts/level-data-io.mjs (Node) and modules/data-asset-loaders.ts (browser)
+ * used to implement this independently, and had actually drifted: the browser side never handled
+ * the hintMetadata sibling-array shape at all, so a hint file in that transitional shape would
+ * silently lose all provenance if ever loaded by the browser (no currently-committed file exercises
+ * this today -- data/hints, data/stress/hints, and data/stress/hints-random contain zero files with
+ * a hintMetadata key -- but a future historical-enrichment or import path could reintroduce one, and
+ * the divergence itself is exactly what
+ * docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 2.5 warns about).
+ * Physical schema v4 dispatch belongs here too once it exists (Phase 8); this is deliberately v1-v3
+ * only for now, per that plan's Phase 1 scope.
+ *
+ * Throws a generic message on an unrecognized shape; callers that want a source-specific message
+ * (e.g. a file path) should catch and rethrow with their own context.
+ * @param {unknown} parsed
+ * @returns {Hint[]}
+ */
+export function decodeHintArtifact(parsed) {
+    if (Array.isArray(parsed)) return upgradeLegacyHints(parsed);
+    if (parsed && typeof parsed === 'object' && Array.isArray(/** @type {any} */ (parsed).hints)) {
+        const obj = /** @type {any} */ (parsed);
+        if (Array.isArray(obj.hintMetadata)) {
+            return obj.hints.map((/** @type {number[]} */ hintPath, /** @type {number} */ i) => {
+                const meta = obj.hintMetadata[i];
+                return toHint(hintPath, meta ? [upgradeProvenanceEntry(meta)] : []);
+            });
+        }
+        return upgradeLegacyHints(obj.hints);
+    }
+    throw new Error('hint artifact must contain a JSON array of hint paths or an object with a hints array');
+}
+
 /** @param {number[][]} paths @param {Hint[]} records @returns {Hint[]} */
 export function reconcileHints(paths, records) {
     const provenanceBySig = new Map();

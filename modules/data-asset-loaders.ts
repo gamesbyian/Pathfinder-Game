@@ -3,7 +3,7 @@
 // without importing the whole app.ts composition root (which would create a circular import,
 // since app.ts's dependency graph eventually reaches the input controllers that own the
 // Dev-Mode corpus switcher UI).
-import { upgradeLegacyHints } from './domain/hint-types.js';
+import { decodeHintArtifact } from './domain/hint-types.js';
 
 export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
     return async () => {
@@ -27,8 +27,12 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
  * rest; a level's FULL hint set lives in `data/hints/<id>.json` (`id` = the level's own permanent
  * identity, e.g. "P00042" — see docs/archive/level-id-unification-plan.md) and is fetched only when first
  * requested — never at boot. The file is the canonical `{schemaVersion, hints: Hint[]}` wrapper
- * (domain/hint-types.ts); upgradeLegacyHints also tolerates a bare path array, so an older
- * cached/CDN-served copy of the file still parses.
+ * (domain/hint-types.ts), decoded through the same decodeHintArtifact() boundary
+ * scripts/level-data-io.mjs uses on the Node side (hint-runtime.mjs's own doc comment explains why
+ * this must be shared rather than reimplemented here: this decoder used to only understand bare
+ * path arrays and `{hints: paths[]}`, silently dropping provenance for the transitional
+ * `{hints: paths[], hintMetadata: [...]}` shape that the Node side already handled). It also
+ * tolerates a bare path array, so an older cached/CDN-served copy of the file still parses.
  *
  * `basePath` also lets a caller point this at an alternate corpus's hints directory (e.g.
  * `./data/stress` for the Dev-Mode stress-corpus switcher — see modules/dev-corpus.ts) since
@@ -44,6 +48,6 @@ export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePa
         const response = await fetchImpl(`${basePath}/${hintsDirName}/${name}`);
         if (!response?.ok) throw new Error(`Failed to load ${basePath}/${hintsDirName}/${name}`);
         const parsed = await response.json();
-        return upgradeLegacyHints(Array.isArray(parsed) ? parsed : parsed?.hints);
+        return decodeHintArtifact(parsed);
     };
 }

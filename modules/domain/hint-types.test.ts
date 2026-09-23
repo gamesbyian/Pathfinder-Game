@@ -2,7 +2,7 @@
  *  must not accumulate, while genuinely distinct rediscoveries are kept. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint } from './hint-types.js';
+import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint, decodeHintArtifact } from './hint-types.js';
 
 test('dedupeProvenanceEntries collapses recording-only differences and keeps evidence-bearing ones', () => {
   const e = makeProvenanceEntry('prefix-anchored', { foundAt: '2026-07-16T05:53:45.609Z', hintGuided: true, usedExistingHints: true });
@@ -132,4 +132,40 @@ test('upgradeProvenanceEntry preserves historical absence of capability booleans
   });
   assert.equal(explicit.context.usedExistingHints, false, 'an already-explicit false is passed through unchanged, not stripped');
   assert.equal(explicit.context.hintGuided, true);
+});
+
+// ── decodeHintArtifact: shared browser/Node hint-artifact decode boundary ──────────────────────
+
+test('decodeHintArtifact handles a bare path array (oldest legacy shape)', () => {
+  assert.deepEqual(decodeHintArtifact([[1, 2, 3]]), [{ path: [1, 2, 3], provenance: [] }]);
+});
+
+test('decodeHintArtifact handles {hints: paths[]} with no provenance', () => {
+  assert.deepEqual(decodeHintArtifact({ hints: [[1, 2, 3]] }), [{ path: [1, 2, 3], provenance: [] }]);
+});
+
+test('decodeHintArtifact reconstructs provenance from the transitional {hints, hintMetadata} sibling-array shape', () => {
+  // This is the exact shape modules/data-asset-loaders.ts (browser) used to silently drop
+  // provenance for before this shared decoder existed — see hint-runtime.mjs's decodeHintArtifact
+  // doc comment and docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 2.5.
+  const decoded = decodeHintArtifact({
+    hints: [[1, 2, 3]],
+    hintMetadata: [{ technique: 'beam', nodesExpanded: 10 }],
+  });
+  assert.equal(decoded.length, 1);
+  assert.deepEqual(decoded[0].path, [1, 2, 3]);
+  assert.equal(decoded[0].provenance.length, 1, 'provenance must survive, not be dropped');
+  assert.equal(decoded[0].provenance[0].solver.technique, 'beam');
+});
+
+test('decodeHintArtifact handles canonical {schemaVersion, hints: Hint[]}', () => {
+  const canonical = { schemaVersion: 3, hints: [toHint([1, 2, 3], [makeProvenanceEntry('beam')])] };
+  const decoded = decodeHintArtifact(canonical);
+  assert.equal(decoded.length, 1);
+  assert.equal(decoded[0].provenance[0].solver.technique, 'beam');
+});
+
+test('decodeHintArtifact throws a clear error on an unrecognized shape instead of silently returning no hints', () => {
+  assert.throws(() => decodeHintArtifact({ levels: [] }), /hint artifact must contain/);
+  assert.throws(() => decodeHintArtifact(null), /hint artifact must contain/);
 });
