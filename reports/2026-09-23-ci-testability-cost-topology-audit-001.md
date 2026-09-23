@@ -434,3 +434,74 @@ Useful queues include:
 - filesystem fixture candidates;
 - repository-data fixture candidates;
 - shared ownership candidates.
+
+
+## Additional source-level findings
+
+### Pure harnesses are visibly paying scheduler/process tax
+
+On CI run 35914130423, several tiny direct-import research contracts each reported about **5.4 s** inside the 173-way Node fan-out:
+
+- `test:research-semantic-identity` — 25 source lines, direct library assertions;
+- `test:research-population-identity` — 82 lines, direct library assertions;
+- `test:research-question-contract` — 35 lines, direct library assertions.
+
+There is no plausible intrinsic five-second workload in those files. Their reported duration is dominated by process startup/scheduling/contention around the assertions.
+
+This makes a direct-module/batched test pilot a high-confidence experiment.
+
+### Repository model reuse already exists below the process boundary
+
+The research-system code already demonstrates the desired architectural seam:
+
+- `buildResearchSystemInventory()` builds one `buildResearchRelations()` model;
+- it passes that model into `auditResearchIntegration(root, { model })`;
+- the audit accepts a supplied model explicitly.
+
+However, separate permanent harness processes such as research system inventory/query/integration/query-graph tests each reconstruct overlapping repository views from disk.
+
+Potential end state:
+
+1. an immutable `ResearchRepositorySnapshot` / relation model built once per test process;
+2. consumers accept the snapshot/model explicitly;
+3. most contract tests operate on injected in-memory models;
+4. one or a few explicit fresh-build tests own filesystem discovery, deterministic rebuild, and Git-ref behavior.
+
+Do not cache across commits or hide freshness behind mutable module globals.
+
+### Slow Vitest files are mixed-tier
+
+The latest covered suite reports:
+
+- `orchestration-work-budget.test.ts`: ~8.2 s;
+- `diversification.test.ts`: ~7.2 s;
+- `repair-search.test.ts`: ~4.2 s.
+
+`diversification.test.ts` already marks real-solver session tests with the existing `deepTest` convention, but Actions coverage runs them because the coverage step does not set `SOLVER_DEEP_TESTS=0`.
+
+`repair-search.test.ts` mixes cheap pure helper tests with many genuine search integrations, including repeated deterministic/equivalence calls at **500,000–1,000,000 node budgets**.
+
+This suggests a tier-shaping experiment:
+
+- keep pure helper/control-flow coverage in ordinary instrumented Vitest;
+- move genuinely real-search proofs to an explicit uninstrumented deep-proof population;
+- add/stay with small synthetic/stubbed tests so moving a proof does not create a branch-coverage hole;
+- benchmark total deep-lane wall time before changing the partition, because file-level parallelism can make a naive split slower.
+
+The goal is to stop making coverage instrumentation carry expensive search proofs, not to weaken those proofs.
+
+### Firestore is a separate infrastructure optimization target
+
+Run 35914130423 spent roughly:
+
+- ~30 s in covered ordinary Vitest;
+- ~11 s in explicit deep proofs;
+- ~31 s from Java setup through the Firestore emulator boundary.
+
+Impact scoping is the largest win, but when persistence validation is required, a follow-up should measure:
+
+- Firebase emulator binary/cache reuse;
+- npx/firebase-tools resolution overhead;
+- whether the emulator can stay within one deliberately persistent job phase when multiple persistence assertions are added.
+
+Do not add `firebase-tools` globally as a devDependency merely to save this step without measuring the added `npm ci` cost paid by every fast/deep runner.
