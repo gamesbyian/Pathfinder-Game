@@ -32,6 +32,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
+const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_RUN_ATTEMPT || null;
 const sourceWorkflow = args.get('--source-workflow') || process.env.SOURCE_WORKFLOW || 'unknown';
 const selectionManifestArg = args.get('--selection-manifest-out');
 const selectionManifestOut = selectionManifestArg ? path.resolve(selectionManifestArg)
@@ -163,10 +164,27 @@ for (const file of walk(stagingDir).sort()) {
     refereeAcceptedRows += accepted.length;
     if (!accepted.length) continue;
 
+    const executionContext = {
+        ...(typeof summary.solverRequestIdentity === 'string' && summary.solverRequestIdentity
+            ? { solverRequestIdentity: summary.solverRequestIdentity } : {}),
+        ...(typeof summary.protocolHash === 'string' && summary.protocolHash
+            ? { protocolHash: summary.protocolHash } : {}),
+        ...(typeof summary.reproducibilityMode === 'string' && summary.reproducibilityMode
+            ? { reproducibilityMode: summary.reproducibilityMode } : {}),
+        ...(typeof summary.arm === 'string' && summary.arm
+            ? { executionArm: summary.arm } : {}),
+        ...(sourceRunId !== 'unknown'
+            ? {
+                occurrenceRunId: sourceRunId,
+                ...(sourceRunAttempt ? { occurrenceRunAttempt: sourceRunAttempt } : {}),
+            }
+            : {}),
+    };
     const capture = await createHintCapture({
         solverVersion: summary.commit ?? null,
         budgetMs: summary.budgetMs ?? null,
         enabled: true,
+        executionContext,
     });
     await capture.prepare(accepted.map(({ entry }) => entry.level));
 
