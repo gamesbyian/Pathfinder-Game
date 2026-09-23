@@ -2,9 +2,24 @@
 import assert from 'node:assert/strict';
 import {
     buildHintIngestionReceipt,
+    countHintStoreSemanticUnits,
     hintIngestionReceiptFromSelectionManifest,
     validateHintIngestionReceipt,
 } from './hint-ingestion-receipt-lib.mjs';
+
+assert.deepEqual(countHintStoreSemanticUnits([
+    {
+        path: [1, 2],
+        provenance: [
+            { occurrences: [{ runId: 'a' }, { runId: 'b' }] },
+            { occurrences: [] },
+        ],
+    },
+    {
+        path: [3, 4],
+        provenance: [{ occurrences: [{ runId: 'c' }] }],
+    },
+]), { paths: 2, provenanceEvents: 3, occurrences: 3 });
 
 const receipt = buildHintIngestionReceipt({
     producer: 'fixture-harvester',
