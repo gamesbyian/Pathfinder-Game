@@ -202,7 +202,7 @@ try {
     provenance,
     new Set(),
   );
-  assert.equal(saved, true);
+  assert.deepEqual(saved, { saved: true });
   const entryId = localHints.hashPathSignature(signature);
   const hintDoc = await getDoc(doc(
     publicClient.db,
