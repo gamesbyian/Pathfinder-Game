@@ -1,0 +1,79 @@
+name: CI historical value audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_runs:
+        description: Optional per-workflow run cap for a bounded rehearsal; blank means exhaust retained history
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out audit branch
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Reconstruct mechanical check lineage
+        run: node scripts/ci-check-lineage.mjs --out tmp/ci-audit/lineage-mechanical.json
+
+      - name: Collect retained CI history
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAX_RUNS: ${{ inputs.max_runs }}
+        shell: bash
+        run: |
+          args=(--repo "${GITHUB_REPOSITORY}" --out tmp/ci-audit)
+          if [[ -n "${MAX_RUNS}" ]]; then
+            args+=(--max-runs "${MAX_RUNS}")
+          fi
+          node scripts/ci-history-collector.mjs "${args[@]}"
+
+      - name: Summarize recovered audit corpus
+        if: always()
+        shell: bash
+        run: |
+          if [[ ! -f tmp/ci-audit/summary.json ]]; then
+            echo '## CI historical audit collection' >> "$GITHUB_STEP_SUMMARY"
+            echo >> "$GITHUB_STEP_SUMMARY"
+            echo 'Collector did not produce summary.json; inspect the failed collection step.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          const fs = require('fs');
+          const s = JSON.parse(fs.readFileSync('tmp/ci-audit/summary.json', 'utf8'));
+          console.log('## CI historical audit collection');
+          console.log();
+          console.log(`- Runs recovered: **${s.runs}**`);
+          console.log(`- Attempts recovered: **${s.attempts}**`);
+          console.log(`- Jobs recovered: **${s.jobs}**`);
+          console.log(`- Failed jobs: **${s.failedJobs}**`);
+          console.log(`- Pull requests represented: **${s.pullRequestsRepresented}**`);
+          console.log(`- Oldest recovered run: **${s.oldestRunCreatedAt ?? 'none'}**`);
+          console.log(`- Newest recovered run: **${s.newestRunCreatedAt ?? 'none'}**`);
+          console.log(`- Recorded retrieval gaps: **${s.gaps.length}**`);
+          console.log();
+          console.log('This is availability accounting, not failure adjudication. Missing retained evidence is never interpreted as zero failures.');
+          NODE
+
+      - name: Upload normalized audit corpus
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-historical-audit-corpus
+          path: tmp/ci-audit/
+          if-no-files-found: error
+          retention-days: 30
