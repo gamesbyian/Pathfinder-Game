@@ -31,6 +31,7 @@ import { readFileSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { stableStringify } from '../modules/canonical-json.mjs';
+import { solverRequestIdentityAvailability } from './solver-request-identity-compat.mjs';
 
 function parseArgs(argv) {
     const map = new Map();
@@ -65,7 +66,19 @@ function loadEffectiveConfig(file) {
     if (summary.effectiveConfigDigest !== recomputed) {
         throw new Error(`${file}: summary.effectiveConfigDigest does not match SHA-256 of the canonical summary.effectiveConfig -- report provenance is stale or malformed`);
     }
-    return { file, effectiveConfig: summary.effectiveConfig, effectiveConfigDigest: summary.effectiveConfigDigest };
+    // Canonical solver-request identity (docs/hint-evidence-execution-identity-storage-
+    // consolidation-plan.md section 3.2) is read only as an ADDITIONAL diagnostic dimension here,
+    // never a replacement: legacy effectiveConfig deliberately mixes solver-request semantics with
+    // population/protocol markers this checker's "same-arm shards must match" purpose also needs to
+    // catch, and not every historical/legacy-only producer emits canonical identity at all. See
+    // checkAgreement()/checkCompare()'s own use of `canonical` below.
+    const canonical = solverRequestIdentityAvailability(summary);
+    return {
+        file,
+        effectiveConfig: summary.effectiveConfig,
+        effectiveConfigDigest: summary.effectiveConfigDigest,
+        canonical,
+    };
 }
 
 /** Field-level diff between two effectiveConfig objects (shallow keys, deep stableStringify per
@@ -87,11 +100,29 @@ export function checkAgreement(files) {
     for (const other of rest) {
         const differing = diffFields(reference.effectiveConfig, other.effectiveConfig);
         if (differing.length > 0 || reference.effectiveConfigDigest !== other.effectiveConfigDigest) {
-            mismatches.push({ file: other.file, against: reference.file, differing });
+            // Diagnostic only, not a gate: legacy effectiveConfig deliberately carries population/
+            // protocol dimensions the canonical solver-request identity excludes by design (plan
+            // section 3.2), and legacy compares raw solveOpts syntactically where canonical compares
+            // normalized effective values (e.g. an omitted nodeBudget vs an explicit Infinity). A
+            // legacy mismatch whose canonical identity still agrees is worth flagging as likely
+            // confined to non-solver-request dimensions or benign syntactic drift; this checker still
+            // fails on ANY legacy mismatch, since population/protocol drift between "same-arm" shards
+            // is exactly the kind of wiring bug this tool exists to catch.
+            const canonicalAgrees = reference.canonical.status === 'canonical' && other.canonical.status === 'canonical'
+                ? reference.canonical.solverRequestIdentity === other.canonical.solverRequestIdentity
+                : null;
+            mismatches.push({ file: other.file, against: reference.file, differing, canonicalAgrees });
         }
     }
     if (mismatches.length > 0) {
-        const lines = mismatches.map(m => `  - ${m.file} vs ${m.against}: differs in [${m.differing.join(', ') || '(digest differs but no field diff found -- non-canonical serialization?)'}]`);
+        const lines = mismatches.map(m => {
+            const canonicalNote = m.canonicalAgrees === null
+                ? ''
+                : m.canonicalAgrees
+                    ? ' (canonical solver-request identity still agrees -- likely confined to population/protocol/syntactic dimensions)'
+                    : ' (canonical solver-request identity also disagrees)';
+            return `  - ${m.file} vs ${m.against}: differs in [${m.differing.join(', ') || '(digest differs but no field diff found -- non-canonical serialization?)'}]${canonicalNote}`;
+        });
         throw new Error(`effective-configuration agreement failed across ${loaded.length} report(s):\n${lines.join('\n')}`);
     }
     return { agree: true, count: loaded.length, effectiveConfigDigest: reference.effectiveConfigDigest };
@@ -113,7 +144,17 @@ export function checkCompare(controlFile, treatmentFile, allowedDiff, requireAct
             + `Expected at least one of [${allowedDiff.join(', ')}] to actually differ.\n`
             + `  control:   ${controlFile}\n  treatment: ${treatmentFile}`);
     }
-    return { differing, unexpected: [], control: control.effectiveConfigDigest, treatment: treatment.effectiveConfigDigest };
+    // Diagnostic only (see checkAgreement()'s own comment for why): does the canonical solver-request
+    // identity itself differ, when both sides have one? A field-level canonical diff is not attempted
+    // here -- canonical's nested shape does not map 1:1 onto legacy's flat --allowed-diff field names,
+    // and inventing that mapping is a separate, larger migration than this coarse pass/fail checker.
+    const canonicalDiffers = control.canonical.status === 'canonical' && treatment.canonical.status === 'canonical'
+        ? control.canonical.solverRequestIdentity !== treatment.canonical.solverRequestIdentity
+        : null;
+    return {
+        differing, unexpected: [], control: control.effectiveConfigDigest, treatment: treatment.effectiveConfigDigest,
+        canonicalDiffers,
+    };
 }
 
 function main() {
@@ -132,7 +173,10 @@ function main() {
         const allowedDiff = (map.get('allowed-diff') || '').split(',').map(s => s.trim()).filter(Boolean);
         const requireActualDiff = map.get('require-actual-diff') === 'true';
         const result = checkCompare(control, treatment, allowedDiff, requireActualDiff);
-        console.log(`Effective-configuration compare OK: control=${result.control} treatment=${result.treatment}; prespecified-dimension diff(s): [${result.differing.join(', ') || '(none)'}].`);
+        const canonicalNote = result.canonicalDiffers === null
+            ? ' canonical solver-request identity: (not available on both sides).'
+            : ` canonical solver-request identity: ${result.canonicalDiffers ? 'differs' : 'identical'}.`;
+        console.log(`Effective-configuration compare OK: control=${result.control} treatment=${result.treatment}; prespecified-dimension diff(s): [${result.differing.join(', ') || '(none)'}].${canonicalNote}`);
         return;
     }
     throw new Error('--mode=agree (with repeated --result=<file>) or --mode=compare (with --control/--treatment/--allowed-diff) is required');
