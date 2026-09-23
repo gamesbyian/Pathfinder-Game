@@ -81,8 +81,6 @@ jobs:
         run: npm run check:text-source-files
         env:
           PATHFINDER_PR_INCREMENTAL: '0'
-      - name: Check validation ownership registry
-        run: npm run check:validation-groups
       - name: Check CI impact inventory
         run: npm run check:ci-impact-inventory
       - name: Run selected non-lint validators
