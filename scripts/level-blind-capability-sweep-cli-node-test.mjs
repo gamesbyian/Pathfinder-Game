@@ -23,6 +23,12 @@ import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+// These tests intentionally exercise a local/non-GHA invocation first. GitHub Actions supplies
+// ambient run identity to the test process, so scrub it explicitly rather than letting CI change
+// the semantics of the fixture. Tests that need a real run identity inject one on that child call.
+delete process.env.GITHUB_RUN_ID;
+delete process.env.GITHUB_RUN_ATTEMPT;
+
 const dir = await mkdtemp(path.join(os.tmpdir(), 'level-blind-capability-sweep-cli-'));
 const corpusPath = path.join(dir, 'corpus.json');
 const outFile = path.join(dir, 'report.json');
