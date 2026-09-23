@@ -67,5 +67,38 @@ assert.equal(ambiguousJoin.summary.ambiguousFailureRecords, 2,
 assert.equal(joined.rows[0].comparableFailureRecords.length, 2);
 assert.deepEqual(joined.rows[0].comparableFailureRecords.map(row => row.runId),
     ['failure-run-1', 'failure-run-2']);
+assert.equal(joined.rows[0].discoveryRunId, 'success-run');
+assert.equal(joined.summary.failureRecordsMissingComparabilityIdentity, 0);
+assert.equal(joined.summary.discoveryRecordsMissingComparabilityIdentity, 0);
+
+const sameRunDifferentProtocol = JSON.parse(JSON.stringify(failures[0]));
+sameRunDifferentProtocol.records = [{
+    identity: 'same-run-different-protocol', parentId: 'P1', runId: 'success-run',
+    protocolHash: 'different-protocol', solverRef: 'solver', outcome: 'exhaustedNegative',
+}];
+assert.equal(
+    joinHintDiscoveryAndFailureProcesses(discovery, [sameRunDifferentProtocol]).summary.joinedDiscoveryRecords,
+    0,
+    'a shared acquisition run id must not make different execution protocols comparable',
+);
+
+const historicalMissingIdentity = JSON.parse(JSON.stringify(failures[0]));
+delete historicalMissingIdentity.protocolHash;
+delete historicalMissingIdentity.solverRef;
+historicalMissingIdentity.records = [{
+    identity: 'historical-missing-identity', parentId: 'P1', runId: 'historical-run',
+    outcome: 'exhaustedNegative',
+}];
+const missingIdentityJoin = joinHintDiscoveryAndFailureProcesses(discovery, [historicalMissingIdentity]);
+assert.equal(missingIdentityJoin.summary.joinedDiscoveryRecords, 0);
+assert.equal(missingIdentityJoin.summary.failureRecordsMissingComparabilityIdentity, 1,
+    'historical missing protocol/revision stays unknown and is reported rather than defaulted');
+
+const discoveryMissingProtocol = JSON.parse(JSON.stringify(discovery[0]));
+delete discoveryMissingProtocol.run.protocolHash;
+const missingDiscoveryIdentityJoin = joinHintDiscoveryAndFailureProcesses([discoveryMissingProtocol], failures);
+assert.equal(missingDiscoveryIdentityJoin.summary.joinedDiscoveryRecords, 0);
+assert.equal(missingDiscoveryIdentityJoin.summary.discoveryRecordsMissingComparabilityIdentity, 2,
+    'discovery evidence missing protocol identity must abstain from every semantic join');
 
 console.log('hint-failure-process-join-lib-node-test: ok');
