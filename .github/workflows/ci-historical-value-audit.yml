@@ -35,9 +35,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Reconstruct mechanical check lineage
-        run: node scripts/ci-check-lineage.mjs --out tmp/ci-audit/lineage-mechanical.json
-
       - name: Reuse prior audit corpus
         if: ${{ inputs.source_run_id != '' }}
         env:
@@ -45,11 +42,13 @@ jobs:
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
         shell: bash
         run: |
-          mkdir -p tmp/ci-audit
+          rm -rf tmp/ci-audit-source
+          mkdir -p tmp/ci-audit-source tmp/ci-audit
           gh run download "${SOURCE_RUN_ID}" \
             --repo "${GITHUB_REPOSITORY}" \
             --name ci-historical-audit-corpus \
-            --dir tmp/ci-audit
+            --dir tmp/ci-audit-source
+          cp -a tmp/ci-audit-source/. tmp/ci-audit/
 
       - name: Collect retained CI history
         if: ${{ inputs.source_run_id == '' }}
@@ -63,6 +62,9 @@ jobs:
             args+=(--max-runs "${MAX_RUNS}")
           fi
           node scripts/ci-history-collector.mjs "${args[@]}"
+
+      - name: Reconstruct mechanical check lineage
+        run: node scripts/ci-check-lineage.mjs --out tmp/ci-audit/lineage-mechanical.json
 
       - name: Build mechanical repair episodes
         if: always()
