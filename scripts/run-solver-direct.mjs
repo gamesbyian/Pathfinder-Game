@@ -20,6 +20,7 @@ import { createHintCapture } from './hint-capture-lib.mjs';
 import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.js';
 import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.js';
 
 const args    = process.argv.slice(2);
 const argMap  = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
@@ -124,8 +125,24 @@ for (const levelNumber of levelNumbers) {
     ok ? solvedCount++ : failCount++;
 
     const solvedByScoringProfileId = ok ? (result.attempts?.find(a => a.ok)?.scoringProfileId ?? 'unknown') : null;
+    const discoveryObservedAt = ok ? new Date().toISOString() : null;
+    const levelRevision = ok ? await getLevelFingerprint(raw) : null;
     if (ok) hintCapture.record(raw, result);
-    results.push({ level: levelNumber, status: result.status, ok, elapsedMs: elapsed, solvedByScoringProfileId, attempts: result.attempts });
+    results.push({
+        level: levelNumber,
+        levelId: raw.id ?? null,
+        levelRevision,
+        discoveryObservedAt,
+        status: result.status,
+        ok,
+        solution: ok && Array.isArray(result.solution) ? result.solution : null,
+        elapsedMs: elapsed,
+        nodesExpanded: result.nodesExpanded ?? null,
+        workSpent: result.workSpent ?? null,
+        workBudget: result.workBudget ?? workBudget ?? null,
+        solvedByScoringProfileId,
+        attempts: result.attempts,
+    });
 
     const marker = ok ? '✓' : '✗';
     if (verbose || !ok) console.log(`  L${levelNumber} ${marker} ${elapsed}ms${ok ? ` [score=${solvedByScoringProfileId}]` : ''}`);
@@ -144,6 +161,10 @@ if (saveHints) {
 }
 
 const out = {
+    schemaVersion: 1,
+    kind: 'pathfinder-direct-solver-report',
+    producer: 'run-solver-direct',
+    corpus: 'data/levels.json',
     timestamp: new Date().toISOString(),
     commitSha: getCommitSha(),
     budgetMs,
