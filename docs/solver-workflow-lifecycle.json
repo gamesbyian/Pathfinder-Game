@@ -23,6 +23,13 @@
       "retirementTrigger": "retire when scoped CI is authoritative and equivalent route/lane/final-status coverage is permanently exercised elsewhere"
     },
     {
+      "workflow": "ci-testability-topology-audit.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual CI testability/process/fixture topology audit",
+      "retirementTrigger": "retire when testability topology is fully represented by maintained validation metadata/telemetry and this standalone audit no longer adds information"
+    },
+    {
       "workflow": "ci.yml",
       "role": "operational",
       "status": "maintained",
