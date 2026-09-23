@@ -46,8 +46,7 @@ function flattenFindingFamilies(container, category) {
     return rows;
 }
 
-export function buildResearchSystemFindingIndex(root = process.cwd(), { allowHistoricalWorkstreamTable = false } = {}) {
-    const inventory = buildResearchSystemInventory(root, { allowHistoricalWorkstreamTable });
+export function buildResearchSystemFindingIndexFromInventory(inventory) {
     const findings = [
         ...flattenFindingFamilies(inventory.findings, 'finding'),
         ...flattenFindingFamilies(inventory.architectureFindings, 'architecture'),
@@ -70,6 +69,12 @@ export function buildResearchSystemFindingIndex(root = process.cwd(), { allowHis
         count: findings.length,
         findings,
     };
+}
+
+export function buildResearchSystemFindingIndex(root = process.cwd(), { allowHistoricalWorkstreamTable = false } = {}) {
+    return buildResearchSystemFindingIndexFromInventory(
+        buildResearchSystemInventory(root, { allowHistoricalWorkstreamTable }),
+    );
 }
 
 export function queryResearchSystemFindings(index, { query = '', category = '', family = '', kind = '' } = {}) {
