@@ -505,3 +505,25 @@ Impact scoping is the largest win, but when persistence validation is required, 
 - whether the emulator can stay within one deliberately persistent job phase when multiple persistence assertions are added.
 
 Do not add `firebase-tools` globally as a devDependency merely to save this step without measuring the added `npm ci` cost paid by every fast/deep runner.
+
+
+## Setup-amortization finding
+
+Recent green CI runs reinforce the existing two-lane packing rule.
+
+On run 35914130423:
+
+- fast-gate checkout began at 20:10:14Z;
+- `npm ci` began at 20:10:29.7Z and validation began at 20:10:35.4Z;
+- deep checkout began at 20:10:51Z;
+- deep `npm ci` began at 20:11:15.8Z and coverage began at 20:11:22.8Z.
+
+So cached `npm ci` itself was only about **5.8 s** in fast and **7.0 s** in deep, while checkout/setup/cache preparation before install was roughly **16 s** and **25 s** respectively.
+
+Adjacent runs show even larger setup variance: fast checkout-to-setup-node intervals around **55–58 s** were observed on runs 35911152785 and 35909830438.
+
+This strengthens an important architectural distinction:
+
+> **Make selection fine-grained, but keep execution packing coarse-grained.**
+
+Do not express semantic ownership by creating one hosted runner per validation group. The impact planner should select contracts/capabilities precisely, then pack the selected work into a small number of runners so checkout/setup/install costs are amortized.
