@@ -45,6 +45,7 @@ import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.
 import { readLevelCorpusDocumentWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
+import { stableStringify } from '../modules/canonical-json.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
 import { toRaceLevelOpts } from './solver-parallel/race-opts.mjs';
@@ -368,13 +369,6 @@ const checkpointSignature = JSON.stringify({
     args: args.filter(arg => arg !== '--resume' && arg !== '--').sort(),
 });
 
-function stableStringify(value) {
-    if (value === undefined) return undefined;
-    if (value === null || typeof value !== 'object') return JSON.stringify(value);
-    if (Array.isArray(value)) return `[${value.map(item => stableStringify(item) ?? 'null').join(',')}]`;
-    const keys = Object.keys(value).filter(key => value[key] !== undefined).sort();
-    return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
-}
 const legacyLatencyPortfolioExperiment = experimentFromArgs();
 
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };

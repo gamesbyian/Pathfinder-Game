@@ -1,13 +1,5 @@
 import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
-
-function stableStringify(value) {
-    if (value === undefined) return undefined;
-    if (value === null || typeof value !== 'object') return JSON.stringify(value);
-    if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
-    const obj = value;
-    const keys = Object.keys(obj).filter(k => obj[k] !== undefined).sort();
-    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`;
-}
+import { stableStringify } from '../modules/canonical-json.mjs';
 
 export function hintDiscoveryInputIdentity(entry) {
     const solver = entry?.solver ?? {};

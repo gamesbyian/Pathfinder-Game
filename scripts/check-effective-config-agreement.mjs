@@ -30,6 +30,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { stableStringify } from '../modules/canonical-json.mjs';
 
 function parseArgs(argv) {
     const map = new Map();
@@ -44,14 +45,6 @@ function parseArgs(argv) {
         repeated.get(key).push(value);
     }
     return { map, repeated };
-}
-
-function stableStringify(value) {
-    if (value === undefined) return undefined;
-    if (value === null || typeof value !== 'object') return JSON.stringify(value);
-    if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
-    const keys = Object.keys(value).filter(k => value[k] !== undefined).sort();
-    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
 }
 
 function effectiveConfigDigest(effectiveConfig) {

@@ -4,6 +4,8 @@
 // many maintained tools. modules/domain/hint-types.ts owns the TypeScript interfaces and typed
 // wrappers/re-exports; do not fork normalization behavior between the two files.
 
+import { stableStringify } from '../canonical-json.mjs';
+
 /** @typedef {import('./hint-types.js').MakeProvenanceEntryOptions} MakeProvenanceEntryOptions */
 /** @typedef {import('./hint-types.js').HintProvenanceEntry} HintProvenanceEntry */
 /** @typedef {import('./hint-types.js').Hint} Hint */
@@ -86,20 +88,12 @@ export function makeProvenanceEntry(technique, opts = {}) {
 // record round-tripped through upgradeProvenanceEntry()'s `{ ...raw, solver, search }` spread, or
 // simply re-serialized after a JSON round-trip through a different engine/library) can carry the
 // SAME fields in a DIFFERENT order and hash to two different identity strings here -- silently
-// defeating the duplicate guard both call sites rely on. Sorting every object's own keys
-// (recursively, at every nesting level -- `solver.forcing` is itself a nested object) removes that
-// dependency entirely while keeping array element ORDER significant, which matters because arrays
-// in this shape represent meaningful sequences (`forcingDisabledFeatures`, `forcingFlippedFilters`)
-// where reordering elements changes what actually happened.
-/** @param {unknown} value @returns {string | undefined} */
-function stableStringify(value) {
-    if (value === undefined) return undefined;
-    if (value === null || typeof value !== 'object') return JSON.stringify(value);
-    if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
-    const obj = /** @type {Record<string, unknown>} */ (value);
-    const keys = Object.keys(obj).filter(k => obj[k] !== undefined).sort();
-    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`;
-}
+// defeating the duplicate guard both call sites rely on. stableStringify() (modules/canonical-json.mjs)
+// sorts every object's own keys recursively, at every nesting level -- `solver.forcing` is itself a
+// nested object -- which removes that dependency entirely while keeping array element ORDER
+// significant, which matters because arrays in this shape represent meaningful sequences
+// (`forcingDisabledFeatures`, `forcingFlippedFilters`) where reordering elements changes what
+// actually happened.
 
 /**
  * Canonical identity of one persisted discovery event.

@@ -34,6 +34,7 @@ import process from 'node:process';
 import { buildPopulationIntegrity, hashConfiguration, hashPopulation, isImmutableCommitSha, parseIdentityLines } from './solver-experiment-contract.mjs';
 import { encodeResearchScopedIdentity } from './research-population-identity-lib.mjs';
 import { normalizeSolverSweepReportInput } from './solver-sweep-report-input.mjs';
+import { stableStringify } from '../modules/canonical-json.mjs';
 
 const EXECUTION_CONFIG_FIELDS = [
     'levelBlind',
@@ -58,14 +59,6 @@ const EXECUTION_CONFIG_FIELDS = [
 function canonicalConfigValue(field, value) {
     if ((field === 'enableFlags' || field === 'disableFlags') && Array.isArray(value)) return [...value].sort();
     return value;
-}
-
-function stableStringify(value) {
-    if (value === undefined) return undefined;
-    if (value === null || typeof value !== 'object') return JSON.stringify(value);
-    if (Array.isArray(value)) return `[${value.map(item => stableStringify(item) ?? 'null').join(',')}]`;
-    const keys = Object.keys(value).filter(key => value[key] !== undefined).sort();
-    return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
 }
 
 function rawEffectiveConfigDigest(value) {

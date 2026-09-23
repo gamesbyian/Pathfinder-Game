@@ -23,6 +23,7 @@ import { buildRow } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool } from './solver-worker-pool.mjs';
 import { canonicalAblationFeatureName, FEATURES } from '../modules/solver/ablation-config.js';
 import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from '../modules/solver/stage-budget.js';
+import { stableStringify } from '../modules/canonical-json.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -205,13 +206,6 @@ if (saveHints) await hintCapture.prepare(targets.map(n => hintLevels[n - 1]));
 // (diagnostic-only, add fields to results without changing the solve). scripts/check-effective-
 // config-agreement.mjs consumes this to verify shard agreement within one arm and prespecified-
 // dimension-only differences between a control/treatment pair.
-function stableStringify(value) {
-    if (value === undefined) return undefined;
-    if (value === null || typeof value !== 'object') return JSON.stringify(value);
-    if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
-    const keys = Object.keys(value).filter(k => value[k] !== undefined).sort();
-    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
-}
 const {
     attemptBudgetTelemetry: _attemptBudgetTelemetry,
     lifecycleTelemetry: _lifecycleTelemetry,
