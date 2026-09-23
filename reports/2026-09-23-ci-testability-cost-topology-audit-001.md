@@ -1076,3 +1076,24 @@ First extract/measure a generic repository import graph that:
 - treats filesystem/data/subprocess/generated/env dependencies as explicit metadata outside the static import graph.
 
 Use this only in shadow mode until replay against historical/real failures demonstrates that it does not miss consumers.
+
+
+## Hidden validation ownership cleanup
+
+The audit found one confirmed duplicate detector execution in the ordinary fast gate:
+
+- `check:dead-scripts` internally invoked the agent-context budget check;
+- `check:validators` separately owns `check:agent-context-budget` in the repo validator group.
+
+A recent green fast-gate log reported the explicit `check:agent-context-budget` execution at about **1.3 s**, after `check:dead-scripts` had already run the same detector.
+
+`check:dead-scripts` no longer invokes agent-context validation internally. The explicit repo validator remains authoritative, so current universal PR CI and the normal local `check` finish line retain the invariant once rather than twice.
+
+Two nested authority checks remain intentionally inside `check:dead-scripts` for now:
+
+- local/GitHub Actions gate parity;
+- validation-group parity.
+
+They protect orchestration authority itself and are currently part of the always-on scoped-CI package-script path. Moving them to repo-only ownership prematurely could create a gap for narrow semantic `package.json` aggregate edits that alter validation composition without otherwise selecting the repo surface.
+
+Follow-up before further separation: harden package-aggregate classification so edits to `check:validators` / `test:node` / CI composition authority force the repo/orchestration surface. Then give each parity detector one explicit execution owner.
