@@ -18,7 +18,7 @@
 
 The program is now materially beyond the architectural-foundation stage.
 
-A reasonable implementation-progress estimate is now **roughly 70–75% of the entire
+A reasonable implementation-progress estimate is now **roughly 73–76% of the entire
 dependency-ordered plan**, with the important asymmetry that the semantic foundation and Phase-5
 ingestion contract are much further along than the remaining physical/workflow migration volume.
 
@@ -274,3 +274,29 @@ stores read-only. For each rescued source observation it:
 A synthetic guard is wired into `test:node`. This removes most of the Phase-7 matching archaeology
 from Claude's future session while preserving the rule that enrichment itself waits on Phase-3
 storage semantics.
+
+
+## Final CI/Phase-8 reduction pass
+
+A real PR-CI run exposed integration drift rather than architectural failure. The branch was brought
+forward to the current validation contracts by:
+
+- correcting the CP-SAT adapter's remaining local-script imports;
+- correcting the reconstructability test so embedded solver-request identity is no longer expected to
+  remain missing;
+- updating the Firestore emulator boundary proof for the deliberate discriminated save outcome;
+- registering all new Node/CLI guards in validation ownership;
+- classifying the inherited portfolio-sweep CLI metric access;
+- normalizing all hint-consolidation investigation reports to the repository's current metadata
+  convention.
+
+The same run proved the production runtime projection against the real corpus: 769,032,924 canonical
+source bytes became 150,198,857 path-only runtime bytes, an 80.5% reduction.
+
+Phase 8 also now has a neutral pre-v4 benchmark harness:
+`scripts/hint-codec-baseline-benchmark.mjs`. It measures raw/gzip/decoded/path-only bytes,
+provenance density, file-size distribution and observed decode cost without choosing a v4 encoding or
+rewriting evidence.
+
+This moves another slice of future Claude work out of setup/measurement and into the genuinely
+semantic remaining questions.
