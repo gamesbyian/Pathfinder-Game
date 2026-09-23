@@ -4,6 +4,7 @@ import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { compareExperimentArms, levelSelectionHash, validateExperimentManifest, validateFamilyEvaluationRunManifest } from './experiment-manifest-lib.mjs';
+import { prepareSolverExperimentPreflight } from './solver-experiment-preflight-lib.mjs';
 
 const workflowInputs = {
     corpus2_budget_ms: '86400000', corpus2_node_budget: '36000000', corpus2_workers: '2',
@@ -110,60 +111,96 @@ const workflowInputString = inputs => Object.entries(inputs).map(([key, value]) 
 // "off" and an explicit enable_flags means "on" -- exactly what PRUNE_MC_NEIGHBOR_BUDGET stopped
 // being once it was promoted to default-on (2026-08-12). This test validates the preflight tool's
 // consistency-checking mechanism in general, not that specific flag's disposition.
-const runPreflight = ({ runId, flagValue, inputs }) => spawnSync(process.execPath, ['--import', 'tsx',
-    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-test', `--run-id=${runId}`, `--corpus=${corpus}`,
+const testGit = (...args) => {
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse') return 'a'.repeat(40);
+    throw new Error(`unexpected Git probe: ${args.join(' ')}`);
+};
+const preparePreflight = args => prepareSolverExperimentPreflight(args, {
+    root: process.cwd(),
+    git: testGit,
+    now: () => '2026-09-23T00:00:00.000Z',
+});
+const preflightArgs = ({ runId, flagValue, inputs }) => [
+    '--experiment-id=cli-test', `--run-id=${runId}`, `--corpus=${corpus}`,
     '--arm=control', `--flags=PRUNE_PORTAL_PARITY_ENVELOPE=${flagValue}`, '--workflow=solver-stress-refresh',
     `--workflow-inputs=${workflowInputString(inputs)}`, '--seeds=', '--work-budget=10', '--wall-deadline-ms=100',
     '--profile=default', '--instrumentation=off', `--output=${path.join(temp, `${runId}.json`)}`, '--allow-dirty',
-], { encoding: 'utf8' });
-assert.equal(runPreflight({ runId: 'off', flagValue: 'false', inputs: workflowInputs }).status, 0);
-const preflightManifest = JSON.parse(readFileSync(path.join(temp, 'off.json'), 'utf8'));
-assert.equal(preflightManifest.budgetProtocol, 'production-additive');
-const questionOut = path.join(temp, 'question.json');
-const questionRun = spawnSync(process.execPath, ['--import', 'tsx',
-    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=question',
-    `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
-    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${questionOut}`,
+];
+
+const offPreflight = preparePreflight(preflightArgs({
+    runId: 'off',
+    flagValue: 'false',
+    inputs: workflowInputs,
+}));
+assert.equal(offPreflight.manifest.budgetProtocol, 'production-additive');
+
+const questionArgs = [
+    '--experiment-id=cli-question', '--run-id=question', `--corpus=${corpus}`,
+    '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
+    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off',
+    `--output=${path.join(temp, 'question.json')}`,
     '--question-id=WS2-CLASS3-DOSE-EXPOSURE',
-    '--live-ambiguity=capability absent vs underdosed', '--discriminating-observable=bounded work response',
-    '--outcome-interpretation-json={"flat":"stop","threshold":"allocation"}', '--measurement-opportunity=MO-004',
+    '--live-ambiguity=capability absent vs underdosed',
+    '--discriminating-observable=bounded work response',
+    '--outcome-interpretation-json={"flat":"stop","threshold":"allocation"}',
+    '--measurement-opportunity=MO-004',
     '--allow-dirty',
-], { encoding: 'utf8' });
-assert.equal(questionRun.status, 0, `${questionRun.stdout}${questionRun.stderr}`);
-const questionManifest = JSON.parse(readFileSync(questionOut, 'utf8'));
+];
+const questionManifest = preparePreflight(questionArgs).manifest;
 assert.equal(questionManifest.researchQuestion.questionId, 'WS2-CLASS3-DOSE-EXPOSURE');
 assert.equal(questionManifest.researchQuestion.measurementOpportunity, 'MO-004');
-const unknownQuestionRun = spawnSync(process.execPath, ['--import', 'tsx',
-    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=unknown-question',
-    `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
-    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${path.join(temp, 'unknown-question.json')}`,
-    '--question-id=WS2-NOT-A-REAL-QUESTION', '--live-ambiguity=x', '--discriminating-observable=y',
-    '--outcome-interpretation-json={"yes":"z"}', '--allow-dirty',
+
+assert.throws(
+    () => preparePreflight([
+        ...questionArgs.filter(arg => !arg.startsWith('--run-id=') && !arg.startsWith('--question-id=')
+            && !arg.startsWith('--measurement-opportunity=')),
+        '--run-id=unknown-question',
+        '--question-id=WS2-NOT-A-REAL-QUESTION',
+    ]),
+    /unknown research question id/,
+);
+assert.throws(
+    () => preparePreflight([
+        ...questionArgs.filter(arg => !arg.startsWith('--run-id=') && !arg.startsWith('--measurement-opportunity=')),
+        '--run-id=unknown-mo',
+        '--measurement-opportunity=MO-999',
+    ]),
+    /unknown measurement opportunity/,
+);
+assert.throws(
+    () => preparePreflight([
+        ...questionArgs.filter(arg => !arg.startsWith('--run-id=') && !arg.startsWith('--measurement-opportunity=')),
+        '--run-id=mismatched-mo',
+        '--measurement-opportunity=MO-002',
+    ]),
+    /not mapped to research question/,
+);
+assert.throws(
+    () => preparePreflight(preflightArgs({
+        runId: 'bad-on',
+        flagValue: 'true',
+        inputs: workflowInputs,
+    })),
+    /solverFlags disagree/,
+);
+assert.equal(preparePreflight(preflightArgs({
+    runId: 'on',
+    flagValue: 'true',
+    inputs: { ...workflowInputs, enable_flags: 'PRUNE_PORTAL_PARITY_ENVELOPE' },
+})).kind, 'manifest');
+
+// One subprocess remains as the executable-boundary proof: actual tsx loading, Git identity,
+// filesystem output, stdout, and exit status.
+const cliSmokeOutput = path.join(temp, 'cli-smoke.json');
+const cliSmoke = spawnSync(process.execPath, ['--import', 'tsx',
+    'scripts/solver-experiment-preflight.mjs',
+    ...preflightArgs({ runId: 'cli-smoke', flagValue: 'false', inputs: workflowInputs })
+        .filter(arg => !arg.startsWith('--output=')),
+    `--output=${cliSmokeOutput}`,
 ], { encoding: 'utf8' });
-assert.notEqual(unknownQuestionRun.status, 0);
-assert.match(`${unknownQuestionRun.stdout}${unknownQuestionRun.stderr}`, /unknown research question id/);
-const unknownMoRun = spawnSync(process.execPath, ['--import', 'tsx',
-    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=unknown-mo',
-    `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
-    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${path.join(temp, 'unknown-mo.json')}`,
-    '--question-id=WS2-CLASS3-DOSE-EXPOSURE', '--live-ambiguity=x', '--discriminating-observable=y',
-    '--outcome-interpretation-json={"yes":"z"}', '--measurement-opportunity=MO-999', '--allow-dirty',
-], { encoding: 'utf8' });
-assert.notEqual(unknownMoRun.status, 0);
-assert.match(`${unknownMoRun.stdout}${unknownMoRun.stderr}`, /unknown measurement opportunity/);
-const mismatchedMoRun = spawnSync(process.execPath, ['--import', 'tsx',
-    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=mismatched-mo',
-    `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
-    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${path.join(temp, 'mismatched-mo.json')}`,
-    '--question-id=WS2-CLASS3-DOSE-EXPOSURE', '--live-ambiguity=x', '--discriminating-observable=y',
-    '--outcome-interpretation-json={"yes":"z"}', '--measurement-opportunity=MO-002', '--allow-dirty',
-], { encoding: 'utf8' });
-assert.notEqual(mismatchedMoRun.status, 0);
-assert.match(`${mismatchedMoRun.stdout}${mismatchedMoRun.stderr}`, /not mapped to research question/);
-const inconsistent = runPreflight({ runId: 'bad-on', flagValue: 'true', inputs: workflowInputs });
-assert.notEqual(inconsistent.status, 0);
-assert.match(`${inconsistent.stdout}${inconsistent.stderr}`, /solverFlags disagree/);
-assert.equal(runPreflight({ runId: 'on', flagValue: 'true', inputs: { ...workflowInputs, enable_flags: 'PRUNE_PORTAL_PARITY_ENVELOPE' } }).status, 0);
+assert.equal(cliSmoke.status, 0, `${cliSmoke.stdout}${cliSmoke.stderr}`);
+assert.equal(JSON.parse(readFileSync(cliSmokeOutput, 'utf8')).budgetProtocol, 'production-additive');
 
 // Capability boundary guard. This is intentionally static as well as runtime-enforced: a future
 // innocent-looking workflow optimization must fail CI if it reintroduces exact-level history.

@@ -1163,3 +1163,98 @@ The parallel runner now supports `PATHFINDER_PARALLEL_SUCCESS_OUTPUT=summary`:
 CI enables summary mode for validator and Node/CLI parallel populations in PR CI, main-push validation, and scoped dry-run execution.
 
 This is primarily a diagnostic/readability and log-storage improvement. Do not claim a meaningful wall-time speedup without measurement.
+
+
+## Thin-CLI pilot: research queryability audit
+
+The 4-way Node-contract timing exposed `test:research-queryability-audit` at roughly **13 s** on a recent green run.
+
+Source inspection found two independent forms of duplicate work:
+
+1. the test runs all 13 production queryability benchmarks in-process, then spawns the CLI, which reruns the same full repository audit merely to prove wrapper behavior;
+2. within one production audit, `system-findings` and `system-lineage` each independently build the same research-system finding index.
+
+The pilot preserves the full integration contract once and narrows only duplicate wrapper/model work:
+
+- `runResearchQueryabilityAudit()` now lazily builds the query graph only when an executable benchmark needs it;
+- the research-system finding index is memoized once per audit invocation;
+- callers may supply an explicit validated benchmark registry;
+- the CLI accepts `--benchmarks=FILE`;
+- the subprocess smoke uses a one-record known-gap registry, proving CLI argument loading, JSON output, exit status, and result shape without rebuilding the full repository model;
+- the in-process test still executes all 13 canonical production benchmarks and keeps all current result assertions.
+
+This is the intended testability pattern: **one strong integration proof plus a tiny executable-boundary smoke**, rather than two copies of the same expensive integration proof.
+
+The PR's own CI timing should be compared against the recent ~13 s command time before generalizing the pattern to other CLI tests.
+
+
+## Thin-CLI/model-reuse continuation on PR #2025
+
+The first queryability pilot produced a real hosted-runner improvement:
+
+- previous `test:research-queryability-audit`: approximately **13 s** under the 4-way Node runner;
+- PR #2025 green run 35928172418: **7.0 s**;
+- observed reduction: roughly **46%**.
+
+The same run exposed three adjacent repository-model hotspots:
+
+| contract | PR #2025 baseline |
+| --- | ---: |
+| `test:research-query` | **18.2 s** |
+| `test:research-integration-audit` | **10.9 s** |
+| `test:research-system-query` | **6.5 s** |
+
+### Research query CLI seam
+
+`research-query-node-test.mjs` previously built one full query graph in-process and then spawned the CLI six times. Each subprocess rebuilt repository state for traversal/view/snapshot/compare modes.
+
+The CLI is now a thin wrapper over `runResearchQueryCommand()`:
+
+- graph and research-system finding index construction are lazy;
+- system-only finding queries do not build the query graph;
+- callers/tests can supply an already-built graph/index;
+- compare-mode snapshot builders are injectable;
+- the Node test exercises every dispatcher mode against the already-built current graph/index;
+- one real subprocess query remains to prove executable wiring, argv parsing, JSON stdout, and exit status.
+
+This preserves semantic coverage while reducing full repository reconstruction from many copies to the one integration graph plus one executable-boundary smoke.
+
+### Research integration audit ownership
+
+The permanent `check:research-integration` validator already owns the full executable/autonomous-build proof and took about **5.1 s** in run 35928172418.
+
+The separate `test:research-integration-audit` was rebuilding the same relation model, rebuilding it again for supplied-model parity, and spawning the full CLI once more.
+
+The Node test now:
+
+1. builds one relation model;
+2. audits that model;
+3. exercises all mutation/error cases against derived immutable variants.
+
+The full CLI/autonomous model construction remains covered by the explicit validator. This is a responsibility split, not a removed invariant.
+
+### Research-system finding derivation
+
+`test:research-system-query` intentionally checks stable finding identity, but previously proved determinism by rebuilding the entire research-system inventory twice.
+
+Finding derivation is now separated as `buildResearchSystemFindingIndexFromInventory()`.
+
+The test:
+
+- builds one current inventory;
+- derives the index twice from that same immutable input to prove stable identity/fingerprints;
+- still reconstructs the `HEAD` finding snapshot through a detached Git worktree as the independent repository integration proof.
+
+This preserves the determinism property while removing one redundant whole-repository inventory build.
+
+### Generalized testability rule
+
+The successful pattern is now clearer:
+
+1. **repository discovery/model construction** gets one explicit integration owner;
+2. **pure derivation/query logic** accepts the built model as input;
+3. **CLI dispatch/parsing** is callable independently from model construction;
+4. **one executable smoke** proves the process boundary where another permanent validator does not already own it;
+5. tests that specifically claim rebuild determinism retain a real independent rebuild, but do not rebuild merely to exercise pure derivation twice.
+
+Continue looking for this shape before introducing broader in-process test batching.
