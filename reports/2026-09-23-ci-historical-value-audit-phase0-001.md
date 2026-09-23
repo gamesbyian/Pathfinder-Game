@@ -378,3 +378,40 @@ The branch now includes `scripts/ci-history-repair-episodes.mjs`. It consumes th
 - per-episode failing job/step identities.
 
 The existing manual `ci-historical-value-audit.yml` workflow invokes this analyzer after history collection, so future audit runs produce `repair-episodes.json` in the same artifact without adding any new ordinary PR-CI obligation.
+
+
+## Current fast-gate validation population
+
+The current machine-readable validation registry contains:
+
+| semantic group | validators | Node/CLI harnesses |
+|---|---:|---:|
+| repo | 10 | 9 |
+| research | 3 | **87** |
+| solver | 2 | 16 |
+| game | 6 | 2 |
+| data | 5 | 33 |
+| shared | 2 | 25 |
+| persistence | 0 | 1 |
+| **total** | **28** | **173** |
+
+Research-only harnesses therefore account for **87 / 173 (50.3%)** of the current permanent Node/CLI population. The current universal gate executes these alongside every other semantic group even when a change is unrelated to research-system contracts.
+
+This does not imply that research checks are low value. On the contrary, sampled repair episodes show research contracts catching real research-system inconsistencies. It means their **universal cadence** deserves evidence rather than inheritance.
+
+## Representative failure-signature stage
+
+The audit branch now includes two second-stage analyzers:
+
+- `scripts/ci-history-failure-signatures.mjs` fetches only the first failing run from each mechanical repair episode and extracts concrete `check:*` / `test:*` detector identities from retained job logs;
+- `scripts/ci-history-failure-groups.mjs` maps those detectors back to the current semantic validation registry.
+
+The manual historical-audit workflow can reuse a prior audit artifact through `source_run_id`, avoiding another 7,905-run crawl. An optional `max_episodes` input supports a bounded rehearsal before all 865 candidate episodes are expanded.
+
+This stage is intended to answer:
+
+1. which detector identities recur across candidate repair families;
+2. which semantic validation groups account for first-failure evidence;
+3. which failures are repeatedly co-detected by multiple contracts in the same representative run;
+4. which current permanent groups have little or no observed representative catch evidence;
+5. where cadence/scoping can reduce execution without deleting the underlying contract.
