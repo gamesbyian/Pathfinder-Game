@@ -151,11 +151,18 @@ Do not count a direct-route deletion as progress unless the real parity evidence
 
 ### Phase 7 — authoritative historical enrichment
 
-**Authority is prepared; corpus mutation has not begun.**
+**Exact-link planning is implemented; corpus mutation has not begun.**
 
-The key #1996 collision source authority is now durable. The semantic model it would enrich is largely
-ready. Actual exact historical backfill should wait until Phase-3 persistence semantics are final and
-Phase-4 queries can judge the result.
+The key #1996 collision source authority is durable, and this descendant now includes a read-only
+historical enrichment planner over that rescued authority. It classifies every rescued observation
+against the current Hint store as already enriched, exact occurrence-enrichment candidate, missing
+path, no matching event, or ambiguous. Exact joins use canonical path hash + immutable solver ref +
+winning attempt/config/gate/seed/nodes/work facts.
+
+The planner deliberately does not reconstruct solver-request/protocol identity or persist solver
+stage. Those remain unresolved unless another exact authority proves them. Actual corpus mutation
+should still wait until Phase-3 persistence semantics are final and Phase-4 queries can judge the
+result.
 
 ### Phase 8 — physical Hint schema v4
 
@@ -241,3 +248,23 @@ The remaining route to a defensible full-plan 75%+ is now mostly **real evidence
 design: run the new validation floor, run bounded specialist dual-path canaries/reharvests, settle the
 Phase-3 bounded Firestore/occurrence representation, and retire the first direct workflow routes only
 after those gates pass.
+
+
+## Phase-7 dry-run enrichment table-setting
+
+Added `scripts/stress/hint-historical-enrichment-plan.mjs`.
+
+It consumes the durable September-9 determinism-collision rescue bundle and current canonical Hint
+stores read-only. For each rescued source observation it:
+
+- exact-matches the accepted path by SHA-256 of canonical JSON path;
+- matches candidate historical provenance through immutable solver ref plus winning technique,
+  profile/bias/beam/retention, gate, seed, winning-attempt nodes and cumulative work when recorded;
+- identifies whether the exact source run/attempt occurrence is already present;
+- classifies zero/multiple path or event matches explicitly rather than guessing;
+- surfaces only the physical occurrence run/attempt as a proved safe candidate addition;
+- leaves solver-request/protocol/stage identity explicitly unresolved.
+
+A synthetic guard is wired into `test:node`. This removes most of the Phase-7 matching archaeology
+from Claude's future session while preserving the rule that enrichment itself waits on Phase-3
+storage semantics.
