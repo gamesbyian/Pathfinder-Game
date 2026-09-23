@@ -430,3 +430,16 @@ The semantic grouper therefore reports, for each detector/group represented in t
 - observed execution seconds per representative detector hit.
 
 These are **not** causal “cost per bug” scores. A representative log contains many unrelated green commands, correlated detectors can share a root cause, and the sample deliberately selects first failures rather than every execution. The purpose is to expose obvious cadence mismatches such as expensive groups with little representative catch evidence, then validate any proposed demotion with router counterfactuals and fault injection.
+
+
+## Signature-rehearsal correction
+
+The first 50-episode signature rehearsal (run 35908941294) completed green but was analytically empty:
+
+- 50 episodes requested;
+- 47 representative job logs unavailable;
+- 0 episodes with extracted detector signatures.
+
+The cause was selection order, not extractor failure. Mechanical repair episodes are emitted oldest-first, so the rehearsal sampled March 2026, where GitHub job-log retention is largely exhausted. Direct checks against recent September episodes recovered detailed detector signatures immediately.
+
+The signature analyzer now sorts episodes **newest-first by default** before applying `max_episodes`. It also records the selected order and refuses a bounded rehearsal that recovers zero detector signatures, preventing an availability-empty run from appearing successful.
