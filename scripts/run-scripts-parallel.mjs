@@ -5,6 +5,10 @@
  * with its own elapsed time — a per-command timing report as a side effect of
  * running things in parallel, not an extra step.
  *
+ * PATHFINDER_PARALLEL_SUCCESS_OUTPUT=summary suppresses successful child output
+ * while preserving full output for failures plus the final timing/status summary.
+ * The default remains verbose for local use.
+ *
  * Used by `check` and `test:node` to fan out their own independent
  * sub-checks/sub-validators (replacing `run-p`, which gives none of that
  * timing/output attribution — see the "parallel run summary" each produces).
@@ -39,6 +43,11 @@ const directPackageScripts = process.env.PATHFINDER_DIRECT_PACKAGE_SCRIPTS === '
 const packageScripts = directPackageScripts
   ? JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')).scripts ?? {}
   : null;
+const successOutputMode = process.env.PATHFINDER_PARALLEL_SUCCESS_OUTPUT?.trim() || 'all';
+if (!['all', 'summary'].includes(successOutputMode)) {
+  console.error('PATHFINDER_PARALLEL_SUCCESS_OUTPUT must be "all" or "summary"');
+  process.exit(2);
+}
 
 function concurrencyLimit() {
   const raw = process.env.PATHFINDER_PARALLEL_JOBS?.trim();
@@ -84,10 +93,15 @@ function runScript(name) {
   return new Promise((resolve) => {
     const started = Date.now();
     const chunks = [];
+    let finished = false;
     const finish = (code) => {
+      if (finished) return;
+      finished = true;
       const seconds = ((Date.now() - started) / 1000).toFixed(1);
-      process.stdout.write(`\n=== ${name} (exit ${code}, ${seconds}s) ===\n`);
-      process.stdout.write(Buffer.concat(chunks));
+      if (code !== 0 || successOutputMode === 'all') {
+        process.stdout.write(`\n=== ${name} (exit ${code}, ${seconds}s) ===\n`);
+        process.stdout.write(Buffer.concat(chunks));
+      }
       resolve({ name, code, seconds });
     };
     let child;
@@ -122,7 +136,10 @@ async function worker() {
 
 await Promise.all(Array.from({ length: jobs }, () => worker()));
 
-console.log(`\n--- parallel run summary (mode=${directPackageScripts ? 'direct' : 'npm'}, jobs=${jobs}/${names.length}) ---`);
+console.log(
+  `\n--- parallel run summary (mode=${directPackageScripts ? 'direct' : 'npm'}, `
+  + `success-output=${successOutputMode}, jobs=${jobs}/${names.length}) ---`,
+);
 for (const { name, code, seconds } of results) {
   console.log(`${code === 0 ? 'PASS' : 'FAIL'}  ${name} (${seconds}s)`);
 }
