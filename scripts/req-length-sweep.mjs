@@ -11,7 +11,7 @@ import { performance } from 'node:perf_hooks';
 import process from 'node:process';
 
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { parseLevelPositions, readLevelsWithHints } from './level-data-io.mjs';
+import { parseLevelPositions, readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { validateRawLevel } from '../modules/domain/level-schema.js';
 import { buildReqLengths, classifyFeasibility, classifyRuns, parseInteger, portalFreeParityReason, summarizePoints, summarizeRuns } from './req-length-sweep-lib.mjs';
 import { normalizeSchedulerMode } from '../modules/solver/scheduler-mode-normalization.mjs';
@@ -45,7 +45,7 @@ const levelFilter = parseLevelPositions(args.get('--levels') || 'pos:1');
 installBrowserStubs();
 const { createSolver } = await import('../modules/solver.js');
 const Solver = createSolver();
-const rawLevels = readLevelsWithHints(levelsPath);
+const { levels: rawLevels } = readLevelCorpusDocumentWithHints(levelsPath);
 const positions = [...levelFilter].filter(position => position >= 1 && position <= rawLevels.length).sort((a, b) => a - b);
 if (positions.length === 0) throw new Error('No selected level positions exist in the input corpus');
 

@@ -16,13 +16,22 @@ import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../modules/domain/hint-novelty.ts';
+import { makeProvenanceEntry, mergeHints, setLevelHintRecords, toHint, SOLVER_ID } from '../modules/domain/hint-types.ts';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 
 installBrowserStubs();
 
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
 const { FEATURE_GROUPS, withFeatureDisabled } = await import('../modules/solver/ablation-config.js');
-const { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelPositions } = await import('./level-data-io.mjs');
+
+// Corner-flip candidates are a deterministic geometric mutation of an already-accepted hint,
+// referee-validated but never run through the solver -- tagging them with SOLVER_ID would
+// misrepresent them as production-solver capability evidence (see provenance-source-taxonomy.mjs's
+// classifyProvenanceOrigin, which falls back to the honest 'other' bucket for any solver.id it does
+// not recognize, exactly what an unclassified id like this one should get).
+const CANDIDATE_SEARCH_MUTATION_ID = 'candidate-search-geometry-mutation';
 
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -49,9 +58,34 @@ async function atomicWriteJson(filePath, data) {
     await atomicWriteFile(filePath, `${JSON.stringify(data, null, 2)}\n`);
 }
 
-function loadRawLevels(levelsJsonPath) {
+function loadCorpusDocument(levelsJsonPath) {
     const resolved = path.isAbsolute(levelsJsonPath) ? levelsJsonPath : path.join(ROOT, levelsJsonPath);
-    return readLevelsWithHints(resolved);
+    return { resolved, document: readLevelCorpusDocumentWithHints(resolved) };
+}
+
+/** Build a canonical provenance entry for one accepted candidate, honest about which phases are
+ *  genuine solver runs (SOLVER_ID) versus the corner-flip mutation phase, which never invokes the
+ *  solver at all. */
+function candidateProvenance(accepted, opts, levelRevision) {
+    const { phase } = accepted.provenance;
+    if (phase === 'corner-flip') {
+        return makeProvenanceEntry('candidate-search-corner-flip', {
+            solverId: CANDIDATE_SEARCH_MUTATION_ID,
+            levelRevision,
+        });
+    }
+    const flagSuffix = accepted.provenance.flag ? `:${accepted.provenance.flag}` : '';
+    const technique = `candidate-search-${phase}${flagSuffix}`;
+    const forcing = {};
+    if (accepted.provenance.gateKey !== undefined) forcing.forcingGateKey = accepted.provenance.gateKey;
+    if (accepted.provenance.stepKey !== undefined) forcing.forcingDirection = accepted.provenance.stepKey;
+    return makeProvenanceEntry(technique, {
+        solverId: SOLVER_ID,
+        budgetMs: opts.timeBudgetMs,
+        termination: 'solved',
+        levelRevision,
+        ...forcing,
+    });
 }
 
 function enumerateFirstSteps(level, gateKey) {
@@ -203,7 +237,8 @@ async function processLevel(levelNumber, raw, opts) {
 async function main() {
     const args = parseArgs(process.argv.slice(2));
     const levelsJsonPath = args.get('--levels-json') || 'data/levels.json';
-    const rawLevels = loadRawLevels(levelsJsonPath);
+    const { resolved: resolvedLevelsJsonPath, document } = loadCorpusDocument(levelsJsonPath);
+    const rawLevels = document.levels;
     const levelNumbers = parseLevelPositions(args.get('--levels') || 'pos:145', { maxLevel: rawLevels.length });
     const opts = {
         timeBudgetMs: Number(args.get('--time-budget-ms') || 1000),
@@ -215,12 +250,17 @@ async function main() {
         writeLevels: args.has('--write-levels'),
     };
 
+    const changedHintLevels = new Set();
     const results = [];
     for (const levelNumber of levelNumbers) {
         const result = await processLevel(levelNumber, rawLevels[levelNumber - 1], opts);
         if (opts.writeLevels && result.accepted.length) {
             const raw = rawLevels[levelNumber - 1];
-            raw.hints = [...(raw.hints || []), ...result.accepted.map(accepted => accepted.path)];
+            const levelRevision = await getLevelFingerprint(raw);
+            const before = Array.isArray(raw.hintRecords) ? raw.hintRecords : [];
+            const incoming = result.accepted.map(accepted => toHint(accepted.path, [candidateProvenance(accepted, opts, levelRevision)]));
+            setLevelHintRecords(raw, mergeHints(before, incoming));
+            changedHintLevels.add(raw);
         }
         results.push(result);
         console.log(`L${levelNumber}: accepted ${result.acceptedCount} / ${result.validCandidates} valid candidate(s)`);
@@ -242,8 +282,8 @@ async function main() {
     await atomicWriteJson(opts.output, report);
     console.log(`Wrote candidate report to ${opts.output}`);
     if (opts.writeLevels && report.totalAccepted > 0) {
-        writeLevelsWithHints(path.isAbsolute(levelsJsonPath) ? levelsJsonPath : path.join(ROOT, levelsJsonPath), rawLevels);
-        console.log(`Updated ${levelsJsonPath} with ${report.totalAccepted} accepted hint(s)`);
+        const { hintFilesChanged } = writeLevelCorpusDocumentWithHints(resolvedLevelsJsonPath, document, { changedHintLevels });
+        console.log(`Updated ${levelsJsonPath} with ${report.totalAccepted} accepted hint(s) (${hintFilesChanged} hint file(s) changed)`);
     }
 }
 

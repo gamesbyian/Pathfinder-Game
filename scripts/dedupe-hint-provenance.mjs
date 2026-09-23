@@ -4,7 +4,7 @@
 // Dry-run by default. `provenanceEventIdentity` is the same write-time identity guard used elsewhere.
 import path from 'node:path';
 import process from 'node:process';
-import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, setLevelHintRecords } from './level-data-io.mjs';
 import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
 
 const ROOT = process.cwd();
@@ -23,9 +23,11 @@ const perCorpus = [];
 
 for (const [name, levelsPath] of CORPORA) {
     const abs = path.resolve(ROOT, levelsPath);
-    const levels = readLevelsWithHints(abs);
+    const document = readLevelCorpusDocumentWithHints(abs);
+    const { levels } = document;
     let removed = 0;
     const touchedLevels = new Set();
+    const changedHintLevels = new Set();
     const samples = [];
 
     for (const level of levels) {
@@ -48,12 +50,13 @@ for (const [name, levelsPath] of CORPORA) {
                 seen.add(id);
                 kept.push(entry);
             }
-            // Preserve reference identity when unchanged so writeLevelsWithHints skips that artifact.
+            // Preserve reference identity when unchanged so writeLevelCorpusDocumentWithHints skips that artifact.
             return kept.length === prov.length ? hint : { ...hint, provenance: kept };
         });
         if (levelChanged) {
-            level.hintRecords = nextRecords;
+            setLevelHintRecords(level, nextRecords);
             touchedLevels.add(level.id ?? levels.indexOf(level) + 1);
+            changedHintLevels.add(level);
         }
     }
 
@@ -61,7 +64,7 @@ for (const [name, levelsPath] of CORPORA) {
     totalRemoved += removed;
 
     if (apply && removed > 0) {
-        const { hintFilesChanged } = writeLevelsWithHints(abs, levels);
+        const { hintFilesChanged } = writeLevelCorpusDocumentWithHints(abs, document, { changedHintLevels });
         console.log(`${name}: rewrote ${hintFilesChanged} hint artifact(s)`);
     }
 }

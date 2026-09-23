@@ -20,7 +20,7 @@ import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 import { validateWitnessOnRaw } from './witness.mjs';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -29,11 +29,12 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 }));
 const corpusFile = args.get('--corpus') || 'data/stress/stress-levels-random.json';
 
-// readLevelsWithHints (not a bare JSON.parse) because .hints/.hintRecords never live inline in
-// the on-disk levels.json at rest (see CLAUDE.md's split-hints architecture) — they're re-attached
-// from the corpus's sibling hints/ directory. Stress-corpus callers are unaffected: stressMeta
-// passes through untouched, and they still take priority in the witness fallback chain below.
-const levels = readLevelsWithHints(path.resolve(ROOT, corpusFile));
+// readLevelCorpusDocumentWithHints (not a bare JSON.parse) because .hints/.hintRecords never live
+// inline in the on-disk levels.json at rest (see CLAUDE.md's split-hints architecture) — they're
+// re-attached from the corpus's sibling hints/ directory. Stress-corpus callers are unaffected:
+// stressMeta passes through untouched, and they still take priority in the witness fallback chain
+// below.
+const { levels } = readLevelCorpusDocumentWithHints(path.resolve(ROOT, corpusFile));
 
 let schemaOk = 0, structuralOk = 0, witnessOk = 0;
 const failures = [];

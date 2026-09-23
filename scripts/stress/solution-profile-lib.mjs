@@ -28,7 +28,7 @@ import { resolveLandmarkTurn, baseLandmarkRole } from '../../modules/domain/land
 import {
     buildHintEdgeCounts, pathVisitCells, mustCrossKeysOf, requiredPathCoverageRatio, entropy, percentile,
 } from '../../modules/domain/hint-novelty.ts';
-import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, parseLevelSelector } from '../level-data-io.mjs';
 import {
     PROVENANCE_ORIGINS as PROVENANCE_SOURCES,
     classifyProvenanceOrigin as classifyProvenanceSource,
@@ -791,7 +791,7 @@ export function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
  *  actually read the file so re-running against a checkout at a different location still produces
  *  byte-identical `source`/`hintSignature` provenance. */
 export function regenerateCorpusProfile({ levelsJsonAbsPath, levelsJsonLabel, outAbsPath, levelSpec = 'all', minHintsPerSource = 3, seed = 20260703 }) {
-    const levels = readLevelsWithHints(levelsJsonAbsPath);
+    const { levels } = readLevelCorpusDocumentWithHints(levelsJsonAbsPath);
     const wanted = [...parseLevelSelector(levels, levelSpec)].sort((a, b) => a - b);
     const levelProfiles = wanted.map((levelNumber) => {
         const level = levels[levelNumber - 1];

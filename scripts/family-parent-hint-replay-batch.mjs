@@ -14,7 +14,7 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, setLevelHintRecords } from './level-data-io.mjs';
 import { normalizeRawLevel } from '../modules/solver/normalization.ts';
 import { validateCandidatePath } from '../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
@@ -64,10 +64,12 @@ for (const corpus of CORPORA) {
     const levelsFile = CORPUS_LEVELS_FILE[corpus];
     if (!levelsFile) throw new Error(`unknown corpus: ${corpus}`);
 
-    const levels = readLevelsWithHints(levelsFile);
+    const document = readLevelCorpusDocumentWithHints(levelsFile);
+    const { levels } = document;
     const byId = new Map(levels.map(l => [String(l.id), l]));
     const preExistingHintCount = new Map(levels.map(l => [String(l.id), l.hints.length]));
     const normalizedCache = new Map();
+    const changedHintLevels = new Set();
 
     const manifestFiles = allManifests.filter(({ manifest }) => manifest.parentCorpus === levelsFile);
     let variantsChecked = 0, variantsAccepted = 0, parentsTouched = new Set();
@@ -105,17 +107,17 @@ for (const corpus of CORPORA) {
                 if (!result.accepted) continue;
                 variantsAccepted++;
                 parentsTouched.add(parent.id);
+                changedHintLevels.add(parent);
                 // Merge in memory even during a dry run. Otherwise `newlyRescued` below always
                 // reported zero without --save-hints because the parent's simulated after-count
                 // never changed, defeating the point of previewing the write.
-                parent.hintRecords = mergeVariantDerivedHint(parent.hintRecords, result.parentPath, {
+                setLevelHintRecords(parent, mergeVariantDerivedHint(parent.hintRecords, result.parentPath, {
                     variantId: edge.variantId,
                     parentId: manifest.parentLevelId,
                     familyId: manifest.familyId,
                     levelRevision: null, // filled in below, once per parent, not per hint
                     foundAt: manifest.lastUpdatedTimestamp ?? manifest.createdTimestamp,
-                });
-                parent.hints = parent.hintRecords.map(h => h.path);
+                }));
             }
         }
     }
@@ -135,7 +137,7 @@ for (const corpus of CORPORA) {
                 }
             }
         }
-        const changed = writeLevelsWithHints(levelsFile, levels);
+        const changed = writeLevelCorpusDocumentWithHints(levelsFile, document, { changedHintLevels });
         console.log(`${corpus}: wrote ${changed.hintFilesChanged} changed hint file(s), ${changed.levelsChanged} levels.json change(s).`);
     }
 

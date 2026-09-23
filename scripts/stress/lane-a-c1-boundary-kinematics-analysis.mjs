@@ -2,7 +2,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { summarizeSignatureCollisions } from '../signature-collision-analysis-lib.mjs';
 import { laneABoundaryKinematics, laneABoundaryKinematicsSignature } from './lane-a-boundary-kinematics-lib.mjs';
 import { deriveLaneAC0Cases, laneAProjectionRows } from './lane-a-c0-population-lib.mjs';
@@ -46,7 +46,7 @@ const rows = rowsFromInput(input);
 
 const corpusPath = casesDocument.corpus;
 if (typeof corpusPath !== 'string' || !corpusPath) throw new Error(`${casesPath ?? populationPath} does not declare corpus`);
-const levels = readLevelsWithHints(path.resolve(ROOT, corpusPath));
+const { levels } = readLevelCorpusDocumentWithHints(path.resolve(ROOT, corpusPath));
 const levelById = new Map(levels.map(level => [String(level.id), level]));
 
 function caseFor(row) {

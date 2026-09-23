@@ -15,7 +15,7 @@
  * Exit code: 0 = all checked paths pass, 1 = one or more paths fail.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
-import { readLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, parseLevelPositions } from './level-data-io.mjs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -35,7 +35,7 @@ const filterLevels = parseLevelPositions(argMap.get('--levels'));
 function loadAllLevels() {
   const root = new URL('..', import.meta.url).pathname;
   const filePath = path.join(root, 'data', 'levels.json');
-  const levels = readLevelsWithHints(filePath);
+  const { levels } = readLevelCorpusDocumentWithHints(filePath);
   if (levels.length === 0) {
     throw new Error('data/levels.json is empty or not an array');
   }

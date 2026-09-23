@@ -23,7 +23,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, parseLevelSelector } from '../level-data-io.mjs';
 import { PACK } from '../../modules/domain/cell-key.ts';
 import {
     buildBucketProfile, buildSinglePathProfile, extractObjectives, nearestProfiles,
@@ -55,7 +55,7 @@ function ensureFreshLibrary(fullPath, fileLabel) {
     const sourceAbsPath = path.resolve(ROOT, parsed.source);
     if (!existsSync(sourceAbsPath)) return parsed;
 
-    const levels = readLevelsWithHints(sourceAbsPath);
+    const { levels } = readLevelCorpusDocumentWithHints(sourceAbsPath);
     const currentSignature = computeHintSignature(levels);
     const taxonomyCurrent = hasCurrentSolutionProfileTaxonomy(parsed);
     if (parsed.hintSignature?.hash === currentSignature.hash && taxonomyCurrent) return parsed;
@@ -131,7 +131,7 @@ function main() {
     }
 
     const targetLevelsPath = path.resolve(ROOT, TARGET_LEVELS_JSON);
-    const targetLevels = readLevelsWithHints(targetLevelsPath);
+    const { levels: targetLevels } = readLevelCorpusDocumentWithHints(targetLevelsPath);
     const targetPosition = resolveTargetPosition(targetLevels, TARGET_LEVEL_SPEC);
     const { source, solutionProfile: targetProfile } = buildTargetProfile(targetLevels, targetPosition);
     const pool = loadPool(LIBRARY_FILES, BUCKET);

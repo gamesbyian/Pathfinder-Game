@@ -58,10 +58,10 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { readLevelsWithHints, writeLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { validateCandidatePath } from '../../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.ts';
-import { EXTERNAL_SOLVER_ID, hintPathSignature, makeProvenanceEntry, toHint } from '../../modules/domain/hint-types.ts';
+import { EXTERNAL_SOLVER_ID, hintPathSignature, makeProvenanceEntry, setLevelHintRecords, toHint } from '../../modules/domain/hint-types.ts';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { UNPACK } from '../../modules/domain/cell-key.ts';
@@ -90,7 +90,8 @@ const maxCombos = Number(arg('max-combos', '16'));
 const corpusFile = arg('corpus', 'data/stress/stress-levels-random.json');
 const CORPUS = path.join(root, corpusFile);
 
-const levels = readLevelsWithHints(CORPUS);
+const corpusDocument = readLevelCorpusDocumentWithHints(CORPUS);
+const levels = corpusDocument.levels;
 const byId = new Map(levels.map((l, i) => [l.id, { level: l, position: i + 1 }]));
 
 const xy = k => { const p = UNPACK(k); return [p.x + 1, p.y + 1]; };
@@ -252,6 +253,7 @@ for (const id of levelIds) {
 
 if (saveHints && pending.size > 0) {
     let added = 0, rediscovered = 0;
+    const changedHintLevels = new Set();
     for (const [id, entries] of pending) {
         const lv = byId.get(id).level;
         const levelRevision = await getLevelFingerprint(lv);
@@ -273,10 +275,10 @@ if (saveHints && pending.size > 0) {
             if (at === undefined) { bySig.set(sig, records.length); records.push(toHint(e.path, [entry])); added++; }
             else { records[at] = { ...records[at], provenance: [...(records[at].provenance || []), entry] }; rediscovered++; }
         }
-        lv.hintRecords = records;
-        lv.hints = records.map(h => h.path);
+        setLevelHintRecords(lv, records);
+        changedHintLevels.add(lv);
     }
-    const { hintFilesChanged } = writeLevelsWithHints(CORPUS, levels);
+    const { hintFilesChanged } = writeLevelCorpusDocumentWithHints(CORPUS, corpusDocument, { changedHintLevels });
     console.log(`\nhints: ${added} new path(s), ${rediscovered} rediscovery entr(ies), ${hintFilesChanged} file(s) rewritten.`);
 }
 

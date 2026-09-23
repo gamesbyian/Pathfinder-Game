@@ -25,7 +25,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { selectUnharvestedCpsatLevels, selectShardByRoundRobin } from './lib/cpsat-branch-label-eligibility.mjs';
 
 const root = (() => {
@@ -45,7 +45,7 @@ const COMBO_TIME_LIMIT = arg('combo-time-limit', '40');
 const MAX_COMBOS = arg('max-combos', '16');
 const SUMMARY_OUT_FILE = arg('summary-out', null);
 
-const corpusLevels = readLevelsWithHints(path.join(root, CORPUS_FILE));
+const { levels: corpusLevels } = readLevelCorpusDocumentWithHints(path.join(root, CORPUS_FILE));
 const unharvested = selectUnharvestedCpsatLevels(corpusLevels);
 const levels = selectShardByRoundRobin(unharvested, SHARD_INDEX, SHARD_COUNT);
 console.log(`cpsat-hint-harvest-sweep: ${unharvested.length} unharvested-eligible level(s) corpus-wide; shard ${SHARD_INDEX}/${SHARD_COUNT} gets ${levels.length}.`);

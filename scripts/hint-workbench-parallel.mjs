@@ -12,7 +12,7 @@
  * unmodified `node <bundle> --levels=<its own slice> --output=<its own shard report>` — sidesteps
  * the worker_threads/tsx-ESM-loader-hook problem entirely, since each child is a fresh process.
  *
- * Concurrent --write-levels is safe by construction, not by luck: writeLevelsWithHints
+ * Concurrent --write-levels is safe by construction, not by luck: writeLevelCorpusDocumentWithHints
  * (level-data-io.mjs) only rewrites a level's per-level hints/<id>.json file when that level's own
  * in-memory .hints/.hintRecords identity changed since read, and levels.json itself never carries
  * hints at rest for a split corpus (see that file's own "concurrent processes over disjoint level
@@ -36,7 +36,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { buildBundle } from './run-bundled.mjs';
-import { readLevelsWithHints, parseLevelSelector } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, parseLevelSelector } from './level-data-io.mjs';
 
 installBrowserStubs();
 
@@ -139,7 +139,7 @@ async function main() {
 
     const levelsJsonPath = args.get('--levels-json') || 'data/levels.json';
     const absLevelsJsonPath = path.isAbsolute(levelsJsonPath) ? levelsJsonPath : path.join(ROOT, levelsJsonPath);
-    const rawLevels = readLevelsWithHints(absLevelsJsonPath);
+    const { levels: rawLevels } = readLevelCorpusDocumentWithHints(absLevelsJsonPath);
     const positions = [...parseLevelSelector(rawLevels, args.get('--levels') || 'all')];
     if (positions.length === 0) { console.log('No levels matched --levels; nothing to do.'); return; }
 
