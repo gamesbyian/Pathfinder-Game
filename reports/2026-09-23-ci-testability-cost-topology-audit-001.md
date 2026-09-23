@@ -953,3 +953,126 @@ That is useful evidence: further slimming must come from:
 4. cadence changes backed by the historical-value program.
 
 Do not chase more bucket renaming expecting material wall-time savings.
+
+
+## Implemented speed work transplanted after contract-surface merge
+
+### File-local corpus formatting
+
+PR-CI formatting validation now uses the existing PR merge-ref changed-path mechanism. On PRs, `check:corpus-level-formatting` checks only changed corpus/hint JSON files; local/manual/full-oracle runs still scan all four corpora and all hint artifacts.
+
+This preserves the invariant while removing whole-tree work for unrelated changes. A dedicated `test:corpus-level-formatting` protects path classification and canonical byte detection.
+
+### Runtime-data cache eager publication
+
+The measured same-key cache stampede is addressed by separating restore/save:
+
+1. `actions/cache/restore@v5` restores the exact content-addressed runtime-data tree;
+2. a miss materializes the same sparse tree as before;
+3. `actions/cache/save@v5` publishes that exact key immediately after materialization.
+
+The content-derived key and no-fallback policy are unchanged. This narrows the window where nearby runs independently materialize the same data before post-job cache publication.
+
+### npm-wrapper/direct-execution benchmark infrastructure
+
+The 173-command Node/CLI population is structurally simple: 172/173 package scripts are single commands. An opt-in direct child mode has been added to the parallel runner for benchmark use only.
+
+The manual benchmark can compare `npm` and `direct` modes at the already-proven four-job concurrency with rotating order. Production remains npm-wrapped until repeated hosted-runner evidence shows a clear gain and all contracts remain green.
+
+## Hard-preflight backtest — negative
+
+A tempting optimization was to run all cheap dependency-free repo validators first and stop before install/tests when that cohort is red.
+
+Historical signature evidence argues against making that a hard gate yet.
+
+Among **211** representative repair episodes containing at least one current repo-validator failure:
+
+- **142 / 211 (67.3%)** had no other currently mapped detector in that representative run;
+- **69 / 211 (32.7%)** also contained another current mapped detector.
+
+Co-failing semantic families among those 69 episodes included:
+
+- research tests: **47** episodes;
+- research validators: **30**;
+- repo tests: **30**;
+- solver tests: **16**;
+- shared/type validators: **12**;
+- data validators: **10**;
+- data tests: **4**.
+
+These groups overlap within episodes.
+
+**Decision:** do not introduce generic `repo preflight red => stop downstream` behavior. It would save work on many red heads but hide useful second failures roughly one-third of the time, recreating repair pinball.
+
+A dependency-free cohort can still improve **time to first signal** or act as a prerequisite for impact planning, but ordinary validation should continue collecting independent failures unless a narrower causal prerequisite is proven.
+
+## Flake-management opportunity — low priority
+
+The exhaustive corpus contains **7,905 runs and 7,915 attempts**, only ten attempts beyond the run count.
+
+Known nondeterministic/harness incidents still matter individually, but there is no evidence that generalized rerun/flakiness management is currently a major CI cost center. Do not build a large flake-management system ahead of the measured process, routing, fixture, and cache costs.
+
+## Deep-test taxonomy audit
+
+All 74 `modules/solver/*.test.ts` files were inspected for `deepTest` / `SOLVER_DEEP_TESTS` gating.
+
+Exactly seven files use the convention:
+
+- `diversification.test.ts`;
+- `hint-ablation-generator.test.ts`;
+- `orchestration-early-repair.test.ts`;
+- `lower-bounds-deadlock-0.test.ts`;
+- `lower-bounds-deadlock-1.test.ts`;
+- `repair-search-partial-path-completion-enabled.test.ts`;
+- `repair-search-partial-path-completion-disabled.test.ts`.
+
+The last four are already explicitly removed from ordinary coverage through `SOLVER_DEADLOCK_PROOF_SKIP` / `SOLVER_R02560_PROOF_SKIP` and run by `test:deep-proofs`.
+
+The first three remain mixed-tier under ordinary coverage. Recent file timings put them at roughly:
+
+- diversification: ~7.2 s;
+- hint-ablation-generator: ~2.0 s;
+- orchestration-early-repair: ~1.4 s.
+
+Potential gross test-time exposure is therefore ~10.6 s before accounting for parallelism and any targeted rerun required after extraction.
+
+**Decision:** this is a legitimate benchmark target, not an immediate refactor. Avoid whole-file duplication. If pursued, extract only the real-search cases into explicit proof files while keeping small direct/stubbed coverage for the control logic.
+
+## TypeScript incremental-cache opportunity
+
+Both universal type checks already use TypeScript incremental build info, but their cache files live under `node_modules/.cache`, so every GitHub `npm ci` removes them.
+
+The production and test configs use separate cache files and cleanly separate test-only source coverage.
+
+Before production caching, run a correctness-and-timing experiment that:
+
+1. measures cold `check:types` and `check:types:tests`;
+2. measures warm unchanged runs;
+3. restores the build-info files and introduces a fresh production source type error, proving `check:types` still fails;
+4. introduces a fresh test-only type error, proving production typing remains unaffected while `check:types:tests` fails;
+5. measures the restored-cache benefit on a small valid source change.
+
+Only add an Actions cache if the fault probes remain sound and the hosted-runner timing gain is material.
+
+## Dependency-local routing opportunity
+
+Path/surface routing remains deliberately conservative. The contract-surface audit showed why surface relabeling alone cannot shrink a broad research change: all 25 former-shared tests are legitimately research-facing.
+
+The next routing frontier is **dependency-local invalidation within a selected surface**.
+
+Two separate import-graph implementations already exist:
+
+- `check-plain-node-import-boundaries.mjs` has the stronger native-Node resolver and literal static/dynamic import handling;
+- `research-system-inventory-lib.mjs` has a reusable dependency-closure concept but follows a narrower `.mjs` view.
+
+Do not activate dependency-based skipping from either implementation directly.
+
+First extract/measure a generic repository import graph that:
+
+- resolves local JS/MJS/TS/TSX imports explicitly;
+- records literal dynamic edges separately;
+- reports unresolved/nonliteral dynamic edges instead of pretending they do not exist;
+- maps registered test entrypoints back to changed modules;
+- treats filesystem/data/subprocess/generated/env dependencies as explicit metadata outside the static import graph.
+
+Use this only in shadow mode until replay against historical/real failures demonstrates that it does not miss consumers.
