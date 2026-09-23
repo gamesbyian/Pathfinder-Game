@@ -17,12 +17,12 @@ import process from 'node:process';
 import {
     readLevelCorpusDocumentWithHints,
     writeLevelCorpusDocumentWithHints,
-} from '../level-data-io.mjs';
+} from './level-data-io.mjs';
 import {
     buildHintIngestionReceipt,
     countHintStoreSemanticUnits,
     validateHintIngestionReceipt,
-} from '../hint-ingestion-receipt-lib.mjs';
+} from './hint-ingestion-receipt-lib.mjs';
 import { parseRawLevel } from '../modules/domain/level-codec.js';
 import { validateCandidatePath } from '../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
