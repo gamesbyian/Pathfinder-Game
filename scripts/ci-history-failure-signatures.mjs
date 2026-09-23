@@ -10,6 +10,7 @@ function parseArgs(argv) {
     episodes: 'tmp/ci-audit/repair-episodes.json',
     output: 'tmp/ci-audit/failure-signatures.json',
     maxEpisodes: null,
+    order: 'newest',
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -21,8 +22,10 @@ function parseArgs(argv) {
     else if (arg.startsWith('--output=')) out.output = arg.slice(9);
     else if (arg === '--max-episodes') out.maxEpisodes = Number(argv[++i]);
     else if (arg.startsWith('--max-episodes=')) out.maxEpisodes = Number(arg.slice(15));
+    else if (arg === '--order') out.order = argv[++i];
+    else if (arg.startsWith('--order=')) out.order = arg.slice(8);
     else if (arg === '--help' || arg === '-h') {
-      console.log('usage: node scripts/ci-history-failure-signatures.mjs [--repo owner/name] [--episodes repair-episodes.json] [--output file] [--max-episodes N]');
+      console.log('usage: node scripts/ci-history-failure-signatures.mjs [--repo owner/name] [--episodes repair-episodes.json] [--output file] [--max-episodes N] [--order newest|oldest]');
       process.exit(0);
     } else throw new Error(`unknown argument: ${arg}`);
   }
@@ -30,6 +33,7 @@ function parseArgs(argv) {
   if (out.maxEpisodes !== null && (!Number.isSafeInteger(out.maxEpisodes) || out.maxEpisodes < 1)) {
     throw new Error('--max-episodes must be a positive integer');
   }
+  if (!['newest', 'oldest'].includes(out.order)) throw new Error('--order must be newest or oldest');
   return out;
 }
 
@@ -128,7 +132,11 @@ function summarize(rows) {
 
 const options = parseArgs(process.argv.slice(2));
 const document = JSON.parse(fs.readFileSync(options.episodes, 'utf8'));
-let episodes = document.episodes ?? [];
+let episodes = [...(document.episodes ?? [])];
+episodes.sort((a, b) =>
+  options.order === 'newest'
+    ? Date.parse(b.startedAt) - Date.parse(a.startedAt)
+    : Date.parse(a.startedAt) - Date.parse(b.startedAt));
 if (options.maxEpisodes !== null) episodes = episodes.slice(0, options.maxEpisodes);
 
 const rows = [];
@@ -194,6 +202,7 @@ const output = {
   generatedAt: new Date().toISOString(),
   sourceEpisodes: options.episodes,
   representativePolicy: 'first failing run in each mechanical repair episode',
+  episodeOrder: options.order,
   episodesRequested: episodes.length,
   episodesWithSignatures: rows.filter(row => row.detectors.length > 0).length,
   gaps,
@@ -205,9 +214,15 @@ const output = {
 fs.mkdirSync(path.dirname(options.output), { recursive: true });
 fs.writeFileSync(options.output, `${JSON.stringify(output, null, 2)}\n`);
 console.log(JSON.stringify({
+  episodeOrder: output.episodeOrder,
   episodesRequested: output.episodesRequested,
   episodesWithSignatures: output.episodesWithSignatures,
   retrievalGaps: gaps.length,
   topDetectors: output.detectorSummary.slice(0, 20),
   topObservedCost: output.commandTimingSummary.slice(0, 20),
 }, null, 2));
+
+if (options.maxEpisodes !== null && output.episodesRequested > 0 && output.episodesWithSignatures === 0) {
+  console.error('bounded failure-signature rehearsal recovered zero detector signatures; refusing a false-green result');
+  process.exit(2);
+}
