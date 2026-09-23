@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 import { analyzeEqualWorkProductionReach } from './stress/analyze-equal-work-production-reach.mjs';
 import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -38,7 +39,7 @@ await writeFile(corpusPath, JSON.stringify([{
 // node directly), so the test matches that real contract rather than inventing a new one.
 await execFile(process.execPath, [
     'scripts/run-bundled.mjs', 'scripts/level-blind-capability-sweep.mjs',
-    `--corpus=${corpusPath}`, '--budget-ms=5000', '--lifecycle-telemetry',
+    `--corpus=${corpusPath}`, '--budget-ms=5000', '--lifecycle-telemetry', '--save-hints',
     '--experiment-id=fixture-experiment', '--research-question=fixture-question', '--preflight=reports/fixture.md',
     `--out=${outFile}`, `--summary-out=${summaryOutFile}`,
 ], { cwd: ROOT });
@@ -117,5 +118,24 @@ assert.equal(reachJoin.decisionBearing, true,
     'the real level-blind report wrapper must pass the maintained production-reach reader');
 assert.deepEqual(reachJoin.production.commits, [report.summary.commit]);
 assert.deepEqual(reachJoin.production.corpora, [report.summary.corpus]);
+
+// Bounded execution/run binding on hint provenance (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W): --save-hints must actually persist the run's real
+// solverRequestIdentity/reproducibilityMode onto the saved path's provenance entry, proven through the
+// real bundled --save-hints invocation above rather than a unit-level shape check alone.
+const savedDocument = readLevelCorpusDocumentWithHints(corpusPath);
+const savedHintRecords = savedDocument.levels[0].hintRecords;
+assert.equal(savedHintRecords?.length, 1, '--save-hints must persist exactly the one solved path');
+const savedProvenance = savedHintRecords[0].provenance[0];
+assert.deepEqual(savedProvenance.execution, {
+    schemaVersion: 1,
+    solverRequestIdentity: report.summary.solverRequestIdentity,
+    protocolHash: null,
+    reproducibilityMode: report.summary.reproducibilityMode,
+    arm: null,
+}, 'the persisted hint provenance execution capsule must match this run\'s own reported identity/reproducibilityMode');
+// No GITHUB_RUN_ID in this local test process -- an occurrence must NOT be fabricated from nothing.
+assert.equal(Object.hasOwn(savedProvenance, 'occurrences'), false,
+    'a local invocation with no real run id must leave occurrences genuinely absent, not a guessed placeholder');
 
 console.log('level-blind-capability-sweep CLI: all tests passed');

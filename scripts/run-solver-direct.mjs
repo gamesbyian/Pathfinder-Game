@@ -17,6 +17,9 @@ import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { parseLevelPositions, readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
+import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.js';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
 
 const args    = process.argv.slice(2);
 const argMap  = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
@@ -62,7 +65,35 @@ const corpusDocument = loadCorpusDocument();
 const rawLevels = corpusDocument.levels;
 console.log(`Loaded ${rawLevels.length} levels. Budget: ${budgetMs}ms${saveHints ? ' (saving hints)' : ''}`);
 
-const hintCapture = await createHintCapture({ solverVersion: getCommitSha(), budgetMs, enabled: saveHints });
+// The literal object handed to Solver.solveLevel() below, and nowhere else (see
+// docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 3.2 -- request identity
+// proves what actually reached the execution boundary). `baseWorkBudget` is the live SolveOpts name;
+// `workBudget` is retired input orchestration.ts rejects, which was passed here unfixed until now.
+// `schedulerMode: 'production'` is explicit, matching level-blind-capability-sweep.mjs's own
+// convention: this tool has no --scheduler-mode flag, but orchestration.ts's own
+// `opts.schedulerMode ?? 'production'` default means every run already IS production-scheduled --
+// recording that as a real, known fact rather than an omitted, classifiable-as-'unknown' one.
+const solveOpts = { timeBudgetMs: budgetMs, schedulerMode: 'production', ...(workBudget !== undefined ? { baseWorkBudget: workBudget } : {}) };
+const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
+const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
+// backend: 'direct' -- levels run sequentially on the main thread, one solveLevel() call at a time;
+// no worker pool, no race pool, so this is a certain fact, not a guess.
+const backend = 'direct';
+const reproducibilityMode = classifyReproducibilityMode({ schedulerMode: solveOpts.schedulerMode, backend });
+
+// Bounded execution/run binding for hint provenance (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W). No experiment contract object exists for this ad hoc direct
+// driver, so protocolHash/executionArm stay genuinely absent; occurrenceRunId only when this
+// invocation is a real GHA job (solver-diagnostics.yml) -- a local debugging run has no run to bind to.
+const hintExecutionContext = {
+    solverRequestIdentity, reproducibilityMode,
+    ...(process.env.GITHUB_RUN_ID ? {
+        occurrenceRunId: process.env.GITHUB_RUN_ID,
+        ...(process.env.GITHUB_RUN_ATTEMPT ? { occurrenceRunAttempt: process.env.GITHUB_RUN_ATTEMPT } : {}),
+    } : {}),
+};
+
+const hintCapture = await createHintCapture({ solverVersion: getCommitSha(), budgetMs, enabled: saveHints, executionContext: hintExecutionContext });
 if (saveHints) await hintCapture.prepare(rawLevels);
 
 const levelNumbers = levelFilter
@@ -85,7 +116,7 @@ for (const levelNumber of levelNumbers) {
 
     const t0 = Date.now();
     let result;
-    try { result = await Solver.solveLevel(level, { timeBudgetMs: budgetMs, ...(workBudget !== undefined ? { workBudget } : {}) }); }
+    try { result = await Solver.solveLevel(level, solveOpts); }
     catch (e) { results.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 }); errorCount++; console.log(`  L${levelNumber}: ERROR — ${e?.message}`); continue; }
 
     const elapsed = Date.now() - t0;
@@ -119,6 +150,7 @@ const out = {
     workBudget: workBudget ?? null,
     levelFilter: levelFilter ? [...levelFilter].sort((a,b) => a-b) : 'all',
     solved: solvedCount, failed: failCount, errors: errorCount, total: levelNumbers.length, totalMs,
+    solverRequestProjection, solverRequestIdentity, backend, reproducibilityMode,
     levels: results,
 };
 

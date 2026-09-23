@@ -649,6 +649,21 @@ const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestP
 const backend = racePoolSize > 0 ? 'raced' : 'direct';
 const reproducibilityMode = classifyReproducibilityMode({ schedulerMode, backend });
 
+// Bounded execution/run binding for hint provenance (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W). No experiment contract object exists in this producer (unlike
+// scripts/publish-solver-sweep-result.mjs's declaredContract), so protocolHash/contractRef stay
+// genuinely absent rather than guessed; executionArm is the real static-portfolio arm name when this
+// run is a confirmation arm, else genuinely absent (an ordinary run has no arm concept); occurrenceRunId
+// only when this run is a real GHA job -- a local invocation has no run to bind to.
+const hintExecutionContext = {
+    solverRequestIdentity, reproducibilityMode,
+    ...(staticPortfolioArmName ? { executionArm: staticPortfolioArmName } : {}),
+    ...(process.env.GITHUB_RUN_ID ? {
+        occurrenceRunId: process.env.GITHUB_RUN_ID,
+        ...(process.env.GITHUB_RUN_ATTEMPT ? { occurrenceRunAttempt: process.env.GITHUB_RUN_ATTEMPT } : {}),
+    } : {}),
+};
+
 // Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs (the CI
 // audit pass). Only the SCHEDULING of writes stays here -- this tool persists incrementally after
 // every level so a killed multi-hour run keeps its finds, which is deliberately different from the
@@ -666,7 +681,7 @@ let hintsAppended = 0;
 // silently keep pointing at a since-edited level) are precomputed by hintCapture.prepare() rather
 // than derived per solve: getLevelFingerprint is async, and the worker-pool onResult callback that
 // merges hints is NOT awaited (solver-worker-pool.mjs), so the merge path must stay synchronous.
-const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints });
+const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints, executionContext: hintExecutionContext });
 if (saveHints) await hintCapture.prepare(toActuallyRun.map(n => rawLevels[n - 1]));
 let totalHintFilesChanged = 0;
 let solvedCount = 0;

@@ -15,6 +15,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -85,5 +86,36 @@ const racedReport = JSON.parse(await readFile(racedOutFile, 'utf8'));
 assert.equal(racedReport.summary.engine, 'raced', 'sanity check: the legacy field must also agree this run raced');
 assert.equal(racedReport.summary.backend, 'raced');
 assert.equal(racedReport.summary.reproducibilityMode, 'first-success-race');
+
+// Bounded execution/run binding on hint provenance (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W): --save-hints under a real GITHUB_RUN_ID must persist both the
+// run's solverRequestIdentity/reproducibilityMode AND a real occurrence lineage record, proving the
+// whole path end-to-end through the real bundled invocation rather than a unit-level shape check alone.
+const hintsCorpusPath = path.join(dir, 'hints-corpus.json');
+await writeFile(hintsCorpusPath, await readFile(corpusPath, 'utf8'));
+const hintsOutFile = path.join(dir, 'hints-report.json');
+const hintsSummaryOutFile = path.join(dir, 'hints-report-summary.md');
+const hintsCheckpointPath = path.join(dir, 'hints-checkpoint.jsonl');
+await execFile(process.execPath, [
+    'scripts/run-bundled.mjs', 'scripts/portfolio-solve-sweep.mjs',
+    `--corpus=${hintsCorpusPath}`, '--scheduler-mode=production', '--budget-ms=5000', '--save-hints',
+    `--checkpoint=${hintsCheckpointPath}`,
+    `--out=${hintsOutFile}`, `--summary-out=${hintsSummaryOutFile}`,
+], { cwd: ROOT, env: { ...process.env, GITHUB_RUN_ID: '998877', GITHUB_RUN_ATTEMPT: '1' } });
+const hintsReport = JSON.parse(await readFile(hintsOutFile, 'utf8'));
+const hintsDocument = readLevelCorpusDocumentWithHints(hintsCorpusPath);
+const savedHintRecords = hintsDocument.levels[0].hintRecords;
+assert.equal(savedHintRecords?.length, 1, '--save-hints must persist exactly the one solved path');
+const savedProvenance = savedHintRecords[0].provenance[0];
+assert.deepEqual(savedProvenance.execution, {
+    schemaVersion: 1,
+    solverRequestIdentity: hintsReport.summary.solverRequestIdentity,
+    protocolHash: null,
+    reproducibilityMode: hintsReport.summary.reproducibilityMode,
+    arm: null,
+}, 'the persisted hint provenance execution capsule must match this run\'s own reported identity/reproducibilityMode');
+assert.equal(savedProvenance.occurrences?.length, 1, 'a real GITHUB_RUN_ID must produce a real occurrence record, not leave it absent');
+assert.equal(savedProvenance.occurrences[0].runId, '998877', '--save-hints must bind the real GITHUB_RUN_ID, not a guessed value');
+assert.equal(savedProvenance.occurrences[0].runAttempt, '1');
 
 console.log('portfolio-solve-sweep CLI: solver request identity dual-write verified');

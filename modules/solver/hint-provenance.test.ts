@@ -304,6 +304,47 @@ test('provenanceFromSolveResult marks isolatedTechnique from ctx, defaulting to 
   assert.equal(production.context.isolatedTechnique, false, 'omitted ctx.isolatedTechnique defaults to false, never undefined');
 });
 
+// Phase 3 bounded execution/occurrence lineage (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W): ProvenanceContext's new fields must reach entry.execution/
+// entry.occurrences, and an omitted field must stay genuinely absent rather than becoming a
+// fabricated null/placeholder.
+const ORDINARY_RESULT = { status: 'success' as const, attempts: [currentAttempt({ scoringProfileId: 'perimeterSweep', orderingBiasId: null, beamWidth: 5000, ok: true })] };
+
+test('provenanceFromSolveResult omits execution/occurrences when ctx supplies neither', () => {
+  const entry = provenanceFromSolveResult(ORDINARY_RESULT);
+  assert.equal(Object.hasOwn(entry, 'execution'), false);
+  assert.equal(Object.hasOwn(entry, 'occurrences'), false);
+});
+
+test('provenanceFromSolveResult forwards solverRequestIdentity/protocolHash/reproducibilityMode/executionArm into entry.execution', () => {
+  const entry = provenanceFromSolveResult(ORDINARY_RESULT, {
+    solverRequestIdentity: 'sha256:abc', protocolHash: 'sha256:def', reproducibilityMode: 'deterministic-work', executionArm: 'control',
+  });
+  assert.deepEqual(entry.execution, {
+    schemaVersion: 1, solverRequestIdentity: 'sha256:abc', protocolHash: 'sha256:def', reproducibilityMode: 'deterministic-work', arm: 'control',
+  });
+});
+
+test('provenanceFromSolveResult builds a partial execution capsule from a single ctx field, others explicit null', () => {
+  const entry = provenanceFromSolveResult(ORDINARY_RESULT, { solverRequestIdentity: 'sha256:abc' });
+  assert.deepEqual(entry.execution, {
+    schemaVersion: 1, solverRequestIdentity: 'sha256:abc', protocolHash: null, reproducibilityMode: null, arm: null,
+  });
+});
+
+test('provenanceFromSolveResult forwards occurrenceRunId/occurrenceRunAttempt into entry.occurrences', () => {
+  const entry = provenanceFromSolveResult(ORDINARY_RESULT, { occurrenceRunId: '123456', occurrenceRunAttempt: '2' });
+  assert.equal(entry.occurrences?.length, 1);
+  assert.equal(entry.occurrences?.[0].runId, '123456');
+  assert.equal(entry.occurrences?.[0].runAttempt, '2');
+  assert.equal(entry.occurrences?.[0].observedAt, entry.foundAt, 'observedAt defaults to this entry\'s own foundAt');
+});
+
+test('provenanceFromSolveResult never fabricates an occurrence when occurrenceRunId is not supplied', () => {
+  const entry = provenanceFromSolveResult(ORDINARY_RESULT, { occurrenceContractRef: 'manifest.json#experimentContract' });
+  assert.equal(Object.hasOwn(entry, 'occurrences'), false, 'a contractRef alone must not synthesize a run id');
+});
+
 test('repairPrimarySeed is a stable, uint32, pure function of (startKey, seedSalt)', () => {
   const a = repairPrimarySeed(0x1234, 0);
   assert.equal(a, repairPrimarySeed(0x1234, 0), 'deterministic for the same inputs');

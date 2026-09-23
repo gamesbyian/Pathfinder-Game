@@ -56,6 +56,21 @@ export interface ProvenanceContext {
     /** Explicit source cell for census-derived solves. Normally supplied by the winning attempt's
      * in-memory carrier so callers outside the census do not need to know about census structure. */
     techniqueCensusCell?: HintTechniqueCensusCellContext | null;
+    /** Bounded execution/run binding (docs/hint-evidence-execution-identity-storage-consolidation-
+     * plan.md section 4/W). Mirrors MakeProvenanceEntryOptions exactly: `undefined` only, never
+     * `null` -- makeProvenanceEntry()'s executionFromOpts()/occurrenceFromOpts() key their presence
+     * check on `undefined`, so an explicit `null` here would wrongly claim "known absent" for a fact
+     * this context genuinely has no way to know. */
+    solverRequestIdentity?: string;
+    protocolHash?: string;
+    reproducibilityMode?: string;
+    executionArm?: string;
+    /** Physical acquisition/run lineage. `occurrenceRunId` must only be set when a real run id is
+     * known (never `null`) -- see the same undefined-vs-null caution above. */
+    occurrenceRunId?: string;
+    occurrenceRunAttempt?: string | number | null;
+    occurrenceContractRef?: string | null;
+    occurrenceSourceRuns?: string[] | null;
 }
 
 interface SolveAttemptInfo {
@@ -165,6 +180,16 @@ function provenanceFromSolveAttemptInfo(result: Omit<SolveResultLike, 'attempts'
         levelRevision: ctx.levelRevision ?? null,
         isolatedTechnique: ctx.isolatedTechnique ?? false,
         techniqueCensusCell: info.techniqueCensusCell ?? ctx.techniqueCensusCell ?? null,
+        // Passed through directly (no `?? null`): an omitted ctx field must stay `undefined` here too,
+        // since makeProvenanceEntry()'s presence checks distinguish "never supplied" from "known null".
+        solverRequestIdentity: ctx.solverRequestIdentity,
+        protocolHash: ctx.protocolHash,
+        reproducibilityMode: ctx.reproducibilityMode,
+        executionArm: ctx.executionArm,
+        occurrenceRunId: ctx.occurrenceRunId,
+        occurrenceRunAttempt: ctx.occurrenceRunAttempt,
+        occurrenceContractRef: ctx.occurrenceContractRef,
+        occurrenceSourceRuns: ctx.occurrenceSourceRuns,
         ...(info.repairMustTurnBiased !== null ? {
             forcingRepairMustTurnBiased: info.repairMustTurnBiased,
             forcingRepairTurnBiased: info.repairTurnBiased,

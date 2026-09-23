@@ -191,11 +191,45 @@ if (Number.isFinite(repairLateProbeNodeBudget)) solveOpts.repairLateProbeNodeBud
 if (Number.isInteger(repairLateProbeMultiSeedRetrySeedCount)) solveOpts.repairLateProbeMultiSeedRetrySeedCountOverride = repairLateProbeMultiSeedRetrySeedCount;
 if (ablation) solveOpts.ablation = ablation;
 
+// Canonical run-wide solver-request identity (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.2), dual-written alongside the legacy effectiveConfig pair below
+// rather than replacing it: `effectiveConfig` mixes solver-request semantics with population identity
+// (corpusSha256) and execution-protocol context (levelBlind), which the canonical projection
+// deliberately keeps separate (level-specific/history-derived and observer-only fields excluded; see
+// solver-request-projection.ts's own doc comment). Built from the SAME literal `solveOpts` object
+// handed to the solver below, for the same reason effectiveConfig is: proving what actually reached
+// the execution boundary, not what argv/CLI intent implied.
+const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
+const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
+
+// Execution backend/reproducibility class (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.3/K, modules/solver/reproducibility-mode.mjs). This tool has no
+// --race-pool-size flag and never can: every level dispatches through runWorkerPool for cross-LEVEL
+// throughput only (parallelizing DIFFERENT levels across worker_threads), never racing multiple
+// attempts at the SAME level for a first-success winner, so each individual level's solveLevel() call
+// is exactly as deterministic as calling it directly on this thread. `direct` is therefore a real,
+// certain fact here, not a guess -- unlike scripts/publish-solver-sweep-result.mjs and friends, which
+// consume already-produced reports and genuinely do not know their upstream backend.
+const backend = 'direct';
+const reproducibilityMode = classifyReproducibilityMode({ schedulerMode: solveOpts.schedulerMode, backend });
+
+// Bounded execution/run binding for hint provenance (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W). No experiment contract object exists in this general-purpose
+// producer, so protocolHash/executionArm stay genuinely absent; occurrenceRunId only when this run is
+// a real GHA job -- a local invocation has no run to bind to.
+const hintExecutionContext = {
+    solverRequestIdentity, reproducibilityMode,
+    ...(process.env.GITHUB_RUN_ID ? {
+        occurrenceRunId: process.env.GITHUB_RUN_ID,
+        ...(process.env.GITHUB_RUN_ATTEMPT ? { occurrenceRunAttempt: process.env.GITHUB_RUN_ATTEMPT } : {}),
+    } : {}),
+};
+
 // Output-side hint state is deliberately distinct from mechanicsOnlyCorpus. Never pass hintLevels
 // or corpusPath to the solver worker.
 const hintDocument = saveHints ? readLevelCorpusDocumentWithHints(corpusPath) : null;
 const hintLevels = hintDocument?.levels ?? null;
-const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints });
+const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints, executionContext: hintExecutionContext });
 if (saveHints) await hintCapture.prepare(targets.map(n => hintLevels[n - 1]));
 
 // Effective-configuration contract (2026-09-09 historical regression-risk audit item #2): a
@@ -216,28 +250,6 @@ const {
 } = solveOpts;
 const effectiveConfig = { corpusSha256, levelBlind: true, ...semanticSolveOpts };
 const effectiveConfigDigest = createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
-
-// Canonical run-wide solver-request identity (docs/hint-evidence-execution-identity-storage-
-// consolidation-plan.md section 3.2), dual-written alongside the legacy effectiveConfig pair above
-// rather than replacing it: `effectiveConfig` mixes solver-request semantics with population identity
-// (corpusSha256) and execution-protocol context (levelBlind), which the canonical projection
-// deliberately keeps separate (level-specific/history-derived and observer-only fields excluded; see
-// solver-request-projection.ts's own doc comment). Built from the SAME literal `solveOpts` object
-// handed to the solver below, for the same reason effectiveConfig is: proving what actually reached
-// the execution boundary, not what argv/CLI intent implied.
-const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
-const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
-
-// Execution backend/reproducibility class (docs/hint-evidence-execution-identity-storage-
-// consolidation-plan.md section 3.3/K, modules/solver/reproducibility-mode.mjs). This tool has no
-// --race-pool-size flag and never can: every level dispatches through runWorkerPool for cross-LEVEL
-// throughput only (parallelizing DIFFERENT levels across worker_threads), never racing multiple
-// attempts at the SAME level for a first-success winner, so each individual level's solveLevel() call
-// is exactly as deterministic as calling it directly on this thread. `direct` is therefore a real,
-// certain fact here, not a guess -- unlike scripts/publish-solver-sweep-result.mjs and friends, which
-// consume already-produced reports and genuinely do not know their upstream backend.
-const backend = 'direct';
-const reproducibilityMode = classifyReproducibilityMode({ schedulerMode: solveOpts.schedulerMode, backend });
 
 const rows = new Map();
 let hintChanges = 0;

@@ -30,6 +30,14 @@
 
 import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
 
+/** @typedef {import('../modules/solver/hint-provenance.js').ProvenanceContext} ProvenanceContext */
+/** Run-wide bounded execution/occurrence fields (docs/hint-evidence-execution-identity-storage-
+ *  consolidation-plan.md section 4/W), forwarded verbatim into every recorded entry's provenance
+ *  context. Same run for every level a given createHintCapture() instance processes, so it is supplied
+ *  once at construction rather than per record() call. A field a caller has no real signal for must be
+ *  left off this object entirely, never set to `null` -- see ProvenanceContext's own doc comment.
+ *  @typedef {Pick<ProvenanceContext, 'solverRequestIdentity'|'protocolHash'|'reproducibilityMode'|'executionArm'|'occurrenceRunId'|'occurrenceRunAttempt'|'occurrenceContractRef'|'occurrenceSourceRuns'>} HintCaptureExecutionContext */
+
 /** Loads the solver-side helpers. Async because these are TS modules resolved by the bundler.
  *  `isolatedTechnique`: true iff every result passed to `record()` comes from running ONE
  *  technique in isolation rather than the real, full, competitively-budgeted solveLevel()
@@ -39,7 +47,11 @@ import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
  *  its find without this flag would misrepresent it as ordinary production-solver capability
  *  evidence (docs/solver-optimization-workstreams.md's Priority 0). Defaults false — every
  *  existing caller (portfolio-solve-sweep.mjs) already runs the real ladder. */
-export async function createHintCapture({ solverVersion, budgetMs, enabled = true, isolatedTechnique = false }) {
+export async function createHintCapture({
+    solverVersion, budgetMs, enabled = true, isolatedTechnique = false,
+    /** @type {HintCaptureExecutionContext} */
+    executionContext = {},
+}) {
     if (!enabled) {
         return {
             enabled: false,
@@ -108,6 +120,7 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
                 randomSeed: null,
                 levelRevision: levelRevisions.get(level) ?? null,
                 isolatedTechnique,
+                ...executionContext,
             });
         const before = level.hintRecords ?? [];
         const beforeCount = before.length;
