@@ -257,6 +257,17 @@ jobs:
             [[ -n "${SOURCE_RUN_ATTEMPT:-}" ]] && echo "Source run attempt: `$SOURCE_RUN_ATTEMPT`"
             [[ -n "${SOURCE_SHA:-}" ]] && echo "Source SHA: `$SOURCE_SHA`"
             echo
+            if [[ -d reports/stress/hint-ingestion-receipts ]]; then
+              echo
+              echo '### Hint ingestion accounting'
+              echo
+              echo '```'
+              node scripts/hint-ingestion-receipt-query.mjs \
+                --root=reports/stress/hint-ingestion-receipts \
+                --run-id="$SOURCE_RUN_ID" || true
+              echo '```'
+            fi
+            echo
             case "${HARVEST_RESULT:-unknown}" in
               persisted)
                 echo "Result: new durable solver evidence was persisted to main."
