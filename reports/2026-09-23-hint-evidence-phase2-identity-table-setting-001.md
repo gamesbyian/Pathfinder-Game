@@ -179,3 +179,19 @@ Run at least:
 - `node scripts/check-corpus-level-formatting.mjs`
 
 Then reconcile against current `main` before merging or continuing producer migration.
+
+
+## Follow-up mechanical hardening
+
+A later pass found one existing regression test still asserting the repaired defect:
+`hint-discovery-process-cli-node-test.mjs` expected `protocolHash === configurationHash`.
+That assertion now verifies the canonical execution-protocol hash, verifies it differs from
+configuration identity for the fixture, and exercises physical `runAttempt` propagation.
+
+`scripts/hint-discovery-process.mjs` now accepts `--run-attempt=<n>` and carries it into the shared
+source-run binding.
+
+Added `scripts/solver-evidence-identity-guard.mjs`, a deliberately narrow source guard that fails if
+maintained `scripts/` or `modules/` code directly assigns `protocolHash` from a
+`configurationHash`. It is wired into `test:node`. Historical reports/docs remain untouched and
+may continue to describe the old defect truthfully.
