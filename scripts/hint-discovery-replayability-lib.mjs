@@ -154,8 +154,14 @@ function attemptConfigIdentityFromProvenance(entry) {
  *
  * This does not mutate/upgrade historical evidence. It names exactly which dimensions are still
  * unavailable and returns an identity only when every required dimension is present. The caller may
- * supply solverRequestIdentity and solverStageId from an exact sibling-evidence/source-run join once
- * those layers are available; historical events do not acquire them by inference.
+ * supply solverRequestIdentity and solverStageId from an exact sibling-evidence/source-run join;
+ * solverRequestIdentity additionally defaults to the entry's own embedded
+ * `execution.solverRequestIdentity` (docs/hint-evidence-execution-identity-storage-consolidation-plan.md
+ * section 4/W) when the caller does not supply one -- a freshly-produced entry now carries this fact
+ * directly, so an external join is no longer the only source. A historical entry with no `execution`
+ * capsule at all still has no signal here and correctly stays missing; this is a real, bounded fact
+ * lookup, never an inferred/fabricated default. solverStageId has no such embedded source yet and
+ * remains external-join-only.
  */
 export function effectiveSolverInputIdentityStatus(entry, {
     solverRequestIdentity = null,
@@ -174,6 +180,9 @@ export function effectiveSolverInputIdentityStatus(entry, {
     const search = entry.search ?? {};
     const context = entry.context ?? {};
     const attemptConfigIdentity = attemptConfigIdentityFromProvenance(entry);
+    const effectiveSolverRequestIdentity = nonEmpty(solverRequestIdentity)
+        ? solverRequestIdentity
+        : (entry.execution?.solverRequestIdentity ?? null);
 
     if (solver.id !== PATHFINDER_SOLVER_ID) {
         return {
@@ -192,7 +201,7 @@ export function effectiveSolverInputIdentityStatus(entry, {
         catch { missingDimensions.push('solverStage'); }
     }
     if (!Number.isFinite(solver.gateKey)) missingDimensions.push('gateKey');
-    if (!nonEmpty(solverRequestIdentity)) missingDimensions.push('solverRequestIdentity');
+    if (!nonEmpty(effectiveSolverRequestIdentity)) missingDimensions.push('solverRequestIdentity');
     if (!hasSearchEnvelope(entry)) missingDimensions.push('resourceEnvelope');
     if (!hasReplaySeedWhenNeeded(entry)) missingDimensions.push('randomSeed');
     if (!hasExplicitCapabilityContext(entry)) missingDimensions.push('capabilityContext');
@@ -212,7 +221,7 @@ export function effectiveSolverInputIdentityStatus(entry, {
             schemaVersion: 1,
             levelRevision: context.levelRevision,
             solverVersion: solver.version,
-            solverRequestIdentity,
+            solverRequestIdentity: effectiveSolverRequestIdentity,
             solverStageId: canonicalSolverStageId,
             attemptConfigIdentity,
             gateKey: solver.gateKey,

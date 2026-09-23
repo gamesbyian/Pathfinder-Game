@@ -101,6 +101,29 @@ assert.equal(legacyStageIdentity.reconstructable, true);
 assert.equal(legacyStageIdentity.identity.solverStageId, 'early-repair-search');
 assert.equal(completeIdentity.identity.solverRequestIdentity, 'sha256:' + '2'.repeat(64));
 
+// Bounded execution capsule fallback (docs/hint-evidence-execution-identity-storage-consolidation-
+// plan.md section 4/W): a freshly-produced entry's own embedded execution.solverRequestIdentity is now
+// a real source, not only an external sibling-evidence join.
+const embeddedIdentityEntry = {
+    ...baseEntry(),
+    execution: { schemaVersion: 1, solverRequestIdentity: 'sha256:' + '9'.repeat(64), protocolHash: null, reproducibilityMode: 'deterministic-work', arm: null },
+};
+const embeddedIdentity = effectiveSolverInputIdentityStatus(embeddedIdentityEntry, { solverStageId: 'main-search' });
+assert.equal(embeddedIdentity.reconstructable, true, 'the entry\'s own execution capsule must satisfy the solverRequestIdentity dimension without an external join');
+assert.equal(embeddedIdentity.identity.solverRequestIdentity, 'sha256:' + '9'.repeat(64));
+
+// An explicit caller-supplied solverRequestIdentity still takes precedence over the embedded one.
+const overriddenIdentity = effectiveSolverInputIdentityStatus(embeddedIdentityEntry, {
+    solverRequestIdentity: 'sha256:' + '8'.repeat(64),
+    solverStageId: 'main-search',
+});
+assert.equal(overriddenIdentity.identity.solverRequestIdentity, 'sha256:' + '8'.repeat(64));
+
+// A historical entry with no execution capsule at all still has no signal -- never fabricated.
+const noExecutionIdentity = effectiveSolverInputIdentityStatus(baseEntry(), { solverStageId: 'main-search' });
+assert.equal(noExecutionIdentity.reconstructable, false);
+assert.deepEqual(noExecutionIdentity.missingDimensions, ['solverRequestIdentity']);
+
 const repairIdentity = effectiveSolverInputIdentityStatus(baseEntry({
     solver: {
         technique: 'repair',
