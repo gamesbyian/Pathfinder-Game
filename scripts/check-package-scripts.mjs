@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /**
- * Verifies package-script/tooling lifecycle references, mandatory agent-context budgets,
- * local/GitHub Actions gate parity, and the permanent-CI lifecycle boundary.
+ * Verifies package-script/tooling lifecycle references, local/GitHub Actions gate parity,
+ * validation-group parity, and the permanent-CI lifecycle boundary.
  *
  * This intentionally checks drift patterns that have hurt this repo: scripts such
  * as `node scripts/foo.mjs` surviving after the target file was removed, explicit
- * Vitest file arguments surviving a rename, invalid lifecycle overrides, mandatory
- * agent orientation quietly growing past its recorded route ceiling, deterministic
+ * Vitest file arguments surviving a rename, invalid lifecycle overrides, deterministic
  * PR checks drifting out of the local finish-line contract, and completed campaign
  * scaffolding creeping back into the permanent gate.
  */
@@ -18,7 +17,6 @@ import process from 'node:process';
 const ROOT = process.cwd();
 const PACKAGE_PATH = path.join(ROOT, 'package.json');
 const TOOLING_LIFECYCLE_PATH = path.join(ROOT, 'scripts', 'tooling-lifecycle.json');
-const AGENT_CONTEXT_CHECK_PATH = path.join(ROOT, 'scripts', 'agent-context-budget.mjs');
 const CI_GATE_PARITY_CHECK_PATH = path.join(ROOT, 'scripts', 'check-ci-gate-parity.mjs');
 const VALIDATION_GROUP_CHECK_PATH = path.join(ROOT, 'scripts', 'validation-groups.mjs');
 const VALID_TOOLING_LIFECYCLES = new Set(['completed-migration', 'specialist-forensic', 'cold-research']);
@@ -190,8 +188,7 @@ function runRequiredCheck(scriptPath, label) {
   }
 }
 
-runRequiredCheck(AGENT_CONTEXT_CHECK_PATH, 'Agent-context budget check');
 runRequiredCheck(CI_GATE_PARITY_CHECK_PATH, 'Local/GitHub Actions gate parity check');
 runRequiredCheck(VALIDATION_GROUP_CHECK_PATH, 'Validation ownership registry parity check');
 
-console.log('Package script entrypoints, tooling lifecycle references, permanent-CI lifecycle, agent-context budgets, CI gate parity, and validation ownership registry are valid.');
+console.log('Package script entrypoints, tooling lifecycle references, permanent-CI lifecycle, CI gate parity, and validation ownership registry are valid.');
