@@ -45,10 +45,11 @@ function randomizedTechnique(technique) {
     return value === 'repair' || value.includes('random') || value.includes('enumerat') || value.includes('prefix-anchored');
 }
 
-// IMPORTANT: this screens attempt-level provenance only. Hint provenance does not currently
-// persist the complete run-level effective/ablation configuration. A collision returned by this
-// screen is therefore a candidate requiring source-run reconciliation, not by itself evidence of
-// solver nondeterminism.
+// Historical entries still expose only attempt-level recorded input and therefore remain a
+// candidate screen requiring source-run reconciliation. Fresh Phase-3 entries can additionally
+// carry execution.solverRequestIdentity; those groups are marked canonical-solver-request. A
+// first-success race is explicitly excluded because that reproducibility mode does not promise a
+// stable winning path even when its request identity matches.
 export function inputComparability(entry) {
     const solver = entry?.solver ?? {};
     const search = entry?.search ?? {};
@@ -124,7 +125,7 @@ export function auditHintFile(levelId, hints) {
         if (group.foundAt.size < 2) continue;
         const row = {
             levelId, identity, paths: group.paths.size, runTimestamps: group.foundAt.size,
-            observations: group.observations, example: group.example,
+            observations: group.observations, identityBasis: group.identityBasis ?? null, example: group.example,
         };
         if (group.paths.size > 1) repeatRunRecordedInputCollision.push(row);
         else repeatRunStable.push(row);
