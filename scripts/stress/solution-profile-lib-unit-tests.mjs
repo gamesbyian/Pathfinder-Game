@@ -236,6 +236,29 @@ test('discoverySaturationCurve: incomplete discovery chronology cannot claim a p
     assert.equal(result.plateauFraction, null);
 });
 
+test('discoverySaturationCurve: a migration-synthetic foundAt counts as undated, not a real timestamp', () => {
+    // 2026-07-11T01:44:17.9xxZ is inside the proven 2026-07-11 flat-hintMetadata-migration window
+    // (isMigrationSyntheticFoundAt() in modules/domain/hint-runtime.mjs). Treating it as a real
+    // discovery time would silently misorder this hint in the chronology walk.
+    const grid = { w: 3, h: 1 };
+    const dated = { path: [p(0, 0), p(1, 0)], provenance: [entry()] };
+    const migrationStamped = { path: [p(1, 0), p(2, 0)], provenance: [entry({ foundAt: '2026-07-11T01:44:17.900Z' })] };
+    const result = discoverySaturationCurve([dated, migrationStamped], [], grid);
+    assert.equal(result.chronologyComplete, false);
+    assert.equal(result.chronologyDatedHints, 1);
+    assert.equal(result.plateauFraction, null);
+
+    // A second, genuinely-dated entry on the SAME hint still makes it usable: the migration-
+    // synthetic entry is excluded per-entry, not treated as poisoning the whole hint.
+    const rediscovered = {
+        path: [p(1, 0), p(2, 0)],
+        provenance: [entry({ foundAt: '2026-07-11T01:44:17.900Z' }), entry({ foundAt: '2026-03-01T00:00:00Z' })],
+    };
+    const withRediscovery = discoverySaturationCurve([dated, rediscovered], [], grid);
+    assert.equal(withRediscovery.chronologyComplete, true);
+    assert.equal(withRediscovery.chronologyDatedHints, 2);
+});
+
 // ── per-level profile assembly + insufficientData gating ──────────────────────
 
 test('buildLevelSolutionProfile: a level with no hints reports insufficientData, not a crash', () => {

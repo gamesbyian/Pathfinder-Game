@@ -5,6 +5,7 @@ import {
     INHERITED_WITNESS_ID,
     TRANSFORMED_WITNESS_ID,
     EXTERNAL_SOLVER_ID,
+    isMigrationSyntheticFoundAt,
 } from '../../modules/domain/hint-types.ts';
 import { classifyProvenanceClass } from './provenance-classes.mjs';
 import { RESEARCH_EVIDENCE_APPLICABILITY } from '../research-evidence-applicability-lib.mjs';
@@ -193,7 +194,10 @@ export function classifyEvidenceApplicability(entry, purpose, {
         reason: origin === 'variant-parent-replay' ? 'valid-context-bound-path' : 'valid-path',
     };
     if (purpose === 'longitudinal-process') {
-        const fullyDated = Boolean(entry.foundAt && entry?.solver?.id && entry?.solver?.version);
+        // A migration-synthetic foundAt (see isMigrationSyntheticFoundAt()) is a parseable
+        // timestamp but not a real discovery time -- treating it as "fully dated" would silently
+        // misplace 662 stress-corpus-1 events in any longitudinal/chronology-ordered analysis.
+        const fullyDated = Boolean(entry.foundAt && !isMigrationSyntheticFoundAt(entry) && entry?.solver?.id && entry?.solver?.version);
         return fullyDated
             ? { applicability: 'admissible', reason: 'dated-versioned-discovery-event' }
             : { applicability: 'context-bound', reason: 'legacy-or-incomplete-event-metadata' };

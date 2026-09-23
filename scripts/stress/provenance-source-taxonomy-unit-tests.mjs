@@ -65,6 +65,26 @@ test('evidence applicability is purpose-dependent rather than a global useful fl
     assert.equal(provenanceDependencyStratum(variant), 'variant-family:F1:parent:P1');
 });
 
+test('a migration-synthetic foundAt is not admissible as a dated longitudinal-process event', () => {
+    // 2026-07-11T01:44:17.9xxZ falls inside the proven migration window (see
+    // isMigrationSyntheticFoundAt() in modules/domain/hint-runtime.mjs); a solver/version-complete
+    // event with that timestamp is still "context-bound", not "dated-versioned-discovery-event",
+    // because the timestamp itself is known-fabricated migration time, not a real discovery time.
+    const migrationStamped = {
+        ...entry({ solver: { id: 'pathfinder-solver', technique: 'dfs', version: 'abc123' } }),
+        foundAt: '2026-07-11T01:44:17.900Z',
+    };
+    const result = classifyEvidenceApplicability(migrationStamped, 'longitudinal-process');
+    assert.equal(result.applicability, 'context-bound');
+    assert.equal(result.reason, 'legacy-or-incomplete-event-metadata');
+
+    const genuinelyDated = {
+        ...entry({ solver: { id: 'pathfinder-solver', technique: 'dfs', version: 'abc123' } }),
+        foundAt: '2026-07-11T01:44:19.000Z', // one second outside the proven window
+    };
+    assert.equal(classifyEvidenceApplicability(genuinelyDated, 'longitudinal-process').applicability, 'admissible');
+});
+
 test('current capability requires an explicit matching regime and strict cold context', () => {
     const cold = entry({ solver: { version: 'v2' } });
     assert.equal(classifyEvidenceApplicability(cold, 'current-production-capability').applicability, 'context-bound');

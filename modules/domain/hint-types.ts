@@ -22,6 +22,8 @@ import {
     upgradeProvenanceEntry as upgradeProvenanceEntryRuntime,
     upgradeLegacyHints as upgradeLegacyHintsRuntime,
     reconcileHints as reconcileHintsRuntime,
+    isMigrationSyntheticFoundAt as isMigrationSyntheticFoundAtRuntime,
+    MIGRATION_SYNTHETIC_FOUND_AT_WINDOW,
 } from './hint-runtime.mjs';
 
 /** Production solver provenance id. */
@@ -238,6 +240,16 @@ export function upgradeProvenanceEntry(raw: any): HintProvenanceEntry {
 /** Upgrade bare paths or older Hint/provenance shapes to canonical Hint[]. Malformed entries drop. */
 export function upgradeLegacyHints(raw: unknown): Hint[] {
     return upgradeLegacyHintsRuntime(raw) as Hint[];
+}
+
+/** The narrow timestamp window the 2026-07-11 flat-hintMetadata migration stamped on 662 events
+ *  across 102 stress-corpus-1 files that never had a real discovery time. */
+export { MIGRATION_SYNTHETIC_FOUND_AT_WINDOW };
+
+/** True iff `entry.foundAt` is a known migration-synthetic timestamp, not a genuine discovery time.
+ *  Chronology/longitudinal consumers must treat a matching entry as undated, not drop it entirely. */
+export function isMigrationSyntheticFoundAt(entry: HintProvenanceEntry | null | undefined): boolean {
+    return isMigrationSyntheticFoundAtRuntime(entry);
 }
 
 /** Reconcile authoritative path membership with provenance keyed by path signature. */

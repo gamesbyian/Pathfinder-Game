@@ -262,6 +262,37 @@ export function upgradeProvenanceEntry(raw) {
     });
 }
 
+// The 2026-07-11 flat-hintMetadata-to-schema-v3 migration (commit 7a651d391b49986626ceffbc4612352ddefb9bd4)
+// upgraded then-existing schema-v1 hintMetadata lacking a discovery timestamp through this same
+// upgradeProvenanceEntry() flat-shape branch, which supplies `new Date()` when foundAt is absent
+// (see makeProvenanceEntry()'s own `?? new Date().toISOString()` default). That one-time migration
+// run stamped a narrow window of migration/normalization time onto 662 provenance events across 102
+// stress-corpus-1 files, not their real (unknown) discovery time. Those events are now stored in the
+// current nested schema-v3 shape with that baked-in timestamp, so upgradeProvenanceEntry() no longer
+// touches them on read -- consumers that treat any parseable foundAt as dated chronology must
+// exclude this cohort explicitly instead. The exact 662/102 count was proven by reconstructing the
+// pre-migration commit and is stable across a second reconstruction at the September 11 audit
+// commit; see reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md.
+export const MIGRATION_SYNTHETIC_FOUND_AT_WINDOW = {
+    min: Date.parse('2026-07-11T01:44:17.863Z'),
+    max: Date.parse('2026-07-11T01:44:18.004Z'),
+};
+
+/**
+ * True iff this provenance entry's `foundAt` is a known migration-synthetic timestamp from the
+ * 2026-07-11 migration rather than a genuine discovery time. Consumers that build chronology/
+ * longitudinal claims (earliest-discovery ordering, "fully dated" completeness, frontier claims)
+ * must treat a matching entry as undated, not filter it out entirely -- the underlying solver/
+ * technique metadata remains real evidence, only its timestamp is unknown.
+ * @param {HintProvenanceEntry | null | undefined} entry
+ */
+export function isMigrationSyntheticFoundAt(entry) {
+    const foundAt = entry?.foundAt;
+    if (typeof foundAt !== 'string') return false;
+    const ms = Date.parse(foundAt);
+    return Number.isFinite(ms) && ms >= MIGRATION_SYNTHETIC_FOUND_AT_WINDOW.min && ms <= MIGRATION_SYNTHETIC_FOUND_AT_WINDOW.max;
+}
+
 /** @param {unknown} raw @returns {Hint[]} */
 export function upgradeLegacyHints(raw) {
     if (!Array.isArray(raw)) return [];

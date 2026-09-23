@@ -29,6 +29,7 @@ import {
     buildHintEdgeCounts, pathVisitCells, mustCrossKeysOf, requiredPathCoverageRatio, entropy, percentile,
 } from '../../modules/domain/hint-novelty.ts';
 import { readLevelCorpusDocumentWithHints, parseLevelSelector } from '../level-data-io.mjs';
+import { isMigrationSyntheticFoundAt } from '../../modules/domain/hint-types.ts';
 import {
     PROVENANCE_ORIGINS as PROVENANCE_SOURCES,
     classifyProvenanceOrigin as classifyProvenanceSource,
@@ -353,7 +354,15 @@ export function pairwiseDistinctivenessStats(paths, mcKeys, useCrossings, seed =
 }
 
 function earliestFoundAt(hint) {
-    const times = (hint.provenance || []).map(p => Date.parse(p.foundAt)).filter(Number.isFinite);
+    // Migration-synthetic foundAt values (the 2026-07-11 flat-hintMetadata migration's stamped
+    // migration/normalization time, not a real discovery time -- see
+    // isMigrationSyntheticFoundAt()'s own doc) are excluded, not just deprioritized: sorting by a
+    // fabricated timestamp would silently misplace these hints in "discovery order" and corrupt
+    // discoverySaturationCurve()'s chronology-dependent plateau claims for stress-corpus-1.
+    const times = (hint.provenance || [])
+        .filter(p => !isMigrationSyntheticFoundAt(p))
+        .map(p => Date.parse(p.foundAt))
+        .filter(Number.isFinite);
     return times.length ? Math.min(...times) : Infinity;
 }
 
