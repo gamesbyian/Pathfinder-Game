@@ -58,7 +58,7 @@ describe('canonical solver request projection', () => {
             changed.ablation.flags.PRUNE_CONNECTIVITY,
             baseline.ablation.flags.PRUNE_CONNECTIVITY,
         );
-        assert.notEqual(canonicalSolverRequestString(changed as any), canonicalSolverRequestString({}));
+        assert.notEqual(canonicalSolverRequestString({ ablation: { SCORE_GOAL_ATTRACTION: false } }), canonicalSolverRequestString({}));
     });
 
     test('disableExtraBudgetPasses resolves the additive cascade but does not zero independent node-reserve policy', () => {
