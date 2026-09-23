@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict';
-import { auditResearchIntegration } from './research-integration-audit-lib.mjs';
+import {
+    auditResearchIntegration,
+    buildResearchIntegrationAuditContext,
+} from './research-integration-audit-lib.mjs';
 import { buildResearchRelations } from './research-relations-lib.mjs';
 
 // The permanent check:research-integration validator owns the executable/full autonomous-build
 // integration proof. This Node test builds the relation model once, then exercises the library
 // contract and mutation/error cases against that immutable baseline.
 const prebuiltModel = buildResearchRelations(process.cwd(), { discoverArtifacts: true });
-const result = auditResearchIntegration(process.cwd(), { model: prebuiltModel });
+const auditContext = buildResearchIntegrationAuditContext(process.cwd());
+const audit = model => auditResearchIntegration(process.cwd(), { model, context: auditContext });
+const result = audit(prebuiltModel);
 assert.equal(result.errorCount, 0, JSON.stringify(result.errors, null, 2));
 assert.equal(result.premiseCount, 148);
 assert.equal(result.premiseRelationCount, 184);
@@ -23,16 +28,12 @@ const withQueueRef = questionRef => ({
             String(row.workstreamId) === '2' ? { ...row, questionRef } : row),
     },
 });
-const terminalQueue = auditResearchIntegration(process.cwd(), {
-    model: withQueueRef('WS2-WORK-LADDER-ECONOMICS'),
-});
+const terminalQueue = audit(withQueueRef('WS2-WORK-LADDER-ECONOMICS'));
 assert.ok(terminalQueue.errors.some(error =>
     /active workstream 2 references terminal research question WS2-WORK-LADDER-ECONOMICS/u.test(error)),
 'active execution must not silently point at a concluded scientific question');
 
-const missingQueueQuestion = auditResearchIntegration(process.cwd(), {
-    model: withQueueRef('WS2-NOT-A-REAL-QUESTION'),
-});
+const missingQueueQuestion = audit(withQueueRef('WS2-NOT-A-REAL-QUESTION'));
 assert.ok(missingQueueQuestion.errors.some(error =>
     /workstream 2 references unknown research question WS2-NOT-A-REAL-QUESTION/u.test(error)),
 'stable queue question references must resolve through the question authority');
@@ -45,7 +46,7 @@ const evidenceWithMissingSource = {
             index === 0 ? { ...row, sourceArtifacts: [...(row.sourceArtifacts ?? []), 'reports/__missing-source-artifact__.md'] } : row),
     },
 };
-const missingSourceArtifact = auditResearchIntegration(process.cwd(), { model: evidenceWithMissingSource });
+const missingSourceArtifact = audit(evidenceWithMissingSource);
 assert.ok(missingSourceArtifact.errors.some(error =>
     /references missing sourceArtifact reports\/__missing-source-artifact__\.md/u.test(error)),
 'structured report sourceArtifact refs must resolve to tracked repository files at integration time');
@@ -65,7 +66,7 @@ const withBadCapabilityDemand = {
         ],
     },
 };
-const badCapabilityDemand = auditResearchIntegration(process.cwd(), { model: withBadCapabilityDemand });
+const badCapabilityDemand = audit(withBadCapabilityDemand);
 assert.ok(badCapabilityDemand.errors.some(error =>
     /capability demand CID-TEST-BAD references unknown owning question WS2-NOT-A-REAL-QUESTION/u.test(error)));
 assert.ok(badCapabilityDemand.errors.some(error =>
@@ -85,7 +86,7 @@ const evidenceWithBadSuccessors = {
             } : row),
     },
 };
-const badSuccessors = auditResearchIntegration(process.cwd(), { model: evidenceWithBadSuccessors });
+const badSuccessors = audit(evidenceWithBadSuccessors);
 assert.ok(badSuccessors.errors.some(error =>
     /references unknown successor question WS2-NOT-A-REAL-QUESTION/u.test(error)));
 assert.ok(badSuccessors.errors.some(error =>
@@ -109,8 +110,7 @@ const withConsumptionEvent = event => ({
     },
 });
 
-const badConsumptionQuestion = auditResearchIntegration(process.cwd(), {
-    model: withConsumptionEvent({
+const badConsumptionQuestion = audit(withConsumptionEvent({
         questionId: 'WS2-NOT-A-REAL-QUESTION',
         decisionRef: 'logical-decision-ref',
         scope: { kind: 'block', id: 'AUDIT-BLOCK' },
