@@ -30,6 +30,13 @@
       "retirementTrigger": "retire when testability topology is fully represented by maintained validation metadata/telemetry and this standalone audit no longer adds information"
     },
     {
+      "workflow": "ci-typescript-incremental-benchmark.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual TypeScript incremental-cache correctness/timing benchmark",
+      "retirementTrigger": "retire after TypeScript cache policy is settled and this standalone benchmark no longer informs CI decisions"
+    },
+    {
       "workflow": "ci.yml",
       "role": "operational",
       "status": "maintained",
