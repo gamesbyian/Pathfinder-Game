@@ -582,15 +582,17 @@
       "id": "PSC-025",
       "concept": "hint artifact layout and discovery",
       "owners": [
+        "modules/hint-artifact-layout.mjs",
         "scripts/level-data-io.mjs",
         "modules/data-asset-loaders.ts",
         "modules/dev-corpus.ts"
       ],
       "forms": [
-        "Node filename-derived hintsDirFor()",
-        "browser caller-provided hintsDirName",
-        "writer accepts arbitrary string IDs",
-        "listHintFiles() regex-limited discovery"
+        "shared levels-filename -> hint-directory rule",
+        "shared persistent-id/positional-fallback -> hint filename rule",
+        "Node path/fs adapter",
+        "browser fetch adapter",
+        "matching-only legacy hintsDirName compatibility assertion"
       ],
       "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
@@ -599,7 +601,7 @@
       "treatment": "canonical-layout-authority",
       "status": "in-progress",
       "retirementGate": "Define one corpus-to-hint-artifact layout contract with Node/browser adapters; every canonical writable hint filename is discoverable by validators, formatters, migrators, and indexes; legacy numeric fallback remains explicit.",
-      "progress": "Investigation closed 2026-09-22. Node/browser corpus-to-hint directory mapping has two owners; hintFileName accepts arbitrary string ids while listHintFiles recognizes only a narrower filename regex. Phase -1 target is one neutral corpus-layout descriptor plus expected artifact names derived from corpus level ids; enumeration becomes missing/orphan verification and numeric fallback stays explicit."
+      "progress": "Implementation completed on chatgpt/continue-hint-evidence-consolidation-2026-09-23: one browser/Node-neutral layout authority now owns directory naming, safe filename/key round-tripping, positional fallback, expected filenames, and discovery vocabulary. Node listHintFiles no longer uses the narrower historical regex; browser dev-corpus mapping derives from levelsFile; corpus formatting validation classifies missing versus orphan artifacts. Focused tests are added, but execution validation/current-main reconciliation remain before closing the registry row."
     },
     {
       "id": "PSC-026",
