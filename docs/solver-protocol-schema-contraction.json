@@ -672,17 +672,16 @@
       ],
       "forms": [
         "canonical hint-ingestion receipt",
-        "historical level-blind selection manifest compatibility projection",
-        "direct artifact merger counters/quarantine (remaining migration gap)"
+        "historical level-blind selection manifest compatibility projection"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingestion-receipt",
       "status": "in-progress",
       "retirementGate": "All modern ingestion lanes expose one minimal canonical funnel vocabulary for observed solved candidates, referee/compatibility rejection, already-represented semantic evidence, quarantine, and persisted changes, with producer-specific extensions allowed.",
-      "progress": "Canonical receipt schema v1 is implemented and queryable. It names success-selected candidate/eligible/referee-accepted/already-represented/quarantined observations, quarantine reasons, coarse semantic changes, exact path/provenance-event/occurrence additions when measurable, physical file changes, and explicit null for unmeasured addition units. Level-blind and isolated/report harvesters emit the shared receipt; the old level-blind manifest remains readable and projects into it without historical rewrite. Central GHA harvest persists these receipts deterministically. Remaining gap: merge-hint-artifacts.mjs still needs equivalent accounting before PSC-028 can retire."
+      "progress": "Canonical receipt schema v1 is implemented and queryable across all three current canonical harvest lanes. Level-blind and isolated/report harvesters emit the shared receipt; merge-hint-artifacts measures exact path/provenance-event/occurrence additions from canonical before/after merge state and emits the same receipt. The old level-blind selection manifest remains a historical/current specialist compatibility resource and projects into the receipt without rewrite. Central GHA harvest persists all three receipts with exact source run id/attempt. Receipt accounting is implementation-complete pending real workflow validation; retirement still requires proving no maintained ingestion lane bypasses the canonical receipt vocabulary."
     },
     {
       "id": "PSC-029",
