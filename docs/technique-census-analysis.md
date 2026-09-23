@@ -5,11 +5,13 @@
 > **Operational interpretation:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
 > **Current budget interpretation:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md), pending regeneration against the refreshed census.
 
-The current committed census remains `reports/stress/technique-census/33717910218/` (2026-09-03 refresh, 78,505 unique cells) until the new canonical run is fully combined/analyzed and committed. A fresh census, GHA `35687337464`, was dispatched 2026-09-22 from solver ref `39d14d49023aa09cb680053b975ef786eeae9b01` with T1 plus the bounded EW1 60×10M pricing tranche. At the latest reconciliation it is still **in progress**; partial shard artifacts are not a current census and must not be used for T1 churn, niche, pricing, or scheduler conclusions. The companion stress refresh is already complete and reconciled. [fresh stress/failure reconciliation](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md)
+Fresh canonical census GHA `35687337464` completed 2026-09-22 from solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`: **120/120 shards**, **80,538 unique cells**, no missing/partial shards, and the bounded EW1 60×10M tranche. Its specialized combined artifact is the current observational census authority. The final workflow badge is red only because the legacy hint-persistence rebase conflicted after combine; automatic harvesting subsequently preserved the discoveries on `main` at `afd744a195b2177a865670d3ec3afc00ed5352a7`. [broad closeout](../reports/2026-09-22-technique-census-broad-evidence-closeout-001.md)
 
-The older `32240161854` census remains historical development evidence. See [`../reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md`](../reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md) for the previous direct rejoin and [`../reports/2026-09-21-technique-census-budget-and-broad-run-reconciliation-001.md`](../reports/2026-09-21-technique-census-budget-and-broad-run-reconciliation-001.md) for the mandatory 2026-09-22 broad-run closeout contract.
+The previous committed census `reports/stress/technique-census/33717910218/` remains the latest fully materialized **second-order** analysis tree until the fresh 80,538-cell matrix is reduced into durable generated outputs. Do not confuse that materialization lag with an incomplete acquisition. The older `32240161854` census remains historical development evidence.
 
-After run `35687337464` completes and its combined output is available, regenerate the second-order outputs against that canonical run directory. Until then, the command below applies to the current committed census:
+The fresh run also exposed a provenance-contract gap: its generic `solver-sweep-result` wrapper marks the primary result non-decision-bearing because the combined output does not expose immutable execution SHA / exact expected-observed identity through the newer result contract. Fix that before the next standing census. Until then, use the specialized artifact for observational capability interpretation and keep production-policy changes behind controlled confirmation.
+
+Regenerate second-order outputs from the fresh combined matrix once materialized into an analyzer input directory. The command below remains the shape of that operation:
 
 ```bash
 node scripts/analyze-technique-census.mjs reports/stress/technique-census/33717910218
@@ -80,13 +82,7 @@ Cap costs are isolated `nodesExpanded` diagnostics. They compare depth **within*
 
 ## Current decision boundary
 
-The expensive matrix is fresh; the current gap is **derived materialization/join/valuation**, not another census:
-
-1. regenerate second-order cap/tranche/substitutability outputs from `33717910218`;
-2. regenerate the prespecified relative-advantage comparisons and materialize old->new action stability;
-3. join current production reach/work evidence where comparable;
-4. value incremental solves/work, rare exclusives, portfolio cardinality, and fixed-work oracle headroom;
-5. use stable cross-evidence cohorts to nominate only compact, testable search/scheduler mechanisms.
+The expensive matrix is fresh and complete; the current gap is **derived materialization/provenance hardening**, not another census. The fresh T1 boundary solves 83/532 current production misses, with 47 singleton-supported misses, while the 60×10M EW1 tranche completed without deadline truncation. Keep the 50M deep ceiling and 10M EW1 instrument. Next: (1) materialize fresh second-order cap/tranche/substitutability outputs, (2) regenerate temporal/relative-advantage comparisons, (3) join current production reach/work, (4) use the 83/47 rescuable cohorts and cheap routing mismatches to nominate compact first-loss/allocation tests, and (5) repair the standard-result execution-identity contract before the next census.
 
 Sequence-dependent actions require controlled current-code execution before causal scheduler use; isolated census curves do not erase predecessor-state effects.
 
