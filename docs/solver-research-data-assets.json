@@ -239,8 +239,7 @@
         "scripts/hint-discovery-process-evidence-lib.mjs",
         "scripts/hint-discovery-process.mjs",
         "docs/solver-evaluation-evidence.md",
-        "scripts/solver-experiment-contract.mjs::hashExecutionProtocol",
-        "scripts/solver-experiment-contract.mjs::sourceRunBindingFromContract"
+        "scripts/solver-experiment-contract.mjs"
       ],
       "queryEntryPoints": [
         "node scripts/research-asset-query.mjs --id=hint-discovery-process",

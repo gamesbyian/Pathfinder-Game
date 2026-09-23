@@ -13,7 +13,7 @@ export function hintDirectoryNameForLevelsFile(levelsFileOrPath) {
     if (typeof levelsFileOrPath !== 'string' || levelsFileOrPath.length === 0) {
         throw new Error('hint layout requires a non-empty levels filename/path');
     }
-    const baseName = levelsFileOrPath.split(/[\\/]/).pop();
+    const baseName = levelsFileOrPath.split(/[\\/]/).pop() ?? levelsFileOrPath;
     const match = /^stress-levels-(.+)\.json$/.exec(baseName);
     return match ? `hints-${match[1]}` : 'hints';
 }
@@ -32,20 +32,33 @@ function assertHintArtifactKey(key) {
     }
 }
 
-/** String persistent ids are used verbatim; positional fallback keys are zero-padded. */
+/**
+ * String persistent ids are used verbatim; positional fallback keys are zero-padded.
+ * @param {string | number} key
+ * @returns {string}
+ */
 export function hintArtifactFileName(key) {
     assertHintArtifactKey(key);
     return typeof key === 'string' ? `${key}.json` : `${String(key).padStart(5, '0')}.json`;
 }
 
-/** Persistent id when present, otherwise the caller-supplied 1-based array position. */
+/**
+ * Persistent id when present, otherwise the caller-supplied 1-based array position.
+ * @param {{id?: unknown} | null | undefined} level
+ * @param {number} position
+ * @returns {string | number}
+ */
 export function hintKeyForLevel(level, position) {
     const key = (typeof level?.id === 'string' && level.id) ? level.id : position;
     assertHintArtifactKey(key);
     return key;
 }
 
-/** True only for filenames that could have been emitted by hintArtifactFileName(). */
+/**
+ * True only for filenames that could have been emitted by hintArtifactFileName().
+ * @param {unknown} fileName
+ * @returns {boolean}
+ */
 export function isHintArtifactFileName(fileName) {
     if (typeof fileName !== 'string' || !fileName.endsWith('.json')) return false;
     const key = fileName.slice(0, -5);
@@ -57,7 +70,11 @@ export function isHintArtifactFileName(fileName) {
     }
 }
 
-/** Canonical expected filenames for a corpus, derived from level identity rather than directory enumeration. */
+/**
+ * Canonical expected filenames for a corpus, derived from level identity rather than directory enumeration.
+ * @param {ReadonlyArray<{id?: unknown}>} levels
+ * @returns {string[]}
+ */
 export function expectedHintArtifactFileNames(levels) {
     if (!Array.isArray(levels)) throw new Error('expectedHintArtifactFileNames requires a levels array');
     return levels.map((level, index) => hintArtifactFileName(hintKeyForLevel(level, index + 1)));

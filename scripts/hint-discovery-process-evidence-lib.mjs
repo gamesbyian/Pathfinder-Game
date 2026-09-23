@@ -41,6 +41,7 @@ export function buildHintDiscoveryProcessEvidence(joinResult, {
     levels,
     contract,
     runId,
+    runAttempt = null,
     contractRef = null,
     arm = null,
 } = {}) {
@@ -50,7 +51,7 @@ export function buildHintDiscoveryProcessEvidence(joinResult, {
     if (!nonEmpty(sourceReport)) throw new Error('sourceReport is required');
     if (!nonEmpty(levels)) throw new Error('levels is required');
 
-    const run = discoveryProcessEnvelopeFromContract(contract, { runId, contractRef, arm });
+    const run = discoveryProcessEnvelopeFromContract(contract, { runId, runAttempt, contractRef, arm });
     const records = joinResult.joined.map(item => ({
         evidenceId: stableHash({
             runId: run.runId,

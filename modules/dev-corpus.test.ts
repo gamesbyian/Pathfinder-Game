@@ -9,7 +9,11 @@ import { createData } from './data.js';
 import { createDevCorpusSwitcher } from './dev-corpus.js';
 
 const deepClone = (v: any) => JSON.parse(JSON.stringify(v));
-const makeLevel = () => ({ grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 } });
+// A real corpus level always carries a persistent id (data.ts's getHints() calls
+// hintsSource(level?.id), never a position) — modules/hint-artifact-layout.mjs's
+// hintArtifactFileName() now validates that key strictly instead of silently building a wrong
+// "undefined.json" URL, so this fixture must supply one like any real level does.
+const makeLevel = (id = 'F00001') => ({ id, grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 } });
 const THEMES = { classic: { canvasBg: '#fff', grid: '#000', path: '#111' } };
 
 // Serves every fetch (levels AND per-level hints) from the same response: `levels` for the level-list

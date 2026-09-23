@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { createFailureResponseDocument, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { hashExecutionProtocol } from './solver-experiment-contract.mjs';
 
 const rawArgs = process.argv.slice(2);
 const values = new Map();
@@ -69,7 +70,12 @@ const contractFile = values.get('contract-file') || null;
 const contract = contractFile && fs.existsSync(contractFile)
     ? JSON.parse(fs.readFileSync(contractFile, 'utf8'))
     : null;
-const protocolHash = contract?.experiment?.configurationHash ?? null;
+// Execution-protocol identity is distinct from configuration identity (see
+// hashExecutionProtocol's own doc): configurationHash alone cannot show that two runs used the
+// same execution semantics (scheduler mode, limits, level-blind/history-aware mode). Only compute
+// it when a contract was actually supplied, preserving the prior "no contract -> null" state that
+// createFailureResponseDocument()/validateFailureResponseDocument() already treat as explicit unknown.
+const protocolHash = contract ? hashExecutionProtocol(contract) : null;
 // Comparable-run failure evidence needs the actual solver execution identity. Do not upgrade
 // orchestration checkout metadata or legacy top-level fields into experiment identity.
 const solverRef = contract?.experiment?.resolvedSha ?? null;

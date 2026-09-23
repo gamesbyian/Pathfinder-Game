@@ -90,12 +90,15 @@ assert.equal(completeIdentity.identity.attemptConfigIdentity, 'dfs|score=default
 assert.equal(completeIdentity.identity.gateKey, 17);
 assert.equal(completeIdentity.identity.solverStageId, 'main-search');
 
+// 'repair-probe' is the historical spelling; 'early-repair-search' is its current canonical
+// name (modules/solver/stage-id-normalization.mjs) — not to be confused with the SEPARATE
+// 'repair-probe-shrink-recovery' -> 'repair-shrink-recovery' legacy pair.
 const legacyStageIdentity = effectiveSolverInputIdentityStatus(baseEntry(), {
     solverRequestIdentity: 'sha256:' + '5'.repeat(64),
-    solverStageId: 'early-repair-search',
+    solverStageId: 'repair-probe',
 });
 assert.equal(legacyStageIdentity.reconstructable, true);
-assert.equal(legacyStageIdentity.identity.solverStageId, 'repair-shrink-recovery');
+assert.equal(legacyStageIdentity.identity.solverStageId, 'early-repair-search');
 assert.equal(completeIdentity.identity.solverRequestIdentity, 'sha256:' + '2'.repeat(64));
 
 const repairIdentity = effectiveSolverInputIdentityStatus(baseEntry({
