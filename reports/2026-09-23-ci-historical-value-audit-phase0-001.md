@@ -84,3 +84,40 @@ Run the manual collector first with a bounded rehearsal, then without `max_runs`
 - lineage output size and active-head correctness.
 
 After that, Phase 1 can mechanically identify all red incidents and fetch logs only for those runs.
+
+
+## Seed cluster 002 — PRs #1981 through #1990
+
+A connector-side scan of the ten consecutive PR heads #1981–#1990 found **10/10 red CI runs**.
+
+Every one of those runs had the same lane shape:
+
+- `fast-gate`: failure;
+- `deep-verification`: success;
+- `impact-shadow`: success.
+
+Across the cluster, the expensive deep lane therefore executed ten times and contributed **zero observed detection**. This is not yet enough to demote it globally, but it is exactly the historical counterfactual the audit is designed to quantify over the full retained population.
+
+The fast-gate failure population was heavily concentrated in research-system metadata/queryability/governance checks:
+
+- `check:research-integration`;
+- `test:research-query`;
+- `test:research-integration-audit`;
+- `test:research-system-inventory`;
+- `test:research-system-consolidation-closeout`;
+- `test:research-index`;
+- workflow lifecycle/documentation/parity checks;
+- an action-selection fixture expectation during part of the sequence.
+
+The failure multiplicity is again much larger than the apparent root-cause count. For example, the same structured research metadata disagreement propagated through the status index into relations, query, inventory, integration-audit, and closeout consumers. Counting each failing harness as an independent catch would substantially exaggerate the marginal detection value of the graph.
+
+The sequence also shows repair progression rather than ten cleanly independent incidents: by PR #1990 the fast gate had narrowed to a single failing `test:research-query` while validators, lint, solver canary, production build, and deep verification were green.
+
+### Audit implication
+
+The final analysis must support **failure-family clustering across adjacent PRs**, not only within one run. Otherwise a whack-a-mole repair sequence can be miscounted as repeated independent regression incidence.
+
+A useful incident schema therefore needs both:
+
+- `rootCauseIncidentId` for correlated failures inside one run; and
+- `failureFamilyId` for the same underlying debt/fix sequence spanning multiple PR heads.
