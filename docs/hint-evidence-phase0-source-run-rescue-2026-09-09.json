@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Phase 0 (baseline/evidence rescue) durable capture of GitHub Actions source-run metadata, arm/configuration identity, and artifact locators for the six 2026-09-09 workflow runs used to reconcile the #1996 hint-provenance repeat-run determinism audit, before their GHA artifacts expire.",
+  "planAuthority": "docs/hint-evidence-execution-identity-storage-consolidation-plan.md",
+  "relatedReports": [
+    "reports/2026-09-22-hint-provenance-repeat-run-determinism-audit.md",
+    "reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md",
+    "reports/2026-09-23-hint-evidence-phase0-source-run-rescue-001.md"
+  ],
+  "rescuedAt": "2026-09-23",
+  "reconciledAgainstMainCommit": "c88461ab669950e4b6d06873431a3704dbe2c4a9",
+  "environmentConstraint": {
+    "summary": "This rescue session's outbound network egress policy denies connections to productionresultssa18.blob.core.windows.net (GitHub Actions artifact storage), so raw artifact ZIP bytes (result.json, manifest.json, batch-*.json per-shard payloads) could not be downloaded in this session even though the GitHub API confirmed all six runs' artifacts are unexpired.",
+    "evidenceCapturedInstead": "Workflow/job/run metadata and job-log text via the GitHub Actions API (api.github.com), which is not subject to the same block. This includes the parameterized workflow display name (which encodes the dispatched arm), head commit/ref, per-job conclusions, and the verbatim human-readable result-summary markdown that scripts/publish-solver-sweep-result.mjs prints to the combine job's log before uploading the solver-sweep-result artifact.",
+    "notRescued": "Exact per-level result.json rows and manifest.json dispatch-input payloads for these six runs remain only inside the still-unexpired (see artifacts[].expiresAt below, currently 2026-12-08) solver-sweep-result/targeted-sweep-combined artifacts. A session with Azure Blob Storage egress access should download and durably archive those artifacts verbatim before that expiry if full row-level replay fidelity for this cohort is later required by Phase 7 (authoritative historical enrichment).",
+    "mitigatingFactor": "The discoveries these runs actually contributed already persisted into the tracked canonical hint corpus (data/stress/hints*) via the normal harvest path at the time; the #1996 audit read them from there, not from these artifacts. This rescue therefore captures the arm/source-run binding context that is NOT already durable in git, rather than duplicating path/provenance bytes that already are."
+  },
+  "sourceRuns": [
+    {
+      "runId": 34315398129,
+      "htmlUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34315398129",
+      "workflowDisplayName": "Targeted sweep · data/stress/connectivity-volume-portal-ab-001-ids.txt · enable=none · disable=none",
+      "workflowFamily": "Solver level-blind targeted sweep",
+      "armParsed": { "idsFile": "data/stress/connectivity-volume-portal-ab-001-ids.txt", "enable": "none", "disable": "none" },
+      "headCommit": "0201e952faa911362396e6d564b5f928f108dc73",
+      "headRef": "claude/solver-portal-restoration-queue-3boq68",
+      "runAttempt": 1,
+      "combineJob": {
+        "id": 102363304743,
+        "conclusion": "failure",
+        "failureReason": "validate-solver-sweep-integrity.mjs reported a population mismatch (558/954 rows) against the full corpus population; this run only ever covered a 558-level slice by design, so the mismatch is not a run defect. The standard solver-sweep-result artifact is still published via a step that runs regardless.",
+        "resultSummaryMarkdown": "# Solver sweep result\n\n- Workflow: Solver level-blind targeted sweep\n- Run: [34315398129](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34315398129)\n- Commit: `0201e952faa911362396e6d564b5f928f108dc73`\n- Ref: `claude/solver-portal-restoration-queue-3boq68`\n- Legacy/specialized artifact: `targeted-sweep-combined`\n- Dispatch inputs: recorded in `manifest.json`\n- Shards: 19/19 complete (exact expected population validated separately)\n- Standard artifact: `solver-sweep-result`\n- Primary result: `result.json`\n\n## Result summary\n\n- `result.json`: 311/558 solved, work=67826579639 (558/558 levels reported), nodes=57813645901\n\n## Stage participation\n\n| stage | reach | attempts | solves | nodesExpanded | attempt workSpent |\n|---|---:|---:|---:|---:|---:|\n| `main-search` | 511/558 | 4014 | 163 | 12822491025 | n/a |\n| `coarse-state-near-tie-retention-disabled-retry` | 305/558 | 3067 | 6 | 3752799037 | n/a |\n| `connectivity-axis-prune-disabled-retry` | 281/558 | 2826 | 1 | 7000878150 | n/a |\n| `guidance-goal-distance-retry` | 267/558 | 2608 | 1 | 14996785276 | n/a |\n| `must-cross-neighbor-prune-disabled-retry` | 172/558 | 1715 | 2 | 7278589958 | n/a |\n| `goal-attraction-disabled-retry` | 95/558 | 1391 | 7 | 246469131 | n/a |\n| `early-repair-search` | 323/558 | 805 | 47 | 1783345483 | n/a |\n| `admissible-order-fallback` | 337/558 | 337 | 32 | 3919173278 | n/a |\n| `late-repair-multiseed-retry` | 60/558 | 328 | 19 | 1573552337 | n/a |\n| `admissible-order-alternate-tiebreak-retry` | 299/558 | 299 | 18 | 3564402962 | n/a |\n| `repair-fallback` | 205/558 | 205 | 4 | 562315448 | n/a |\n| `late-repair-search` | 71/558 | 71 | 11 | 312843816 | n/a |"
+      },
+      "shardJobs": { "planned": 19, "observedConclusions": { "success": 20, "cancelled": 19 }, "note": "counts include the plan job itself; one shard (015/19) succeeded, the remaining 18 were cancelled after the population-slice was fully covered by earlier shards' partial output before the run's own timeout budget elapsed -- combine still reported 19/19 shard result files present" },
+      "artifacts": [
+        { "id": 10091384220, "name": "solver-sweep-result", "sizeBytes": 630450, "sha256": "8ab2c590aff7144c7d7a1efbc60a61776fd436874534c0fc5ec991b1a6d0b1d9", "createdAt": "2026-09-09T06:35:10Z", "expiresAt": "2026-12-08T05:34:05Z" },
+        { "id": 10089885578, "name": "targeted-shard-plan", "sizeBytes": 7967, "sha256": "4883475b8cbe0817e37d0f725f4344844bec60c76ca293d5d479b8577b1f036a", "createdAt": "2026-09-09T05:35:02Z", "expiresAt": "2026-12-08T05:34:05Z" }
+      ],
+      "otherArtifactsNotEnumerated": { "count": 19, "namePattern": "targeted-shard-NNN", "note": "raw per-shard payloads already folded into the combined result.json referenced above; not individually enumerated here" }
+    },
+    {
+      "runId": 34315357361,
+      "htmlUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34315357361",
+      "workflowDisplayName": "Targeted sweep · data/stress/mc-neighbor-budget-portal-ab-001-ids.txt · enable=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL · disable=none",
+      "workflowFamily": "Solver level-blind targeted sweep",
+      "armParsed": { "idsFile": "data/stress/mc-neighbor-budget-portal-ab-001-ids.txt", "enable": "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL", "disable": "none" },
+      "headCommit": "0201e952faa911362396e6d564b5f928f108dc73",
+      "headRef": "claude/solver-portal-restoration-queue-3boq68",
+      "runAttempt": 1,
+      "combineJob": {
+        "id": 102372535638,
+        "conclusion": "failure",
+        "failureReason": "validate-solver-sweep-integrity.mjs reported a population mismatch (170/530 rows) against the full corpus population; this run only ever covered a 170-level slice by design.",
+        "resultSummaryMarkdown": "# Solver sweep result\n\n- Workflow: Solver level-blind targeted sweep\n- Run: [34315357361](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34315357361)\n- Commit: `0201e952faa911362396e6d564b5f928f108dc73`\n- Ref: `claude/solver-portal-restoration-queue-3boq68`\n- Legacy/specialized artifact: `targeted-sweep-combined`\n- Dispatch inputs: recorded in `manifest.json`\n- Shards: 14/14 complete (exact expected population validated separately)\n- Standard artifact: `solver-sweep-result`\n- Primary result: `result.json`\n\n## Result summary\n\n- `result.json`: 112/170 solved, work=17353627290 (170/170 levels reported), nodes=14505555158\n\n## Stage participation\n\n| stage | reach | attempts | solves | nodesExpanded | attempt workSpent |\n|---|---:|---:|---:|---:|---:|\n| `main-search` | 142/170 | 1007 | 64 | 2813944283 | n/a |\n| `coarse-state-near-tie-retention-disabled-retry` | 72/170 | 766 | 1 | 888938567 | n/a |\n| `connectivity-axis-prune-disabled-retry` | 66/170 | 704 | 0 | 1650001095 | n/a |\n| `must-cross-neighbor-prune-disabled-retry` | 66/170 | 681 | 5 | 2709845098 | n/a |\n| `guidance-goal-distance-retry` | 59/170 | 604 | 0 | 3608844512 | n/a |\n| `early-repair-search` | 130/170 | 313 | 28 | 703752654 | n/a |\n| `goal-attraction-disabled-retry` | 11/170 | 173 | 0 | 36058062 | n/a |\n| `admissible-order-fallback` | 77/170 | 77 | 5 | 920054614 | n/a |\n| `admissible-order-alternate-tiebreak-retry` | 71/170 | 71 | 5 | 841949004 | n/a |\n| `repair-fallback` | 56/170 | 56 | 1 | 180179397 | n/a |\n| `late-repair-multiseed-retry` | 4/170 | 27 | 1 | 130511145 | n/a |\n| `late-repair-search` | 6/170 | 6 | 2 | 21476727 | n/a |"
+      },
+      "shardJobs": { "planned": 14, "observedConclusions": { "success": 1, "cancelled": 13 }, "note": "plan job success; all 14 solve shards show conclusion=cancelled in the job list (matching this workflow family's deliberate cancel-after-deadline pattern), yet combine still reported 14/14 shard result files present -- shard timeout wrappers write partial output before the job-level cancellation lands" },
+      "artifacts": [
+        { "id": 10092845194, "name": "solver-sweep-result", "sizeBytes": 181963, "sha256": "bda6b75e2e636f96df7635ce3c2436a08c8f2504b81d6853052241428339f64f", "createdAt": "2026-09-09T07:24:06Z", "expiresAt": "2026-12-08T05:33:30Z" },
+        { "id": 10091397703, "name": "targeted-shard-plan", "sizeBytes": 4743, "sha256": "0764e5adfeb6bc643eec31d06e953ab2bbae1cb92fe3af43c2de044c9833f1a2", "createdAt": "2026-09-09T06:35:39Z", "expiresAt": "2026-12-08T05:33:30Z" }
+      ],
+      "otherArtifactsNotEnumerated": { "count": 14, "namePattern": "targeted-shard-NNN", "note": "raw per-shard payloads already folded into the combined result.json referenced above; not individually enumerated here" }
+    },
+    {
+      "runId": 34320087947,
+      "htmlUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320087947",
+      "workflowDisplayName": "Targeted sweep · data/stress/mc-neighbor-budget-portal-ab-001-ids.txt · enable=none · disable=none",
+      "workflowFamily": "Solver level-blind targeted sweep",
+      "armParsed": { "idsFile": "data/stress/mc-neighbor-budget-portal-ab-001-ids.txt", "enable": "none", "disable": "none" },
+      "headCommit": "0201e952faa911362396e6d564b5f928f108dc73",
+      "headRef": "claude/solver-portal-restoration-queue-3boq68",
+      "runAttempt": 1,
+      "combineJob": {
+        "id": 102389792927,
+        "conclusion": "failure",
+        "failureReason": "validate-solver-sweep-integrity.mjs reported a population mismatch (513/530 rows); 17 ids (including R02565, R02794, R02802, R02858, R02884, R02899, R02902, R02915, R02927, R02932, R03032, R03097, R03128, R03303, R03304, R03334, R03368) had no result row in this run and became the residual population for the 2026-09-09 gap-fill runs below.",
+        "resultSummaryMarkdown": "# Solver sweep result\n\n- Workflow: Solver level-blind targeted sweep\n- Run: [34320087947](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320087947)\n- Commit: `0201e952faa911362396e6d564b5f928f108dc73`\n- Ref: `claude/solver-portal-restoration-queue-3boq68`\n- Legacy/specialized artifact: `targeted-sweep-combined`\n- Dispatch inputs: recorded in `manifest.json`\n- Shards: 53/53 complete (exact expected population validated separately)\n- Standard artifact: `solver-sweep-result`\n- Primary result: `result.json`\n\n## Result summary\n\n- `result.json`: 189/513 solved, work=83704832144 (513/513 levels reported), nodes=73095241994\n\n## Stage participation\n\n| stage | reach | attempts | solves | nodesExpanded | attempt workSpent |\n|---|---:|---:|---:|---:|---:|\n| `main-search` | 468/513 | 4133 | 92 | 12131504101 | n/a |\n| `coarse-state-near-tie-retention-disabled-retry` | 361/513 | 3648 | 7 | 4442419970 | n/a |\n| `connectivity-axis-prune-disabled-retry` | 344/513 | 3515 | 1 | 8576074956 | n/a |\n| `must-cross-neighbor-prune-disabled-retry` | 343/513 | 3501 | 2 | 14675245478 | n/a |\n| `guidance-goal-distance-retry` | 334/513 | 3363 | 0 | 20261127756 | n/a |\n| `early-repair-search` | 430/513 | 1102 | 45 | 2474615233 | n/a |\n| `goal-attraction-disabled-retry` | 35/513 | 510 | 2 | 99157851 | n/a |\n| `admissible-order-fallback` | 373/513 | 373 | 12 | 4557853538 | n/a |\n| `admissible-order-alternate-tiebreak-retry` | 354/513 | 354 | 10 | 4355695626 | n/a |\n| `repair-fallback` | 287/513 | 287 | 1 | 804058683 | n/a |\n| `late-repair-multiseed-retry` | 23/513 | 126 | 10 | 597136127 | n/a |\n| `late-repair-search` | 30/513 | 30 | 7 | 120352675 | n/a |"
+      },
+      "shardJobs": { "planned": 53, "observedConclusions": { "success": 53 }, "note": "all 53 solve shards plus the plan job completed with conclusion=success" },
+      "artifacts": [
+        { "id": 10094581678, "name": "solver-sweep-result", "sizeBytes": 710877, "sha256": "800bd584551815cdba2f132eb6fce2b6c102197e16e63ff09e81bddc3859afc1", "createdAt": "2026-09-09T08:15:20Z", "expiresAt": "2026-12-08T06:39:50Z" },
+        { "id": 10091557868, "name": "targeted-shard-plan", "sizeBytes": 5062, "sha256": "458a746a942faade705b77fb2213a40c52ffa1793bfadd87102500e2e300f5ef", "createdAt": "2026-09-09T06:41:29Z", "expiresAt": "2026-12-08T06:39:50Z" }
+      ],
+      "otherArtifactsNotEnumerated": { "count": 53, "namePattern": "targeted-shard-NNN", "note": "raw per-shard payloads already folded into the combined result.json referenced above; not individually enumerated here" }
+    },
+    {
+      "runId": 34320103478,
+      "htmlUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320103478",
+      "workflowDisplayName": "Targeted sweep · data/stress/mc-neighbor-budget-portal-ab-001-ids.txt · enable=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL · disable=none",
+      "workflowFamily": "Solver level-blind targeted sweep",
+      "armParsed": { "idsFile": "data/stress/mc-neighbor-budget-portal-ab-001-ids.txt", "enable": "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL", "disable": "none" },
+      "headCommit": "0201e952faa911362396e6d564b5f928f108dc73",
+      "headRef": "claude/solver-portal-restoration-queue-3boq68",
+      "runAttempt": 1,
+      "combineJob": {
+        "id": 102391503895,
+        "conclusion": "failure",
+        "failureReason": "Only 20/53 shards produced output before the run was cut short ('Shards: 20/53 **INCOMPLETE**' in the publish step); the remaining 33 solve-shard jobs show conclusion=cancelled with zero result rows. This run's own incompleteness (not merely the full-corpus population slice) is the direct predecessor to the 2026-09-09 gap-fill runs below, which targeted exactly its missing/gap population together with run 34320087947's gap.",
+        "resultSummaryMarkdown": "# Solver sweep result\n\n- Workflow: Solver level-blind targeted sweep\n- Run: [34320103478](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320103478)\n- Commit: `0201e952faa911362396e6d564b5f928f108dc73`\n- Ref: `claude/solver-portal-restoration-queue-3boq68`\n- Legacy/specialized artifact: `targeted-sweep-combined`\n- Dispatch inputs: recorded in `manifest.json`\n- Shards: 20/53 **INCOMPLETE** (exact expected population validated separately)\n- Standard artifact: `solver-sweep-result`\n- Primary result: `result.json`\n\n## Result summary\n\n- `result.json`: 16/16 solved, work=412601195 (16/16 levels reported), nodes=174655780\n\n## Stage participation\n\n| stage | reach | attempts | solves | nodesExpanded | attempt workSpent |\n|---|---:|---:|---:|---:|---:|\n| `main-search` | 12/16 | 44 | 12 | 96614768 | n/a |\n| `early-repair-search` | 16/16 | 38 | 4 | 78041012 | n/a |"
+      },
+      "shardJobs": { "planned": 53, "observedConclusions": { "success": 1, "cancelled": 53 }, "note": "plan job success; all 53 solve-shard jobs show conclusion=cancelled in the job list, but 20 of them wrote partial batch output before cancellation landed (16 levels solved of those 20 shards' slice)" },
+      "artifacts": [
+        { "id": 10094777351, "name": "solver-sweep-result", "sizeBytes": 14588, "sha256": "e84452cf6ad3fa0067d63b0060060b7dfcb28af469a04b064a5438de204222b7", "createdAt": "2026-09-09T08:20:45Z", "expiresAt": "2026-12-08T06:40:03Z" },
+        { "id": 10094615609, "name": "targeted-shard-plan", "sizeBytes": 5048, "sha256": "fb4d65d1bdbb6c79d4d074dbd8211b0d2c8fa4f5769699ed7f89feb1f4fc6535", "createdAt": "2026-09-09T08:16:18Z", "expiresAt": "2026-12-08T06:40:03Z" }
+      ],
+      "otherArtifactsNotEnumerated": { "count": 53, "namePattern": "targeted-shard-NNN", "note": "raw per-shard payloads (mostly empty/cancelled) already folded into the combined result.json referenced above; not individually enumerated here" }
+    },
+    {
+      "runId": 34337871124,
+      "htmlUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337871124",
+      "workflowDisplayName": "Targeted sweep · data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt · enable=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL · disable=none",
+      "workflowFamily": "Solver level-blind targeted sweep",
+      "armParsed": { "idsFile": "data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt", "enable": "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL", "disable": "none" },
+      "headCommit": "423e4a09517787adb935136a29781f1f8234861e",
+      "headRef": "claude/solver-portal-restoration-queue-3boq68",
+      "runAttempt": 1,
+      "combineJob": {
+        "id": 102428715494,
+        "conclusion": "success",
+        "gapPopulation": "18 ids: exactly the union of the 17 missing rows from run 34320087947 and the residual gap from run 34320103478 (R02902, R03097, R03368, R02565, R02802, R02858, R02884, R02656, R02927, R02932, R03128, R02915, R03032, R03303, R03304, R02794, R02899, R03334)",
+        "perLevelDetailForStage_connectivityAxisPruneDisabledRetry": [
+          { "id": "R02902", "ok": false, "status": "node-budget-reached", "workSpent": 292589569, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999977, "stageSolved": false },
+          { "id": "R03097", "ok": false, "status": "node-budget-reached", "workSpent": 315903146, "reached": true, "stageAttempts": 20, "stageNodesExpanded": 25000113, "stageSolved": false },
+          { "id": "R03368", "ok": false, "status": "node-budget-reached", "workSpent": 263759004, "reached": true, "stageAttempts": 7, "stageNodesExpanded": 25000091, "stageSolved": false },
+          { "id": "R02565", "ok": false, "status": "node-budget-reached", "workSpent": 298357519, "reached": true, "stageAttempts": 20, "stageNodesExpanded": 25000072, "stageSolved": false },
+          { "id": "R02802", "ok": false, "status": "node-budget-reached", "workSpent": 284297222, "reached": true, "stageAttempts": 20, "stageNodesExpanded": 24999801, "stageSolved": false },
+          { "id": "R02858", "ok": true, "status": "success", "workSpent": 21543076, "reached": false, "stageAttempts": 0, "stageNodesExpanded": 0, "stageSolved": false },
+          { "id": "R02884", "ok": true, "status": "success", "workSpent": 34684150, "reached": false, "stageAttempts": 0, "stageNodesExpanded": 0, "stageSolved": false },
+          { "id": "R02656", "ok": false, "status": "node-budget-reached", "workSpent": 194728151, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 25000000, "stageSolved": false },
+          { "id": "R02927", "ok": true, "status": "success", "workSpent": 54751292, "reached": false, "stageAttempts": 0, "stageNodesExpanded": 0, "stageSolved": false },
+          { "id": "R02932", "ok": false, "status": "node-budget-reached", "workSpent": 249961797, "reached": true, "stageAttempts": 13, "stageNodesExpanded": 25000089, "stageSolved": false },
+          { "id": "R03128", "ok": false, "status": "node-budget-reached", "workSpent": 207093267, "reached": true, "stageAttempts": 7, "stageNodesExpanded": 24999970, "stageSolved": false },
+          { "id": "R02915", "ok": true, "status": "success", "workSpent": 22638850, "reached": false, "stageAttempts": 0, "stageNodesExpanded": 0, "stageSolved": false },
+          { "id": "R03032", "ok": false, "status": "node-budget-reached", "workSpent": 299669737, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999919, "stageSolved": false },
+          { "id": "R03303", "ok": false, "status": "node-budget-reached", "workSpent": 230773631, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999801, "stageSolved": false },
+          { "id": "R03304", "ok": true, "status": "success", "workSpent": 6254640, "reached": false, "stageAttempts": 0, "stageNodesExpanded": 0, "stageSolved": false },
+          { "id": "R02794", "ok": false, "status": "node-budget-reached", "workSpent": 263239352, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 25000030, "stageSolved": false },
+          { "id": "R02899", "ok": false, "status": "node-budget-reached", "workSpent": 296492200, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 25000001, "stageSolved": false },
+          { "id": "R03334", "ok": false, "status": "node-budget-reached", "workSpent": 287453570, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999910, "stageSolved": false }
+        ],
+        "resultSummaryMarkdown": "# Solver sweep result\n\n- Workflow: Solver level-blind targeted sweep\n- Run: [34337871124](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337871124)\n- Commit: `423e4a09517787adb935136a29781f1f8234861e`\n- Ref: `claude/solver-portal-restoration-queue-3boq68`\n- Legacy/specialized artifact: `targeted-sweep-combined`\n- Dispatch inputs: recorded in `manifest.json`\n- Shards: 5/5 complete (exact expected population validated separately)\n- Standard artifact: `solver-sweep-result`\n- Primary result: `result.json`\n\n## Result summary\n\n- `result.json`: 5/18 solved, work=3624190173 (18/18 levels reported), nodes=3292776681\n\n## Stage participation\n\n| stage | reach | attempts | solves | nodesExpanded | attempt workSpent |\n|---|---:|---:|---:|---:|---:|\n| `main-search` | 18/18 | 167 | 4 | 582599365 | n/a |\n| `coarse-state-near-tie-retention-disabled-retry` | 13/18 | 157 | 0 | 162499697 | n/a |\n| `connectivity-axis-prune-disabled-retry` | 13/18 | 157 | 0 | 324999774 | n/a |\n| `guidance-goal-distance-retry` | 13/18 | 157 | 0 | 923635782 | n/a |\n| `must-cross-neighbor-prune-disabled-retry` | 13/18 | 157 | 0 | 572584125 | n/a |\n| `goal-attraction-disabled-retry` | 6/18 | 83 | 1 | 17443571 | n/a |\n| `late-repair-multiseed-retry` | 9/18 | 63 | 0 | 314999809 | n/a |\n| `admissible-order-alternate-tiebreak-retry` | 13/18 | 13 | 0 | 162500096 | n/a |\n| `admissible-order-fallback` | 13/18 | 13 | 0 | 162500608 | n/a |\n| `early-repair-search` | 4/18 | 9 | 0 | 20000175 | n/a |\n| `late-repair-search` | 9/18 | 9 | 0 | 44999510 | n/a |\n| `repair-fallback` | 3/18 | 3 | 0 | 4014169 | n/a |"
+      },
+      "shardJobs": { "planned": 5, "observedConclusions": { "success": 6 }, "note": "plan job plus all 5 solve shards completed with conclusion=success" },
+      "artifacts": [
+        { "id": 10099392886, "name": "solver-sweep-result", "sizeBytes": 37052, "sha256": "8ab9ff16d71301fe8c489a0c5d0319b0140113c6df09e2399ea0fef7c65fbe29", "createdAt": "2026-09-09T10:26:19Z", "expiresAt": "2026-12-08T10:00:32Z" },
+        { "id": 10099391949, "name": "targeted-sweep-combined", "sizeBytes": 34435, "sha256": "560b550e207314c1a352f0dfeaa18b1310b1340913cf73b88895b59c3c184c0b", "createdAt": "2026-09-09T10:26:18Z", "expiresAt": "2026-12-08T10:00:32Z" },
+        { "id": 10098487408, "name": "targeted-shard-plan", "sizeBytes": 728, "sha256": "fecda7a7d3a7df49d8eb0583c3897e34ac3de2cbf369a782aa5a8898445d9592", "createdAt": "2026-09-09T10:01:30Z", "expiresAt": "2026-12-08T10:00:32Z" }
+      ],
+      "otherArtifactsNotEnumerated": { "count": 5, "namePattern": "targeted-shard-NNN", "note": "raw per-shard payloads already folded into the combined result.json referenced above; not individually enumerated here" }
+    },
+    {
+      "runId": 34337880617,
+      "htmlUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337880617",
+      "workflowDisplayName": "Targeted sweep · data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt · enable=none · disable=none",
+      "workflowFamily": "Solver level-blind targeted sweep",
+      "armParsed": { "idsFile": "data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt", "enable": "none", "disable": "none" },
+      "headCommit": "423e4a09517787adb935136a29781f1f8234861e",
+      "headRef": "claude/solver-portal-restoration-queue-3boq68",
+      "runAttempt": 1,
+      "combineJob": {
+        "id": 102433294729,
+        "conclusion": "success",
+        "gapPopulation": "same 18-id gap population as run 34337871124, run under the control (enable=none) arm",
+        "perLevelDetailForStage_connectivityAxisPruneDisabledRetry": [
+          { "id": "R02902", "ok": false, "status": "node-budget-reached", "workSpent": 290822678, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 25000035, "stageSolved": false },
+          { "id": "R03097", "ok": false, "status": "node-budget-reached", "workSpent": 311236258, "reached": true, "stageAttempts": 20, "stageNodesExpanded": 25000025, "stageSolved": false },
+          { "id": "R03368", "ok": false, "status": "node-budget-reached", "workSpent": 260382028, "reached": true, "stageAttempts": 7, "stageNodesExpanded": 25000138, "stageSolved": false },
+          { "id": "R02565", "ok": false, "status": "node-budget-reached", "workSpent": 298343158, "reached": true, "stageAttempts": 20, "stageNodesExpanded": 25000049, "stageSolved": false },
+          { "id": "R02802", "ok": false, "status": "node-budget-reached", "workSpent": 283448535, "reached": true, "stageAttempts": 20, "stageNodesExpanded": 25000022, "stageSolved": false },
+          { "id": "R02858", "ok": true, "status": "success", "workSpent": 110178147, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 25000185, "stageSolved": false },
+          { "id": "R02884", "ok": true, "status": "success", "workSpent": 128811170, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 25000167, "stageSolved": false },
+          { "id": "R02656", "ok": false, "status": "node-budget-reached", "workSpent": 186486734, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999918, "stageSolved": false },
+          { "id": "R02927", "ok": true, "status": "success", "workSpent": 340913547, "reached": true, "stageAttempts": 13, "stageNodesExpanded": 25000067, "stageSolved": false },
+          { "id": "R02932", "ok": false, "status": "node-budget-reached", "workSpent": 244736566, "reached": true, "stageAttempts": 13, "stageNodesExpanded": 25000113, "stageSolved": false },
+          { "id": "R03128", "ok": false, "status": "node-budget-reached", "workSpent": 207143625, "reached": true, "stageAttempts": 7, "stageNodesExpanded": 24999928, "stageSolved": false },
+          { "id": "R02915", "ok": false, "status": "node-budget-reached", "workSpent": 321242335, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 25000225, "stageSolved": false },
+          { "id": "R03032", "ok": false, "status": "node-budget-reached", "workSpent": 289399051, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999998, "stageSolved": false },
+          { "id": "R03303", "ok": false, "status": "node-budget-reached", "workSpent": 229354086, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999943, "stageSolved": false },
+          { "id": "R03304", "ok": true, "status": "success", "workSpent": 6404847, "reached": false, "stageAttempts": 0, "stageNodesExpanded": 0, "stageSolved": false },
+          { "id": "R02794", "ok": false, "status": "node-budget-reached", "workSpent": 254514080, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999816, "stageSolved": false },
+          { "id": "R02899", "ok": false, "status": "node-budget-reached", "workSpent": 254367068, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999865, "stageSolved": false },
+          { "id": "R03334", "ok": false, "status": "node-budget-reached", "workSpent": 285783157, "reached": true, "stageAttempts": 10, "stageNodesExpanded": 24999889, "stageSolved": false }
+        ],
+        "resultSummaryMarkdown": "# Solver sweep result\n\n- Workflow: Solver level-blind targeted sweep\n- Run: [34337880617](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337880617)\n- Commit: `423e4a09517787adb935136a29781f1f8234861e`\n- Ref: `claude/solver-portal-restoration-queue-3boq68`\n- Legacy/specialized artifact: `targeted-sweep-combined`\n- Dispatch inputs: recorded in `manifest.json`\n- Shards: 5/5 complete (exact expected population validated separately)\n- Standard artifact: `solver-sweep-result`\n- Primary result: `result.json`\n\n## Result summary\n\n- `result.json`: 4/18 solved, work=4303567070 (18/18 levels reported), nodes=3919545931\n\n## Stage participation\n\n| stage | reach | attempts | solves | nodesExpanded | attempt workSpent |\n|---|---:|---:|---:|---:|---:|\n| `coarse-state-near-tie-retention-disabled-retry` | 17/18 | 200 | 0 | 212499228 | n/a |\n| `connectivity-axis-prune-disabled-retry` | 17/18 | 200 | 0 | 425000383 | n/a |\n| `must-cross-neighbor-prune-disabled-retry` | 17/18 | 200 | 1 | 733291929 | n/a |\n| `guidance-goal-distance-retry` | 15/18 | 180 | 0 | 1065227477 | n/a |\n| `main-search` | 18/18 | 173 | 1 | 593910174 | n/a |\n| `goal-attraction-disabled-retry` | 7/18 | 103 | 0 | 20691450 | n/a |\n| `late-repair-multiseed-retry` | 11/18 | 74 | 1 | 365428947 | n/a |\n| `admissible-order-alternate-tiebreak-retry` | 17/18 | 17 | 0 | 212500224 | n/a |\n| `admissible-order-fallback` | 17/18 | 17 | 0 | 212500224 | n/a |\n| `late-repair-search` | 12/18 | 12 | 1 | 55014637 | n/a |\n| `early-repair-search` | 4/18 | 9 | 0 | 20000138 | n/a |\n| `repair-fallback` | 3/18 | 3 | 0 | 3481120 | n/a |"
+      },
+      "shardJobs": { "planned": 5, "observedConclusions": { "success": 6 }, "note": "plan job plus all 5 solve shards completed with conclusion=success" },
+      "artifacts": [
+        { "id": 10099959095, "name": "solver-sweep-result", "sizeBytes": 41623, "sha256": "e92fcff80b3ac4bc6d55455e9d13ee6558f38ecdc50b24b6037997d8e4e86cc0", "createdAt": "2026-09-09T10:42:14Z", "expiresAt": "2026-12-08T10:00:37Z" },
+        { "id": 10099958466, "name": "targeted-sweep-combined", "sizeBytes": 39043, "sha256": "075bc21336f81aaed5af5651c389811f30f6febf061498c14496eaccb102504d", "createdAt": "2026-09-09T10:42:13Z", "expiresAt": "2026-12-08T10:00:37Z" },
+        { "id": 10099428143, "name": "targeted-shard-plan", "sizeBytes": 728, "sha256": "1045fac2a76d11163088dc1fad853e642004ab7b7810356a025ea9f9c3129dfa", "createdAt": "2026-09-09T10:27:19Z", "expiresAt": "2026-12-08T10:00:37Z" }
+      ],
+      "otherArtifactsNotEnumerated": { "count": 5, "namePattern": "targeted-shard-NNN", "note": "raw per-shard payloads already folded into the combined result.json referenced above; not individually enumerated here" }
+    }
+  ],
+  "knownCollisionLevelsFromReport1996": {
+    "note": "The 15 levels from the #1996 determinism-audit reconciliation. Their accepted paths and provenance foundAt timestamps are already durably tracked in git (data/stress/hints* / data/stress/hints-random*) via the harvest that ran shortly after these source runs; this rescue does not duplicate that path/provenance data, it only preserves the arm/source-run binding context above that the tracked Hint provenance itself does not carry.",
+    "levels": ["R01523", "R01554", "R01930", "R02076", "R02269", "R02314", "R02349", "R02510", "R02515", "R02557", "R02699", "R02715", "R03001", "R03267", "R03304"]
+  }
+}
