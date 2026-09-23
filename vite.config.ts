@@ -3,6 +3,7 @@ import { cp } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { projectRuntimeHintDirectory } from './scripts/runtime-hint-projection-lib.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const fromRoot = (p: string) => fileURLToPath(new URL(p, import.meta.url));
@@ -52,16 +53,37 @@ function copyRuntimeAssets(): Plugin {
             for (const file of RUNTIME_DATA_FILES) {
                 await cp(fromRoot(`./data/${file}`), `${out}/data/${file}`);
             }
-            await cp(fromRoot('./data/hints'), `${out}/data/hints`, { recursive: true });
+            const publishedProjection = projectRuntimeHintDirectory(
+                fromRoot('./data/hints'),
+                `${out}/data/hints`,
+            );
             for (const file of DEV_CORPUS_FILES) {
                 await cp(fromRoot(`./data/stress/${file}`), `${out}/data/stress/${file}`);
             }
-            await cp(fromRoot('./data/stress/hints'), `${out}/data/stress/hints`, { recursive: true });
+            const stressProjection = projectRuntimeHintDirectory(
+                fromRoot('./data/stress/hints'),
+                `${out}/data/stress/hints`,
+            );
             // Corpus 2's sibling hints dir (see modules/dev-corpus.ts / level-data-io.mjs's
-            // hintsDirFor) -- copied only if present, since it may be empty/unseeded.
+            // hintsDirFor) -- generated only if present, since it may be empty/unseeded.
+            let randomProjection = null;
             if (existsSync(fromRoot('./data/stress/hints-random'))) {
-                await cp(fromRoot('./data/stress/hints-random'), `${out}/data/stress/hints-random`, { recursive: true });
+                randomProjection = projectRuntimeHintDirectory(
+                    fromRoot('./data/stress/hints-random'),
+                    `${out}/data/stress/hints-random`,
+                );
             }
+            const sourceBytes = publishedProjection.summary.sourceBytes
+                + stressProjection.summary.sourceBytes
+                + (randomProjection?.summary.sourceBytes ?? 0);
+            const runtimeBytes = publishedProjection.summary.runtimeBytes
+                + stressProjection.summary.runtimeBytes
+                + (randomProjection?.summary.runtimeBytes ?? 0);
+            console.log(
+                `Runtime hint projection: ${sourceBytes.toLocaleString()} source bytes -> `
+                + `${runtimeBytes.toLocaleString()} path-only bytes `
+                + `(${sourceBytes > 0 ? ((1 - runtimeBytes / sourceBytes) * 100).toFixed(1) : '0.0'}% reduction).`,
+            );
             await cp(fromRoot('./firebase-config.js'), `${out}/firebase-config.js`);
         },
     };
