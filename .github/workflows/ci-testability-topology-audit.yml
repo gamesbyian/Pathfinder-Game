@@ -1,0 +1,51 @@
+name: CI testability topology audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+      - name: Build CI testability topology
+        run: node scripts/ci-testability-topology-audit.mjs
+      - name: Summarize topology
+        shell: bash
+        run: |
+          node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          const fs = require('fs');
+          const d = JSON.parse(fs.readFileSync('tmp/ci-testability-topology.json', 'utf8'));
+          console.log('## CI testability topology');
+          console.log();
+          console.log(`- Permanent contracts: **${d.summary.totalContracts}**`);
+          console.log(`- Validators: **${d.summary.validators}**`);
+          console.log(`- Node/CLI harnesses: **${d.summary.nodeTests}**`);
+          console.log();
+          console.log('### Invocation modes');
+          console.log();
+          console.log('| Mode | Contracts |');
+          console.log('| --- | ---: |');
+          for (const [name, count] of Object.entries(d.summary.invocationModes).sort((a, b) => b[1] - a[1])) {
+            console.log(`| \`${name}\` | ${count} |`);
+          }
+          console.log();
+          console.log('### Static refactor candidates');
+          console.log();
+          console.log('| Candidate | Contracts |');
+          console.log('| --- | ---: |');
+          for (const [name, count] of Object.entries(d.summary.refactorCandidateCounts).sort((a, b) => b[1] - a[1])) {
+            console.log(`| \`${name}\` | ${count} |`);
+          }
+          NODE
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ci-testability-topology
+          path: tmp/ci-testability-topology.json
+          retention-days: 30
