@@ -144,7 +144,9 @@ jobs:
               node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
-                --source-workflow="$SOURCE_WORKFLOW"
+                --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
+                --source-workflow="$SOURCE_WORKFLOW" \
+                --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-captured-artifacts.json"
 
               # Artifact-only level-blind workflows still retain solved paths and winning attempts in
               # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
