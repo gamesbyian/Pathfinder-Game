@@ -28,6 +28,8 @@ const summary = {
     hints: 0,
     provenanceEvents: 0,
     comparableEvents: 0,
+    canonicalComparableEvents: 0,
+    legacyComparableEvents: 0,
     repeatRunComparableGroups: 0,
     repeatRunStableGroups: 0,
     repeatRunRecordedInputCollisionGroups: 0,
@@ -45,6 +47,8 @@ for (const root of roots) {
         summary.hints += result.hints;
         summary.provenanceEvents += result.provenanceEvents;
         summary.comparableEvents += result.comparableEvents;
+        summary.canonicalComparableEvents += result.canonicalComparableEvents;
+        summary.legacyComparableEvents += result.legacyComparableEvents;
         summary.exactEventCrossPathGroups += result.exactEventCrossPath.length;
         summary.repeatRunRecordedInputCollisionGroups += result.repeatRunRecordedInputCollision.length;
         summary.repeatRunStableGroups += result.repeatRunStable.length;
