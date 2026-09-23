@@ -42,6 +42,14 @@ jobs:
           fi
           node scripts/ci-history-collector.mjs "${args[@]}"
 
+      - name: Build mechanical repair episodes
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f tmp/ci-audit/history.jsonl ]]; then
+            node scripts/ci-history-repair-episodes.mjs
+          fi
+
       - name: Summarize recovered audit corpus
         if: always()
         shell: bash
