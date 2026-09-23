@@ -169,3 +169,106 @@ test('decodeHintArtifact throws a clear error on an unrecognized shape instead o
   assert.throws(() => decodeHintArtifact({ levels: [] }), /hint artifact must contain/);
   assert.throws(() => decodeHintArtifact(null), /hint artifact must contain/);
 });
+
+// ── Bounded execution/run binding and occurrence lineage (plan section 4/W) ────────────────────
+
+test('makeProvenanceEntry omits `execution` entirely when no execution option is passed', () => {
+  const entry = makeProvenanceEntry('dfs', {});
+  assert.equal(Object.hasOwn(entry, 'execution'), false);
+});
+
+test('makeProvenanceEntry builds a full execution block from any one execution option, defaulting the rest to null', () => {
+  const entry = makeProvenanceEntry('dfs', { solverRequestIdentity: 'sha256:' + 'a'.repeat(64) });
+  assert.ok(entry.execution);
+  assert.equal(entry.execution!.solverRequestIdentity, 'sha256:' + 'a'.repeat(64));
+  assert.equal(entry.execution!.protocolHash, null);
+  assert.equal(entry.execution!.reproducibilityMode, null);
+  assert.equal(entry.execution!.arm, null);
+  assert.equal(entry.execution!.schemaVersion, 1);
+});
+
+test('makeProvenanceEntry omits `occurrences` entirely when no occurrenceRunId is passed', () => {
+  const entry = makeProvenanceEntry('dfs', {});
+  assert.equal(Object.hasOwn(entry, 'occurrences'), false);
+});
+
+test('makeProvenanceEntry records one occurrence defaulting observedAt to this entry\'s own foundAt', () => {
+  const entry = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-1', occurrenceRunAttempt: 2 });
+  assert.equal(entry.occurrences?.length, 1);
+  assert.equal(entry.occurrences![0].runId, 'run-1');
+  assert.equal(entry.occurrences![0].runAttempt, '2');
+  assert.equal(entry.occurrences![0].observedAt, '2026-09-23T00:00:00.000Z');
+  assert.equal(entry.occurrences![0].sourceRuns, null);
+});
+
+test('makeProvenanceEntry accepts an explicit occurrenceObservedAt distinct from foundAt', () => {
+  const entry = makeProvenanceEntry('dfs', {
+    foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-1', occurrenceObservedAt: '2026-09-24T00:00:00.000Z',
+  });
+  assert.equal(entry.occurrences![0].observedAt, '2026-09-24T00:00:00.000Z');
+});
+
+test('provenanceEventIdentity treats different execution identity as a genuinely different semantic event', () => {
+  const a = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', solverRequestIdentity: 'sha256:' + 'a'.repeat(64) });
+  const b = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', solverRequestIdentity: 'sha256:' + 'b'.repeat(64) });
+  const merged = dedupeProvenanceEntries([a, b]);
+  assert.equal(merged.length, 2, 'a different solver-request identity is real evidence of a different execution, not a duplicate recording');
+});
+
+test('provenanceEventIdentity ignores occurrence lineage: two entries differing only in occurrenceRunId collapse to one', () => {
+  const a = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-1' });
+  const b = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-2' });
+  const merged = dedupeProvenanceEntries([a, b]);
+  assert.equal(merged.length, 1, 'a physical run id must never make an otherwise-identical rediscovery look like a new semantic event');
+});
+
+test('dedupeProvenanceEntries merges occurrence lineage from a rediscovery instead of dropping it', () => {
+  const a = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-1' });
+  const b = makeProvenanceEntry('dfs', { foundAt: '2026-09-24T00:00:00.000Z', occurrenceRunId: 'run-2', occurrenceObservedAt: '2026-09-24T00:00:00.000Z' });
+  const merged = dedupeProvenanceEntries([a, b]);
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].foundAt, a.foundAt, 'the first-recorded entry\'s own fields (including foundAt) are kept unchanged');
+  assert.deepEqual(
+    merged[0].occurrences?.map(o => o.runId).sort(),
+    ['run-1', 'run-2'],
+    'both independent acquisitions must be preserved as occurrence lineage, not one overwriting the other',
+  );
+});
+
+test('dedupeProvenanceEntries re-harvesting the exact same occurrence is idempotent', () => {
+  const a = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-1', occurrenceRunAttempt: 1 });
+  const bSameRun = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-1', occurrenceRunAttempt: 1, occurrenceObservedAt: '2026-09-30T00:00:00.000Z' });
+  const merged = dedupeProvenanceEntries([a, bSameRun]);
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].occurrences?.length, 1, 'the same runId+runAttempt must not accumulate a second occurrence record');
+  assert.equal(merged[0].occurrences![0].observedAt, a.occurrences![0].observedAt,
+    'the first-seen occurrence record for a given key wins; re-harvest must not overwrite it');
+});
+
+test('mergeHints preserves occurrence lineage across a path rediscovered from a different run', () => {
+  const a = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-1' });
+  const b = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-2' });
+  const merged = mergeHints([toHint([1, 2, 3], [a])], [toHint([1, 2, 3], [b])]);
+  assert.equal(merged[0].provenance.length, 1);
+  assert.deepEqual(merged[0].provenance[0].occurrences?.map(o => o.runId).sort(), ['run-1', 'run-2']);
+});
+
+test('upgradeProvenanceEntry does not fabricate execution or occurrences for a historical entry that never had them', () => {
+  const upgraded = upgradeProvenanceEntry({
+    solver: { id: 'pathfinder-solver', version: 'abc', technique: 'beam', beamWidth: 2000, gateKey: 12, forcing: null, attemptIndex: 3 },
+    search: { nodesExpanded: 10, elapsedMs: 1, budgetMs: 2, workSpent: null, workBudget: null, cumulativeNodesExpanded: 10, cumulativeElapsedMs: 1, cumulativeBudgetMs: 2, termination: 'solved', randomSeed: null, seedSalt: null },
+    context: { usedExistingHints: false, hintGuided: true, isolatedTechnique: false },
+    foundAt: '2026-01-01T00:00:00.000Z',
+  });
+  assert.equal(Object.hasOwn(upgraded, 'execution'), false);
+  assert.equal(Object.hasOwn(upgraded, 'occurrences'), false);
+});
+
+test('upgradeProvenanceEntry preserves an already-canonical entry\'s execution/occurrences unchanged', () => {
+  const original = makeProvenanceEntry('dfs', {
+    foundAt: '2026-09-23T00:00:00.000Z', solverRequestIdentity: 'sha256:' + 'a'.repeat(64), occurrenceRunId: 'run-1',
+  });
+  const upgraded = upgradeProvenanceEntry(original);
+  assert.deepEqual(upgraded.execution, original.execution);
+  assert.deepEqual(upgraded.occurrences, original.occurrences);
+});

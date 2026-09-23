@@ -139,10 +139,49 @@ export interface HintContextProvenance {
     techniqueCensusCell: HintTechniqueCensusCellContext | null;
 }
 
+/**
+ * Bounded solver-request/execution-protocol identity for this discovery event
+ * (docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 4/W). Field names
+ * reuse the Phase 2 identity owners exactly: `solverRequestIdentity`
+ * (solverRequestIdentityFromProjection()), `protocolHash` (hashExecutionProtocol()'s own field name),
+ * `reproducibilityMode` (classifyReproducibilityMode()), `arm` (sourceRunBindingFromContract()'s own
+ * field name). Genuinely absent on the containing HintProvenanceEntry (no key at all) for historical
+ * entries and for non-solver producers (human path, witness generators, external solvers) that have
+ * no Pathfinder solver-request semantics to report.
+ */
+export interface HintExecutionProvenance {
+    schemaVersion: number;
+    solverRequestIdentity: string | null;
+    protocolHash: string | null;
+    reproducibilityMode: string | null;
+    arm: string | null;
+}
+
+/**
+ * One physical acquisition ("occurrence") of this semantic discovery event: a rediscovery from a
+ * different source run merges into this list rather than duplicating the whole provenance entry.
+ * Deliberately excluded from provenanceEventIdentity() so a physical run id/observation time can
+ * never make an otherwise-identical rediscovery look like a new semantic event.
+ */
+export interface HintOccurrence {
+    schemaVersion: number;
+    runId: string;
+    runAttempt: string | null;
+    contractRef: string | null;
+    /** Genuinely known observation time for THIS occurrence; never fabricated. */
+    observedAt: string | null;
+    /** Constituent acquisition-run lineage when this occurrence came from a recombined artifact. */
+    sourceRuns: string[] | null;
+}
+
 export interface HintProvenanceEntry {
     solver: HintSolverProvenance;
     search: HintSearchProvenance;
     context: HintContextProvenance;
+    /** Bounded execution/run-request identity; absent when not applicable/not recorded (see doc above). */
+    execution?: HintExecutionProvenance;
+    /** One entry per independent physical acquisition; absent when none is recorded. */
+    occurrences?: HintOccurrence[];
     /** ISO 8601 recording time. */
     foundAt: string;
 }
@@ -192,6 +231,18 @@ export interface MakeProvenanceEntryOptions {
     isolatedTechnique?: boolean;
     techniqueCensusCell?: HintTechniqueCensusCellContext | null;
     foundAt?: string;
+    /** Any of these four creates a non-null `execution` block; omitted fields become null within it. */
+    solverRequestIdentity?: string;
+    protocolHash?: string;
+    reproducibilityMode?: string;
+    executionArm?: string;
+    /** Presence of `occurrenceRunId` creates one initial occurrence entry. */
+    occurrenceRunId?: string;
+    occurrenceRunAttempt?: string | number | null;
+    occurrenceContractRef?: string | null;
+    /** Defaults to this entry's own `foundAt` when omitted. */
+    occurrenceObservedAt?: string | null;
+    occurrenceSourceRuns?: string[] | null;
 }
 
 export function makeProvenanceEntry(

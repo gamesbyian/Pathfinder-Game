@@ -43,8 +43,53 @@ function forcingFromOpts(opts) {
     };
 }
 
+// Bounded execution/run binding (docs/hint-evidence-execution-identity-storage-consolidation-plan.md
+// section 4/W). Genuinely absent (no `execution` key at all, not `execution: null`) unless the caller
+// actually supplies one of these -- historical entries and non-solver producers (human path, witness
+// generators, external solvers) legitimately have no Pathfinder solver-request/execution-protocol
+// identity to report, per that section's own text. Reuses the exact field names already established by
+// the Phase 2 identity owners (solverRequestIdentityFromProjection(), hashExecutionProtocol()'s own
+// `protocolHash`, sourceRunBindingFromContract()'s own `arm`) rather than inventing parallel spellings.
+/** @param {MakeProvenanceEntryOptions} opts */
+function executionFromOpts(opts) {
+    const has = opts.solverRequestIdentity !== undefined || opts.protocolHash !== undefined
+        || opts.reproducibilityMode !== undefined || opts.executionArm !== undefined;
+    if (!has) return undefined;
+    return {
+        schemaVersion: 1,
+        solverRequestIdentity: opts.solverRequestIdentity ?? null,
+        protocolHash: opts.protocolHash ?? null,
+        reproducibilityMode: opts.reproducibilityMode ?? null,
+        arm: opts.executionArm ?? null,
+    };
+}
+
+// One physical acquisition of this semantic discovery event (section W's "occurrence lineage"),
+// carrying the source-run locator and lineage that must NOT become part of semantic-event identity
+// (provenanceEventIdentity() below excludes `occurrences` for exactly this reason -- a rediscovery
+// from a different run merges into this list rather than duplicating the whole provenance entry, and
+// re-harvesting the SAME run is idempotent because dedupeProvenanceEntries()/mergeOccurrenceLineage()
+// key on runId+runAttempt). `observedAt` defaults to `foundAt` (the entry's own discovery time) only
+// for a single fresh construction; a later independently-merged occurrence keeps its own real
+// observedAt, distinct from the original entry's `foundAt`, which never changes after first recording.
+/** @param {MakeProvenanceEntryOptions} opts */
+function occurrenceFromOpts(opts) {
+    if (opts.occurrenceRunId === undefined) return undefined;
+    return {
+        schemaVersion: 1,
+        runId: String(opts.occurrenceRunId),
+        runAttempt: opts.occurrenceRunAttempt == null ? null : String(opts.occurrenceRunAttempt),
+        contractRef: opts.occurrenceContractRef ?? null,
+        observedAt: opts.occurrenceObservedAt ?? opts.foundAt ?? null,
+        sourceRuns: Array.isArray(opts.occurrenceSourceRuns) ? [...opts.occurrenceSourceRuns] : null,
+    };
+}
+
 /** @param {string} technique @param {MakeProvenanceEntryOptions} [opts] @returns {HintProvenanceEntry} */
 export function makeProvenanceEntry(technique, opts = {}) {
+    const foundAt = opts.foundAt ?? new Date().toISOString();
+    const execution = executionFromOpts(opts);
+    const occurrence = occurrenceFromOpts({ ...opts, foundAt });
     return {
         solver: {
             id: opts.solverId ?? SOLVER_ID,
@@ -78,7 +123,9 @@ export function makeProvenanceEntry(technique, opts = {}) {
             isolatedTechnique: opts.isolatedTechnique ?? false,
             techniqueCensusCell: opts.techniqueCensusCell ?? null,
         },
-        foundAt: opts.foundAt ?? new Date().toISOString(),
+        ...(execution !== undefined ? { execution } : {}),
+        ...(occurrence !== undefined ? { occurrences: [occurrence] } : {}),
+        foundAt,
     };
 }
 
@@ -102,7 +149,16 @@ export function makeProvenanceEntry(technique, opts = {}) {
  * config, seed, forcing, termination and deterministic search result is one discovery event even if
  * it was recorded at a different wall-clock instant or with slightly different timing/allocation
  * counters. solver.version and deterministic work/search fields remain included because cross-commit
- * rediscoveries and changed search trajectories are distinct evidence.
+ * rediscoveries and changed search trajectories are distinct evidence. `execution` (solver-request/
+ * protocol identity, section 3.2/3.3) is likewise included: two runs whose ONLY difference is
+ * execution/request semantics (e.g. a different ablation arm) are meant to be distinct events -- that
+ * was this whole plan's original motivating gap (2026-09-22 determinism audit).
+ *
+ * `occurrences` (section W's occurrence lineage: source-run locators for each independent physical
+ * acquisition of this SAME semantic event) is deliberately excluded, for the same reason `foundAt` is:
+ * a physical run ID/observation time must never make an otherwise-identical rediscovery look like a
+ * new semantic event. dedupeProvenanceEntries() below merges occurrence lineage across entries that
+ * collapse to the same identity here, rather than losing it the way a naive dedupe would.
  *
  * This lives at the persistence boundary so every merge/reconcile path gets the same semantics.
  *
@@ -114,7 +170,7 @@ export function makeProvenanceEntry(technique, opts = {}) {
  */
 export function provenanceEventIdentity(entry) {
     if (!entry || typeof entry !== 'object') return stableStringify(entry ?? null);
-    const { foundAt: _foundAt, ...rest } = entry;
+    const { foundAt: _foundAt, occurrences: _occurrences, ...rest } = entry;
     const {
         elapsedMs: _elapsedMs,
         cumulativeElapsedMs: _cumulativeElapsedMs,
@@ -124,6 +180,31 @@ export function provenanceEventIdentity(entry) {
         ...search
     } = rest.search || {};
     return stableStringify({ ...rest, search });
+}
+
+/** @param {{runId: string, runAttempt: string | null}} occurrence */
+function occurrenceKey(occurrence) {
+    return `${occurrence.runId}::${occurrence.runAttempt ?? ''}`;
+}
+
+/**
+ * Merge two entries' occurrence lineage, keyed by runId+runAttempt so re-harvesting the exact same
+ * acquisition is idempotent (the first-seen record for a given key wins; this never overwrites).
+ * Returns `undefined` when neither side has any occurrence, matching makeProvenanceEntry()'s own
+ * "genuinely absent, not an empty array" convention.
+ * @param {any[] | undefined} a
+ * @param {any[] | undefined} b
+ * @returns {any[] | undefined}
+ */
+function mergeOccurrenceLineage(a, b) {
+    if (!a && !b) return undefined;
+    const seen = new Map();
+    for (const occurrence of a ?? []) seen.set(occurrenceKey(occurrence), occurrence);
+    for (const occurrence of b ?? []) {
+        const key = occurrenceKey(occurrence);
+        if (!seen.has(key)) seen.set(key, occurrence);
+    }
+    return [...seen.values()];
 }
 
 /** @param {number[]} path */
@@ -157,18 +238,31 @@ export function setLevelHintRecords(level, records) {
     return records;
 }
 
-/** Remove duplicate recordings of the same discovery event while preserving evidence from genuinely distinct finds. */
-/** @param {HintProvenanceEntry[]} entries @returns {HintProvenanceEntry[]} */
+/**
+ * Remove duplicate recordings of the same discovery event while preserving evidence from genuinely
+ * distinct finds. When two entries share the same semantic identity but carry different occurrence
+ * lineage (section W: independent reacquisition of the same semantic event from another source run),
+ * their `occurrences` merge into the kept entry rather than the later entry's lineage being silently
+ * dropped -- the first-recorded entry's own fields (including `foundAt`) are otherwise unchanged.
+ * @param {HintProvenanceEntry[]} entries @returns {HintProvenanceEntry[]}
+ */
 export function dedupeProvenanceEntries(entries) {
-    const seen = new Set();
-    const out = [];
+    const order = [];
+    const byKey = new Map();
     for (const entry of entries) {
         const key = provenanceEventIdentity(entry);
-        if (seen.has(key)) continue;
-        seen.add(key);
-        out.push(entry);
+        const existing = byKey.get(key);
+        if (!existing) {
+            byKey.set(key, entry);
+            order.push(key);
+            continue;
+        }
+        const merged = mergeOccurrenceLineage(existing.occurrences, entry.occurrences);
+        if (merged !== undefined && merged.length !== (existing.occurrences ?? []).length) {
+            byKey.set(key, { ...existing, occurrences: merged });
+        }
     }
-    return out;
+    return order.map(key => byKey.get(key));
 }
 
 /** @param {Hint[]} existing @param {Hint[]} incoming @returns {Hint[]} */
