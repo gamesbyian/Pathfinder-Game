@@ -16,6 +16,10 @@ import process from 'node:process';
 import { parseHintFileContents, stringifyHints } from './level-data-io.mjs';
 import { mergeHints } from '../modules/domain/hint-types.ts';
 import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
+import {
+    buildHintIngestionReceipt,
+    validateHintIngestionReceipt,
+} from './hint-ingestion-receipt-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [key, ...rest] = a.split('=');
@@ -24,7 +28,10 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || 'unknown';
+const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_RUN_ATTEMPT || null;
 const sourceWorkflow = args.get('--source-workflow') || 'unknown';
+const ingestionReceiptArg = args.get('--ingestion-receipt-out');
+const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const STORES = new Map([
@@ -57,6 +64,14 @@ function dedupeSemantic(hints) {
         return { path: hint.path, provenance };
     });
 }
+function semanticCounts(hints) {
+    return {
+        paths: hints.length,
+        provenanceEvents: hints.reduce((sum, hint) => sum + (hint.provenance?.length ?? 0), 0),
+        occurrences: hints.reduce((sum, hint) => sum + (hint.provenance ?? [])
+            .reduce((eventSum, event) => eventSum + (event.occurrences?.length ?? 0), 0), 0),
+    };
+}
 function corpusIndex(corpusPath) {
     const raw = JSON.parse(readFileSync(corpusPath, 'utf8'));
     const levels = Array.isArray(raw) ? raw : raw.levels;
@@ -80,6 +95,13 @@ let filesChanged = 0;
 let incomingFiles = 0;
 let incomingPaths = 0;
 let incomingProvenance = 0;
+let eligibleObservations = 0;
+let refereeAcceptedObservations = 0;
+let acceptedAlreadyRepresented = 0;
+let semanticRecordChanges = 0;
+let pathAdditions = 0;
+let provenanceEventAdditions = 0;
+let occurrenceAdditions = 0;
 const pending = [];
 for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     const [store, fileName] = key.split('\0');
@@ -106,7 +128,12 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
         continue;
     }
 
-    let mergedIncoming = [];
+    const target = path.join(storeInfo.targetDir, fileName);
+    const existing = existsSync(target)
+        ? parseHintFileContents(JSON.parse(readFileSync(target, 'utf8')), target)
+        : [];
+    let merged = dedupeSemantic(existing);
+
     for (const source of sources.sort()) {
         let parsed;
         let hints;
@@ -125,7 +152,8 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
         incomingFiles += 1;
         incomingPaths += hints.length;
         incomingProvenance += hints.reduce((sum, h) => sum + (h.provenance?.length || 0), 0);
-        const accepted = [];
+        eligibleObservations += hints.length;
+
         for (const hint of hints) {
             const verdict = validateCandidatePath(level, hint.path);
             if (!verdict.ok) {
@@ -135,17 +163,29 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
                     reason: `main-referee-rejected:${verdict.reason}`,
                     hint,
                 });
-            } else accepted.push(hint);
-        }
-        mergedIncoming = dedupeSemantic(mergeHints(mergedIncoming, accepted));
-    }
-    if (!mergedIncoming.length) continue;
+                continue;
+            }
 
-    const target = path.join(storeInfo.targetDir, fileName);
-    const existing = existsSync(target)
-        ? parseHintFileContents(JSON.parse(readFileSync(target, 'utf8')), target)
-        : [];
-    const merged = dedupeSemantic(mergeHints(existing, mergedIncoming));
+            refereeAcceptedObservations += 1;
+            const before = semanticCounts(merged);
+            const nextMerged = dedupeSemantic(mergeHints(merged, [hint]));
+            const after = semanticCounts(nextMerged);
+            const pathDelta = after.paths - before.paths;
+            const provenanceDelta = after.provenanceEvents - before.provenanceEvents;
+            const occurrenceDelta = after.occurrences - before.occurrences;
+
+            if (pathDelta || provenanceDelta || occurrenceDelta) {
+                semanticRecordChanges += 1;
+                pathAdditions += pathDelta;
+                provenanceEventAdditions += provenanceDelta;
+                occurrenceAdditions += occurrenceDelta;
+            } else {
+                acceptedAlreadyRepresented += 1;
+            }
+            merged = nextMerged;
+        }
+    }
+
     const next = stringifyHints(merged);
     const prev = existsSync(target) ? readFileSync(target, 'utf8') : null;
     if (next !== prev) {
@@ -153,6 +193,31 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
         writeFileSync(target, next);
         filesChanged += 1;
     }
+}
+
+if (ingestionReceiptOut) {
+    const receipt = buildHintIngestionReceipt({
+        producer: 'merge-hint-artifacts',
+        sourceRunId,
+        sourceRunAttempt,
+        sourceWorkflow,
+        candidateObservations: incomingPaths,
+        eligibleObservations,
+        refereeAcceptedObservations,
+        acceptedAlreadyRepresented,
+        semanticRecordChanges,
+        pathAdditions,
+        provenanceEventAdditions,
+        occurrenceAdditions,
+        filesChanged,
+        pending,
+        corpusScope: [...STORES.keys()].sort(),
+        notes: 'direct transported canonical-hint compatibility importer; detailed semantic additions are measured by before/after canonical merge state per referee-accepted observation',
+    });
+    validateHintIngestionReceipt(receipt);
+    mkdirSync(path.dirname(ingestionReceiptOut), { recursive: true });
+    writeFileSync(ingestionReceiptOut, `${JSON.stringify(receipt, null, 2)}\n`);
+    console.log(`Wrote hint-ingestion receipt to ${path.relative(root, ingestionReceiptOut)}.`);
 }
 
 if (pending.length) {
@@ -163,4 +228,4 @@ if (pending.length) {
     console.log(`Quarantined ${pending.length} unmergeable captured hint record(s) to ${path.relative(root, out)}.`);
 }
 
-console.log(`Hint artifact merge: ${incomingFiles} captured file(s), ${incomingPaths} path record(s), ${incomingProvenance} provenance event(s), ${filesChanged} canonical file(s) changed, ${pending.length} pending record(s).`);
+console.log(`Hint artifact merge: ${incomingFiles} captured file(s), ${incomingPaths} path record(s), ${incomingProvenance} provenance event(s), ${refereeAcceptedObservations} referee-accepted observation(s), ${semanticRecordChanges} semantic record change(s), ${pathAdditions} path addition(s), ${provenanceEventAdditions} provenance-event addition(s), ${occurrenceAdditions} occurrence addition(s), ${filesChanged} canonical file(s) changed, ${pending.length} pending record(s).`);
