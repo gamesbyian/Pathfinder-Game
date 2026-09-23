@@ -1163,3 +1163,26 @@ The parallel runner now supports `PATHFINDER_PARALLEL_SUCCESS_OUTPUT=summary`:
 CI enables summary mode for validator and Node/CLI parallel populations in PR CI, main-push validation, and scoped dry-run execution.
 
 This is primarily a diagnostic/readability and log-storage improvement. Do not claim a meaningful wall-time speedup without measurement.
+
+
+## Thin-CLI pilot: research queryability audit
+
+The 4-way Node-contract timing exposed `test:research-queryability-audit` at roughly **13 s** on a recent green run.
+
+Source inspection found two independent forms of duplicate work:
+
+1. the test runs all 13 production queryability benchmarks in-process, then spawns the CLI, which reruns the same full repository audit merely to prove wrapper behavior;
+2. within one production audit, `system-findings` and `system-lineage` each independently build the same research-system finding index.
+
+The pilot preserves the full integration contract once and narrows only duplicate wrapper/model work:
+
+- `runResearchQueryabilityAudit()` now lazily builds the query graph only when an executable benchmark needs it;
+- the research-system finding index is memoized once per audit invocation;
+- callers may supply an explicit validated benchmark registry;
+- the CLI accepts `--benchmarks=FILE`;
+- the subprocess smoke uses a one-record known-gap registry, proving CLI argument loading, JSON output, exit status, and result shape without rebuilding the full repository model;
+- the in-process test still executes all 13 canonical production benchmarks and keeps all current result assertions.
+
+This is the intended testability pattern: **one strong integration proof plus a tiny executable-boundary smoke**, rather than two copies of the same expensive integration proof.
+
+The PR's own CI timing should be compared against the recent ~13 s command time before generalizing the pattern to other CLI tests.
