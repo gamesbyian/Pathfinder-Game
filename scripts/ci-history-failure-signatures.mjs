@@ -44,7 +44,7 @@ function runGh(args) {
 function jobLog(repo, runId, jobId) {
   try {
     return runGh(['run', 'view', String(runId), '--repo', repo, '--job', String(jobId), '--log']);
-  } catch (error) {
+  } catch {
     return null;
   }
 }
