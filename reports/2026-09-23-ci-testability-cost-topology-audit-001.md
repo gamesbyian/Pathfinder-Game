@@ -1258,3 +1258,34 @@ The successful pattern is now clearer:
 5. tests that specifically claim rebuild determinism retain a real independent rebuild, but do not rebuild merely to exercise pure derivation twice.
 
 Continue looking for this shape before introducing broader in-process test batching.
+
+
+## Post-#2025 evidence refresh and benchmark closure
+
+PR #2025 merged at `9d9159b8cb8f09db58d6fe5668876b111be4af59`. Its final green PR-CI run `35929852088` provides a useful post-refactor baseline under the same four-worker harness:
+
+- the full 173-contract `test:node` population completed in about **35.7 s wall**;
+- `test:research-query`: **4.9 s**;
+- `test:research-queryability-audit`: **4.2 s**;
+- `test:research-integration-audit`: **2.1 s**;
+- `test:research-system-query`: **4.9 s**;
+- `test:experiment-manifest`: **6.4 s**;
+- `test:portfolio-solve-sweep-worker`: **6.1 s**.
+
+The validator population on the same run exposed the other universal critical-path candidate clearly:
+
+- `check:types`: **10.5 s**;
+- `check:types:tests`: **12.9 s**.
+
+The model-reuse/CLI-seam work therefore moved the research-specific hotspot materially without exhausting the broader CI opportunity. The next evidence should resolve two already-instrumented questions rather than inventing another speculative optimization:
+
+1. whether bypassing per-child `npm run` wrappers produces a repeatable hosted-runner gain at the settled four-worker concurrency;
+2. whether restoring TypeScript incremental build info produces a material valid-change speedup while the fault probes continue to detect new production and test-only type errors.
+
+To make those measurements reproducible from an audit PR rather than dependent on an out-of-band manual dispatch:
+
+- the Node concurrency benchmark now supports a narrow `pull_request` trigger when its own runner/script/package authority changes, defaults that PR path to `npm,direct` at four workers/four repeats, and retains a machine-readable result artifact;
+- the TypeScript incremental benchmark now supports a narrow `pull_request` trigger when its workflow/script/TypeScript cache authority changes;
+- ordinary production CI behavior remains unchanged by these benchmark triggers.
+
+Do not promote direct child execution or Actions-cached TypeScript build info merely because one PR benchmark is favorable. Require repeated green measurements and preserve the existing correctness/failure-quality contracts before activation.
