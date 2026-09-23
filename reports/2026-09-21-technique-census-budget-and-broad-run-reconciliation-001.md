@@ -1,9 +1,9 @@
 # Technique census budget and broad-run reconciliation 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-21 — current production refresh remains 50M nodes/level; EW1 remains the validated shallow cross-technique pricing instrument at 10M canonical work.
-> **Decision:** keep T1/T3/T4 at 50M nodes; make a bounded 60-level / 10M-work EW1 tranche part of the normal census dispatch, with an independent frozen seed and a dedicated pre-fan-out work-cap canary.
-> **Remaining gate:** after the next stress refresh + census complete, reconcile the fresh capability boundary, EW1 shallow pricing, T1 deep capability, failure-response evidence, and WS1 frozen-model challenge before changing scheduler or census budgets.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-22 — stress refresh `35687363645` and technique census `35687337464` completed from shared solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`; census combine is 120/120 complete with 80,538 unique cells.
+> **Decision:** retain the 50M-node T1/T3/T4 ceiling and the bounded 60-level / 10M-work EW1 tranche. The fresh evidence exposes useful deep-vs-cheap allocation cohorts without making deeper standing census compute decision-limiting.
+> **Remaining gate:** materialize the fresh second-order census outputs and harden the standard-result execution-identity contract; production scheduler changes still require controlled confirmation.
 
 ## Why the deep census stays at 50M nodes
 
@@ -66,3 +66,13 @@ After both broad runs complete, the next solver-research pass must:
 7. explicitly reconsider the next census budget only if capped-depth evidence is now decision-limiting.
 
 Do not mark the broad acquisition complete merely because the workflows are green. The acquisition closes only after this reconciliation is recorded in current workstream authority or a dated result.
+
+## 2026-09-22 closeout
+
+The preregistered broad-run reconciliation is complete. The stress boundary remained **101/102 C1 + 1,169/1,700 C2** with zero solved-set churn. The census finished all 120 shards and shows full-depth T1 isolated capability on **83/532 current production misses**, including **47 singleton-supported** misses; **449** current misses have no T1 solve. On the safety side, **140/1,430 production-solved levels** have no isolated T1 solver, so T1 remains capability evidence rather than a production-ladder oracle.
+
+EW1 also behaved as intended: the 60-level × 10M-work tranche completed without deadline truncation and separates cheap naturally exhausted beam screens from cap-bound DFS/admissible/repair continuations. Cross-source joins nominate cheap isolated capability that production does not convert into recorded wins, but those rows are allocation questions rather than automatic promotions or removals.
+
+The census workflow itself ended red only after the scientific combine, when its legacy direct hint-persistence commit collided with newer main. Automatic harvesting subsequently persisted the discoveries at `afd744a195b2177a865670d3ec3afc00ed5352a7`. No rerun is warranted. [Full closeout](2026-09-22-technique-census-broad-evidence-closeout-001.md).
+
+The generic `solver-sweep-result` wrapper did reveal one genuine integration gap: the combined census primary result does not bind the immutable execution SHA / exact expected-observed population through the newer standard contract, so the wrapper labels it non-decision-bearing despite complete specialized coverage. Repair that contract before the next standing census; do not solve it by repeating this acquisition.

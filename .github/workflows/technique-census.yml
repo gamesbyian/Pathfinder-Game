@@ -260,7 +260,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Check out the dispatched commit exactly
         uses: actions/checkout@v7
@@ -359,23 +359,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Persist the run summary and any newly discovered hints
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add "reports/stress/technique-census/${{ github.run_id }}/"
-          git add data/hints/ data/stress/hints/ data/stress/hints-random/
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Technique capability census (${{ github.run_id }})"
-          for attempt in 1 2 3 4; do
-            if git push origin HEAD:${{ github.ref_name }}; then exit 0; fi
-            sleep $((attempt * 5))
-            git fetch origin "${{ github.ref_name }}"
-            # Same rationale as solver-stress-refresh.yml's own identical step: discard anything left
-            # unstaged (this run never intended to commit it) so `git rebase` doesn't refuse over an
-            # unrelated concurrent commit landing on the branch mid-run.
-            git checkout -- .
-            git rebase "origin/${{ github.ref_name }}" || exit 1
-          done
-          exit 1
+      # Do not push generated census reports/hints from this long-running combine job.
+      # The combined artifact is the immutable scientific result, and harvest-solver-evidence.yml
+      # semantically merges referee-valid discoveries onto current main after completion or failure.
+      # Keeping one persistence rail avoids giant rebase conflicts after a many-hour census.
