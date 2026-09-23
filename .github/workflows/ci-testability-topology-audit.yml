@@ -80,7 +80,7 @@ jobs:
             for (const [name, row] of Object.entries(d.groupSummary).sort((a, b) => b[1].observedTotalSeconds - a[1].observedTotalSeconds)) {
               console.log(`| \`${name}\` | ${row.contracts} | ${row.observedTotalSeconds.toFixed(1)} | ${row.representativeDetectorAppearances} | ${row.observedZeroHitContracts} |`);
             }
-            NODE
+          NODE
           fi
       - uses: actions/upload-artifact@v7
         with:
