@@ -25,3 +25,9 @@ test('hashPathSignature is a fixed-length hex string regardless of input length'
 test('MAX_HINTS_PER_LEVEL matches the documented cap', () => {
     assert.equal(MAX_HINTS_PER_LEVEL, 5000);
 });
+
+test('saveLocalLevelHintIfNovel returns a distinguishable no-connection outcome, not a bare false', async () => {
+    const { saveLocalLevelHintIfNovel } = createLocalLevelHintsRepository({ appId: 'test', db: null });
+    const outcome = await saveLocalLevelHintIfNovel('fingerprint', [1, 2, 3], '1,2,3', {} as any, new Set());
+    assert.deepEqual(outcome, { saved: false, reason: 'no-connection' });
+});

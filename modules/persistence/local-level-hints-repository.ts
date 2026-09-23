@@ -9,6 +9,18 @@ import { toHint, mergeHints, upgradeProvenanceEntry, type Hint, type HintProvena
 
 const MAX_HINTS_PER_LEVEL = 5000;
 
+/** One doc per path means a rediscovery of an already-known path has no document to append its
+ *  provenance to -- the plan's tracked evidence-loss limitation (this backend's create-only,
+ *  single-provenance-event-per-path shape cannot represent occurrence lineage yet; that is a
+ *  Phase 3 storage-layout item, not a Phase 1 containment fix). Returning a discriminated outcome
+ *  instead of a bare boolean makes that specific loss distinguishable from a real capacity refusal
+ *  or a missing connection, rather than three different "nothing happened" cases collapsing into
+ *  one false — see docs/hint-evidence-execution-identity-storage-consolidation-plan.md's Firestore
+ *  section ("capacity/duplicate/failure outcomes must be distinguishable"). */
+export type SaveLocalLevelHintOutcome =
+    | { saved: true }
+    | { saved: false; reason: 'no-connection' | 'duplicate-provenance-not-recorded' | 'capacity-reached' };
+
 /** Short, deterministic, Firestore-doc-ID-safe digest of a path signature (FNV-1a, 32-bit,
  *  hex-encoded) — not a security boundary (collisions just produce a redundant-looking entry,
  *  never overwrite one — see firestore.rules), just a stable bucket so every client converges on
@@ -44,23 +56,24 @@ export function createLocalLevelHintsRepository(client: any) {
 
     /** Saves one newly-discovered path as its own entry, unless it's already known (locally or
      *  here — callers pass `alreadyKnownSignatures` covering both) or the level already has
-     *  MAX_HINTS_PER_LEVEL saved. Best-effort, non-atomic count check: a soft cap on puzzle-hint
-     *  data, not a security boundary, so a small overshoot under concurrent writes is acceptable
-     *  (see docs/firestore-security-model.md). Propagates failures like every other repository
-     *  function here — callers driving an invisible background save (rather than a submission
-     *  flow already surfacing its own errors) are responsible for catching and reporting rather
-     *  than letting a rejected promise go unhandled. */
+     *  MAX_HINTS_PER_LEVEL saved; see SaveLocalLevelHintOutcome for why the "unless" cases return a
+     *  distinguishable reason rather than a bare false. Best-effort, non-atomic count check: a soft
+     *  cap on puzzle-hint data, not a security boundary, so a small overshoot under concurrent
+     *  writes is acceptable (see docs/firestore-security-model.md). Propagates failures like every
+     *  other repository function here — callers driving an invisible background save (rather than a
+     *  submission flow already surfacing its own errors) are responsible for catching and reporting
+     *  rather than letting a rejected promise go unhandled. */
     async function saveLocalLevelHintIfNovel(
         levelFingerprint: string,
         path: number[],
         pathSignature: string,
         provenance: HintProvenanceEntry,
         alreadyKnownSignatures: ReadonlySet<string>,
-    ): Promise<boolean> {
-        if (!client.db || !levelFingerprint) return false;
-        if (alreadyKnownSignatures.has(pathSignature)) return false;
+    ): Promise<SaveLocalLevelHintOutcome> {
+        if (!client.db || !levelFingerprint) return { saved: false, reason: 'no-connection' };
+        if (alreadyKnownSignatures.has(pathSignature)) return { saved: false, reason: 'duplicate-provenance-not-recorded' };
         const count = await getCountFromServer(entries(levelFingerprint));
-        if (count.data().count >= MAX_HINTS_PER_LEVEL) return false;
+        if (count.data().count >= MAX_HINTS_PER_LEVEL) return { saved: false, reason: 'capacity-reached' };
         const entryId = hashPathSignature(pathSignature);
         await setDoc(doc(entries(levelFingerprint), entryId), {
             path,
@@ -68,7 +81,7 @@ export function createLocalLevelHintsRepository(client: any) {
             provenance,
             createdAt: Timestamp.now(),
         });
-        return true;
+        return { saved: true };
     }
 
     return { getLocalLevelHints, saveLocalLevelHintIfNovel, hashPathSignature, MAX_HINTS_PER_LEVEL };
