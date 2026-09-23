@@ -139,17 +139,28 @@ It was corrected before closeout:
 
 This is exactly the distinction the common vocabulary exists to preserve.
 
+## Direct-artifact receipt closeout
+
+The direct transported-canonical-file compatibility importer was subsequently migrated to the same
+receipt vocabulary.
+
+`scripts/merge-hint-artifacts.mjs` now measures canonical before/after semantic units for every
+referee-accepted incoming observation and reports:
+
+- accepted observations that changed semantic storage;
+- accepted observations already represented;
+- exact path additions;
+- exact provenance-event additions;
+- exact occurrence additions;
+- physical files changed.
+
+The central workflow emits this third receipt as
+`run-<run-id>-captured-artifacts.json`, so all current canonical harvest lanes now share one accounting
+contract. A focused empty-staging smoke test plus the shared semantic-unit counter guard were added.
+
 ## Remaining Phase-5/6 gaps
 
-The largest explicit mechanical gap is:
-
-`scripts/merge-hint-artifacts.mjs`
-
-The direct transported-canonical-file compatibility importer still has its own counters/quarantine
-semantics and does not emit the canonical receipt. Adding honest path/event/occurrence deltas there
-requires comparing before/after semantic stores rather than relabeling its existing coarse counters.
-
-Phase 5 also still needs the final standardized successful-discovery projection/completeness contract
+Phase 5 still needs the final standardized successful-discovery projection/completeness contract
 for all intended modern producer families, including CP-SAT artifact sufficiency.
 
 Phase 6 remains family-by-family migration work. This tranche does not remove any direct persistence
@@ -181,5 +192,5 @@ accepting it.
 2. design/implement the Phase-3 Firestore/GHA bounded-growth/overflow semantics;
 3. decide whether solver stage should become a bounded embedded provenance dimension or remain an
    exact sibling-evidence join;
-4. migrate `merge-hint-artifacts.mjs` to honest receipt accounting;
+4. use the now-complete receipt coverage to enumerate any maintained ingestion lane that still bypasses the canonical accounting vocabulary;
 5. use the new query/receipt oracles as the gates for producer/workflow-family Phase-5/6 migration.
