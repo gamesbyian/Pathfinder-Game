@@ -318,3 +318,34 @@ The useful cadence question is instead:
 > Can main-push validation become an impact-scoped backstop for direct-main changes and merge/integration-sensitive surfaces, while periodic full validation supplies the broader oracle?
 
 This should be evaluated separately from PR deep-verification scoping.
+
+
+## Historical unique-catch counterfactual against the current router
+
+The current impact authority was checked against the surviving genuine deep-only episode.
+
+Current routing rules classify `modules/solver/**`, `modules/solver.ts`, and related production solver paths as **solver + research** impact. The solver validation plan requires:
+
+- unit coverage;
+- deep proofs;
+- solver canary; and
+- production build.
+
+PR #1722 changed `modules/solver/orchestration.ts`, `modules/solver.ts`, `modules/solver/search.ts`, stage-budget/executor code, worker code, and solver tests. Therefore the current scoped plan would **require deep verification** for the exact historical episode where deep supplied unique branch-caused evidence.
+
+This is an important safety result: the current router does not appear to trade away the only demonstrated current-era marginal deep catch.
+
+PR #1693 is different: it changed package/workflow/CI authority and would conservatively escalate to full impact under the current router anyway. Its non-branch-caused deep failure therefore also remains visible during router-authority changes, where conservative full validation is appropriate.
+
+### Provisional current-era disposition
+
+Evidence now supports the following **shadow candidate**, not yet a production change:
+
+- **fast gate:** retain as universal installed-dependency lane for now, while its internal semantic groups continue to be audited;
+- **deep verification:** move from universal PR cadence to impact-scoped PR cadence under the existing execution plan;
+- **solver impact:** keep the whole current deep bundle together initially;
+- **CI/router/config authority:** retain conservative full-impact escalation;
+- **periodic full oracle:** retain to audit router omissions and unexpected cross-surface coupling;
+- **main push:** preserve as a direct-main/integration backstop, then scope it with the same impact authority rather than deleting it.
+
+Before activation, fault injection should reproduce at least the PR #1722 failure class and prove the scoped route selects/catches it.
