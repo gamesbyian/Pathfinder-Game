@@ -1581,4 +1581,42 @@
           "mainSearchLateReserveConfigCount": null,
           "admissibleOrderNodeReserveFraction": null,
           "admissibleOrderNonDefaultRetryBudgetFraction": null,
-          "earlyRepairSearchAdaptiveBadnessGate
+          "earlyRepairSearchAdaptiveBadnessGate": null,
+          "earlyRepairSearchAdaptiveMinScale": null,
+          "repairLateProbeNodeBudget": null
+        },
+        "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 5 batch report(s))"
+      },
+      "affectedSolvedRows": [
+        {
+          "id": "R03304",
+          "level": 1635,
+          "solutionLength": 92,
+          "solutionSha256": "d6ed4ade13db5e7422991557e2ed606b582db730f22dcea4b22166bc97037021",
+          "refereeValid": true,
+          "nodesExpanded": 580626,
+          "workSpent": 6404847,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 458764,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 458764,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3022,
+              "outcome": "success",
+              "allocatedBudgetMs": 86397192,
+              "nodesExpanded": 339033,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
