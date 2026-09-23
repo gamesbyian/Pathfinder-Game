@@ -52,7 +52,7 @@ Use the narrowest granularity history actually exposes. If an old bundled step r
 
 Collapse correlated red checks into root-cause incidents. One defect that makes lint, tests, build, and an aggregate gate red is one catch event, not four.
 
-For each incident record the PR/commit/run/attempt, changed files and router classification, failing stable check IDs, first failing check, root cause, failure class, fix/rerun evidence, whether it could have merged absent the check, whether another check independently covered it, and whether current main still has equivalent protection.
+For each incident record the PR/commit/run/attempt, changed files and router classification, failing stable check IDs, first failing check, root cause, failure class, fix/rerun evidence, whether it could have merged absent the check, whether another check independently covered it, and whether current main still has equivalent protection. Assign both a `rootCauseIncidentId` for correlated failures within one run and, where evidence supports it, a `failureFamilyId` linking the same underlying debt/fix sequence across adjacent PR heads. A repair pinball sequence must not be counted as repeated independent incidence merely because the branch moved between runs.
 
 Prefer explicit log/fix evidence. Use “unknown” rather than inference theater.
 
