@@ -51,6 +51,34 @@ assert.deepEqual(
     }),
     { applicability: 'admissible', reason: 'matching-comparable-run-regime' },
 );
+assert.deepEqual(
+    classifyFailureEvidenceApplicability(document, { ...document.records[0], runId: 'another-run' }, 'longitudinal-process', {
+        comparableProtocolHashes: ['proto'],
+        comparableSolverRefs: ['solver'],
+    }),
+    { applicability: 'admissible', reason: 'matching-comparable-run-regime' },
+    'run identity is acquisition lineage, not a semantic comparability dimension',
+);
+assert.deepEqual(
+    classifyFailureEvidenceApplicability(document, {
+        ...document.records[0], runId: 'run-1', protocolHash: 'different-protocol',
+    }, 'longitudinal-process', {
+        comparableProtocolHashes: ['proto'],
+        comparableSolverRefs: ['solver'],
+    }),
+    { applicability: 'context-bound', reason: 'different-protocol-or-solver-regime' },
+    'a shared run cannot make different protocol identities comparable',
+);
+assert.deepEqual(
+    classifyFailureEvidenceApplicability({}, {
+        ...document.records[0], runId: 'historical-run', protocolHash: undefined, solverRef: undefined,
+    }, 'longitudinal-process', {
+        comparableProtocolHashes: ['proto'],
+        comparableSolverRefs: ['solver'],
+    }),
+    { applicability: 'context-bound', reason: 'missing-run-protocol-or-solver-identity' },
+    'missing historical protocol and revision remain unknown rather than inheriting current defaults',
+);
 
 assert.deepEqual(
     classifyFailureEvidenceApplicability(document, document.records[0], 'population-prevalence'),
