@@ -496,6 +496,10 @@ const mapDirectLevelToAuditLevel = (row = {}) => {
   const rawStatus = solved ? 'success' : (`${row?.status || ''}` === 'timeout' ? 'timeout' : `${row?.status || ''}` || 'error');
   return {
     level: Number(row?.level) || null,
+    levelId: row?.levelId ?? null,
+    levelRevision: row?.levelRevision ?? null,
+    discoveryObservedAt: row?.discoveryObservedAt ?? null,
+    solution: solved && Array.isArray(row?.solution) ? row.solution : null,
     status: solved ? 'success' : rawStatus,
     rawStatus,
     finalStatus: rawStatus,
@@ -512,6 +516,8 @@ const mapDirectLevelToAuditLevel = (row = {}) => {
     contradictionRecoveryActivated: !!row?.contradictionRecoveryActivated,
     preExpansionAbort: row?.preExpansionAbort || null,
     nodesExpanded: Number.isFinite(row?.nodesExpanded) ? row.nodesExpanded : null,
+    workSpent: Number.isFinite(row?.workSpent) ? row.workSpent : null,
+    workBudget: Number.isFinite(row?.workBudget) ? row.workBudget : null,
     candidateMovesConsidered: Number.isFinite(row?.candidateMovesConsidered) ? row.candidateMovesConsidered : null,
     rootCandidatesGenerated: Number.isFinite(row?.rootCandidatesGenerated) ? row.rootCandidatesGenerated : null,
     rootCandidateCountDepth0: Number.isFinite(row?.rootCandidateCountDepth0) ? row.rootCandidateCountDepth0 : null,
@@ -530,10 +536,20 @@ const mapDirectLevelToAuditLevel = (row = {}) => {
 const convertDirectToRawPayload = (direct = {}) => {
   const levels = Array.isArray(direct?.levels) ? direct.levels.map(mapDirectLevelToAuditLevel) : [];
   return {
+    schemaVersion: 1,
+    kind: 'pathfinder-solver-diagnostics-report',
+    producer: 'solver-diagnostics',
+    corpus: direct?.corpus ?? 'data/levels.json',
     exportMode: 'full',
     runType: 'newHint',
     timestamp: direct?.timestamp || new Date().toISOString(),
     commitSha: direct?.commitSha || process.env.GITHUB_SHA || 'local',
+    budgetMs: direct?.budgetMs ?? null,
+    workBudget: direct?.workBudget ?? null,
+    solverRequestProjection: direct?.solverRequestProjection ?? null,
+    solverRequestIdentity: direct?.solverRequestIdentity ?? null,
+    backend: direct?.backend ?? null,
+    reproducibilityMode: direct?.reproducibilityMode ?? null,
     levelCount: levels.length,
     levels
   };
