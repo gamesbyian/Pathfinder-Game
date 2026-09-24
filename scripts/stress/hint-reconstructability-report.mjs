@@ -22,6 +22,7 @@ const CORPORA = [
     { name: 'published', levels: 'data/levels.json' },
     { name: 'corpus1', levels: 'data/stress/stress-levels.json' },
     { name: 'corpus2', levels: 'data/stress/stress-levels-random.json' },
+    { name: 'envelope', levels: 'data/stress/stress-levels-envelope.json' },
 ];
 
 const arg = name => process.argv.find(a => a.startsWith(`--${name}=`))?.split('=').slice(1).join('=');
