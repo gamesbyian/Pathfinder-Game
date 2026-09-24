@@ -33,6 +33,11 @@
       "path": "scripts/hint-workbench-node-test.mjs",
       "disposition": "temporary-test-fixture-writer",
       "rationale": "Creates synthetic canonical-layout Hint files only inside a temporary test directory to exercise workbench I/O compatibility; it never targets repository canonical data."
+    },
+    {
+      "path": "scripts/validate-all-hint-stores-node-test.mjs",
+      "disposition": "temporary-test-fixture-writer",
+      "rationale": "Creates one synthetic canonical-layout Hint file only inside mkdtemp() to prove whole-store owner/referee validation; it never targets repository canonical data."
     }
   ]
 }
