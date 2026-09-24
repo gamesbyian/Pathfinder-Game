@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-workflow-persistence-audit",
+  "reviewedAt": "2026-09-24",
+  "purpose": "Explicit exceptions to central GHA Hint persistence. An entry permits only the listed staging scopes; every other maintained workflow remains report-only for canonical Hint stores.",
+  "entries": [
+    {
+      "workflow": "collect-variant-family-dataset.yml",
+      "disposition": "family-research-direct-persistence",
+      "allowedStagePrefixes": [
+        "data/families/"
+      ],
+      "rationale": "Variant-family generation is a canonical family-dataset producer rather than a solver-discovery ingestion lane. It writes family levels and their sibling Hint artifacts together through the shared semantic/physical I/O boundary on the dedicated research branch. The exception is intentionally limited to data/families/ and does not authorize published/stress Hint persistence."
+    }
+  ]
+}
