@@ -139,6 +139,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A1 deep runtime-data checkout | **merged / measured green on hit** | #2045: source checkout **2 s** + exact runtime-data restore **2 s**; all deep obligations green; deep job **56 s**. |
 | A1b fast runtime-data cache-miss recovery | **investigation in progress (#2058)** | Hint-tree invalidation exposed a **52–56 s** fast-gate miss path. In-place sparse expansion and second checkout in the same worktree are rejected; #2058 is probing an isolated runtime-data checkout/copy and will remove forced-miss instrumentation before merge. |
 | B1 lifecycle deterministic dispatch | **merged / measured green** | #2044: `orchestration-work-budget.test.ts` **~8.2 s → 195 ms**; covered-suite wall **~29.5 s → 26.48 s**; all test slots preserved. |
+| B1c hint-occurrence import boundary | **measured green / implementation ready** | Synthetic contract **15.8 s → 0.1 s**; hint closeout canary independently reran full-corpus occurrence acceptance successfully. |
 | A3 main-seeded ESLint cache | **merged / measured green** | #2054 main-push seeded the default-branch generation after a 15 s cold lint; unrelated #2059 restored that generation and lint fell to **1 s** (from 16 s cold on #2054). |
 | A4 250k solver canary | **merged / measured green** | #2056: original exact 9-level fixture set retained; repaired-stack PR run solved **9/9 in 1.7 s / 1,303,532 nodes** at 250k with no work-budget mismatch. |
 | A2 exact Node 22.23.2 | **production migration ready / measured green** | #2064 run 35963869514 passed all ordinary PR obligations; setup-node measured **0-3 s** across planner/fast/deep. Final current-main transplant pins PR/main/scoped to exact 22.23.2 and isolates the Node-22 Firebase CLI cache generation. |
@@ -207,6 +208,20 @@ Measurement-only rehearsal on the exact 37-test file:
 Lower budgets do not buy additional wall time, so production uses **250k / 125k** for more work-envelope headroom. Paired determinism/default-equivalence tests are also strengthened to require identical node counts and nonzero repair work, preventing trivial null/null success from weakening the invariant.
 
 Expected file saving: roughly **7.5 s** versus the current covered-suite profile. Full-suite wall saving must be measured separately because Vitest overlaps files.
+
+### B1c. Remove hint-occurrence unit-test import side effect
+
+Post-hint-consolidation profiling exposed `test:hint-occurrence-acceptance` at **15.8 s** despite tiny synthetic inputs. The test imported one helper from the corpus-scale CLI module, which also ran the full three-corpus acceptance audit at module load.
+
+Measured fix:
+
+- pure occurrence semantics live in a side-effect-free library;
+- CLI imports/re-exports the helper and retains direct invocation behavior;
+- synthetic Node contract imports the pure library;
+- ordinary CI contract: **15.8 s → 0.1 s**;
+- hint closeout canary reran the real full-corpus occurrence acceptance command successfully.
+
+This is a module-boundary correction, not validation reduction.
 
 ## Implementation sequence
 
