@@ -13,7 +13,6 @@ import path from 'node:path';
 import process from 'node:process';
 import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
-import { summarizeHintRecords } from './hint-query-lib.mjs';
 import { summarizeReconstructability } from './stress/hint-reconstructability-report.mjs';
 
 const STORES = [
@@ -46,10 +45,13 @@ function rowForArtifact(root, store, name) {
     const raw = readFileSync(path.join(root, artifactPath), 'utf8');
     const parsed = JSON.parse(raw);
     const hints = decodeHintArtifact(parsed);
-    const query = summarizeHintRecords(hints);
     const reconstructability = summarizeReconstructability(hints);
     const physical = physicalSchema(parsed);
-    const provenanceEvents = hints.reduce((sum, hint) => sum + (hint?.provenance?.length ?? 0), 0);
+    const provenanceEntries = hints.flatMap(hint => hint?.provenance ?? []);
+    const provenanceEvents = provenanceEntries.length;
+    const solverIds = [...new Set(provenanceEntries.map(entry => entry?.solver?.id).filter(Boolean))].sort();
+    const techniques = [...new Set(provenanceEntries.map(entry => entry?.solver?.technique).filter(Boolean))].sort();
+    const retryTiers = [...new Set(provenanceEntries.map(entry => entry?.solver?.forcing?.retryTier).filter(Boolean))].sort();
     return {
         corpus: store.corpus,
         levelKey: name.slice(0, -5),
@@ -61,9 +63,9 @@ function rowForArtifact(root, store, name) {
         representation: physical.representation,
         hints: hints.length,
         provenanceEvents,
-        solverIds: Object.keys(query.solverIds ?? {}).sort(),
-        techniques: Object.keys(query.techniques ?? {}).sort(),
-        retryTiers: Object.keys(query.retryTiers ?? {}).sort(),
+        solverIds,
+        techniques,
+        retryTiers,
         effectiveInputReconstructable: reconstructability.effectiveInputReconstructable,
         effectiveInputNotReconstructable: reconstructability.effectiveInputNotReconstructable,
         eventsWithExecution: reconstructability.eventsWithExecution,
