@@ -21,7 +21,7 @@ const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).m
 const rescuePath = String(args.get('--rescue') || DEFAULT_RESCUE);
 const outPath = args.get('--out') ? String(args.get('--out')) : null;
 
-function sha256Canonical(value) {
+export function sha256Canonical(value) {
     return createHash('sha256').update(stableStringify(value)).digest('hex');
 }
 
@@ -143,13 +143,20 @@ export function buildHistoricalEnrichmentPlan(rescue, corpusDocuments) {
     };
 }
 
-const rescue = JSON.parse(readFileSync(rescuePath, 'utf8'));
-const corpusPaths = [...new Set((rescue.runs ?? []).map(run => run?.resultContext?.corpus).filter(Boolean))];
-const corpusDocuments = new Map(corpusPaths.map(corpus => [
-    corpus,
-    readLevelCorpusDocumentWithHints(corpus),
-]));
-const plan = buildHistoricalEnrichmentPlan(rescue, corpusDocuments);
-const json = JSON.stringify(plan, null, 2);
-if (outPath) writeFileSync(outPath, json + '\n');
-console.log(json);
+// Guarded so importing this module's exported functions (classifyRescuedObservation,
+// provenanceMatchesRescuedObservation, sha256Canonical, buildHistoricalEnrichmentPlan -- e.g. from
+// hint-historical-enrichment-apply.mjs, or a test) never triggers a real file read plus a full plan
+// dump to stdout as an unwanted import side effect.
+const isMain = process.argv[1] && import.meta.url === new URL(process.argv[1], 'file://').href;
+if (isMain) {
+    const rescue = JSON.parse(readFileSync(rescuePath, 'utf8'));
+    const corpusPaths = [...new Set((rescue.runs ?? []).map(run => run?.resultContext?.corpus).filter(Boolean))];
+    const corpusDocuments = new Map(corpusPaths.map(corpus => [
+        corpus,
+        readLevelCorpusDocumentWithHints(corpus),
+    ]));
+    const plan = buildHistoricalEnrichmentPlan(rescue, corpusDocuments);
+    const json = JSON.stringify(plan, null, 2);
+    if (outPath) writeFileSync(outPath, json + '\n');
+    console.log(json);
+}
