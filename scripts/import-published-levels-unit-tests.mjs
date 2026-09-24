@@ -115,7 +115,7 @@ test('normalizeLevel handles a mix of bare-path and {path, provenance} hints in 
 test('mergeNewHints appends only hints not already present, deduped by path signature', () => {
   const target = { hints: [[1, 2], [3, 4]] };
   const added = mergeNewHints(target, { hints: [[3, 4], [5, 6]] });
-  assert.equal(added, 1);
+  assert.deepEqual(added, { pathsAdded: 1, semanticChanged: true });
   assert.deepEqual(target.hints, [[1, 2], [3, 4], [5, 6]]);
   assert.deepEqual(target.hintRecords.map(rec => rec.path), [[1, 2], [3, 4], [5, 6]],
     'bare-path input is upgraded once and canonical records become the mutation authority');
@@ -144,6 +144,15 @@ test('mergeNewHints threads a new hint\'s provenance into target.hintRecords', (
   assert.deepEqual(target.hints, [[1, 2], [3, 4]]);
   assert.equal(target.hintRecords.length, 2);
   assert.equal(target.hintRecords[1].provenance[0].solver.technique, 'manual-path');
+});
+
+test('mergeNewHints preserves provenance-only semantic changes when the path is already known', () => {
+  const target = { hints: [[1, 2]], hintRecords: [{ path: [1, 2], provenance: [] }] };
+  const incoming = { hints: [[1, 2]], hintRecords: [{ path: [1, 2], provenance: [{ solver: { id: 'p', technique: 'manual-path' } }] }] };
+  const merged = mergeNewHints(target, incoming);
+  assert.deepEqual(merged, { pathsAdded: 0, semanticChanged: true });
+  assert.equal(target.hintRecords.length, 1);
+  assert.equal(target.hintRecords[0].provenance[0].solver.technique, 'manual-path');
 });
 
 // --- makeLevelIdMinter ---
