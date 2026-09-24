@@ -181,7 +181,13 @@ test('decodeHintArtifact reconstructs provenance from the transitional {hints, h
   assert.equal(decoded[0].provenance[0].solver.technique, 'beam');
 });
 
-test('decodeHintArtifact explicitly dispatches historical schema v2/v3 wrappers', () => {
+test('decodeHintArtifact explicitly dispatches historical schema v1-v3 wrappers', () => {
+  const v1 = decodeHintArtifact({
+    schemaVersion: 1,
+    hints: [[1, 2, 3]],
+    hintMetadata: [{ technique: 'beam', nodesExpanded: 10 }],
+  });
+  assert.equal(v1[0].provenance[0].solver.technique, 'beam');
   for (const schemaVersion of [2, 3]) {
     const canonical = { schemaVersion, hints: [toHint([1, 2, 3], [makeProvenanceEntry('beam')])] };
     const decoded = decodeHintArtifact(canonical);
