@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-bare-mutation-audit",
+  "reviewedAt": "2026-09-24",
+  "purpose": "Explicit review ledger for maintained direct assignments to level.hints or level.hintRecords. New assignments fail the hostile audit until classified.",
+  "entries": [
+    {
+      "path": "modules/domain/hint-runtime.mjs",
+      "disposition": "canonical-mutation-owner",
+      "rationale": "setLevelHintRecords() is the sole canonical synchronization boundary; it assigns hintRecords first and derives bare hints from those semantic records."
+    },
+    {
+      "path": "modules/domain/level-codec.ts",
+      "disposition": "ephemeral-wire-clone-projection",
+      "rationale": "Assignments construct wire/clone views for serialization and engine cloning. They do not mutate persisted Hint authority; canonical persisted mutation remains setLevelHintRecords()."
+    }
+  ]
+}
