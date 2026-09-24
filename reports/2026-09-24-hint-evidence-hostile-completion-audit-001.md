@@ -288,6 +288,24 @@ remain explicit compatibility paths, declared v2/v3 wrappers use retained histor
 uses the current codec, and every other declared schema version throws. Regression tests cover v2,
 v3 and unsupported v5. PSC-024 is now reclosed.
 
+### 21. Phase 8 omitted the tracked envelope Hint corpus
+
+The hostile audit found a fourth tracked first-class Hint store,
+`data/stress/hints-envelope/`, paired with `data/stress/stress-levels-envelope.json`.
+It contains 124 tracked Hint artifacts and is already treated as first-class research evidence by
+corpus-formatting, provenance-coverage and occurrence-acceptance tooling. The Phase-8 migration
+tool, benchmark, consolidation census, determinism audit, reconstructability report and cost-drift
+tool nevertheless hard-coded only published + stress1 + stress2.
+
+This falsifies PR #2071's claim that its 1,962-file migration covered the "full tracked corpus":
+the 124 envelope artifacts remained schema v3.
+
+**Correction in progress:** whole-store consolidation tooling now includes the envelope store, and a
+temporary PR-scoped workflow runs the already-tested v4 migration specifically over those 124
+artifacts, proves immediate idempotency, uploads the reversible semantic/join-equivalence manifest,
+and commits only the migrated envelope files. The workflow is to be deleted after the repair commit
+lands and exact-head validation is green.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
