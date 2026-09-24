@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { auditHintOccurrenceSemantics } from './hint-occurrence-acceptance-audit.mjs';
+import { auditHintOccurrenceSemantics } from './hint-occurrence-acceptance-lib.mjs';
 
 const base = {
     solver: {
