@@ -2,7 +2,7 @@
  *  must not accumulate, while genuinely distinct rediscoveries are kept. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint, decodeHintArtifact, provenanceEventIdentity, provenanceEventKey } from './hint-types.js';
+import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint, decodeHintArtifact, encodeHintArtifact, HINT_ARTIFACT_SCHEMA_VERSION, provenanceEventIdentity, provenanceEventKey } from './hint-types.js';
 
 test('dedupeProvenanceEntries collapses recording-only differences and keeps evidence-bearing ones', () => {
   const e = makeProvenanceEntry('prefix-anchored', { foundAt: '2026-07-16T05:53:45.609Z', hintGuided: true, usedExistingHints: true });
@@ -168,6 +168,93 @@ test('decodeHintArtifact handles canonical {schemaVersion, hints: Hint[]}', () =
 test('decodeHintArtifact throws a clear error on an unrecognized shape instead of silently returning no hints', () => {
   assert.throws(() => decodeHintArtifact({ levels: [] }), /hint artifact must contain/);
   assert.throws(() => decodeHintArtifact(null), /hint artifact must contain/);
+});
+
+test('schema v4 encoder round-trips canonical Hint semantics losslessly', () => {
+  const records = [
+    toHint([1, 2, 3], [
+      makeProvenanceEntry('beam', {
+        solverVersion: 'a'.repeat(40),
+        scoringProfileId: 'perimeterSweep',
+        beamWidth: 2000,
+        levelRevision: 'v1:test',
+        solverRequestIdentity: 'sha256:' + '1'.repeat(64),
+        reproducibilityMode: 'deterministic-work',
+        occurrenceRunId: 'run-1',
+        occurrenceRunAttempt: 2,
+        foundAt: '2026-09-23T00:00:00.000Z',
+      }),
+      makeProvenanceEntry('beam', {
+        solverVersion: 'a'.repeat(40),
+        scoringProfileId: 'perimeterSweep',
+        beamWidth: 2000,
+        levelRevision: 'v1:test',
+        solverRequestIdentity: 'sha256:' + '1'.repeat(64),
+        reproducibilityMode: 'deterministic-work',
+        occurrenceRunId: 'run-2',
+        occurrenceRunAttempt: 1,
+        foundAt: '2026-09-24T00:00:00.000Z',
+      }),
+    ]),
+    toHint([4, 5, 6], []),
+  ];
+  const encoded: any = encodeHintArtifact(records);
+  assert.equal(encoded.schemaVersion, HINT_ARTIFACT_SCHEMA_VERSION);
+  assert.ok(['sparse-inline', 'interned'].includes(encoded.representation));
+  assert.deepEqual(decodeHintArtifact(encoded), records);
+});
+
+test('schema v4 sparse-inline keeps historical capability missingness genuinely absent', () => {
+  const historical = upgradeProvenanceEntry({
+    solver: { id: 'pathfinder-solver', version: 'abc', technique: 'beam', beamWidth: 2000, gateKey: 12, forcing: null, attemptIndex: 3 },
+    search: { nodesExpanded: 10, elapsedMs: 1, budgetMs: 2, termination: 'solved' },
+    context: {},
+    foundAt: '2026-01-01T00:00:00.000Z',
+  });
+  const decoded = decodeHintArtifact({
+    schemaVersion: 4,
+    representation: 'sparse-inline',
+    hints: [{ path: [1, 2, 3], provenance: [historical] }],
+  });
+  assert.equal(Object.hasOwn(decoded[0].provenance[0].context, 'usedExistingHints'), false);
+  assert.equal(Object.hasOwn(decoded[0].provenance[0].context, 'hintGuided'), false);
+  assert.equal(Object.hasOwn(decoded[0].provenance[0].context, 'isolatedTechnique'), false);
+});
+
+test('schema v4 interned form restores shared solver/context/execution tables exactly', () => {
+  const source = makeProvenanceEntry('dfs', {
+    solverVersion: 'a'.repeat(40),
+    levelRevision: 'v1:test',
+    solverRequestIdentity: 'sha256:' + '2'.repeat(64),
+    reproducibilityMode: 'deterministic-work',
+    foundAt: '2026-09-23T00:00:00.000Z',
+  });
+  const decoded = decodeHintArtifact({
+    schemaVersion: 4,
+    representation: 'interned',
+    tables: {
+      solver: [source.solver],
+      context: [source.context],
+      execution: [source.execution],
+    },
+    hints: [{
+      path: [9, 8, 7],
+      provenance: [{
+        solverRef: 0,
+        contextRef: 0,
+        executionRef: 0,
+        search: source.search,
+        foundAt: source.foundAt,
+      }],
+    }],
+  });
+  assert.deepEqual(decoded, [toHint([9, 8, 7], [source])]);
+  assert.throws(() => decodeHintArtifact({
+    schemaVersion: 4,
+    representation: 'interned',
+    tables: { solver: [], context: [], execution: [] },
+    hints: [{ path: [1], provenance: [{ solverRef: 0, contextRef: 0, search: {}, foundAt: 'x' }] }],
+  }), /reference out of range/);
 });
 
 // ── Bounded execution/run binding and occurrence lineage (plan section 4/W) ────────────────────
