@@ -145,6 +145,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
 | B5 runtime-hint projection cache | **production rollout in progress** | Rehearsal #2081 hit run 36063620245 restored exact projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold build dominated by deterministic projection. Production branch seeds/restores PR/main/scoped and post-diagnostics generations. |
+| D1 two-way Node sharding | **timing viable; hermeticity repair in progress** | #2088 current 204-contract profile balances **49.6/49.7 child-s**. Shard 2: **13 s useful / 24 s runner wall**. Shard 1: **16 s useful / 29 s runner wall**, but failed only because `test:harvest-solver-diagnostics-reports` rewrote tracked `P00001.json` while concurrent corpus readers ran. First-shard-start → both shard completions: **29 s**. Fix the shared-state test, rerun, then decide production sharding. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
@@ -395,6 +396,41 @@ Notes:
 - If `implementation` remains above 30 s, split covered Vitest by measured file cost and merge V8 coverage/thresholds. Do not lower coverage thresholds.
 - Do not add a separate runner merely to aggregate status. Use native required checks or an effectively dependency-only result contract that does not put another hosted-runner queue on the critical path.
 - Generate Node shard membership from a checked-in timing profile plus deterministic fallback, and validate that every registered Node contract is assigned exactly once.
+
+### D1. Two-way Node/CLI sharding — current rehearsal
+
+The current Node/CLI registry has grown to **204 contracts**, so the old 176-contract timing projection is obsolete.
+
+Corrected warm full-control run in #2088 measured:
+
+- full Node/CLI population: **32 s useful step / 48 s runner wall**;
+- summed child time: **99.3 s**.
+
+A timing profile rebuilt directly from that run balances the current registry at:
+
+- shard 1: **49.6 child-seconds / 136 contracts**;
+- shard 2: **49.7 child-seconds / 68 contracts**.
+
+Hosted rehearsal 36066406943:
+
+| lane | useful Node step | runner wall | result |
+| --- | ---: | ---: | --- |
+| full warm control | 32 s | 48 s | green |
+| shard 1 | 16 s | 29 s | red: one shared-state test race |
+| shard 2 | 13 s | 24 s | green |
+
+First shard runner start to both shard completions was **29 s**, inside the 35-second full-gate objective with ~6 s margin.
+
+The shard-1 failure is not a timing-profile or selection failure. `test:harvest-solver-diagnostics-reports` deliberately rewrote the tracked `data/hints/P00001.json` while the Node-contract runner executed other corpus readers concurrently. One reader observed the file between truncate/write operations and failed with `SyntaxError: Unexpected end of JSON input`.
+
+This exposes a hidden non-hermetic test boundary that the monolithic four-worker schedule happened not to trigger in that run. The repair is to make the diagnostics harvester accept an injected corpus path and run the regression against a private one-level temporary corpus, preserving the real P00001 level/hint semantics without mutating repository state.
+
+Decision gate:
+
+1. land the hermetic diagnostics-harvest regression;
+2. rerun the exact current two-way shard rehearsal;
+3. if both shard runner walls remain ≤27–30 s and first-shard-start → both-complete remains ≤35 s, two-way standard-runner Node sharding remains viable;
+4. if timing then fails, stop shard-count tuning and move to the larger/reserved-runner fallback already defined in Phase E.
 
 ### Phase E: hosted-runner variance decision
 
