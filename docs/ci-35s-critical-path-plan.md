@@ -145,7 +145,8 @@ The original nine-level population has now been probed at **250,000 work** and a
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
 | B5 runtime-hint projection cache | **production rollout in progress** | Rehearsal #2081 hit run 36063620245 restored exact projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold build dominated by deterministic projection. Production branch seeds/restores PR/main/scoped and post-diagnostics generations. |
-| D1 two-way Node sharding | **timing viable; hermeticity repair in progress** | #2088 current 204-contract profile balances **49.6/49.7 child-s**. Shard 2: **13 s useful / 24 s runner wall**. Shard 1: **16 s useful / 29 s runner wall**, but failed only because `test:harvest-solver-diagnostics-reports` rewrote tracked `P00001.json` while concurrent corpus readers ran. First-shard-start → both shard completions: **29 s**. Fix the shared-state test, rerun, then decide production sharding. |
+| D1 two-way Node sharding | **semantically green; shared-runner wall missed target** | Post-#2091 rerun: shard 1 **17 s useful / 27 s wall**, shard 2 **14 s useful / 38 s wall**; both green. The overrun was setup-node variance (11 s on shard 2), not shard work. Do not tune shard membership/count further to solve hosted bootstrap variance. |
+| D2 balanced coverage sharding | **rehearsal in progress** | Native equal-file D2 preserved merged thresholds but took **64 s** first-shard-start → merge complete. Current 146-file timing profile balances **17.091 / 17.090 test-s**; D2b keeps one shard runner warm as merge coordinator to remove the third-runner tax. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
@@ -397,6 +398,36 @@ Notes:
 - Do not add a separate runner merely to aggregate status. Use native required checks or an effectively dependency-only result contract that does not put another hosted-runner queue on the critical path.
 - Generate Node shard membership from a checked-in timing profile plus deterministic fallback, and validate that every registered Node contract is assigned exactly once.
 
+### Current post-optimization full-impact baseline
+
+Ordinary full-impact CI run **36066406944** is the current architecture baseline:
+
+| lane | runner wall | dominant work |
+| --- | ---: | --- |
+| impact shadow | **7 s** | observational; no longer gates deep startup |
+| fast gate | **58 s** | Node/CLI population **34 s** |
+| deep verification | **77 s** | coverage **30 s** + heavyweight proofs **10 s** + Firestore **13 s**, serialized |
+
+The overall first-required-runner → last-required-completion span was **77 s**.
+
+Bootstrap/cache work has largely succeeded. The remaining critical path is validation execution itself: Node on fast, and especially covered Vitest + proofs + Firestore on deep.
+
+### D1 result: Node sharding is semantically viable, but shared-runner variance still breaks 35 s
+
+After #2091 removed the tracked-hint mutation race, topology run **36068242014** reran the exact current 204-contract two-way partition:
+
+| lane | useful Node work | runner wall | result |
+| --- | ---: | ---: | --- |
+| full warm control | 31 s | 50 s | green |
+| shard 1 | **17 s** | **27 s** | green |
+| shard 2 | **14 s** | **38 s** | green |
+
+Both shard runners started at the same second. First-shard-start → both-complete was therefore **38 s**.
+
+Shard 2's excess was bootstrap variance, especially `setup-node` at **11 s** versus 2 s on shard 1. The measured Node work itself is comfortably inside budget.
+
+Decision: **stop tuning Node shard membership/count on shared runners**. The partition is semantically valid and useful for a future larger/reserved-runner topology, but a hard ≤35 s wall target cannot be declared from standard hosted runners when ordinary setup variance alone pushes a healthy shard pair to 38 s.
+
 ### D1. Two-way Node/CLI sharding — current rehearsal
 
 The current Node/CLI registry has grown to **204 contracts**, so the old 176-contract timing projection is obsolete.
@@ -431,6 +462,45 @@ Decision gate:
 2. rerun the exact current two-way shard rehearsal;
 3. if both shard runner walls remain ≤27–30 s and first-shard-start → both-complete remains ≤35 s, two-way standard-runner Node sharding remains viable;
 4. if timing then fails, stop shard-count tuning and move to the larger/reserved-runner fallback already defined in Phase E.
+
+### D2 result: native equal-file coverage sharding preserves thresholds but wastes the critical path
+
+Evidence-only run **36068033403** proved Vitest's merge path is semantically usable:
+
+- both coverage shards passed;
+- blob reports merged successfully;
+- Pathfinder's unchanged global and `modules/input/*-core.ts` thresholds passed on the merged report.
+
+Timing:
+
+| lane | useful coverage/merge work | runner wall |
+| --- | ---: | ---: |
+| native shard 1 | 11 s | 28 s |
+| native shard 2 | 19 s | 40 s |
+| separate merge job | **2 s merge/check** | 21 s |
+
+First shard start → merged thresholds complete: **64 s**.
+
+Two problems are architectural rather than semantic:
+
+1. Vitest's equal-file partition is badly runtime-imbalanced for Pathfinder;
+2. a third hosted merge runner spends ~19 s on assignment/setup for ~2 s of actual merging.
+
+The current full-coverage timing profile has **146 files / 34.181 summed file-seconds**. Greedy measured balancing produces **17.091 / 17.090 seconds**, essentially exact.
+
+### D2b: balanced coverage shards with a warm merge coordinator
+
+The next rehearsal therefore:
+
+1. uses the measured 146-file timing profile and validates that it exactly covers the current Vitest file registry;
+2. runs two explicit file-balanced coverage populations on standard runners;
+3. keeps per-shard threshold enforcement off only while producing blob reports;
+4. makes one shard runner the coordinator after its own shard completes;
+5. polls the current workflow run for the worker's uploaded blob;
+6. downloads it into the already-warm coordinator;
+7. runs native `--merge-reports --coverage` there under the ordinary production config and unchanged thresholds.
+
+This removes the third-runner setup/queue tax. D2b is viable only if first-shard-start → merged-threshold completion approaches the ≤35 s target. If it still misses materially, coverage moves to the larger/reserved-runner fallback rather than weakening coverage.
 
 ### Phase E: hosted-runner variance decision
 
