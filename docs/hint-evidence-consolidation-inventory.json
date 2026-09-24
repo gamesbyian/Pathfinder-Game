@@ -1276,7 +1276,7 @@
           "scripts/check-corpus-level-formatting.mjs",
           "scripts/hint-store-index.mjs"
         ],
-        "finding": "The original Phase-8 migration and whole-store tooling assumed three Hint stores. A mechanical tree census found six: envelope (124 files) plus two canonical family stores (788 + 477) were omitted, leaving 1,389 tracked schema-v3 artifacts after a purported full-corpus migration. Whole-store tooling now discovers Hint directories mechanically and a permanent census guard asserts the current six-store topology."
+        "finding": "The original Phase-8 migration and whole-store tooling assumed three Hint stores. A mechanical tree census found six: envelope (124 files) plus two canonical family stores (788 + 477) were omitted, leaving 1,389 tracked schema-v3 artifacts after a purported full-corpus migration. Whole-store tooling now discovers Hint directories mechanically; a full six-store repair migrated exactly those 1,389 files with semantic/join equivalence and immediate idempotency."
       },
       {
         "id": "HPA-019",
@@ -1286,7 +1286,16 @@
           ".github/workflows/hint-provenance-hostile-audit.yml",
           ".github/workflows/hint-envelope-v4-migration-repair.yml"
         ],
-        "finding": "The Phase-8 migration manifest proved semantic and join-identity equivalence but contained no referee-validation disposition despite the plan requiring one; existing validators did not cover the omitted family stores. Added a mechanically discovered all-store owner/path referee validator and made both hostile closeout and repair migration require it."
+        "finding": "The Phase-8 migration manifest proved semantic and join-identity equivalence but contained no referee-validation disposition despite the plan requiring one; existing validators did not cover the omitted family stores. Added a mechanically discovered all-store owner/path referee validator. The repair workflow's piped invocation is explicitly rejected as evidence because it could mask failure; final hostile/closeout runs execute the validator directly."
+      },
+      {
+        "id": "HPA-020",
+        "kind": "parallel-test-shared-hint-mutation-race",
+        "paths": [
+          "scripts/harvest-solver-diagnostics-reports.mjs",
+          "scripts/harvest-solver-diagnostics-reports-node-test.mjs"
+        ],
+        "finding": "The diagnostics harvester real-row canary rewrote tracked data/hints/P00001.json while the Node suite runs concurrently, creating a race where another reader could observe truncated JSON. CI reproduced the failure. Added an explicit harvester --root fixture seam and moved the canary to an isolated temporary corpus."
       }
     ],
     "permanentGuards": [
