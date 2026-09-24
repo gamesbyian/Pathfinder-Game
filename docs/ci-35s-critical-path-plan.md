@@ -376,6 +376,20 @@ Promotion design:
 
 Because the five-lane rehearsal would otherwise repeat 8–9 s installs, this optimization moves ahead of lane proliferation.
 
+### B2. Two-way coverage shard + authoritative merge rehearsal
+
+The current full-impact deep lane is **77 s** wall, dominated by a serialized **30 s coverage + 10 s proofs + 13 s Firestore** chain. Remaining slow-file inflation is largely contention: `repair-search.test.ts` is ~2 s when targeted after B1b, but ~8.4 s inside the full covered suite.
+
+Rehearsal design:
+
+1. two warm-cache coverage runners use Vitest's native `--shard=1/2` and `--shard=2/2`;
+2. intermediate shards suppress thresholds only because each sees partial coverage;
+3. both upload blob reports containing test + coverage data;
+4. one merge job downloads both blobs and runs `vitest --merge-reports --coverage`;
+5. merge runs normal config, so the existing global and `modules/input/*-core.ts` thresholds remain authoritative.
+
+Decision metric is **first shard start → merged authoritative result**, not shard test time alone. If merge-runner assignment/setup pushes the path near or above 35 s, shared-runner coverage sharding is not a viable endpoint even if each shard is fast.
+
 ### Phase D: runtime-balanced execution topology
 
 Do not pick shard count until A/B/C measurements are active. The first standard-runner rehearsal should use **five required lanes** because that is the smallest layout with a plausible ≤27 s budget per lane on 4-core runners.
