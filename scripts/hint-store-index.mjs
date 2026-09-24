@@ -14,7 +14,7 @@ import process from 'node:process';
 import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
 import { summarizeReconstructability } from './stress/hint-reconstructability-report.mjs';
-import { discoverHintStoreDirs, hintStoreLabel } from './hint-store-roots.mjs';
+import { assertCompleteHintStoreDirs, discoverHintStoreDirs, hintStoreLabel } from './hint-store-roots.mjs';
 
 function stores(root) {
     return discoverHintStoreDirs(root).map(dir => ({ corpus: hintStoreLabel(dir), dir }));
@@ -118,6 +118,7 @@ const arg = name => process.argv.find(value => value.startsWith(`--${name}=`))?.
 
 function main() {
     const root = path.resolve(arg('root') || '.');
+    assertCompleteHintStoreDirs(discoverHintStoreDirs(root), 'full Hint-store index');
     const verifyPath = arg('verify');
     if (verifyPath) {
         const index = JSON.parse(readFileSync(path.resolve(verifyPath), 'utf8'));
