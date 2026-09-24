@@ -20,6 +20,7 @@ const STORES = [
     { corpus: 'published', dir: 'data/hints' },
     { corpus: 'corpus1', dir: 'data/stress/hints' },
     { corpus: 'corpus2', dir: 'data/stress/hints-random' },
+    { corpus: 'envelope', dir: 'data/stress/hints-envelope' },
 ];
 
 function sha256(value) {
