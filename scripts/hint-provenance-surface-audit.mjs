@@ -31,16 +31,21 @@ function inspectPhysicalHintReadSurface(text) {
 function inspectPhysicalHintWriteSurface(text) {
   const writeCallRe = /\b(?:writeFileSync|writeFile|appendFileSync|appendFile|copyFileSync|renameSync)\s*\(\s*([^,\n]+)/gu;
   const directCanonicalTarget = /(?:data\/(?:stress\/)?hints(?:-random|-envelope)?\/|\bhintFilePathFor\s*\()/u;
+  const canonicalPathVars = new Set();
+  for (const match of text.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;\n]+)/gu)) {
+    if (directCanonicalTarget.test(match[2])) canonicalPathVars.add(match[1]);
+  }
   let writesDirectCanonicalTarget = false;
   for (const match of text.matchAll(writeCallRe)) {
-    if (directCanonicalTarget.test(match[1])) {
+    const target = match[1].trim();
+    if (directCanonicalTarget.test(target) || canonicalPathVars.has(target)) {
       writesDirectCanonicalTarget = true;
       break;
     }
   }
-  // Canonical/migration owners often compute the path separately, but their write is paired with
-  // the shared physical encoder. This intentionally does not treat a file as a writer merely
-  // because it reads Hint paths and also writes an unrelated report.
+  // Canonical/migration/compatibility owners often compute the path through helpers or maps, but
+  // their physical write is paired with the shared encoder. This intentionally does not treat a
+  // file as a writer merely because it reads Hint paths and also writes an unrelated report.
   const writesFile = /\b(?:writeFileSync|writeFile|appendFileSync|appendFile|copyFileSync|renameSync)\s*\(/u.test(text);
   const ownsPhysicalEncoding = /\b(?:encodeHintArtifact|stringifyHints)\b/u.test(text);
   return { suspect: writesDirectCanonicalTarget || (writesFile && ownsPhysicalEncoding) };
@@ -88,6 +93,11 @@ if (process.argv.includes('--self-test')) {
     {
       name: 'shared codec owner write',
       text: `const next = stringifyHints(records); writeFileSync(hintFilePathFor(levelsFile, id), next);`,
+      suspect: true,
+    },
+    {
+      name: 'staged canonical path raw writer',
+      text: `const target = path.join(root, 'data/hints/P00001.json');\nwriteFileSync(target, JSON.stringify(doc));`,
       suspect: true,
     },
     {
