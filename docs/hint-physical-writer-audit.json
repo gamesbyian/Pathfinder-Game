@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-physical-writer-audit",
+  "reviewedAt": "2026-09-24",
+  "purpose": "Explicit review ledger for maintained files broadly suspected of writing physical canonical Hint artifacts. New suspects fail the hostile audit until classified.",
+  "entries": [
+    {
+      "path": "scripts/level-data-io.mjs",
+      "disposition": "physical-io-owner",
+      "rationale": "Canonical Node Hint-store filesystem owner. Writes are gated by explicit changedHintLevels and serialize semantic Hint records through encodeHintArtifact/stringifyHints."
+    },
+    {
+      "path": "scripts/hint-artifact-v4-migration.mjs",
+      "disposition": "physical-migration-owner",
+      "rationale": "Dedicated schema-v4 migration owner. --apply rewrites canonical Hint artifacts only after decode/encode/decode semantic and join-identity equivalence checks."
+    },
+    {
+      "path": "scripts/hint-provenance-surface-audit.mjs",
+      "disposition": "false-positive-audit-fixture",
+      "rationale": "Self-test source intentionally contains a literal direct-writer example so the detector proves it catches the forbidden shape; the audit does not write canonical Hint artifacts."
+    }
+  ]
+}
