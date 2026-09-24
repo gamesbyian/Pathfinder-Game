@@ -1,5 +1,6 @@
 import { PACK, UNPACK } from '../domain/cell-key.js';
 import { remapLevelKeys } from '../domain/level-codec.js';
+import { setLevelHintRecords } from '../domain/hint-types.js';
 
 /** Mutate a working editor level by shifting every packed coordinate key. */
 export function shiftLevelCoords(level: any, dx: number, dy: number) {
@@ -9,7 +10,7 @@ export function shiftLevelCoords(level: any, dx: number, dy: number) {
         return PACK(point.x + dx, point.y + dy);
     };
     remapLevelKeys(level, shift);
-    level.hints = [];
+    setLevelHintRecords(level, []);
 }
 
 /**
@@ -32,5 +33,5 @@ export function applyCoordMapToLevel(
     remapLevelKeys(level, mapKey, { axisMap, reflect });
     level.grid.w = newW;
     level.grid.h = newH;
-    level.hints = [];
+    setLevelHintRecords(level, []);
 }
