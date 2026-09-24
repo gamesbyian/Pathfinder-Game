@@ -90,6 +90,7 @@ jobs:
           VALIDATOR_GROUPS: ${{ needs.impact-shadow.outputs.validator_groups }}
           PATHFINDER_PR_INCREMENTAL: '0'
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: |
           groups="${VALIDATOR_GROUPS//,/ }"
           node scripts/validation-groups.mjs validators $groups
@@ -103,6 +104,7 @@ jobs:
           NODE_TEST_GROUPS: ${{ needs.impact-shadow.outputs.node_test_groups }}
           PATHFINDER_PARALLEL_JOBS: '4'
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: |
           groups="${NODE_TEST_GROUPS//,/ }"
           node scripts/validation-groups.mjs nodeTests $groups
