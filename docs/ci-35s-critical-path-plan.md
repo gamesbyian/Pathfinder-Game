@@ -169,6 +169,29 @@ Together:
 - A1c covers diagnostics-generated `[skip ci]` main commits;
 - A1b can recover a PR exact miss by restoring the cached base-parent generation and overlaying only changed runtime-data files.
 
+### A1b. Differential runtime-data miss recovery — measured green
+
+Whole-tree materialization during PR CI is rejected in every tested shape (**52-56 s**), and `git archive` from the partial clone is also rejected (**~102 s** for one file).
+
+The production design is differential:
+
+1. exact current runtime-data cache lookup;
+2. on miss, derive and restore the exact cached `HEAD^1` generation;
+3. identify runtime-data files changed by the tested merge from tree metadata;
+4. fetch only each changed blob through GitHub's blob API and overlay it on the cached base tree;
+5. remove deleted runtime-data files;
+6. save the exact current generation;
+7. only if the base cache is absent, use the known-slow whole-tree checkout as a correctness fallback.
+
+Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forced one-file overlay:
+- base-parent cache restore: **2 s**;
+- one changed blob overlay: **1 s**;
+- whole-tree fallback: skipped;
+- exact current cache save: **2 s**;
+- fast gate remained green.
+
+A1c (#2061) seeds diagnostics-generated `[skip ci]` main generations. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
