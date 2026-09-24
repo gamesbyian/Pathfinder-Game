@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
+import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 
 const ROOT = path.resolve(process.argv.find(a => a.startsWith('--root='))?.slice(7) || process.cwd());
 const OUT = process.argv.find(a => a.startsWith('--out='))?.slice(6)
@@ -81,19 +82,18 @@ for (const [corpus, rel] of hintRoots) {
     const raw=fs.readFileSync(file);
     const text=raw.toString('utf8');
     const parsed=JSON.parse(text);
-    const hints=Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.hints) ? parsed.hints : []);
+    const semanticHints=decodeHintArtifact(parsed);
     const schemaVersion=Array.isArray(parsed) ? 'unversioned-array' : String(parsed?.schemaVersion ?? 'absent');
     const c=byCorpus[corpus];
-    c.files++; c.bytes+=raw.byteLength; c.hints+=hints.length;
+    c.files++; c.bytes+=raw.byteLength; c.hints+=semanticHints.length;
     c.schemaVersions[schemaVersion]=(c.schemaVersions[schemaVersion]||0)+1;
     c.canonicalGzipBytes += gzipSync(raw).byteLength;
-    const paths=hints.map(h=>Array.isArray(h)?h:h?.path).filter(Array.isArray);
+    const paths=semanticHints.map(h=>h.path);
     const minified=Buffer.from(JSON.stringify({schemaVersion:1,hints:paths}));
     const pretty=Buffer.from(JSON.stringify({schemaVersion:1,hints:paths},null,2)+'\n');
     c.pathOnlyMinifiedBytes += minified.byteLength;
     c.pathOnlyPrettyBytes += pretty.byteLength;
     c.pathOnlyGzipBytes += gzipSync(minified).byteLength;
-    const semanticHints=hints.filter(h=>h && !Array.isArray(h) && Array.isArray(h.path));
     const encodedHintArray=Buffer.from(JSON.stringify(semanticHints.map(h=>JSON.stringify(h))));
     c.firestoreEncodedHintArrayBytes.push(encodedHintArray.byteLength);
 
