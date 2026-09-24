@@ -55,7 +55,7 @@ function walk(dir, out = []) {
     return out;
 }
 
-const corpusPath = path.join(root, CORPUS);
+const corpusPath = path.resolve(root, CORPUS);
 const document = readLevelCorpusDocumentWithHints(corpusPath);
 const byId = new Map(document.levels.map((level, index) => [
     String(level.id ?? index + 1),
