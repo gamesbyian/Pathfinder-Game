@@ -2,6 +2,13 @@
   "schemaVersion": 1,
   "workflows": [
     {
+      "workflow": "ci-coverage-shard-rehearsal.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual/PR CI coverage-shard timing and merged-threshold rehearsal",
+      "retirementTrigger": "retire after the coverage-sharding/topology decision is settled and equivalent timing/merge proof is permanently exercised elsewhere"
+    },
+    {
       "workflow": "ci-historical-value-audit.yml",
       "role": "operational",
       "status": "maintained",
