@@ -131,6 +131,19 @@ Five structurally overlapping alternative fixtures also solved in ~0.1 s total, 
 
 The original nine-level population has now been probed at **250,000 work** and all **9/9 solve in ~1.5 s total / 1.30 M nodes**. Keep the exact fixture set and regenerate its baseline at 250k work; replacement is unnecessary unless future semantics change.
 
+## Implementation status
+
+| Phase | Status | Evidence / next gate |
+| --- | --- | --- |
+| A1 deep runtime-data checkout | **merged / measured green on hit** | #2045: source checkout **2 s** + exact runtime-data restore **2 s**; all deep obligations green; deep job **56 s**. Rejected post-clone sparse expansion measured 51 s; miss fallback now uses the prior batched checkout shape. |
+| A2 exact Node 22.23.2 | planned | Hosted shadow passed typecheck, all fast-unit tests, and production build with runtime assets restored; complete full-contract rehearsal still required. |
+| A3 main-seeded ESLint cache | **implementation in progress** | Default branch restores the existing ESLint cache generation and saves a commit-specific successor only after successful lint. Misses still run full lint. |
+| A4 250k solver canary | planned | Original **9/9** fixtures solve in ~**1.5 s** at 250k work; same fixture set can be preserved. |
+| B1 lifecycle deterministic dispatch | **merged / measured green** | #2044: full test file **~8.2 s → 195 ms**; covered-suite wall **~29.5 s → 26.48 s**; all test slots preserved. |
+| B2 coverage sharding/tier decision | pending post-B1 remeasure | Existing `deepTest` exclusion kept thresholds green but only saved ~2.8 s; do not split tiers by default. |
+| C exact dependency-tree restore | planned | Hosted restore **3 s** vs `npm ci` **8 s**; lockfile includes platform/native/install-script packages, so key must include OS + arch + exact Node/npm generation + lockfile and promotion requires full restored-tree validation. |
+| A5 remove planner dependency edge | planned | Fast gate consumes no planner outputs. Deep can compute the canonical plan locally after source checkout; stale “shadow-only” summary wording should be corrected in the same change. |
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
