@@ -144,7 +144,10 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A2 exact Node 22.23.2 | **merged / measured green** | Production PR/main/scoped workflows are pinned to exact 22.23.2 with a separate Node-22 Firebase CLI cache generation; full-contract rehearsals were green with setup-node ~0–3 s. |
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
-| B5 runtime-hint projection cache | **production rollout in progress** | Rehearsal #2081 hit run 36063620245 restored exact projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold build dominated by deterministic projection. Production branch seeds/restores PR/main/scoped and post-diagnostics generations. |
+| B5 runtime-hint projection cache | **merged / measured green** | #2087 merged restore/seed across PR/main/scoped and diagnostics. Ordinary PR #2088 restored the exact projection cache and completed build in **~2.3 s** with Vite compile **672 ms**, versus ~25 s cold. |
+| D1 two-way Node sharding | **closed negative on shared hosted runners** | Post-hermetic rehearsals are semantically green and cut useful Node work to ~14–17 s/shard, but runner walls varied to **31–35 s** and **27–38 s** across confirmations. Shared bootstrap variance consumes the 35 s budget; stop shard-count tuning. |
+| B3 proofs + Firestore overlap | **production rollout measured green on PR** | #2100 full-impact run kept coverage green and ran unchanged proofs + Firestore concurrently in **15 s**, with independent success outputs. Prior serialized shape was ~23 s. Awaiting final authority/parity-green merge. |
+| D2 coverage sharding | **technical success; shared-runner margin insufficient** | D2b run 36068829982 balanced 146 files to 17.091/17.090 test-s and produced authoritative merged coverage with unchanged thresholds in **34 s from shard start**. Only ~1 s headroom remains; D1 already demonstrated ordinary hosted setup variance can exceed that. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
@@ -375,6 +378,32 @@ Promotion design:
 
 Because the five-lane rehearsal would otherwise repeat 8–9 s installs, this optimization moves ahead of lane proliferation.
 
+
+### D2b result: balanced warm-coordinator coverage reaches 34 s, but with no reliability margin
+
+Evidence-only topology run **36068829982** used the measured 146-file profile and one warm shard runner as merge coordinator:
+
+| lane | useful work | runner wall |
+| --- | ---: | ---: |
+| coordinator coverage shard | **18 s** | **38 s** |
+| worker coverage shard | **19 s** | **33 s** |
+| coordinator wait for worker artifact | 3 s | same warm runner |
+| download + native merge + unchanged threshold enforcement | **2 s** | same warm runner |
+
+Both runners started at 22:41:25. The authoritative merged coverage result completed at 22:41:59: **34 s from first shard start to threshold result**.
+
+This proves Pathfinder's full covered population can be split and recombined without weakening coverage semantics, and that the third merge runner from D2 was unnecessary.
+
+It does **not** establish a reliable shared-runner ≤35 s gate. The measured margin is ~1 s, while D1 independently observed a healthy shard runner spend 11 s in `setup-node` and push a semantically green pair to 38 s. Shared hosted-runner bootstrap variance is now the limiting factor, not test partition quality.
+
+Preserve the measured coverage profile and warm-coordinator architecture. The next full-gate design should run them on reserved/larger compute, or explicitly accept that a shared-runner p90 ≤35 s cannot be guaranteed.
+
+### Current full-impact baseline after bootstrap/cache work
+
+Ordinary full-impact PR run **36066406944** completed in **77 s** wall. Fast gate was **58 s**, dominated by Node/CLI at **34 s**. Deep verification was the critical path at **77 s**, dominated by serialized **30 s coverage + 10 s proofs + 13 s Firestore**.
+
+This baseline changes the optimization priority: bootstrap/cache work has mostly succeeded. Remaining latency is validation execution plus shared-runner orchestration. B3 removes real serialized work without adding a runner; D1 has already shown that adding shared Node runners does not provide enough p90 headroom; D2b is the final shared-runner coverage architecture worth testing before the plan moves that work to reserved/larger compute.
+
 ### Phase D: runtime-balanced execution topology
 
 Do not pick shard count until A/B/C measurements are active. The first standard-runner rehearsal should use **five required lanes** because that is the smallest layout with a plausible ≤27 s budget per lane on 4-core runners.
@@ -395,6 +424,61 @@ Notes:
 - If `implementation` remains above 30 s, split covered Vitest by measured file cost and merge V8 coverage/thresholds. Do not lower coverage thresholds.
 - Do not add a separate runner merely to aggregate status. Use native required checks or an effectively dependency-only result contract that does not put another hosted-runner queue on the critical path.
 - Generate Node shard membership from a checked-in timing profile plus deterministic fallback, and validate that every registered Node contract is assigned exactly once.
+
+### D1. Two-way Node/CLI sharding — current rehearsal
+
+The current Node/CLI registry has grown to **204 contracts**, so the old 176-contract timing projection is obsolete.
+
+Corrected warm full-control run in #2088 measured:
+
+- full Node/CLI population: **32 s useful step / 48 s runner wall**;
+- summed child time: **99.3 s**.
+
+A timing profile rebuilt directly from that run balances the current registry at:
+
+- shard 1: **49.6 child-seconds / 136 contracts**;
+- shard 2: **49.7 child-seconds / 68 contracts**.
+
+Hosted rehearsal 36066406943:
+
+| lane | useful Node step | runner wall | result |
+| --- | ---: | ---: | --- |
+| full warm control | 32 s | 48 s | green |
+| shard 1 | 16 s | 29 s | red: one shared-state test race |
+| shard 2 | 13 s | 24 s | green |
+
+First shard runner start to both shard completions was **29 s**, inside the 35-second full-gate objective with ~6 s margin.
+
+The shard-1 failure is not a timing-profile or selection failure. `test:harvest-solver-diagnostics-reports` deliberately rewrote the tracked `data/hints/P00001.json` while the Node-contract runner executed other corpus readers concurrently. One reader observed the file between truncate/write operations and failed with `SyntaxError: Unexpected end of JSON input`.
+
+This exposes a hidden non-hermetic test boundary that the monolithic four-worker schedule happened not to trigger in that run. The repair is to make the diagnostics harvester accept an injected corpus path and run the regression against a private one-level temporary corpus, preserving the real P00001 level/hint semantics without mutating repository state.
+
+Decision gate:
+
+1. land the hermetic diagnostics-harvest regression;
+2. rerun the exact current two-way shard rehearsal;
+3. if both shard runner walls remain ≤27–30 s and first-shard-start → both-complete remains ≤35 s, two-way standard-runner Node sharding remains viable;
+4. if timing then fails, stop shard-count tuning and move to the larger/reserved-runner fallback already defined in Phase E.
+
+
+### D2 final result: shared-runner coverage sharding closes negative
+
+The final warm-coordinator rehearsal #2098 / run **36068829982** removed the separate merge-runner tax and runtime-balanced the current 146 covered files at **17.091 / 17.090 predicted file-seconds**.
+
+Measured result:
+
+| lane | useful work | runner wall |
+| --- | ---: | ---: |
+| balanced coordinator shard | 18 s | **38 s** |
+| balanced worker shard | 19 s | **33 s** |
+| coordinator wait for worker artifact | 3 s | included above |
+| authoritative merged coverage/threshold check | 2 s | included above |
+
+First shard start → merged authoritative thresholds complete: **38 s**.
+
+All tests and unchanged production coverage thresholds remained green. The remaining miss is therefore infrastructure latency, not coverage semantics or shard balance.
+
+Decision: stop shared-runner coverage topology tuning. D1 and D2 independently show the same pattern: useful validation work fits, but standard hosted-runner bootstrap/variance exhausts the hard ≤35 s budget. Future sharding evidence remains useful for a larger/reserved runner, but production should not add shared hosted lanes merely to move work around.
 
 ### Phase E: hosted-runner variance decision
 
