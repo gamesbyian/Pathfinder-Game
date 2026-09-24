@@ -212,6 +212,10 @@ jobs:
           SOLVER_DEEP_TESTS: '0'
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
+          # B3 rehearsal: keep production test defaults unchanged while measuring whether the
+          # documented repair-search envelopes are materially overprovisioned.
+          PATHFINDER_REPAIR_TEST_DETERMINISM_NODE_BUDGET: '400000'
+          PATHFINDER_REPAIR_TEST_DEFAULT_EQ_NODE_BUDGET: '250000'
         run: npm run test:coverage
 
   repair-search-budget-probe:
