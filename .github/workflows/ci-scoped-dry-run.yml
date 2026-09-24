@@ -146,6 +146,12 @@ jobs:
         id: deep_proofs
         if: needs.impact-shadow.outputs.needs_deep_proofs == 'true'
         run: npm run test:deep-proofs
+      # Restore the default-branch-seeded Firebase CLI materialization. Startup acceleration only.
+      - name: Restore Firebase CLI cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.npm/_npx
+          key: firebase-cli-${{ runner.os }}-node20-firebase-tools-15.28.2-v1
       - uses: actions/setup-java@v5
         if: needs.impact-shadow.outputs.needs_firestore == 'true'
         with:
