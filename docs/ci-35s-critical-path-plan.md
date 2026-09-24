@@ -208,6 +208,26 @@ Lower budgets do not buy additional wall time, so production uses **250k / 125k*
 
 Expected file saving: roughly **7.5 s** versus the current covered-suite profile. Full-suite wall saving must be measured separately because Vitest overlaps files.
 
+### B1c. Remove hint-occurrence unit-test import side effect
+
+Post-hint-consolidation Node/CLI profiling exposed a new dominant contract:
+
+- `test:hint-occurrence-acceptance`: **15.8 s**;
+- next-largest current Node contracts are materially smaller.
+
+Root cause is structural, not intrinsic audit cost. The synthetic node test imports `auditHintOccurrenceSemantics` from the CLI module, and that module executes `buildHintOccurrenceAcceptanceReport()` at top level. Importing one pure function therefore scans all three persisted hint corpora before the synthetic assertions run.
+
+Production/testability fix:
+
+1. extract `auditHintOccurrenceSemantics` and its private occurrence-key helper into a side-effect-free library;
+2. keep the CLI importing/re-exporting that function so external API compatibility is preserved;
+3. make the synthetic Node contract import the pure library directly;
+4. leave the corpus-scale CLI behavior unchanged when the CLI itself is invoked.
+
+Expected contract-level saving is roughly the full **15.8 s** observed import cost. Because Node contracts execute in a four-worker pool, the actual Node-population wall reduction must be measured separately.
+
+The corpus-scale acceptance proof remains independently maintained by `.github/workflows/hint-consolidation-closeout.yml`, which directly invokes `hint-occurrence-acceptance-audit.mjs`. The optimization therefore separates unit import cost from corpus authority rather than removing the full audit.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
