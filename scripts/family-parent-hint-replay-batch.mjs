@@ -70,6 +70,7 @@ for (const corpus of CORPORA) {
     const byId = new Map(levels.map(l => [String(l.id), l]));
     const preExistingHintCount = new Map(levels.map(l => [String(l.id), l.hints.length]));
     const normalizedCache = new Map();
+    const revisionCache = new Map();
     const changedHintLevels = new Set();
 
     const manifestFiles = allManifests.filter(({ manifest }) => manifest.parentCorpus === levelsFile);
@@ -89,6 +90,14 @@ for (const corpus of CORPORA) {
         if (!normalized) {
             normalized = normalizeRawLevel(parent, null);
             normalizedCache.set(parent.id, normalized);
+        }
+        let parentRevision = revisionCache.get(parent.id);
+        if (!parentRevision) {
+            // Level fingerprints exclude Hint state, so this identity is stable across every replay
+            // merge in this batch. Stamp it before merge so provenanceEventIdentity can dedupe a
+            // repeated batch run correctly; never mutate an identity field after canonical merge.
+            parentRevision = await getLevelFingerprint(parent);
+            revisionCache.set(parent.id, parentRevision);
         }
 
         for (const edge of manifest.variants || []) {
@@ -116,7 +125,7 @@ for (const corpus of CORPORA) {
                     variantId: edge.variantId,
                     parentId: manifest.parentLevelId,
                     familyId: manifest.familyId,
-                    levelRevision: null, // filled in below, once per parent, not per hint
+                    levelRevision: parentRevision
                     foundAt: manifest.lastUpdatedTimestamp ?? manifest.createdTimestamp,
                 }));
             }
@@ -124,20 +133,6 @@ for (const corpus of CORPORA) {
     }
 
     if (SAVE) {
-        // Backfill levelRevision now that every parent's final pre-write fingerprint is stable
-        // (fingerprint excludes hints from its comparison fields, so computing it once per parent
-        // after all merges is equivalent to per-hint and far cheaper).
-        for (const parentId of parentsTouched) {
-            const parent = byId.get(parentId);
-            const revision = await getLevelFingerprint(parent);
-            for (const rec of parent.hintRecords) {
-                for (const p of rec.provenance) {
-                    if (p.solver?.technique?.startsWith('variant-parent-replay:') && p.context && p.context.levelRevision == null) {
-                        p.context.levelRevision = revision;
-                    }
-                }
-            }
-        }
         const changed = writeLevelCorpusDocumentWithHints(levelsFile, document, { changedHintLevels });
         console.log(`${corpus}: wrote ${changed.hintFilesChanged} changed hint file(s), ${changed.levelsChanged} levels.json change(s).`);
     }
