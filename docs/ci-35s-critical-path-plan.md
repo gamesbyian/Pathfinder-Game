@@ -144,6 +144,19 @@ The original nine-level population has now been probed at **250,000 work** and a
 | C exact dependency-tree restore | planned | Hosted restore **3 s** vs `npm ci` **8 s**; promotion requires OS + arch + exact Node/npm generation + lockfile keying and complete restored-tree validation. |
 | A5 remove planner dependency edge | planned | Fast gate consumes no planner outputs; deep can compute the canonical plan locally, fail safe to full deep, and exit before dependency setup when not selected. |
 
+### A1c. Publish runtime-data cache from diagnostics hint refresh
+
+The diagnostics workflow can change `data/hints` and push a `[skip ci]` commit. That changes the exact runtime-data Git-object key **without running main-push CI**, so the next PR can encounter a cold runtime-data generation even though the change originated on the default branch.
+
+Implementation in progress:
+
+1. after diagnostics commits/pushes its hint/audit refresh, derive the runtime-data key from the final local `HEAD` (after any retry/rebase);
+2. check whether that exact key is already cached;
+3. if not, save the canonical runtime-data tree from the default-branch workflow;
+4. later PRs can then restore the new exact generation instead of materializing the ~190 MB hint/data tree.
+
+This does not replace a correct PR miss fallback, but it should make diagnostics-driven misses rare. It also aligns cache authority with the producer that invalidates the cache generation.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
