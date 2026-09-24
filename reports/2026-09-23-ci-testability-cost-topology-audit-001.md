@@ -1516,6 +1516,27 @@ The canary baseline was introduced as a fixed representative sample, not as nine
 
 Before changing the canary, determine whether L140 now uniquely catches a meaningful semantic class. If not, replace/distill it with a representative level that restores the canary's intended "few seconds total" role. Do not simply drop it because it is slow.
 
+
+
+### Hosted bootstrap benchmark: first pass
+
+Topology-audit run **35957860615** directly measured three bootstrap shapes.
+
+| probe | observed step time |
+| --- | ---: |
+| current deep sparse checkout | **15 s** |
+| source-only checkout | **3 s** |
+| exact runtime-data cache restore after source-only checkout | **3 s** |
+| floating Node 20 setup | **5 s** |
+| exact cached Node 22.23.2 setup | **2 s** |
+| npm ci under Node 22 | **7 s** |
+
+The runtime-data cache was an exact hit on the current Git-object key. Source-only checkout plus exact runtime restore therefore reached the complete canonical runtime-data shape in roughly **6 s**, versus **15 s** for the current deep Git materialization. This validates the deep-checkout hypothesis with hosted evidence rather than repository-size arithmetic alone.
+
+The first Node 22 toolchain smoke failed, but the failure was **not Node-version behavior**. The intentionally source-only benchmark checkout omitted `data/hints` and `data/themes.json`; `scripts/data-assets-unit-tests.mjs` correctly failed on those missing fixtures. The benchmark has been amended to restore the exact runtime-data cache before rerunning the broader Node 22 smoke.
+
+The runner image's exact Node 22.23.2 toolcache selection is already measurably cheaper than floating Node 20. A second probe now compares that against using the runner's system Node directly with an explicit npm-cache restore, which may remove the remaining setup-node action overhead at the cost of tying CI runtime to the runner-image version.
+
 ### Interim implication
 
 A 35 s target is not reachable by one more micro-optimization. The evidence points to a combined architecture:
