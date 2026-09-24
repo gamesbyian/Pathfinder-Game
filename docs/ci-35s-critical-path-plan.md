@@ -140,7 +140,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | B1 lifecycle deterministic dispatch | **merged / measured green** | #2044: `orchestration-work-budget.test.ts` **~8.2 s → 195 ms**; covered-suite wall **~29.5 s → 26.48 s**; all test slots preserved. |
 | A3 main-seeded ESLint cache | **implementation in progress** | Default branch restores the existing ESLint generation and saves a commit-specific successor only after successful lint. Misses still run full lint. |
 | A4 250k solver canary | **implementation in progress** | Original exact 9-level fixture set solved **9/9 in ~1.5 s / 1,303,532 nodes** at 250k in hosted run 35958399905; workflows and baseline now use the same deterministic budget. |
-| A2 exact Node 22.23.2 | planned | Node 22 passed typecheck, complete fast-unit population, and build. Full contract rehearsal must migrate the Firebase CLI cache generation from Node 20 to Node 22. |
+| A2 exact Node 22.23.2 | **production migration in progress** | #2057 full-contract rehearsal passed planner, validators, lint, Node/CLI, 250k canary, build, coverage, deep proofs, and Firestore. Production PR/main/scoped workflows now pin exact 22.23.2 and use a separate Node-22 Firebase CLI cache generation. |
 | C exact dependency-tree restore | planned | Hosted restore **3 s** vs `npm ci` **8 s**; promotion requires OS + arch + exact Node/npm generation + lockfile keying and complete restored-tree validation. |
 | A5 remove planner dependency edge | planned | Fast gate consumes no planner outputs; deep can compute the canonical plan locally, fail safe to full deep, and exit before dependency setup when not selected. |
 
