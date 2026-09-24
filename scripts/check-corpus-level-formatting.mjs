@@ -15,6 +15,7 @@ import { stringifyCorpusJson } from './level-json-format.mjs';
 import { listHintFiles, hintFilePathFor } from './level-data-io.mjs';
 import { expectedHintArtifactFileNames } from '../modules/hint-artifact-layout.mjs';
 import { prChangedFiles, readRepositoryText } from './repository-file-view.mjs';
+import { discoverHintStoreDirs } from './hint-store-roots.mjs';
 
 const ROOT = process.cwd();
 
@@ -26,12 +27,8 @@ const CORPORA = [
 ];
 
 const CORPUS_BY_PATH = new Map(CORPORA.map(row => [row.relative, row]));
-const HINT_PREFIXES = [
-  'data/hints/',
-  'data/stress/hints/',
-  'data/stress/hints-random/',
-  'data/stress/hints-envelope/',
-];
+const HINT_DIRS = discoverHintStoreDirs(ROOT);
+const HINT_PREFIXES = HINT_DIRS.map(dir => `${dir}/`);
 
 export function corpusFormattingKind(relativePath) {
   const normalized = relativePath.split(path.sep).join('/');
@@ -85,11 +82,12 @@ function fullScanPaths() {
       throw new Error(`${corpus.label}: expected corpus file not found at ${absolute}`);
     }
     rows.push(corpus.relative);
-
-    for (const hintFileName of listHintFiles(absolute)) {
-      const key = hintFileName.replace(/\.json$/u, '');
-      const hintFile = hintFilePathFor(absolute, key);
-      rows.push(path.relative(ROOT, hintFile).split(path.sep).join('/'));
+  }
+  for (const hintDir of HINT_DIRS) {
+    const absolute = path.join(ROOT, hintDir);
+    for (const name of fs.readdirSync(absolute).sort()) {
+      if (!name.endsWith('.json') || name.startsWith('_')) continue;
+      rows.push(`${hintDir}/${name}`);
     }
   }
   return rows;
