@@ -36,7 +36,10 @@ export default defineConfig({
                 'modules/**/types.ts',
                 'modules/solver/testing-api.ts',
             ],
-            thresholds: {
+            // Coverage shard rehearsals collect partial maps on each runner and therefore
+            // cannot enforce whole-suite thresholds independently. The merge step runs without
+            // PATHFINDER_COVERAGE_SHARD and enforces this unchanged threshold authority once.
+            thresholds: process.env.PATHFINDER_COVERAGE_SHARD === '1' ? undefined : {
                 statements: 82,
                 branches: 72,
                 functions: 90,
