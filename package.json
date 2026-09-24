@@ -457,7 +457,7 @@
     "test:level-sparse-serialization-apply": "node scripts/level-sparse-serialization-apply-node-test.mjs",
     "levels:sparse-serialization-apply": "node scripts/level-sparse-serialization-apply.mjs",
     "test:central-hint-persistence-guard": "node scripts/central-hint-persistence-guard.mjs",
-    "test:import-published-hint-merge": "node scripts/import-published-levels-hint-merge-node-test.mjs",
+    "test:import-published-hint-merge": "tsx scripts/import-published-levels-hint-merge-node-test.mjs",
     "test:hint-physical-decode-guard": "node scripts/hint-provenance-surface-audit.mjs --enforce --summary-only"
   },
   "devDependencies": {
