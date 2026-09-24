@@ -138,3 +138,98 @@ jobs:
         if: matrix.shard == 1
         run: npx vitest --merge-reports=merged-vitest-reports --reporter=default --coverage
 
+
+  coverage-local-pair:
+    name: coverage-local-pair
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+
+      - name: Derive runtime-data cache key
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+
+      - name: Require warm runtime-data cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+          fail-on-cache-miss: true
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Require warm exact dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+
+      - name: Run two covered shards concurrently on one runner
+        shell: bash
+        env:
+          SOLVER_DEADLOCK_PROOF_SKIP: '1'
+          SOLVER_R02560_PROOF_SKIP: '1'
+        run: |
+          set +e
+          mkdir -p local-vitest-reports coverage/shard-1 coverage/shard-2
+          (
+            export PATHFINDER_COVERAGE_SHARD=1
+            npx vitest run --shard=1/2 --maxWorkers=2 --reporter=blob               --outputFile=local-vitest-reports/blob-1.json               --coverage.enabled --coverage.reportsDirectory=coverage/shard-1
+          ) &
+          pid1=$!
+          (
+            export PATHFINDER_COVERAGE_SHARD=1
+            npx vitest run --shard=2/2 --maxWorkers=2 --reporter=blob               --outputFile=local-vitest-reports/blob-2.json               --coverage.enabled --coverage.reportsDirectory=coverage/shard-2
+          ) &
+          pid2=$!
+          wait "$pid1"; status1=$?
+          wait "$pid2"; status2=$?
+          set -e
+          if [[ "$status1" != 0 || "$status2" != 0 ]]; then
+            echo "::error::Coverage shard processes failed: shard1=$status1 shard2=$status2"
+            exit 1
+          fi
+
+      - name: Merge local coverage and enforce unchanged thresholds
+        run: npx vitest --merge-reports=local-vitest-reports --reporter=default --coverage
