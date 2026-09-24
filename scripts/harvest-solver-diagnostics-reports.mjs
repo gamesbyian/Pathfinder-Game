@@ -2,9 +2,8 @@
 /**
  * Central semantic adapter for pathfinder-solver-diagnostics-report artifacts.
  *
- * Solver diagnostics remains dual-path during Phase 6: the source workflow still writes canonical
- * hints directly, while this adapter reconstructs the same successful observations from the durable
- * diagnostics artifact. The source workflow is artifact-only; central harvest is the canonical persistence route.
+ * The source workflow is artifact-only. This adapter reconstructs successful observations from the
+ * durable diagnostics artifact; central harvest is the sole canonical persistence route.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
