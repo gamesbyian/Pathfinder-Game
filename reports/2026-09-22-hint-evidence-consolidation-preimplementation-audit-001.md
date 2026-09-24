@@ -3,7 +3,16 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-22 — full-corpus census, workflow/source reachability audit, Firestore sizing proxy, and request-semantics classification completed on PR #1996
 > **Decision:** The semantic architecture is sufficiently specified to begin Phase -1 authority/validation implementation; physical hint-schema-v4 migration remains blocked.
-> **Remaining gate:** Phase -1 must prove historical-unknown round trips, execution/occurrence lineage, Firestore/GHA semantic parity, referee equivalence, and runtime-projection freshness before physical v4 migration.
+> **Remaining gate:** Historical record only. The gates named here were implementation-entry gates, not whole-program completion evidence. Current completion authority is the 2026-09-24 hostile audit and the strengthened completion contract in the plan.
+>
+> **Post-implementation clarification (2026-09-24):** This audit's `concluded-positive` status means
+> the architecture was sufficiently specified to begin implementation. It must not be read as proof
+> that implementation later covered every maintained producer, consumer, persistence route, or tracked
+> Hint store. PR #2072 demonstrated that the original implementation-closeout process could satisfy
+> phase narratives over an incomplete hand-enumerated surface. The plan now requires mechanically
+> derived populations, executable Definition-of-Done proofs, topology-real validation, adversarial
+> guard self-tests, and independent fresh-context closeout. See
+> `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`.
 
 > **Date:** 2026-09-22  
 > **Scope:** empirical pre-implementation checks for the hint evidence / execution identity / storage consolidation plan.  
