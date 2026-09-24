@@ -29,10 +29,21 @@ function inspectPhysicalHintReadSurface(text) {
 }
 
 function inspectPhysicalHintWriteSurface(text) {
+  const writeCallRe = /\b(?:writeFileSync|writeFile|appendFileSync|appendFile|copyFileSync|renameSync)\s*\(\s*([^,\n]+)/gu;
+  const directCanonicalTarget = /(?:data\/(?:stress\/)?hints(?:-random|-envelope)?\/|\bhintFilePathFor\s*\()/u;
+  let writesDirectCanonicalTarget = false;
+  for (const match of text.matchAll(writeCallRe)) {
+    if (directCanonicalTarget.test(match[1])) {
+      writesDirectCanonicalTarget = true;
+      break;
+    }
+  }
+  // Canonical/migration owners often compute the path separately, but their write is paired with
+  // the shared physical encoder. This intentionally does not treat a file as a writer merely
+  // because it reads Hint paths and also writes an unrelated report.
   const writesFile = /\b(?:writeFileSync|writeFile|appendFileSync|appendFile|copyFileSync|renameSync)\s*\(/u.test(text);
-  const hasCanonicalPathSignal = /(?:data\/(?:stress\/)?hints(?:-random|-envelope)?(?:\/|['"`])|\bhint(?:FilePathFor|ArtifactFileName|sDirFor)\b)/u.test(text);
   const ownsPhysicalEncoding = /\b(?:encodeHintArtifact|stringifyHints)\b/u.test(text);
-  return { suspect: writesFile && (hasCanonicalPathSignal || ownsPhysicalEncoding) };
+  return { suspect: writesDirectCanonicalTarget || (writesFile && ownsPhysicalEncoding) };
 }
 
 if (process.argv.includes('--self-test')) {
