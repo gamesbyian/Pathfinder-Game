@@ -152,13 +152,76 @@ jobs:
             data/stress/hints
             data/stress/hints-random
             data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-isolated-probe-v2
-      - name: Checkout runtime data on cache miss
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-base-overlay-probe-v3
+      - name: Derive base-parent runtime-data cache key
+        id: base-runtime-data-key
         if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD^1:data/levels.json
+            git rev-parse HEAD^1:data/level-heatmaps.json
+            git rev-parse HEAD^1:data/themes.json
+            git rev-parse HEAD^1:data/hints
+            git rev-parse HEAD^1:data/stress/stress-levels.json
+            git rev-parse HEAD^1:data/stress/stress-levels-random.json
+            git rev-parse HEAD^1:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD^1:data/stress/hints
+            git rev-parse HEAD^1:data/stress/hints-random
+            git rev-parse HEAD^1:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore base-parent runtime-data tree
+        id: base-runtime-data-cache
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.base-runtime-data-key.outputs.key }}
+      - name: Overlay runtime-data changes from tested merge
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit == 'true'
+        shell: bash
+        env:
+          # Rehearsal-only: force one unchanged runtime file through the overlay path so the
+          # mechanism is exercised even though this CI-only PR does not change runtime data.
+          PATHFINDER_RUNTIME_DATA_OVERLAY_PROBE: data/levels.json
+        run: |
+          mapfile -d '' changed < <(
+            git diff --name-only -z --no-renames --diff-filter=ACMRT HEAD^1 HEAD -- \
+              data/levels.json data/level-heatmaps.json data/themes.json data/hints \
+              data/stress/stress-levels.json data/stress/stress-levels-random.json \
+              data/stress/stress-levels-envelope.json data/stress/hints \
+              data/stress/hints-random data/stress/hints-envelope
+          )
+          if [[ -n "$PATHFINDER_RUNTIME_DATA_OVERLAY_PROBE" ]]; then
+            changed+=("$PATHFINDER_RUNTIME_DATA_OVERLAY_PROBE")
+          fi
+          if (( ${#changed[@]} )); then
+            git archive --format=tar HEAD -- "${changed[@]}" | tar -x
+          fi
+          mapfile -d '' deleted < <(
+            git diff --name-only -z --no-renames --diff-filter=D HEAD^1 HEAD -- \
+              data/levels.json data/level-heatmaps.json data/themes.json data/hints \
+              data/stress/stress-levels.json data/stress/stress-levels-random.json \
+              data/stress/stress-levels-envelope.json data/stress/hints \
+              data/stress/hints-random data/stress/hints-envelope
+          )
+          if (( ${#deleted[@]} )); then
+            rm -f -- "${deleted[@]}"
+          fi
+      - name: Last-resort runtime-data checkout when base cache is absent
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit != 'true'
         uses: actions/checkout@v7
         with:
-          # Keep the large data materialization isolated from the source sparse worktree.
-          # In-place expansion and a second root checkout both measured ~52-56s.
           path: .runtime-data-source
           sparse-checkout: |
             /data/levels.json
@@ -172,8 +235,8 @@ jobs:
             /data/stress/hints-random/
             /data/stress/hints-envelope/
           sparse-checkout-cone-mode: false
-      - name: Install runtime data from miss checkout
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+      - name: Install last-resort runtime data
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           mkdir -p data
@@ -194,7 +257,7 @@ jobs:
             data/stress/hints
             data/stress/hints-random
             data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-isolated-probe-v2
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-base-overlay-probe-v3
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
