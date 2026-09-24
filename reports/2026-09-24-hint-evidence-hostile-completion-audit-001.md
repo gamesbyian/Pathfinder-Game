@@ -292,19 +292,38 @@ v3 and unsupported v5. PSC-024 is now reclosed.
 
 The hostile audit found a fourth tracked first-class Hint store,
 `data/stress/hints-envelope/`, paired with `data/stress/stress-levels-envelope.json`.
-It contains 124 tracked Hint artifacts and is already treated as first-class research evidence by
-corpus-formatting, provenance-coverage and occurrence-acceptance tooling. The Phase-8 migration
-tool, benchmark, consolidation census, determinism audit, reconstructability report and cost-drift
-tool nevertheless hard-coded only published + stress1 + stress2.
+A mechanical repository-tree census found six tracked canonical Hint directories, not the three
+assumed by the original Phase-8 tooling. The omitted stores are:
 
-This falsifies PR #2071's claim that its 1,962-file migration covered the "full tracked corpus":
-the 124 envelope artifacts remained schema v3.
+- `data/stress/hints-envelope/`: 124 artifacts;
+- `data/families/hints/`: 788 artifacts;
+- `data/families/phaseB/hints/`: 477 artifacts.
 
-**Correction in progress:** whole-store consolidation tooling now includes the envelope store, and a
-temporary PR-scoped workflow runs the already-tested v4 migration specifically over those 124
-artifacts, proves immediate idempotency, uploads the reversible semantic/join-equivalence manifest,
-and commits only the migrated envelope files. The workflow is to be deleted after the repair commit
-lands and exact-head validation is green.
+All 1,389 omitted artifacts were still schema v3 when discovered. The family stores are written
+through the same canonical `level-data-io` / `hintsDirFor` boundary, so they are not a separate
+archive format.
+
+This falsifies PR #2071's claim that its 1,962-file migration covered the "full tracked corpus".
+
+**Correction in progress:** whole-store migration, codec benchmark, consolidation census,
+determinism audit, formatting check and derived index now discover tracked Hint stores mechanically
+instead of enumerating them. A permanent census guard currently asserts the six-store topology.
+A temporary PR-scoped workflow runs the tested v4 migration over all discovered stores, proves
+immediate idempotency and whole-store referee validity, uploads the reversible evidence, and commits
+only the previously omitted stores.
+
+### 22. The Phase-8 migration manifest did not contain referee-validation evidence
+
+The plan requires the reversible migration evidence to include a referee-validation disposition.
+The original migration tool proved decode/encode semantic equality and cross-resource join identity,
+but its report contains no referee field or path-validity result. PR #2071's validation narrative
+relied on separate partial validators, which did not cover the omitted family stores.
+
+**Correction:** `scripts/validate-all-hint-stores.mjs` now mechanically discovers every tracked
+Hint store, resolves each artifact to its owning sibling level document, fails on ambiguous/orphan
+ownership, decodes through the shared codec, and runs every stored path through the real PLAY
+referee. The hostile audit and omitted-store migration transaction both require this whole-store
+proof, and the migration workflow uploads its result beside the before/after migration manifests.
 
 ## Producer audit result
 
