@@ -114,6 +114,13 @@
       "retirementTrigger": "retire when the hint-evidence-consolidation plan closes out and its oracles fold into a permanently maintained validation surface"
     },
     {
+      "workflow": "hint-envelope-v4-migration-repair.yml",
+      "role": "evidence-maintenance",
+      "status": "maintained",
+      "currentConsumer": "PR #2072 hostile closeout repair for the omitted tracked envelope Hint store",
+      "retirementTrigger": "delete immediately after the envelope store is committed as canonical schema v4 and exact-head closeout validation is green"
+    },
+    {
       "workflow": "hint-provenance-hostile-audit.yml",
       "role": "operational",
       "status": "maintained",
