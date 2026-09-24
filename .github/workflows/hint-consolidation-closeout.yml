@@ -73,5 +73,10 @@ jobs:
           console.log('V4 gzip reduction:', (100 * report.bytes.gzipReduction).toFixed(2) + '%');
           NODE
 
+      - name: Measure bounded sparse level serialization
+        run: |
+          node scripts/level-sparse-serialization-benchmark.mjs --out=/tmp/level-sparse-benchmark.json >/tmp/level-sparse-benchmark.log
+          cat /tmp/level-sparse-benchmark.log
+
       - name: Portfolio direct-vs-report provenance parity
         run: npm run test:portfolio-solve-sweep-cli
