@@ -42,7 +42,8 @@ jobs:
       # this run's observations into canonical Hint evidence. Computing it here would require a
       # second direct Hint writer and defeat the single-ingestion-path invariant.
 
-      - name: Upload full diagnostics artifact
+      - name: Upload full or partial diagnostics artifact
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: solver-diagnostics-${{ github.sha }}
@@ -50,6 +51,7 @@ jobs:
             logs/solver-workflow/latest.json
             logs/solver-workflow/*.json
           retention-days: 30
+          if-no-files-found: warn
 
       - name: Publish standard solver sweep result
         if: always()
