@@ -228,6 +228,21 @@ Expected contract-level saving is roughly the full **15.8 s** observed import co
 
 The corpus-scale acceptance proof remains independently maintained by `.github/workflows/hint-consolidation-closeout.yml`, which directly invokes `hint-occurrence-acceptance-audit.mjs`. The optimization therefore separates unit import cost from corpus authority rather than removing the full audit.
 
+### B1d. Bundle each harvest CLI once per Node contract
+
+After B1c, the largest newly-added hint ingestion contracts include:
+
+- `test:harvest-solver-diagnostics-reports`: **~5.9 s**;
+- `test:harvest-cpsat-discovery-reports`: **~5.0 s**.
+
+Each test has two important end-to-end cases: empty staging receipt behavior and a real referee-accepted canonical hint row. Both cases currently invoke `run-bundled.mjs` independently, rebuilding the same harvester bundle twice inside one Node contract.
+
+The repository already has a safer/faster pattern in `hint-workbench-node-test.mjs`: import `buildBundle()`, build the entry once, then spawn the resulting bundle for all cases.
+
+B1d applies that exact pattern to both harvest contracts. The real-row tests, canonical hint-file mutation/restore, referee path validation, and persisted provenance assertions remain unchanged. Only duplicate esbuild work is removed.
+
+Acceptance: both contracts remain green, their direct CLI semantics stay exercised through the built bundle, and Node/CLI summary shows a material per-contract reduction from the ~5-6 s baseline.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
