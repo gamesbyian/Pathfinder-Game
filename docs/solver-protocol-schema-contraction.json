@@ -566,7 +566,8 @@
       "forms": [
         "unversioned bare hint-path array",
         "unversioned transitional object with hints/hintMetadata",
-        "schema v2/v3 historical wrapper",
+        "schema v1 historical transitional wrapper",
+        "schema v2/v3 historical canonical wrapper",
         "schema v4 current sparse-inline/interned wrapper"
       ],
       "currentWritesMultipleForms": false,
@@ -575,8 +576,8 @@
       "persistedExternalRequirement": true,
       "treatment": "canonical-ingress-adapter",
       "status": "complete",
-      "retirementGate": "Satisfied 2026-09-24 after hostile audit: decodeHintArtifact is the one shared browser/Node version authority; unversioned legacy forms enter through explicit compatibility adapters, schema v2/v3 dispatch through retained historical readers, schema v4 owns current encoding, and any other declared schemaVersion fails closed.",
-      "progress": "Hostile closeout found that the first v4 decoder still shape-guessed any object with a hints array after failing the v4 check, so a future schemaVersion:5 wrapper could be silently interpreted as legacy. Dispatch is now explicit for v2/v3/v4 and unsupported declared versions throw; current writers continue to emit v4 only."
+      "retirementGate": "Satisfied 2026-09-24 after hostile audit: decodeHintArtifact is the one shared browser/Node version authority; unversioned legacy forms and declared schema v1-v3 enter through explicit historical adapters, schema v4 owns current encoding, and any other declared schemaVersion fails closed.",
+      "progress": "Hostile closeout found that the first v4 decoder still shape-guessed any object with a hints array after failing the v4 check, so a future schemaVersion:5 wrapper could be silently interpreted as legacy. Dispatch is now explicit for declared v1/v2/v3/v4 and unsupported declared versions throw; current writers emit v4 only."
     },
     {
       "id": "PSC-025",
