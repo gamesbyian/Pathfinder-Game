@@ -131,6 +131,19 @@ Five structurally overlapping alternative fixtures also solved in ~0.1 s total, 
 
 The original nine-level population has now been probed at **250,000 work** and all **9/9 solve in ~1.5 s total / 1.30 M nodes**. Keep the exact fixture set and regenerate its baseline at 250k work; replacement is unnecessary unless future semantics change.
 
+## Implementation status
+
+| Work | Status | Current evidence / next gate |
+| --- | --- | --- |
+| CI health: audit-refresh staging | **repair in progress** | Automated diagnostics refresh repeatedly re-tracked `logs/solver-workflow/compact-failure-response.json`, which `check:audit-artifacts` explicitly forbids. Repair narrows staging to `latest.json` + timestamped snapshots and removes the transient. |
+| A1 deep runtime-data checkout | **merged / measured green on hit** | #2045: source checkout **2 s** + exact runtime-data restore **2 s**; all deep obligations green; deep job **56 s**. Rejected post-clone sparse expansion measured 51 s; miss fallback uses the prior batched checkout shape. |
+| B1 lifecycle deterministic dispatch | **merged / measured green** | #2044: `orchestration-work-budget.test.ts` **~8.2 s → 195 ms**; covered-suite wall **~29.5 s → 26.48 s**; all test slots preserved. |
+| A3 main-seeded ESLint cache | **ready to restack after CI-health repair** | Functional branch code is complete. Previous red runs were caused by the forbidden raw audit artifact, not lint/cache behavior. |
+| A4 250k solver canary | **ready to restack after A3** | Original exact 9-level fixture set solves **9/9 in ~1.5 s / 1,303,532 nodes** at 250k. Previous stacked run confirmed the 250k canary itself green. |
+| A2 exact Node 22.23.2 | planned | Node 22 passed typecheck, complete fast-unit population, and build. Full contract rehearsal must migrate the Firebase CLI cache generation from Node 20 to Node 22 rather than restoring a Node-20-materialized npx tree. |
+| C exact dependency-tree restore | planned | Hosted restore **3 s** vs `npm ci` **8 s**. Lockfile contains platform/native/install-script packages, so promotion requires OS + arch + exact Node/npm generation + lockfile keying and a complete restored-tree validation rehearsal. |
+| A5 remove planner dependency edge | planned | Fast gate consumes no planner outputs. Deep can start immediately, run the canonical planner locally, fail safe to full deep on planner error, and exit before dependency setup when deep is not required. |
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
