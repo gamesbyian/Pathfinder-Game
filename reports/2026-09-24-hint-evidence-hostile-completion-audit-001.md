@@ -276,6 +276,18 @@ history into modern defaults. `PSC-030` already recorded the same missingness co
 **Correction:** PSC-015 is reclosed with the post-v4 evidence, and PSC-001's retirement text now
 reflects the editor coordinate-transform fix plus the new fail-closed bare-mutation ledger.
 
+### 20. Declared future Hint schema versions could fall through as legacy
+
+The shared decoder handled v4 explicitly but then accepted any remaining object with a `hints`
+array through legacy shape inference. A future `{schemaVersion: 5, hints: ...}` artifact could
+therefore be silently interpreted under v2/v3/legacy semantics instead of failing closed. This left
+PSC-024 correctly open despite the completed physical migration.
+
+**Correction:** schema dispatch is now authoritative: unversioned legacy array/transitional objects
+remain explicit compatibility paths, declared v2/v3 wrappers use retained historical adapters, v4
+uses the current codec, and every other declared schema version throws. Regression tests cover v2,
+v3 and unsupported v5. PSC-024 is now reclosed.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
