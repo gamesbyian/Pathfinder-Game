@@ -417,27 +417,48 @@ jobs:
   # changes retain their deep protections; unrelated repo/research/data-only PRs may skip it.
   # Planner failure or manual dispatch always runs the lane.
   deep-verification:
-    needs: impact-shadow
-    if: >-
-      always()
-      && (
-        github.event_name == 'workflow_dispatch'
-        || needs.impact-shadow.outputs.planner_outcome != 'success'
-        || needs.impact-shadow.outputs.deep_job_required == 'true'
-      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          # Source-only checkout. Canonical runtime data is restored below from the exact
-          # Git-object-keyed cache already owned/published by the universal fast gate.
+          # Start immediately instead of waiting on impact-shadow. The local canonical planner
+          # below needs HEAD^1 for PR diff classification.
+          fetch-depth: 2
+          # Source-only checkout. Canonical runtime data is restored only when deep is required.
           sparse-checkout: |
             /*
             !/logs/
             !/reports/
             !/data/
           sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Compute local deep validation plan
+        id: deep-impact
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            node scripts/ci-impact-shadow-plan.mjs --git-diff HEAD^1 HEAD --out=tmp/deep-impact-plan.json
+          else
+            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/deep-impact-plan.json
+          fi
+      - name: Record local deep planner decision
+        if: always()
+        shell: bash
+        env:
+          PLANNER_OUTCOME: ${{ steps.deep-impact.outcome }}
+          DEEP_REQUIRED: ${{ steps.deep-impact.outputs.deep_job_required }}
+        run: |
+          echo "Local deep planner outcome: $PLANNER_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Local deep required: ${DEEP_REQUIRED:-unknown}" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$PLANNER_OUTCOME" != "success" ]]; then
+            echo "Planner failure fails safe: deep verification will run." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Derive deep runtime-data cache key
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: deep-runtime-data-key
         shell: bash
         run: |
@@ -454,6 +475,7 @@ jobs:
             git rev-parse HEAD:data/stress/hints-envelope
           } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
       - name: Restore exact runtime-data tree for deep verification
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: deep-runtime-data-cache
         uses: actions/cache/restore@v5
         with:
@@ -470,7 +492,7 @@ jobs:
             data/stress/hints-envelope
           key: runtime-data-${{ steps.deep-runtime-data-key.outputs.key }}
       - name: Materialize deep runtime data on cache miss
-        if: steps.deep-runtime-data-cache.outputs.cache-hit != 'true'
+        if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && (steps.deep-runtime-data-cache.outputs.cache-hit != 'true')
         uses: actions/checkout@v7
         with:
           # A second batched checkout is intentionally used on a miss. Hosted evidence showed
@@ -484,25 +506,24 @@ jobs:
             /data/stress/stress-levels.json
             /data/stress/stress-levels-random.json
           sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22.23.2'
-          cache: npm
       - name: Derive exact dependency-tree cache key
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: dependency-tree-key
         shell: bash
         run: |
           echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
       - name: Restore exact dependency tree
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: dependency-tree-cache
         uses: actions/cache/restore@v5
         with:
           path: node_modules
           key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Install dependencies from the npm cache
-        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Run covered ordinary test population
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: coverage
         continue-on-error: true
         run: npm run test:coverage
@@ -510,20 +531,24 @@ jobs:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
       - name: Run heavyweight implementation proofs
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: deep_proofs
         continue-on-error: true
         run: npm run test:deep-proofs
       # Restore the default-branch-seeded Firebase CLI materialization. Startup acceleration only.
       - name: Restore Firebase CLI cache
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         uses: actions/cache/restore@v5
         with:
           path: ~/.npm/_npx
           key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
       - uses: actions/setup-java@v5
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         with:
           distribution: temurin
           java-version: '21'
       - name: Exercise level-fingerprint repository identity through Firestore emulator
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: firestore
         continue-on-error: true
         run: >-
@@ -535,10 +560,17 @@ jobs:
         if: always()
         shell: bash
         env:
+          RUN_DEEP: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true' }}
           COVERAGE: ${{ steps.coverage.outcome }}
           DEEP_PROOFS: ${{ steps.deep_proofs.outcome }}
           FIRESTORE: ${{ steps.firestore.outcome }}
         run: |
+          if [[ "$RUN_DEEP" != "true" ]]; then
+            echo "## CI deep verification" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Deep verification not selected by the canonical local impact plan." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           failed=0
           {
             echo '## CI deep verification'
