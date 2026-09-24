@@ -22,7 +22,7 @@ import type { PrepLevel, ScoringProfile } from './types.js';
 // Stable, compact id for a seed path — FNV-1a over its cell keys, base36. Records WHICH existing hint
 // a prefix-anchored completion was anchored on (VarietySavedMeta.anchorSeed) without storing the full
 // path signature on every provenance entry; a tool maps it back by hashing each of the level's hints.
-function hashSeedPath(path: number[]): string {
+export function varietyAnchorSeedId(path: number[]): string {
     let h = 0x811c9dc5;
     for (const k of path) { h ^= k; h = Math.imul(h, 0x01000193); }
     return (h >>> 0).toString(36);
@@ -251,7 +251,7 @@ export function createVarietySearch(
             for (const seed of seeds) {
                 if (shouldStop()) break;
                 const L = seed.length;
-                const seedId = hashSeedPath(seed);
+                const seedId = varietyAnchorSeedId(seed);
                 for (let k = Math.max(1, Math.floor(L * 0.3)); k < L - 2 && !shouldStop(); k += Math.max(1, Math.floor(L * 0.12))) {
                     techniqueForCurrentPhase.value = 'prefix-anchored' + orderSuffix;
                     anchorForCurrentPhase.seed = seedId;
