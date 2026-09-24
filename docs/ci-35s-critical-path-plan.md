@@ -297,10 +297,17 @@ All three use the same warm exact runtime-data and dependency-tree bootstrap. Th
 
 **Rehearsal correction:** first hosted run 36064252085 was invalid as a timing comparison because the benchmark checkout omitted `reports/`. The unsharded control and both shards therefore failed the same legitimate report-backed Node contracts with ENOENT/missing-reference errors. This is a harness bug, not evidence for or against sharding. The corrected rehearsal now mirrors production fast-gate's exact log/report sparse population in all three jobs; only Node contract partitioning differs.
 
-Decision rule:
+Decision result from corrected hosted run **36065247220**:
 
-- if both shard runner walls are ≤27 s **and** first-shard-start → both-shards-complete is ≤35 s across comparable samples, standard-runner sharding remains viable;
-- if useful shard work fits but shared-runner assignment skew again pushes authority beyond 35 s, stop adding standard-runner shards and proceed to the reserved/larger-runner benchmark already defined below.
+- shard A useful Node work: **14 s**; runner wall: **32 s**;
+- shard B useful Node work: **16 s**; runner wall: **31 s**;
+- same-run unsharded Node population: **26 s** useful work;
+- first shard runner start → both shards complete: **36 s**;
+- all 204 contracts passed in both the full control and the partitioned population.
+
+The compute split works, but standard shared-runner bootstrap/start skew consumes almost all of the gain. The result misses the ≤35 s authority target by ~1 s even in this single favorable sample and misses the ≤27 s per-lane headroom target by 4–5 s.
+
+**Decision:** do not productionize shared-runner Node sharding. Along with the already-rejected standard-runner coverage sharding, D1 closes the standard-hosted fan-out path. Proceed to the reserved/larger-runner benchmark rather than adding a third shared shard or shaving validation to compensate for runner infrastructure.
 
 ## Implementation sequence
 
