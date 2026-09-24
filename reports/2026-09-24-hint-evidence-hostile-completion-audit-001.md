@@ -347,6 +347,25 @@ fixtures. The canary copies the real P00001 level/Hint evidence into a temporary
 harvester there, and never mutates shared repository data. This removes a hidden serialization
 requirement from the Hint validation suite.
 
+### 24. Whole-store referee validation applied the player/editor size ceiling to research-family levels
+
+The first exact-head run of the mechanically complete six-store referee validator found 65 failures,
+all in family Hint stores. The owning levels were structurally rejected because `grid.w` or
+`grid.h` exceeded 15 before their stored paths reached the path referee. These family-generation
+corpora intentionally contain research levels beyond the ordinary player/editor 15x15 schema ceiling;
+the canonical family Hint stores are still valid research evidence and use the same Hint codec.
+
+This was a validator-domain mismatch, not evidence that the 65 Hint artifacts were corrupt. It also
+demonstrates why "run the real topology before closure" is necessary: the new exhaustive validator
+itself had only been tested on ordinary small levels.
+
+**Correction:** whole-store validation keeps the normal detailed structural parser for ordinary
+published/stress stores. For the two canonical family stores it relaxes only the known
+`grid.w/grid.h <= 15` player/editor constraint, parses through the shared raw-level parser, and then
+runs the same candidate-path referee. All other structural parse failures remain fatal. The node
+regression suite now includes an oversized family level whose path must be referee-validated
+successfully.
+
 ## Planning-contract defects exposed by implementation
 
 The hostile findings do not imply that the original architecture was directionless; most of the
