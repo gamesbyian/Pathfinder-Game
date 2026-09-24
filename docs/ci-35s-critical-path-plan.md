@@ -144,7 +144,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A2 exact Node 22.23.2 | **merged / measured green** | Production PR/main/scoped workflows are pinned to exact 22.23.2 with a separate Node-22 Firebase CLI cache generation; full-contract rehearsals were green with setup-node ~0–3 s. |
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
-| B5 runtime-hint projection cache | **production rollout in progress** | Rehearsal #2081 hit run 36063620245 restored exact projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold build dominated by deterministic projection. Production branch seeds/restores PR/main/scoped and post-diagnostics generations. |
+| B5 runtime-hint projection cache | **merged / rollout verification pending** | #2087 merged projection restore/seed across PR/main/scoped and post-diagnostics paths. Rehearsal #2081 restored exact projection in **1 s** and built in **2 s** versus ~25 s cold; verify one ordinary post-merge hit before closing B5. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
@@ -374,6 +374,28 @@ Promotion design:
 - native/install-script packages must be inventoried before treating the cache as authoritative bootstrap state.
 
 Because the five-lane rehearsal would otherwise repeat 8–9 s installs, this optimization moves ahead of lane proliferation.
+
+### D0. Isolate tracked-file-mutating Node contracts before authoritative sharding
+
+Final current-profile rehearsal #2088 exposed a correctness issue before it could answer the timing question:
+
+- the full 204-contract control passed;
+- shard 2 passed;
+- shard 1 failed `test:harvest-solver-diagnostics-reports` with a truncated/invalid JSON read;
+- the failing test deliberately mutated and restored tracked `data/hints/P00001.json`;
+- changing the contract mix changed four-worker scheduling enough to expose a race against another repository-mutating contract.
+
+This is **testability debt, not evidence against sharding**. A validation contract intended to run in a parallel pool cannot rely on temporarily mutating a tracked repository artifact and hoping neighboring tests do not overlap.
+
+Repair strategy:
+
+1. preserve the canonical diagnostics report identity `data/levels.json`;
+2. add an optional harvester storage-path override used only by tests;
+3. copy the real published corpus plus the real P00001 hint artifact into a private temp directory;
+4. run the real harvester/referee/provenance path against that isolated storage;
+5. remove all snapshot/restore writes to the tracked repository.
+
+After that repair is green, rerun the current-profile two-shard rehearsal once. Do **not** reinterpret #2088's red result as a latency failure.
 
 ### Phase D: runtime-balanced execution topology
 
