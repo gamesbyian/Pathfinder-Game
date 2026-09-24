@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   coverage-shards:
@@ -105,44 +106,35 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-  coverage-merge:
-    name: coverage-merge
-    needs: coverage-shards
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/
-          sparse-checkout-cone-mode: false
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22.23.2'
-          cache: npm
-
-      - name: Derive exact dependency-tree cache key
-        id: dependency-tree-key
+      - name: Wait for sibling coverage blob
+        if: matrix.shard == 1
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+          for attempt in {1..30}; do
+            artifact_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
+              --jq '.artifacts[] | select(.name == "coverage-blob-2") | .id' | head -n1)"
+            if [[ -n "$artifact_id" ]]; then
+              echo "Sibling coverage artifact is available."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Timed out waiting for coverage-blob-2 from sibling shard."
+          exit 1
 
-      - name: Require warm exact dependency tree
-        uses: actions/cache/restore@v5
-        with:
-          path: node_modules
-          key: ${{ steps.dependency-tree-key.outputs.key }}
-          fail-on-cache-miss: true
-
-      - name: Download coverage blobs
+      - name: Download both coverage blobs on shard 1
+        if: matrix.shard == 1
         uses: actions/download-artifact@v8
         with:
           pattern: coverage-blob-*
-          path: vitest-reports
+          path: merged-vitest-reports
           merge-multiple: true
+          run-id: ${{ github.run_id }}
+          github-token: ${{ github.token }}
 
-      - name: Merge coverage and enforce unchanged thresholds
-        run: npx vitest --merge-reports=vitest-reports --reporter=default --coverage
+      - name: Merge coverage and enforce unchanged thresholds on shard 1
+        if: matrix.shard == 1
+        run: npx vitest --merge-reports=merged-vitest-reports --reporter=default --coverage
+
