@@ -18,6 +18,53 @@ const ENFORCE = process.argv.includes('--enforce');
 const SUMMARY_ONLY = process.argv.includes('--summary-only');
 const { sourceTexts, reachable } = buildMaintainedReachability(ROOT);
 
+function inspectPhysicalHintReadSurface(text) {
+  const readsJsonFile = /\b(?:readFileSync|readFile)\s*\(/u.test(text)
+    && /\bJSON\.parse\s*\(/u.test(text);
+  const consumesHintRows = /\.hints\b/u.test(text);
+  const hasHintSourceSignal = /(?:\bhint(?:File|Doc|Path|Artifact|Contents?|Metadata|Dir)\b|data\/(?:stress\/)?hints(?:-random|-envelope)?\/)/iu.test(text);
+  const usesSharedDecoder = /\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(text);
+  const suspect = readsJsonFile && consumesHintRows && hasHintSourceSignal;
+  return { suspect, bypass: suspect && !usesSharedDecoder };
+}
+
+if (process.argv.includes('--self-test')) {
+  const cases = [
+    {
+      name: 'inline raw physical reader',
+      text: `const doc = JSON.parse(fs.readFileSync('data/stress/hints/a.json', 'utf8')); doc.hints.forEach(use);`,
+      suspect: true,
+      bypass: true,
+    },
+    {
+      name: 'staged raw physical reader',
+      text: `const raw = fs.readFileSync(hintFilePath, 'utf8');\nconst parsed = JSON.parse(raw);\nfor (const hint of parsed.hints) use(hint);`,
+      suspect: true,
+      bypass: true,
+    },
+    {
+      name: 'staged reader through shared decoder',
+      text: `const raw = fs.readFileSync(hintArtifactPath, 'utf8');\nconst parsed = JSON.parse(raw);\nconst doc = decodeHintArtifact(parsed);\nfor (const hint of doc.hints) use(hint);`,
+      suspect: true,
+      bypass: false,
+    },
+    {
+      name: 'unrelated JSON with semantic hints property',
+      text: `const raw = fs.readFileSync(reportPath, 'utf8');\nconst parsed = JSON.parse(raw);\nconsole.log(parsed.hints);`,
+      suspect: false,
+      bypass: false,
+    },
+  ];
+  for (const fixture of cases) {
+    const actual = inspectPhysicalHintReadSurface(fixture.text);
+    if (actual.suspect !== fixture.suspect || actual.bypass !== fixture.bypass) {
+      throw new Error(`${fixture.name}: expected suspect=${fixture.suspect}, bypass=${fixture.bypass}; got ${JSON.stringify(actual)}`);
+    }
+  }
+  console.log('hint-provenance-surface-audit detector self-test: all tests passed');
+  process.exit(0);
+}
+
 const categories = {
   physicalCodec: [
     /\bdecodeHintArtifact\b/u, /\bencodeHintArtifact\b/u, /\bparseHintFileContents\b/u,
@@ -92,18 +139,9 @@ for (const [rel, text] of sourceTexts) {
       && fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8').includes(rel),
     hits,
   });
-  if (maintainedReachable
-      && /JSON\.parse\s*\([^\n]*(?:readFileSync|readFile)/u.test(text)
-      && /(?:hintFile|hintDoc|hints\/|hints-random\/|data\/hints)/u.test(text)
-      && /\.hints\b/u.test(text)) {
-    directPhysicalReadSuspects.push(rel);
-  }
-  if (maintainedReachable
-      && /JSON\.parse\s*\([^\n]*(?:readFileSync|readFile)/u.test(text)
-      && /\b(?:doc|document|hintDoc)\.hints\b/u.test(text)
-      && !/\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(text)) {
-    physicalDecodeBypasses.push(rel);
-  }
+  const physicalRead = inspectPhysicalHintReadSurface(text);
+  if (maintainedReachable && physicalRead.suspect) directPhysicalReadSuspects.push(rel);
+  if (maintainedReachable && physicalRead.bypass) physicalDecodeBypasses.push(rel);
 }
 rows.sort((a,b)=>a.path.localeCompare(b.path));
 
