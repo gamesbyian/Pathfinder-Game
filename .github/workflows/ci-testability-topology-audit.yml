@@ -19,6 +19,113 @@ permissions:
   contents: read
 
 jobs:
+  bootstrap-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Setup floating Node 20
+        id: node20
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Record Node 20 runtime
+        run: node --version
+      - name: Setup preinstalled Node 22.23.2
+        id: node22
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Record Node 22 runtime
+        run: node --version
+      - name: Install dependencies under Node 22
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Node 22 toolchain smoke
+        run: |
+          npm run check:types
+          npm run build
+
+  checkout-current-deep-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current deep population
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/*
+            /data/stress/stress-levels.json
+            /data/stress/stress-levels-random.json
+          sparse-checkout-cone-mode: false
+      - name: Measure current deep checkout
+        shell: bash
+        run: |
+          echo "files=$(find . -type f -not -path './.git/*' | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+          echo "bytes=$(du -sb --exclude=.git . | awk '{print $1}')" >> "$GITHUB_STEP_SUMMARY"
+
+  checkout-runtime-cache-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source without data
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore exact runtime-data tree
+        id: runtime-data-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+      - name: Measure source plus runtime-data restore
+        shell: bash
+        env:
+          CACHE_HIT: ${{ steps.runtime-data-cache.outputs.cache-hit }}
+        run: |
+          echo "cache-hit=$CACHE_HIT" >> "$GITHUB_STEP_SUMMARY"
+          echo "files=$(find . -type f -not -path './.git/*' | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+          echo "bytes=$(du -sb --exclude=.git . | awk '{print $1}')" >> "$GITHUB_STEP_SUMMARY"
+
   audit:
     runs-on: ubuntu-latest
     steps:
