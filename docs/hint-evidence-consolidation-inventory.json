@@ -1260,6 +1260,21 @@
           "docs/solver-protocol-schema-contraction.json"
         ],
         "finding": "decodeHintArtifact explicitly handled v4 but then accepted any object with a hints array as legacy, so an unsupported future declared schema could be silently misread. Added authoritative v2/v3/v4 dispatch, fail-closed unsupported versions, regression tests, and closed PSC-024."
+      },
+      {
+        "id": "HPA-018",
+        "kind": "omitted-tracked-hint-store",
+        "paths": [
+          "data/stress/hints-envelope",
+          "scripts/hint-artifact-v4-migration.mjs",
+          "scripts/hint-codec-baseline-benchmark.mjs",
+          "scripts/hint-evidence-consolidation-audit.mjs",
+          "scripts/hint-determinism-audit.mjs",
+          "scripts/stress/hint-reconstructability-report.mjs",
+          "scripts/stress/hint-cost-drift.mjs",
+          "scripts/hint-store-index.mjs"
+        ],
+        "finding": "Phase 8 and several whole-store consolidation tools hard-coded only three Hint stores, omitting the tracked 124-artifact stress envelope corpus. This invalidated the 'full tracked corpus' migration claim. Tooling now includes envelope and a one-shot repair migration is applying the same v4 semantic/join-equivalence checks to that store."
       }
     ],
     "permanentGuards": [
