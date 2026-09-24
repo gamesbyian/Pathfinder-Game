@@ -1,6 +1,9 @@
 # Hint evidence Phase 8 six-store migration repair — 001
 
-> **Status:** migration applied; final whole-store referee closeout pending exact-head hostile audit
+> **Status:** active
+> **Last evidence:** 2026-09-24 — the six-store migration transaction completed losslessly and idempotently; later exact-head closeout exposed and corrected a family-level validator-domain mismatch, but the corrected whole-store referee proof still requires a green exact-head run.
+> **Decision:** Preserve the six-store migration as valid physical/semantic migration evidence; do not treat Phase 8 or the whole program as finally closed until the permanent whole-store referee validator succeeds on the exact closing head.
+> **Remaining gate:** corrected six-store census + whole-store PLAY-referee validation must pass in the hostile audit / closeout canary on the same exact head as the remaining program gates.
 >
 > **Source commit:** `ee22ef8c5c760e46a51573f401124c1ffc181030`
 >
