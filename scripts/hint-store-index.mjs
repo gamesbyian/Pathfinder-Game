@@ -14,13 +14,11 @@ import process from 'node:process';
 import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
 import { summarizeReconstructability } from './stress/hint-reconstructability-report.mjs';
+import { discoverHintStoreDirs, hintStoreLabel } from './hint-store-roots.mjs';
 
-const STORES = [
-    { corpus: 'published', dir: 'data/hints' },
-    { corpus: 'corpus1', dir: 'data/stress/hints' },
-    { corpus: 'corpus2', dir: 'data/stress/hints-random' },
-    { corpus: 'envelope', dir: 'data/stress/hints-envelope' },
-];
+function stores(root) {
+    return discoverHintStoreDirs(root).map(dir => ({ corpus: hintStoreLabel(dir), dir }));
+}
 
 function sha256(value) {
     return 'sha256:' + createHash('sha256').update(value).digest('hex');
@@ -76,7 +74,7 @@ function rowForArtifact(root, store, name) {
 }
 
 export function buildHintStoreIndex(root = process.cwd()) {
-    const rows = STORES.flatMap(store => filesUnder(root, store.dir).map(name => rowForArtifact(root, store, name)));
+    const rows = stores(root).flatMap(store => filesUnder(root, store.dir).map(name => rowForArtifact(root, store, name)));
     const sourceBindings = rows.map(row => [row.artifactPath, row.contentSha256]);
     const totals = rows.reduce((acc, row) => {
         acc.artifacts += 1;
