@@ -22,7 +22,7 @@ import {
   isSameLevelStructure,
   LEVEL_FINGERPRINT_VERSION,
 } from '../modules/domain/level-fingerprint.ts';
-import { hintPathSignature, makeProvenanceEntry, provenanceEventKey } from '../modules/domain/hint-types.ts';
+import { hintPathSignature, makeProvenanceEntry, provenanceEventKey, provenanceEvidenceKeys } from '../modules/domain/hint-types.ts';
 import { createLevelRatingRepository } from '../modules/persistence/level-rating-repository.ts';
 import { createLevelSubmissionRepository } from '../modules/persistence/level-submission-repository.ts';
 import { createLocalLevelHintsRepository } from '../modules/persistence/local-level-hints-repository.ts';
@@ -251,6 +251,63 @@ try {
   assert.equal(mergedHints[0].provenance.length, 2, 'both discovery events must be preserved, not overwritten');
   const techniques = mergedHints[0].provenance.map((p) => p.solver.technique).sort();
   assert.deepEqual(techniques, ['firestore-emulator-boundary', 'firestore-emulator-boundary-rediscovery']);
+
+  // Same SEMANTIC event, different PHYSICAL occurrence: Phase 3's original Firestore proof covered
+  // only distinct semantic events. The occurrence model explicitly requires a later run/attempt to
+  // merge into the existing semantic event rather than disappear as a duplicate.
+  const occurrenceA = makeProvenanceEntry('firestore-emulator-occurrence', {
+    occurrenceRunId: 'run-a',
+    occurrenceRunAttempt: 1,
+    occurrenceObservedAt: '2026-09-24T01:00:00.000Z',
+    foundAt: '2026-09-24T01:00:00.000Z',
+  });
+  const occurrenceASaved = await localHints.saveLocalLevelHintIfNovel(
+    levelFingerprint, hintPath, signature, occurrenceA,
+    new Set(mergedHints.flatMap((h) => h.provenance.flatMap((p) => provenanceEvidenceKeys(signature, p)))),
+  );
+  assert.equal(occurrenceASaved.saved, true);
+
+  const afterOccurrenceA = await localHints.getLocalLevelHints(levelFingerprint);
+  const occurrenceKnown = new Set(
+    afterOccurrenceA.flatMap((h) => h.provenance.flatMap((p) => provenanceEvidenceKeys(signature, p))),
+  );
+  const occurrenceB = makeProvenanceEntry('firestore-emulator-occurrence', {
+    occurrenceRunId: 'run-b',
+    occurrenceRunAttempt: 1,
+    occurrenceObservedAt: '2026-09-24T02:00:00.000Z',
+    foundAt: '2026-09-24T02:00:00.000Z',
+  });
+  assert.equal(
+    localHints.localHintEntryId(signature, occurrenceA) === localHints.localHintEntryId(signature, occurrenceB),
+    false,
+    'same semantic event with a new physical run must have a distinct immutable Firestore doc id',
+  );
+  const occurrenceBSaved = await localHints.saveLocalLevelHintIfNovel(
+    levelFingerprint, hintPath, signature, occurrenceB, occurrenceKnown,
+  );
+  assert.equal(occurrenceBSaved.saved, true, 'new occurrence of an existing semantic event must be retained');
+
+  const afterOccurrenceB = await localHints.getLocalLevelHints(levelFingerprint);
+  const occurrenceEvents = afterOccurrenceB[0].provenance
+    .filter((p) => p.solver.technique === 'firestore-emulator-occurrence');
+  assert.equal(occurrenceEvents.length, 1, 'same-event occurrence docs must merge back into one semantic provenance event');
+  assert.deepEqual(
+    occurrenceEvents[0].occurrences?.map((o) => o.runId).sort(),
+    ['run-a', 'run-b'],
+    'both physical acquisition runs must survive the Firestore round trip',
+  );
+
+  const afterOccurrenceBKnown = new Set(
+    afterOccurrenceB.flatMap((h) => h.provenance.flatMap((p) => provenanceEvidenceKeys(signature, p))),
+  );
+  const duplicateOccurrenceB = await localHints.saveLocalLevelHintIfNovel(
+    levelFingerprint, hintPath, signature, occurrenceB, afterOccurrenceBKnown,
+  );
+  assert.deepEqual(
+    duplicateOccurrenceB,
+    { saved: false, reason: 'duplicate-provenance-not-recorded' },
+    're-saving the same run/attempt remains idempotent',
+  );
 
   console.log('Firestore level-fingerprint repository/emulator boundary proof passed.');
 } finally {
