@@ -58,6 +58,7 @@ try {
     // edits and this fixture never touches the level's own definition.
     const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
+    const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-real-row-'));
     const sourceCorpusPath = path.join(ROOT, 'data', 'levels.json');
     const sourceHintPath = path.join(ROOT, 'data', 'hints', 'P00001.json');
     const isolatedDataDir = path.join(realTemp, 'data');
@@ -77,7 +78,6 @@ try {
     const knownPath = knownHint.path;
     assert.ok(Array.isArray(knownPath) && knownPath.length > 0, 'fixture requires an already-known winning path for P00001');
 
-    const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-real-row-'));
     const realReceiptPath = path.join(realTemp, 'receipt.json');
     // The harvester writes to this isolated sibling hint directory, never to the tracked repo.
     // This keeps the real codec/referee/provenance path while making the contract safe under
