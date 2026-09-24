@@ -146,8 +146,8 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
 | B5 runtime-hint projection cache | **merged / measured green** | #2087 merged restore/seed across PR/main/scoped and diagnostics. Ordinary PR #2088 restored the exact projection cache and completed build in **~2.3 s** with Vite compile **672 ms**, versus ~25 s cold. |
 | D1 two-way Node sharding | **closed negative on shared hosted runners** | Post-hermetic rehearsals are semantically green and cut useful Node work to ~14–17 s/shard, but runner walls varied to **31–35 s** and **27–38 s** across confirmations. Shared bootstrap variance consumes the 35 s budget; stop shard-count tuning. |
-| B3 proofs + Firestore overlap | **production rollout in progress** | #2094 run 36068104237 kept both unchanged obligations green and collapsed their serial ~23 s tail to **14 s concurrent wall** on one warm 4-core runner. Production PR preserves independent failure statuses. |
-| D2 coverage sharding | **closed negative on shared hosted runners** | Native two-shard + separate merge was **81 s** first-start→authoritative result. Final #2098 measured-balanced warm-coordinator design removed the third runner but still finished in **38 s** (18/19 s shard work; 38/33 s runner walls; 3 s artifact wait; 2 s merge). Semantics/thresholds are sound; bootstrap variance consumes the target. |
+| B3 proofs + Firestore overlap | **production rollout measured green on PR** | #2100 full-impact run kept coverage green and ran unchanged proofs + Firestore concurrently in **15 s**, with independent success outputs. Prior serialized shape was ~23 s. Awaiting final authority/parity-green merge. |
+| D2 coverage sharding | **technical success; shared-runner margin insufficient** | D2b run 36068829982 balanced 146 files to 17.091/17.090 test-s and produced authoritative merged coverage with unchanged thresholds in **34 s from shard start**. Only ~1 s headroom remains; D1 already demonstrated ordinary hosted setup variance can exceed that. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
@@ -378,6 +378,25 @@ Promotion design:
 
 Because the five-lane rehearsal would otherwise repeat 8–9 s installs, this optimization moves ahead of lane proliferation.
 
+
+### D2b result: balanced warm-coordinator coverage reaches 34 s, but with no reliability margin
+
+Evidence-only topology run **36068829982** used the measured 146-file profile and one warm shard runner as merge coordinator:
+
+| lane | useful work | runner wall |
+| --- | ---: | ---: |
+| coordinator coverage shard | **18 s** | **38 s** |
+| worker coverage shard | **19 s** | **33 s** |
+| coordinator wait for worker artifact | 3 s | same warm runner |
+| download + native merge + unchanged threshold enforcement | **2 s** | same warm runner |
+
+Both runners started at 22:41:25. The authoritative merged coverage result completed at 22:41:59: **34 s from first shard start to threshold result**.
+
+This proves Pathfinder's full covered population can be split and recombined without weakening coverage semantics, and that the third merge runner from D2 was unnecessary.
+
+It does **not** establish a reliable shared-runner ≤35 s gate. The measured margin is ~1 s, while D1 independently observed a healthy shard runner spend 11 s in `setup-node` and push a semantically green pair to 38 s. Shared hosted-runner bootstrap variance is now the limiting factor, not test partition quality.
+
+Preserve the measured coverage profile and warm-coordinator architecture. The next full-gate design should run them on reserved/larger compute, or explicitly accept that a shared-runner p90 ≤35 s cannot be guaranteed.
 
 ### Current full-impact baseline after bootstrap/cache work
 
