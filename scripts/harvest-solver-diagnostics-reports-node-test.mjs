@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -9,6 +9,9 @@ const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 
 const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-central-harvest-'));
 const receiptPath = path.join(temp, 'receipt.json');
+const emptyWorkspace = path.join(temp, 'workspace');
+mkdirSync(path.join(emptyWorkspace, 'data'), { recursive: true });
+writeFileSync(path.join(emptyWorkspace, 'data', 'levels.json'), '[]\n');
 try {
     const run = spawnSync(process.execPath, [
         'scripts/run-bundled.mjs',
@@ -19,6 +22,7 @@ try {
         '--source-run-attempt=2',
         '--source-workflow=Solver diagnostics and hint capture',
         `--ingestion-receipt-out=${receiptPath}`,
+        `--workspace-root=${emptyWorkspace}`,
     ], {
         cwd: ROOT,
         encoding: 'utf8',
@@ -50,33 +54,35 @@ try {
 // genuinely accepts it) with a synthetic but realistic diagnostics row shape, and asserts the
 // reconstructed provenance's cumulativeElapsedMs actually reaches the persisted Hint record.
 {
-    // This test file runs under plain `node` (see package.json), so it cannot import
-    // modules/domain/level-fingerprint.ts directly (a TypeScript module resolvable only through the
-    // bundler harvest-solver-diagnostics-reports.mjs itself runs through). Instead of recomputing the
-    // level revision, read it off an already-stored real provenance entry for this exact level -- the
-    // same value getLevelFingerprint() would return, since it is stable across mechanics-preserving
-    // edits and this fixture never touches the level's own definition.
     const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
-    const corpusPath = path.join(ROOT, 'data', 'levels.json');
-    const document = readLevelCorpusDocumentWithHints(corpusPath);
-    const level = document.levels.find(l => l.id === 'P00001');
-    assert.ok(level, 'fixture requires the real published corpus to still carry level P00001');
-    const knownHint = level.hintRecords.find(h => h.provenance?.some(p => typeof p?.context?.levelRevision === 'string' && p.context.levelRevision.length > 0));
-    assert.ok(knownHint, 'fixture requires an already-known hint for P00001 with a recorded levelRevision');
-    const levelRevision = knownHint.provenance.find(p => typeof p?.context?.levelRevision === 'string')?.context.levelRevision;
-    const knownPath = knownHint.path;
-    assert.ok(Array.isArray(knownPath) && knownPath.length > 0, 'fixture requires an already-known winning path for P00001');
+    const sourceLevels = JSON.parse(readFileSync(path.join(ROOT, 'data', 'levels.json'), 'utf8'));
+    const rawLevel = sourceLevels.find(l => l.id === 'P00001');
+    assert.ok(rawLevel, 'fixture requires the real published corpus to still carry level P00001');
+    const sourceHintPath = path.join(ROOT, 'data', 'hints', 'P00001.json');
+    const sourceHintBytes = readFileSync(sourceHintPath, 'utf8');
 
     const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-real-row-'));
+    const workspaceRoot = path.join(realTemp, 'workspace');
+    const fixtureCorpusPath = path.join(workspaceRoot, 'data', 'levels.json');
+    const fixtureHintDir = path.join(workspaceRoot, 'data', 'hints');
+    const stagingDir = path.join(realTemp, 'staging');
     const realReceiptPath = path.join(realTemp, 'receipt.json');
-    // Snapshot by content, not git: this test mutates the real tracked hint file below, and must
-    // restore it byte-for-byte afterward regardless of whether the working tree had other
-    // uncommitted changes to it already -- `git checkout` would silently discard those instead.
-    const p00001HintPath = path.join(ROOT, 'data', 'hints', 'P00001.json');
-    const originalP00001Hints = readFileSync(p00001HintPath, 'utf8');
+    mkdirSync(fixtureHintDir, { recursive: true });
+    mkdirSync(stagingDir, { recursive: true });
+    writeFileSync(fixtureCorpusPath, `${JSON.stringify([rawLevel], null, 2)}\n`);
+    writeFileSync(path.join(fixtureHintDir, 'P00001.json'), sourceHintBytes);
+
     try {
-        const reportPath = path.join(realTemp, 'diagnostics-report.json');
+        const document = readLevelCorpusDocumentWithHints(fixtureCorpusPath);
+        const level = document.levels[0];
+        const knownHint = level.hintRecords.find(h => h.provenance?.some(p => typeof p?.context?.levelRevision === 'string' && p.context.levelRevision.length > 0));
+        assert.ok(knownHint, 'fixture requires an already-known hint for P00001 with a recorded levelRevision');
+        const levelRevision = knownHint.provenance.find(p => typeof p?.context?.levelRevision === 'string')?.context.levelRevision;
+        const knownPath = knownHint.path;
+        assert.ok(Array.isArray(knownPath) && knownPath.length > 0, 'fixture requires an already-known winning path for P00001');
+
+        const reportPath = path.join(stagingDir, 'diagnostics-report.json');
         writeFileSync(reportPath, JSON.stringify({
             schemaVersion: 1,
             kind: 'pathfinder-solver-diagnostics-report',
@@ -105,17 +111,18 @@ try {
             'scripts/run-bundled.mjs',
             'scripts/harvest-solver-diagnostics-reports.mjs',
             '--',
-            `--staging-dir=${realTemp}`,
+            `--staging-dir=${stagingDir}`,
             '--source-run-id=fixture-real-row-run',
             '--source-run-attempt=1',
             '--source-workflow=Solver diagnostics and hint capture',
             `--ingestion-receipt-out=${realReceiptPath}`,
+            `--workspace-root=${workspaceRoot}`,
         ], { cwd: ROOT, encoding: 'utf8' });
         assert.equal(realRun.status, 0, realRun.stderr || realRun.stdout);
         assert.match(realRun.stdout, /1 report\(s\), 1 candidate\(s\), 1 eligible, 1 referee-accepted/, realRun.stdout);
 
-        const afterDocument = readLevelCorpusDocumentWithHints(corpusPath);
-        const afterLevel = afterDocument.levels.find(l => l.id === 'P00001');
+        const afterDocument = readLevelCorpusDocumentWithHints(fixtureCorpusPath);
+        const afterLevel = afterDocument.levels[0];
         const afterHint = afterLevel.hintRecords.find(h => h.path.join(',') === knownPath.join(','));
         const newEntry = afterHint.provenance.find(p => p.search?.cumulativeElapsedMs === 777);
         assert.ok(newEntry, `expected a reconstructed provenance entry with cumulativeElapsedMs=777 from the report's timeMs field; got entries: ${JSON.stringify(afterHint.provenance.map(p => p.search?.cumulativeElapsedMs))}`);
@@ -127,10 +134,6 @@ try {
         assert.equal(newEntry.execution?.reproducibilityMode, 'deterministic-work');
         assert.equal(newEntry.occurrences?.[0]?.runId, 'fixture-real-row-run');
     } finally {
-        // Restore the real, tracked corpus file this test deliberately mutated for the assertion
-        // above, to its exact original content -- not via git, so any pre-existing uncommitted
-        // change to this file survives this test untouched.
-        writeFileSync(p00001HintPath, originalP00001Hints);
         rmSync(realTemp, { recursive: true, force: true });
     }
 }
