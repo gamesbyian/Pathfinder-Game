@@ -579,3 +579,23 @@ These numbers do **not** mean the zero-hit checks are useless. The sample is con
 7. Preserve full validation on periodic main/nightly cadence as the oracle and for direct-to-main changes until main-push scoping has equivalent evidence.
 
 The audit now supports changing **when** large validation populations run. It does not yet support deleting large classes of validation.
+
+
+## Representative semantic fault injection follow-up
+
+PR #2030 converted the remaining activation prerequisite into a reusable isolated-worktree audit across four semantic fault families.
+
+Initial hosted run `35952055604` produced:
+
+| fault family | routed protection | existing detector result |
+| --- | --- | --- |
+| game editor-runtime port miswire | `game` + build/unit coverage | caught |
+| persistence runtime auth-token drop | `game,persistence` + Firestore/unit coverage | caught |
+| solver gate interleaving forcibly disabled | `research,solver` + solver canary/deep proofs/unit coverage/build | **missed by the targeted existing solver tests** |
+| router authority drops `deep-proofs` | conservative full impact | caught |
+
+The solver miss was substantive rather than a routing error. The router selected the intended solver protections, while the targeted orchestration/routing/default-equivalence tests all remained green with production gate interleaving hard-disabled. Ordinary CI's solver canary and deep-verification lane also remained green on the audit PR, demonstrating that this particular scheduling invariant was not directly pinned by the existing proof population.
+
+The follow-up adds a focused production-path regression test to `modules/solver/orchestration-core.test.ts`. It constructs a two-gate level, bounds execution to two dispatched nodes, and asserts that production scheduling visits both active gates under the same config before advancing configs. This directly distinguishes the intended interleaved coordinator from the gate-serial fallback without relying on a corpus solve outcome.
+
+Activation implication: impact routing itself passed this injected solver case; the uncovered risk was detector completeness. Scoped solver validation should not be promoted until the refreshed fault-injection run proves the new scheduling invariant catches the injected defect.
