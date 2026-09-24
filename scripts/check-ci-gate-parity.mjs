@@ -45,7 +45,7 @@ const fullClosure = closure('ci');
 requireMembers('ci', fullClosure, ['check', 'check:lint', 'test:coverage', 'test:node']);
 
 const workflowRuns = [...workflow.matchAll(/^\s*run:\s*npm run ([A-Za-z0-9:_-]+)\s*$/gm)].map(match => match[1]);
-const expectedWorkflowRuns = [
+const expectedWorkflowInvocations = [
   'check:dead-scripts',
   'check:text-source-files',
   'check:validators',
@@ -55,12 +55,17 @@ const expectedWorkflowRuns = [
   'test:coverage',
   'test:deep-proofs',
 ];
-for (const expected of expectedWorkflowRuns) {
-  if (!workflowRuns.includes(expected)) errors.push(`ci.yml no longer runs npm run ${expected}`);
+for (const expected of expectedWorkflowInvocations) {
+  const escaped = expected.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+  if (!new RegExp(`npm run ${escaped}(?=\\s|["']|$)`, 'mu').test(workflow)) {
+    errors.push(`ci.yml no longer invokes npm run ${expected}`);
+  }
 }
+// Direct single-command steps remain a separate classification surface. A required invocation may
+// also live inside an intentionally concurrent multiline shell step (currently deep services).
 for (const actual of workflowRuns) {
-  if (!expectedWorkflowRuns.includes(actual)) {
-    errors.push(`ci.yml added npm run ${actual}; classify it in the local/GHA parity contract`);
+  if (!expectedWorkflowInvocations.includes(actual)) {
+    errors.push(`ci.yml added direct npm run ${actual}; classify it in the local/GHA parity contract`);
   }
 }
 
