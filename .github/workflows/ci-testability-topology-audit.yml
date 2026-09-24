@@ -19,6 +19,79 @@ permissions:
   contents: read
 
 jobs:
+  coverage-worker-count:
+    name: coverage-workers-${{ matrix.workers }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workers: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Require warm runtime data
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+          fail-on-cache-miss: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Derive dependency-tree key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Require warm dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+      - name: Run full covered population with fixed worker count
+        env:
+          SOLVER_DEADLOCK_PROOF_SKIP: '1'
+          SOLVER_R02560_PROOF_SKIP: '1'
+          WORKERS: ${{ matrix.workers }}
+        run: >-
+          npx vitest run --coverage
+          --reporter=default
+          --maxWorkers=${WORKERS}
+
   audit:
     runs-on: ubuntu-latest
     steps:
