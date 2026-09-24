@@ -135,10 +135,39 @@ jobs:
             --baseline=logs/solver-canary-baseline.json \
             --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
             --budget-ms=15000 --work-budget=250000
+      - name: Derive runtime-hint projection cache key
+        id: runtime-hint-projection-key
+        if: needs.impact-shadow.outputs.needs_build == 'true'
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git hash-object scripts/runtime-hint-projection-lib.mjs
+            git hash-object modules/domain/hint-runtime.mjs
+            git hash-object modules/canonical-json.mjs
+            git hash-object vite.config.ts
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore exact runtime-hint projection
+        id: runtime-hint-projection-cache
+        if: needs.impact-shadow.outputs.needs_build == 'true'
+        uses: actions/cache/restore@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
       - name: Build production bundle
         id: build
         if: needs.impact-shadow.outputs.needs_build == 'true'
+        env:
+          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
         run: npm run build
+      - name: Save exact runtime-hint projection after successful cold build
+        if: needs.impact-shadow.outputs.needs_build == 'true' && steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
 
   deep-verification:
     needs: impact-shadow

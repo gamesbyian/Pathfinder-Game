@@ -137,19 +137,20 @@ The original nine-level population has now been probed at **250,000 work** and a
 | --- | --- | --- |
 | CI health: diagnostics audit ownership | **merged / guarded** | #2051 routes compact failure-response scratch to `tmp/`, narrows staging to canonical latest/timestamp history, removes the forbidden tracked transient, and makes `check:audit-artifacts` guard the ownership contract. |
 | A1 deep runtime-data checkout | **merged / measured green on hit** | #2045: source checkout **2 s** + exact runtime-data restore **2 s**; all deep obligations green; deep job **56 s**. |
-| A1b fast runtime-data cache-miss recovery | **investigation in progress (#2058)** | Hint-tree invalidation exposed a **52–56 s** fast-gate miss path. In-place sparse expansion and second checkout in the same worktree are rejected; #2058 is probing an isolated runtime-data checkout/copy and will remove forced-miss instrumentation before merge. |
+| A1b fast runtime-data cache-miss recovery | **merged / measured green** | Differential recovery restores the exact cached `HEAD^1` generation, overlays only changed runtime-data blobs, and saves the current generation. Decisive rehearsal: **2 s base restore + 1 s one-file overlay + 2 s save**. |
 | B1 lifecycle deterministic dispatch | **merged / measured green** | #2044: `orchestration-work-budget.test.ts` **~8.2 s → 195 ms**; covered-suite wall **~29.5 s → 26.48 s**; all test slots preserved. |
 | A3 main-seeded ESLint cache | **merged / measured green** | #2054 main-push seeded the default-branch generation after a 15 s cold lint; unrelated #2059 restored that generation and lint fell to **1 s** (from 16 s cold on #2054). |
 | A4 250k solver canary | **merged / measured green** | #2056: original exact 9-level fixture set retained; repaired-stack PR run solved **9/9 in 1.7 s / 1,303,532 nodes** at 250k with no work-budget mismatch. |
-| A2 exact Node 22.23.2 | **production migration ready / measured green** | #2064 run 35963869514 passed all ordinary PR obligations; setup-node measured **0-3 s** across planner/fast/deep. Final current-main transplant pins PR/main/scoped to exact 22.23.2 and isolates the Node-22 Firebase CLI cache generation. |
-| C exact dependency-tree restore | **production implementation in progress / full-contract hit proven** | #2068 hit run: fast and deep each restored `node_modules` in **2 s**, skipped `npm ci`, and the full fast+deep contract stayed green. Production PR/main/scoped workflows now share the exact OS+arch+Node+npm+lockfile generation; main-push seeds it on misses. |
-| A5 remove planner dependency edge | **promotion ready / positive+negative rehearsals green** | #2070 full-impact run 35965966081 started deep concurrently and preserved coverage/proofs/Firestore; #2073 docs-only rehearsal started deep concurrently, both planners selected `deep_job_required=false`, and deep exited in **7 s** before runtime-data/dependency/test setup. |
+| A2 exact Node 22.23.2 | **merged / measured green** | Production PR/main/scoped workflows are pinned to exact 22.23.2 with a separate Node-22 Firebase CLI cache generation; full-contract rehearsals were green with setup-node ~0–3 s. |
+| C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
+| A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
+| B5 runtime-hint projection cache | **production rollout in progress** | Rehearsal #2081 hit run 36063620245 restored exact projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold build dominated by deterministic projection. Production branch seeds/restores PR/main/scoped and post-diagnostics generations. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
 The diagnostics workflow can change `data/hints` and push a `[skip ci]` commit. That changes the exact runtime-data Git-object key **without running main-push CI**, so the next PR can encounter a cold runtime-data generation even though the change originated on the default branch.
 
-Implementation in progress:
+Merged in #2061:
 
 1. after diagnostics commits/pushes its hint/audit refresh, derive the runtime-data key from the final local `HEAD` (after any retry/rebase);
 2. check whether that exact key is already cached;
@@ -191,6 +192,76 @@ Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forc
 - fast gate remained green.
 
 A1c (#2061) seeds diagnostics-generated `[skip ci]` main generations. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
+
+### B1b. Right-size repair-search determinism test budgets
+
+Post-B1 coverage profiling identified `repair-search.test.ts` as the remaining dominant covered file at **~9.0 s**.
+
+Measurement-only rehearsal on the exact 37-test file:
+
+| determinism budget | default-equivalence budget | file tests | Vitest duration |
+| ---: | ---: | ---: | ---: |
+| 250k | 125k | 37/37 green | **1.43 s tests / 1.97 s total** |
+| 100k | 50k | 37/37 green | 1.54 s / 2.03 s |
+| 50k | 25k | 37/37 green | 1.49 s / 2.07 s |
+
+Lower budgets do not buy additional wall time, so production uses **250k / 125k** for more work-envelope headroom. Paired determinism/default-equivalence tests are also strengthened to require identical node counts and nonzero repair work, preventing trivial null/null success from weakening the invariant.
+
+Expected file saving: roughly **7.5 s** versus the current covered-suite profile. Full-suite wall saving must be measured separately because Vitest overlaps files.
+
+### B1c. Remove hint-occurrence unit-test import side effect
+
+Post-hint-consolidation Node/CLI profiling exposed a new dominant contract:
+
+- `test:hint-occurrence-acceptance`: **15.8 s**;
+- next-largest current Node contracts are materially smaller.
+
+Root cause is structural, not intrinsic audit cost. The synthetic node test imports `auditHintOccurrenceSemantics` from the CLI module, and that module executes `buildHintOccurrenceAcceptanceReport()` at top level. Importing one pure function therefore scans all three persisted hint corpora before the synthetic assertions run.
+
+Production/testability fix:
+
+1. extract `auditHintOccurrenceSemantics` and its private occurrence-key helper into a side-effect-free library;
+2. keep the CLI importing/re-exporting that function so external API compatibility is preserved;
+3. make the synthetic Node contract import the pure library directly;
+4. leave the corpus-scale CLI behavior unchanged when the CLI itself is invoked.
+
+Expected contract-level saving is roughly the full **15.8 s** observed import cost. Because Node contracts execute in a four-worker pool, the actual Node-population wall reduction must be measured separately.
+
+The corpus-scale acceptance proof remains independently maintained by `.github/workflows/hint-consolidation-closeout.yml`, which directly invokes `hint-occurrence-acceptance-audit.mjs`. The optimization therefore separates unit import cost from corpus authority rather than removing the full audit.
+
+### B5. Cache deterministic runtime-hint build projection
+
+Fast-gate profiling separated the production build into two costs:
+
+- Vite bundle compilation: **~0.7 s**;
+- runtime-hint projection in `closeBundle()`: **~24 s**, converting roughly **572 MB canonical source hints → 150 MB path-only runtime hints**.
+
+The projection is deterministic derived data. Rehearsal #2081 bound an exact cache to:
+
+- Git tree IDs for `data/hints`, `data/stress/hints`, and `data/stress/hints-random`;
+- `scripts/runtime-hint-projection-lib.mjs`;
+- `modules/domain/hint-runtime.mjs`;
+- `modules/canonical-json.mjs`;
+- `vite.config.ts`.
+
+Same-key hosted run **36063620245** measured:
+
+- exact projection restore: **1 s**;
+- production build step: **2 s** total;
+- Vite compile: **690 ms**;
+- cache save skipped on hit.
+
+This clears the ≤6 s acceptance target with substantial margin.
+
+Production rollout:
+
+1. local/default builds remain unchanged unless `PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT` is explicitly set;
+2. PR fast-gate restores the exact generation, builds from it or generates it on miss, then saves only after successful cold build;
+3. main-push does the same and therefore seeds default-branch generations reusable by later PRs;
+4. scoped rehearsal mirrors the same exact authority;
+5. solver diagnostics derives the key from final local `HEAD` after any push/rebase and seeds a new generation when a `[skip ci]` hint refresh changes canonical hint trees.
+
+No restore prefix is allowed. A stale projection must never be reused across source/code generations.
 
 ## Implementation sequence
 
