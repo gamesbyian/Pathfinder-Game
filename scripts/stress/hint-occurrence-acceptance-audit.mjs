@@ -6,30 +6,41 @@
  * Usage:
  *   node scripts/stress/hint-occurrence-acceptance-audit.mjs [--json=<path>] [--no-fail]
  */
-import { writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
+import { decodeHintArtifact } from '../../modules/domain/hint-runtime.mjs';
+import { assertCompleteHintStoreDirs, discoverHintStoreDirs, hintStoreLabel } from '../hint-store-roots.mjs';
 import { auditHintOccurrenceSemantics } from './hint-occurrence-acceptance-lib.mjs';
 export { auditHintOccurrenceSemantics } from './hint-occurrence-acceptance-lib.mjs';
 
-const CORPORA = [
-    { name: 'published', levels: 'data/levels.json' },
-    { name: 'corpus1', levels: 'data/stress/stress-levels.json' },
-    { name: 'corpus2', levels: 'data/stress/stress-levels-random.json' },
-    { name: 'envelope', levels: 'data/stress/stress-levels-envelope.json' },
-];
 const EXPECTED_SYNTHETIC_FOUND_AT_EVENTS = 662;
 
 const value = name => process.argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 const noFail = process.argv.includes('--no-fail');
 
+function levelsFromHintStore(relativeDir) {
+    const absDir = path.join(process.cwd(), relativeDir);
+    return readdirSync(absDir)
+        .filter(name => name.endsWith('.json') && !name.startsWith('_'))
+        .sort()
+        .map(name => ({
+            id: path.basename(name, '.json'),
+            hintRecords: decodeHintArtifact(JSON.parse(readFileSync(path.join(absDir, name), 'utf8'))),
+        }));
+}
+
 export function buildHintOccurrenceAcceptanceReport() {
-    const corpora = CORPORA.map(({ name, levels }) => {
-        const document = readLevelCorpusDocumentWithHints(levels);
-        return { corpus: name, levelsPath: levels, ...auditHintOccurrenceSemantics(document.levels) };
-    });
+    const dirs = assertCompleteHintStoreDirs(
+        discoverHintStoreDirs(process.cwd()),
+        'Hint occurrence acceptance audit',
+    );
+    const corpora = dirs.map(relativeDir => ({
+        corpus: hintStoreLabel(relativeDir),
+        hintStoreDir: relativeDir,
+        ...auditHintOccurrenceSemantics(levelsFromHintStore(relativeDir)),
+    }));
     const totals = {
         levels: 0,
         hints: 0,
