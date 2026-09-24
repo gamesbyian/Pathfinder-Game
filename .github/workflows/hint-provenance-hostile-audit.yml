@@ -40,6 +40,7 @@ jobs:
 
       - name: Full hint validity / occurrence / formatting floor
         run: |
+          npm run check:hint-store-census
           npm run test:hint-path-validation
           npm run check:all-hint-store-referee
           npm run hints:occurrence-acceptance-audit
