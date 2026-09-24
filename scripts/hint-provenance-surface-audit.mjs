@@ -139,8 +139,40 @@ else console.log(JSON.stringify({
   directPhysicalReadSuspects: result.directPhysicalReadSuspects,
   physicalDecodeBypasses: result.physicalDecodeBypasses,
 }, null, 2));
-if (ENFORCE && result.physicalDecodeBypasses.length > 0) {
-  console.error('Maintained raw Hint artifact readers bypass the shared decoder:');
-  for (const file of result.physicalDecodeBypasses) console.error('  - ' + file);
-  process.exit(1);
+if (ENFORCE) {
+  const failures = [];
+  if (result.physicalDecodeBypasses.length > 0) {
+    failures.push(...result.physicalDecodeBypasses.map(file =>
+      file + ': raw Hint artifact reader bypasses the shared decoder'));
+  }
+
+  const ledgerPath = path.join(ROOT, 'docs', 'hint-physical-reader-audit.json');
+  if (!fs.existsSync(ledgerPath)) {
+    failures.push('docs/hint-physical-reader-audit.json: reviewed physical-reader ledger is missing');
+  } else {
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+    const reviewed = new Map((ledger.entries ?? []).map(entry => [entry.path, entry]));
+    for (const file of result.directPhysicalReadSuspects) {
+      const entry = reviewed.get(file);
+      if (!entry) {
+        failures.push(file + ': new direct physical-read suspect has not been explicitly reviewed');
+        continue;
+      }
+      const source = sourceTexts.get(file) ?? '';
+      if (entry.disposition === 'shared-decoder'
+          && !/\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(source)) {
+        failures.push(file + ': ledger says shared-decoder but the decoder boundary is no longer present');
+      }
+      if (entry.disposition === 'physical-io-owner'
+          && !/\bdecodeHintArtifact\b/u.test(source)) {
+        failures.push(file + ': physical I/O owner no longer delegates reads to decodeHintArtifact');
+      }
+    }
+  }
+
+  if (failures.length > 0) {
+    console.error('Hint/provenance physical-reader audit failures:');
+    for (const failure of failures) console.error('  - ' + failure);
+    process.exit(1);
+  }
 }
