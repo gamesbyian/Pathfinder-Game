@@ -8,7 +8,7 @@
  * specialist reconstruction must not introduce a new path or semantic provenance event.
  *
  * Usage:
- *   node scripts/hint-ingestion-shadow-parity.mjs --receipt=<file> --family=<cpsat|diagnostics> --phase=<shadow|reharvest>
+ *   node scripts/hint-ingestion-shadow-parity.mjs --receipt=<file> --family=<cpsat|diagnostics|portfolio> --phase=<shadow|reharvest>
  */
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
@@ -24,12 +24,14 @@ const phase = args.get('--phase') ?? 'shadow';
 const allowEmpty = args.has('--allow-empty');
 
 if (!receiptPath) throw new Error('--receipt is required');
-if (!['cpsat', 'diagnostics'].includes(family)) throw new Error('--family must be cpsat or diagnostics');
+if (!['cpsat', 'diagnostics', 'portfolio'].includes(family)) throw new Error('--family must be cpsat, diagnostics or portfolio');
 if (!['shadow', 'reharvest'].includes(phase)) throw new Error('--phase must be shadow or reharvest');
 
 const expectedProducer = family === 'cpsat'
     ? 'harvest-cpsat-discovery-reports'
-    : 'harvest-solver-diagnostics-reports';
+    : family === 'diagnostics'
+        ? 'harvest-solver-diagnostics-reports'
+        : 'harvest-portfolio-solve-sweep-reports';
 
 const receipt = validateHintIngestionReceipt(JSON.parse(readFileSync(receiptPath, 'utf8')));
 const failures = [];
@@ -53,8 +55,8 @@ if (receipt.additions.provenanceEvents !== 0) {
 if (phase === 'reharvest' && receipt.additions.occurrences !== 0) {
     failures.push(`reharvest added ${receipt.additions.occurrences} occurrence(s); source-run replay is not idempotent`);
 }
-if (phase === 'shadow' && family === 'diagnostics' && receipt.additions.occurrences !== 0) {
-    failures.push(`diagnostics shadow added ${receipt.additions.occurrences} occurrence(s); direct diagnostics output should already carry the same source run occurrence`);
+if (phase === 'shadow' && (family === 'diagnostics' || family === 'portfolio') && receipt.additions.occurrences !== 0) {
+    failures.push(`${family} shadow added ${receipt.additions.occurrences} occurrence(s); direct output should already carry the same source run occurrence`);
 }
 
 const result = {
