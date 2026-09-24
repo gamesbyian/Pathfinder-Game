@@ -11,13 +11,9 @@
 # matrix entry onto the freed runner, so slow shards' slack gets naturally backfilled by the queue
 # instead of sitting idle while the last slow shard finishes alone.
 #
-# Commit mechanics mirror collect-prune-gap-labels.yml: the combine job commits new/changed
-# data/stress/hints-random/*.json straight back to the dispatched branch from GitHub's own runner
-# network, not via an artifact download into a sandboxed dispatching session (see that workflow's
-# header for the proxy-block history this avoids). writeLevelsWithHints (scripts/level-data-io.mjs)
-# is explicitly designed for this: concurrent processes over DISJOINT level sets are safe regardless
-# of write-order, because a level untouched by a given process's run is skipped entirely rather than
-# rewritten from that process's stale corpus snapshot.
+# Successful discoveries are transported only through self-describing discovery reports under
+# logs/cpsat-hint-harvest-sweep/. The central Harvest solver hint evidence workflow is the sole
+# authority that turns those observations into canonical Hint-store mutations.
 name: cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)
 run-name: "CP-SAT harvest · corpus=${{ inputs.corpus }} · shards=${{ inputs.shard_count }} · limit=${{ inputs.time_limit }}"
 
@@ -122,17 +118,12 @@ jobs:
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Stage this shard's new/changed hint files for upload
+      - name: Stage this shard's discovery reports for upload
         if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
         shell: bash
         run: |
           stage="artifact-staging/cpsat-hint-harvest-shard-${{ steps.range.outputs.nn }}"
-          mkdir -p "${stage}/data/stress/hints-random" "${stage}/data/hints" "${stage}/logs"
-          while IFS= read -r f; do
-            [ -z "$f" ] && continue
-            mkdir -p "$(dirname "${stage}/${f}")"
-            cp "${f}" "${stage}/${f}"
-          done < <(git status --porcelain -- data/stress/hints-random/ data/stress/stress-levels-random.json data/hints/ | awk '{print $2}')
+          mkdir -p "${stage}/logs"
           cp -r logs/cpsat-hint-harvest-sweep "${stage}/logs/" 2>/dev/null || true
 
       - name: Upload this shard's results
@@ -191,24 +182,3 @@ jobs:
           path: logs/solver-sweep-result/
           if-no-files-found: error
           retention-days: 90
-
-      - name: Merge new/updated hint files into the working tree and commit
-        shell: bash
-        run: |
-          mkdir -p data/stress/hints-random data/hints
-          find artifact-staging -path '*/data/stress/hints-random/*.json' -exec cp {} data/stress/hints-random/ \;
-          find artifact-staging -path '*/data/hints/*.json' -exec cp {} data/hints/ \;
-          # Virtually never fires (writeLevelsWithHints only rewrites the main corpus file if the
-          # STRIPPED level array changed, and hint harvesting never touches level data) but handled
-          # defensively rather than assumed away.
-          found_main=$(find artifact-staging -path '*/data/stress/stress-levels-random.json' | head -1)
-          if [ -n "$found_main" ]; then cp "$found_main" data/stress/stress-levels-random.json; fi
-          if git status --porcelain -- data/stress/hints-random/ data/stress/stress-levels-random.json data/hints/ | grep -q .; then
-            git config user.name 'github-actions[bot]'
-            git config user.email 'github-actions[bot]@users.noreply.github.com'
-            git add data/stress/hints-random/ data/stress/stress-levels-random.json data/hints/
-            git commit -m "cpsat-hint-harvest-sweep: broaden CP-SAT hint coverage (run ${{ github.run_id }})"
-            git push origin HEAD:"${{ github.ref_name }}"
-          else
-            echo "No new/changed hint files -- nothing to commit."
-          fi
