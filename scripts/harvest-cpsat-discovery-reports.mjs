@@ -6,8 +6,9 @@
  * Pathfinder capability; it projects referee-valid exact successful observations into canonical
  * Hint provenance while preserving EXTERNAL_SOLVER_ID and physical source-run occurrence lineage.
  *
- * Historical captured-hint artifacts remain readable for compatibility. Current CP-SAT source workflows are artifact-only; because occurrence lineage
- * is excluded from semantic provenance-event identity, re-harvesting the same semantic CP-SAT
+ * Historical captured-hint artifacts remain readable for compatibility. Current CP-SAT source
+ * workflows are artifact-only. Because occurrence lineage is excluded from semantic
+ * provenance-event identity, re-harvesting the same semantic CP-SAT
  * discovery from this report should merge the source-run occurrence rather than manufacture a
  * duplicate discovery event.
  */
