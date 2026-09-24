@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { buildMaintainedReachability } from './hint-io-facade-guard-lib.mjs';
+import { CANONICAL_TRACKED_HINT_STORE_DIRS } from './hint-store-roots.mjs';
 
 const ROOT = path.resolve(process.argv.find(a => a.startsWith('--root='))?.slice(7) || process.cwd());
 const OUT = process.argv.find(a => a.startsWith('--out='))?.slice(6) || null;
@@ -18,11 +19,30 @@ const ENFORCE = process.argv.includes('--enforce');
 const SUMMARY_ONLY = process.argv.includes('--summary-only');
 const { sourceTexts, reachable } = buildMaintainedReachability(ROOT);
 
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^$\{\}()|[\]\\]/gu, '\\const { sourceTexts, reachable } = buildMaintainedReachability(ROOT);
+
+');
+}
+
+const CANONICAL_STORE_SOURCE = CANONICAL_TRACKED_HINT_STORE_DIRS.map(escapeRegExp).join('|');
+const CANONICAL_STORE_PATH_RE = new RegExp('(?:' + CANONICAL_STORE_SOURCE + ')/', 'u');
+const HINT_PATH_HELPER_RE = /\b(?:hintFilePathFor|hintsDirFor)\s*\(/u;
+
+function expressionHasCanonicalHintPath(expression, pathVars = new Set()) {
+  if (CANONICAL_STORE_PATH_RE.test(expression) || HINT_PATH_HELPER_RE.test(expression)) return true;
+  for (const name of pathVars) {
+    if (new RegExp('\\b' + escapeRegExp(name) + '\\b', 'u').test(expression)) return true;
+  }
+  return false;
+}
 function inspectPhysicalHintReadSurface(text) {
   const readsJsonFile = /\b(?:readFileSync|readFile)\s*\(/u.test(text)
     && /\bJSON\.parse\s*\(/u.test(text);
   const consumesHintRows = /\.hints\b/u.test(text);
-  const hasHintSourceSignal = /(?:\bhint(?:File(?:Path)?|Doc|Path|Artifact(?:Path)?|Contents?|Metadata|Dir)\b|data\/(?:stress\/)?hints(?:-random|-envelope)?\/)/iu.test(text);
+  const hasHintSourceSignal = /\bhint(?:File(?:Path)?|Doc|Path|Artifact(?:Path)?|Contents?|Metadata|Dir)\b/iu.test(text)
+    || CANONICAL_STORE_PATH_RE.test(text)
+    || HINT_PATH_HELPER_RE.test(text);
   const usesSharedDecoder = /\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(text);
   const suspect = readsJsonFile && consumesHintRows && hasHintSourceSignal;
   return { suspect, bypass: suspect && !usesSharedDecoder };
@@ -30,15 +50,22 @@ function inspectPhysicalHintReadSurface(text) {
 
 function inspectPhysicalHintWriteSurface(text) {
   const writeCallRe = /\b(?:writeFileSync|writeFile|appendFileSync|appendFile|copyFileSync|renameSync)\s*\(\s*([^,\n]+)/gu;
-  const directCanonicalTarget = /(?:data\/(?:stress\/)?hints(?:-random|-envelope)?\/|\bhintFilePathFor\s*\()/u;
   const canonicalPathVars = new Set();
-  for (const match of text.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;\n]+)/gu)) {
-    if (directCanonicalTarget.test(match[2])) canonicalPathVars.add(match[1]);
+  const assignments = [...text.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;\n]+)/gu)];
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const match of assignments) {
+      if (!canonicalPathVars.has(match[1]) && expressionHasCanonicalHintPath(match[2], canonicalPathVars)) {
+        canonicalPathVars.add(match[1]);
+        changed = true;
+      }
+    }
   }
   let writesDirectCanonicalTarget = false;
   for (const match of text.matchAll(writeCallRe)) {
     const target = match[1].trim();
-    if (directCanonicalTarget.test(target) || canonicalPathVars.has(target)) {
+    if (expressionHasCanonicalHintPath(target, canonicalPathVars) || canonicalPathVars.has(target)) {
       writesDirectCanonicalTarget = true;
       break;
     }
@@ -62,6 +89,12 @@ if (process.argv.includes('--self-test')) {
     {
       name: 'staged raw physical reader',
       text: `const raw = fs.readFileSync(hintFilePath, 'utf8');\nconst parsed = JSON.parse(raw);\nfor (const hint of parsed.hints) use(hint);`,
+      suspect: true,
+      bypass: true,
+    },
+    {
+      name: 'raw family-store physical reader',
+      text: `const parsed = JSON.parse(fs.readFileSync('data/families/phaseB/hints/F00001.json', 'utf8'));\nfor (const hint of parsed.hints) use(hint);`,
       suspect: true,
       bypass: true,
     },
@@ -98,6 +131,16 @@ if (process.argv.includes('--self-test')) {
     {
       name: 'staged canonical path raw writer',
       text: `const target = path.join(root, 'data/hints/P00001.json');\nwriteFileSync(target, JSON.stringify(doc));`,
+      suspect: true,
+    },
+    {
+      name: 'family-store raw writer',
+      text: `writeFileSync('data/families/hints/F00001.json', JSON.stringify(doc));`,
+      suspect: true,
+    },
+    {
+      name: 'helper-derived staged raw writer',
+      text: `const hintDir = hintsDirFor(corpusPath);\nconst target = path.join(hintDir, id + '.json');\nwriteFileSync(target, JSON.stringify(doc));`,
       suspect: true,
     },
     {
@@ -157,8 +200,9 @@ const categories = {
     /\bsolverRefs\b/u, /\bcontextRefs\b/u, /\bexecutionRefs\b/u,
   ],
   physicalPathKnowledge: [
-    /data\/hints\//u, /data\/stress\/hints(?:-random|-envelope)?\//u,
+    CANONICAL_STORE_PATH_RE,
     /['"]hints(?:-random|-envelope)?['"]/u,
+    /\b(?:hintFilePathFor|hintsDirFor)\b/u,
   ],
   workflowPersistence: [
     /--save-hints\b/u, /git add[^\n]*hints/u, /harvest-solver-evidence/u,
