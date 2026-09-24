@@ -210,6 +210,49 @@ for (const surface of ['repo', 'game', 'persistence', 'solver', 'research', 'dat
   };
 }
 
+
+const dependencyMetadataQueue = traced
+  .filter(row => !row.graph.staticImportSufficientCandidate)
+  .map(row => ({
+    family: row.family,
+    ownerGroup: row.ownerGroup,
+    surfaces: row.surfaces,
+    name: row.name,
+    entrypoint: row.entrypoint,
+    closureSize: row.graph.files.length,
+    reasons: [
+      ...(row.graph.unresolved.length ? ['unresolved-local-import'] : []),
+      ...(row.graph.unknownDynamicCount ? ['nonliteral-dynamic-import'] : []),
+      ...(row.graph.traits.filesystem ? ['filesystem'] : []),
+      ...(row.graph.traits.childProcess ? ['child-process'] : []),
+      ...(row.graph.traits.environment ? ['environment'] : []),
+      ...(row.graph.traits.network ? ['network'] : []),
+    ],
+  }))
+  .sort((a, b) =>
+    a.reasons.length - b.reasons.length
+    || a.closureSize - b.closureSize
+    || a.name.localeCompare(b.name));
+
+const staticImportCandidateQueue = sufficient
+  .map(row => ({
+    family: row.family,
+    ownerGroup: row.ownerGroup,
+    surfaces: row.surfaces,
+    name: row.name,
+    entrypoint: row.entrypoint,
+    closureSize: row.graph.files.length,
+    files: row.graph.files,
+  }))
+  .sort((a, b) => a.closureSize - b.closureSize || a.name.localeCompare(b.name));
+
+const dependencyMetadataReasonCounts = {};
+for (const row of dependencyMetadataQueue) {
+  for (const reason of row.reasons) {
+    dependencyMetadataReasonCounts[reason] = (dependencyMetadataReasonCounts[reason] ?? 0) + 1;
+  }
+}
+
 const output = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
@@ -228,6 +271,9 @@ const output = {
     sourceFilesWithRegisteredConsumers: consumerRows.length,
   },
   bySurface,
+  dependencyMetadataReasonCounts,
+  staticImportCandidateQueue,
+  dependencyMetadataQueue,
   topSharedDependencies: consumerRows.slice(0, 100),
   contracts,
 };
@@ -238,5 +284,8 @@ fs.writeFileSync(outPath, `${JSON.stringify(output, null, 2)}\n`);
 console.log(JSON.stringify({
   summary: output.summary,
   bySurface: output.bySurface,
+  dependencyMetadataReasonCounts: output.dependencyMetadataReasonCounts,
+  staticImportCandidateQueue: output.staticImportCandidateQueue.slice(0, 25),
+  dependencyMetadataQueue: output.dependencyMetadataQueue.slice(0, 25),
   topSharedDependencies: output.topSharedDependencies.slice(0, 20),
 }, null, 2));
