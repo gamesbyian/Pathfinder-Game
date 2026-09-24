@@ -145,6 +145,8 @@ These are independent, low-risk changes and should be activated separately so th
 - materialize from Git only on an exact miss;
 - keep cache miss fully correct.
 
+**Implementation note:** production PR CI is correct and measured green on the cache-hit path. The first scoped-dry-run mirror accidentally inserted this bootstrap into scoped `fast-gate` instead of scoped `deep-verification`; the follow-up parity fix moves it to the intended lane and restores scoped fast-gate to its prior checkout shape. This was rehearsal drift, not a production deep-lane regression.
+
 **Measured opportunity:** ~15 s checkout → ~4–6 s source+runtime restore.  
 **Target saving:** 9–11 s deep-lane startup.
 
