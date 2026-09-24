@@ -406,6 +406,148 @@ export function upgradeLegacyHints(raw) {
     return out;
 }
 
+
+export const HINT_ARTIFACT_SCHEMA_VERSION = 4;
+
+/** @param {unknown} value */
+function jsonUtf8Bytes(value) {
+    const json = JSON.stringify(value);
+    return typeof TextEncoder === 'function' ? new TextEncoder().encode(json).length : json.length;
+}
+
+/** @param {Hint[]} records */
+function encodeSparseInlineV4(records) {
+    return {
+        schemaVersion: HINT_ARTIFACT_SCHEMA_VERSION,
+        representation: 'sparse-inline',
+        hints: records.map(hint => ({
+            path: hint.path,
+            ...(Array.isArray(hint.provenance) && hint.provenance.length > 0
+                ? { provenance: hint.provenance }
+                : {}),
+        })),
+    };
+}
+
+/** @param {Hint[]} records */
+function encodeInternedV4(records) {
+    /** @type {{solver: any[], context: any[], execution: any[]}} */
+    const tables = { solver: [], context: [], execution: [] };
+    const indexes = {
+        solver: new Map(),
+        context: new Map(),
+        execution: new Map(),
+    };
+    /** @param {'solver' | 'context' | 'execution'} kind @param {any} value */
+    const intern = (kind, value) => {
+        const key = stableStringify(value);
+        const known = indexes[kind].get(key);
+        if (known !== undefined) return known;
+        const index = tables[kind].length;
+        tables[kind].push(value);
+        indexes[kind].set(key, index);
+        return index;
+    };
+
+    const hints = records.map(hint => ({
+        path: hint.path,
+        ...(Array.isArray(hint.provenance) && hint.provenance.length > 0 ? {
+            provenance: hint.provenance.map(entry => {
+                const {
+                    solver, search, context, execution, occurrences, foundAt,
+                    ...extra
+                } = entry;
+                return {
+                    solverRef: intern('solver', solver),
+                    contextRef: intern('context', context),
+                    ...(execution !== undefined ? { executionRef: intern('execution', execution) } : {}),
+                    search,
+                    ...(occurrences !== undefined ? { occurrences } : {}),
+                    foundAt,
+                    ...(Object.keys(extra).length > 0 ? { extra } : {}),
+                };
+            }),
+        } : {}),
+    }));
+
+    return {
+        schemaVersion: HINT_ARTIFACT_SCHEMA_VERSION,
+        representation: 'interned',
+        tables,
+        hints,
+    };
+}
+
+/**
+ * Encode canonical semantic Hint[] as physical schema v4.
+ *
+ * Two lossless forms are supported. sparse-inline is deliberately conservative: it only omits
+ * an empty provenance array, because historical own-property missingness inside provenance remains
+ * epistemically meaningful. interned deduplicates exact solver/context/execution objects while
+ * leaving high-cardinality search/occurrence data inline. The smaller deterministic JSON candidate
+ * wins; ties prefer sparse-inline for easier review.
+ *
+ * @param {Hint[]} records
+ */
+export function encodeHintArtifact(records) {
+    if (!Array.isArray(records)) throw new Error('hint records must be an array');
+    const sparse = encodeSparseInlineV4(records);
+    const interned = encodeInternedV4(records);
+    return jsonUtf8Bytes(interned) < jsonUtf8Bytes(sparse) ? interned : sparse;
+}
+
+/** @param {any} obj */
+function decodeV4HintArtifact(obj) {
+    if (obj.representation === 'sparse-inline') {
+        if (!Array.isArray(obj.hints)) throw new Error('schema v4 sparse-inline artifact must contain hints');
+        return obj.hints.map((/** @type {any} */ hint) => {
+            if (!hint || typeof hint !== 'object' || !Array.isArray(hint.path) || hint.path.length === 0) {
+                throw new Error('schema v4 sparse-inline hint must contain a non-empty path');
+            }
+            return toHint(
+                hint.path,
+                Array.isArray(hint.provenance) ? hint.provenance.map(upgradeProvenanceEntry) : [],
+            );
+        });
+    }
+    if (obj.representation === 'interned') {
+        const tables = obj.tables;
+        if (!tables || !Array.isArray(tables.solver) || !Array.isArray(tables.context)
+            || !Array.isArray(tables.execution) || !Array.isArray(obj.hints)) {
+            throw new Error('schema v4 interned artifact has malformed tables/hints');
+        }
+        /** @param {'solver' | 'context' | 'execution'} kind @param {any} index */
+        const getRef = (kind, index) => {
+            if (!Number.isInteger(index) || index < 0 || index >= tables[kind].length) {
+                throw new Error('schema v4 ' + kind + ' reference out of range');
+            }
+            return tables[kind][index];
+        };
+        return obj.hints.map((/** @type {any} */ hint) => {
+            if (!hint || typeof hint !== 'object' || !Array.isArray(hint.path) || hint.path.length === 0) {
+                throw new Error('schema v4 interned hint must contain a non-empty path');
+            }
+            const provenance = Array.isArray(hint.provenance) ? hint.provenance.map((/** @type {any} */ encoded) => {
+                if (!encoded || typeof encoded !== 'object') throw new Error('schema v4 provenance entry must be an object');
+                const entry = {
+                    ...(encoded.extra && typeof encoded.extra === 'object' && !Array.isArray(encoded.extra)
+                        ? encoded.extra : {}),
+                    solver: getRef('solver', encoded.solverRef),
+                    search: encoded.search,
+                    context: getRef('context', encoded.contextRef),
+                    ...(encoded.executionRef !== undefined
+                        ? { execution: getRef('execution', encoded.executionRef) } : {}),
+                    ...(encoded.occurrences !== undefined ? { occurrences: encoded.occurrences } : {}),
+                    foundAt: encoded.foundAt,
+                };
+                return upgradeProvenanceEntry(entry);
+            }) : [];
+            return toHint(hint.path, provenance);
+        });
+    }
+    throw new Error('unsupported schema v4 representation ' + JSON.stringify(obj.representation));
+}
+
 /**
  * Shared browser/Node decode boundary for a hint artifact's already-JSON.parse()d content, into
  * canonical Hint[]. Handles every historically-committed physical shape:
@@ -433,6 +575,9 @@ export function upgradeLegacyHints(raw) {
  */
 export function decodeHintArtifact(parsed) {
     if (Array.isArray(parsed)) return upgradeLegacyHints(parsed);
+    if (parsed && typeof parsed === 'object' && /** @type {any} */ (parsed).schemaVersion === HINT_ARTIFACT_SCHEMA_VERSION) {
+        return decodeV4HintArtifact(/** @type {any} */ (parsed));
+    }
     if (parsed && typeof parsed === 'object' && Array.isArray(/** @type {any} */ (parsed).hints)) {
         const obj = /** @type {any} */ (parsed);
         if (Array.isArray(obj.hintMetadata)) {

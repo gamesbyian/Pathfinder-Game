@@ -25,6 +25,8 @@ import {
     isMigrationSyntheticFoundAt as isMigrationSyntheticFoundAtRuntime,
     MIGRATION_SYNTHETIC_FOUND_AT_WINDOW,
     decodeHintArtifact as decodeHintArtifactRuntime,
+    encodeHintArtifact as encodeHintArtifactRuntime,
+    HINT_ARTIFACT_SCHEMA_VERSION as RUNTIME_HINT_ARTIFACT_SCHEMA_VERSION,
     provenanceEventIdentity as provenanceEventIdentityRuntime,
 } from './hint-runtime.mjs';
 
@@ -323,11 +325,19 @@ export function isMigrationSyntheticFoundAt(entry: HintProvenanceEntry | null | 
     return isMigrationSyntheticFoundAtRuntime(entry);
 }
 
+/** Current physical Hint artifact schema version. */
+export const HINT_ARTIFACT_SCHEMA_VERSION = RUNTIME_HINT_ARTIFACT_SCHEMA_VERSION;
+
 /** Shared browser/Node decode boundary for a hint artifact's parsed JSON content -> Hint[].
- *  Handles every historically-committed v1-v3 physical shape; see hint-runtime.mjs's own doc for
+ *  Handles every historically-committed v1-v4 physical shape; see hint-runtime.mjs's own doc for
  *  why this must be one shared function rather than separately implemented per environment. */
 export function decodeHintArtifact(parsed: unknown): Hint[] {
     return decodeHintArtifactRuntime(parsed) as Hint[];
+}
+
+/** Encode canonical semantic Hint[] using the current lossless physical artifact schema. */
+export function encodeHintArtifact(records: Hint[]): unknown {
+    return encodeHintArtifactRuntime(records);
 }
 
 /** Reconcile authoritative path membership with provenance keyed by path signature. */

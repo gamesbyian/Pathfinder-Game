@@ -10,7 +10,7 @@
  *      with a per-level, per-hint breakdown (--output) that check:hint-validity doesn't provide
  *
  * Usage:
- *   npm run test:hint-path-validation -- [--levels=pos:92,pos:108,pos:134] [--verbose] [--output=path.json]
+ *   npm run test:hint-path-validation -- [--corpus=data/levels.json] [--levels=pos:92,pos:108,pos:134] [--verbose] [--output=path.json]
  *
  * Exit code: 0 = all checked paths pass, 1 = one or more paths fail.
  */
@@ -29,15 +29,16 @@ const argMap = new Map(
 );
 const verbose = argMap.has('--verbose');
 const outputFile = argMap.get('--output') || null;
+const corpusArg = argMap.get('--corpus') || 'data/levels.json';
 const filterLevels = parseLevelPositions(argMap.get('--levels'));
 
-// --- Load levels from data/levels.json + the split hints artifact (data/hints/) ---
+// --- Load one requested corpus + its split sibling Hint artifacts. ---
 function loadAllLevels() {
   const root = new URL('..', import.meta.url).pathname;
-  const filePath = path.join(root, 'data', 'levels.json');
+  const filePath = path.isAbsolute(corpusArg) ? corpusArg : path.join(root, corpusArg);
   const { levels } = readLevelCorpusDocumentWithHints(filePath);
   if (levels.length === 0) {
-    throw new Error('data/levels.json is empty or not an array');
+    throw new Error(`${corpusArg} is empty or does not contain a levels array`);
   }
   return levels;
 }
@@ -51,7 +52,7 @@ function validateHintPath(level, hintPath) {
 // --- Main ---
 async function main() {
   const levels = loadAllLevels();
-  console.log(`Loaded ${levels.length} levels.`);
+  console.log(`Loaded ${levels.length} levels from ${corpusArg}.`);
 
   const results = [];
   let passed = 0;

@@ -17,9 +17,11 @@
  *   node scripts/stress/hint-historical-enrichment-apply.mjs --apply [--rescue=<path>] [--out=<path>]
  * Without --apply, runs as a dry run: computes and reports what WOULD be applied, mutates nothing.
  */
+import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 import { dedupeProvenanceEntries, setLevelHintRecords } from '../../modules/domain/hint-runtime.mjs';
+import { stableStringify } from '../../modules/canonical-json.mjs';
 import { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import {
     classifyRescuedObservation,
@@ -32,6 +34,10 @@ import {
  * summary. Kept file-I/O-free so it can be unit-tested against in-memory fixtures, matching
  * hint-historical-enrichment-plan.mjs's own buildHistoricalEnrichmentPlan()/CLI split.
  */
+function semanticSha256(value) {
+    return 'sha256:' + createHash('sha256').update(stableStringify(value)).digest('hex');
+}
+
 export function applyHistoricalEnrichment(rescue, corpusDocuments, { apply = false } = {}) {
     const results = [];
     const changedLevelsByCorpus = new Map();
@@ -63,8 +69,11 @@ export function applyHistoricalEnrichment(rescue, corpusDocuments, { apply = fal
                 observedAt: run?.resultContext?.timestamp ?? null,
                 sourceRuns: null,
             };
+            const beforeHintSha256 = semanticSha256(hint);
             const syntheticEntry = { ...structuredClone(matchedEntry), occurrences: [newOccurrence] };
             const merged = dedupeProvenanceEntries([...hint.provenance, syntheticEntry]);
+            const afterHint = { ...hint, provenance: merged };
+            const afterHintSha256 = semanticSha256(afterHint);
 
             if (apply) {
                 hint.provenance = merged;
@@ -76,6 +85,13 @@ export function applyHistoricalEnrichment(rescue, corpusDocuments, { apply = fal
                 runId: String(run.runId), runAttempt: newOccurrence.runAttempt, levelId: row.id, corpus,
                 status: 'exact-occurrence-enrichment-candidate', applied: apply,
                 occurrenceObservedAt: newOccurrence.observedAt,
+                beforeHintSha256,
+                afterHintSha256,
+                joinChecks: {
+                    exactPathHashMatches: classification.pathMatches,
+                    exactSemanticEventMatches: classification.eventMatches,
+                    sourceRunOccurrenceAlreadyPresent: false,
+                },
             });
         }
     }
@@ -84,6 +100,7 @@ export function applyHistoricalEnrichment(rescue, corpusDocuments, { apply = fal
         summary: {
             schemaVersion: 1,
             kind: 'pathfinder-historical-hint-enrichment-application',
+            sourceAuthorityKind: rescue?.kind ?? null,
             mode: apply ? 'applied' : 'dry-run',
             totalObservations: results.length,
             candidatesFound: results.filter(r => r.status === 'exact-occurrence-enrichment-candidate').length,

@@ -1,0 +1,107 @@
+name: Hint consolidation closeout canary
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'modules/**'
+      - 'data/**'
+      - 'docs/hint-evidence-**'
+      - 'reports/**hint-evidence**'
+      - '.github/workflows/harvest-solver-evidence.yml'
+      - '.github/workflows/hint-consolidation-closeout.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  closeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20.19.0'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Prove historical enrichment authority is exhausted
+        run: |
+          node scripts/stress/hint-historical-enrichment-plan.mjs --out=/tmp/historical-plan.json
+          node scripts/stress/hint-historical-enrichment-apply.mjs --out=/tmp/historical-apply-dry-run.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const plan = JSON.parse(fs.readFileSync('/tmp/historical-plan.json', 'utf8'));
+          const apply = JSON.parse(fs.readFileSync('/tmp/historical-apply-dry-run.json', 'utf8'));
+          const remaining = Number(plan.counts?.['exact-occurrence-enrichment-candidate'] ?? 0);
+          if (remaining !== 0 || Number(apply.candidatesFound ?? 0) !== 0) {
+            console.error(JSON.stringify({ remaining, applyCandidates: apply.candidatesFound, counts: plan.counts }, null, 2));
+            process.exit(1);
+          }
+          console.log('Historical enrichment exact-candidate remainder: 0');
+          console.log(JSON.stringify(plan.counts, null, 2));
+          NODE
+
+      - name: Re-run corpus occurrence acceptance
+        run: node scripts/stress/hint-occurrence-acceptance-audit.mjs
+
+      - name: Re-referee all canonical Hint paths after enrichment
+        run: |
+          npm run test:hint-path-validation -- --corpus=data/levels.json
+          npm run test:hint-path-validation -- --corpus=data/stress/stress-levels.json
+          npm run test:hint-path-validation -- --corpus=data/stress/stress-levels-random.json
+
+      - name: Re-run determinism and reconstructability oracles after enrichment
+        run: |
+          node scripts/hint-determinism-audit.mjs --out=/tmp/hint-determinism-post-enrichment.json
+          node scripts/stress/hint-reconstructability-report.mjs --json=/tmp/hint-reconstructability-post-enrichment.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const det = JSON.parse(fs.readFileSync('/tmp/hint-determinism-post-enrichment.json', 'utf8'));
+          const rec = JSON.parse(fs.readFileSync('/tmp/hint-reconstructability-post-enrichment.json', 'utf8'));
+          // exactEventCrossPathGroups includes known non-Pathfinder diagnostic/replay producers;
+          // this audit is rerun as an oracle, not interpreted as a zero-violation counter.
+          console.log('Determinism oracle:', JSON.stringify({
+            comparableEvents: det.comparableEvents,
+            canonicalComparableEvents: det.canonicalComparableEvents,
+            recordedInputCollisions: det.repeatRunRecordedInputCollisionGroups,
+            exactEventCrossPathGroups: det.exactEventCrossPathGroups,
+          }));
+          console.log('Reconstructability totals:', JSON.stringify(rec.totals));
+          NODE
+
+      - name: Measure current canonical codec baseline
+        run: |
+          node scripts/hint-codec-baseline-benchmark.mjs --out=/tmp/hint-codec-baseline.json >/tmp/hint-codec-baseline.log
+          cat /tmp/hint-codec-baseline.log
+          node - <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/hint-codec-baseline.json', 'utf8'));
+          console.log('Codec baseline totals:', JSON.stringify(report.totals));
+          NODE
+
+      - name: Dry-run full-corpus schema v4 migration
+        run: |
+          node scripts/hint-artifact-v4-migration.mjs --out=/tmp/hint-v4-migration.json >/tmp/hint-v4-migration.log
+          cat /tmp/hint-v4-migration.log
+          node - <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/hint-v4-migration.json', 'utf8'));
+          if (report.semanticRoundTrip !== 'pass') process.exit(1);
+          console.log('V4 representations:', JSON.stringify(report.representations));
+          console.log('V4 byte reduction:', (100 * report.bytes.reduction).toFixed(2) + '%');
+          console.log('V4 gzip reduction:', (100 * report.bytes.gzipReduction).toFixed(2) + '%');
+          NODE
+
+      - name: Measure bounded sparse level serialization
+        run: |
+          node scripts/level-sparse-serialization-benchmark.mjs --out=/tmp/level-sparse-benchmark.json >/tmp/level-sparse-benchmark.log
+          cat /tmp/level-sparse-benchmark.log
+
+      - name: Portfolio direct-vs-report provenance parity
+        run: npm run test:portfolio-solve-sweep-cli

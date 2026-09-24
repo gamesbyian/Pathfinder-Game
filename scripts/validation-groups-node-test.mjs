@@ -60,10 +60,10 @@ for (const member of [
 ]) {
   assert.ok(shared.selected.includes(member), `shared fallback lost ${member}`);
 }
-// Was 25 pre-merge on this branch's own history: the hint-evidence-consolidation branch's shared
-// nodeTests (hint/harvest-evidence tests genuinely spanning solver+research+data) merged cleanly
-// alongside this file's own additions rather than conflicting, growing the real total to 49.
-assert.equal(shared.selected.length, 49);
+// Was 25 pre-merge on main; grew to 49 after merging origin/main's hint-evidence-consolidation
+// history, then to 51 after merging the portfolio-harvester/v4-codec branch (chatgpt/hint-
+// consolidation-final-push-2026-09-24), which added its own two shared-surface entries.
+assert.equal(shared.selected.length, 51);
 
 const combined = list('nodeTests', 'solver', 'research');
 assert.equal(new Set(combined.selected).size, combined.selected.length, 'multi-surface selection must dedupe commands');

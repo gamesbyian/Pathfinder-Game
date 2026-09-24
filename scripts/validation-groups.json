@@ -123,7 +123,8 @@
       "test:hint-harvest-selection-integration",
       "test:method-probe-shard-plan",
       "test:probe-corpus-loader",
-      "test:corpus-level-formatting"
+      "test:corpus-level-formatting",
+      "test:level-sparse-serialization-benchmark"
     ],
     "research": [
       "test:research-domain-ownership",
@@ -263,7 +264,9 @@
       "test:hint-ingestion-workflow-completeness",
       "test:hint-historical-enrichment-plan",
       "test:hint-historical-enrichment-apply",
-      "test:hint-codec-baseline-benchmark"
+      "test:hint-codec-baseline-benchmark",
+      "test:harvest-portfolio-solve-sweep-reports",
+      "test:hint-artifact-v4-migration"
     ],
     "persistence": [
       "test:firestore-rules"

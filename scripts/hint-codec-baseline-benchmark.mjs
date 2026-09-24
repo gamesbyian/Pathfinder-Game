@@ -115,7 +115,8 @@ export function benchmarkHintCodecBaseline(root=process.cwd()) {
   };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMain = process.argv[1] && import.meta.url === new URL(process.argv[1], 'file://').href;
+if (isMain) {
   const report=benchmarkHintCodecBaseline();
   const outArg=process.argv.find(a=>a.startsWith('--out='))?.slice(6);
   if(outArg) writeFileSync(outArg, JSON.stringify(report,null,2)+'\n');

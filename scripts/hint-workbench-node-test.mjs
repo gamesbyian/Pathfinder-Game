@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 import { buildBundle } from './run-bundled.mjs';
+import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -340,11 +341,17 @@ async function main() {
         // id-keyed hint artifact path without coupling CLI correctness to any published level.
         assert.ok(writeReport.writes.changedFiles.some(filePath => filePath.endsWith('hints/P00001.json')));
         assert.ok(writeReport.writes.postWriteReminders.includes('npm run check:level-data-validity'));
-        const fixtureHints = JSON.parse(await readFile(path.join(fixtureDir, 'hints/P00001.json'), 'utf8'));
-        assert.equal(fixtureHints.schemaVersion, 3);
-        assert.ok(fixtureHints.hints.length > sourceHintCount);
-        assert.ok(fixtureHints.hints.every(hint => Array.isArray(hint.path) && Array.isArray(hint.provenance)));
-        const newlyAcceptedHint = fixtureHints.hints[fixtureHints.hints.length - 1];
+        // Decode through the shared canonical decoder rather than indexing the raw parsed JSON:
+        // stringifyHints() now writes through encodeHintArtifact() (schema v4, sparse-inline or
+        // interned, whichever is smaller), so a hardcoded schemaVersion/shape assumption here would
+        // both go stale on the next codec bump and silently break under the interned representation
+        // (whose provenance entries carry solverRef/contextRef table indices, not solver/context
+        // objects directly).
+        const fixtureHintsRaw = JSON.parse(await readFile(path.join(fixtureDir, 'hints/P00001.json'), 'utf8'));
+        const fixtureHints = decodeHintArtifact(fixtureHintsRaw);
+        assert.ok(fixtureHints.length > sourceHintCount);
+        assert.ok(fixtureHints.every(hint => Array.isArray(hint.path) && Array.isArray(hint.provenance)));
+        const newlyAcceptedHint = fixtureHints[fixtureHints.length - 1];
         assert.ok(newlyAcceptedHint.provenance.length > 0, 'newly accepted hint should carry provenance');
         assert.equal(typeof newlyAcceptedHint.provenance[0].solver.technique, 'string');
 

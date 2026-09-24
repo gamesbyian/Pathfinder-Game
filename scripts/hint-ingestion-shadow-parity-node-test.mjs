@@ -55,6 +55,33 @@ try {
         '--phase=shadow',
     ], { encoding: 'utf8' });
     assert.notEqual(diagnostics.status, 0, 'diagnostics shadow expects direct route to have already persisted the same occurrence');
+
+    writeFileSync(receiptPath, JSON.stringify(buildHintIngestionReceipt({
+        ...base,
+        producer: 'harvest-portfolio-solve-sweep-reports',
+        occurrenceAdditions: 0,
+    })));
+    const portfolio = spawnSync(process.execPath, [
+        'scripts/hint-ingestion-shadow-parity.mjs',
+        `--receipt=${receiptPath}`,
+        '--family=portfolio',
+        '--phase=shadow',
+    ], { encoding: 'utf8' });
+    assert.equal(portfolio.status, 0, portfolio.stderr || portfolio.stdout);
+
+    writeFileSync(receiptPath, JSON.stringify(buildHintIngestionReceipt({
+        ...base,
+        producer: 'harvest-portfolio-solve-sweep-reports',
+        occurrenceAdditions: 1,
+    })));
+    const portfolioMismatch = spawnSync(process.execPath, [
+        'scripts/hint-ingestion-shadow-parity.mjs',
+        `--receipt=${receiptPath}`,
+        '--family=portfolio',
+        '--phase=shadow',
+    ], { encoding: 'utf8' });
+    assert.notEqual(portfolioMismatch.status, 0,
+        'portfolio shadow must reject a new occurrence when the direct route ran first');
 } finally {
     rmSync(temp, { recursive: true, force: true });
 }
