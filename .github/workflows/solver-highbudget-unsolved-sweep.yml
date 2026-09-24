@@ -262,6 +262,11 @@ jobs:
             touch "logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}.console.log"
           fi
 
+      # --save-hints deliberately dropped 2026-09-24: harvest-solver-evidence.yml already
+      # reconstructs identical canonical hint/provenance evidence from this workflow's own raw
+      # per-shard reports (harvest-portfolio-solve-sweep-reports.mjs), proven byte-identical to this
+      # direct-write path on a real portfolio-solve-sweep canary — see
+      # reports/2026-09-24-hint-evidence-phase6-portfolio-family-retirement-001.md.
       - name: Run portfolio-solve-sweep on this shard's corpus-1 straggler (if any)
         id: sweep-corpus1
         if: matrix.shard.c1Id != null
@@ -277,7 +282,6 @@ jobs:
             --node-budget="${{ inputs.node_budget }}" \
             --workers=1 \
             --resume \
-            --save-hints \
             --out="logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}.json" \
             --summary-out="logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}-summary.md" \
             2>&1 | tee -a "logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}.console.log"
@@ -299,7 +303,6 @@ jobs:
             --node-budget="${{ inputs.node_budget }}" \
             --workers="${{ inputs.workers }}" \
             --resume \
-            --save-hints \
             --out="logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}.json" \
             --summary-out="logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}-summary.md" \
             2>&1 | tee -a "logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}.console.log"
@@ -532,16 +535,16 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ -n "$GAP_FILL_C1" ] || [ -n "$GAP_FILL_C2" ]; then
-            # A gap-fill round only ever observed a SUBSET of the frozen cohort. The aggregate
-            # report/telemetry files represent the full cohort as one semantic unit -- committing
-            # this round's partial reports/telemetry over those canonical filenames would silently
-            # corrupt them. Newly-solved hints are still per-id evidence and safe to keep; reconcile
-            # this round's published solver-sweep-result artifact with the prior full round via
-            # solver-combine-sweep-runs.yml before merging results into the canonical report.
-            git add data/stress/hints/ data/stress/hints-random/ 2>/dev/null || true
-          else
-            git add data/stress/hints/ data/stress/hints-random/ reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json "reports/stress/highbudget-unsolved-sweep-source-run-${{ github.run_id }}.json" logs/solver-highbudget-sweep/ logs/solver-stress-refresh/corpus2-runtime-telemetry.json 2>/dev/null || true
+          # A gap-fill round only ever observed a SUBSET of the frozen cohort. The aggregate
+          # report/telemetry files represent the full cohort as one semantic unit -- committing this
+          # round's partial reports/telemetry over those canonical filenames would silently corrupt
+          # them; reconcile this round's published solver-sweep-result artifact with the prior full
+          # round via solver-combine-sweep-runs.yml before merging results into the canonical report.
+          # Hint/provenance evidence is no longer written here (--save-hints removed 2026-09-24):
+          # harvest-solver-evidence.yml reconstructs and persists it centrally from this run's own
+          # uploaded shard reports once this workflow completes, regardless of gap-fill scope.
+          if [ -z "$GAP_FILL_C1" ] && [ -z "$GAP_FILL_C2" ]; then
+            git add reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json "reports/stress/highbudget-unsolved-sweep-source-run-${{ github.run_id }}.json" logs/solver-highbudget-sweep/ logs/solver-stress-refresh/corpus2-runtime-telemetry.json 2>/dev/null || true
           fi
           if git diff --cached --quiet; then
             echo "Nothing changed -- not creating an empty commit."
