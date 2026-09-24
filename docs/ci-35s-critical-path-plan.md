@@ -240,6 +240,25 @@ Acceptance:
 - generated manifests and browser/runtime projection semantics remain unchanged;
 - only after hit-side evidence should main/scoped CI seed/consume the cache.
 
+### B2/B3 coverage topology closeout
+
+The standard-runner coverage experiments have now answered the shard-count and repair-budget questions.
+
+- two cross-runner shards: 15-18 s useful work; merged thresholds green; authority wall ~49 s with separate fan-in runner and ~43 s with shard-1 fan-in;
+- one runner / two concurrent shards: ~31 s covered work / ~43 s job wall;
+- three cross-runner shards: 10-13 s useful work, thresholds green, but shared-runner start skew drove authority to ~74 s;
+- one standard runner with `SOLVER_DEEP_TESTS=0`: thresholds green, ~25.9 s covered work / ~46 s job wall before B3;
+- #2077 production candidate 250k/125k: ordinary covered suite **22.00 s**, repair-search **6.3 s**, full CI green;
+- lower 100k/50k and 50k/25k coverage-sensitive probes: green but **~25.2 s suite / ~8.6-8.8 s repair-search**, so they provide no economic improvement and are rejected.
+
+Decision:
+
+- keep #2077's 250k/125k production budgets;
+- do not productionize standard-hosted cross-runner coverage sharding from #2074;
+- close #2074 as measurement evidence once these results are durably recorded;
+- remaining standard-runner work should target structural accidental costs (B1c import side effect, B5 runtime-hint projection, expensive real-corpus Node adapters) rather than add more shared-hosted shards;
+- if those structural wins still leave full-impact p90 above 35 s, use the reserved/larger-runner fallback rather than weakening coverage.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
