@@ -321,10 +321,10 @@
     },
     {
       "workflow": "solver-diagnostics.yml",
-      "currentHintMode": "artifact-only self-describing diagnostics report; central diagnostics harvester is sole canonical Hint writer",
+      "currentHintMode": "artifact-only diagnostics reports with always-uploaded full/partial evidence; central harvester is sole canonical Hint writer",
       "centralHarvester": true,
       "target": "central persistence (implemented)",
-      "partialFailureEvidence": false,
+      "partialFailureEvidence": true,
       "producerEntrypoint": "npm solver:analyze-diagnostics / underlying diagnostics solver runner",
       "executionClass": "diagnostic/mixed",
       "exactSuccessfulPathAvailability": "yes: successful diagnostics rows now retain exact accepted solution path",
@@ -336,13 +336,13 @@
       "migrationTarget": "central ingestion complete",
       "levelBlind": false,
       "historyAware": true,
-      "currentHintPersistence": "source workflow emits diagnostics artifacts/history only; central harvester persists Hint observations and computes published hint-cost drift after semantic merge",
+      "currentHintPersistence": "source workflow uploads full/partial diagnostics artifacts under if: always(); central diagnostics harvester reconstructs and persists canonical Hint observations",
       "exactSuccessfulPath": "yes in diagnostics artifact and direct hint writes",
       "winningAttemptConfig": "yes in serialized attempts",
       "levelRevision": "exact per successful observation",
       "effectiveExecutionConfig": "canonical solverRequestIdentity + reproducibilityMode retained in diagnostics artifact",
       "sourceRunLineage": "exact GHA run id/attempt supplied by central harvester",
-      "partialFailureUpload": false
+      "partialFailureUpload": true
     },
     {
       "workflow": "solver-broad-confirmation.yml",
@@ -424,6 +424,50 @@
       "effectiveExecutionConfig": "source contracts must be compatible",
       "sourceRunLineage": "typed constituent acquisition runs already retained",
       "partialFailureUpload": true
+    },
+    {
+      "workflow": "collect-prune-gap-labels.yml",
+      "currentHintMode": "non-Hint prune-gap label evidence only",
+      "centralHarvester": false,
+      "target": "remain non-Hint evidence-producing",
+      "migrationTarget": "remain non-Hint evidence-producing",
+      "partialFailureUpload": true,
+      "artifactSufficientForFutureSemanticHint": "not applicable: this workflow produces prune-gap labels, not accepted-path Hint discoveries",
+      "hintIngestionDisposition": "non-hint-evidence",
+      "rationale": "Maintained evidence-producing workflow, explicitly classified so omission from Hint ingestion is deliberate rather than invisible."
+    },
+    {
+      "workflow": "collect-variant-family-dataset.yml",
+      "currentHintMode": "direct canonical family-dataset Hint persistence through shared corpus I/O; explicit workflow persistence exception",
+      "centralHarvester": false,
+      "target": "retain family-research direct persistence exception",
+      "migrationTarget": "retain family-research direct persistence exception",
+      "partialFailureUpload": true,
+      "artifactSufficientForFutureSemanticHint": "not applicable to central solver ingestion: family levels and sibling Hint artifacts are one research dataset transaction",
+      "hintIngestionDisposition": "family-direct-canonical-persistence",
+      "rationale": "Variant-family generation owns data/families levels and sibling Hints together on its research branch. Direct GHA persistence is reviewed in docs/hint-workflow-persistence-audit.json and is limited to data/families/."
+    },
+    {
+      "workflow": "cpsat-explicit-prefix-reference.yml",
+      "currentHintMode": "non-Hint exact/reference evidence only",
+      "centralHarvester": false,
+      "target": "remain non-Hint exact/reference evidence",
+      "migrationTarget": "remain non-Hint evidence-producing",
+      "partialFailureUpload": true,
+      "artifactSufficientForFutureSemanticHint": "not applicable: reference/abstention evidence is not a fresh accepted-path discovery source",
+      "hintIngestionDisposition": "non-hint-evidence",
+      "rationale": "Explicitly classified to keep exact/reference evidence out of success-selected Hint ingestion."
+    },
+    {
+      "workflow": "ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
+      "currentHintMode": "non-Hint one-shot WS1 research evidence",
+      "centralHarvester": false,
+      "target": "remain non-Hint one-shot evidence",
+      "migrationTarget": "remain non-Hint evidence-producing",
+      "partialFailureUpload": true,
+      "artifactSufficientForFutureSemanticHint": "not applicable: this one-shot research workflow is not a canonical Hint discovery producer",
+      "hintIngestionDisposition": "non-hint-evidence",
+      "rationale": "Maintained evidence-producing workflow, explicitly classified so its exclusion from Hint ingestion is reviewable."
     }
   ],
   "provenanceMissingness": [
