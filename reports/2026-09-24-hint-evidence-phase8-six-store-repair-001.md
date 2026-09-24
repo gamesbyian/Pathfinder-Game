@@ -58,7 +58,14 @@ without `pipefail`. The validator's output artifact is empty, so that step is **
 closeout evidence**, despite GitHub marking the shell step successful.
 
 The permanent hostile audit now runs both the six-store census and whole-store PLAY-referee validator
-directly. Final Phase-8 closeout requires that exact-head run to succeed.
+directly. Its first mechanically complete exact-head run then exposed a second validation issue:
+65 family-store levels exceeded the ordinary player/editor 15x15 ceiling. Those are intentional
+research-family dimensions, not corrupt Hint evidence. The validator now relaxes only that size
+ceiling for the two canonical family stores while retaining the shared raw-level parser and the same
+PLAY path referee; an oversized-family regression fixture covers the distinction.
+
+Final Phase-8 closeout still requires the corrected whole-store validator to succeed on the exact
+program-closing head.
 
 ## Durable evidence
 
