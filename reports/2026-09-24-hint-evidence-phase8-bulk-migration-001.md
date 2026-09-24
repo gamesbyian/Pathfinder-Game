@@ -130,3 +130,18 @@ whole-store tooling and running the same schema-v4 semantic-hash / join-identity
 whole-store PLAY-referee proof over the omitted stores. The original 1,962-file measurements below
 remain valid for the three stores actually processed by this run; they must not be interpreted as
 corpus-wide totals.
+
+## Six-store repair completion
+
+The hostile correction above has now been executed, not merely planned. See
+[`2026-09-24-hint-evidence-phase8-six-store-repair-001.md`](2026-09-24-hint-evidence-phase8-six-store-repair-001.md)
+and its machine summary.
+
+A full checkout contained **3,351 artifacts across six canonical Hint stores**. The repair changed
+exactly the **1,389 previously omitted files** and preserved expanded semantic and cross-resource
+join hashes; an immediate full rerun reported zero changes. The corrected all-store Phase-8
+comparison is **734,618,282 → 574,394,797 raw bytes (-21.81%)** and
+**23,131,040 → 21,364,458 gzip bytes (-7.64%)**.
+
+The original figures in this report remain the correct measurements for the three stores processed
+by the original run; the six-store repair report is the authority for corpus-wide completion.
