@@ -146,6 +146,13 @@ jobs:
         id: deep_proofs
         if: needs.impact-shadow.outputs.needs_deep_proofs == 'true'
         run: npm run test:deep-proofs
+      - name: Restore Firebase CLI and Firestore emulator cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.npm/_npx
+            ~/.cache/firebase/emulators
+          key: firebase-firestore-${{ runner.os }}-node20-firebase-tools-15.28.2
       - uses: actions/setup-java@v5
         if: needs.impact-shadow.outputs.needs_firestore == 'true'
         with:
