@@ -106,6 +106,9 @@ console.log(`Target: ${levelNumbers.length} level(s)`);
 const results = [];
 let solvedCount = 0, failCount = 0, errorCount = 0;
 const runStart = Date.now();
+// Explicit fault-injection seam for the durability regression test. Not a CLI option and never
+// enabled by production workflows.
+const testFailAfterCompleted = Number(process.env.PATHFINDER_TEST_FAIL_AFTER_COMPLETED || 0);
 
 const buildReport = () => ({
     schemaVersion: 1,
@@ -140,12 +143,19 @@ async function checkpointReport() {
     await rename(tmp, resolved);
 }
 
+async function checkpointObservation() {
+    await checkpointReport();
+    if (testFailAfterCompleted > 0 && results.length >= testFailAfterCompleted) {
+        throw new Error(`PATHFINDER_TEST_FAIL_AFTER_COMPLETED=${testFailAfterCompleted}`);
+    }
+}
+
 for (const levelNumber of levelNumbers) {
     const raw = rawLevels[levelNumber - 1];
     if (!raw) {
         results.push({ level: levelNumber, status: 'error', error: 'no-raw-level' });
         errorCount++;
-        await checkpointReport();
+        await checkpointObservation();
         continue;
     }
 
@@ -154,7 +164,7 @@ for (const levelNumber of levelNumbers) {
     catch (e) {
         results.push({ level: levelNumber, status: 'error', error: `normalize: ${e?.message}` });
         errorCount++;
-        await checkpointReport();
+        await checkpointObservation();
         continue;
     }
 
@@ -165,7 +175,7 @@ for (const levelNumber of levelNumbers) {
         results.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 });
         errorCount++;
         console.log(`  L${levelNumber}: ERROR — ${e?.message}`);
-        await checkpointReport();
+        await checkpointObservation();
         continue;
     }
 
@@ -192,7 +202,7 @@ for (const levelNumber of levelNumbers) {
         solvedByScoringProfileId,
         attempts: result.attempts,
     });
-    await checkpointReport();
+    await checkpointObservation();
 
     const marker = ok ? '✓' : '✗';
     if (verbose || !ok) console.log(`  L${levelNumber} ${marker} ${elapsed}ms${ok ? ` [score=${solvedByScoringProfileId}]` : ''}`);
