@@ -3,7 +3,7 @@
 
 import { collection, doc, getDoc, getDocs, query, orderBy, deleteDoc, writeBatch } from 'firebase/firestore';
 import { encodeHints, decodeHints } from './level-submission-repository.js';
-import { mergeHints, upgradeLegacyHints, hintPathSignature } from '../domain/hint-types.js';
+import { mergeHints, upgradeLegacyHints, hintPathSignature, provenanceEventKey } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
 import type { ReportError } from '../ports.js';
@@ -39,7 +39,7 @@ export function encodedLevelDataByteSize(encodedLevelData: any): number {
 export function createReviewRepository(client: any, { getLevelFingerprint, getLocalLevelHints, saveLocalLevelHintIfNovel, reportError = defaultReportError }: {
     getLevelFingerprint: (level: any) => any,
     getLocalLevelHints: (levelFingerprint: string) => Promise<Hint[]>,
-    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnown: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>,
+    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEventKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>,
     reportError?: ReportError,
 }) {
     const { appId } = client;
@@ -148,23 +148,26 @@ export function createReviewRepository(client: any, { getLevelFingerprint, getLo
      *  docs/firestore-security-model.md); the submission is deleted last so a failure partway
      *  through leaves it in the queue for a retry rather than silently losing the report.
      *
-     *  Returns a per-outcome tally rather than void: this backend cannot append a rediscovery's
-     *  provenance to an already-known path (one doc per path, no occurrence-lineage array yet — a
-     *  Phase 3 storage-layout item, not fixed here), so a submission consisting entirely of
-     *  rediscoveries would otherwise complete "successfully" while persisting nothing. Surfacing the
-     *  tally lets the caller (review-controller.ts) tell the admin what actually happened instead of
-     *  a blanket "Hints added!" regardless of outcome. */
+     *  Returns a per-outcome tally rather than void: a genuinely NEW discovery event for an
+     *  already-known path gets its own sibling entry (see local-level-hints-repository.ts's
+     *  entryIdFor), but the exact same discovery event submitted twice is still a real duplicate
+     *  refused as a no-op, so a submission consisting entirely of such duplicates would otherwise
+     *  complete "successfully" while persisting nothing. Surfacing the tally lets the caller
+     *  (review-controller.ts) tell the admin what actually happened instead of a blanket "Hints
+     *  added!" regardless of outcome. */
     async function approveLocalHintAddition(submissionId: string, levelFingerprint: string, hints: Hint[]): Promise<LocalHintAdditionSummary> {
         if (!client.db) throw new Error('No Firebase connection');
         const existing = await getLocalLevelHints(levelFingerprint);
-        const knownSignatures = new Set(existing.map((h) => hintPathSignature(h.path)));
+        const knownEventKeys = new Set(
+            existing.flatMap((h) => h.provenance.map((entry) => provenanceEventKey(hintPathSignature(h.path), entry))),
+        );
         const summary: LocalHintAdditionSummary = { saved: 0, duplicateNotRecorded: 0, capacityReached: 0 };
         for (const hint of hints) {
             const signature = hintPathSignature(hint.path);
             const provenanceEntry = hint.provenance[hint.provenance.length - 1];
             if (!provenanceEntry) continue;
-            const outcome = await saveLocalLevelHintIfNovel(levelFingerprint, hint.path, signature, provenanceEntry, knownSignatures);
-            if (outcome.saved) { knownSignatures.add(signature); summary.saved++; }
+            const outcome = await saveLocalLevelHintIfNovel(levelFingerprint, hint.path, signature, provenanceEntry, knownEventKeys);
+            if (outcome.saved) { knownEventKeys.add(provenanceEventKey(signature, provenanceEntry)); summary.saved++; }
             else if (outcome.reason === 'duplicate-provenance-not-recorded') summary.duplicateNotRecorded++;
             else if (outcome.reason === 'capacity-reached') summary.capacityReached++;
         }

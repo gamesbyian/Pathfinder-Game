@@ -25,6 +25,7 @@ import {
     isMigrationSyntheticFoundAt as isMigrationSyntheticFoundAtRuntime,
     MIGRATION_SYNTHETIC_FOUND_AT_WINDOW,
     decodeHintArtifact as decodeHintArtifactRuntime,
+    provenanceEventIdentity as provenanceEventIdentityRuntime,
 } from './hint-runtime.mjs';
 
 /** Production solver provenance id. */
@@ -254,6 +255,24 @@ export function makeProvenanceEntry(
 
 export function hintPathSignature(path: number[]): string {
     return hintPathSignatureRuntime(path);
+}
+
+/** Canonical semantic discovery-event identity for one provenance entry (excludes foundAt,
+ *  wall-clock search fields, and occurrences; includes execution) -- see hint-runtime.mjs's own
+ *  doc comment for the full exclusion rationale. The single shared identity rule every merge path
+ *  (mergeHints, reconcileHints, capture guards, the offline cleaner, and Firestore-backed
+ *  repositories that need to tell two discovery events apart) must use instead of a second one. */
+export function provenanceEventIdentity(entry: HintProvenanceEntry): string {
+    return provenanceEventIdentityRuntime(entry);
+}
+
+/** Composite (path, discovery-event) key: distinguishes "this exact path is already known" from
+ *  "this exact discovery event for this path is already known" -- a genuinely new discovery event
+ *  for an already-known path is not a duplicate and must not be conflated with one (see
+ *  local-level-hints-repository.ts's own doc comment on why its Firestore layout keys entries this
+ *  way instead of one entry per path). */
+export function provenanceEventKey(pathSignature: string, entry: HintProvenanceEntry): string {
+    return `${pathSignature}::${provenanceEventIdentity(entry)}`;
 }
 
 /** Wrap a bare path as a canonical Hint. */

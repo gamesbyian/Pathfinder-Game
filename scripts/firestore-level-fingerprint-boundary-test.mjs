@@ -22,7 +22,7 @@ import {
   isSameLevelStructure,
   LEVEL_FINGERPRINT_VERSION,
 } from '../modules/domain/level-fingerprint.ts';
-import { hintPathSignature, makeProvenanceEntry } from '../modules/domain/hint-types.ts';
+import { hintPathSignature, makeProvenanceEntry, provenanceEventKey } from '../modules/domain/hint-types.ts';
 import { createLevelRatingRepository } from '../modules/persistence/level-rating-repository.ts';
 import { createLevelSubmissionRepository } from '../modules/persistence/level-submission-repository.ts';
 import { createLocalLevelHintsRepository } from '../modules/persistence/local-level-hints-repository.ts';
@@ -188,7 +188,10 @@ try {
   assert.equal(duplicateLegacy.duplicate?.levelFingerprint, legacyOnlyCurrentFingerprint);
 
   // Local-hint identity: the real repository uses the exact level fingerprint as the
-  // collection-path key and the deterministic path-signature digest as the entry document ID.
+  // collection-path key and a composite (path-signature, discovery-event-identity) digest as the
+  // entry document ID (see local-level-hints-repository.ts's entryIdFor doc comment) -- NOT the
+  // path-signature digest alone, so a second, genuinely distinct discovery event for an
+  // already-known path gets its own sibling doc instead of being silently dropped.
   const localHints = createLocalLevelHintsRepository(user);
   const hintPath = [0x00000000, 0x00000001, 0x00010001];
   const signature = hintPathSignature(hintPath);
@@ -202,8 +205,8 @@ try {
     provenance,
     new Set(),
   );
-  assert.equal(saved, true);
-  const entryId = localHints.hashPathSignature(signature);
+  assert.equal(saved.saved, true);
+  const entryId = localHints.localHintEntryId(signature, provenance);
   const hintDoc = await getDoc(doc(
     publicClient.db,
     'artifacts',
@@ -220,6 +223,34 @@ try {
   const roundTrippedHints = await localHints.getLocalLevelHints(levelFingerprint);
   assert.equal(roundTrippedHints.length, 1);
   assert.deepEqual(roundTrippedHints[0].path, hintPath);
+  assert.equal(roundTrippedHints[0].provenance.length, 1);
+
+  // The exact same discovery event submitted again is a real duplicate: refused as a no-op,
+  // nothing new persisted.
+  const knownEventKeys = new Set([provenanceEventKey(signature, provenance)]);
+  const duplicateOutcome = await localHints.saveLocalLevelHintIfNovel(
+    levelFingerprint, hintPath, signature, provenance, knownEventKeys,
+  );
+  assert.deepEqual(duplicateOutcome, { saved: false, reason: 'duplicate-provenance-not-recorded' });
+
+  // A genuinely NEW discovery event for the SAME already-known path is not a duplicate: it gets
+  // its own sibling entry doc, and getLocalLevelHints() merges both into one Hint with a combined
+  // provenance array -- the evidence-loss gap this repository's own doc comments used to flag.
+  const secondProvenance = makeProvenanceEntry('firestore-emulator-boundary-rediscovery', {
+    foundAt: '2026-09-01T00:00:00.000Z',
+  });
+  const secondEntryId = localHints.localHintEntryId(signature, secondProvenance);
+  assert.notEqual(secondEntryId, entryId, 'a distinct discovery event for the same path must get a distinct doc ID');
+  const secondSaved = await localHints.saveLocalLevelHintIfNovel(
+    levelFingerprint, hintPath, signature, secondProvenance, knownEventKeys,
+  );
+  assert.equal(secondSaved.saved, true, 'a new discovery event for an already-known path must not be treated as a duplicate');
+
+  const mergedHints = await localHints.getLocalLevelHints(levelFingerprint);
+  assert.equal(mergedHints.length, 1, 'both entry docs share one path, so they must merge into one Hint');
+  assert.equal(mergedHints[0].provenance.length, 2, 'both discovery events must be preserved, not overwritten');
+  const techniques = mergedHints[0].provenance.map((p) => p.solver.technique).sort();
+  assert.deepEqual(techniques, ['firestore-emulator-boundary', 'firestore-emulator-boundary-rediscovery']);
 
   console.log('Firestore level-fingerprint repository/emulator boundary proof passed.');
 } finally {

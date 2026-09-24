@@ -2,21 +2,40 @@
 // Firestore published_levels doc) — see docs/firestore-security-model.md and CLAUDE.md's
 // Provenance section. Keyed by the level's fingerprint (domain/level-fingerprint.ts), the same
 // identity mechanism already used for submission/publish duplicate detection and Dev-Mode level
-// ratings. One Firestore doc per distinct discovered path, under
+// ratings. One Firestore doc per distinct (path, discovery-event) pair -- see entryIdFor()'s own
+// doc comment for why a path can have more than one -- under
 // artifacts/{appId}/local_level_hints/{levelFingerprint}/entries/{entryId}.
 import { collection, doc, getDocs, getCountFromServer, setDoc, Timestamp } from 'firebase/firestore';
-import { toHint, mergeHints, upgradeProvenanceEntry, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
+import { toHint, mergeHints, upgradeProvenanceEntry, provenanceEventIdentity, provenanceEventKey, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
 
 const MAX_HINTS_PER_LEVEL = 5000;
 
-/** One doc per path means a rediscovery of an already-known path has no document to append its
- *  provenance to -- the plan's tracked evidence-loss limitation (this backend's create-only,
- *  single-provenance-event-per-path shape cannot represent occurrence lineage yet; that is a
- *  Phase 3 storage-layout item, not a Phase 1 containment fix). Returning a discriminated outcome
- *  instead of a bare boolean makes that specific loss distinguishable from a real capacity refusal
- *  or a missing connection, rather than three different "nothing happened" cases collapsing into
- *  one false — see docs/hint-evidence-execution-identity-storage-consolidation-plan.md's Firestore
- *  section ("capacity/duplicate/failure outcomes must be distinguishable"). */
+/** Bounded execution/run binding (docs/hint-evidence-execution-identity-storage-consolidation-
+ *  plan.md section 4/W's Firestore layout item): each entry doc's ID is a composite of the path
+ *  signature AND the discovery-event identity, `<pathHash>-<eventHash>`, rather than the path
+ *  signature alone. A genuinely NEW discovery event for an ALREADY-known path (a different play
+ *  session/technique finding the same path) is not a duplicate of the path's first-known event and
+ *  must not be discarded as one -- it gets its own sibling doc under the same level's `entries`
+ *  collection, reusing the exact same create-only/immutable security-rule pattern already proven
+ *  for the first event (a doc-ID collision on the true duplicate case -- same path AND same exact
+ *  event -- is still the existing harmless create-no-op). getLocalLevelHints() needs no change at
+ *  all for this: mergeHints()/dedupeProvenanceEntries() already group multiple Firestore docs that
+ *  share a path into one Hint with a combined provenance array, deduping true semantic duplicates
+ *  and merging occurrence lineage exactly as they do for every other multi-event provenance source
+ *  in this codebase -- reusing the single shared merge path rather than a second copy of it. */
+function entryIdFor(pathSignature: string, entry: HintProvenanceEntry, hash: (s: string) => string): string {
+    return `${hash(pathSignature)}-${hash(provenanceEventIdentity(entry))}`;
+}
+
+/** A rediscovery of an already-known PATH is no longer evidence-loss (see entryIdFor's own doc
+ *  comment): only a true duplicate -- the exact same discovery EVENT for the exact same path,
+ *  keyed by provenanceEventKey() -- is refused, and it is refused because writing it again would
+ *  be redundant, not because this backend structurally cannot represent it. Returning a
+ *  discriminated outcome instead of a bare boolean still makes that redundant-duplicate case
+ *  distinguishable from a real capacity refusal or a missing connection, rather than three
+ *  different "nothing happened" cases collapsing into one false — see
+ *  docs/hint-evidence-execution-identity-storage-consolidation-plan.md's Firestore section
+ *  ("capacity/duplicate/failure outcomes must be distinguishable"). */
 export type SaveLocalLevelHintOutcome =
     | { saved: true }
     | { saved: false; reason: 'no-connection' | 'duplicate-provenance-not-recorded' | 'capacity-reached' };
@@ -40,8 +59,10 @@ export function createLocalLevelHintsRepository(client: any) {
         collection(doc(client.db, 'artifacts', appId), 'local_level_hints', levelFingerprint, 'entries');
 
     /** All saved entries for a level, hydrated into canonical Hint[] (one provenance entry per
-     *  Firestore doc, grouped by path signature — mirrors how the local per-level hint files
-     *  store multiple discovery events for the same path). */
+     *  Firestore doc; multiple docs may share the same path when more than one discovery event was
+     *  recorded for it — mergeHints()/dedupeProvenanceEntries() already group those into one Hint
+     *  with a combined, deduped provenance array, the same machinery every other multi-event
+     *  provenance source in this codebase already relies on). */
     async function getLocalLevelHints(levelFingerprint: string): Promise<Hint[]> {
         if (!client.db || !levelFingerprint) return [];
         const snapshot = await getDocs(entries(levelFingerprint));
@@ -54,27 +75,31 @@ export function createLocalLevelHintsRepository(client: any) {
         return mergeHints([], hints);
     }
 
-    /** Saves one newly-discovered path as its own entry, unless it's already known (locally or
-     *  here — callers pass `alreadyKnownSignatures` covering both) or the level already has
-     *  MAX_HINTS_PER_LEVEL saved; see SaveLocalLevelHintOutcome for why the "unless" cases return a
-     *  distinguishable reason rather than a bare false. Best-effort, non-atomic count check: a soft
-     *  cap on puzzle-hint data, not a security boundary, so a small overshoot under concurrent
-     *  writes is acceptable (see docs/firestore-security-model.md). Propagates failures like every
-     *  other repository function here — callers driving an invisible background save (rather than a
-     *  submission flow already surfacing its own errors) are responsible for catching and reporting
-     *  rather than letting a rejected promise go unhandled. */
+    /** Saves one newly-discovered path/event pair as its own entry, unless this exact discovery
+     *  event is already known (locally or here — callers pass `alreadyKnownEventKeys`, built via
+     *  provenanceEventKey(), covering both) or the level already has MAX_HINTS_PER_LEVEL saved
+     *  entries; see SaveLocalLevelHintOutcome for why the "unless" cases return a distinguishable
+     *  reason rather than a bare false. A NEW discovery event for an already-known path is not
+     *  "already known" here — see entryIdFor()'s own doc comment. Best-effort, non-atomic count
+     *  check: a soft cap on puzzle-hint data, not a security boundary, so a small overshoot under
+     *  concurrent writes is acceptable (see docs/firestore-security-model.md). Propagates failures
+     *  like every other repository function here — callers driving an invisible background save
+     *  (rather than a submission flow already surfacing its own errors) are responsible for
+     *  catching and reporting rather than letting a rejected promise go unhandled. */
     async function saveLocalLevelHintIfNovel(
         levelFingerprint: string,
         path: number[],
         pathSignature: string,
         provenance: HintProvenanceEntry,
-        alreadyKnownSignatures: ReadonlySet<string>,
+        alreadyKnownEventKeys: ReadonlySet<string>,
     ): Promise<SaveLocalLevelHintOutcome> {
         if (!client.db || !levelFingerprint) return { saved: false, reason: 'no-connection' };
-        if (alreadyKnownSignatures.has(pathSignature)) return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+        if (alreadyKnownEventKeys.has(provenanceEventKey(pathSignature, provenance))) {
+            return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+        }
         const count = await getCountFromServer(entries(levelFingerprint));
         if (count.data().count >= MAX_HINTS_PER_LEVEL) return { saved: false, reason: 'capacity-reached' };
-        const entryId = hashPathSignature(pathSignature);
+        const entryId = entryIdFor(pathSignature, provenance, hashPathSignature);
         await setDoc(doc(entries(levelFingerprint), entryId), {
             path,
             pathSignature,
@@ -84,5 +109,10 @@ export function createLocalLevelHintsRepository(client: any) {
         return { saved: true };
     }
 
-    return { getLocalLevelHints, saveLocalLevelHintIfNovel, hashPathSignature, MAX_HINTS_PER_LEVEL };
+    /** Exposed so callers (and this module's own emulator-backed boundary test) can independently
+     *  compute the exact doc ID a save will use, without a second copy of entryIdFor's format. */
+    const localHintEntryId = (pathSignature: string, provenance: HintProvenanceEntry) =>
+        entryIdFor(pathSignature, provenance, hashPathSignature);
+
+    return { getLocalLevelHints, saveLocalLevelHintIfNovel, hashPathSignature, localHintEntryId, MAX_HINTS_PER_LEVEL };
 }

@@ -2,7 +2,7 @@
  *  must not accumulate, while genuinely distinct rediscoveries are kept. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint, decodeHintArtifact } from './hint-types.js';
+import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint, decodeHintArtifact, provenanceEventIdentity, provenanceEventKey } from './hint-types.js';
 
 test('dedupeProvenanceEntries collapses recording-only differences and keeps evidence-bearing ones', () => {
   const e = makeProvenanceEntry('prefix-anchored', { foundAt: '2026-07-16T05:53:45.609Z', hintGuided: true, usedExistingHints: true });
@@ -220,6 +220,25 @@ test('provenanceEventIdentity ignores occurrence lineage: two entries differing 
   const b = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z', occurrenceRunId: 'run-2' });
   const merged = dedupeProvenanceEntries([a, b]);
   assert.equal(merged.length, 1, 'a physical run id must never make an otherwise-identical rediscovery look like a new semantic event');
+});
+
+// provenanceEventKey (docs/hint-evidence-execution-identity-storage-consolidation-plan.md section
+// 4/W's Firestore layout item): the composite (path, discovery-event) key local-level-hints-
+// repository.ts and win-controller.ts use to tell "this exact path is known" apart from "this
+// exact discovery event for this path is known" -- the distinction that lets a genuinely new
+// discovery event for an already-known path get its own entry instead of being dropped.
+test('provenanceEventKey differs when either the path signature or the event identity differs', () => {
+  const dfs = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z' });
+  const repair = makeProvenanceEntry('repair', { foundAt: '2026-09-23T00:00:00.000Z' });
+  assert.notEqual(provenanceEventKey('1,2,3', dfs), provenanceEventKey('4,5,6', dfs), 'different path signature must change the key');
+  assert.notEqual(provenanceEventKey('1,2,3', dfs), provenanceEventKey('1,2,3', repair), 'different discovery event must change the key');
+});
+
+test('provenanceEventKey is stable for the exact same discovery event re-observed at a different time', () => {
+  const a = makeProvenanceEntry('dfs', { foundAt: '2026-09-23T00:00:00.000Z' });
+  const b = makeProvenanceEntry('dfs', { foundAt: '2026-09-24T00:00:00.000Z' });
+  assert.equal(provenanceEventKey('1,2,3', a), provenanceEventKey('1,2,3', b));
+  assert.equal(provenanceEventKey('1,2,3', a), `1,2,3::${provenanceEventIdentity(a)}`);
 });
 
 test('dedupeProvenanceEntries merges occurrence lineage from a rediscovery instead of dropping it', () => {

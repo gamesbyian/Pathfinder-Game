@@ -167,9 +167,14 @@ export function makeProvenanceEntry(technique, opts = {}) {
  * identities purely because of object key insertion order.
  *
  * @param {HintProvenanceEntry} entry
+ * @returns {string}
  */
 export function provenanceEventIdentity(entry) {
-    if (!entry || typeof entry !== 'object') return stableStringify(entry ?? null);
+    // stableStringify() only returns undefined for a literal `undefined` root value; both call
+    // sites here always pass a concrete object (or `null`, which stringifies to the string "null"),
+    // so a string is guaranteed -- the cast documents that guarantee rather than widening this
+    // function's own contract to match stableStringify's more permissive one.
+    if (!entry || typeof entry !== 'object') return /** @type {string} */ (stableStringify(entry ?? null));
     const { foundAt: _foundAt, occurrences: _occurrences, ...rest } = entry;
     const {
         elapsedMs: _elapsedMs,
@@ -179,7 +184,7 @@ export function provenanceEventIdentity(entry) {
         budgetMs: _budgetMs,
         ...search
     } = rest.search || {};
-    return stableStringify({ ...rest, search });
+    return /** @type {string} */ (stableStringify({ ...rest, search }));
 }
 
 /** @param {{runId: string, runAttempt: string | null}} occurrence */
