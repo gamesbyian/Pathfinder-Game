@@ -62,8 +62,10 @@ for (const member of [
 }
 // Was 25 pre-merge on main; grew to 49 after merging origin/main's hint-evidence-consolidation
 // history, then to 51 after merging the portfolio-harvester/v4-codec branch (chatgpt/hint-
-// consolidation-final-push-2026-09-24), which added its own two shared-surface entries.
-assert.equal(shared.selected.length, 51);
+// consolidation-final-push-2026-09-24), which added its own two shared-surface entries, then to
+// 54 after the hostile completion audit added central-persistence, published-import enrichment and
+// physical-decode invariants to the shared validation surface.
+assert.equal(shared.selected.length, 54);
 
 const combined = list('nodeTests', 'solver', 'research');
 assert.equal(new Set(combined.selected).size, combined.selected.length, 'multi-surface selection must dedupe commands');
