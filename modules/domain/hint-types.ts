@@ -28,6 +28,7 @@ import {
     encodeHintArtifact as encodeHintArtifactRuntime,
     HINT_ARTIFACT_SCHEMA_VERSION as RUNTIME_HINT_ARTIFACT_SCHEMA_VERSION,
     provenanceEventIdentity as provenanceEventIdentityRuntime,
+    hintOccurrenceKey as hintOccurrenceKeyRuntime,
 } from './hint-runtime.mjs';
 
 /** Production solver provenance id. */
@@ -275,6 +276,23 @@ export function provenanceEventIdentity(entry: HintProvenanceEntry): string {
  *  way instead of one entry per path). */
 export function provenanceEventKey(pathSignature: string, entry: HintProvenanceEntry): string {
     return `${pathSignature}::${provenanceEventIdentity(entry)}`;
+}
+
+/** Canonical physical-acquisition identity within one semantic provenance event. */
+export function hintOccurrenceKey(occurrence: HintOccurrence): string {
+    return hintOccurrenceKeyRuntime(occurrence);
+}
+
+/** Composite key for one physical occurrence of one semantic discovery event on one path.
+ *  Occurrence identity is deliberately separate from provenanceEventIdentity(): callers that need
+ *  storage/idempotency at physical-acquisition grain must compose it explicitly rather than
+ *  redefining semantic event equality. */
+export function provenanceOccurrenceKey(
+    pathSignature: string,
+    entry: HintProvenanceEntry,
+    occurrence: HintOccurrence,
+): string {
+    return `${provenanceEventKey(pathSignature, entry)}::occurrence::${hintOccurrenceKey(occurrence)}`;
 }
 
 /** Wrap a bare path as a canonical Hint. */
