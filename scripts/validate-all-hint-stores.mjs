@@ -14,7 +14,7 @@ import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 import { isHintArtifactFileName, hintArtifactFileName, hintKeyForLevel } from '../modules/hint-artifact-layout.mjs';
 import { discoverHintStoreDirs } from './hint-store-roots.mjs';
 
-const { parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
+const { parseRawLevel, parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
 
 function levelsFromDocument(parsed) {
@@ -23,6 +23,25 @@ function levelsFromDocument(parsed) {
     return levels.filter(level => level && typeof level === 'object'
         && level.grid && (Array.isArray(level.gates) || Array.isArray(level.gateKeys))
         && (level.goal || Number.isInteger(level.goalKey)));
+}
+
+function parseOwnedLevel(raw, index, relativeDir) {
+    const parsed = parseRawLevelDetailed(raw, index);
+    if (parsed.ok && parsed.level) return parsed;
+
+    // Family-generation corpora intentionally include research levels larger than the 15x15
+    // player/editor schema limit. They remain valid solver/referee subjects and their Hint stores
+    // use the same canonical physical contract. Relax only that known domain-specific constraint;
+    // every other structural error remains fatal.
+    const familyStore = relativeDir === 'data/families/hints'
+        || relativeDir === 'data/families/phaseB/hints';
+    const onlyPlayerGridLimit = parsed.errors.length > 0
+        && parsed.errors.every(error => error === 'grid.w must not exceed 15' || error === 'grid.h must not exceed 15');
+    if (familyStore && onlyPlayerGridLimit) {
+        const level = parseRawLevel(raw, index);
+        if (level) return { ok: true, level, errors: [] };
+    }
+    return parsed;
 }
 
 function ownerMapForHintDir(root, relativeDir) {
@@ -73,7 +92,7 @@ export function validateAllTrackedHintStores(root = process.cwd()) {
                 failures.push(`${relativeDir}/${fileName}: Hint decode failed: ${error.message}`);
                 continue;
             }
-            const parsedLevel = parseRawLevelDetailed(owner.raw, owner.index);
+            const parsedLevel = parseOwnedLevel(owner.raw, owner.index, relativeDir);
             if (!parsedLevel.ok || !parsedLevel.level) {
                 failures.push(`${relativeDir}/${fileName}: owning level from ${owner.source} failed structural parse: ${parsedLevel.errors.join('; ')}`);
                 continue;
