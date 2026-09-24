@@ -4,11 +4,13 @@ import path from 'node:path';
 import process from 'node:process';
 import { auditHintFile } from './hint-determinism-audit-lib.mjs';
 import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
+import { discoverHintStoreDirs } from './hint-store-roots.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
-const roots = (value('roots') ?? 'data/hints,data/stress/hints,data/stress/hints-random,data/stress/hints-envelope')
-    .split(',').map(item => item.trim()).filter(Boolean);
+const roots = value('roots')
+    ? value('roots').split(',').map(item => item.trim()).filter(Boolean)
+    : discoverHintStoreDirs(process.cwd());
 const outPath = value('out') ?? null;
 const sampleLimit = Number(value('sample-limit') ?? 25);
 
