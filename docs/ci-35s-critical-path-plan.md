@@ -131,6 +131,19 @@ Five structurally overlapping alternative fixtures also solved in ~0.1 s total, 
 
 The original nine-level population has now been probed at **250,000 work** and all **9/9 solve in ~1.5 s total / 1.30 M nodes**. Keep the exact fixture set and regenerate its baseline at 250k work; replacement is unnecessary unless future semantics change.
 
+## Implementation status
+
+| Work | Status | Current evidence / next gate |
+| --- | --- | --- |
+| CI health: diagnostics audit ownership | **merged / guarded** | #2051 routes compact failure-response scratch to `tmp/`, narrows staging to canonical latest/timestamp history, removes the forbidden tracked transient, and makes `check:audit-artifacts` guard the ownership contract. |
+| A1 deep runtime-data checkout | **merged / measured green on hit** | #2045: source checkout **2 s** + exact runtime-data restore **2 s**; all deep obligations green; deep job **56 s**. |
+| B1 lifecycle deterministic dispatch | **merged / measured green** | #2044: `orchestration-work-budget.test.ts` **~8.2 s → 195 ms**; covered-suite wall **~29.5 s → 26.48 s**; all test slots preserved. |
+| A3 main-seeded ESLint cache | **implementation in progress** | Default branch restores the existing ESLint generation and saves a commit-specific successor only after successful lint. Misses still run full lint. |
+| A4 250k solver canary | **ready to restack after A3** | Original 9/9 fixtures solve **~1.5 s / 1,303,532 nodes** at 250k with unchanged fixture identity. |
+| A2 exact Node 22.23.2 | planned | Node 22 passed typecheck, complete fast-unit population, and build. Full contract rehearsal must migrate the Firebase CLI cache generation from Node 20 to Node 22. |
+| C exact dependency-tree restore | planned | Hosted restore **3 s** vs `npm ci` **8 s**; promotion requires OS + arch + exact Node/npm generation + lockfile keying and complete restored-tree validation. |
+| A5 remove planner dependency edge | planned | Fast gate consumes no planner outputs; deep can compute the canonical plan locally, fail safe to full deep, and exit before dependency setup when not selected. |
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
