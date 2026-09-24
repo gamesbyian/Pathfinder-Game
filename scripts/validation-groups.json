@@ -454,6 +454,8 @@
         "filesystemScope": "repo-inputs",
         "repoPaths": [
           "docs/solver-workflow-lifecycle.json",
+          "docs/hint-workflow-persistence-audit.json",
+          "scripts/hint-store-roots.mjs",
           ".github/workflows/**"
         ]
       },
@@ -483,6 +485,14 @@
           "scripts/hint-store-roots.mjs",
           "modules/domain/**",
           "modules/hint-artifact-layout.mjs"
+        ]
+      },
+      "test:hint-ingestion-workflow-completeness": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "docs/solver-workflow-lifecycle.json",
+          "docs/hint-evidence-consolidation-inventory.json",
+          ".github/workflows/**"
         ]
       }
     }
