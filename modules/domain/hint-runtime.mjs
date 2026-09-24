@@ -557,6 +557,7 @@ function decodeV4HintArtifact(obj) {
  *   - `{ hints: path[] }` (bare paths, no provenance);
  *   - `{ hints: path[], hintMetadata: [...] }` (transitional sibling-array shape: nested provenance
  *     reconstructed from the parallel hintMetadata entry at the same index);
+ *   - `{ schemaVersion: 1, hints, hintMetadata? }` (historical transitional wrapper);
  *   - `{ schemaVersion: 2|3, hints: Hint[] }` (historical canonical wrappers);
  *   - `{ schemaVersion: 4, ... }` (current sparse-inline/interned physical codec).
  * Declared unknown schema versions fail closed rather than falling through to shape guessing.
@@ -570,7 +571,7 @@ function decodeV4HintArtifact(obj) {
  * the divergence itself is exactly what
  * docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 2.5 warns about).
  * Schema dispatch is authoritative here: unversioned legacy adapters are explicit compatibility
- * paths, v2/v3 are retained historical readers, and v4 is the sole current write version.
+ * paths, v1-v3 are retained historical readers, and v4 is the sole current write version.
  *
  * Throws a generic message on an unrecognized shape; callers that want a source-specific message
  * (e.g. a file path) should catch and rethrow with their own context.
@@ -583,6 +584,18 @@ export function decodeHintArtifact(parsed) {
         const obj = /** @type {any} */ (parsed);
         if (obj.schemaVersion !== undefined) {
             if (obj.schemaVersion === HINT_ARTIFACT_SCHEMA_VERSION) return decodeV4HintArtifact(obj);
+            if (obj.schemaVersion === 1) {
+                if (!Array.isArray(obj.hints)) {
+                    throw new Error('schema v1 hint artifact must contain a hints array');
+                }
+                if (Array.isArray(obj.hintMetadata)) {
+                    return obj.hints.map((/** @type {number[]} */ hintPath, /** @type {number} */ i) => {
+                        const meta = obj.hintMetadata[i];
+                        return toHint(hintPath, meta ? [upgradeProvenanceEntry(meta)] : []);
+                    });
+                }
+                return upgradeLegacyHints(obj.hints);
+            }
             if (obj.schemaVersion === 2 || obj.schemaVersion === 3) {
                 if (!Array.isArray(obj.hints)) {
                     throw new Error('schema v' + obj.schemaVersion + ' hint artifact must contain a hints array');
