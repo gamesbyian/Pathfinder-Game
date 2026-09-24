@@ -18,13 +18,7 @@ import {
 } from '../modules/domain/hint-runtime.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
 import { stringifyCorpusJson } from './level-json-format.mjs';
-
-const DEFAULT_DIRS = [
-    'data/hints',
-    'data/stress/hints',
-    'data/stress/hints-random',
-    'data/stress/hints-envelope',
-];
+import { discoverHintStoreDirs } from './hint-store-roots.mjs';
 
 function sha256Text(text) {
     return 'sha256:' + createHash('sha256').update(text).digest('hex');
@@ -102,10 +96,11 @@ function filesUnder(root, relDirs) {
     return out;
 }
 
-export function migrateHintStores(root, { apply = false, dirs = DEFAULT_DIRS } = {}) {
+export function migrateHintStores(root, { apply = false, dirs = null } = {}) {
+    const effectiveDirs = dirs ?? discoverHintStoreDirs(root);
     const rows = [];
     const representations = {};
-    for (const file of filesUnder(root, dirs)) {
+    for (const file of filesUnder(root, effectiveDirs)) {
         const raw = readFileSync(file.abs, 'utf8');
         const measured = measureV4ArtifactText(raw);
         representations[measured.representation] = (representations[measured.representation] ?? 0) + 1;
@@ -172,7 +167,7 @@ if (isMain) {
     const out = args.get('--out') ? path.resolve(String(args.get('--out'))) : null;
     const dirs = args.get('--dirs')
         ? String(args.get('--dirs')).split(',').map(value => value.trim()).filter(Boolean)
-        : DEFAULT_DIRS;
+        : null;
     const report = migrateHintStores(root, { apply, dirs });
     const json = JSON.stringify(report, null, 2);
     if (out) writeFileSync(out, json + '\n');
