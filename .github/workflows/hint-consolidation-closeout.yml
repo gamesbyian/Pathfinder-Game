@@ -50,6 +50,30 @@ jobs:
       - name: Re-run corpus occurrence acceptance
         run: node scripts/stress/hint-occurrence-acceptance-audit.mjs
 
+      - name: Re-referee all canonical Hint paths after enrichment
+        run: npm run test:hint-path-validation
+
+      - name: Re-run determinism and reconstructability oracles after enrichment
+        run: |
+          node scripts/hint-determinism-audit.mjs --out=/tmp/hint-determinism-post-enrichment.json
+          node scripts/stress/hint-reconstructability-report.mjs --json=/tmp/hint-reconstructability-post-enrichment.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const det = JSON.parse(fs.readFileSync('/tmp/hint-determinism-post-enrichment.json', 'utf8'));
+          const rec = JSON.parse(fs.readFileSync('/tmp/hint-reconstructability-post-enrichment.json', 'utf8'));
+          if (det.exactEventCrossPathGroups !== 0) {
+            console.error('Exact semantic discovery event appears on multiple paths:', det.exactEventCrossPathGroups);
+            process.exit(1);
+          }
+          console.log('Determinism oracle:', JSON.stringify({
+            comparableEvents: det.comparableEvents,
+            canonicalComparableEvents: det.canonicalComparableEvents,
+            recordedInputCollisions: det.repeatRunRecordedInputCollisionGroups,
+            exactEventCrossPathGroups: det.exactEventCrossPathGroups,
+          }));
+          console.log('Reconstructability totals:', JSON.stringify(rec.totals));
+          NODE
+
       - name: Measure current canonical codec baseline
         run: |
           node scripts/hint-codec-baseline-benchmark.mjs --out=/tmp/hint-codec-baseline.json >/tmp/hint-codec-baseline.log
