@@ -443,7 +443,8 @@
           ".github/workflows/**",
           "docs/hint-physical-reader-audit.json",
           "docs/hint-physical-writer-audit.json",
-          "package.json"
+          "package.json",
+          "docs/hint-bare-mutation-audit.json"
         ]
       },
       "test:central-hint-persistence-guard": {
