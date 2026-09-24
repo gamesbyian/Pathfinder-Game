@@ -187,8 +187,10 @@ export function provenanceEventIdentity(entry) {
     return /** @type {string} */ (stableStringify({ ...rest, search }));
 }
 
-/** @param {{runId: string, runAttempt: string | null}} occurrence */
-function occurrenceKey(occurrence) {
+/** Canonical physical-acquisition identity within one semantic provenance event.
+ *  @param {{runId: string, runAttempt: string | null}} occurrence
+ *  @returns {string} */
+export function hintOccurrenceKey(occurrence) {
     return `${occurrence.runId}::${occurrence.runAttempt ?? ''}`;
 }
 
@@ -204,9 +206,9 @@ function occurrenceKey(occurrence) {
 function mergeOccurrenceLineage(a, b) {
     if (!a && !b) return undefined;
     const seen = new Map();
-    for (const occurrence of a ?? []) seen.set(occurrenceKey(occurrence), occurrence);
+    for (const occurrence of a ?? []) seen.set(hintOccurrenceKey(occurrence), occurrence);
     for (const occurrence of b ?? []) {
-        const key = occurrenceKey(occurrence);
+        const key = hintOccurrenceKey(occurrence);
         if (!seen.has(key)) seen.set(key, occurrence);
     }
     return [...seen.values()];
