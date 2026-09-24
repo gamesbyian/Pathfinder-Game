@@ -181,11 +181,20 @@ test('decodeHintArtifact reconstructs provenance from the transitional {hints, h
   assert.equal(decoded[0].provenance[0].solver.technique, 'beam');
 });
 
-test('decodeHintArtifact handles canonical {schemaVersion, hints: Hint[]}', () => {
-  const canonical = { schemaVersion: 3, hints: [toHint([1, 2, 3], [makeProvenanceEntry('beam')])] };
-  const decoded = decodeHintArtifact(canonical);
-  assert.equal(decoded.length, 1);
-  assert.equal(decoded[0].provenance[0].solver.technique, 'beam');
+test('decodeHintArtifact explicitly dispatches historical schema v2/v3 wrappers', () => {
+  for (const schemaVersion of [2, 3]) {
+    const canonical = { schemaVersion, hints: [toHint([1, 2, 3], [makeProvenanceEntry('beam')])] };
+    const decoded = decodeHintArtifact(canonical);
+    assert.equal(decoded.length, 1);
+    assert.equal(decoded[0].provenance[0].solver.technique, 'beam');
+  }
+});
+
+test('decodeHintArtifact fails closed on unsupported declared schema versions', () => {
+  assert.throws(
+    () => decodeHintArtifact({ schemaVersion: 5, hints: [[1, 2, 3]] }),
+    /unsupported hint artifact schemaVersion 5/,
+  );
 });
 
 test('decodeHintArtifact throws a clear error on an unrecognized shape instead of silently returning no hints', () => {
