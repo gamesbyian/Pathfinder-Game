@@ -269,7 +269,8 @@
       "test:harvest-portfolio-solve-sweep-reports",
       "test:hint-artifact-v4-migration",
       "test:central-hint-persistence-guard",
-      "test:import-published-hint-merge"
+      "test:import-published-hint-merge",
+      "test:hint-physical-decode-guard"
     ],
     "persistence": [
       "test:firestore-rules"
