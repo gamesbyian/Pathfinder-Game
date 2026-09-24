@@ -239,11 +239,9 @@ export function createReviewController({ state, ui, engine, editor, persistence,
 
         try {
             ui.showMessage(isHintAddition ? 'Adding hints…' : 'Approving…', 'info');
-            // approveLocalHintAddition's tally surfaces a real evidence-loss case: local_level_hints
-            // is one doc per path, so a rediscovery of an already-known path has nowhere to record
-            // its provenance (see local-level-hints-repository.ts's SaveLocalLevelHintOutcome). A
-            // submission consisting entirely of such rediscoveries would otherwise show "Hints
-            // added!" while persisting nothing.
+            // approveLocalHintAddition persists local-level evidence one semantic provenance event
+            // at a time. Its tally distinguishes true duplicate events and capacity refusal from
+            // successful event persistence so review cannot silently claim evidence was saved.
             let localSummary: { pathsWithSavedEvidence: number; saved: number; duplicateNotRecorded: number; capacityReached: number } | null = null;
             if (isHintAddition && isLocal) {
                 localSummary = await persistence.approveLocalHintAddition(sub.id, sub.targetLocalLevelFingerprint, hintsToPersist);
