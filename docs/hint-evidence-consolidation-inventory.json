@@ -1266,15 +1266,27 @@
         "kind": "omitted-tracked-hint-store",
         "paths": [
           "data/stress/hints-envelope",
+          "data/families/hints",
+          "data/families/phaseB/hints",
+          "scripts/hint-store-roots.mjs",
           "scripts/hint-artifact-v4-migration.mjs",
           "scripts/hint-codec-baseline-benchmark.mjs",
           "scripts/hint-evidence-consolidation-audit.mjs",
           "scripts/hint-determinism-audit.mjs",
-          "scripts/stress/hint-reconstructability-report.mjs",
-          "scripts/stress/hint-cost-drift.mjs",
+          "scripts/check-corpus-level-formatting.mjs",
           "scripts/hint-store-index.mjs"
         ],
-        "finding": "Phase 8 and several whole-store consolidation tools hard-coded only three Hint stores, omitting the tracked 124-artifact stress envelope corpus. This invalidated the 'full tracked corpus' migration claim. Tooling now includes envelope and a one-shot repair migration is applying the same v4 semantic/join-equivalence checks to that store."
+        "finding": "The original Phase-8 migration and whole-store tooling assumed three Hint stores. A mechanical tree census found six: envelope (124 files) plus two canonical family stores (788 + 477) were omitted, leaving 1,389 tracked schema-v3 artifacts after a purported full-corpus migration. Whole-store tooling now discovers Hint directories mechanically and a permanent census guard asserts the current six-store topology."
+      },
+      {
+        "id": "HPA-019",
+        "kind": "missing-whole-store-referee-migration-proof",
+        "paths": [
+          "scripts/validate-all-hint-stores.mjs",
+          ".github/workflows/hint-provenance-hostile-audit.yml",
+          ".github/workflows/hint-envelope-v4-migration-repair.yml"
+        ],
+        "finding": "The Phase-8 migration manifest proved semantic and join-identity equivalence but contained no referee-validation disposition despite the plan requiring one; existing validators did not cover the omitted family stores. Added a mechanically discovered all-store owner/path referee validator and made both hostile closeout and repair migration require it."
       }
     ],
     "permanentGuards": [
