@@ -8,8 +8,6 @@ on:
       - 'Solver high-budget sweep (unsolved-only, both corpora)'
       - 'Solver level-blind targeted sweep'
       - 'Solver routing-regime-gated routing sample A/B'
-      - 'Solver repair-fallback node-reserve sample A/B'
-      - 'Solver elite-prefix-dfs-retry local validation'
       - 'method-probe sweep (isolated single-method corpus test)'
       - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
       - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
@@ -80,6 +78,7 @@ jobs:
           source_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID")"
           source_workflow="$(jq -r '.name' <<<"$source_json")"
           source_sha="$(jq -r '.head_sha' <<<"$source_json")"
+          source_run_attempt="$(jq -r '.run_attempt // 1' <<<"$source_json")"
           if [[ -n "$EXPECTED_WORKFLOW" && "$EXPECTED_WORKFLOW" != "$source_workflow" ]]; then
             echo "Expected source workflow '$EXPECTED_WORKFLOW' but run $SOURCE_RUN_ID belongs to '$source_workflow'." >&2
             exit 1
@@ -90,6 +89,7 @@ jobs:
           fi
           printf 'SOURCE_WORKFLOW=%s\n' "$source_workflow" >> "$GITHUB_ENV"
           printf 'SOURCE_SHA=%s\n' "$source_sha" >> "$GITHUB_ENV"
+          printf 'SOURCE_RUN_ATTEMPT=%s\n' "$source_run_attempt" >> "$GITHUB_ENV"
 
       - name: Download every artifact from the source solver run
         id: download
@@ -142,7 +142,22 @@ jobs:
               node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
-                --source-workflow="$SOURCE_WORKFLOW"
+                --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
+                --source-workflow="$SOURCE_WORKFLOW" \
+                --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-captured-artifacts.json"
+
+              # CP-SAT is an external specialist producer. Its workflow still transports canonical
+              # hint files during the Phase-6 parity window, but its self-describing discovery
+              # reports can now reconstruct the same semantic events centrally while preserving
+              # external-solver identity and source-run occurrence lineage.
+              if [[ "$SOURCE_WORKFLOW" == 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)' ]]; then
+                node scripts/run-bundled.mjs scripts/harvest-cpsat-discovery-reports.mjs -- \
+                  --staging-dir=artifact-staging \
+                  --source-run-id="$SOURCE_RUN_ID" \
+                  --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
+                  --source-workflow="$SOURCE_WORKFLOW" \
+                  --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-cpsat-discoveries.json"
+              fi
 
               # Artifact-only level-blind workflows still retain solved paths and winning attempts in
               # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
@@ -150,7 +165,22 @@ jobs:
               node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
-                --source-workflow="$SOURCE_WORKFLOW"
+                --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
+                --source-workflow="$SOURCE_WORKFLOW" \
+                --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-level-blind.json"
+
+              # Solver diagnostics now preserves exact successful paths, level revisions,
+              # winning attempts, request identity and discovery timestamps in its uploaded report.
+              # Keep the source workflow's direct writer during Phase-6 parity, but reconstruct the
+              # same observations centrally as a shadow lane.
+              if [[ "$SOURCE_WORKFLOW" == 'Solver diagnostics and hint capture' ]]; then
+                node scripts/run-bundled.mjs scripts/harvest-solver-diagnostics-reports.mjs -- \
+                  --staging-dir=artifact-staging \
+                  --source-run-id="$SOURCE_RUN_ID" \
+                  --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
+                  --source-workflow="$SOURCE_WORKFLOW" \
+                  --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-diagnostics.json"
+              fi
 
               # Direct/isolated tools serialize their valid paths too. Keep them with
               # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
@@ -158,8 +188,10 @@ jobs:
               node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
+                --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
                 --source-workflow="$SOURCE_WORKFLOW" \
-                --source-sha="$SOURCE_SHA"
+                --source-sha="$SOURCE_SHA" \
+                --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-isolated.json"
             fi
 
             # A decision-bearing v3 result has already passed the experiment contract, population
@@ -170,8 +202,8 @@ jobs:
               --staging-dir=artifact-staging \
               --out-root=reports/stress/experiment-evidence
 
-            if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ 2>/dev/null)" ]; then
-              echo 'No new canonical hint/provenance, selection, pending, or decision-bearing experiment evidence to persist.'
+            if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ reports/stress/hint-ingestion-receipts/ 2>/dev/null)" ]; then
+              echo 'No new canonical hint/provenance, ingestion-receipt, selection, pending, or decision-bearing experiment evidence to persist.'
               echo 'HARVEST_RESULT=no-new-evidence' >> "$GITHUB_ENV"
               exit 0
             fi
@@ -185,6 +217,9 @@ jobs:
             fi
             if [ -d reports/stress/hint-harvest-selection ]; then
               git add reports/stress/hint-harvest-selection/
+            fi
+            if [ -d reports/stress/hint-ingestion-receipts ]; then
+              git add reports/stress/hint-ingestion-receipts/
             fi
             git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
             if git push origin HEAD:main; then
@@ -219,7 +254,19 @@ jobs:
             echo
             printf 'Source run: `%s`\n' "$SOURCE_RUN_ID"
             [[ -n "${SOURCE_WORKFLOW:-}" ]] && echo "Source workflow: `$SOURCE_WORKFLOW`"
+            [[ -n "${SOURCE_RUN_ATTEMPT:-}" ]] && echo "Source run attempt: `$SOURCE_RUN_ATTEMPT`"
             [[ -n "${SOURCE_SHA:-}" ]] && echo "Source SHA: `$SOURCE_SHA`"
+            echo
+            if [[ -d reports/stress/hint-ingestion-receipts ]]; then
+              echo
+              echo '### Hint ingestion accounting'
+              echo
+              echo '```'
+              node scripts/hint-ingestion-receipt-query.mjs \
+                --root=reports/stress/hint-ingestion-receipts \
+                --run-id="$SOURCE_RUN_ID" || true
+              echo '```'
+            fi
             echo
             case "${HARVEST_RESULT:-unknown}" in
               persisted)

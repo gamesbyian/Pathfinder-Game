@@ -162,7 +162,8 @@
         "npx tsx scripts/hint-query.mjs --id=<ID> --full --purpose=<positive-oracle|solution-atlas|current-production-capability|technique-performance|longitudinal-process>",
         "node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all",
         "node scripts/stress/hint-cost-drift.mjs",
-        "node scripts/stress/hint-reconstructability-report.mjs"
+        "node scripts/stress/hint-reconstructability-report.mjs",
+        "node scripts/hint-determinism-audit.mjs"
       ],
       "joinKeys": [
         "level.id",
@@ -175,8 +176,9 @@
         "search.randomSeed",
         "context.levelRevision",
         "solver version/comparable-version set",
-        "solver-request identity (prospective exact join; historical absence remains unknown)",
-        "execution protocol / source-run binding (prospective sibling-evidence join)"
+        "execution.solverRequestIdentity (modern Pathfinder discoveries when the producer records it; historical absence remains unknown)",
+        "execution.protocolHash / execution.reproducibilityMode / execution.arm when actually observed",
+        "occurrences[].runId + occurrences[].runAttempt for physical acquisition lineage; excluded from semantic provenance-event identity"
       ],
       "evidenceRoles": [
         "positive-oracle",
@@ -204,7 +206,9 @@
         "Recover exact solver/configuration, work, nodes, termination, seed, forcing, run-context and solver-regime information for historical rediscoveries.",
         "Collapse dependent replay/configuration clouds into conservative within-path dependency strata before interpreting support volume.",
         "Test whether an apparent technique, corpus, solution-profile or current-capability effect is confounded by how and when known solutions were discovered.",
-        "Use the reconstructability report to see exactly which effective-input dimensions are absent before attempting replay, determinism grouping, or historical enrichment."
+        "Use the reconstructability report to see exactly which effective-input dimensions are absent before attempting replay, determinism grouping, or historical enrichment.",
+        "Measure execution-capsule, solver-request-identity and occurrence-lineage coverage directly before interpreting modern/historical joinability.",
+        "Use the canonical determinism audit to distinguish modern canonical-request comparisons from legacy recorded-input approximations and to exclude first-success races from path-stability claims."
       ],
       "caveats": [
         "Evidence applicability is query-dependent: one event may be strong atlas/history evidence and inadmissible current-capability evidence.",
@@ -215,7 +219,7 @@
         "Old solver versions are not automatically stale, but current capability/performance use requires audited code/config/scheduler/work equivalence or bounded current replay.",
         "Technique-performance claims require originating-run denominators/failures and comparable work; success-selected hint events alone cannot establish solve rate or relative performance.",
         "Provenance is powerful offline evidence but must not become level-specific runtime steering.",
-        "Current canonical Hint provenance usually lacks solver-request identity and solver stage, so full effective-input reconstruction should be measured through the reconstructability query rather than inferred from older replayability labels."
+        "Modern solve-and-save Pathfinder producers can now embed solver-request identity and physical occurrence lineage; historical entries and producers without a real signal remain legitimately sparse. Solver stage is still not embedded, so full effective-input reconstruction must continue to report that missing dimension rather than infer it."
       ]
     },
     {
@@ -324,7 +328,8 @@
         "hint-provenance",
         "production-benchmarks",
         "experiment-manifests",
-        "raw-logs-and-baselines"
+        "raw-logs-and-baselines",
+        "hint-ingestion-receipts"
       ],
       "affordances": [
         "Measure how many already-solved source rows were observed, referee-accepted, persisted as new path/provenance evidence, already represented, or quarantined.",
@@ -332,11 +337,71 @@
         "Audit whether changes in the hint store reflect producer novelty, persistence deduplication, or reconciliation/quarantine behavior."
       ],
       "caveats": [
-        "This resource currently covers only harvest-level-blind-report-hints; direct hint-artifact merging and isolated-report harvesting in the same source run have separate selection semantics.",
+        "This legacy resource remains specific to harvest-level-blind-report-hints. Cross-harvester accounting is now exposed separately through hint-ingestion-receipts; keep this manifest as historical/compatibility evidence rather than expanding it into a second universal receipt schema.",
         "The denominator is success-selected source rows observed by that harvester, not the originating attempted solver population.",
         "These manifests cannot estimate solve rate or relative technique performance without joining the originating experiment population/failures.",
         "A referee-accepted row that makes no persistence change usually means equivalent evidence was already represented; it is not a failed discovery.",
         "Quarantined evidence remains historical/forensic material and must not be silently reclassified as current capability."
+      ]
+    },
+    {
+      "id": "hint-ingestion-receipts",
+      "name": "Canonical hint-ingestion receipts",
+      "status": "generated-interface",
+      "grain": [
+        "source-run",
+        "harvester/producer",
+        "success-ingestion funnel",
+        "semantic addition units",
+        "quarantine reason"
+      ],
+      "locations": [
+        {
+          "kind": "pattern",
+          "path": "reports/stress/hint-ingestion-receipts/run-<run-id>-<producer>.json"
+        }
+      ],
+      "authorities": [
+        "scripts/hint-ingestion-receipt-lib.mjs",
+        "scripts/hint-ingestion-receipt-query.mjs",
+        ".github/workflows/harvest-solver-evidence.yml"
+      ],
+      "queryEntryPoints": [
+        "node scripts/hint-ingestion-receipt-query.mjs",
+        "node scripts/hint-ingestion-receipt-query.mjs --json",
+        "node scripts/research-asset-query.mjs --id=hint-ingestion-receipts"
+      ],
+      "joinKeys": [
+        "source.runId",
+        "source.runAttempt when known",
+        "source.workflow",
+        "source.producer"
+      ],
+      "evidenceRoles": [
+        "selection-audit",
+        "ingestion-accounting",
+        "longitudinal-process",
+        "forensic"
+      ],
+      "relatedAssets": [
+        "hint-provenance",
+        "hint-harvest-selection-provenance",
+        "experiment-manifests",
+        "compact-failure-response",
+        "raw-logs-and-baselines"
+      ],
+      "affordances": [
+        "Compare candidate, eligible, referee-accepted, already-represented and quarantined success observations across harvester families using one versioned vocabulary.",
+        "Distinguish exact path/provenance-event/occurrence addition counts from producer-local coarse semantic-change counts; unavailable units remain explicit null rather than fabricated zero.",
+        "Audit central-harvest retry/replay behavior without treating physical source-run identity as semantic discovery identity.",
+        "Aggregate quarantine reasons and addition coverage by producer/source run before changing workflow persistence routes."
+      ],
+      "caveats": [
+        "This is success-ingestion accounting, not an attempted solver population; it cannot establish solve rate or technique performance.",
+        "The level-blind and isolated/report importers currently emit this receipt; direct captured-hint artifact merging is still a separate receipt gap.",
+        "Some current producers expose only a coarse semanticRecordChanges count. Exact path/provenance-event/occurrence additions remain null until the mutation boundary can measure those units independently.",
+        "A null addition unit means unknown/not observed by that producer, never zero.",
+        "Historical level-blind selection manifests remain a compatibility resource and should not be rewritten."
       ]
     },
     {

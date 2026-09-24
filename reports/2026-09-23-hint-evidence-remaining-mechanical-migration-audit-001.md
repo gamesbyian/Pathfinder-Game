@@ -1,5 +1,11 @@
 # Hint evidence: remaining mechanical migration audit 001
 
+> **Status:** active
+> **Last evidence:** 2026-09-23 — Retained and reconciled as part of the active hint-evidence consolidation implementation.
+> **Decision:** Preserve this report as durable implementation/audit evidence; current code and later reconciliation records remain authoritative where they supersede earlier details.
+> **Remaining gate:** Apply the current phase-specific validation and closeout gates before treating this report as proof of whole-program completion.
+
+
 > **Status:** reconciled into draft PR #2002
 > **Last evidence:** 2026-09-23 — Codex static maintained-surface audit at `23389ff4763884db4dc10689689aef216addd2b9`, reconciled against the live #2002 continuation branch.
 > **Decision:** Preserve this inventory as the mechanical migration/validation map. Findings already implemented on #2002 are marked below; remaining items continue to guide compatibility migration.

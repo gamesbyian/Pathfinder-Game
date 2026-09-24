@@ -51,6 +51,9 @@ export interface ProvenanceContext {
     budgetMs?: number | null;
     /** Solver build id/git SHA when known. */
     solverVersion?: string | null;
+    /** Exact source-observed discovery time for historical/replayed evidence. Current in-memory
+     * producers normally omit this and makeProvenanceEntry() stamps construction time. */
+    foundAt?: string;
     /** True for one-technique isolated runs, not the competitively-budgeted production ladder. */
     isolatedTechnique?: boolean;
     /** Explicit source cell for census-derived solves. Normally supplied by the winning attempt's
@@ -157,6 +160,7 @@ export function deriveHistoricalSolveAttemptInfo(attempts: HistoricalAttemptLike
 function provenanceFromSolveAttemptInfo(result: Omit<SolveResultLike, 'attempts'>, info: SolveAttemptInfo, ctx: ProvenanceContext): HintProvenanceEntry {
     return makeProvenanceEntry(info.technique, {
         solverVersion: ctx.solverVersion ?? null,
+        foundAt: ctx.foundAt,
         scoringProfileId: info.scoringProfileId,
         orderingBiasId: info.orderingBiasId,
         beamWidth: info.beamWidth,

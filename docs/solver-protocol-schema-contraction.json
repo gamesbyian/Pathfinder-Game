@@ -657,30 +657,31 @@
       "treatment": "single-mutable-authority",
       "status": "in-progress",
       "retirementGate": "Modern GHA solver discoveries use one central semantic hint-ingestion authority from specialist discovery artifacts projected through a common execution capsule. Do not force failure/exact/family/search-loss evidence into one universal artifact schema. Direct hint-file import remains historical/mixed-era compatibility after parity and partial-failure recovery are demonstrated.",
-      "progress": "Workflow matrix now names producer entrypoint, level/history semantics, persistence lane, path/config/revision availability, source lineage, partial-failure behavior, artifact sufficiency, and migration target for all harvester-relevant maintained workflows. Central harvester deliberately excludes broad/residual/static-portfolio/recombination from canonical hints. Recombination already retains constituent acquisition runs. Two harvester workflow_run names have no maintained workflow file and are stale trigger residue."
+      "progress": "Central harvest now resolves source run attempt as well as run id/workflow/SHA; all canonical import lanes emit the shared ingestion receipt. Report-based level-blind and isolated lanes reconstruct physical occurrence lineage from exact source-run facts. Direct transported Hint artifacts are structurally merged/referee-checked and report exact path/event/occurrence deltas. CP-SAT now emits self-describing exact successful-discovery JSON (path, source level revision, forcing, discovery time, external solver identity) into its existing shard artifact; the central harvester has a CP-SAT specialist adapter that rechecks source revision/path and reconstructs the same external semantic event plus source-run occurrence. CP-SAT direct hint transport is intentionally retained as the Phase-6 parity lane. Remaining Phase-6 work is family-by-family parity/recovery evidence and retirement of direct canonical mutation only after those gates pass."
     },
     {
       "id": "PSC-028",
       "concept": "hint ingestion selection/retention accounting",
       "owners": [
+        "scripts/hint-ingestion-receipt-lib.mjs",
+        "scripts/hint-ingestion-receipt-query.mjs",
         "scripts/hint-harvest-selection-manifest-lib.mjs",
         "scripts/harvest-level-blind-report-hints.mjs",
         "scripts/harvest-isolated-report-hints.mjs",
         "scripts/merge-hint-artifacts.mjs"
       ],
       "forms": [
-        "level-blind selection manifest",
-        "isolated-harvest counters/quarantine",
-        "direct artifact merger counters/quarantine"
+        "canonical hint-ingestion receipt",
+        "historical level-blind selection manifest compatibility projection"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingestion-receipt",
       "status": "in-progress",
       "retirementGate": "All modern ingestion lanes expose one minimal canonical funnel vocabulary for observed solved candidates, referee/compatibility rejection, already-represented semantic evidence, quarantine, and persisted changes, with producer-specific extensions allowed.",
-      "progress": "Investigation closed 2026-09-22. Only level-blind harvesting emits a structured selection manifest; isolated and direct-artifact compatibility import expose different log/quarantine counters. Phase -1 will add one versioned hint-ingestion receipt with explicit units for candidate, eligible, referee-accepted, already-represented, path/event/occurrence additions, quarantine reasons, and physical changes. It remains success-ingestion accounting, never an attempted-population denominator."
+      "progress": "Canonical receipt schema v1 is implemented and queryable across all three current canonical harvest lanes. Level-blind and isolated/report harvesters emit the shared receipt; merge-hint-artifacts measures exact path/provenance-event/occurrence additions from canonical before/after merge state and emits the same receipt. The old level-blind selection manifest remains a historical/current specialist compatibility resource and projects into the receipt without rewrite. Central GHA harvest persists all three receipts with exact source run id/attempt. Receipt accounting is implementation-complete pending real workflow validation; retirement still requires proving no maintained ingestion lane bypasses the canonical receipt vocabulary."
     },
     {
       "id": "PSC-029",

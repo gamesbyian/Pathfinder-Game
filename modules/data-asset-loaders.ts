@@ -27,9 +27,10 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
  * Per-level lazy hint fetcher (hardening plan §2). `data/levels.json` carries no hints at
  * rest; a level's FULL hint set lives in `data/hints/<id>.json` (`id` = the level's own permanent
  * identity, e.g. "P00042" — see docs/archive/level-id-unification-plan.md) and is fetched only when first
- * requested — never at boot. The file is the canonical `{schemaVersion, hints: Hint[]}` wrapper
- * (domain/hint-types.ts), decoded through the same decodeHintArtifact() boundary
- * scripts/level-data-io.mjs uses on the Node side (hint-runtime.mjs's own doc comment explains why
+ * requested — never at boot. In development the fetched file may be the canonical
+ * `{schemaVersion, hints: Hint[]}` evidence artifact; production builds now generate a path-only
+ * runtime projection with source content/semantic hashes. Both shapes decode through the same
+ * decodeHintArtifact() boundary scripts/level-data-io.mjs uses on the Node side (hint-runtime.mjs's own doc comment explains why
  * this must be shared rather than reimplemented here: this decoder used to only understand bare
  * path arrays and `{hints: paths[]}`, silently dropping provenance for the transitional
  * `{hints: paths[], hintMetadata: [...]}` shape that the Node side already handled). It also

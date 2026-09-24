@@ -1,6 +1,12 @@
 # Hint evidence consolidation — Phase 0 source-run evidence rescue — 001
 
-> **Status:** concluded-partial (see "What was not rescued" below)
+> **Status:** active
+> **Last evidence:** 2026-09-23 — Retained and reconciled as part of the active hint-evidence consolidation implementation.
+> **Decision:** Preserve this report as durable implementation/audit evidence; current code and later reconciliation records remain authoritative where they supersede earlier details.
+> **Remaining gate:** Apply the current phase-specific validation and closeout gates before treating this report as proof of whole-program completion.
+
+
+> **Status:** concluded-positive for the high-value determinism-collision authority; broader full-result archival remains optional
 >
 > **Date:** 2026-09-23
 >
@@ -11,7 +17,9 @@
 > **Base commit:** `c88461ab669950e4b6d06873431a3704dbe2c4a9` (`main`, unchanged by this batch's semantics — this
 > batch adds evidence only, per Phase 0's rule not to rewrite canonical historical Hint provenance yet).
 >
-> **Machine-readable bundle:** [`docs/hint-evidence-phase0-source-run-rescue-2026-09-09.json`](../docs/hint-evidence-phase0-source-run-rescue-2026-09-09.json)
+> **Machine-readable metadata bundle:** [`docs/hint-evidence-phase0-source-run-rescue-2026-09-09.json`](../docs/hint-evidence-phase0-source-run-rescue-2026-09-09.json)
+>
+> **Durable collision authority rescue:** [`docs/hint-evidence-phase0-sept9-determinism-collision-authority-rescue.json`](../docs/hint-evidence-phase0-sept9-determinism-collision-authority-rescue.json)
 
 ## 1. Why this batch, and why it is first
 
@@ -85,55 +93,53 @@ population; `34320103478` was cut short at 20/53 shards, and its 16 solved level
 `34320087947`'s 17 missing levels together form the exact 18-level gap population that the two
 `-gapfill-001` runs (`34337871124`, `34337880617`) then re-ran under both arms.
 
-## 4. What was **not** rescued, and why
+## 4. Follow-up rescue: the collision authority is now durable
 
-This session's outbound network egress policy denies `CONNECT` to
-`productionresultssa18.blob.core.windows.net`, which is where GitHub Actions serves artifact ZIP
-content (confirmed via `curl -sS http://127.0.0.1:43457/__agentproxy/status`, which recorded a
-`connect_rejected` / gateway 403 for that host). This is an organization egress policy denial, not a
-transient failure, so per this environment's operating rules it was not retried or routed around.
+A later 2026-09-23 environment exposed a GitHub Actions artifact download API that follows GitHub's
+temporary artifact-storage redirect internally. All six `solver-sweep-result` artifacts were still
+healthy and unexpired, so the earlier Azure-Blob egress limitation was no longer binding.
 
-Consequently the raw artifact bytes — `result.json` (exact per-level rows including winning paths),
-`manifest.json` (dispatch inputs, source-to-published file mapping), and the per-shard `batch-*.json`
-payloads — could **not** be downloaded or archived in this session, even though the GitHub API confirms
-all six runs' artifacts are currently unexpired.
+The six exact source ZIPs were downloaded and inspected. Rather than commit megabytes of unrelated
+failed-attempt rows or opaque ZIP files, the rescue preserves the minimum authority Phase 0 actually
+needed for #1996's 15 collision levels in:
 
-This is a real, honest gap against the plan's instruction to preserve "exact solved rows/paths ...
-sufficient for later semantic backfill" — but it is materially mitigated:
+`docs/hint-evidence-phase0-sept9-determinism-collision-authority-rescue.json`
 
-- The actual solver discoveries these six runs produced were already harvested into the tracked
-  canonical hint corpus (`data/stress/hints*`) shortly after these runs, which is how the #1996 audit
-  was able to read and compare their paths in the first place. Those paths and their `provenanceEventIdentity()` are
-  therefore **already durable in git**, independent of these GHA artifacts. This rescue's job was to
-  capture the arm/source-run binding context that the tracked Hint provenance does *not* yet carry (no
-  hint schema field exists for source-run identity today), and that context has been captured.
-- What remains genuinely at risk of being lost when these artifacts expire (`2026-12-08`) is
-  **full row-level manifest fidelity** — e.g. the literal dispatch-input JSON, and per-level rows for
-  the majority of each run's population that did *not* become one of the 15 #1996 collision levels.
-  That fidelity is not needed by any batch before Phase 7 (authoritative historical enrichment), and
-  Phase 7 is explicitly gated on Phases 1-6 first.
+That durable bundle contains, for all six runs:
 
-**Recommendation:** before `2026-12-08`, a session with Azure Blob Storage egress access (or a
-maintainer running `gh run download` locally) should download and durably archive the six
-`solver-sweep-result.zip` artifacts (and ideally the two `targeted-sweep-combined.zip` artifacts)
-verbatim — e.g. committed under `reports/` or an external evidence store — so that full row-level replay
-fidelity for this specific cohort is not lost. This is flagged here rather than silently deferred, per
-the plan's stop-and-reconcile posture on storage constraints that would otherwise require lossy
-behavior; it is an environment/tooling limitation of this session, not a plan defect, so it does not
-block continuing to the next batch.
+- immutable run/workflow/ref/solver revision and run-attempt identity;
+- literal dispatch inputs and shard-completeness disposition;
+- SHA-256 of the original `manifest.json` and the complete original `result.json`;
+- run-wide corpus, work/node/wall and execution configuration;
+- every solved observation among the 15 affected collision levels (41 source observations total);
+- SHA-256 of the exact solved path's canonical JSON array, plus path length, so the source observation
+  can be joined exactly to the already-tracked canonical Hint path without copying the path bytes again;
+- referee disposition, aggregate work/nodes, winning configuration/action/gate and the exact winning
+  attempt payload needed to reconstruct the arm/action relationship.
+
+This removes the material Phase-0 retention risk for the determinism-collision cohort: later Phase-7
+enrichment no longer needs a live GitHub Actions artifact to prove which arm/configuration/run produced
+which affected stored path.
+
+The complete source results contained far more unrelated failed and solved rows. Those full ZIPs are
+still not committed to git because they are not needed to satisfy the high-value rescue objective and
+would duplicate substantial specialist evidence. Their hashes and artifact identities remain recorded,
+so a future archival policy may preserve them elsewhere if warranted.
+
+The original metadata bundle remains useful for broader run/job/artifact context and should not be
+replaced by the collision-focused authority bundle.
 
 ## 5. Exit evidence
 
-- Machine-readable rescue bundle: `docs/hint-evidence-phase0-source-run-rescue-2026-09-09.json`
-  (schema version 1; one record per source run plus the known-collision cross-reference).
+- Machine-readable run metadata bundle: `docs/hint-evidence-phase0-source-run-rescue-2026-09-09.json`.
+- Exact collision-authority rescue: `docs/hint-evidence-phase0-sept9-determinism-collision-authority-rescue.json` (six runs, 15 affected levels, 41 exact source observations, original manifest/result hashes and exact path hashes).
 - This report, recording scope, method, what was captured, what was not, and why.
 - No canonical Hint provenance, hint corpus file, or existing report was modified by this batch —
   verified by `git status`/`git diff` showing only the two new files above added.
 
 Per plan §14.1 exit-evidence discipline: the baseline and currently recoverable high-value source
 evidence (arm/configuration identity, source-run binding, and result-summary text) now remain
-reconstructable without depending on future GHA artifact retention, with the one explicit exception
-(full per-row manifest bytes) named in §4 above and its own recommended remediation and deadline.
+reconstructable without depending on future GHA artifact retention, for the high-value #1996 collision cohort without depending on future GHA retention. Full unrelated result rows remain intentionally outside this minimal rescue rather than an unresolved authority gap.
 
 ## 6. Next batch
 

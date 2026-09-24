@@ -205,7 +205,7 @@ try {
     provenance,
     new Set(),
   );
-  assert.equal(saved.saved, true);
+  assert.deepEqual(saved, { saved: true });
   const entryId = localHints.localHintEntryId(signature, provenance);
   const hintDoc = await getDoc(doc(
     publicClient.db,

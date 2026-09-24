@@ -43,6 +43,18 @@ assert.notEqual(out.levels[0].status, 'error', '--work-budget must reach solveLe
 assert.doesNotMatch(String(out.levels[0].error ?? ''), /retired SolveOpts\.workBudget/,
     'the retired-key error must never appear again once --work-budget is routed correctly');
 assert.equal(out.workBudget, 5000000);
+assert.equal(out.kind, 'pathfinder-direct-solver-report');
+assert.equal(out.producer, 'run-solver-direct');
+assert.equal(out.corpus, 'data/levels.json');
+if (out.levels[0].ok === true) {
+    assert.ok(Array.isArray(out.levels[0].solution) && out.levels[0].solution.length > 0,
+        'a successful direct observation must persist its exact accepted path for central replay');
+    assert.equal(typeof out.levels[0].levelRevision, 'string');
+    assert.ok(out.levels[0].levelRevision.length > 0);
+    assert.equal(typeof out.levels[0].discoveryObservedAt, 'string');
+    assert.ok(Number.isFinite(Date.parse(out.levels[0].discoveryObservedAt)));
+    assert.equal(out.levels[0].workBudget, 5000000);
+}
 
 // Canonical solver-request identity dual-write (docs/hint-evidence-execution-identity-storage-
 // consolidation-plan.md section 3.2): proves the value actually reaches the real bundled invocation

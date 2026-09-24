@@ -37,12 +37,37 @@ export function summarizeReconstructability(hints) {
     let hintsWithProvenance = 0;
     let events = 0;
     let effectiveInputReconstructable = 0;
+    let eventsWithExecution = 0;
+    let eventsWithSolverRequestIdentity = 0;
+    let eventsWithOccurrences = 0;
+    let eventsWithMultipleOccurrences = 0;
+    let occurrenceRecords = 0;
+    let occurrencesWithContractRef = 0;
+    let occurrenceSourceRunLinks = 0;
 
     for (const hint of hints ?? []) {
         const provenance = Array.isArray(hint?.provenance) ? hint.provenance : [];
         if (provenance.length > 0) hintsWithProvenance += 1;
         for (const entry of provenance) {
             events += 1;
+            if (entry?.execution && typeof entry.execution === 'object') {
+                eventsWithExecution += 1;
+                if (typeof entry.execution.solverRequestIdentity === 'string' && entry.execution.solverRequestIdentity.length > 0) {
+                    eventsWithSolverRequestIdentity += 1;
+                }
+            }
+            const occurrences = Array.isArray(entry?.occurrences) ? entry.occurrences : [];
+            if (occurrences.length > 0) {
+                eventsWithOccurrences += 1;
+                if (occurrences.length > 1) eventsWithMultipleOccurrences += 1;
+                occurrenceRecords += occurrences.length;
+                for (const occurrence of occurrences) {
+                    if (typeof occurrence?.contractRef === 'string' && occurrence.contractRef.length > 0) {
+                        occurrencesWithContractRef += 1;
+                    }
+                    if (Array.isArray(occurrence?.sourceRuns)) occurrenceSourceRunLinks += occurrence.sourceRuns.length;
+                }
+            }
             const replay = classifyHintDiscoveryReplayability(entry);
             addCount(replayBasisCounts, replay.replayBasis);
             addCount(replayReasons, replay.reason);
@@ -61,6 +86,13 @@ export function summarizeReconstructability(hints) {
         events,
         effectiveInputReconstructable,
         effectiveInputNotReconstructable: events - effectiveInputReconstructable,
+        eventsWithExecution,
+        eventsWithSolverRequestIdentity,
+        eventsWithOccurrences,
+        eventsWithMultipleOccurrences,
+        occurrenceRecords,
+        occurrencesWithContractRef,
+        occurrenceSourceRunLinks,
         replayBasisCounts: Object.fromEntries(Object.entries(replayBasisCounts).sort()),
         replayReasons: Object.fromEntries(
             Object.entries(replayReasons).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
@@ -83,13 +115,22 @@ export function buildReport() {
         events: 0,
         effectiveInputReconstructable: 0,
         effectiveInputNotReconstructable: 0,
+        eventsWithExecution: 0,
+        eventsWithSolverRequestIdentity: 0,
+        eventsWithOccurrences: 0,
+        eventsWithMultipleOccurrences: 0,
+        occurrenceRecords: 0,
+        occurrencesWithContractRef: 0,
+        occurrenceSourceRunLinks: 0,
         replayBasisCounts: {},
         replayReasons: {},
         missingDimensions: {},
     };
     for (const row of corpora) {
         for (const key of ['hints', 'hintsWithProvenance', 'events', 'effectiveInputReconstructable',
-            'effectiveInputNotReconstructable']) totals[key] += row[key];
+            'effectiveInputNotReconstructable', 'eventsWithExecution', 'eventsWithSolverRequestIdentity',
+            'eventsWithOccurrences', 'eventsWithMultipleOccurrences', 'occurrenceRecords',
+            'occurrencesWithContractRef', 'occurrenceSourceRunLinks']) totals[key] += row[key];
         for (const [key, count] of Object.entries(row.replayBasisCounts)) totals.replayBasisCounts[key] = (totals.replayBasisCounts[key] ?? 0) + count;
         for (const [key, count] of Object.entries(row.replayReasons)) totals.replayReasons[key] = (totals.replayReasons[key] ?? 0) + count;
         for (const [key, count] of Object.entries(row.missingDimensions)) totals.missingDimensions[key] = (totals.missingDimensions[key] ?? 0) + count;
@@ -112,6 +153,15 @@ function main() {
     console.log(format(header));
     console.log(widths.map(width => '-'.repeat(width)).join('  '));
     for (const row of rows) console.log(format(row));
+
+    console.log('\nExecution/occurrence coverage across durable Hint provenance:');
+    console.log(`  events with execution capsule: ${report.totals.eventsWithExecution}`);
+    console.log(`  events with solver-request identity: ${report.totals.eventsWithSolverRequestIdentity}`);
+    console.log(`  events with occurrence lineage: ${report.totals.eventsWithOccurrences}`);
+    console.log(`  events with multiple occurrences: ${report.totals.eventsWithMultipleOccurrences}`);
+    console.log(`  occurrence records: ${report.totals.occurrenceRecords}`);
+    console.log(`  occurrence records with contractRef: ${report.totals.occurrencesWithContractRef}`);
+    console.log(`  constituent source-run links: ${report.totals.occurrenceSourceRunLinks}`);
 
     console.log('\nMissing dimensions across durable Hint provenance:');
     const missing = Object.entries(report.totals.missingDimensions)
