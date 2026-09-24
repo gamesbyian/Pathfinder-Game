@@ -1165,6 +1165,21 @@
           ".github/workflows/solver-highbudget-unsolved-sweep.yml"
         ],
         "finding": "Already-migrated workflows retained empty Hint-directory staging/git-status plumbing. Removed so source workflows no longer understand canonical Hint-store paths as transport."
+      },
+      {
+        "id": "HPA-005",
+        "kind": "firestore-local-evidence-loss",
+        "paths": [
+          "modules/persistence/review-repository.ts",
+          "modules/input/review-controller.ts"
+        ],
+        "finding": "Local-corpus hint approval persisted only the last provenance event for each submitted Hint even though the local store supports one document per (path,event), and capacity-refused submissions were still deleted. Fixed to persist every event, dedupe idempotently, and retain the submission whenever any event hits capacity."
+      },
+      {
+        "id": "HPA-006",
+        "kind": "post-merge-semantic-identity-mutation",
+        "path": "scripts/family-parent-hint-replay-batch.mjs",
+        "finding": "Batch replay merged provenance with levelRevision:null and filled levelRevision afterward. Because levelRevision participates in semantic event identity, reruns could create duplicates before mutating them into the same identity. Fixed by computing the hint-excluding level fingerprint once per parent before merge."
       }
     ],
     "permanentGuards": [
