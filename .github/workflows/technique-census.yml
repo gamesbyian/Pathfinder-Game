@@ -289,15 +289,14 @@ jobs:
           path: artifact-staging
           merge-multiple: false
 
-      - name: Combine, derive summaries, and persist novel solutions
+      - name: Combine and derive summaries
         run: |
           node scripts/run-bundled.mjs scripts/combine-technique-census-shards.mjs -- \
             --staging-dir=artifact-staging \
             --out-dir="reports/stress/technique-census/${{ github.run_id }}" \
             --plan=plan/technique-census-plan.json \
             --solver-version="${{ github.sha }}" \
-            --expected-shards=120 \
-            --save-hints
+            --expected-shards=120
 
       - name: Upload the combined result
         uses: actions/upload-artifact@v7
