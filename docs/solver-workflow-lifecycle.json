@@ -23,6 +23,13 @@
       "retirementTrigger": "retire when scoped CI is authoritative and equivalent route/lane/final-status coverage is permanently exercised elsewhere"
     },
     {
+      "workflow": "ci-semantic-fault-injection-audit.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "CI impact-routing semantic fault-injection audit",
+      "retirementTrigger": "retire when scoped CI is authoritative and equivalent representative semantic fault injection is permanently exercised elsewhere"
+    },
+    {
       "workflow": "ci-testability-topology-audit.yml",
       "role": "operational",
       "status": "maintained",
