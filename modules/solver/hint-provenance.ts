@@ -86,6 +86,11 @@ export interface ProvenanceContext {
     occurrenceRunAttempt?: string | number | null;
     occurrenceContractRef?: string | null;
     occurrenceSourceRuns?: string[] | null;
+    /** Caller-known forcing dimensions that are outside the winning Attempt itself (for example
+     * a tool-level forced first step or an ablation applied to the whole solve request). */
+    forcingGateKey?: number | null;
+    forcingDirection?: number | null;
+    forcingDisabledFeatures?: string[] | null;
 }
 
 interface SolveAttemptInfo {
@@ -170,6 +175,11 @@ export function deriveHistoricalSolveAttemptInfo(attempts: HistoricalAttemptLike
 }
 
 function provenanceFromSolveAttemptInfo(result: Omit<SolveResultLike, 'attempts'>, info: SolveAttemptInfo, ctx: ProvenanceContext): HintProvenanceEntry {
+    const disabledFeatures = [
+        ...(info.goalAttractionDisabledRetry ? GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS : []),
+        ...(ctx.forcingDisabledFeatures ?? []),
+    ];
+    const uniqueDisabledFeatures = [...new Set(disabledFeatures)];
     return makeProvenanceEntry(info.technique, {
         solverVersion: ctx.solverVersion ?? null,
         foundAt: ctx.foundAt,
@@ -210,8 +220,10 @@ function provenanceFromSolveAttemptInfo(result: Omit<SolveResultLike, 'attempts'
             forcingRepairMustTurnBiased: info.repairMustTurnBiased,
             forcingRepairTurnBiased: info.repairTurnBiased,
         } : {}),
-        ...(info.goalAttractionDisabledRetry ? {
-            forcingDisabledFeatures: [...GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS],
+        ...(ctx.forcingGateKey !== undefined ? { forcingGateKey: ctx.forcingGateKey } : {}),
+        ...(ctx.forcingDirection !== undefined ? { forcingDirection: ctx.forcingDirection } : {}),
+        ...(uniqueDisabledFeatures.length > 0 ? {
+            forcingDisabledFeatures: uniqueDisabledFeatures,
         } : {}),
         ...(info.retryTier !== null ? { forcingRetryTier: info.retryTier } : {}),
     });
