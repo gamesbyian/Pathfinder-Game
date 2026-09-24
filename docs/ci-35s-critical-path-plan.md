@@ -243,6 +243,32 @@ B1d applies that exact pattern to both harvest contracts. The real-row tests, ca
 
 Acceptance: both contracts remain green, their direct CLI semantics stay exercised through the built bundle, and Node/CLI summary shows a material per-contract reduction from the ~5-6 s baseline.
 
+### D1. Two-shard Node/CLI hosted rehearsal
+
+Post-B1c profiling on a four-worker standard runner measured:
+
+- **204** Node/CLI contracts;
+- **126.9 child-seconds** total;
+- production runner wall **33 s**;
+- theoretical four-worker floor ~31.7 s.
+
+This shows the existing bounded runner is already close to work-conserving for the monolithic population. Further small contract cleanups cannot by themselves create a comfortable ≤35 s full-gate lane.
+
+A hosted rehearsal therefore compares, in the same workflow generation and with warm exact runtime/dependency caches:
+
+1. the full 204-contract population at four workers;
+2. runtime-balanced shard A at four workers;
+3. runtime-balanced shard B at four workers.
+
+Shard membership is greedily regenerated from the measured post-B1c timing profile and mechanically cross-checked against the current `package.json` `test:node` registry. The source profile predicts ~63.5 / 63.4 child-seconds, so useful wall should be roughly 16 s per shard if scaling holds.
+
+Decision criteria:
+
+- each shard's own runner wall should fit ≤27 s;
+- first-shard-start → both-shards-complete should fit ≤35 s in repeated samples;
+- compare that authority wall directly with the same-run full-population job;
+- if shared-runner assignment skew again erases the useful-work win, stop adding standard-runner shards and proceed to the reserved/larger-runner benchmark already defined by this plan.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
