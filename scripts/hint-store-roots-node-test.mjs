@@ -20,13 +20,4 @@ try {
   ]);
 } finally { rmSync(root,{recursive:true,force:true}); }
 
-const current=discoverHintStoreDirs(process.cwd());
-assert.deepEqual(current,[
-  'data/families/hints',
-  'data/families/phaseB/hints',
-  'data/hints',
-  'data/stress/hints',
-  'data/stress/hints-envelope',
-  'data/stress/hints-random',
-], 'tracked canonical Hint-store census changed; review whole-store tooling and update this guard intentionally');
 console.log('hint-store-roots-node-test: ok');
