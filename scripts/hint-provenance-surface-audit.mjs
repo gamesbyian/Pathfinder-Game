@@ -66,6 +66,7 @@ const categories = {
   ],
 };
 
+const directPhysicalReadSuspects = [];
 const rows = [];
 for (const [rel, text] of sourceTexts) {
   const hits = {};
@@ -74,13 +75,20 @@ for (const [rel, text] of sourceTexts) {
     if (matched.length) hits[category] = matched;
   }
   if (!Object.keys(hits).length) continue;
+  const maintainedReachable = reachable.has(rel);
   rows.push({
     path: rel,
-    maintainedReachable: reachable.has(rel),
+    maintainedReachable,
     directPackageReference: fs.existsSync(path.join(ROOT, 'package.json'))
       && fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8').includes(rel),
     hits,
   });
+  if (maintainedReachable
+      && /JSON\.parse\s*\([^\n]*(?:readFileSync|readFile)/u.test(text)
+      && /(?:hintFile|hintDoc|hints\/|hints-random\/|data\/hints)/u.test(text)
+      && /\.hints\b/u.test(text)) {
+    directPhysicalReadSuspects.push(rel);
+  }
 }
 rows.sort((a,b)=>a.path.localeCompare(b.path));
 
@@ -99,6 +107,7 @@ const result = {
   generatedAt: new Date().toISOString(),
   root: ROOT,
   summary,
+  directPhysicalReadSuspects: [...new Set(directPhysicalReadSuspects)].sort(),
   maintainedRows: maintained,
   dormantRows: rows.filter(r=>!r.maintainedReachable),
 };
