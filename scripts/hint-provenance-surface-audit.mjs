@@ -140,6 +140,8 @@ const categories = {
   ],
   mutableAliases: [
     /\.hintRecords\s*=/u, /\.hints\s*=/u,
+    /\.(?:hintRecords|hints)\.(?:push|pop|shift|unshift|splice|sort|reverse)\s*\(/u,
+    /\.(?:hintRecords|hints)\s*\[[^\]]+\]\s*=/u,
   ],
   provenanceIdentityMutation: [
     /\.context\.levelRevision\s*=/u,
