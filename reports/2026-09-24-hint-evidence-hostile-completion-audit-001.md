@@ -305,12 +305,19 @@ archive format.
 
 This falsifies PR #2071's claim that its 1,962-file migration covered the "full tracked corpus".
 
-**Correction in progress:** whole-store migration, codec benchmark, consolidation census,
-determinism audit, formatting check and derived index now discover tracked Hint stores mechanically
-instead of enumerating them. A permanent census guard currently asserts the six-store topology.
-A temporary PR-scoped workflow runs the tested v4 migration over all discovered stores, proves
-immediate idempotency and whole-store referee validity, uploads the reversible evidence, and commits
-only the previously omitted stores.
+**Correction applied:** whole-store migration, codec benchmark, consolidation census, determinism
+audit, formatting check and derived index now discover tracked Hint stores mechanically instead of
+enumerating them. A full Actions checkout found **six stores / 3,351 artifacts**. The repair
+transaction changed exactly the **1,389 omitted schema-v3 files**, preserved expanded semantic and
+cross-resource join hashes, and an immediate second pass found **0 changes**. The temporary migration
+workflow was then retired. Durable repair evidence is in
+`reports/2026-09-24-hint-evidence-phase8-six-store-repair-001.{md,json}`.
+
+Across all six stores before any Phase-8 bulk migration versus the final all-v4 state, raw storage
+fell **734,618,282 → 574,394,797 bytes (21.81%)** and gzip fell
+**23,131,040 → 21,364,458 bytes (7.64%)**. The repair batch alone grew slightly because the omitted
+small artifacts do not share the large-store compression economics; corpus-wide material reduction,
+not per-file shrinkage, is the exit criterion.
 
 ### 22. The Phase-8 migration manifest did not contain referee-validation evidence
 
@@ -322,8 +329,23 @@ relied on separate partial validators, which did not cover the omitted family st
 **Correction:** `scripts/validate-all-hint-stores.mjs` now mechanically discovers every tracked
 Hint store, resolves each artifact to its owning sibling level document, fails on ambiguous/orphan
 ownership, decodes through the shared codec, and runs every stored path through the real PLAY
-referee. The hostile audit and omitted-store migration transaction both require this whole-store
-proof, and the migration workflow uploads its result beside the before/after migration manifests.
+referee. The temporary repair workflow attempted this proof but used a shell pipeline that could
+mask the validator exit and produced an empty log, so that step is explicitly **not** accepted as
+evidence. The permanent hostile audit and closeout canary now run the six-store census and referee
+validator directly; their exact-head success is the closing proof.
+
+### 23. Parallel diagnostics harvest test mutated shared canonical data
+
+`harvest-solver-diagnostics-reports-node-test.mjs` exercised a real solved-row persistence path by
+rewriting tracked `data/hints/P00001.json` and restoring it afterward. The normal Node harness runs
+tests concurrently, so another reader could observe that file between truncate/write completion.
+CI produced exactly that failure: `Unexpected end of JSON input` while another bundled consumer
+read the same artifact.
+
+**Correction:** the production diagnostics harvester now accepts an explicit `--root` for isolated
+fixtures. The canary copies the real P00001 level/Hint evidence into a temporary root, runs the real
+harvester there, and never mutates shared repository data. This removes a hidden serialization
+requirement from the Hint validation suite.
 
 ## Producer audit result
 
@@ -397,9 +419,12 @@ reader ledger and fail-closed decode guard.
 
 ### Canonical Hint storage is materially smaller without semantic loss
 
-Satisfied by PR #2071's v4 migration evidence transaction: semantic hashes/counts preserved and raw
-tracked bytes materially reduced. Runtime path-only projection remains a separate untracked
-derivative.
+Satisfied by the corrected two-stage Phase-8 evidence transaction. PR #2071 migrated the original
+three-store population; the hostile repair then discovered and migrated the omitted envelope and
+family stores. Across the true six-store pre-v4 population, raw bytes fell 21.81% and gzip bytes
+fell 7.64%, with semantic/join equivalence and migration idempotency preserved. Runtime path-only
+projection remains a separate untracked derivative. Final all-store referee validity remains part
+of the exact-head closing gate.
 
 ### Historical v1-v3 evidence remains readable and honestly incomplete
 
@@ -420,7 +445,10 @@ Satisfied materially after this audit by:
 - workflow ingestion completeness guard;
 - central Hint persistence guard;
 - physical reader/decode review ledger;
+- mechanically discovered Hint-store census;
+- all-store PLAY-referee validation;
 - v4 migration semantic-equivalence/idempotency checks;
+- freshness-bound derived Hint-store index;
 - Firestore emulator boundary;
 - occurrence acceptance audit.
 
