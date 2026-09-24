@@ -145,6 +145,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
 | B5 runtime-hint projection cache | **production rollout in progress** | Rehearsal #2081 hit run 36063620245 restored exact projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold build dominated by deterministic projection. Production branch seeds/restores PR/main/scoped and post-diagnostics generations. |
+| D2 two-way coverage sharding | **rehearsal in progress** | Current deep baseline is **77 s runner wall**: ~17 s bootstrap + 30 s coverage + 10 s heavyweight proofs + 13 s Firestore, serialized. Rehearsal runs two real coverage shards with warm production caches and merges blob/coverage results under the unchanged production thresholds. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
@@ -395,6 +396,51 @@ Notes:
 - If `implementation` remains above 30 s, split covered Vitest by measured file cost and merge V8 coverage/thresholds. Do not lower coverage thresholds.
 - Do not add a separate runner merely to aggregate status. Use native required checks or an effectively dependency-only result contract that does not put another hosted-runner queue on the critical path.
 - Generate Node shard membership from a checked-in timing profile plus deterministic fallback, and validate that every registered Node contract is assigned exactly once.
+
+### Current post-optimization full-impact baseline
+
+Ordinary full-impact CI run **36066406944** is the current architecture baseline after A1/A2/A3/A4/B1/B1b/B1c/C/A5/B5:
+
+| lane | runner wall | dominant work |
+| --- | ---: | --- |
+| impact shadow | **7 s** | observational only; no longer gates deep startup |
+| fast gate | **58 s** | Node/CLI population **34 s** |
+| deep verification | **77 s** | coverage **30 s** + heavyweight proofs **10 s** + Firestore **13 s**, currently serialized |
+
+The overall first-required-runner → last-required-completion span was **77 s**.
+
+This invalidates the original ~96 s baseline as a planning reference. Bootstrap/cache work succeeded: fast-gate source/runtime/dependency/bootstrap before validators is now roughly 10 s on a warm generation. The critical path has shifted to actual validation execution.
+
+Consequences:
+
+1. D1 Node sharding can plausibly bring the fast lane below 35 s if the hidden shared-state test defect exposed by #2088 is repaired.
+2. Deep remains the dominant blocker even if fast becomes ~29 s.
+3. Merely overlapping heavyweight proofs and Firestore with monolithic coverage would still leave roughly bootstrap + 30 s coverage, above the target.
+4. The next required discriminator is coverage sharding with merged V8 coverage and unchanged thresholds.
+
+### D2. Two-way covered-Vitest sharding and merged coverage
+
+Current covered Vitest remains **~28-30 s wall** under the production V8 coverage configuration. Latest slow-file profile still includes:
+
+- `repair-search.test.ts`: ~8.4 s under coverage instrumentation;
+- `diversification.test.ts`: ~7.6 s;
+- remaining files are materially smaller.
+
+Vitest 4.1 supports test-file sharding with blob reporters and native merged coverage reporting. The D2 rehearsal therefore uses:
+
+1. two standard hosted runners;
+2. the same source-only checkout, exact runtime-data cache, exact Node 22.23.2, and exact dependency-tree cache as production deep verification;
+3. `--shard=1/2` and `--shard=2/2`;
+4. coverage collection enabled on both shard runs;
+5. threshold enforcement disabled only while producing per-shard blob reports;
+6. a merge job that restores the blob reports and runs Vitest `--merge-reports --coverage` under the ordinary production config, so the **same global and input-core coverage thresholds** are enforced on the merged result.
+
+Decision rule:
+
+- if each coverage shard runner wall is ≤25-27 s and shard-start → merged-threshold-complete is plausibly ≤35 s, coverage sharding remains viable;
+- if shard jobs are fast but the merge runner/queue pushes the critical path beyond 35 s, fold coverage merge into a reserved/larger-runner architecture instead of weakening thresholds;
+- if two shards remain too slow, test a measured file-balanced partition rather than increasing shard count blindly;
+- no coverage threshold reduction is permitted as a latency optimization.
 
 ### Phase E: hosted-runner variance decision
 
