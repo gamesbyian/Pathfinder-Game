@@ -1251,6 +1251,15 @@
         "kind": "stale-schema-contraction-control-plane",
         "path": "docs/solver-protocol-schema-contraction.json",
         "finding": "PSC-015 remained in-progress even though its provenance-generation/missingness retirement gate had been satisfied by shared historical ingress semantics and the lossless v4 migration; PSC-001 also described the now-fixed editor bare-hints transform as an acceptable residual. Reconciled both rows to current implementation truth."
+      },
+      {
+        "id": "HPA-017",
+        "kind": "schema-version-fail-open",
+        "paths": [
+          "modules/domain/hint-runtime.mjs",
+          "docs/solver-protocol-schema-contraction.json"
+        ],
+        "finding": "decodeHintArtifact explicitly handled v4 but then accepted any object with a hints array as legacy, so an unsupported future declared schema could be silently misread. Added authoritative v2/v3/v4 dispatch, fail-closed unsupported versions, regression tests, and closed PSC-024."
       }
     ],
     "permanentGuards": [
