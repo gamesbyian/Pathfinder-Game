@@ -42,7 +42,7 @@ expect(
 
 expect(
   ['modules/domain/path-validator.ts'],
-  ['game', 'research', 'shared', 'solver'],
+  ['game', 'research', 'solver'],
 );
 
 expect(
@@ -92,6 +92,18 @@ const registeredPersistenceHarness = expect(
 );
 assert.equal(registeredPersistenceHarness.files[0].rule, 'registered-validation-entrypoint');
 
+const registeredCrossSurfaceHarness = expect(
+  ['scripts/portfolio-solve-sweep-lib-node-test.mjs'],
+  ['research', 'solver'],
+);
+assert.equal(registeredCrossSurfaceHarness.files[0].rule, 'registered-validation-entrypoint');
+
+const registeredResearchOnlyFormerSharedHarness = expect(
+  ['scripts/signature-collision-analysis-node-test.mjs'],
+  ['research'],
+);
+assert.equal(registeredResearchOnlyFormerSharedHarness.files[0].rule, 'registered-validation-entrypoint');
+
 const packageBase = {
   name: 'pathfinder-game',
   private: true,
@@ -133,6 +145,19 @@ const ciScriptChange = classifyPackageJsonDocuments(packageBase, {
   },
 });
 assert.equal(ciScriptChange.full, true);
+
+const validationAggregateChange = classifyPackageJsonDocuments(packageBase, {
+  ...packageBase,
+  scripts: {
+    ...packageBase.scripts,
+    'test:node': 'node scripts/run-scripts-parallel.mjs test:research-query',
+  },
+});
+assert.equal(
+  validationAggregateChange.full,
+  true,
+  'validation aggregate composition must remain full-impact CI authority',
+);
 
 
 

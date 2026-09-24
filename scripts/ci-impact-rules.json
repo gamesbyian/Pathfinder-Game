@@ -130,12 +130,11 @@
       "id": "shared-domain",
       "pattern": "^modules/domain/",
       "surfaces": [
-        "shared",
         "game",
         "solver",
         "research"
       ],
-      "reason": "shared executable domain semantics"
+      "reason": "shared executable domain semantics; known game/solver/research surfaces now select explicit multi-surface contracts without whole shared-bucket escalation"
     },
     {
       "id": "game-modules",

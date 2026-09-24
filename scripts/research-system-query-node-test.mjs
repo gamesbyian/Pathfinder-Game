@@ -1,16 +1,18 @@
 /* global structuredClone */
 import assert from 'node:assert/strict';
 
+import { buildResearchSystemInventory } from './research-system-inventory-lib.mjs';
 import {
-    buildResearchSystemFindingIndex,
+    buildResearchSystemFindingIndexFromInventory,
     buildResearchSystemFindingSnapshot,
     buildResearchSystemFindingSnapshotFromGitRef,
     diffResearchSystemFindingSnapshots,
     queryResearchSystemFindings,
 } from './research-system-query-lib.mjs';
 
-const first = buildResearchSystemFindingIndex(process.cwd());
-const second = buildResearchSystemFindingIndex(process.cwd());
+const inventory = buildResearchSystemInventory(process.cwd());
+const first = buildResearchSystemFindingIndexFromInventory(inventory);
+const second = buildResearchSystemFindingIndexFromInventory(inventory);
 
 assert.equal(first.schemaVersion, 1);
 assert.equal(first.authority.kind, 'derived-read-only');

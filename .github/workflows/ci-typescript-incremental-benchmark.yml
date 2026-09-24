@@ -1,0 +1,33 @@
+name: CI TypeScript Incremental Cache Benchmark
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/ci-typescript-incremental-benchmark.yml'
+      - 'scripts/ci-typescript-incremental-benchmark.mjs'
+      - 'tsconfig.json'
+      - 'tsconfig.test.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies from the npm cache
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Benchmark TypeScript incremental build info
+        run: node scripts/ci-typescript-incremental-benchmark.mjs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ci-typescript-incremental-benchmark
+          path: tmp/ci-typescript-cache-benchmark/result.json
+          retention-days: 30

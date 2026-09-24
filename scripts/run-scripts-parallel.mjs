@@ -5,6 +5,10 @@
  * with its own elapsed time — a per-command timing report as a side effect of
  * running things in parallel, not an extra step.
  *
+ * PATHFINDER_PARALLEL_SUCCESS_OUTPUT=summary suppresses successful child output
+ * while preserving full output for failures plus the final timing/status summary.
+ * The default remains verbose for local use.
+ *
  * Used by `check` and `test:node` to fan out their own independent
  * sub-checks/sub-validators (replacing `run-p`, which gives none of that
  * timing/output attribution — see the "parallel run summary" each produces).
@@ -24,6 +28,8 @@
  * further on the same box.
  */
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 
 const requestedNames = process.argv.slice(2);
@@ -33,6 +39,15 @@ if (requestedNames.length === 0) {
 }
 
 const names = requestedNames;
+const directPackageScripts = process.env.PATHFINDER_DIRECT_PACKAGE_SCRIPTS === '1';
+const packageScripts = directPackageScripts
+  ? JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')).scripts ?? {}
+  : null;
+const successOutputMode = process.env.PATHFINDER_PARALLEL_SUCCESS_OUTPUT?.trim() || 'all';
+if (!['all', 'summary'].includes(successOutputMode)) {
+  console.error('PATHFINDER_PARALLEL_SUCCESS_OUTPUT must be "all" or "summary"');
+  process.exit(2);
+}
 
 function concurrencyLimit() {
   const raw = process.env.PATHFINDER_PARALLEL_JOBS?.trim();
@@ -53,17 +68,50 @@ const jobs = concurrencyLimit();
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
+function spawnPackageScript(name) {
+  if (!directPackageScripts) {
+    return spawn(npmCmd, ['run', name], { stdio: ['ignore', 'pipe', 'pipe'] });
+  }
+
+  const command = packageScripts?.[name];
+  if (typeof command !== 'string' || command.trim() === '') {
+    throw new Error(`package script is missing: ${name}`);
+  }
+  const binDir = path.join(process.cwd(), 'node_modules', '.bin');
+  const env = {
+    ...process.env,
+    PATH: [binDir, process.env.PATH ?? ''].filter(Boolean).join(path.delimiter),
+  };
+  return spawn(command, {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: true,
+    env,
+  });
+}
+
 function runScript(name) {
   return new Promise((resolve) => {
     const started = Date.now();
     const chunks = [];
+    let finished = false;
     const finish = (code) => {
+      if (finished) return;
+      finished = true;
       const seconds = ((Date.now() - started) / 1000).toFixed(1);
-      process.stdout.write(`\n=== ${name} (exit ${code}, ${seconds}s) ===\n`);
-      process.stdout.write(Buffer.concat(chunks));
+      if (code !== 0 || successOutputMode === 'all') {
+        process.stdout.write(`\n=== ${name} (exit ${code}, ${seconds}s) ===\n`);
+        process.stdout.write(Buffer.concat(chunks));
+      }
       resolve({ name, code, seconds });
     };
-    const child = spawn(npmCmd, ['run', name], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let child;
+    try {
+      child = spawnPackageScript(name);
+    } catch (error) {
+      chunks.push(Buffer.from(`${error.message}\n`));
+      finish(1);
+      return;
+    }
     child.stdout.on('data', (chunk) => chunks.push(chunk));
     child.stderr.on('data', (chunk) => chunks.push(chunk));
     child.on('error', (error) => {
@@ -88,7 +136,10 @@ async function worker() {
 
 await Promise.all(Array.from({ length: jobs }, () => worker()));
 
-console.log(`\n--- parallel run summary (jobs=${jobs}/${names.length}) ---`);
+console.log(
+  `\n--- parallel run summary (mode=${directPackageScripts ? 'direct' : 'npm'}, `
+  + `success-output=${successOutputMode}, jobs=${jobs}/${names.length}) ---`,
+);
 for (const { name, code, seconds } of results) {
   console.log(`${code === 0 ? 'PASS' : 'FAIL'}  ${name} (${seconds}s)`);
 }

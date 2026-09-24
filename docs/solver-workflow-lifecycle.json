@@ -23,6 +23,27 @@
       "retirementTrigger": "retire when scoped CI is authoritative and equivalent route/lane/final-status coverage is permanently exercised elsewhere"
     },
     {
+      "workflow": "ci-semantic-fault-injection-audit.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "CI impact-routing semantic fault-injection audit",
+      "retirementTrigger": "retire when scoped CI is authoritative and equivalent representative semantic fault injection is permanently exercised elsewhere"
+    },
+    {
+      "workflow": "ci-testability-topology-audit.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual CI testability/process/fixture topology audit",
+      "retirementTrigger": "retire when testability topology is fully represented by maintained validation metadata/telemetry and this standalone audit no longer adds information"
+    },
+    {
+      "workflow": "ci-typescript-incremental-benchmark.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "manual TypeScript incremental-cache correctness/timing benchmark",
+      "retirementTrigger": "retire after TypeScript cache policy is settled and this standalone benchmark no longer informs CI decisions"
+    },
+    {
       "workflow": "ci.yml",
       "role": "operational",
       "status": "maintained",

@@ -81,8 +81,6 @@ jobs:
         run: npm run check:text-source-files
         env:
           PATHFINDER_PR_INCREMENTAL: '0'
-      - name: Check validation ownership registry
-        run: npm run check:validation-groups
       - name: Check CI impact inventory
         run: npm run check:ci-impact-inventory
       - name: Run selected non-lint validators
@@ -91,6 +89,8 @@ jobs:
         env:
           VALIDATOR_GROUPS: ${{ needs.impact-shadow.outputs.validator_groups }}
           PATHFINDER_PR_INCREMENTAL: '0'
+          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: |
           groups="${VALIDATOR_GROUPS//,/ }"
           node scripts/validation-groups.mjs validators $groups
@@ -102,6 +102,9 @@ jobs:
         shell: bash
         env:
           NODE_TEST_GROUPS: ${{ needs.impact-shadow.outputs.node_test_groups }}
+          PATHFINDER_PARALLEL_JOBS: '4'
+          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: |
           groups="${NODE_TEST_GROUPS//,/ }"
           node scripts/validation-groups.mjs nodeTests $groups
@@ -143,6 +146,12 @@ jobs:
         id: deep_proofs
         if: needs.impact-shadow.outputs.needs_deep_proofs == 'true'
         run: npm run test:deep-proofs
+      # Restore the default-branch-seeded Firebase CLI materialization. Startup acceleration only.
+      - name: Restore Firebase CLI cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.npm/_npx
+          key: firebase-cli-${{ runner.os }}-node20-firebase-tools-15.28.2-v1
       - uses: actions/setup-java@v5
         if: needs.impact-shadow.outputs.needs_firestore == 'true'
         with:

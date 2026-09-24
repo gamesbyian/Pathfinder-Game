@@ -73,6 +73,37 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --fund=false
 
+      - name: Restore default-branch Firebase CLI cache
+        id: firebase-cli-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.npm/_npx
+          key: firebase-cli-${{ runner.os }}-node20-firebase-tools-15.28.2-v1
+
+      - name: Seed Firebase CLI cache on miss
+        id: seed-firebase-cli
+        if: steps.firebase-cli-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: npx --yes firebase-tools@15.28.2 --version
+
+      - name: Save default-branch Firebase CLI cache
+        if: steps.firebase-cli-cache.outputs.cache-hit != 'true' && steps.seed-firebase-cli.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.npm/_npx
+          key: firebase-cli-${{ runner.os }}-node20-firebase-tools-15.28.2-v1
+
+      - name: Restore TypeScript incremental state
+        id: typescript-buildinfo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules/.cache/tsconfig.tsbuildinfo
+            node_modules/.cache/tsconfig.test.tsbuildinfo
+          key: typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-${{ github.sha }}
+          restore-keys: |
+            typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-
+
       # Keep independent validation phases running after one phase fails. This is intentionally
       # different from the local ci:fast convenience chain: main-push is a repository-health
       # diagnostic surface, so one push should expose the whole current debt set instead of
@@ -88,7 +119,18 @@ jobs:
       - name: Run repository/domain validators
         id: validators
         continue-on-error: true
+        env:
+          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: npm run check:validators
+      - name: Save TypeScript incremental state
+        if: steps.validators.outcome == 'success' && steps.typescript-buildinfo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            node_modules/.cache/tsconfig.tsbuildinfo
+            node_modules/.cache/tsconfig.test.tsbuildinfo
+          key: typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-${{ github.sha }}
       - name: Run lint
         id: lint
         continue-on-error: true
@@ -100,6 +142,10 @@ jobs:
       - name: Run Node and CLI contract tests
         id: node_tests
         continue-on-error: true
+        env:
+          PATHFINDER_PARALLEL_JOBS: '4'
+          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: npm run test:node
       - name: Build production bundle
         id: build
