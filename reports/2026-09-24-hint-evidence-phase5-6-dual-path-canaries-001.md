@@ -1,6 +1,9 @@
 # Hint evidence consolidation — Phase 5/6 real dual-path canaries — 001
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — real local CP-SAT and solver-diagnostics dual-path canaries confirmed captured-artifact vs. specialist-report parity and reharvest idempotency.
+> **Decision:** parity evidence now exists for both families; neither direct-write route is retired yet.
+> **Remaining gate:** choose the first small artifact-sufficient level-blind family for Phase-6 direct-route retirement.
 >
 > **Date:** 2026-09-24
 >

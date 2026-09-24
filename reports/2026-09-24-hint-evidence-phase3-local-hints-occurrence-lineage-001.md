@@ -1,7 +1,9 @@
 # Hint evidence consolidation — Phase 3 Firestore local-hints occurrence lineage — 001
 
-> **Status:** concluded-positive (implementation + static verification; real Firestore-emulator
-> execution could not run in this environment — see section 5)
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — implemented and statically verified the local_level_hints occurrence-lineage fix; real Firestore-emulator execution could not run in this environment (see section 5).
+> **Decision:** ship the fix on static verification; treat real Firestore-emulator confirmation as an open follow-up, not a blocker.
+> **Remaining gate:** confirm this batch's real behavior once CI's Firestore-emulator job runs on this branch.
 >
 > **Date:** 2026-09-24
 >

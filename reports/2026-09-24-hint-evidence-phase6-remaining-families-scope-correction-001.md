@@ -1,6 +1,9 @@
 # Hint evidence consolidation — Phase 6 remaining-families scope correction — 001
 
-> **Status:** correction
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — corrected an inaccurate forward-looking claim in the immediately preceding report after actually inspecting the two remaining dual-path families.
+> **Decision:** the two remaining families need a new history-aware harvester, not a simple flag removal; this is real, larger Phase 6 scope, not a quick follow-up.
+> **Remaining gate:** design and prove a history-aware portfolio harvester before removing --save-hints from either remaining workflow.
 >
 > **Date:** 2026-09-24
 >

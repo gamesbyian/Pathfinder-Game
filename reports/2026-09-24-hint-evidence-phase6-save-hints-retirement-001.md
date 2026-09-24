@@ -1,6 +1,9 @@
 # Hint evidence consolidation — Phase 6 `--save-hints` retirement — 001
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — removed the redundant --save-hints direct write from solver-stress-refresh.yml now that both corpora had real parity evidence.
+> **Decision:** solver-stress-refresh.yml is now fully centralized on the harvester as its sole persistence authority.
+> **Remaining gate:** apply the same retirement to the two portfolio-family workflows once their own parity is proven.
 >
 > **Date:** 2026-09-24
 >

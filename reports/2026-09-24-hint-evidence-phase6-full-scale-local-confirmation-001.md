@@ -1,6 +1,9 @@
 # Hint evidence consolidation — Phase 6 full-scale local confirmation — 001
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — a real full corpus-1 (102-level) sweep confirmed the level-blind central harvester is byte-identical to the direct-write path; a real parallel-test race was found and fixed along the way.
+> **Decision:** corpus-1 parity is exhaustively proven; corpus-2 and the retirement edit remain outstanding.
+> **Remaining gate:** the equivalent corpus-2 proof, then the --save-hints retirement edit.
 >
 > **Date:** 2026-09-24
 >

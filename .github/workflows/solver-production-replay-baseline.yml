@@ -202,11 +202,7 @@ jobs:
       # note it reads the recorded baseline, so this is a warm re-solve, not a cold-solve measurement.
       # --baseline-budget is deliberately NOT passed (it caused a 503->473 corpus-2 regression when
       # tried in the refresh workflow — see that file's comment).
-      # --save-hints deliberately dropped 2026-09-24: harvest-solver-evidence.yml already
-      # reconstructs identical canonical hint/provenance evidence from this workflow's own raw
-      # per-shard reports (harvest-portfolio-solve-sweep-reports.mjs), proven byte-identical to this
-      # direct-write path on a real 20-level corpus-1 canary (0 mismatches across 25,686 provenance
-      # fields, plus reharvest idempotency) — see
+      # --save-hints dropped 2026-09-24: reconstructed centrally instead (proven parity) —
       # reports/2026-09-24-hint-evidence-phase6-portfolio-family-retirement-001.md.
       - name: Solve this shard's corpus-1 slice
         id: sweep-corpus1
@@ -732,9 +728,8 @@ jobs:
           # NOT logs/stress-corpus*-baseline.json (see the completeness step above), and NOT the
           # raw per-shard logs: they are already uploaded as artifacts, and committing them is what
           # let a previous run's files contaminate a later combine. Only reports go to git.
-          # Hint/provenance evidence is no longer written here (--save-hints removed 2026-09-24):
-          # harvest-solver-evidence.yml reconstructs and persists it centrally from this run's own
-          # uploaded shard reports once this workflow completes.
+          # Hints are no longer written here (--save-hints removed): harvest-solver-evidence.yml
+          # persists them centrally instead.
           git add reports/stress/
           if git diff --cached --quiet; then
             echo "Nothing changed — not creating an empty commit."

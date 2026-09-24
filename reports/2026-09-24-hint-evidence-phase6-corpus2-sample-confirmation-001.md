@@ -1,6 +1,9 @@
 # Hint evidence consolidation — Phase 6 corpus-2 sample confirmation — 001
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — a real corpus-2 sample (11 levels, 3 solved) confirmed level-blind harvester parity, complementing the exhaustive corpus-1 proof.
+> **Decision:** both corpora now have sufficient evidence to retire --save-hints from solver-stress-refresh.yml.
+> **Remaining gate:** make the --save-hints retirement edit itself, then repeat the proof for the two portfolio-family workflows.
 >
 > **Date:** 2026-09-24
 >

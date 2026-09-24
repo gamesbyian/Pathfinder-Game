@@ -1,6 +1,9 @@
 # Hint evidence consolidation — PR #2011 reconciliation — 001
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — reconciled and validated PR #2011's Phase 4/5/6-plumbing/Phase-9 work into this branch by actually running it, not by trusting its own description.
+> **Decision:** accept the incoming branch's work as-is on the strength of the passing automated floor plus a targeted correctness spot-check.
+> **Remaining gate:** a real bounded CP-SAT workflow run, the published_levels PSC-029 half, durable solver-stage identity, and real Phase 7 execution.
 >
 > **Date:** 2026-09-24
 >

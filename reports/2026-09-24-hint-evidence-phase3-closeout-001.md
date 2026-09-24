@@ -1,6 +1,9 @@
 # Hint evidence consolidation — Phase 3 closeout: PSC-029 retirement + stage-identity decision — 001
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — closed PSC-029 retirement and the durable solver-stage-identity decision, clearing Phase 3's last open handoff item.
+> **Decision:** Phase 3 is complete: published_levels/local_level_hints retention is unified and durable solver-stage identity is deliberately not persisted.
+> **Remaining gate:** none for Phase 3 itself; this closure unblocks Phase 5/6 live-workflow validation and Phase 7 execution.
 >
 > **Date:** 2026-09-24
 >

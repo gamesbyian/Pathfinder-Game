@@ -1,6 +1,9 @@
 # Hint evidence consolidation — Phase 6 portfolio family retirement — 001
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — a real 20-level corpus-1 canary (plus a corpus-2 sample) proved portfolio-family harvester parity; --save-hints was then retired from both remaining dual-write workflows.
+> **Decision:** Phase 6 is closed — every GHA solver-discovery workflow now has exactly one canonical persistence authority.
+> **Remaining gate:** none for Phase 6; the Phase 8 bulk-migration decision and a real Phase 10 cleanup pass remain.
 >
 > **Date:** 2026-09-24
 >

@@ -1,6 +1,9 @@
 # Hint evidence consolidation — Phase 7 historical enrichment applied — 001
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — applied real Phase 7 historical enrichment (41 occurrence records across 15 files) against the rescued September-9 determinism-collision cohort.
+> **Decision:** Phase 7's exact-link enrichment for the known rescued cohort is applied and verified.
+> **Remaining gate:** none for this rescued cohort; broader Phase 8/10 work remains.
 >
 > **Date:** 2026-09-24
 >

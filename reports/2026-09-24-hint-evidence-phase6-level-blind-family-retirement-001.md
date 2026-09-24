@@ -1,7 +1,9 @@
 # Hint evidence consolidation — Phase 6 level-blind family real canary — 001
 
-> **Status:** concluded-positive (parity proven; direct-route retirement decision deferred — see
-> section 5)
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-24 — a real 3-level local canary proved level-blind harvester/direct-write parity and fixed two real bugs (see section 5 for the retirement-decision deferral).
+> **Decision:** parity is proven at small scale; direct-route retirement is deferred pending full-scale confirmation.
+> **Remaining gate:** a real full-scale solver-stress-refresh.yml confirmation before removing --save-hints.
 >
 > **Date:** 2026-09-24
 >
