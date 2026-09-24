@@ -210,6 +210,21 @@ Production/testability fix:
 
 Expected contract-level saving is roughly the full **15.8 s** observed import cost. Because Node contracts execute in a four-worker pool, the actual Node-population wall reduction must be measured separately.
 
+### B4. Remove full-corpus CLI work from import-only unit tests
+
+Fast-gate profiling after the hint/provenance consolidation showed `test:hint-occurrence-acceptance` at **~15.8 s** despite its test body using only two tiny synthetic level objects.
+
+Root cause: `scripts/stress/hint-occurrence-acceptance-audit.mjs` exports the pure `auditHintOccurrenceSemantics()` helper but also unconditionally executes `buildHintOccurrenceAcceptanceReport()` at module load, reading all three canonical hint corpora whenever imported.
+
+Production fix in progress:
+
+- keep the same direct CLI behavior and full-corpus acceptance audit;
+- execute the CLI body only when the module is the direct Node entrypoint;
+- imports become side-effect free;
+- the unit test still exercises the exact pure audit logic.
+
+Acceptance: targeted test wall should collapse from ~15.8 s to sub-second while the direct audit command and ordinary CI remain green.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
