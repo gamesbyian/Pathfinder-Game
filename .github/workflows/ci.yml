@@ -224,6 +224,16 @@ jobs:
         # npm-audit output was informational here, not a CI gate, and security checks have their own
         # explicit repository commands.
         run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Restore TypeScript incremental state
+        id: typescript-buildinfo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules/.cache/tsconfig.tsbuildinfo
+            node_modules/.cache/tsconfig.test.tsbuildinfo
+          key: typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-${{ github.sha }}
+          restore-keys: |
+            typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-
       - name: Check package-script reachability
         id: dead_scripts
         continue-on-error: true
@@ -241,6 +251,15 @@ jobs:
         env:
           PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
+      - name: Save TypeScript incremental state
+        if: steps.validators.outcome == 'success' && steps.typescript-buildinfo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            node_modules/.cache/tsconfig.tsbuildinfo
+            node_modules/.cache/tsconfig.test.tsbuildinfo
+          key: typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-${{ github.sha }}
       - name: Run lint
         id: lint
         continue-on-error: true
@@ -251,6 +270,7 @@ jobs:
         env:
           PATHFINDER_PARALLEL_JOBS: '4'
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: npm run test:node
       - name: Solver capability canary
         id: solver_canary
