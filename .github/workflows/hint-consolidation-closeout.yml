@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '20.19.0'
+          node-version: '22.23.2'
           cache: npm
 
       - run: npm ci
@@ -50,11 +50,10 @@ jobs:
       - name: Re-run corpus occurrence acceptance
         run: node scripts/stress/hint-occurrence-acceptance-audit.mjs
 
-      - name: Re-referee all canonical Hint paths after enrichment
+      - name: Prove complete tracked Hint-store population and referee validity
         run: |
-          npm run test:hint-path-validation -- --corpus=data/levels.json
-          npm run test:hint-path-validation -- --corpus=data/stress/stress-levels.json
-          npm run test:hint-path-validation -- --corpus=data/stress/stress-levels-random.json
+          npm run check:hint-store-census
+          npm run check:all-hint-store-referee
 
       - name: Re-run determinism and reconstructability oracles after enrichment
         run: |
