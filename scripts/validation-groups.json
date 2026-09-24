@@ -268,7 +268,8 @@
       "test:hint-codec-baseline-benchmark",
       "test:harvest-portfolio-solve-sweep-reports",
       "test:hint-artifact-v4-migration",
-      "test:central-hint-persistence-guard"
+      "test:central-hint-persistence-guard",
+      "test:import-published-hint-merge"
     ],
     "persistence": [
       "test:firestore-rules"
