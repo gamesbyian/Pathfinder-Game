@@ -1,0 +1,111 @@
+#!/usr/bin/env node
+/**
+ * Hostile post-consolidation census of every maintained-reachable Hint/provenance surface.
+ *
+ * This is deliberately broader than a single "forbidden import" guard. It inventories physical
+ * artifact knowledge, semantic readers/writers, provenance construction, direct mutable aliases,
+ * workflow persistence, Firestore surfaces, and research consumers. The first use is diagnostic:
+ * review/classify every surfaced file before converting stable invariants into hard failures.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+import { buildMaintainedReachability } from './hint-io-facade-guard-lib.mjs';
+
+const ROOT = path.resolve(process.argv.find(a => a.startsWith('--root='))?.slice(7) || process.cwd());
+const OUT = process.argv.find(a => a.startsWith('--out='))?.slice(6) || null;
+const { sourceTexts, reachable } = buildMaintainedReachability(ROOT);
+
+const categories = {
+  physicalCodec: [
+    /\bdecodeHintArtifact\b/u, /\bencodeHintArtifact\b/u, /\bparseHintFileContents\b/u,
+    /\bstringifyHints\b/u, /\bHINT_ARTIFACT_SCHEMA_VERSION\b/u,
+  ],
+  corpusIo: [
+    /\breadLevelCorpusDocumentWithHints\b/u, /\bwriteLevelCorpusDocumentWithHints\b/u,
+    /\breadLevelHints\b/u, /\bhintFilePathFor\b/u, /\bhintsDirFor\b/u,
+  ],
+  semanticMutation: [
+    /\bsetLevelHintRecords\b/u, /\bmergeHints\b/u, /\bdedupeProvenanceEntries\b/u,
+  ],
+  provenanceConstruction: [
+    /\bmakeProvenanceEntry\b/u, /\bprovenanceFromSolveResult\b/u,
+    /\bprovenanceFromHistoricalSolveResult\b/u, /\bhintsFromVarietyResult\b/u,
+    /\btoHint\b/u,
+  ],
+  provenanceConsumption: [
+    /\bprovenanceEventIdentity\b/u, /\.provenance\b/u, /\boccurrences\b/u,
+    /\bsolverRequestIdentity\b/u, /\bprotocolHash\b/u, /\busedExistingHints\b/u,
+    /\bhintGuided\b/u, /\bisolatedTechnique\b/u,
+  ],
+  mutableAliases: [
+    /\.hintRecords\s*=/u, /\.hints\s*=/u,
+  ],
+  physicalShapeKnowledge: [
+    /\bhintMetadata\b/u,
+    /\b(?:parsed|obj|artifact|document)\??\.hints\b/u,
+    /\bschemaVersion\s*(?:===|==|:|=)\s*[1234]\b/u,
+    /\brepresentation\s*(?:===|==|:|=)\s*['"](?:sparse-inline|interned)['"]/u,
+    /\bsolverRefs\b/u, /\bcontextRefs\b/u, /\bexecutionRefs\b/u,
+  ],
+  physicalPathKnowledge: [
+    /data\/hints\//u, /data\/stress\/hints(?:-random|-envelope)?\//u,
+    /['"]hints(?:-random|-envelope)?['"]/u,
+  ],
+  workflowPersistence: [
+    /--save-hints\b/u, /git add[^\n]*hints/u, /harvest-solver-evidence/u,
+    /merge-hint-artifacts/u,
+  ],
+  firestore: [
+    /\blocal_level_hints\b/u, /\bpublished_levels\b/u, /\bFirestore\b/u, /\bfirestore\b/u,
+  ],
+  researchHintConsumer: [
+    /hint-query/u, /provenance-source-taxonomy/u, /hint-discovery-replayability/u,
+    /hint-termination-semantics/u, /hint-cost-drift/u, /hint-discovery-process/u,
+    /hint-failure-process/u, /provenance-coverage/u, /solution-profile/u,
+  ],
+};
+
+const rows = [];
+for (const [rel, text] of sourceTexts) {
+  const hits = {};
+  for (const [category, patterns] of Object.entries(categories)) {
+    const matched = patterns.filter(re => re.test(text)).map(re => re.source);
+    if (matched.length) hits[category] = matched;
+  }
+  if (!Object.keys(hits).length) continue;
+  rows.push({
+    path: rel,
+    maintainedReachable: reachable.has(rel),
+    directPackageReference: fs.existsSync(path.join(ROOT, 'package.json'))
+      && fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8').includes(rel),
+    hits,
+  });
+}
+rows.sort((a,b)=>a.path.localeCompare(b.path));
+
+const maintained = rows.filter(r=>r.maintainedReachable);
+const summary = {};
+for (const category of Object.keys(categories)) {
+  summary[category] = {
+    maintainedFiles: maintained.filter(r=>r.hits[category]).length,
+    allFiles: rows.filter(r=>r.hits[category]).length,
+  };
+}
+
+const result = {
+  schemaVersion: 1,
+  kind: 'pathfinder-hint-provenance-surface-census',
+  generatedAt: new Date().toISOString(),
+  root: ROOT,
+  summary,
+  maintainedRows: maintained,
+  dormantRows: rows.filter(r=>!r.maintainedReachable),
+};
+const json = JSON.stringify(result, null, 2);
+if (OUT) {
+  const out = path.resolve(ROOT, OUT);
+  fs.mkdirSync(path.dirname(out), {recursive:true});
+  fs.writeFileSync(out, json + '\n');
+}
+console.log(json);
