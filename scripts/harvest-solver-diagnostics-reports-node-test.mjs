@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -58,9 +58,9 @@ try {
     // edits and this fixture never touches the level's own definition.
     const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
-    const corpusPath = path.join(ROOT, 'data', 'levels.json');
-    const document = readLevelCorpusDocumentWithHints(corpusPath);
-    const level = document.levels.find(l => l.id === 'P00001');
+    const sourceCorpusPath = path.join(ROOT, 'data', 'levels.json');
+    const sourceDocument = readLevelCorpusDocumentWithHints(sourceCorpusPath);
+    const level = sourceDocument.levels.find(l => l.id === 'P00001');
     assert.ok(level, 'fixture requires the real published corpus to still carry level P00001');
     const knownHint = level.hintRecords.find(h => h.provenance?.some(p => typeof p?.context?.levelRevision === 'string' && p.context.levelRevision.length > 0));
     assert.ok(knownHint, 'fixture requires an already-known hint for P00001 with a recorded levelRevision');
@@ -68,13 +68,25 @@ try {
     const knownPath = knownHint.path;
     assert.ok(Array.isArray(knownPath) && knownPath.length > 0, 'fixture requires an already-known winning path for P00001');
 
+    // Never mutate the repository's shared data tree from a parallel Node test. The old version of
+    // this canary rewrote data/hints/P00001.json in place and restored it afterward; another test
+    // could read between truncate/write completion and observe invalid JSON. Instead copy the exact
+    // real level + Hint artifact into an isolated root and run the production harvester there.
     const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-real-row-'));
+    const fixtureRoot = path.join(realTemp, 'fixture-root');
+    const fixtureData = path.join(fixtureRoot, 'data');
+    mkdirSync(path.join(fixtureData, 'hints'), { recursive: true });
+    const rawCorpus = JSON.parse(readFileSync(sourceCorpusPath, 'utf8'));
+    const rawLevels = Array.isArray(rawCorpus) ? rawCorpus : rawCorpus.levels;
+    const rawLevel = rawLevels.find(l => l.id === 'P00001');
+    assert.ok(rawLevel, 'fixture requires raw P00001 level data');
+    writeFileSync(path.join(fixtureData, 'levels.json'), JSON.stringify([rawLevel]) + '\n');
+    writeFileSync(
+        path.join(fixtureData, 'hints', 'P00001.json'),
+        readFileSync(path.join(ROOT, 'data', 'hints', 'P00001.json'), 'utf8'),
+    );
+    const corpusPath = path.join(fixtureData, 'levels.json');
     const realReceiptPath = path.join(realTemp, 'receipt.json');
-    // Snapshot by content, not git: this test mutates the real tracked hint file below, and must
-    // restore it byte-for-byte afterward regardless of whether the working tree had other
-    // uncommitted changes to it already -- `git checkout` would silently discard those instead.
-    const p00001HintPath = path.join(ROOT, 'data', 'hints', 'P00001.json');
-    const originalP00001Hints = readFileSync(p00001HintPath, 'utf8');
     try {
         const reportPath = path.join(realTemp, 'diagnostics-report.json');
         writeFileSync(reportPath, JSON.stringify({
@@ -105,6 +117,7 @@ try {
             'scripts/run-bundled.mjs',
             'scripts/harvest-solver-diagnostics-reports.mjs',
             '--',
+            `--root=${fixtureRoot}`,
             `--staging-dir=${realTemp}`,
             '--source-run-id=fixture-real-row-run',
             '--source-run-attempt=1',
@@ -127,10 +140,6 @@ try {
         assert.equal(newEntry.execution?.reproducibilityMode, 'deterministic-work');
         assert.equal(newEntry.occurrences?.[0]?.runId, 'fixture-real-row-run');
     } finally {
-        // Restore the real, tracked corpus file this test deliberately mutated for the assertion
-        // above, to its exact original content -- not via git, so any pre-existing uncommitted
-        // change to this file survives this test untouched.
-        writeFileSync(p00001HintPath, originalP00001Hints);
         rmSync(realTemp, { recursive: true, force: true });
     }
 }
