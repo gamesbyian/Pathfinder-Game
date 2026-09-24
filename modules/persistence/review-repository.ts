@@ -3,7 +3,7 @@
 
 import { collection, doc, getDoc, getDocs, query, orderBy, deleteDoc, writeBatch } from 'firebase/firestore';
 import { encodeHints, decodeHints } from './level-submission-repository.js';
-import { mergeHints, upgradeLegacyHints, hintPathSignature, provenanceEventKey } from '../domain/hint-types.js';
+import { mergeHints, upgradeLegacyHints, hintPathSignature, provenanceEvidenceKeys } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
 import type { ReportError } from '../ports.js';
@@ -30,10 +30,10 @@ export async function persistLocalHintAdditionEvents({
     levelFingerprint: string;
     hints: Hint[];
     existing: Hint[];
-    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEventKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>;
+    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEvidenceKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>;
 }): Promise<LocalHintAdditionSummary> {
-    const knownEventKeys = new Set(
-        existing.flatMap((h) => h.provenance.map((entry) => provenanceEventKey(hintPathSignature(h.path), entry))),
+    const knownEvidenceKeys = new Set(
+        existing.flatMap((h) => h.provenance.flatMap((entry) => provenanceEvidenceKeys(hintPathSignature(h.path), entry))),
     );
     const summary: LocalHintAdditionSummary = {
         pathsWithSavedEvidence: 0,
@@ -50,10 +50,10 @@ export async function persistLocalHintAdditionEvents({
                 hint.path,
                 signature,
                 provenanceEntry,
-                knownEventKeys,
+                knownEvidenceKeys,
             );
             if (outcome.saved) {
-                knownEventKeys.add(provenanceEventKey(signature, provenanceEntry));
+                for (const key of provenanceEvidenceKeys(signature, provenanceEntry)) knownEvidenceKeys.add(key);
                 summary.saved++;
                 pathSaved = true;
             } else if (outcome.reason === 'duplicate-provenance-not-recorded') {
@@ -88,7 +88,7 @@ export function encodedLevelDataByteSize(encodedLevelData: any): number {
 export function createReviewRepository(client: any, { getLevelFingerprint, getLocalLevelHints, saveLocalLevelHintIfNovel, reportError = defaultReportError }: {
     getLevelFingerprint: (level: any) => any,
     getLocalLevelHints: (levelFingerprint: string) => Promise<Hint[]>,
-    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEventKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>,
+    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEvidenceKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>,
     reportError?: ReportError,
 }) {
     const { appId } = client;
