@@ -480,6 +480,22 @@ All tests and unchanged production coverage thresholds remained green. The remai
 
 Decision: stop shared-runner coverage topology tuning. D1 and D2 independently show the same pattern: useful validation work fits, but standard hosted-runner bootstrap/variance exhausts the hard ≤35 s budget. Future sharding evidence remains useful for a larger/reserved runner, but production should not add shared hosted lanes merely to move work around.
 
+### B6. Full same-runner deep concurrency rehearsal
+
+After B3, the warm deep path is roughly **12 s bootstrap + 21 s coverage + 12 s concurrent proofs/Firestore**.
+
+The last single-runner packing experiment launches all three unchanged deep obligations together after one warm bootstrap:
+
+- ordinary covered implementation population with existing thresholds;
+- heavyweight solver proofs;
+- Firestore persistence boundary.
+
+All child exit codes and logs remain independent.
+
+Decision:
+- if the combined validation window stays around **20–22 s**, production deep can plausibly approach the 35 s target without coverage sharding;
+- if CPU contention pushes the window materially higher, the 4-core single-runner deep path is exhausted and further work must reduce the proof population itself or change compute infrastructure.
+
 ### Phase E: hosted-runner variance decision
 
 Run at least 10 comparable full-impact rehearsal executions after the candidate topology is green.
