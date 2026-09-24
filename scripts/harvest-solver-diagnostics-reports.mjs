@@ -4,7 +4,7 @@
  *
  * Solver diagnostics remains dual-path during Phase 6: the source workflow still writes canonical
  * hints directly, while this adapter reconstructs the same successful observations from the durable
- * diagnostics artifact. Real parity/reharvest evidence is required before retiring that direct route.
+ * diagnostics artifact. The source workflow is artifact-only; central harvest is the canonical persistence route.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -263,7 +263,7 @@ if (ingestionReceiptOut) {
         filesChanged,
         pending,
         corpusScope: CORPUS,
-        notes: 'native Pathfinder diagnostics successful-discovery projection reconstructed from the durable diagnostics artifact; direct source-workflow mutation remains during Phase-6 parity',
+        notes: 'native Pathfinder diagnostics successful-discovery projection reconstructed from the durable diagnostics artifact; canonical persistence occurs only in the central harvester',
     });
     validateHintIngestionReceipt(receipt);
     mkdirSync(path.dirname(ingestionReceiptOut), { recursive: true });
