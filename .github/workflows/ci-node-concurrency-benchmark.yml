@@ -18,6 +18,12 @@ on:
         required: true
         default: '4'
         type: string
+  pull_request:
+    paths:
+      - '.github/workflows/ci-node-concurrency-benchmark.yml'
+      - 'scripts/ci-node-concurrency-benchmark.mjs'
+      - 'scripts/run-scripts-parallel.mjs'
+      - 'package.json'
 
 permissions:
   contents: read
@@ -34,8 +40,17 @@ jobs:
       - name: Install dependencies from the npm cache
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Benchmark Node harness fan-out
+        env:
+          JOB_COUNTS: ${{ inputs.job_counts || '4' }}
+          EXECUTION_MODES: ${{ inputs.execution_modes || 'npm,direct' }}
+          REPEATS: ${{ inputs.repeats || '4' }}
         run: >-
           npm run ci:benchmark-node-concurrency --
-          --jobs="${{ inputs.job_counts }}"
-          --modes="${{ inputs.execution_modes }}"
-          --repeats="${{ inputs.repeats }}"
+          --jobs="$JOB_COUNTS"
+          --modes="$EXECUTION_MODES"
+          --repeats="$REPEATS"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ci-node-concurrency-benchmark
+          path: tmp/ci-node-concurrency-benchmark/result.json
+          retention-days: 30

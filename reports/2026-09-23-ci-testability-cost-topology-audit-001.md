@@ -1258,3 +1258,94 @@ The successful pattern is now clearer:
 5. tests that specifically claim rebuild determinism retain a real independent rebuild, but do not rebuild merely to exercise pure derivation twice.
 
 Continue looking for this shape before introducing broader in-process test batching.
+
+
+## Post-#2025 evidence refresh and benchmark closure
+
+PR #2025 merged at `9d9159b8cb8f09db58d6fe5668876b111be4af59`. Its final green PR-CI run `35929852088` provides a useful post-refactor baseline under the same four-worker harness:
+
+- the full 173-contract `test:node` population completed in about **35.7 s wall**;
+- `test:research-query`: **4.9 s**;
+- `test:research-queryability-audit`: **4.2 s**;
+- `test:research-integration-audit`: **2.1 s**;
+- `test:research-system-query`: **4.9 s**;
+- `test:experiment-manifest`: **6.4 s**;
+- `test:portfolio-solve-sweep-worker`: **6.1 s**.
+
+The validator population on the same run exposed the other universal critical-path candidate clearly:
+
+- `check:types`: **10.5 s**;
+- `check:types:tests`: **12.9 s**.
+
+The model-reuse/CLI-seam work therefore moved the research-specific hotspot materially without exhausting the broader CI opportunity. The next evidence should resolve two already-instrumented questions rather than inventing another speculative optimization:
+
+1. whether bypassing per-child `npm run` wrappers produces a repeatable hosted-runner gain at the settled four-worker concurrency;
+2. whether restoring TypeScript incremental build info produces a material valid-change speedup while the fault probes continue to detect new production and test-only type errors.
+
+To make those measurements reproducible from an audit PR rather than dependent on an out-of-band manual dispatch:
+
+- the Node concurrency benchmark now supports a narrow `pull_request` trigger when its own runner/script/package authority changes, defaults that PR path to `npm,direct` at four workers/four repeats, and retains a machine-readable result artifact;
+- the TypeScript incremental benchmark now supports a narrow `pull_request` trigger when its workflow/script/TypeScript cache authority changes;
+- ordinary production CI behavior remains unchanged by these benchmark triggers.
+
+Do not promote direct child execution or Actions-cached TypeScript build info merely because one PR benchmark is favorable. Require repeated green measurements and preserve the existing correctness/failure-quality contracts before activation.
+
+
+## Hosted-runner benchmark results from PR #2026
+
+PR #2026 supplied the first same-runner repeated measurement for the two remaining universal execution-cost candidates.
+
+### Direct child execution
+
+Run `35930998352` executed the complete Node/CLI contract population four times per mode at the already-selected four-worker concurrency.
+
+| mode | median wall |
+| --- | ---: |
+| npm child wrappers | **38.01 s** |
+| direct child execution | **28.86 s** |
+
+Direct execution was **1.317× faster** than the same four-worker npm-wrapped population, a wall-time reduction of about **24%**. All benchmark executions passed.
+
+This is large enough to justify production activation in GitHub CI, provided:
+- local/default execution retains the npm-wrapper path;
+- CI retains an explicit escape hatch back to npm mode;
+- the parallel-runner regression suite continues covering command parsing, exit propagation, buffering, and failure output.
+
+### TypeScript incremental build-info reuse
+
+Run `35930998349` measured:
+
+| probe | seconds |
+| --- | ---: |
+| production cold | **4.164** |
+| production warm | **1.544** |
+| tests cold | **6.305** |
+| tests warm | **2.277** |
+| production valid change after restored cache | **1.604** |
+
+Observed speedups:
+- production unchanged warm: **2.697×**;
+- tests unchanged warm: **2.769×**;
+- production valid change after restored cache: **2.596×**.
+
+The fault probes also passed:
+- restored production build info still detected a newly added production type error;
+- production typing correctly ignored a newly added test-only type error;
+- restored test build info detected that new test-only type error.
+
+This clears the correctness/timing gate for an exact-key GitHub Actions cache of the two build-info files. Activation should use keys derived from the TypeScript/toolchain generation plus source-tree identity, avoid broad fallback restore keys, and retain the fault-probe benchmark as a manual/PR audit oracle.
+
+### Dependency-local shadow result
+
+Run `35930998378` traced **204 / 206** permanent contracts and found:
+- **49** strict static-import-sufficient candidates;
+- **1** contract with an unresolved local edge;
+- **2** contracts with nonliteral dynamic imports;
+- **534** source files with at least one registered consumer.
+
+Filesystem/process/environment dependencies remain common, so static reachability is still only a lower bound. The next routing step is to add explicit non-import dependency metadata for the clean candidate set and near-misses, then replay/fault-inject before any dependency-local skipping is activated.
+
+### Worker-pool reuse follow-up
+
+PR #2027 independently reduced `test:portfolio-solve-sweep-worker` from roughly **6.1 s** on the post-#2025 baseline to **4.0 s** while preserving the real forked-worker + nested-race boundary. It also better matches production's intended long-lived worker/race-pool reuse topology.
+

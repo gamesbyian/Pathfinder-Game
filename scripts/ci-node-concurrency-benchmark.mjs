@@ -107,8 +107,13 @@ const conclusion = !fastest
   ? 'No benchmark variant completed every requested run; do not change the runner.'
   : `${fastest.mode}@jobs=${fastest.jobs} has the lowest observed median (${fastest.medianSeconds}s).`;
 
+const output = { schemaVersion: 1, variants: summary, runs: rows, conclusion };
+const outDir = 'tmp/ci-node-concurrency-benchmark';
+fs.mkdirSync(outDir, { recursive: true });
+fs.writeFileSync(`${outDir}/result.json`, `${JSON.stringify(output, null, 2)}\n`);
+
 console.log('\n=== Node harness concurrency benchmark ===');
-console.log(JSON.stringify({ schemaVersion: 1, variants: summary, runs: rows }, null, 2));
+console.log(JSON.stringify(output, null, 2));
 
 if (process.env.GITHUB_STEP_SUMMARY) {
   const lines = [
