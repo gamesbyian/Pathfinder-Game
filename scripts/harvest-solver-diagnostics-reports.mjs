@@ -2,8 +2,9 @@
 /**
  * Central semantic adapter for pathfinder-solver-diagnostics-report artifacts.
  *
- * The source workflow is artifact-only. This adapter reconstructs successful observations from the
- * durable diagnostics artifact; central harvest is the sole canonical persistence route.
+ * Solver diagnostics remains dual-path during Phase 6: the source workflow still writes canonical
+ * hints directly, while this adapter reconstructs the same successful observations from the durable
+ * diagnostics artifact. Real parity/reharvest evidence is required before retiring that direct route.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -34,8 +35,7 @@ const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).m
     const [key, ...rest] = arg.split('=');
     return [key, rest.join('=')];
 }));
-const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
-const root = path.resolve(args.get('--root') || repoRoot);
+const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
 const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_RUN_ATTEMPT || null;
@@ -44,7 +44,7 @@ const ingestionReceiptArg = args.get('--ingestion-receipt-out');
 const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
-const CORPUS = 'data/levels.json';
+const CORPUS = args.get('--corpus') || 'data/levels.json';
 
 function walk(dir, out = []) {
     for (const name of readdirSync(dir)) {
@@ -55,7 +55,7 @@ function walk(dir, out = []) {
     return out;
 }
 
-const corpusPath = path.join(root, CORPUS);
+const corpusPath = path.resolve(root, CORPUS);
 const document = readLevelCorpusDocumentWithHints(corpusPath);
 const byId = new Map(document.levels.map((level, index) => [
     String(level.id ?? index + 1),
@@ -262,7 +262,7 @@ if (ingestionReceiptOut) {
         filesChanged,
         pending,
         corpusScope: CORPUS,
-        notes: 'native Pathfinder diagnostics successful-discovery projection reconstructed from the durable diagnostics artifact; canonical persistence occurs only in the central harvester',
+        notes: 'native Pathfinder diagnostics successful-discovery projection reconstructed from the durable diagnostics artifact; direct source-workflow mutation remains during Phase-6 parity',
     });
     validateHintIngestionReceipt(receipt);
     mkdirSync(path.dirname(ingestionReceiptOut), { recursive: true });
