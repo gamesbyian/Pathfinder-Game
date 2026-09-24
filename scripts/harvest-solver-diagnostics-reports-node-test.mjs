@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -58,7 +58,16 @@ try {
     // edits and this fixture never touches the level's own definition.
     const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
-    const corpusPath = path.join(ROOT, 'data', 'levels.json');
+    const sourceCorpusPath = path.join(ROOT, 'data', 'levels.json');
+    const sourceHintPath = path.join(ROOT, 'data', 'hints', 'P00001.json');
+    const isolatedDataDir = path.join(realTemp, 'data');
+    const isolatedHintsDir = path.join(isolatedDataDir, 'hints');
+    mkdirSync(isolatedHintsDir, { recursive: true });
+    const corpusPath = path.join(isolatedDataDir, 'levels.json');
+    const p00001HintPath = path.join(isolatedHintsDir, 'P00001.json');
+    copyFileSync(sourceCorpusPath, corpusPath);
+    copyFileSync(sourceHintPath, p00001HintPath);
+
     const document = readLevelCorpusDocumentWithHints(corpusPath);
     const level = document.levels.find(l => l.id === 'P00001');
     assert.ok(level, 'fixture requires the real published corpus to still carry level P00001');
@@ -70,11 +79,9 @@ try {
 
     const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-real-row-'));
     const realReceiptPath = path.join(realTemp, 'receipt.json');
-    // Snapshot by content, not git: this test mutates the real tracked hint file below, and must
-    // restore it byte-for-byte afterward regardless of whether the working tree had other
-    // uncommitted changes to it already -- `git checkout` would silently discard those instead.
-    const p00001HintPath = path.join(ROOT, 'data', 'hints', 'P00001.json');
-    const originalP00001Hints = readFileSync(p00001HintPath, 'utf8');
+    // The harvester writes to this isolated sibling hint directory, never to the tracked repo.
+    // This keeps the real codec/referee/provenance path while making the contract safe under
+    // four-worker and cross-shard scheduling.
     try {
         const reportPath = path.join(realTemp, 'diagnostics-report.json');
         writeFileSync(reportPath, JSON.stringify({
@@ -110,6 +117,7 @@ try {
             '--source-run-attempt=1',
             '--source-workflow=Solver diagnostics and hint capture',
             `--ingestion-receipt-out=${realReceiptPath}`,
+            `--corpus-path=${corpusPath}`,
         ], { cwd: ROOT, encoding: 'utf8' });
         assert.equal(realRun.status, 0, realRun.stderr || realRun.stdout);
         assert.match(realRun.stdout, /1 report\(s\), 1 candidate\(s\), 1 eligible, 1 referee-accepted/, realRun.stdout);
@@ -127,10 +135,6 @@ try {
         assert.equal(newEntry.execution?.reproducibilityMode, 'deterministic-work');
         assert.equal(newEntry.occurrences?.[0]?.runId, 'fixture-real-row-run');
     } finally {
-        // Restore the real, tracked corpus file this test deliberately mutated for the assertion
-        // above, to its exact original content -- not via git, so any pre-existing uncommitted
-        // change to this file survives this test untouched.
-        writeFileSync(p00001HintPath, originalP00001Hints);
         rmSync(realTemp, { recursive: true, force: true });
     }
 }
