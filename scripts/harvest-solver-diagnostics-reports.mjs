@@ -35,7 +35,8 @@ const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).m
     const [key, ...rest] = arg.split('=');
     return [key, rest.join('=')];
 }));
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
+const root = path.resolve(args.get('--root') || repoRoot);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
 const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_RUN_ATTEMPT || null;
