@@ -242,17 +242,13 @@ jobs:
         shell: bash
         run: |
           stage="artifact-staging/stress-shard-${{ steps.range.outputs.nn }}"
-          mkdir -p "$stage/logs/solver-corpus2-batches" "$stage/data/stress/hints" "$stage/data/stress/hints-random"
+          mkdir -p "$stage/logs/solver-corpus2-batches"
           for f in \
             "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
             "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" \
             "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
             "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md"; do
             [ -e "$f" ] && cp "$f" "$stage/logs/solver-corpus2-batches/"
-          done
-          git status --porcelain -- data/stress/hints/ data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
-            mkdir -p "$stage/$(dirname "$f")"
-            cp "$f" "$stage/$f"
           done
 
       - name: Upload shard artifact
