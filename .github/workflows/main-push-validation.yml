@@ -93,6 +93,15 @@ jobs:
           path: ~/.npm/_npx
           key: firebase-cli-${{ runner.os }}-node20-firebase-tools-15.28.2-v1
 
+      - name: Restore default-branch ESLint result cache
+        id: eslint-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .cache/eslint
+          key: eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-
+
       - name: Restore TypeScript incremental state
         id: typescript-buildinfo
         uses: actions/cache/restore@v5
@@ -135,6 +144,12 @@ jobs:
         id: lint
         continue-on-error: true
         run: npm run check:lint
+      - name: Save default-branch ESLint result cache
+        if: steps.lint.outcome == 'success' && steps.eslint-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .cache/eslint
+          key: eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-${{ github.sha }}
       - name: Run fast unit tests
         id: unit_fast
         continue-on-error: true
