@@ -144,6 +144,17 @@ The original nine-level population has now been probed at **250,000 work** and a
 | C exact dependency-tree restore | planned | Hosted restore **3 s** vs `npm ci` **8 s**; promotion requires OS + arch + exact Node/npm generation + lockfile keying and complete restored-tree validation. |
 | A5 remove planner dependency edge | planned | Fast gate consumes no planner outputs; deep can compute the canonical plan locally, fail safe to full deep, and exit before dependency setup when not selected. |
 
+### A1b. Fast-gate runtime-data cache miss fallback
+
+After hint-tree churn invalidated the exact runtime-data key, ordinary PR runs measured the universal fast-gate miss path at **52-56 s** before validation. Two approaches are already rejected by hosted evidence:
+
+1. post-clone `git sparse-checkout set` on the source worktree: 52-56 s;
+2. a second full sparse checkout into the same root worktree: ~55 s.
+
+Current rehearsal isolates the data population in `.runtime-data-source`, copies only `data/` into the source worktree, then removes the temporary checkout. The branch deliberately adds an `-a1b-miss-probe` cache-key suffix to force one miss; that suffix must be removed before merge.
+
+If this isolated checkout is still materially above ~15 s, stop optimizing PR-side miss recovery and move exact runtime-data cache publication upstream to the default-branch diagnostics/hint producer so PRs normally never materialize the hint tree.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
