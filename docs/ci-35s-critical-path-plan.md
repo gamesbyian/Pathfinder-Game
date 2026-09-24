@@ -228,6 +228,78 @@ Expected contract-level saving is roughly the full **15.8 s** observed import co
 
 The corpus-scale acceptance proof remains independently maintained by `.github/workflows/hint-consolidation-closeout.yml`, which directly invokes `hint-occurrence-acceptance-audit.mjs`. The optimization therefore separates unit import cost from corpus authority rather than removing the full audit.
 
+### B2 coverage topology conclusion and repair-search follow-up
+
+Coverage topology rehearsal has now established both compute and infrastructure limits:
+
+- two cross-runner shards: useful covered work **15-18 s**, but merged authority ~49 s with a separate aggregator;
+- two shards merged on shard 1: correctness preserved, but duplicated bootstrap still kept authority above the 35 s target;
+- one runner / two concurrent shard processes: covered work **31 s**, total job ~43 s; 4-core runner saturation removes the theoretical split win;
+- three cross-runner shards: useful work **10-13 s**, thresholds green, but shared-runner assignment skew produced ~74 s first-runner-start → merged authority;
+- one standard runner with existing `deepTest` integrations excluded: thresholds green, covered work **~27 s**, total runner wall **46 s**.
+
+Conclusion: test execution can be sharded below the useful-work budget, but ordinary shared-runner topology does not currently convert that into ≤35 s authoritative wall. Before escalating to larger/reserved compute, reduce the remaining single-runner long tail.
+
+Current long tail after B1:
+- `repair-search.test.ts`: **~9.0 s**;
+- next file: ~2.5 s.
+
+A measurement-only rehearsal now parameterizes only the expensive repair-search determinism/default-equivalence node budgets while leaving ordinary CI defaults unchanged. Probe envelopes:
+- 250k / 125k;
+- 100k / 50k;
+- 50k / 25k.
+
+Promotion requires the exact repair-search file to stay green and retain nontrivial deterministic execution; the lowest passing envelope then becomes a candidate production testability change.
+
+Final budget conclusion after full-coverage comparison:
+
+- 250k / 125k production candidate (#2077): ordinary covered suite **22.00 s**, repair-search file **6.3 s**;
+- 100k / 50k rehearsal: suite **25.26 s**, repair-search **8.8 s**;
+- 50k / 25k rehearsal: suite **25.21 s**, repair-search **8.6 s**;
+- latest single-fast comparison without existing deep integrations: **19.70 s useful coverage**, **38 s runner wall**.
+
+The lower repair budgets do not produce a stable coverage win, so 250k / 125k remains the production choice. Coverage sharding is proven semantically correct but rejected as a production standard-runner topology for now: shared-runner assignment/duplicated bootstrap overwhelms its compute savings. The next architecture decision should therefore use the improved single-runner costs and, if standard-runner wall remains above target, benchmark reserved/larger compute rather than adding more shared-runner shards.
+
+### B1d. Bundle-once harvest test experiment: rejected
+
+Post-B1c profiling identified two recent hint-ingestion contracts at roughly **5–6 s** each:
+
+- `test:harvest-solver-diagnostics-reports`: ~5.9 s;
+- `test:harvest-cpsat-discovery-reports`: ~5.0 s.
+
+Both tests deliberately preserve two end-to-end cases, including a real canonical-row referee/persistence canary. A rehearsal reused one `buildBundle()` output for both cases instead of invoking `run-bundled.mjs` twice.
+
+Measured result:
+
+- diagnostics harvest: **5.9 → 5.7 s**;
+- CP-SAT harvest: **5.0 → 4.7 s**.
+
+The duplicate esbuild cost is not the dominant work. Corpus load/referee/persistence semantics dominate, so this code change is **not promoted**. The real integration coverage remains unchanged.
+
+### D1. Two-shard Node/CLI hosted rehearsal
+
+After B1c, a warm four-worker production run measured:
+
+- **204** Node/CLI contracts;
+- **126.9 child-seconds** total;
+- Node/CLI wall **33 s**;
+- ideal four-worker floor from the measured population ~31.7 s.
+
+The current monolithic runner is therefore already close to work-conserving. A two-way greedy timing partition predicts **63.5 / 63.4 child-seconds**, roughly 16 s useful work per shard at four workers.
+
+A current-main hosted rehearsal compares:
+
+1. the complete 204-contract population, four workers;
+2. balanced shard A, four workers;
+3. balanced shard B, four workers.
+
+All three use the same warm exact runtime-data and dependency-tree bootstrap. The timing profile is mechanically checked against the current `package.json` `test:node` registry before execution.
+
+Decision rule:
+
+- if both shard runner walls are ≤27 s **and** first-shard-start → both-shards-complete is ≤35 s across comparable samples, standard-runner sharding remains viable;
+- if useful shard work fits but shared-runner assignment skew again pushes authority beyond 35 s, stop adding standard-runner shards and proceed to the reserved/larger-runner benchmark already defined below.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
