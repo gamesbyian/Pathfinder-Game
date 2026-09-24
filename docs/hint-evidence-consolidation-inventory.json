@@ -1209,6 +1209,12 @@
           "modules/input/submission-controller.ts"
         ],
         "finding": "Browser variety-search provenance projected only newlySaved paths, dropped documented independent rediscoveries, and omitted VarietySavedMeta.scoringProfileId. Submission mode also derived usedExistingHints after adding new paths, which could label a cold successful search as history-aware. Fixed the canonical projection to preserve new + rediscovered events, scoring profile, seed/anchor identity, and pre-search hint context."
+      },
+      {
+        "id": "HPA-011",
+        "kind": "guard-detection-blind-spot",
+        "path": "scripts/hint-provenance-surface-audit.mjs",
+        "finding": "The permanent physical-reader guard only recognized inline JSON.parse(readFile...) shapes and a narrow variable-name set, so staged read/parse refactors could evade raw v4-reader detection. Hardened to combine independent read/parse/Hint-source/.hints signals and added a permanent detector self-test."
       }
     ],
     "permanentGuards": [
