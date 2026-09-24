@@ -276,17 +276,11 @@ jobs:
         run: |
           set -euo pipefail
           stage="artifact-staging/typical-shard-${{ matrix.shard }}"
-          mkdir -p "${stage}/logs/production-replay-baseline" "${stage}/data/stress/hints" "${stage}/data/stress/hints-random"
+          mkdir -p "${stage}/logs/production-replay-baseline"
           cp logs/production-replay-baseline/*batch-${{ matrix.shard }}*.json \
              logs/production-replay-baseline/*batch-${{ matrix.shard }}*.md \
              logs/production-replay-baseline/*batch-${{ matrix.shard }}*.log \
              "${stage}/logs/production-replay-baseline/" 2>/dev/null || true
-          # Shard level-ranges are disjoint per corpus, so a git-status diff against the fresh
-          # checkout is a precise list of the hint files THIS shard changed.
-          git status --porcelain -- data/stress/hints/ data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
-            mkdir -p "${stage}/$(dirname "$f")"
-            cp "$f" "${stage}/${f}"
-          done
 
       # The artifact name and the staging directory both come from matrix.shard — ONE source. The
       # neighbouring refresh workflow derived its padding twice and the two silently diverged,
