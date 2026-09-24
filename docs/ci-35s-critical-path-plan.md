@@ -129,7 +129,7 @@ Follow-up hosted probe:
 
 Five structurally overlapping alternative fixtures also solved in ~0.1 s total, so preserving multi-mechanic representation does not inherently require the current canary cost.
 
-The preferred action is to retain the original nine fixtures if all nine still solve at the smaller deterministic work budget; replacement is a fallback, not the first move.
+The original nine-level population has now been probed at **250,000 work** and all **9/9 solve in ~1.5 s total / 1.30 M nodes**. Keep the exact fixture set and regenerate its baseline at 250k work; replacement is unnecessary unless future semantics change.
 
 ## Implementation sequence
 
@@ -168,12 +168,13 @@ These are independent, low-risk changes and should be activated separately so th
 
 #### A4. Right-size the solver canary work budget
 
-- keep the current nine fixtures if the nine-level 250k-work probe is green;
-- regenerate the canary baseline at the new deterministic work budget;
+- keep the current nine fixtures;
+- set the canary work budget to **250,000**;
+- regenerate the canary baseline at that deterministic work budget;
 - preserve solved-set semantics and all nine fixture identities.
 
-**Measured L140 opportunity:** ~9.4 s → ~0.7 s at 250k.  
-**Target whole-canary wall:** ≤1.5 s.
+**Measured result:** 9/9 solve in ~1.5 s total at 250k; L140 itself is ~0.7 s.  
+**Target whole-canary wall:** ≤2 s.
 
 #### A5. Remove the planner runner from the full-impact dependency chain
 
@@ -206,30 +207,39 @@ Require a targeted before/after run proving the mutation/regression would still 
 
 #### B2. Separate real deep integrations only if coverage remains sound
 
-An audit probe runs coverage with `SOLVER_DEEP_TESTS=0`.
+The hosted probe with `SOLVER_DEEP_TESTS=0` stayed **green at existing coverage thresholds**, but wall time only improved from roughly **29.5 s to 26.7 s**. Existing Vitest parallelism already hides much of those real-integration costs.
 
-If thresholds remain green:
+**Decision:** do not create a new deep-integration tier merely for this ~2.8 s gain.
 
-- make the ordinary covered population explicitly fast/deterministic;
-- create an explicit `test:deep-integrations` obligation for real-solver `deepTest` cases such as diversification/hint-ablation/early-repair integration;
-- run that obligation in parallel with heavyweight proofs/other deep work;
-- do not rewrite those tests as mocks merely to reduce wall time.
+Instead:
 
-If thresholds fail materially, keep required cases under coverage or merge per-shard V8 coverage rather than lowering thresholds.
+- keep current coverage composition while B1 is measured;
+- after B1, require covered-suite wall **≤19 s** to fit one standard-runner implementation lane with bootstrap headroom;
+- if it remains >19 s, build **two measured file-balanced coverage shards** and merge V8 coverage before enforcing the unchanged thresholds;
+- only split real `deepTest` integrations separately if they materially improve the shard critical path or simplify ownership;
+- never lower coverage thresholds to avoid implementing coverage merge.
 
 ### Phase C: reduce dependency materialization if it pays
 
-A same-runner benchmark is measuring exact `node_modules` cache save/delete/restore.
+Hosted run 35958457759 measured:
 
-Promote only if:
+- exact Node 22 + npm-cache `npm ci`: **8 s**;
+- save exact `node_modules`: **3 s**;
+- delete + exact cache restore: **3 s**;
+- post-restore `check:types`: green.
 
-- restore is materially faster than the observed 7–9 s `npm ci`;
-- a post-restore typecheck/full validation remains green;
-- key includes OS, exact Node runtime, lockfile/toolchain generation;
-- cache miss falls back to `npm ci`;
-- install-script/native-module correctness remains explicit.
+This clears the timing threshold: restore saves roughly **5 s per dependency lane**.
 
-If restore does not save at least ~4 s per lane, keep `npm ci`; complexity is not justified.
+Promotion design:
+
+- default branch seeds `node_modules` only after successful `npm ci`;
+- exact key includes OS, exact Node runtime, package lock, and any install-generation input that can affect postinstall/native output;
+- PR lanes restore read-only from default branch;
+- cache miss falls back to `npm ci` and remains fully correct;
+- before activation, run the complete Node/CLI + Vitest + build contract from a restored tree, not just typecheck;
+- native/install-script packages must be inventoried before treating the cache as authoritative bootstrap state.
+
+Because the five-lane rehearsal would otherwise repeat 8–9 s installs, this optimization moves ahead of lane proliferation.
 
 ### Phase D: runtime-balanced execution topology
 
@@ -239,11 +249,11 @@ Do not pick shard count until A/B/C measurements are active. The first standard-
 
 | lane | obligations | target bootstrap | target useful work | lane budget |
 | --- | --- | ---: | ---: | ---: |
-| static | reachability/text + validators + warm lint + build | 8–12 s | 8–10 s | **≤22 s** |
-| node-a | ~50% measured Node/CLI cost | 8–12 s | 13–14 s | **≤26 s** |
-| node-b | ~50% measured Node/CLI cost | 8–12 s | 13–14 s | **≤26 s** |
-| implementation | ordinary coverage after B1/B2 | 8–12 s | ≤15–18 s | **≤30 s** |
-| deep-services | heavy proofs + deep integrations + Firestore + canary, overlapping independent processes where measured safe | 8–12 s | ≤15–18 s critical path | **≤30 s** |
+| static | reachability/text + validators + warm lint + build | **≤8 s** | 8–10 s | **≤18 s** |
+| node-a | ~50% measured Node/CLI cost | **≤8 s** | 13–14 s | **≤23 s** |
+| node-b | ~50% measured Node/CLI cost | **≤8 s** | 13–14 s | **≤23 s** |
+| implementation | ordinary coverage after B1; shard if >19 s | **≤8 s** | ≤19 s | **≤27 s** |
+| deep-services | heavy proofs + Firestore + 250k canary, overlapping independent processes where measured safe | **≤8 s** | ≤14–16 s critical path | **≤24 s** |
 
 Notes:
 
@@ -289,9 +299,9 @@ This fallback is preferable to removing validation solely because shared hosted-
 3. A4 canary budget.
 4. B1 lifecycle deterministic dispatch.
 5. A2 exact Node 22 after a complete Node22 shadow/full contract.
-6. A5 remove planner dependency edge.
-7. C dependency materialization only if benchmark wins.
-8. B2 deep-integration tier only if coverage probe permits.
+6. C exact dependency-tree restore after a complete restored-tree validation rehearsal.
+7. A5 remove planner dependency edge.
+8. B2 coverage-shard decision from post-B1 timing; do not create a deep-integration tier by default.
 9. D candidate five-lane rehearsal.
 10. E standard-vs-reserved runner decision.
 
