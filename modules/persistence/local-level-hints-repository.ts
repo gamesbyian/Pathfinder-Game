@@ -2,11 +2,11 @@
 // Firestore published_levels doc) — see docs/firestore-security-model.md and CLAUDE.md's
 // Provenance section. Keyed by the level's fingerprint (domain/level-fingerprint.ts), the same
 // identity mechanism already used for submission/publish duplicate detection and Dev-Mode level
-// ratings. One Firestore doc per distinct (path, discovery-event) pair -- see entryIdFor()'s own
+// ratings. One Firestore doc per distinct (path, discovery-event, physical-occurrence set) observation -- see entryIdFor()'s own
 // doc comment for why a path can have more than one -- under
 // artifacts/{appId}/local_level_hints/{levelFingerprint}/entries/{entryId}.
 import { collection, doc, getDocs, getCountFromServer, setDoc, Timestamp } from 'firebase/firestore';
-import { toHint, mergeHints, upgradeProvenanceEntry, provenanceEventIdentity, provenanceEventKey, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
+import { toHint, mergeHints, upgradeProvenanceEntry, provenanceEventIdentity, provenanceEventKey, provenanceOccurrenceKey, provenanceEvidenceKeys, hintOccurrenceKey, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
 
 const MAX_HINTS_PER_LEVEL = 5000;
 
@@ -24,12 +24,14 @@ const MAX_HINTS_PER_LEVEL = 5000;
  *  and merging occurrence lineage exactly as they do for every other multi-event provenance source
  *  in this codebase -- reusing the single shared merge path rather than a second copy of it. */
 function entryIdFor(pathSignature: string, entry: HintProvenanceEntry, hash: (s: string) => string): string {
-    return `${hash(pathSignature)}-${hash(provenanceEventIdentity(entry))}`;
+    const occurrenceKeys = (entry.occurrences ?? []).map(hintOccurrenceKey).sort();
+    const occurrenceSuffix = occurrenceKeys.length > 0 ? `-${hash(JSON.stringify(occurrenceKeys))}` : '';
+    return `${hash(pathSignature)}-${hash(provenanceEventIdentity(entry))}${occurrenceSuffix}`;
 }
 
 /** A rediscovery of an already-known PATH is no longer evidence-loss (see entryIdFor's own doc
- *  comment): only a true duplicate -- the exact same discovery EVENT for the exact same path,
- *  keyed by provenanceEventKey() -- is refused, and it is refused because writing it again would
+ *  comment): only a true duplicate -- the exact same discovery EVENT with no new physical occurrence for the
+ *  exact same path -- is refused, and it is refused because writing it again would
  *  be redundant, not because this backend structurally cannot represent it. Returning a
  *  discriminated outcome instead of a bare boolean still makes that redundant-duplicate case
  *  distinguishable from a real capacity refusal or a missing connection, rather than three
@@ -76,7 +78,7 @@ export function createLocalLevelHintsRepository(client: any) {
     }
 
     /** Saves one newly-discovered path/event pair as its own entry, unless this exact discovery
-     *  event is already known (locally or here — callers pass `alreadyKnownEventKeys`, built via
+     *  event is already known (locally or here — callers pass `alreadyKnownEvidenceKeys`, built via
      *  provenanceEventKey(), covering both) or the level already has MAX_HINTS_PER_LEVEL saved
      *  entries; see SaveLocalLevelHintOutcome for why the "unless" cases return a distinguishable
      *  reason rather than a bare false. A NEW discovery event for an already-known path is not
@@ -91,19 +93,35 @@ export function createLocalLevelHintsRepository(client: any) {
         path: number[],
         pathSignature: string,
         provenance: HintProvenanceEntry,
-        alreadyKnownEventKeys: ReadonlySet<string>,
+        alreadyKnownEvidenceKeys: ReadonlySet<string>,
     ): Promise<SaveLocalLevelHintOutcome> {
         if (!client.db || !levelFingerprint) return { saved: false, reason: 'no-connection' };
-        if (alreadyKnownEventKeys.has(provenanceEventKey(pathSignature, provenance))) {
-            return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+
+        const eventKey = provenanceEventKey(pathSignature, provenance);
+        const occurrences = provenance.occurrences ?? [];
+        let provenanceToPersist = provenance;
+
+        if (occurrences.length === 0) {
+            if (alreadyKnownEvidenceKeys.has(eventKey)) {
+                return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+            }
+        } else {
+            const novelOccurrences = occurrences.filter(
+                occurrence => !alreadyKnownEvidenceKeys.has(provenanceOccurrenceKey(pathSignature, provenance, occurrence)),
+            );
+            if (novelOccurrences.length === 0) {
+                return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+            }
+            provenanceToPersist = { ...provenance, occurrences: novelOccurrences };
         }
+
         const count = await getCountFromServer(entries(levelFingerprint));
         if (count.data().count >= MAX_HINTS_PER_LEVEL) return { saved: false, reason: 'capacity-reached' };
-        const entryId = entryIdFor(pathSignature, provenance, hashPathSignature);
+        const entryId = entryIdFor(pathSignature, provenanceToPersist, hashPathSignature);
         await setDoc(doc(entries(levelFingerprint), entryId), {
             path,
             pathSignature,
-            provenance,
+            provenance: provenanceToPersist,
             createdAt: Timestamp.now(),
         });
         return { saved: true };
@@ -114,5 +132,8 @@ export function createLocalLevelHintsRepository(client: any) {
     const localHintEntryId = (pathSignature: string, provenance: HintProvenanceEntry) =>
         entryIdFor(pathSignature, provenance, hashPathSignature);
 
-    return { getLocalLevelHints, saveLocalLevelHintIfNovel, hashPathSignature, localHintEntryId, MAX_HINTS_PER_LEVEL };
+    const localHintEvidenceKeys = (pathSignature: string, provenance: HintProvenanceEntry) =>
+        provenanceEvidenceKeys(pathSignature, provenance);
+
+    return { getLocalLevelHints, saveLocalLevelHintIfNovel, hashPathSignature, localHintEntryId, localHintEvidenceKeys, MAX_HINTS_PER_LEVEL };
 }
