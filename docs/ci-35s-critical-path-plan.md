@@ -169,6 +169,19 @@ Together:
 - A1c covers diagnostics-generated `[skip ci]` main commits;
 - A1b can recover a PR exact miss by restoring the cached base-parent generation and overlaying only changed runtime-data files.
 
+### A1b decisive base-cache overlay rehearsal
+
+A1d's merge main-push run seeded the exact `396abe50...` runtime-data generation in **2 s**, satisfying the prerequisite missing from the earlier A1b rehearsal.
+
+This branch deliberately misses only the PR current-generation key, then:
+1. derives `HEAD^1` runtime-data identity;
+2. restores the normal unsuffixed base-parent cache;
+3. forces one harmless `data/levels.json` overlay to exercise the delta path;
+4. saves the rehearsal current generation;
+5. must skip the known-slow whole-tree fallback.
+
+Rehearsal-only suffix and forced overlay input are removed before production merge.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
