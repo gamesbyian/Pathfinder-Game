@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-v4-six-store-repair",
+  "generatedAt": "2026-09-24",
+  "sourceCommit": "ee22ef8c5c760e46a51573f401124c1ffc181030",
+  "targetCommit": "9ea3003b8fbb5ad323db29a38ef73907a4d1df28",
+  "workflowRunId": 36065570267,
+  "workflowArtifact": {
+    "id": 10835949903,
+    "name": "hint-omitted-v4-migration",
+    "digest": "sha256:a4f282fab7487c2ffe43980a4d680a2573cf760992d369994f0547297d895759",
+    "expiresAt": "2026-10-08T22:12:31Z",
+    "note": "Short-lived convenience copy only; the complete per-file manifest is deterministically regenerable from sourceCommit with the command below."
+  },
+  "trackedHintStores": {
+    "count": 6,
+    "files": 3351,
+    "byDirectory": {
+      "data/families/hints": 788,
+      "data/families/phaseB/hints": 477,
+      "data/hints": 160,
+      "data/stress/hints": 102,
+      "data/stress/hints-envelope": 124,
+      "data/stress/hints-random": 1700
+    }
+  },
+  "repairMigration": {
+    "filesScanned": 3351,
+    "filesChanged": 1389,
+    "hints": 269670,
+    "provenanceEvents": 845435,
+    "representationsAfter": {
+      "sparse-inline": 1355,
+      "interned": 1996
+    },
+    "mixedPreRepairBytes": 574204800,
+    "finalBytes": 574394797,
+    "mixedPreRepairGzipBytes": 21280791,
+    "finalGzipBytes": 21364458,
+    "semanticRoundTrip": "pass",
+    "crossResourceJoinIdentity": "pass",
+    "immediateRerunChangedFiles": 0,
+    "omittedStoresChanged": [
+      "data/families/hints",
+      "data/families/phaseB/hints",
+      "data/stress/hints-envelope"
+    ]
+  },
+  "fullPhase8Economics": {
+    "interpretation": "Compares all six stores before any v4 bulk migration with the final all-six-store v4 state. The repair batch alone is slightly larger because the previously omitted small artifacts favor sparse v4 semantics over raw-byte minimization; the full program remains materially smaller.",
+    "preV4Bytes": 734618282,
+    "finalV4Bytes": 574394797,
+    "rawBytesReduced": 160223485,
+    "rawReductionPercent": 21.810440731721403,
+    "preV4GzipBytes": 23131040,
+    "finalV4GzipBytes": 21364458,
+    "gzipBytesReduced": 1766582,
+    "gzipReductionPercent": 7.637278738872095
+  },
+  "perFileManifestRegeneration": {
+    "checkoutCommit": "ee22ef8c5c760e46a51573f401124c1ffc181030",
+    "command": "node scripts/hint-artifact-v4-migration.mjs --out=/tmp/hint-v4-six-store-manifest.json",
+    "expectedFiles": 3351,
+    "expectedChangedFiles": 1389,
+    "guarantee": "The migration tool records source/target content hashes, expanded semantic hash, join-identity hash, counts and bytes for every discovered artifact and is deterministic from the immutable source commit."
+  },
+  "refereeValidation": {
+    "repairWorkflowStep": "not accepted as closeout proof",
+    "reason": "The temporary workflow used `node ... | tee` without pipefail, so the validator process exit could have been masked; its uploaded text file was empty.",
+    "requiredClosingProof": "A later exact-head Hint/provenance hostile audit must run `check:hint-store-census` and `check:all-hint-store-referee` without a masking pipeline and succeed."
+  }
+}
