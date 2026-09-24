@@ -463,8 +463,9 @@
     "hints:index": "node scripts/hint-store-index.mjs",
     "test:hint-store-index": "node scripts/hint-store-index-node-test.mjs",
     "test:hint-store-roots": "node scripts/hint-store-roots-node-test.mjs",
-    "test:validate-all-hint-stores": "node scripts/validate-all-hint-stores-node-test.mjs",
-    "check:all-hint-store-referee": "node scripts/validate-all-hint-stores.mjs"
+    "test:validate-all-hint-stores": "tsx scripts/validate-all-hint-stores-node-test.mjs",
+    "check:all-hint-store-referee": "tsx scripts/validate-all-hint-stores.mjs",
+    "check:hint-store-census": "node scripts/hint-store-census.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
