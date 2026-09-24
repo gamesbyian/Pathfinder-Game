@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global structuredClone */
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { applyHistoricalEnrichment } from './hint-historical-enrichment-apply.mjs';

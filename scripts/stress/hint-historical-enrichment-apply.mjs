@@ -17,6 +17,7 @@
  *   node scripts/stress/hint-historical-enrichment-apply.mjs --apply [--rescue=<path>] [--out=<path>]
  * Without --apply, runs as a dry run: computes and reports what WOULD be applied, mutates nothing.
  */
+/* global structuredClone */
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
