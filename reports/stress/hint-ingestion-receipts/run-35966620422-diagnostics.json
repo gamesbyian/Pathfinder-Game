@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-ingestion-receipt",
+  "source": {
+    "producer": "harvest-solver-diagnostics-reports",
+    "runId": "35966620422",
+    "runAttempt": "1",
+    "workflow": "Solver diagnostics and hint capture",
+    "artifact": null
+  },
+  "scope": {
+    "corpus": "data/levels.json"
+  },
+  "funnel": {
+    "candidateObservations": 320,
+    "eligibleObservations": 320,
+    "refereeAcceptedObservations": 320,
+    "acceptedAlreadyRepresented": 160,
+    "quarantinedObservations": 0,
+    "quarantineReasons": {}
+  },
+  "additions": {
+    "semanticRecordChanges": 160,
+    "paths": 0,
+    "provenanceEvents": 0,
+    "occurrences": 160
+  },
+  "physical": {
+    "filesChanged": 160
+  },
+  "semantics": {
+    "successSelected": true,
+    "notAttemptedPopulation": true,
+    "candidateObservation": "a success-bearing row/artifact presented to this ingestion boundary",
+    "eligibleObservation": "a candidate with enough identity/path information to undergo canonical referee/merge handling",
+    "refereeAcceptedObservation": "an eligible observation whose exact path is valid against the target level revision",
+    "acceptedAlreadyRepresented": "referee-valid observation that produced no semantic store change",
+    "semanticRecordChange": "coarse producer-observed change when the current mutation API cannot distinguish path/event/occurrence units",
+    "nullAdditionUnit": "this producer cannot measure that addition unit exactly; null is unknown/not-observed, never zero",
+    "notes": "native Pathfinder diagnostics successful-discovery projection reconstructed from the durable diagnostics artifact; direct source-workflow mutation remains during Phase-6 parity"
+  }
+}
