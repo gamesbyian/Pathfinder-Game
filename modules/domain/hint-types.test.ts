@@ -2,7 +2,7 @@
  *  must not accumulate, while genuinely distinct rediscoveries are kept. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint, decodeHintArtifact, encodeHintArtifact, HINT_ARTIFACT_SCHEMA_VERSION, provenanceEventIdentity, provenanceEventKey } from './hint-types.js';
+import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, setLevelHintRecords, toHint, decodeHintArtifact, encodeHintArtifact, HINT_ARTIFACT_SCHEMA_VERSION, provenanceEventIdentity, provenanceEventKey, hintOccurrenceKey, provenanceOccurrenceKey, provenanceEvidenceKeys } from './hint-types.js';
 
 test('dedupeProvenanceEntries collapses recording-only differences and keeps evidence-bearing ones', () => {
   const e = makeProvenanceEntry('prefix-anchored', { foundAt: '2026-07-16T05:53:45.609Z', hintGuided: true, usedExistingHints: true });
@@ -36,6 +36,29 @@ test('mergeHints keeps two genuinely distinct provenance entries for one path', 
   const merged = mergeHints([toHint([1, 2], [a])], [toHint([1, 2], [b])]);
   assert.equal(merged[0].provenance.length, 2, 'a different technique finding the same path is recorded');
 });
+
+test('occurrence persistence keys distinguish physical reacquisitions without changing semantic event identity', () => {
+  const pathSignature = '1,2,3';
+  const first = makeProvenanceEntry('dfs', {
+    occurrenceRunId: 'run-a', occurrenceRunAttempt: 1,
+    foundAt: '2026-09-24T00:00:00.000Z',
+  });
+  const second = makeProvenanceEntry('dfs', {
+    occurrenceRunId: 'run-b', occurrenceRunAttempt: 1,
+    foundAt: '2026-09-24T01:00:00.000Z',
+  });
+  assert.equal(provenanceEventIdentity(first), provenanceEventIdentity(second),
+    'physical run identity must not split one semantic discovery event');
+  assert.notEqual(hintOccurrenceKey(first.occurrences![0]), hintOccurrenceKey(second.occurrences![0]));
+  assert.notEqual(
+    provenanceOccurrenceKey(pathSignature, first, first.occurrences![0]),
+    provenanceOccurrenceKey(pathSignature, second, second.occurrences![0]),
+  );
+  const keys = provenanceEvidenceKeys(pathSignature, first);
+  assert.equal(keys.length, 2, 'one semantic event key plus one physical occurrence key');
+  assert.equal(keys[0], provenanceEventKey(pathSignature, first));
+});
+
 
 test('reconcileHints dedupes byte-identical entries while pairing paths to records', () => {
   const e = makeProvenanceEntry('repair', { randomSeed: 42, foundAt: '2026-07-16T05:53:45.609Z' });
