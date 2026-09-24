@@ -373,6 +373,7 @@ jobs:
         id: deep_proofs
         continue-on-error: true
         run: npm run test:deep-proofs
+      # Exact tool/emulator cache: this is startup acceleration only, never test evidence.
       - name: Restore Firebase CLI and Firestore emulator cache
         uses: actions/cache@v5
         with:
