@@ -18,7 +18,7 @@ import {
 } from '../modules/domain/hint-runtime.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
 import { stringifyCorpusJson } from './level-json-format.mjs';
-import { discoverHintStoreDirs } from './hint-store-roots.mjs';
+import { assertCompleteHintStoreDirs, discoverHintStoreDirs } from './hint-store-roots.mjs';
 
 function sha256Text(text) {
     return 'sha256:' + createHash('sha256').update(text).digest('hex');
@@ -97,7 +97,7 @@ function filesUnder(root, relDirs) {
 }
 
 export function migrateHintStores(root, { apply = false, dirs = null } = {}) {
-    const effectiveDirs = dirs ?? discoverHintStoreDirs(root);
+    const effectiveDirs = dirs ?? assertCompleteHintStoreDirs(discoverHintStoreDirs(root), 'schema-v4 full-store migration');
     const rows = [];
     const representations = {};
     for (const file of filesUnder(root, effectiveDirs)) {
