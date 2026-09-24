@@ -375,6 +375,19 @@ Promotion design:
 
 Because the five-lane rehearsal would otherwise repeat 8–9 s installs, this optimization moves ahead of lane proliferation.
 
+### B3. Overlap heavyweight proofs and Firestore on one warm runner
+
+Current full-impact deep execution serializes roughly **10 s deep proofs + 13 s Firestore** after coverage.
+
+Before assigning these obligations to separate hosted jobs, measure same-runner overlap:
+
+- restore the same warm runtime-data, dependency-tree, Firebase CLI, and Java prerequisites;
+- launch the unchanged `test:deep-proofs` command and unchanged Firestore emulator boundary concurrently;
+- preserve independent exit codes and full logs;
+- compare concurrent wall against the ~23 s serial sum.
+
+Promotion requires both obligations to remain green and concurrency to produce a stable critical-path reduction without materially inflating either proof through CPU contention.
+
 ### Phase D: runtime-balanced execution topology
 
 Do not pick shard count until A/B/C measurements are active. The first standard-runner rehearsal should use **five required lanes** because that is the smallest layout with a plausible ≤27 s budget per lane on 4-core runners.
