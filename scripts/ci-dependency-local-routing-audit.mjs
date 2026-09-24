@@ -162,6 +162,7 @@ for (const [registryFamily, outputFamily] of [['validators', 'validator'], ['nod
       const entrypoint = packageEntrypoint(command);
       const surfaces = registry.contractSurfaces?.[registryFamily]?.[name] ?? [ownerGroup];
       const graph = entrypoint ? closure(entrypoint) : null;
+      const dependencyDeclaration = registry.contractDependencies?.[registryFamily]?.[name] ?? null;
       contracts.push({
         family: outputFamily,
         ownerGroup,
@@ -170,6 +171,7 @@ for (const [registryFamily, outputFamily] of [['validators', 'validator'], ['nod
         command,
         entrypoint,
         graph,
+        dependencyDeclaration,
       });
     }
   }
@@ -193,6 +195,34 @@ const traced = contracts.filter(row => row.graph);
 const closureSizes = traced.map(row => row.graph.files.length);
 const sufficient = traced.filter(row => row.graph.staticImportSufficientCandidate);
 
+function metadataCoverage(row) {
+  const declaration = row.dependencyDeclaration ?? {};
+  const filesystemCovered = !row.graph.traits.filesystem
+    || declaration.filesystemScope === 'fixture-only'
+    || (declaration.filesystemScope === 'repo-inputs' && (declaration.repoPaths?.length ?? 0) > 0);
+  const childProcessCovered = !row.graph.traits.childProcess
+    || (declaration.processEntrypoints?.length ?? 0) > 0;
+  const environmentCovered = !row.graph.traits.environment;
+  const networkCovered = !row.graph.traits.network;
+  const importGraphCovered = row.graph.unresolved.length === 0 && row.graph.unknownDynamicCount === 0;
+  return {
+    importGraphCovered,
+    filesystemCovered,
+    childProcessCovered,
+    environmentCovered,
+    networkCovered,
+    sufficient:
+      importGraphCovered
+      && filesystemCovered
+      && childProcessCovered
+      && environmentCovered
+      && networkCovered,
+  };
+}
+
+for (const row of traced) row.metadataCoverage = metadataCoverage(row);
+const metadataSufficient = traced.filter(row => row.metadataCoverage.sufficient);
+
 const bySurface = {};
 for (const surface of ['repo', 'game', 'persistence', 'solver', 'research', 'data', 'shared']) {
   const rows = contracts.filter(row => row.surfaces.includes(surface) || (surface === 'shared' && row.ownerGroup === 'shared'));
@@ -201,6 +231,7 @@ for (const surface of ['repo', 'game', 'persistence', 'solver', 'research', 'dat
     contracts: rows.length,
     tracedContracts: tracedRows.length,
     staticImportSufficientCandidates: tracedRows.filter(row => row.graph.staticImportSufficientCandidate).length,
+    metadataSufficientCandidates: tracedRows.filter(row => row.metadataCoverage?.sufficient).length,
     withUnresolvedEdges: tracedRows.filter(row => row.graph.unresolved.length > 0).length,
     withUnknownDynamicImports: tracedRows.filter(row => row.graph.unknownDynamicCount > 0).length,
     withFilesystemDependency: tracedRows.filter(row => row.graph.traits.filesystem).length,
@@ -246,6 +277,20 @@ const staticImportCandidateQueue = sufficient
   }))
   .sort((a, b) => a.closureSize - b.closureSize || a.name.localeCompare(b.name));
 
+const metadataSufficientCandidateQueue = metadataSufficient
+  .filter(row => !row.graph.staticImportSufficientCandidate)
+  .map(row => ({
+    family: row.family,
+    ownerGroup: row.ownerGroup,
+    surfaces: row.surfaces,
+    name: row.name,
+    entrypoint: row.entrypoint,
+    closureSize: row.graph.files.length,
+    dependencyDeclaration: row.dependencyDeclaration,
+    coverage: row.metadataCoverage,
+  }))
+  .sort((a, b) => a.closureSize - b.closureSize || a.name.localeCompare(b.name));
+
 const dependencyMetadataReasonCounts = {};
 for (const row of dependencyMetadataQueue) {
   for (const reason of row.reasons) {
@@ -261,6 +306,8 @@ const output = {
     contracts: contracts.length,
     contractsWithEntrypoints: traced.length,
     staticImportSufficientCandidates: sufficient.length,
+    metadataSufficientCandidates: metadataSufficient.length,
+    metadataRescuedCandidates: metadataSufficient.filter(row => !row.graph.staticImportSufficientCandidate).length,
     contractsWithUnresolvedEdges: traced.filter(row => row.graph.unresolved.length > 0).length,
     contractsWithUnknownDynamicImports: traced.filter(row => row.graph.unknownDynamicCount > 0).length,
     closureSize: {
@@ -273,6 +320,7 @@ const output = {
   bySurface,
   dependencyMetadataReasonCounts,
   staticImportCandidateQueue,
+  metadataSufficientCandidateQueue,
   dependencyMetadataQueue,
   topSharedDependencies: consumerRows.slice(0, 100),
   contracts,
@@ -286,6 +334,7 @@ console.log(JSON.stringify({
   bySurface: output.bySurface,
   dependencyMetadataReasonCounts: output.dependencyMetadataReasonCounts,
   staticImportCandidateQueue: output.staticImportCandidateQueue.slice(0, 25),
+  metadataSufficientCandidateQueue: output.metadataSufficientCandidateQueue.slice(0, 25),
   dependencyMetadataQueue: output.dependencyMetadataQueue.slice(0, 25),
   topSharedDependencies: output.topSharedDependencies.slice(0, 20),
 }, null, 2));
