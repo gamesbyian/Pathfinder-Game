@@ -143,7 +143,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A4 250k solver canary | **merged / measured green** | #2056: original exact 9-level fixture set retained; repaired-stack PR run solved **9/9 in 1.7 s / 1,303,532 nodes** at 250k with no work-budget mismatch. |
 | A2 exact Node 22.23.2 | **production migration ready / measured green** | #2064 run 35963869514 passed all ordinary PR obligations; setup-node measured **0-3 s** across planner/fast/deep. Final current-main transplant pins PR/main/scoped to exact 22.23.2 and isolates the Node-22 Firebase CLI cache generation. |
 | C exact dependency-tree restore | **production implementation in progress / full-contract hit proven** | #2068 hit run: fast and deep each restored `node_modules` in **2 s**, skipped `npm ci`, and the full fast+deep contract stayed green. Production PR/main/scoped workflows now share the exact OS+arch+Node+npm+lockfile generation; main-push seeds it on misses. |
-| A5 remove planner dependency edge | planned | Fast gate consumes no planner outputs; deep can compute the canonical plan locally, fail safe to full deep, and exit before dependency setup when not selected. |
+| A5 remove planner dependency edge | **promotion ready / positive+negative rehearsals green** | #2070 full-impact run 35965966081 started deep concurrently and preserved coverage/proofs/Firestore; #2073 docs-only rehearsal started deep concurrently, both planners selected `deep_job_required=false`, and deep exited in **7 s** before runtime-data/dependency/test setup. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
