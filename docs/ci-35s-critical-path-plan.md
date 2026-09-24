@@ -295,6 +295,8 @@ A current-main hosted rehearsal compares:
 
 All three use the same warm exact runtime-data and dependency-tree bootstrap. The timing profile is mechanically checked against the current `package.json` `test:node` registry before execution.
 
+**Rehearsal correction:** first hosted run 36064252085 was invalid as a timing comparison because the benchmark checkout omitted `reports/`. The unsharded control and both shards therefore failed the same legitimate report-backed Node contracts with ENOENT/missing-reference errors. This is a harness bug, not evidence for or against sharding. The corrected rehearsal now mirrors production fast-gate's exact log/report sparse population in all three jobs; only Node contract partitioning differs.
+
 Decision rule:
 
 - if both shard runner walls are ≤27 s **and** first-shard-start → both-shards-complete is ≤35 s across comparable samples, standard-runner sharding remains viable;
