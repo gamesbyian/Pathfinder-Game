@@ -14,7 +14,7 @@ import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 // but did NOT under the old local stableStringify comparison, so a republished landmark
 // level would have been treated as new instead of merged.
 import { getLevelFingerprintSource } from '../modules/domain/level-fingerprint.js';
-import { upgradeLegacyHints } from '../modules/domain/hint-types.js';
+import { mergeHints, upgradeLegacyHints } from '../modules/domain/hint-types.js';
 import { makeProvenanceEntry, makeLevelProvenance } from '../modules/domain/level-provenance-types.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
@@ -158,19 +158,11 @@ export function mergeNewHints(target, incoming) {
   const incomingRecords = Array.isArray(incoming.hintRecords) && incoming.hintRecords.length
     ? incoming.hintRecords
     : upgradeLegacyHints(Array.isArray(incoming.hints) ? incoming.hints : []);
-  const seen = new Set(targetRecords.map(rec => hintSignature(rec.path)));
-  const nextRecords = [...targetRecords];
-  let added = 0;
-  for (const rec of incomingRecords) {
-    if (nextRecords.length >= MAX_HINTS_PER_LEVEL) break;
-    const sig = hintSignature(rec.path);
-    if (seen.has(sig)) continue;
-    seen.add(sig);
-    nextRecords.push(rec);
-    added++;
-  }
-  if (added > 0 || !Array.isArray(target.hintRecords)) setLevelHintRecords(target, nextRecords);
-  return added;
+  const merged = mergeHints(targetRecords, incomingRecords);
+  const pathsAdded = merged.length - targetRecords.length;
+  const semanticChanged = JSON.stringify(merged) !== JSON.stringify(targetRecords);
+  if (semanticChanged || !Array.isArray(target.hintRecords)) setLevelHintRecords(target, merged);
+  return { pathsAdded, semanticChanged };
 }
 
 async function fetchPublishedLevels() {
@@ -204,8 +196,12 @@ export async function main() {
     const fp = levelFingerprint(level);
     const match = byFingerprint.get(fp);
     if (match) {
-      const added = mergeNewHints(match, level);
-      if (added > 0) { hintsAdded += added; levelsUpdated++; changedLevelIds.add(match.id); }
+      const merged = mergeNewHints(match, level);
+      if (merged.semanticChanged) {
+        hintsAdded += merged.pathsAdded;
+        levelsUpdated++;
+        changedLevelIds.add(match.id);
+      }
     } else {
       // `id` first, matching the established field order (see backfill-level-ids.mjs) --
       // the Firestore staging doc itself never carries one (see makeLevelIdMinter's doc
@@ -218,9 +214,9 @@ export async function main() {
     }
   }
   writeLevels(corpusDocument, levels, changedLevelIds);
-  console.log(`Imported ${newLevels} new published level(s); appended ${hintsAdded} new hint(s) to ${levelsUpdated} existing level(s).`);
+  console.log(`Imported ${newLevels} new published level(s); added ${hintsAdded} new hint path(s) and/or provenance to ${levelsUpdated} existing level(s).`);
 
-  if (newLevels > 0 || hintsAdded > 0) {
+  if (newLevels > 0 || levelsUpdated > 0) {
     const written = loadRawCorpusDocument().levels;
     const output = writeHeatmapsFile(written, heatmapsJsonPath);
     console.log(`Updated heat maps for ${output.levels.length} levels in data/level-heatmaps.json.`);
