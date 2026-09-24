@@ -1,6 +1,6 @@
 # Hint evidence, execution identity, and storage consolidation plan
 
-> **Status:** planned
+> **Status:** implemented; hostile closeout revalidation in progress on PR #2072
 >
 > **Date:** 2026-09-22
 >
@@ -12,6 +12,8 @@
 > The same review also found substantial storage redundancy in the canonical hint corpus and several
 > parallel persistence/configuration paths that should be consolidated rather than permanently
 > worked around.
+>
+> **Post-implementation hostile audit:** [`reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`](../reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md) is the current closeout authority. It supersedes earlier completion claims and records corrections found after the schema-v4 migration.
 >
 > **Pre-implementation empirical audit:** [`reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md`](../reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md) verifies request/backend semantics, provenance missingness, source-run reconstructability, producer observation sufficiency, stale writers, and Firestore retention behavior.
 >
