@@ -87,7 +87,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add logs/solver-workflow data/hints reports/stress/hint-cost-drift-published.json
+          # Stage only the diagnostics producer's durable audit outputs. Downstream transient
+          # derivatives (for example compact-failure-response.json) may exist in this directory
+          # for artifact publication, but check:audit-artifacts intentionally forbids tracking them.
+          git add logs/solver-workflow/latest.json \
+            logs/solver-workflow/[0-9][0-9][0-9][0-9]-*.json \
+            data/hints reports/stress/hint-cost-drift-published.json
           if git diff --cached --quiet; then
             echo "No audit changes to commit."
             exit 0
