@@ -131,6 +131,21 @@ Five structurally overlapping alternative fixtures also solved in ~0.1 s total, 
 
 The original nine-level population has now been probed at **250,000 work** and all **9/9 solve in ~1.5 s total / 1.30 M nodes**. Keep the exact fixture set and regenerate its baseline at 250k work; replacement is unnecessary unless future semantics change.
 
+### A1b. Fast-gate runtime-data cache miss fallback
+
+Fresh post-#2051 PRs exposed a second copy of the sparse-expansion pathology already rejected for deep verification. After hint-tree changes invalidated the runtime-data key, fast-gate measured:
+
+- source checkout: 3–5 s;
+- runtime-data cache miss: immediate;
+- post-clone `git sparse-checkout set` materialization: **52–56 s**;
+- cache save: ~3–4 s.
+
+Because fast-gate is universal, this miss path alone violates the 35-second objective before validation begins.
+
+Implementation: on a miss, run a second batched `actions/checkout@v7` with the final source/report/runtime-data sparse population and `fetch-depth: 2`, then publish the exact runtime-data cache as before. This mirrors A1's lesson: do not expand the large hint tree into an existing sparse checkout one file population at a time.
+
+Acceptance: cache-miss materialization should return toward the historical ~15 s batched-checkout range and remain fully correct for incremental checks.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
