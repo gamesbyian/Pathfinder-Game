@@ -7,7 +7,7 @@ import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
-const roots = (value('roots') ?? 'data/hints,data/stress/hints,data/stress/hints-random')
+const roots = (value('roots') ?? 'data/hints,data/stress/hints,data/stress/hints-random,data/stress/hints-envelope')
     .split(',').map(item => item.trim()).filter(Boolean);
 const outPath = value('out') ?? null;
 const sampleLimit = Number(value('sample-limit') ?? 25);
