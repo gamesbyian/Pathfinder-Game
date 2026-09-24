@@ -1,9 +1,9 @@
 # Hint evidence consolidation — hostile completion audit — 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-24 — Exact-head validation at `00eb1b9...` exposed a whole-store referee validator domain mismatch on 65 oversized research-family levels; the validator and its regression fixture are corrected on the current PR head.
+> **Last evidence:** 2026-09-24 — Exact-head validation at `00eb1b9...` exposed a whole-store referee validator domain mismatch on 65 oversized research-family levels. That validator/fixture correction is now accompanied by strengthened plan phase exits that require mechanically derived populations, persistence state-transition coverage and topology-real closeout rather than report-level completion claims.
 > **Decision:** The prior "all phases complete" claim was premature. Treat the program as complete only after the corrections in this report are green on one exact remote CI head and the hostile maintained-surface guards report no unreviewed bypass.
-> **Remaining gate:** A new exact-head CI / hostile audit / closeout canary run must confirm the family-validator correction, alongside solver-evidence integrity, CI topology and Firestore-emulator evidence. No current-head Actions run was visible yet at the time of this documentation update.
+> **Remaining gate:** Re-run exact-head CI / hostile audit / closeout canary after the validator and documentation corrections; solver-evidence integrity, CI topology, whole-store referee validation and Firestore-emulator evidence must all be green on that same head.
 
 ## Why this audit existed
 
