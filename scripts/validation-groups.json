@@ -460,14 +460,12 @@
       "test:hint-store-index": {
         "filesystemScope": "repo-inputs",
         "repoPaths": [
-          "data/hints/**",
-          "data/stress/hints/**",
-          "data/stress/hints-random/**",
+          "data/**/hints*/**",
           "modules/domain/hint-runtime.mjs",
-          "scripts/hint-query-lib.mjs",
           "scripts/hint-discovery-replayability-lib.mjs",
           "scripts/stress/hint-reconstructability-report.mjs",
-          "scripts/hint-store-index.mjs"
+          "scripts/hint-store-index.mjs",
+          "scripts/hint-store-roots.mjs"
         ]
       },
       "test:hint-store-roots": {
