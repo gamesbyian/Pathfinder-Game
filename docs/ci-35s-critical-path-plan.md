@@ -131,6 +131,18 @@ Five structurally overlapping alternative fixtures also solved in ~0.1 s total, 
 
 The original nine-level population has now been probed at **250,000 work** and all **9/9 solve in ~1.5 s total / 1.30 M nodes**. Keep the exact fixture set and regenerate its baseline at 250k work; replacement is unnecessary unless future semantics change.
 
+## Implementation status
+
+| Phase | Status | Evidence / next gate |
+| --- | --- | --- |
+| A1 deep runtime-data checkout | **implementation in progress** | Hosted audit measured current deep checkout 15 s vs source-only + exact runtime restore 4–6 s. Production PR must preserve full deep validation and demonstrate an exact cache hit or correct miss fallback. |
+| A2 exact Node 22.23.2 | planned | Node 22 shadow passed typecheck, fast-unit population, and build; complete contract rehearsal still required. |
+| A3 main-seeded ESLint cache | planned | Cold new-PR lint ~12–15 s vs warmed ~2 s. |
+| A4 250k solver canary | planned | Original 9/9 fixtures solve in ~1.5 s at 250k. |
+| B1 lifecycle deterministic dispatch | planned | Slow bookkeeping test has an existing `attemptSearchForTesting` seam. |
+| C exact dependency-tree restore | planned | 3 s restore vs 8 s `npm ci`; complete restored-tree rehearsal required. |
+| A5 remove planner dependency edge | planned | Current planner runner adds ~9–45 s startup dependency despite negligible classification work. |
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
