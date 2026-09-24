@@ -72,6 +72,7 @@ jobs:
           node scripts/sweep-publish.mjs \
             --primary="logs/solver-workflow/latest.json" \
             --failure-source="logs/solver-workflow/latest.json" \
+            --failure-response-out="tmp/solver-diagnostics-compact-failure-response.json" \
             --source-artifact="solver-diagnostics-${{ github.sha }}"
 
       - name: Upload standard solver sweep result
@@ -87,7 +88,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add logs/solver-workflow data/hints reports/stress/hint-cost-drift-published.json
+          # Only the canonical current pointer and timestamped history belong in
+          # logs/solver-workflow. sweep-publish scratch evidence lives under tmp/ and is copied into
+          # the uploaded standard sweep artifact, never committed as raw workflow history.
+          git add logs/solver-workflow/latest.json
+          git add logs/solver-workflow/????-??-??T??-??-??Z-*.json
+          git add data/hints reports/stress/hint-cost-drift-published.json
           if git diff --cached --quiet; then
             echo "No audit changes to commit."
             exit 0

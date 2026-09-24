@@ -16,6 +16,20 @@ import process from 'node:process';
 const ALLOWED_NAMES = new Set(['latest.json']);
 const TIMESTAMP_SNAPSHOT = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z-[0-9a-f]+\.json$/;
 
+const diagnosticsWorkflow = readFileSync('.github/workflows/solver-diagnostics.yml', 'utf8');
+const diagnosticsFailures = [];
+if (!diagnosticsWorkflow.includes('--failure-response-out="tmp/solver-diagnostics-compact-failure-response.json"')) {
+  diagnosticsFailures.push('solver-diagnostics must route compact failure-response scratch outside logs/solver-workflow');
+}
+if (/git add\s+logs\/solver-workflow(?:\s|$)/u.test(diagnosticsWorkflow)) {
+  diagnosticsFailures.push('solver-diagnostics must not broadly stage logs/solver-workflow; stage only canonical latest/timestamp snapshots');
+}
+if (diagnosticsFailures.length > 0) {
+  console.error('Invalid solver-diagnostics audit artifact ownership:');
+  for (const failure of diagnosticsFailures) console.error(`  - ${failure}`);
+  process.exit(1);
+}
+
 const trackedFiles = execFileSync('git', ['ls-files', '-z', 'logs/solver-workflow'], { encoding: 'utf8' })
   .split('\0')
   .filter(Boolean);
