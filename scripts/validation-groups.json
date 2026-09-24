@@ -125,7 +125,8 @@
       "test:probe-corpus-loader",
       "test:corpus-level-formatting",
       "test:level-sparse-serialization-benchmark",
-      "test:level-sparse-serialization-apply"
+      "test:level-sparse-serialization-apply",
+      "test:hint-store-index"
     ],
     "research": [
       "test:research-domain-ownership",
@@ -452,6 +453,19 @@
         "repoPaths": [
           "docs/solver-workflow-lifecycle.json",
           ".github/workflows/**"
+        ]
+      },
+      "test:hint-store-index": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/hints/**",
+          "data/stress/hints/**",
+          "data/stress/hints-random/**",
+          "modules/domain/hint-runtime.mjs",
+          "scripts/hint-query-lib.mjs",
+          "scripts/hint-discovery-replayability-lib.mjs",
+          "scripts/stress/hint-reconstructability-report.mjs",
+          "scripts/hint-store-index.mjs"
         ]
       }
     }
