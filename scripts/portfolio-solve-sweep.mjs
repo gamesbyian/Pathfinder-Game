@@ -818,6 +818,7 @@ function writeReport() {
         solverRequestIdentity,
         backend,
         reproducibilityMode,
+        staticPortfolioArm: staticPortfolioArmName,
     };
 
     mkdirSync(path.dirname(outFile), { recursive: true });
