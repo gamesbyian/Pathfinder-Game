@@ -45,11 +45,14 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const report = JSON.parse(fs.readFileSync('/tmp/hint-omitted-v4-rerun.json', 'utf8'));
-          if (report.totals?.filesChanged !== 0) {
-            console.error(JSON.stringify(report.totals, null, 2));
+          if (report.changedFiles !== 0) {
+            console.error(JSON.stringify({ changedFiles: report.changedFiles, files: report.files }, null, 2));
             process.exit(1);
           }
           NODE
+
+      - name: Referee-validate every tracked Hint store after migration
+        run: node scripts/validate-all-hint-stores.mjs | tee /tmp/hint-all-store-referee.txt
 
       - name: Upload reversible migration evidence
         uses: actions/upload-artifact@v7
@@ -58,10 +61,11 @@ jobs:
           path: |
             /tmp/hint-omitted-v4-migration.json
             /tmp/hint-omitted-v4-rerun.json
+            /tmp/hint-all-store-referee.txt
           if-no-files-found: error
           retention-days: 14
 
-      - name: Commit migrated envelope artifacts when needed
+      - name: Commit migrated omitted artifacts when needed
         run: |
           if git diff --quiet -- data/stress/hints-envelope data/families/hints data/families/phaseB/hints; then
             echo "All tracked Hint stores already canonical v4; nothing to commit."
