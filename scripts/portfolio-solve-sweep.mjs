@@ -315,6 +315,7 @@ function appendCheckpoint(checkpointFile, row, signature) {
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
+const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.js');
 // provenanceFromSolveResult / toHint / mergeHints / hintPaths / getLevelFingerprint are deliberately
 // NOT imported here any more — the whole hint-merge path lives in scripts/hint-capture-lib.mjs, so
 // there is exactly one implementation of it shared with run-solver-direct.mjs's CI audit pass.
@@ -683,6 +684,10 @@ let hintsAppended = 0;
 // merges hints is NOT awaited (solver-worker-pool.mjs), so the merge path must stay synchronous.
 const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints, executionContext: hintExecutionContext });
 if (saveHints) await hintCapture.prepare(toActuallyRun.map(n => rawLevels[n - 1]));
+const levelRevisionByNumber = new Map(await Promise.all(toActuallyRun.map(async levelNumber => [
+    levelNumber,
+    await getLevelFingerprint(rawLevels[levelNumber - 1]),
+])));
 let totalHintFilesChanged = 0;
 let solvedCount = 0;
 let solvedBeforeFallbackCount = 0;
@@ -753,6 +758,10 @@ function writeReport() {
     const newFinds = levels.filter(f => f.solvedBeforeFallback);
 
     const summary = {
+        schemaVersion: 1,
+        producer: 'portfolio-solve-sweep',
+        levelBlind: false,
+        historyAware: true,
         generatedAt: new Date().toISOString(),
         commit,
         corpus: path.relative(root, corpusPath),
@@ -888,7 +897,10 @@ if (workerCount <= 1) {
             result = { ok: false, status: 'error', error: err?.message ?? String(err), totalMs: Date.now() - t0, attempts: [] };
         }
         const row = buildRow(levelNumber, raw?.id, result, schedulerMode);
-        row.hintAppended = mergeSolvedHint(raw, result);
+        const discoveryObservedAt = result?.ok ? new Date().toISOString() : null;
+        row.levelRevision = levelRevisionByNumber.get(levelNumber) ?? null;
+        row.discoveryObservedAt = discoveryObservedAt;
+        row.hintAppended = result?.ok && saveHints ? hintCapture.record(raw, result, { foundAt: discoveryObservedAt }) : false;
         if (row.hintAppended) hintsAppended += 1;
         recordRow(row);
         logProgress(row);
@@ -920,7 +932,10 @@ if (workerCount <= 1) {
             const { id, result } = workerResult;
             attachRefereeValid(levelNumber, result);
             const row = buildRow(levelNumber, id ?? raw?.id, result, schedulerMode);
-            row.hintAppended = mergeSolvedHint(raw, result);
+            const discoveryObservedAt = result?.ok ? new Date().toISOString() : null;
+            row.levelRevision = levelRevisionByNumber.get(levelNumber) ?? null;
+            row.discoveryObservedAt = discoveryObservedAt;
+            row.hintAppended = result?.ok && saveHints ? hintCapture.record(raw, result, { foundAt: discoveryObservedAt }) : false;
             if (row.hintAppended) hintsAppended += 1;
             recordRow(row);
             logProgress(row);
