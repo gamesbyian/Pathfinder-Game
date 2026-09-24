@@ -144,7 +144,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A2 exact Node 22.23.2 | **merged / measured green** | Production PR/main/scoped workflows are pinned to exact 22.23.2 with a separate Node-22 Firebase CLI cache generation; full-contract rehearsals were green with setup-node ~0–3 s. |
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
-| B5 runtime-hint projection cache | **production rollout in progress** | Rehearsal #2081 hit run 36063620245 restored exact projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold build dominated by deterministic projection. Production branch seeds/restores PR/main/scoped and post-diagnostics generations. |
+| B5 runtime-hint projection cache | **merged / measured green** | #2087 production rollout seeds/restores exact PR/main/scoped/post-diagnostics generations. Rehearsal #2081 restored the projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold deterministic projection. |
 | D1 two-way Node sharding | **semantically green; shared-runner wall missed target** | Post-#2091 rerun: shard 1 **17 s useful / 27 s wall**, shard 2 **14 s useful / 38 s wall**; both green. The overrun was setup-node variance (11 s on shard 2), not shard work. Do not tune shard membership/count further to solve hosted bootstrap variance. |
 | D2 balanced coverage sharding | **rehearsal in progress** | Native equal-file D2 preserved merged thresholds but took **64 s** first-shard-start → merge complete. Current 146-file timing profile balances **17.091 / 17.090 test-s**; D2b keeps one shard runner warm as merge coordinator to remove the third-runner tax. |
 
@@ -412,7 +412,7 @@ The overall first-required-runner → last-required-completion span was **77 s**
 
 Bootstrap/cache work has largely succeeded. The remaining critical path is validation execution itself: Node on fast, and especially covered Vitest + proofs + Firestore on deep.
 
-### D1. Two-way Node/CLI sharding — current rehearsal
+### D1. Initial two-way Node/CLI rehearsal
 
 The current Node/CLI registry has grown to **204 contracts**, so the old 176-contract timing projection is obsolete.
 
@@ -440,12 +440,7 @@ The shard-1 failure is not a timing-profile or selection failure. `test:harvest-
 
 This exposes a hidden non-hermetic test boundary that the monolithic four-worker schedule happened not to trigger in that run. The repair is to make the diagnostics harvester accept an injected corpus path and run the regression against a private one-level temporary corpus, preserving the real P00001 level/hint semantics without mutating repository state.
 
-Decision gate:
-
-1. land the hermetic diagnostics-harvest regression;
-2. rerun the exact current two-way shard rehearsal;
-3. if both shard runner walls remain ≤27–30 s and first-shard-start → both-complete remains ≤35 s, two-way standard-runner Node sharding remains viable;
-4. if timing then fails, stop shard-count tuning and move to the larger/reserved-runner fallback already defined in Phase E.
+That initial run exposed the non-hermetic diagnostics-harvest regression subsequently fixed in #2091. The post-fix rerun and final D1 decision are recorded immediately below.
 
 ### D1 result: Node sharding is semantically viable, but shared-runner variance still breaks 35 s
 
