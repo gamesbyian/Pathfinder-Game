@@ -1537,6 +1537,69 @@ The first Node 22 toolchain smoke failed, but the failure was **not Node-version
 
 The runner image's exact Node 22.23.2 toolcache selection is already measurably cheaper than floating Node 20. A second probe now compares that against using the runner's system Node directly with an explicit npm-cache restore, which may remove the remaining setup-node action overhead at the cost of tying CI runtime to the runner-image version.
 
+
+
+### Hosted bootstrap benchmark: second pass
+
+Topology-audit run **35958054368** corrected the first pass's missing runtime fixtures and added a system-runtime comparison.
+
+Measured bootstrap:
+
+| probe | observed step time |
+| --- | ---: |
+| source checkout | 2–3 s |
+| exact runtime-data restore | **1 s** on this run |
+| floating Node 20 setup | **6 s** |
+| exact cached Node 22.23.2 setup | **1 s** |
+| npm ci under exact Node 22 | **9 s** |
+| system Node version | 22.23.2 |
+| hosted runner logical CPUs | **4** |
+
+The exact Node 22 job then passed:
+
+- `check:types`;
+- the complete `test:unit:fast` population: **138 files passed, 4 skipped; 1,513 tests passed, 11 skipped**;
+- production Vite build.
+
+The fast-unit population completed in **20.12 s** under Node 22.23.2. No Node-version compatibility failure has been observed.
+
+The raw system-Node probe did not establish a worthwhile advantage:
+
+- it avoids `setup-node`, but an explicit `actions/cache/restore` using the visible setup-node cache key did not hit the setup-node-managed cache version;
+- `npm ci` still took ~8 s;
+- typecheck and the actual Vite compilation succeeded; the later build close hook failed only because the intentionally source-only checkout omitted `data/levels.json`.
+
+Given the small remaining setup-node cost, exact Node 22.23.2 is the cleaner candidate: pinned runtime semantics, setup-node-managed npm caching, and a measured ~5 s improvement over floating Node 20 in this run.
+
+### Canary candidate probe
+
+The same run exercised five published levels chosen for overlap with L140's multi-mechanic shape:
+
+| position | notable overlap | elapsed |
+| ---: | --- | ---: |
+| 62 | 2 gates, portal, must-pass, 2 geese | 19 ms |
+| 71 | 2 gates, 2 portals, goose | 31 ms |
+| 85 | 2 gates, portal, 2 geese, reqInt 3 | 38 ms |
+| 93 | 2 gates, 2 portals, must-pass, goose | 26 ms |
+| 102 | 2 gates, portal, 2 must-pass, 2 geese | 7 ms |
+
+All five solved at the existing 5,000,000 work budget in roughly **0.1 s total / 61,227 nodes**.
+
+This proves the canary can retain broad multi-mechanic representation without paying L140's current ~9.4 s cost. It does **not** yet prove L140 should be removed: a follow-up probe is measuring whether the same exact L140 witness still succeeds at a materially smaller work budget.
+
+### ESLint default-branch authority
+
+`main-push-validation.yml` currently has no ESLint cache restore/save steps. The PR workflow writes `.cache/eslint` only from PR scope, explaining why unrelated new PRs cold-miss while subsequent revisions of the same PR can fall to ~2 s lint.
+
+Recommended activation pattern:
+
+1. main-push restores the newest cache for the current ESLint/package generation;
+2. main-push saves a commit-specific successor after successful lint;
+3. PRs continue restoring by the generation prefix;
+4. cache miss remains fully correct because ESLint still scans every file.
+
+This is a cache-availability change only, not validation narrowing.
+
 ### Interim implication
 
 A 35 s target is not reachable by one more micro-optimization. The evidence points to a combined architecture:
