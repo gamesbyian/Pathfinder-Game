@@ -21,12 +21,13 @@ concurrency:
 # only twice. Independent validation steps within a lane continue after ordinary validation failures
 # so one run reports the useful failure set; setup/install failures still stop dependent validation.
 jobs:
-  # Shadow-only impact routing. This job never suppresses validation and planner failures are
-  # non-gating while the existing full CI remains the oracle. It intentionally avoids npm ci:
+  # Impact routing is authoritative only for whether the expensive deep lane is required.
+  # The fast gate remains universal. Planner failure fails safe by running deep verification. It intentionally avoids npm ci:
   # ownership/routing authorities use Node built-ins and Git metadata only.
   impact-shadow:
     runs-on: ubuntu-latest
     outputs:
+      planner_outcome: ${{ steps.impact.outcome }}
       full: ${{ steps.impact.outputs.full }}
       surfaces: ${{ steps.impact.outputs.surfaces }}
       validator_groups: ${{ steps.impact.outputs.validator_groups }}
@@ -73,16 +74,16 @@ jobs:
           name: ci-impact-shadow
           path: tmp/ci-impact-shadow.json
           retention-days: 14
-      - name: Record shadow planner status
+      - name: Record impact planner status
         if: always()
         shell: bash
         env:
           SHADOW_OUTCOME: ${{ steps.impact.outcome }}
         run: |
-          echo "Shadow planner outcome: $SHADOW_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Impact planner outcome: $SHADOW_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
           if [[ "$SHADOW_OUTCOME" != "success" ]]; then
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Planner failure is non-gating during shadow mode; the existing full CI jobs remain authoritative." >> "$GITHUB_STEP_SUMMARY"
+            echo "Planner failure fails safe: fast-gate remains universal and deep-verification runs conservatively." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   fast-gate:
@@ -338,10 +339,19 @@ jobs:
           fi
           exit "$failed"
 
-  # Coverage and the heavyweight implementation proofs share one runner/install. Coverage skips
-  # only the four proof files delegated to the explicit test:deep-proofs command immediately after
-  # it, so every PR still executes the same proof population exactly once.
+  # Coverage, heavyweight implementation proofs, and Firestore share one runner/install.
+  # This lane is impact-scoped for PRs. Solver/game/persistence/shared and conservative full-impact
+  # changes retain their deep protections; unrelated repo/research/data-only PRs may skip it.
+  # Planner failure or manual dispatch always runs the lane.
   deep-verification:
+    needs: impact-shadow
+    if: >-
+      always()
+      && (
+        github.event_name == 'workflow_dispatch'
+        || needs.impact-shadow.outputs.planner_outcome != 'success'
+        || needs.impact-shadow.outputs.deep_job_required == 'true'
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
