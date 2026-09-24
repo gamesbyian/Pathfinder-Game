@@ -210,6 +210,8 @@ Expected file saving: roughly **7.5 s** versus the current covered-suite profile
 
 ### B5. Cache deterministic runtime-hint build projection
 
+B5 measurement note: the first two PR runs intentionally produced different exact keys because `main` advanced between them with a solver-evidence harvest that changed `data/hints`. The cache correctly missed rather than reusing stale projected runtime hints. A documentation-only follow-up now forces a third run against the current generation to obtain a genuine same-key hit measurement.
+
 Current fast-gate profiling separates the production build into two very different costs:
 
 - Vite bundle compilation: **~0.7 s**;
