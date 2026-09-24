@@ -265,6 +265,17 @@ deterministic `sourceSetSha256`, and `--verify=<index>` fails when any canonical
 The index reuses the shared decoder, hint-query summaries and reconstructability classifier; it is
 explicitly marked derived rather than authoritative.
 
+### 19. Schema-contraction control plane still marked provenance generations unfinished
+
+`PSC-015` remained `in-progress` after the exact conditions in its retirement gate had already
+been satisfied: historical absence/unknown semantics are preserved at shared ingress, current
+writers emit one canonical nested provenance shape, retained historical generations remain readable,
+and the real v4 bulk migration preserved expanded semantic hashes/counts without converting unknown
+history into modern defaults. `PSC-030` already recorded the same missingness contract as complete.
+
+**Correction:** PSC-015 is reclosed with the post-v4 evidence, and PSC-001's retirement text now
+reflects the editor coordinate-transform fix plus the new fail-closed bare-mutation ledger.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
