@@ -240,6 +240,19 @@ if (ENFORCE) {
       file + ': raw Hint artifact reader bypasses the shared decoder'));
   }
 
+  const bareMutationLedgerPath = path.join(ROOT, 'docs', 'hint-bare-mutation-audit.json');
+  if (!fs.existsSync(bareMutationLedgerPath)) {
+    failures.push('docs/hint-bare-mutation-audit.json: reviewed bare-Hint mutation ledger is missing');
+  } else {
+    const bareMutationLedger = JSON.parse(fs.readFileSync(bareMutationLedgerPath, 'utf8'));
+    const reviewedBareMutations = new Map((bareMutationLedger.entries ?? []).map(entry => [entry.path, entry]));
+    for (const row of maintained.filter(row => row.hits.mutableAliases)) {
+      if (!reviewedBareMutations.has(row.path)) {
+        failures.push(row.path + ': direct .hints/.hintRecords assignment has not been explicitly reviewed');
+      }
+    }
+  }
+
   const writerLedgerPath = path.join(ROOT, 'docs', 'hint-physical-writer-audit.json');
   if (!fs.existsSync(writerLedgerPath)) {
     failures.push('docs/hint-physical-writer-audit.json: reviewed physical-writer ledger is missing');
