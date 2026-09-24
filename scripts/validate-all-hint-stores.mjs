@@ -9,6 +9,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 import { isHintArtifactFileName, hintArtifactFileName, hintKeyForLevel } from '../modules/hint-artifact-layout.mjs';
 import { discoverHintStoreDirs } from './hint-store-roots.mjs';
@@ -89,7 +90,7 @@ export function validateAllTrackedHintStores(root = process.cwd()) {
     return { ok: failures.length === 0, artifacts, hints, stores, failures };
 }
 
-const isMain = process.argv[1] && import.meta.url === new URL(process.argv[1], 'file://').href;
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
     const result = validateAllTrackedHintStores(process.cwd());
     console.log(JSON.stringify({ artifacts: result.artifacts, hints: result.hints, stores: result.stores }, null, 2));
