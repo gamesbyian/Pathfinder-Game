@@ -234,6 +234,22 @@ selection to omit a guard after changing exactly the files it governs.
 source modules/scripts, workflows, the reader/writer ledgers, package entrypoints, and workflow
 lifecycle authority.
 
+### 17. Editor coordinate transforms cleared only the derived bare-path projection
+
+The hostile mutable-alias census found that editor coordinate transforms assigned
+`level.hints = []` directly after shifting/reflection while leaving canonical
+`level.hintRecords` untouched. Since `hintRecords` is the persisted authority, a transformed
+level could retain stale provenance-rich paths and later write them back despite the UI-facing
+bare-path list having been cleared.
+
+**Correction:** coordinate transforms now clear through `setLevelHintRecords(level, [])`, so both
+canonical records and the derived path projection are invalidated together.
+
+**Standing guard:** maintained direct `.hints` / `.hintRecords` assignments are now fail-closed
+through `docs/hint-bare-mutation-audit.json`. The only reviewed maintained assignments are the
+canonical synchronization owner in `hint-runtime.mjs` and ephemeral wire/clone projection in
+`level-codec.ts`.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
