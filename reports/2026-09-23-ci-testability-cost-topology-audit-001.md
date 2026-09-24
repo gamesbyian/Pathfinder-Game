@@ -1378,3 +1378,285 @@ Recommended policy:
 5. Do not activate dependency-local skipping from metadata alone; historical replay/fault injection remains the promotion gate for any contract whose omission could hide a meaningful defect.
 
 Stopping rule for this audit cycle: do **not** bulk-annotate the ~150 filesystem-bearing contracts. The prototype demonstrates that the authority seam works. Future declarations should be demand-driven by measured CI cost or routing value.
+
+
+## Critical-path compression phase: ≤35 seconds full CI
+
+The testability/cost audit is reopened under a hard wall-time target:
+
+> **A full-impact PR must complete all required validation in 35 seconds or less.**
+
+This changes the interpretation of earlier findings. The previous recommendation to avoid multiplying hosted-runner jobs was correct for the then-current objective, which balanced runner-hours, queue/setup variance, and simplicity. It is not a permanent two-lane constraint. With a hard latency ceiling, additional parallelism is justified whenever measured critical-path reduction dominates runner/setup variance.
+
+Initial full-run reference: CI run 35955087367.
+
+Approximate timestamps show:
+
+- first required runner start: 04:19:46Z;
+- impact planner complete: ~04:19:53Z;
+- fast gate complete: ~04:21:05Z;
+- deep verification complete: ~04:21:22Z;
+- full wall span: **~96 s**.
+
+### Immediate critical-path hypotheses to investigate
+
+1. **Deep checkout/materialization is anomalously expensive.** The deep runner spent roughly 16 s in checkout before setup-node, versus roughly 2 to 3 s in the fast lane. Audit its sparse-checkout pattern and actual file population before accepting that cost.
+2. **The fast lane serializes independent broad phases.** Validators (~5.6 s), lint (~14.4 s), Node/CLI contracts (~26.9 s), solver canary (~10 s), and build (~2.6 s) currently form a long serial chain after setup.
+3. **Deep work is also serialized.** Covered Vitest (~30 s), explicit deep proofs (~11.5 s), and Firestore (~11 s after cache work) are independent enough to evaluate concurrent execution/sharding.
+4. **Node/CLI already has per-command timing.** Use those measurements to construct balanced shards rather than increasing one runner's child concurrency beyond the already-measured four-worker sweet spot.
+5. **Vitest coverage needs file-level cost modeling.** Coverage output already writes timing data; evaluate two- and three-shard partitions plus report/threshold aggregation instead of assuming one monolithic coverage command.
+6. **Solver canary should be treated as a parallel batch.** Its nine fixed levels are semantically one canary but need not imply serial execution if result identity and baseline comparison can be preserved.
+7. **Repeated setup may need a different substrate.** If multiple lanes are required, benchmark prepared dependencies, artifact handoff, or a CI image/cache strategy rather than paying `npm ci` independently without measurement.
+8. **Final-status aggregation cannot consume a runner-sized latency tax.** Prefer native dependency/result semantics or an effectively zero-work aggregator.
+9. **Repository/test seams remain in scope.** Thin CLI boundaries, reusable repository models, long-lived workers, fixture-only filesystem declarations, and explicit dependency authority have already produced wins and should be applied to remaining hotspots.
+
+### Planning threshold
+
+Do not finalize an implementation plan until the audit can assign a realistic p50 timing budget to every proposed lane and explain how p90 runner/setup variance will be handled. A paper topology whose sum of command times is under 35 seconds but whose hosted execution routinely exceeds it is not sufficient.
+
+
+## Critical-path investigation: first measured discriminators
+
+The first follow-up pass after adopting the ≤35 s full-impact target found several costs that are structural enough to guide the benchmark plan.
+
+### 1. Deep checkout is mostly data materialization, not source checkout
+
+Repository tree accounting on current main:
+
+| population | files | bytes |
+| --- | ---: | ---: |
+| entire tracked blob tree | ~10,400 | ~1.85 GB |
+| current deep sparse checkout | ~3,269 | ~206.9 MB |
+| deep checkout `data/` payload | ~1,757 | ~190.3 MB |
+| non-data/non-log/non-report source | ~1,512 | ~16.6 MB |
+
+Recent hosted full-impact runs consistently put fast checkout around **2–4 s** and deep checkout around **15–17 s**. The deep checkout therefore materializes roughly an order of magnitude more payload than the source itself, dominated by data/hint artifacts.
+
+The fast lane already demonstrates the alternative shape: omit runtime data from Git checkout and restore an exact Git-object-keyed runtime-data cache. Deep validation should be audited for the exact data paths its tests actually read, then either reuse the exact runtime-data cache or materialize only that minimal set.
+
+### 2. The standalone impact planner is now on the latency path
+
+The semantic plan computation itself is effectively instantaneous, but `deep-verification` now waits on the `impact-shadow` job. Recent planner job durations ranged from roughly **9 s to 45 s**, dominated by runner assignment/bootstrap/checkout/setup rather than classification.
+
+For a hard 35 s ceiling, a separate runner cannot remain a prerequisite for starting full-impact deep work.
+
+Candidate architecture to benchmark:
+
+- preserve the current classifier/planner as the single authority;
+- start the potential deep lane immediately;
+- compute the plan inside that lane before dependency installation;
+- exit successfully and cheaply when deep work is not selected;
+- retain/publish the plan artifact independently if useful for observability.
+
+This trades a small amount of startup work on PRs that eventually skip deep for removal of a potentially large full-impact dependency edge.
+
+### 3. ESLint cache is scoped too narrowly for first-run PR latency
+
+A cold/new PR repeatedly reports no matching ESLint cache and spends roughly **12–15 s** linting. A warmed revision of the same PR has shown lint near **2 s**.
+
+The current cache is saved from PR scope, so unrelated new PRs cannot reliably inherit it. This repeats the cache-scope issue already found and corrected for Firebase CLI materialization.
+
+Benchmark/default candidate: seed the content-addressed ESLint cache from broad `main` validation and restore it read-only on PRs, with the existing config/package-lock generation in the key. Do not treat the cache as correctness evidence; a miss still runs full lint.
+
+### 4. Node setup downloads a non-preinstalled runtime
+
+The current Ubuntu 24.04 runner image (20260920.314.1) reports preinstalled/cached Node **22.23.2** and **24.21.0**, while current CI asks `setup-node` for floating major `20`. Hosted logs show `setup-node` resolving/downloading Node **20.20.2** on each job, contributing roughly **4 s** before npm-cache restoration.
+
+The repository engine contract is `>=20.19`.
+
+Benchmark candidate: run the full validation contract under exact Node 22.23.2 (or the image's system Node) and compare setup + behavior. Promotion requires all current tests/builds to remain green; this is runtime selection, not permission to relax the engine floor.
+
+### 5. The Node/CLI population is highly shardable
+
+One representative full run reported **176 contracts**, about **107.7 child-seconds** total, completing in **~27 s wall** with the already-settled four-worker pool.
+
+Greedy runtime balancing from that run gives almost perfect child-time partitions:
+
+| shards | child-time per shard | projected four-worker useful time before overhead |
+| ---: | ---: | ---: |
+| 2 | ~53.8–53.9 s | ~13.5 s |
+| 3 | ~35.9 s | ~9.0 s |
+| 4 | ~26.9–27.0 s | ~6.8 s |
+
+This is stronger evidence for sharding than equal-count partitioning. The remaining question is setup/runner skew: another hosted job only helps if its bootstrap cost is below the Node wall time it removes from the critical lane.
+
+### 6. Covered Vitest cost is concentrated in two integration fixtures
+
+Representative covered-suite slow files:
+
+- `orchestration-work-budget.test.ts`: **~8.2 s**, with one lifecycle-telemetry bookkeeping regression taking ~8.0 s;
+- `diversification.test.ts`: **~7.0 s**, dominated by three deliberately real full-session solver integrations;
+- `repair-search.test.ts`: **~4.4 s**;
+- all remaining reported files are materially smaller.
+
+The lifecycle regression asserts stage-instantiation telemetry rather than search quality and already lives beside tests using deterministic/exhausting dispatch seams. It is therefore a high-priority testability refactor candidate.
+
+The diversification tests explicitly claim real-solver integration as their contract. Do not stub them merely for speed. Instead evaluate whether those real integrations belong in a separately parallel proof/integration population.
+
+### 7. Explicit deep proofs are already internally parallel but have one long tail
+
+A representative deep-proof run completed in **~11.05 s wall** while executing:
+
+- deadlock root 0: ~9.1 s;
+- deadlock root 1: ~6.8 s;
+- R02560 enabled: ~0.36 s;
+- R02560 disabled: ~10.4 s.
+
+The summed test time was ~26.6 s, confirming Vitest is already overlapping files. Additional file-level sharding can only beat ~11 s by isolating the ~10 s R02560-disabled and ~9 s deadlock-root-0 tails onto separate runners or by making the underlying witnesses cheaper.
+
+### 8. Solver canary cost is one level, not nine
+
+Current nine-level canary timing from run 35955087367:
+
+- eight levels combined: roughly **0.35 s**;
+- level position 140 alone: roughly **9.38 s**;
+- total canary: ~9.7 s and ~11.9 M nodes.
+
+The canary baseline was introduced as a fixed representative sample, not as nine individually justified mechanism witnesses. Its baseline snapshot recorded the whole set at **2.587 s / 6.51 M nodes**, so current L140 has accumulated substantial cost while preserving the same solved-set result.
+
+Before changing the canary, determine whether L140 now uniquely catches a meaningful semantic class. If not, replace/distill it with a representative level that restores the canary's intended "few seconds total" role. Do not simply drop it because it is slow.
+
+
+
+### Hosted bootstrap benchmark: first pass
+
+Topology-audit run **35957860615** directly measured three bootstrap shapes.
+
+| probe | observed step time |
+| --- | ---: |
+| current deep sparse checkout | **15 s** |
+| source-only checkout | **3 s** |
+| exact runtime-data cache restore after source-only checkout | **3 s** |
+| floating Node 20 setup | **5 s** |
+| exact cached Node 22.23.2 setup | **2 s** |
+| npm ci under Node 22 | **7 s** |
+
+The runtime-data cache was an exact hit on the current Git-object key. Source-only checkout plus exact runtime restore therefore reached the complete canonical runtime-data shape in roughly **6 s**, versus **15 s** for the current deep Git materialization. This validates the deep-checkout hypothesis with hosted evidence rather than repository-size arithmetic alone.
+
+The first Node 22 toolchain smoke failed, but the failure was **not Node-version behavior**. The intentionally source-only benchmark checkout omitted `data/hints` and `data/themes.json`; `scripts/data-assets-unit-tests.mjs` correctly failed on those missing fixtures. The benchmark has been amended to restore the exact runtime-data cache before rerunning the broader Node 22 smoke.
+
+The runner image's exact Node 22.23.2 toolcache selection is already measurably cheaper than floating Node 20. A second probe now compares that against using the runner's system Node directly with an explicit npm-cache restore, which may remove the remaining setup-node action overhead at the cost of tying CI runtime to the runner-image version.
+
+
+
+### Hosted bootstrap benchmark: second pass
+
+Topology-audit run **35958054368** corrected the first pass's missing runtime fixtures and added a system-runtime comparison.
+
+Measured bootstrap:
+
+| probe | observed step time |
+| --- | ---: |
+| source checkout | 2–3 s |
+| exact runtime-data restore | **1 s** on this run |
+| floating Node 20 setup | **6 s** |
+| exact cached Node 22.23.2 setup | **1 s** |
+| npm ci under exact Node 22 | **9 s** |
+| system Node version | 22.23.2 |
+| hosted runner logical CPUs | **4** |
+
+The exact Node 22 job then passed:
+
+- `check:types`;
+- the complete `test:unit:fast` population: **138 files passed, 4 skipped; 1,513 tests passed, 11 skipped**;
+- production Vite build.
+
+The fast-unit population completed in **20.12 s** under Node 22.23.2. No Node-version compatibility failure has been observed.
+
+The raw system-Node probe did not establish a worthwhile advantage:
+
+- it avoids `setup-node`, but an explicit `actions/cache/restore` using the visible setup-node cache key did not hit the setup-node-managed cache version;
+- `npm ci` still took ~8 s;
+- typecheck and the actual Vite compilation succeeded; the later build close hook failed only because the intentionally source-only checkout omitted `data/levels.json`.
+
+Given the small remaining setup-node cost, exact Node 22.23.2 is the cleaner candidate: pinned runtime semantics, setup-node-managed npm caching, and a measured ~5 s improvement over floating Node 20 in this run.
+
+### Canary candidate probe
+
+The same run exercised five published levels chosen for overlap with L140's multi-mechanic shape:
+
+| position | notable overlap | elapsed |
+| ---: | --- | ---: |
+| 62 | 2 gates, portal, must-pass, 2 geese | 19 ms |
+| 71 | 2 gates, 2 portals, goose | 31 ms |
+| 85 | 2 gates, portal, 2 geese, reqInt 3 | 38 ms |
+| 93 | 2 gates, 2 portals, must-pass, goose | 26 ms |
+| 102 | 2 gates, portal, 2 must-pass, 2 geese | 7 ms |
+
+All five solved at the existing 5,000,000 work budget in roughly **0.1 s total / 61,227 nodes**.
+
+This proves the canary can retain broad multi-mechanic representation without paying L140's current ~9.4 s cost. It does **not** yet prove L140 should be removed: a follow-up probe is measuring whether the same exact L140 witness still succeeds at a materially smaller work budget.
+
+### ESLint default-branch authority
+
+`main-push-validation.yml` currently has no ESLint cache restore/save steps. The PR workflow writes `.cache/eslint` only from PR scope, explaining why unrelated new PRs cold-miss while subsequent revisions of the same PR can fall to ~2 s lint.
+
+Recommended activation pattern:
+
+1. main-push restores the newest cache for the current ESLint/package generation;
+2. main-push saves a commit-specific successor after successful lint;
+3. PRs continue restoring by the generation prefix;
+4. cache miss remains fully correct because ESLint still scans every file.
+
+This is a cache-availability change only, not validation narrowing.
+
+### Interim implication
+
+A 35 s target is not reachable by one more micro-optimization. The evidence points to a combined architecture:
+
+1. remove avoidable bootstrap costs (deep data checkout, Node runtime download, cold cross-PR ESLint);
+2. remove the standalone planner dependency from full-impact startup;
+3. make the remaining expensive test boundaries cheaper where their asserted invariant does not require full search;
+4. then partition the genuinely independent expensive populations by measured runtime.
+
+The next benchmark should test these bootstrap assumptions and candidate lane shapes directly on hosted runners before fixing shard count or job topology.
+
+
+### Final discriminators for the implementation plan
+
+Additional hosted probes closed the remaining planning questions.
+
+#### Original canary population at reduced work
+
+The full original nine-level canary was rerun at **250,000 work**:
+
+- solved: **9/9**;
+- wall: **~1.5 s**;
+- nodes: **~1.30 M**.
+
+Therefore the canary does not need a fixture-set change. The correct first optimization is simply to regenerate its baseline at 250k deterministic work and preserve all nine published witnesses.
+
+#### Coverage with existing deepTest cases excluded
+
+A full `test:coverage` run with `SOLVER_DEEP_TESTS=0`:
+
+- stayed green at the existing coverage thresholds;
+- completed in **26.71 s**;
+- compared with ~29.51 s for the current covered population.
+
+The ~2.8 s wall improvement is real but smaller than the nominal per-test costs because Vitest already overlaps files. Creating a separate deep-integration tier solely for this saving is not justified.
+
+Decision: first make the ~8 s lifecycle bookkeeping regression use its existing deterministic dispatch seam and remeasure. If covered wall remains above the plan's **19 s useful-work budget**, split coverage by measured file cost and merge V8 coverage; do not lower thresholds.
+
+#### Exact node_modules restore
+
+Hosted run 35958457759 measured the dependency tree directly:
+
+- `npm ci`: **8 s**;
+- cache save: **3 s**;
+- exact cache restore after deleting `node_modules`: **3 s**;
+- restored-tree `check:types`: green.
+
+This is a material ~5 s bootstrap reduction per lane and changes the standard-runner topology economics. The implementation plan therefore targets an exact default-branch-seeded dependency tree, with a full restored-tree validation rehearsal and a strict miss fallback to `npm ci` before production activation.
+
+#### Resulting standard-runner budget
+
+With measured bootstrap reductions, the first candidate rehearsal is five lanes, each budgeted below 27 s:
+
+- static ≤18 s;
+- Node A ≤23 s;
+- Node B ≤23 s;
+- implementation coverage ≤27 s;
+- deep services ≤24 s.
+
+This leaves approximately 8 s of workflow-level headroom under the 35 s target for ordinary runner-start skew. The rehearsal must prove that p90 start skew fits that envelope. If it does not, the plan explicitly escalates to reserved/larger compute rather than deleting validation.

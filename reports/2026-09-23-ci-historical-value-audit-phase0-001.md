@@ -599,3 +599,25 @@ The solver miss was substantive rather than a routing error. The router selected
 The follow-up adds a focused production-path regression test to `modules/solver/orchestration-core.test.ts`. It constructs a two-gate level, bounds execution to two dispatched nodes, and asserts that production scheduling visits both active gates under the same config before advancing configs. This directly distinguishes the intended interleaved coordinator from the gate-serial fallback without relying on a corpus solve outcome.
 
 Activation implication: impact routing itself passed this injected solver case; the uncovered risk was detector completeness. Scoped solver validation should not be promoted until the refreshed fault-injection run proves the new scheduling invariant catches the injected defect.
+
+
+## Production activation and new latency objective
+
+The cadence audit's principal production recommendation is now partially activated.
+
+PR #2036 changed ordinary PR CI so that:
+
+- `fast-gate` remains universal;
+- semantic impact routing is authoritative only for whether `deep-verification` must run;
+- planner failure fails safe by running deep verification;
+- manual dispatch always runs deep verification;
+- CI/router/config authority changes remain conservative full-impact cases;
+- broad main-push validation remains the integration/direct-main oracle.
+
+The activation PR itself classified as full impact and ran the entire deep lane successfully.
+
+This closes the original universal-vs-scoped deep-verification question, but it opens a stricter performance question. The current target is now **≤35 seconds wall-clock for a full-impact PR while preserving the full selected validation contract**.
+
+CI run 35955087367 is the initial reference point: roughly **96 seconds** from first required runner start to final deep-lane completion. That is about 2.7× the new ceiling. The next audit phase therefore treats the current lane packing as a baseline rather than a preferred architecture.
+
+The remaining work is not justified by lower defect value. It is justified by critical-path cost. Historical catch evidence continues to constrain what may be moved or transformed: the #1722 solver-semantic unique-catch class, router-authority full fallback, and representative 4/4 semantic fault-injection set remain safety oracles while execution is redesigned.
