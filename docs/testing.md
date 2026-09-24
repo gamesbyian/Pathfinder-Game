@@ -108,7 +108,7 @@ For example, `test:technique-campaign-analysis` and `test:analyze-technique-cens
 
 ## CI wall-time objective
 
-The active CI optimization target is now **full PR validation in 35 seconds or less wall-clock**, measured from the first required runner starting to the last required validation lane completing. This is a critical-path target, not a permission to delete protection.
+The active CI optimization target is now **full PR validation in 35 seconds or less wall-clock** (implementation plan: [`ci-35s-critical-path-plan.md`](ci-35s-critical-path-plan.md)), measured from the first required runner starting to the last required validation lane completing. This is a critical-path target, not a permission to delete protection.
 
 A full-impact PR must still preserve the validation contract selected today: universal fast-gate obligations plus covered implementation tests, heavyweight solver proofs, and Firestore persistence validation. Meeting the target may require restructuring runner/job topology, checkout/materialization, dependency preparation, test sharding, worker reuse, and repository/test seams.
 
