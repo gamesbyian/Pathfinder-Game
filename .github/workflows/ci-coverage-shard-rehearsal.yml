@@ -218,6 +218,144 @@ jobs:
           PATHFINDER_REPAIR_TEST_DEFAULT_EQ_NODE_BUDGET: '250000'
         run: npm run test:coverage
 
+  coverage-repair-budget-100k:
+    name: coverage-repair-budget-100k
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: coverage100-runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Require warm runtime-data cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.coverage100-runtime-data-key.outputs.key }}
+          fail-on-cache-miss: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Derive exact dependency-tree cache key
+        id: coverage100-dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Require warm exact dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.coverage100-dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+      - name: Run covered suite with 100k/50k repair budgets
+        env:
+          SOLVER_DEEP_TESTS: '0'
+          SOLVER_DEADLOCK_PROOF_SKIP: '1'
+          SOLVER_R02560_PROOF_SKIP: '1'
+          PATHFINDER_REPAIR_TEST_DETERMINISM_NODE_BUDGET: '100000'
+          PATHFINDER_REPAIR_TEST_DEFAULT_EQ_NODE_BUDGET: '50000'
+        run: npm run test:coverage
+
+  coverage-repair-budget-50k:
+    name: coverage-repair-budget-50k
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: coverage50-runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Require warm runtime-data cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.coverage50-runtime-data-key.outputs.key }}
+          fail-on-cache-miss: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Derive exact dependency-tree cache key
+        id: coverage50-dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Require warm exact dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.coverage50-dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+      - name: Run covered suite with 50k/25k repair budgets
+        env:
+          SOLVER_DEEP_TESTS: '0'
+          SOLVER_DEADLOCK_PROOF_SKIP: '1'
+          SOLVER_R02560_PROOF_SKIP: '1'
+          PATHFINDER_REPAIR_TEST_DETERMINISM_NODE_BUDGET: '50000'
+          PATHFINDER_REPAIR_TEST_DEFAULT_EQ_NODE_BUDGET: '25000'
+        run: npm run test:coverage
+
   repair-search-budget-probe:
     name: repair-search-budget-probe
     runs-on: ubuntu-latest
