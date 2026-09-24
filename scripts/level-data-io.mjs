@@ -1,6 +1,7 @@
 /**
  * Shared I/O for split level/hint artifacts. Level JSON has no hints at rest; per-level files hold
- * canonical `{schemaVersion:3,hints:Hint[]}`. Reads upgrade legacy shapes and attach `.hintRecords`
+ * canonical schema-v4 Hint artifacts (sparse-inline or interned). Reads retain v1-v3 compatibility
+ * and attach `.hintRecords`
  * as canonical mutable state plus derived `.hints` bare paths. Writes strip both from level JSON and
  * persist only levels named in an explicit hint write set. Hint files use persistent level ids
  * verbatim when present, else 1-based position.
@@ -8,10 +9,9 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { stringifyCorpusJson } from './level-json-format.mjs';
-import { setLevelHintRecords, upgradeLegacyHints, decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
+import { setLevelHintRecords, upgradeLegacyHints, decodeHintArtifact, encodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 import { hintDirectoryNameForLevelsFile, hintArtifactFileName, hintKeyForLevel as canonicalHintKeyForLevel, isHintArtifactFileName } from '../modules/hint-artifact-layout.mjs';
 
-const HINT_SCHEMA_VERSION = 3;
 
 /** Sibling hint directory derived by the shared browser/Node artifact-layout authority. */
 export function hintsDirFor(levelsJsonPath) {
@@ -93,9 +93,10 @@ export function readLevelCorpusDocumentWithHints(levelsJsonPath) {
     return { levels, metadata, storageShape };
 }
 
-/** Serialize canonical hints one record per line. */
+/** Serialize canonical semantic Hint[] through the current deterministic physical codec, retaining
+ * one logical Hint record per line for reviewability. */
 export function stringifyHints(records) {
-    return stringifyCorpusJson({ schemaVersion: HINT_SCHEMA_VERSION, hints: records }, 'hints');
+    return stringifyCorpusJson(encodeHintArtifact(records), 'hints');
 }
 
 /**
