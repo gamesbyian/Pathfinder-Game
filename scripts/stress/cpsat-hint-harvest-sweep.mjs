@@ -21,7 +21,7 @@
  *     [--max-combos=16] [--summary-out=logs/cpsat-hint-harvest-sweep/shard-01-summary.md]
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
