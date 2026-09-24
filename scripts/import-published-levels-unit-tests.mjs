@@ -125,14 +125,14 @@ test('mergeNewHints is uncapped for scripts — a level past 1000 hints still ga
   const target = { hints: Array.from({ length: 1000 }, (_, i) => [i]) };
   const added = mergeNewHints(target, { hints: [[9999]] });
   // The 1000-hint cap was a UI-latency guard, not a data limit — scripts only dedup, never truncate.
-  assert.equal(added, 1);
+  assert.deepEqual(added, { pathsAdded: 1, semanticChanged: true });
   assert.equal(target.hints.length, 1001);
 });
 
 test('mergeNewHints initializes a missing hints array on the target', () => {
   const target = {};
   const added = mergeNewHints(target, { hints: [[1, 2]] });
-  assert.equal(added, 1);
+  assert.deepEqual(added, { pathsAdded: 1, semanticChanged: true });
   assert.deepEqual(target.hints, [[1, 2]]);
 });
 
@@ -140,7 +140,7 @@ test('mergeNewHints threads a new hint\'s provenance into target.hintRecords', (
   const target = { hints: [[1, 2]], hintRecords: [{ path: [1, 2], provenance: [] }] };
   const incoming = { hints: [[3, 4]], hintRecords: [{ path: [3, 4], provenance: [{ solver: { id: 'p', technique: 'manual-path' } }] }] };
   const added = mergeNewHints(target, incoming);
-  assert.equal(added, 1);
+  assert.deepEqual(added, { pathsAdded: 1, semanticChanged: true });
   assert.deepEqual(target.hints, [[1, 2], [3, 4]]);
   assert.equal(target.hintRecords.length, 2);
   assert.equal(target.hintRecords[1].provenance[0].solver.technique, 'manual-path');
