@@ -1,6 +1,6 @@
 # CI impact routing and validation architecture plan
 
-> **Status:** implementation active.
+> **Status:** Phase 3 partially activated; deep verification is impact-scoped, fast-gate remains universal.
 > **Started:** 2026-09-21.
 > **Goal:** make validation proportional to the repository surfaces a change can invalidate, while preserving conservative correctness and a full-validation oracle.
 
@@ -144,47 +144,51 @@ Track separately:
 
 The program succeeds when common research-only work avoids unrelated game/solver proof cost, broad product/solver changes remain strongly validated, and the routing model becomes easier to reason about than the universal gate it replaced.
 
-## Current next gate
+## Current state and next gate
 
-**Phase 0 is complete.** Validation ownership is exact and mechanically guarded: 28 permanent validators and 165 Node/CLI harnesses are registered without omissions or duplicates.
+**Phases 0 through 2 are complete for the currently activated scope.** Ownership, impact classification, validation planning, execution packing, historical replay, live shadowing, manual scoped rehearsals, and semantic fault injection are all represented by maintained repository machinery.
 
-**Phase 1 source-impact hardening is complete enough for shadow operation.** Current branch state:
+Current production behavior:
 
-- zero unclassified paths across the current tracked tree (**10,297 blobs** at the latest structural sweep);
-- permanent tracked-path coverage validation;
-- explicit full-impact precedence over derived harness ownership;
-- rename/delete/copy-safe Git change parsing;
-- semantic script-only `package.json` classification with non-script changes remaining full;
-- registered harness entrypoint ownership derived from the validation registry;
-- first-class `persistence` impact, separating Firestore boundary cost from generic game work;
-- real `--git-diff <base> <head>` classification;
-- data-driven validation planning;
-- 27-PR historical replay: **18/27 scoped candidates, 9/27 earned full-impact**;
-- modeled execution consequence: **16/27** historical PRs skip the deep runner, **17/27** skip build/canary/heavy solver proofs, and **18/27** skip Firestore.
+- `fast-gate` remains universal for every PR and still executes package/script reachability, textual invariants, all validators, lint, the complete Node/CLI contract population, solver canary, and production build;
+- `deep-verification` is now impact-scoped under the semantic execution plan;
+- planner failure fails safe by running deep verification;
+- manual `workflow_dispatch` runs deep verification;
+- CI/router/config authority changes conservatively classify as full impact;
+- `main-push-validation.yml` remains broad and authoritative as the direct-main/integration backstop;
+- dependency-local `contractDependencies` metadata is validated and measured but does not yet authorize production skipping.
 
-Evidence:
-- [foundation result 001](../reports/2026-09-21-ci-impact-routing-foundation-result-001.md)
-- [historical backtest 002](../reports/2026-09-21-ci-impact-routing-historical-backtest-002.md)
-- [shadow readiness result 002](../reports/2026-09-21-ci-impact-routing-shadow-readiness-result-002.md)
-- [scoped execution historical economics 003](../reports/2026-09-21-ci-scoped-execution-historical-economics-003.md)
-- [live shadow evidence 004](../reports/2026-09-22-ci-impact-routing-live-shadow-evidence-004.md)
+Evidence supporting the deep-lane activation includes:
 
-**Phase 2 measurement/shadowing has enough live shape evidence for activation rehearsal.** `.github/workflows/ci.yml` contains non-gating, dependency-free `impact-shadow`. Real post-foundation PRs now cover all three important routing shapes: research-only scoped (#1974/#1975), solver scoped (#1982), and repeated full-impact authority changes. In both research-only samples, every observed failure was in retained fast/research obligations while the entire deep lane passed; #1982 correctly retained solver coverage/proofs/canary/build while excluding Firestore. Router failure remains non-gating while broad CI is authoritative.
+- the retained current-era history showed one demonstrated genuine branch-caused deep-only catch, PR #1722, and the current router selects deep verification for that solver-impacting change class;
+- representative semantic fault injection now catches game, persistence, solver gate-interleaving, and router-authority defects, 4/4 after the missing interleaving invariant was pinned directly;
+- research/data/repository-only historical and live samples repeatedly paid deep-lane cost without marginal detection;
+- the broad main-push oracle remains in place to expose integration or routing omissions.
 
-The parallel-script runner also supports opt-in `PATHFINDER_PARALLEL_JOBS=<N>` bounded concurrency, but the historical unbounded default remains unchanged until representative 4/8/16/unbounded measurements justify a new default.
+Phase 3 is therefore **partially activated**, not complete. Surface-level routing currently controls only the expensive deep lane. Fast-gate group scoping and dependency-local skipping remain deliberately unactivated.
 
-The execution layer is now modeled separately in `scripts/ci-execution-plan.json` / `scripts/ci-execution-plan.mjs`:
+### New latency constraint
 
-- `fast-gate` remains the always-materialized installed-dependency lane in the first scoped version;
-- `deep-verification` becomes a whole-job skip candidate only when coverage, deep proofs, and Firestore boundary are all unnecessary;
-- the future single required status is `ci-success`, evaluated with `if: always()`;
-- `impact-shadow` and `fast-gate` must succeed;
-- `deep-verification` may be either `success` or deliberately `skipped`; failure/cancellation is never accepted.
+The optimization target has changed from "remove obviously irrelevant work at acceptable complexity" to a hard critical-path objective:
 
-The validation-plan parity checker now also proves every expensive capability belongs to exactly one execution lane and the final-status acceptance contract is structurally conservative.
+> **A full-impact PR should complete its entire required validation contract in 35 seconds or less wall-clock.**
 
-`main-push-validation.yml` now also shadows the same impact model over the complete push event range while leaving its broad safety-net validation untouched.
+The current full-impact topology does not meet this goal. A recent full PR run took roughly 96 seconds from first required runner start to last required validation completion. The universal fast lane took roughly 79 seconds on its own and the deep lane roughly 85 seconds from its runner start.
 
-`ci-scoped-dry-run.yml` now provides a manual end-to-end activation rehearsal over explicit base/head refs. Its job/capability/always-on/final-status structure is mechanically checked against the execution plan. Ordinary PR CI remains unchanged.
+This target changes the next phase from cadence refinement to execution-architecture work. Validation breadth remains protected; job topology, checkout/materialization, dependency setup, phase concurrency, sharding, worker reuse, and test/repository seams are all open to redesign.
 
-**Next:** establish a green current-main broad baseline after #1984, then run representative manual scoped dry-runs for research-only, solver, and full-impact refs and verify the `ci-success` skipped/required-deep semantics. Node-harness concurrency remains a separate measurement gate for changing the fan-out default, not a prerequisite for a routing rollout. Do not enable skipped validation until the broad baseline and scoped dry-run gates are green and the final required status is deliberately promoted into ordinary PR CI.
+### Next gate
+
+Before another production routing reduction, complete the 35-second critical-path audit:
+
+1. reconstruct per-step wall-time distributions from recent full-impact PR runs, including checkout, setup-node, cache restore, `npm ci`, validators, lint, Node/CLI contracts, solver canary, build, coverage, deep proofs, Java/Firebase setup, and Firestore;
+2. explain the deep checkout outlier and measure the exact file/materialization cost of its sparse-checkout definition;
+3. benchmark candidate lane topologies using the existing full validation contract, not a reduced substitute;
+4. design runtime-balanced shards for Node/CLI contracts and covered Vitest work using measured command/file timings;
+5. determine which setup costs can be shared, eliminated, prebuilt, or hidden behind useful parallel work;
+6. audit solver-canary execution for safe internal parallelism/worker reuse;
+7. model p50 and p90 critical paths, including hosted-runner startup variance;
+8. only then preregister an implementation sequence capable of reaching the ≤35s target.
+
+The 35-second target does not authorize deleting tests, shrinking coverage, or weakening semantic proof obligations merely to meet the clock. If a validation obligation cannot fit, first change how it is executed or make the underlying test boundary cheaper.
+
