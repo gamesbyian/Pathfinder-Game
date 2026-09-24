@@ -144,7 +144,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A2 exact Node 22.23.2 | **merged / measured green** | Production PR/main/scoped workflows are pinned to exact 22.23.2 with a separate Node-22 Firebase CLI cache generation; full-contract rehearsals were green with setup-node ~0–3 s. |
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
-| B5 runtime-hint projection cache | **merged / rollout verification pending** | #2087 merged projection restore/seed across PR/main/scoped and post-diagnostics paths. Rehearsal #2081 restored exact projection in **1 s** and built in **2 s** versus ~25 s cold; verify one ordinary post-merge hit before closing B5. |
+| B5 runtime-hint projection cache | **merged / measured green** | #2087 merged projection restore/seed across PR/main/scoped and post-diagnostics paths. Ordinary PR #2088 restored the exact projection cache and completed build in **~2.3 s** total with Vite compile **672 ms**, versus ~25 s cold. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
