@@ -192,6 +192,24 @@ Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forc
 
 A1c (#2061) seeds diagnostics-generated `[skip ci]` main generations. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
 
+### B1c. Remove hint-occurrence unit-test import side effect
+
+Post-hint-consolidation Node/CLI profiling exposed a new dominant contract:
+
+- `test:hint-occurrence-acceptance`: **15.8 s**;
+- next-largest current Node contracts are materially smaller.
+
+Root cause is structural, not intrinsic audit cost. The synthetic node test imports `auditHintOccurrenceSemantics` from the CLI module, and that module executes `buildHintOccurrenceAcceptanceReport()` at top level. Importing one pure function therefore scans all three persisted hint corpora before the synthetic assertions run.
+
+Production/testability fix:
+
+1. extract `auditHintOccurrenceSemantics` and its private occurrence-key helper into a side-effect-free library;
+2. keep the CLI importing/re-exporting that function so external API compatibility is preserved;
+3. make the synthetic Node contract import the pure library directly;
+4. leave the corpus-scale CLI behavior unchanged when the CLI itself is invoked.
+
+Expected contract-level saving is roughly the full **15.8 s** observed import cost. Because Node contracts execute in a four-worker pool, the actual Node-population wall reduction must be measured separately.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
