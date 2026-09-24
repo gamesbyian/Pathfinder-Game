@@ -48,6 +48,22 @@ try {
   assert.match(verbosePass.stdout, /PASS_STDOUT/u);
   assert.match(verbosePass.stdout, /success-output=all/u);
 
+  const npmFallbackPass = run(['pass'], {
+    PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '0',
+    PATHFINDER_PARALLEL_SUCCESS_OUTPUT: 'summary',
+  });
+  assert.equal(npmFallbackPass.status, 0);
+  assert.match(npmFallbackPass.stdout, /PASS\s+pass/u);
+  assert.match(npmFallbackPass.stdout, /mode=npm/u);
+
+  const npmFallbackFail = run(['fail'], {
+    PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '0',
+    PATHFINDER_PARALLEL_SUCCESS_OUTPUT: 'summary',
+  });
+  assert.equal(npmFallbackFail.status, 1);
+  assert.match(npmFallbackFail.stdout, /FAIL_STDERR/u);
+  assert.match(npmFallbackFail.stdout, /mode=npm/u);
+
   const invalidMode = run(['pass'], { PATHFINDER_PARALLEL_SUCCESS_OUTPUT: 'nope' });
   assert.equal(invalidMode.status, 2);
   assert.match(invalidMode.stderr, /must be "all" or "summary"/u);
