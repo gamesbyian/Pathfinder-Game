@@ -32,6 +32,37 @@ jobs:
             !/data/*
             /data/levels.json
           sparse-checkout-cone-mode: false
+      - name: Derive bootstrap runtime-data cache key
+        id: bootstrap-runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore bootstrap runtime data
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.bootstrap-runtime-data-key.outputs.key }}
       - name: Setup floating Node 20
         id: node20
         uses: actions/setup-node@v7
@@ -134,6 +165,34 @@ jobs:
           echo "cache-hit=$CACHE_HIT" >> "$GITHUB_STEP_SUMMARY"
           echo "files=$(find . -type f -not -path './.git/*' | wc -l)" >> "$GITHUB_STEP_SUMMARY"
           echo "bytes=$(du -sb --exclude=.git . | awk '{print $1}')" >> "$GITHUB_STEP_SUMMARY"
+
+  system-node-bootstrap-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Record system runtime
+        run: |
+          node --version
+          npm --version
+          nproc
+      - name: Restore npm cache explicitly
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.npm
+          key: node-cache-${{ runner.os }}-x64-npm-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies with system Node
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: System-Node toolchain smoke
+        run: |
+          npm run check:types
+          npm run build
 
   audit:
     runs-on: ubuntu-latest
