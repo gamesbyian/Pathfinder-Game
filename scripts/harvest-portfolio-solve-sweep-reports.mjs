@@ -29,7 +29,7 @@ import {
 import { parseRawLevel } from '../modules/domain/level-codec.js';
 import { validateCandidatePath } from '../modules/domain/path-validator.js';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.js';
-import { provenanceFromHistoricalSolveResult } from '../modules/solver/hint-provenance.js';
+import { reconstructPortfolioHintProvenance } from './portfolio-hint-reconstruction-lib.mjs';
 import { mergeHints, setLevelHintRecords } from '../modules/domain/hint-types.js';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(arg => {
@@ -167,32 +167,9 @@ for (const file of walk(stagingDir).sort()) {
         }
         refereeAcceptedObservations += 1;
 
-        const provenance = provenanceFromHistoricalSolveResult({
-            attempts: Array.isArray(row.attempts) ? row.attempts : [],
-            nodesExpanded: Number.isFinite(row.nodesExpanded) ? row.nodesExpanded : undefined,
-            totalMs: Number.isFinite(row.totalMs) ? row.totalMs
-                : Number.isFinite(row.elapsedMs) ? row.elapsedMs : undefined,
-            status: 'success',
-            workSpent: Number.isFinite(row.workSpent) ? row.workSpent : undefined,
-            workBudget: Number.isFinite(row.workBudget) ? row.workBudget : undefined,
-        }, {
-            solverVersion: typeof summary.commit === 'string' ? summary.commit : null,
-            foundAt: row.discoveryObservedAt,
-            budgetMs: Number.isFinite(summary.budgetMs) ? summary.budgetMs : null,
-            usedExistingHints: false,
-            levelRevision: row.levelRevision,
-            ...(typeof summary.solverRequestIdentity === 'string' && summary.solverRequestIdentity
-                ? { solverRequestIdentity: summary.solverRequestIdentity } : {}),
-            ...(typeof summary.reproducibilityMode === 'string' && summary.reproducibilityMode
-                ? { reproducibilityMode: summary.reproducibilityMode } : {}),
-            ...(typeof summary.staticPortfolioArm === 'string' && summary.staticPortfolioArm
-                ? { executionArm: summary.staticPortfolioArm } : {}),
-            ...(sourceRunId !== 'unknown'
-                ? {
-                    occurrenceRunId: sourceRunId,
-                    ...(sourceRunAttempt ? { occurrenceRunAttempt: sourceRunAttempt } : {}),
-                }
-                : {}),
+        const provenance = reconstructPortfolioHintProvenance(summary, row, {
+            sourceRunId: sourceRunId !== 'unknown' ? sourceRunId : null,
+            sourceRunAttempt,
         });
 
         const observation = buildHintDiscoveryIngestionObservation({
