@@ -81,6 +81,7 @@ const CORPORA = {
     published: 'data/hints',
     corpus1: 'data/stress/hints',
     corpus2: 'data/stress/hints-random',
+    envelope: 'data/stress/hints-envelope',
 };
 
 const which = args.get('--corpus');
