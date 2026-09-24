@@ -1413,3 +1413,116 @@ Approximate timestamps show:
 ### Planning threshold
 
 Do not finalize an implementation plan until the audit can assign a realistic p50 timing budget to every proposed lane and explain how p90 runner/setup variance will be handled. A paper topology whose sum of command times is under 35 seconds but whose hosted execution routinely exceeds it is not sufficient.
+
+
+## Critical-path investigation: first measured discriminators
+
+The first follow-up pass after adopting the ≤35 s full-impact target found several costs that are structural enough to guide the benchmark plan.
+
+### 1. Deep checkout is mostly data materialization, not source checkout
+
+Repository tree accounting on current main:
+
+| population | files | bytes |
+| --- | ---: | ---: |
+| entire tracked blob tree | ~10,400 | ~1.85 GB |
+| current deep sparse checkout | ~3,269 | ~206.9 MB |
+| deep checkout `data/` payload | ~1,757 | ~190.3 MB |
+| non-data/non-log/non-report source | ~1,512 | ~16.6 MB |
+
+Recent hosted full-impact runs consistently put fast checkout around **2–4 s** and deep checkout around **15–17 s**. The deep checkout therefore materializes roughly an order of magnitude more payload than the source itself, dominated by data/hint artifacts.
+
+The fast lane already demonstrates the alternative shape: omit runtime data from Git checkout and restore an exact Git-object-keyed runtime-data cache. Deep validation should be audited for the exact data paths its tests actually read, then either reuse the exact runtime-data cache or materialize only that minimal set.
+
+### 2. The standalone impact planner is now on the latency path
+
+The semantic plan computation itself is effectively instantaneous, but `deep-verification` now waits on the `impact-shadow` job. Recent planner job durations ranged from roughly **9 s to 45 s**, dominated by runner assignment/bootstrap/checkout/setup rather than classification.
+
+For a hard 35 s ceiling, a separate runner cannot remain a prerequisite for starting full-impact deep work.
+
+Candidate architecture to benchmark:
+
+- preserve the current classifier/planner as the single authority;
+- start the potential deep lane immediately;
+- compute the plan inside that lane before dependency installation;
+- exit successfully and cheaply when deep work is not selected;
+- retain/publish the plan artifact independently if useful for observability.
+
+This trades a small amount of startup work on PRs that eventually skip deep for removal of a potentially large full-impact dependency edge.
+
+### 3. ESLint cache is scoped too narrowly for first-run PR latency
+
+A cold/new PR repeatedly reports no matching ESLint cache and spends roughly **12–15 s** linting. A warmed revision of the same PR has shown lint near **2 s**.
+
+The current cache is saved from PR scope, so unrelated new PRs cannot reliably inherit it. This repeats the cache-scope issue already found and corrected for Firebase CLI materialization.
+
+Benchmark/default candidate: seed the content-addressed ESLint cache from broad `main` validation and restore it read-only on PRs, with the existing config/package-lock generation in the key. Do not treat the cache as correctness evidence; a miss still runs full lint.
+
+### 4. Node setup downloads a non-preinstalled runtime
+
+The current Ubuntu 24.04 runner image (20260920.314.1) reports preinstalled/cached Node **22.23.2** and **24.21.0**, while current CI asks `setup-node` for floating major `20`. Hosted logs show `setup-node` resolving/downloading Node **20.20.2** on each job, contributing roughly **4 s** before npm-cache restoration.
+
+The repository engine contract is `>=20.19`.
+
+Benchmark candidate: run the full validation contract under exact Node 22.23.2 (or the image's system Node) and compare setup + behavior. Promotion requires all current tests/builds to remain green; this is runtime selection, not permission to relax the engine floor.
+
+### 5. The Node/CLI population is highly shardable
+
+One representative full run reported **176 contracts**, about **107.7 child-seconds** total, completing in **~27 s wall** with the already-settled four-worker pool.
+
+Greedy runtime balancing from that run gives almost perfect child-time partitions:
+
+| shards | child-time per shard | projected four-worker useful time before overhead |
+| ---: | ---: | ---: |
+| 2 | ~53.8–53.9 s | ~13.5 s |
+| 3 | ~35.9 s | ~9.0 s |
+| 4 | ~26.9–27.0 s | ~6.8 s |
+
+This is stronger evidence for sharding than equal-count partitioning. The remaining question is setup/runner skew: another hosted job only helps if its bootstrap cost is below the Node wall time it removes from the critical lane.
+
+### 6. Covered Vitest cost is concentrated in two integration fixtures
+
+Representative covered-suite slow files:
+
+- `orchestration-work-budget.test.ts`: **~8.2 s**, with one lifecycle-telemetry bookkeeping regression taking ~8.0 s;
+- `diversification.test.ts`: **~7.0 s**, dominated by three deliberately real full-session solver integrations;
+- `repair-search.test.ts`: **~4.4 s**;
+- all remaining reported files are materially smaller.
+
+The lifecycle regression asserts stage-instantiation telemetry rather than search quality and already lives beside tests using deterministic/exhausting dispatch seams. It is therefore a high-priority testability refactor candidate.
+
+The diversification tests explicitly claim real-solver integration as their contract. Do not stub them merely for speed. Instead evaluate whether those real integrations belong in a separately parallel proof/integration population.
+
+### 7. Explicit deep proofs are already internally parallel but have one long tail
+
+A representative deep-proof run completed in **~11.05 s wall** while executing:
+
+- deadlock root 0: ~9.1 s;
+- deadlock root 1: ~6.8 s;
+- R02560 enabled: ~0.36 s;
+- R02560 disabled: ~10.4 s.
+
+The summed test time was ~26.6 s, confirming Vitest is already overlapping files. Additional file-level sharding can only beat ~11 s by isolating the ~10 s R02560-disabled and ~9 s deadlock-root-0 tails onto separate runners or by making the underlying witnesses cheaper.
+
+### 8. Solver canary cost is one level, not nine
+
+Current nine-level canary timing from run 35955087367:
+
+- eight levels combined: roughly **0.35 s**;
+- level position 140 alone: roughly **9.38 s**;
+- total canary: ~9.7 s and ~11.9 M nodes.
+
+The canary baseline was introduced as a fixed representative sample, not as nine individually justified mechanism witnesses. Its baseline snapshot recorded the whole set at **2.587 s / 6.51 M nodes**, so current L140 has accumulated substantial cost while preserving the same solved-set result.
+
+Before changing the canary, determine whether L140 now uniquely catches a meaningful semantic class. If not, replace/distill it with a representative level that restores the canary's intended "few seconds total" role. Do not simply drop it because it is slow.
+
+### Interim implication
+
+A 35 s target is not reachable by one more micro-optimization. The evidence points to a combined architecture:
+
+1. remove avoidable bootstrap costs (deep data checkout, Node runtime download, cold cross-PR ESLint);
+2. remove the standalone planner dependency from full-impact startup;
+3. make the remaining expensive test boundaries cheaper where their asserted invariant does not require full search;
+4. then partition the genuinely independent expensive populations by measured runtime.
+
+The next benchmark should test these bootstrap assumptions and candidate lane shapes directly on hosted runners before fixing shard count or job topology.
