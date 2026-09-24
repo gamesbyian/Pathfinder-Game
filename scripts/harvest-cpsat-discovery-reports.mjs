@@ -42,6 +42,8 @@ const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).m
     return [key, rest.join('=')];
 }));
 const root = path.resolve(new URL('..', import.meta.url).pathname);
+const workspaceRootArg = args.get('--workspace-root');
+const workspaceRoot = workspaceRootArg ? path.resolve(workspaceRootArg) : root;
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
 const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_RUN_ATTEMPT || null;
@@ -73,7 +75,7 @@ const states = new Map();
 function stateFor(corpusRel) {
     let state = states.get(corpusRel);
     if (state) return state;
-    const corpusPath = path.join(root, corpusRel);
+    const corpusPath = path.join(workspaceRoot, corpusRel);
     const document = readLevelCorpusDocumentWithHints(corpusPath);
     const byId = new Map(document.levels.map((level, index) => [
         String(level.id ?? index + 1),
@@ -253,7 +255,7 @@ for (const state of states.values()) {
 }
 
 if (pending.length) {
-    const pendingDir = path.join(root, 'reports/stress/pending-solver-evidence');
+    const pendingDir = path.join(workspaceRoot, 'reports/stress/pending-solver-evidence');
     mkdirSync(pendingDir, { recursive: true });
     const out = path.join(pendingDir, `run-${sourceRunId}-cpsat-discoveries.json`);
     writeFileSync(out, `${JSON.stringify({
@@ -263,7 +265,7 @@ if (pending.length) {
         sourceWorkflow,
         pending,
     }, null, 2)}\n`);
-    console.log(`Quarantined ${pending.length} CP-SAT discovery observation(s) to ${path.relative(root, out)}.`);
+    console.log(`Quarantined ${pending.length} CP-SAT discovery observation(s) to ${path.relative(workspaceRoot, out)}.`);
 }
 
 if (ingestionReceiptOut) {
@@ -288,7 +290,7 @@ if (ingestionReceiptOut) {
     validateHintIngestionReceipt(receipt);
     mkdirSync(path.dirname(ingestionReceiptOut), { recursive: true });
     writeFileSync(ingestionReceiptOut, `${JSON.stringify(receipt, null, 2)}\n`);
-    console.log(`Wrote hint-ingestion receipt to ${path.relative(root, ingestionReceiptOut)}.`);
+    console.log(`Wrote hint-ingestion receipt to ${path.relative(workspaceRoot, ingestionReceiptOut)}.`);
 }
 
 console.log(
