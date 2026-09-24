@@ -20,9 +20,7 @@ const SUMMARY_ONLY = process.argv.includes('--summary-only');
 const { sourceTexts, reachable } = buildMaintainedReachability(ROOT);
 
 function escapeRegExp(text) {
-  return text.replace(/[.*+?^$\{\}()|[\]\\]/gu, '\\const { sourceTexts, reachable } = buildMaintainedReachability(ROOT);
-
-');
+  return text.replace(/[.*+?^$\{\}()|[\]\\]/gu, '\\$&');
 }
 
 const CANONICAL_STORE_SOURCE = CANONICAL_TRACKED_HINT_STORE_DIRS.map(escapeRegExp).join('|');
