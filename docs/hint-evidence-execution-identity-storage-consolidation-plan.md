@@ -1,6 +1,6 @@
 # Hint evidence, execution identity, and storage consolidation plan
 
-> **Status:** implemented; hostile closeout revalidation in progress on PR #2072
+> **Status:** implementation substantially landed; prior completion claim disproven; hostile closeout and exact-head validation remain blocking on PR #2072
 >
 > **Date:** 2026-09-22
 >
@@ -22,6 +22,50 @@
 > **Primary goal:** make solver evidence smaller, more queryable, more replay-/audit-friendly, and
 > harder to record incompletely, without losing semantic information, breaking historical data,
 > weakening level-blindness, or coupling offline evidence to production routing.
+
+## 0. Completion-contract correction from implementation experience
+
+This section is a **retrospective correction to the original execution contract**. The hostile
+post-implementation audit demonstrated that several requirements below were semantically sound but
+not operationally exhaustive enough. Future execution of this plan, and any claim that it is
+complete, must use the stronger rules here.
+
+1. **Words such as all, every, maintained, canonical, tracked, and full corpus require a mechanical
+   population owner.** A hand-written list may document the population but may not define it. The
+   repository must derive the relevant producers, consumers, workflows, stores, or artifacts from
+   current repository authorities and fail on unclassified additions.
+2. **Every Definition-of-Done statement maps to an executable proof.** A phase report or PR
+   description may summarize evidence, but cannot itself satisfy a closure condition. The closeout
+   record must name the exact test, guard, census, emulator run, migration manifest, or query that
+   proves each item.
+3. **Architectural guards require adversarial self-tests and CI invalidation ownership.** A guard is
+   incomplete until representative equivalent/refactored bypasses are tested and the scoped-CI
+   contract declares every source, workflow, ledger, and authority whose change must select the
+   guard.
+4. **Persistence semantics are closed by state-transition coverage, not one happy-path example.**
+   Where persistence/deduplication is touched, acceptance must distinguish at least: exact retry of
+   one occurrence; same semantic event with a new acquisition occurrence; new semantic event on an
+   existing path; new path; partial persistence; capacity refusal; retry after refusal; and semantic
+   reconstruction after read/merge.
+5. **Execution-topology-specific behavior must run in that topology before the phase closes.**
+   Firestore behavior requires the real emulator boundary; GHA transport requires the real workflow
+   path; browser/bundle behavior requires the supported browser/Vite path; sparse/full-checkout
+   checks must run in the topology that owns them. Static or local substitute evidence may keep work
+   moving but cannot close the affected phase.
+6. **Bulk migrations must mechanically discover their complete input universe and record that
+   population in the migration evidence.** The manifest/proof must include the discovered stores and
+   artifact counts, semantic/join equivalence, idempotency, and the required referee/path-validity
+   disposition. A successful migration over a hand-enumerated subset is not a full-corpus migration.
+7. **Final closeout is an independent reconstruction from current repository truth.** It must rebuild
+   producer, consumer, persistence, workflow, store, historical-compatibility, and current-document
+   inventories from the repository rather than using implementation diffs or implementation reports
+   as the checklist. Prefer fresh context.
+8. **Pending or red closing evidence means not complete.** No phase/program completion label may be
+   based on an older green SHA, a queued check, a locally substituted topology, or a report that says
+   a later check is merely follow-up.
+
+The hostile completion audit on PR #2072 is the first application of this strengthened closeout
+contract. Its corrections are part of the implementation, not optional post-plan cleanup.
 
 ## 1. Outcomes
 
@@ -1808,6 +1852,10 @@ This plan does not:
 - remove legacy readers after migration.
 
 ## 17. Definition of done
+
+The program is complete only when the requirements below are satisfied **and** their current
+executable proofs are green on the same exact head. Population-scoped claims must use the mechanical
+owners required by section 0; implementation reports are supporting evidence, not closure authority.
 
 The program is complete when:
 
