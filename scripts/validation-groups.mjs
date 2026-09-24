@@ -108,6 +108,58 @@ function validateContractSurfaces() {
 }
 validateContractSurfaces();
 
+const contractDependencies = registry.contractDependencies ?? {};
+
+function validateContractDependencies() {
+  const validScopes = new Set(['repo-inputs', 'fixture-only']);
+  const validKeys = new Set(['filesystemScope', 'repoPaths', 'processEntrypoints']);
+
+  for (const [familyName, mappings] of Object.entries(contractDependencies)) {
+    if (!VALID_FAMILIES.has(familyName)) fail(`validation registry: contractDependencies has unknown family ${familyName}`);
+    if (!mappings || typeof mappings !== 'object' || Array.isArray(mappings)) {
+      fail(`validation registry: contractDependencies.${familyName} must be an object`);
+    }
+    for (const [member, declaration] of Object.entries(mappings)) {
+      if (!inventories[familyName].seen.has(member)) {
+        fail(`validation registry: contractDependencies.${familyName} names unregistered contract ${member}`);
+      }
+      if (!declaration || typeof declaration !== 'object' || Array.isArray(declaration)) {
+        fail(`validation registry: contractDependencies.${familyName}.${member} must be an object`);
+      }
+      for (const key of Object.keys(declaration)) {
+        if (!validKeys.has(key)) fail(`validation registry: unsupported dependency key ${key} for ${member}`);
+      }
+
+      const scope = declaration.filesystemScope;
+      if (scope != null && !validScopes.has(scope)) {
+        fail(`validation registry: invalid filesystemScope ${scope} for ${member}`);
+      }
+
+      const repoPaths = declaration.repoPaths ?? [];
+      if (!Array.isArray(repoPaths) || repoPaths.some(p => typeof p !== 'string' || !p || path.isAbsolute(p))) {
+        fail(`validation registry: repoPaths for ${member} must be non-empty repo-relative strings`);
+      }
+      if (scope === 'repo-inputs' && repoPaths.length === 0) {
+        fail(`validation registry: repo-inputs contract ${member} must declare repoPaths`);
+      }
+      if (scope === 'fixture-only' && repoPaths.length > 0) {
+        fail(`validation registry: fixture-only contract ${member} must not declare repoPaths`);
+      }
+
+      const processEntrypoints = declaration.processEntrypoints ?? [];
+      if (!Array.isArray(processEntrypoints) || processEntrypoints.some(p => typeof p !== 'string' || !p || path.isAbsolute(p))) {
+        fail(`validation registry: processEntrypoints for ${member} must be repo-relative strings`);
+      }
+      for (const entrypoint of processEntrypoints) {
+        if (!fs.existsSync(path.join(ROOT, entrypoint))) {
+          fail(`validation registry: processEntrypoint for ${member} does not exist: ${entrypoint}`);
+        }
+      }
+    }
+  }
+}
+validateContractDependencies();
+
 function semanticSurfacesFor(familyName, member) {
   const explicit = contractSurfaces?.[familyName]?.[member];
   if (explicit) return explicit;
@@ -136,7 +188,8 @@ if (process.argv.includes('--check')) {
     console.log(
       `Validation ownership registry is in exact parity: ${validatorInventory.flat.length} validators, `
       + `${nodeInventory.flat.length} Node/CLI harnesses; `
-      + `${Object.values(contractSurfaces).reduce((sum, mappings) => sum + Object.keys(mappings ?? {}).length, 0)} contract(s) declare explicit multi-surface ownership.`,
+      + `${Object.values(contractSurfaces).reduce((sum, mappings) => sum + Object.keys(mappings ?? {}).length, 0)} contract(s) declare explicit multi-surface ownership; `
+      + `${Object.values(contractDependencies).reduce((sum, mappings) => sum + Object.keys(mappings ?? {}).length, 0)} contract(s) declare explicit dependency metadata.`,
     );
   }
   process.exit(process.exitCode ?? 0);
