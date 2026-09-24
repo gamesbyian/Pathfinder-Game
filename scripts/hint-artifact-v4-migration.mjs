@@ -5,6 +5,7 @@
  * Default is read-only. --apply rewrites only after every file has decoded -> encoded -> decoded
  * semantic equality. Historical v1-v3 remain readable through the shared decoder.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
