@@ -1,9 +1,9 @@
 # Hint evidence consolidation — hostile completion audit — 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-24 — Fresh-context maintained-surface audit after the schema-v4 bulk migration; real Firestore emulator proves corrected same-event occurrence retention.
+> **Last evidence:** 2026-09-24 — Exact-head validation at `00eb1b9...` exposed a whole-store referee validator domain mismatch on 65 oversized research-family levels; the validator and its regression fixture are corrected on the current PR head.
 > **Decision:** The prior "all phases complete" claim was premature. Treat the program as complete only after the corrections in this report are green on one exact remote CI head and the hostile maintained-surface guards report no unreviewed bypass.
-> **Remaining gate:** Exact-head CI, hostile full-checkout audit, closeout canary, solver-evidence integrity guard, and Firestore emulator must all complete successfully after the final corrections; then this report may conclude positive.
+> **Remaining gate:** A new exact-head CI / hostile audit / closeout canary run must confirm the family-validator correction, alongside solver-evidence integrity, CI topology and Firestore-emulator evidence. No current-head Actions run was visible yet at the time of this documentation update.
 
 ## Why this audit existed
 
