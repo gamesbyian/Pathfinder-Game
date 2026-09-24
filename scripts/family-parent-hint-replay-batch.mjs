@@ -125,7 +125,7 @@ for (const corpus of CORPORA) {
                     variantId: edge.variantId,
                     parentId: manifest.parentLevelId,
                     familyId: manifest.familyId,
-                    levelRevision: parentRevision
+                    levelRevision: parentRevision,
                     foundAt: manifest.lastUpdatedTimestamp ?? manifest.createdTimestamp,
                 }));
             }
