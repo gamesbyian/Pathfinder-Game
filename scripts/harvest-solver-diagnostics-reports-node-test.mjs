@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -56,11 +56,11 @@ try {
     // level revision, read it off an already-stored real provenance entry for this exact level -- the
     // same value getLevelFingerprint() would return, since it is stable across mechanics-preserving
     // edits and this fixture never touches the level's own definition.
-    const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
+    const { readLevelCorpusDocumentWithHints, hintFilePathFor } = await import('./level-data-io.mjs');
 
-    const corpusPath = path.join(ROOT, 'data', 'levels.json');
-    const document = readLevelCorpusDocumentWithHints(corpusPath);
-    const level = document.levels.find(l => l.id === 'P00001');
+    const publishedCorpusPath = path.join(ROOT, 'data', 'levels.json');
+    const publishedDocument = readLevelCorpusDocumentWithHints(publishedCorpusPath);
+    const level = publishedDocument.levels.find(l => l.id === 'P00001');
     assert.ok(level, 'fixture requires the real published corpus to still carry level P00001');
     const knownHint = level.hintRecords.find(h => h.provenance?.some(p => typeof p?.context?.levelRevision === 'string' && p.context.levelRevision.length > 0));
     assert.ok(knownHint, 'fixture requires an already-known hint for P00001 with a recorded levelRevision');
@@ -68,20 +68,28 @@ try {
     const knownPath = knownHint.path;
     assert.ok(Array.isArray(knownPath) && knownPath.length > 0, 'fixture requires an already-known winning path for P00001');
 
+    // Keep the real published level/hint semantics, but never mutate the tracked corpus. The old
+    // fixture rewrote data/hints/P00001.json in place; under the parallel Node-contract runner,
+    // unrelated corpus readers could observe the file between truncate/write syscalls and fail
+    // JSON.parse with "Unexpected end of JSON input". A private one-level corpus proves the same
+    // ingestion behavior without shared mutable repository state.
     const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-real-row-'));
+    const stagingDir = path.join(realTemp, 'staging');
+    mkdirSync(stagingDir, { recursive: true });
+    const corpusPath = path.join(realTemp, 'levels.json');
+    const { hints: _hints, hintRecords: _hintRecords, ...rawLevel } = level;
+    writeFileSync(corpusPath, JSON.stringify([rawLevel], null, 2) + '\n');
+    const isolatedHintPath = hintFilePathFor(corpusPath, 'P00001');
+    mkdirSync(path.dirname(isolatedHintPath), { recursive: true });
+    writeFileSync(isolatedHintPath, readFileSync(path.join(ROOT, 'data', 'hints', 'P00001.json'), 'utf8'));
     const realReceiptPath = path.join(realTemp, 'receipt.json');
-    // Snapshot by content, not git: this test mutates the real tracked hint file below, and must
-    // restore it byte-for-byte afterward regardless of whether the working tree had other
-    // uncommitted changes to it already -- `git checkout` would silently discard those instead.
-    const p00001HintPath = path.join(ROOT, 'data', 'hints', 'P00001.json');
-    const originalP00001Hints = readFileSync(p00001HintPath, 'utf8');
     try {
-        const reportPath = path.join(realTemp, 'diagnostics-report.json');
+        const reportPath = path.join(stagingDir, 'diagnostics-report.json');
         writeFileSync(reportPath, JSON.stringify({
             schemaVersion: 1,
             kind: 'pathfinder-solver-diagnostics-report',
             producer: 'solver-diagnostics',
-            corpus: 'data/levels.json',
+            corpus: corpusPath,
             commitSha: 'fixture-sha',
             solverRequestIdentity: 'sha256:' + 'f'.repeat(64),
             reproducibilityMode: 'deterministic-work',
@@ -105,7 +113,8 @@ try {
             'scripts/run-bundled.mjs',
             'scripts/harvest-solver-diagnostics-reports.mjs',
             '--',
-            `--staging-dir=${realTemp}`,
+            `--staging-dir=${stagingDir}`,
+            `--corpus=${corpusPath}`,
             '--source-run-id=fixture-real-row-run',
             '--source-run-attempt=1',
             '--source-workflow=Solver diagnostics and hint capture',
@@ -127,10 +136,6 @@ try {
         assert.equal(newEntry.execution?.reproducibilityMode, 'deterministic-work');
         assert.equal(newEntry.occurrences?.[0]?.runId, 'fixture-real-row-run');
     } finally {
-        // Restore the real, tracked corpus file this test deliberately mutated for the assertion
-        // above, to its exact original content -- not via git, so any pre-existing uncommitted
-        // change to this file survives this test untouched.
-        writeFileSync(p00001HintPath, originalP00001Hints);
         rmSync(realTemp, { recursive: true, force: true });
     }
 }
