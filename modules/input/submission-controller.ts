@@ -269,13 +269,15 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
                 if (res.newlySaved.length > 0) {
                     normalizedHints = collectValidatedUniqueHints([...candidatePaths, ...res.newlySaved], validateHintPath);
                     setFoundHintsSinceLoad(state, mergeUniqueHints(state.engineState.foundHintsSinceLoad || [], res.newlySaved));
-                    const newlyFoundRecords = hintsFromVarietyResult(res, {
+                }
+                if (res.newlySaved.length > 0 || (res.rediscovered?.length ?? 0) > 0) {
+                    const discoveryRecords = hintsFromVarietyResult(res, {
                         levelRevision: levelFingerprint,
-                        usedExistingHints: normalizedHints.length > 0,
+                        usedExistingHints: candidatePaths.length > 0,
                         randomSeed: varietySeed,
                         solverVersion: SOLVER_VERSION,
                     });
-                    setFoundHintsSinceLoadRecords(state, mergeHints(state.engineState.foundHintsSinceLoadRecords || [], newlyFoundRecords));
+                    setFoundHintsSinceLoadRecords(state, mergeHints(state.engineState.foundHintsSinceLoadRecords || [], discoveryRecords));
                 }
             } catch (err: any) {
                 engine.overlays.setOverlayState(OVERLAY_NONE);
