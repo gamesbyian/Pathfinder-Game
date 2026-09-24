@@ -32,7 +32,7 @@ try {
   writeFileSync(path.join(root,'data','families','family-test.json'),JSON.stringify([familyLevel])+'\n');
   writeFileSync(
     path.join(root,'data','families','hints','F00001-re-01.json'),
-    JSON.stringify(encodeHintArtifact([toHint(Array.from({length:16},(_,i)=>i*65536),[])]))+'\n',
+    JSON.stringify(encodeHintArtifact([toHint(Array.from({length:16},(_,i)=>i),[])]))+'\n',
   );
   result=validateAllTrackedHintStores(root);
   assert.equal(result.ok,true,JSON.stringify(result.failures));
