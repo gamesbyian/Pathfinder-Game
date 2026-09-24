@@ -120,11 +120,13 @@ by lazy-only adoption.
 ## Hostile-audit correction, 2026-09-24
 
 The original report's phrase **"full tracked corpus" was incorrect**. A later hostile closeout audit
-found the tracked first-class research store `data/stress/hints-envelope/` (124 Hint artifacts),
-paired with `data/stress/stress-levels-envelope.json`, was absent from the migration tool's default
-directory list. Those artifacts therefore remained schema v3 after this migration.
+found three tracked canonical stores absent from the migration tool's default directory list:
+`data/stress/hints-envelope/` (124 artifacts), `data/families/hints/` (788), and
+`data/families/phaseB/hints/` (477). All 1,389 omitted artifacts remained schema v3 after this
+migration.
 
-PR #2072 corrects the scope defect by adding the envelope store to all plan-critical whole-store
-Hint tooling and running the same schema-v4 semantic-hash / join-identity migration contract over
-the omitted store. The original 1,962-file measurements below remain valid for the three stores
-actually processed by this run; they must not be interpreted as corpus-wide totals.
+PR #2072 corrects the scope defect by mechanically discovering tracked Hint directories for
+whole-store tooling and running the same schema-v4 semantic-hash / join-identity contract plus a
+whole-store PLAY-referee proof over the omitted stores. The original 1,962-file measurements below
+remain valid for the three stores actually processed by this run; they must not be interpreted as
+corpus-wide totals.
