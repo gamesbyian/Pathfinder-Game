@@ -3,17 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
+import { discoverHintStoreDirs, hintStoreLabel } from './hint-store-roots.mjs';
 
 const ROOT = path.resolve(process.argv.find(a => a.startsWith('--root='))?.slice(7) || process.cwd());
 const OUT = process.argv.find(a => a.startsWith('--out='))?.slice(6)
   || 'reports/2026-09-22-hint-evidence-consolidation-census.json';
 
-const hintRoots = [
-  ['published', 'data/hints'],
-  ['stress1', 'data/stress/hints'],
-  ['stress2', 'data/stress/hints-random'],
-  ['envelope', 'data/stress/hints-envelope'],
-];
+const hintRoots = discoverHintStoreDirs(ROOT).map(dir => [hintStoreLabel(dir), dir]);
 
 const fields = [
   'solver.id','solver.version','solver.technique','solver.scoringProfileId','solver.orderingBiasId',
