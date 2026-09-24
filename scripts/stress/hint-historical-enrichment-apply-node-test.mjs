@@ -53,6 +53,15 @@ function fixture() {
     const { summary, changedLevelsByCorpus } = applyHistoricalEnrichment(rescue, corpusDocuments, { apply: true });
     assert.equal(summary.mode, 'applied');
     assert.equal(summary.applied, 1);
+    assert.equal(summary.sourceAuthorityKind, 'pathfinder-hint-determinism-collision-authority-rescue');
+    assert.match(summary.rows[0].beforeHintSha256, /^sha256:[0-9a-f]{64}$/u);
+    assert.match(summary.rows[0].afterHintSha256, /^sha256:[0-9a-f]{64}$/u);
+    assert.notEqual(summary.rows[0].beforeHintSha256, summary.rows[0].afterHintSha256);
+    assert.deepEqual(summary.rows[0].joinChecks, {
+        exactPathHashMatches: 1,
+        exactSemanticEventMatches: 1,
+        sourceRunOccurrenceAlreadyPresent: false,
+    });
     assert.equal(changedLevelsByCorpus.get('fixture-corpus.json').size, 1);
     const entry = level.hintRecords[0].provenance[0];
     assert.equal(entry.occurrences.length, 1);
