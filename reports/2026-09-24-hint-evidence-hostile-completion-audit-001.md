@@ -211,6 +211,29 @@ JSON-parse, Hint-source, and `.hints` signals; decoder presence is checked separ
 self-test covers inline raw reads, staged raw reads, staged reads through the shared decoder, and an
 unrelated JSON negative control.
 
+### 15. Direct physical writer ownership was not fail-closed
+
+The plan requires a repository guard against maintained code writing canonical Hint files outside
+approved store/migration owners. Existing checks covered obsolete facades and workflow-level
+persistence, but a maintained script could still introduce a direct filesystem writer without a
+reviewed ownership decision.
+
+**Correction:** the hostile surface audit now detects direct physical Hint writers and requires every
+maintained suspect to appear in `docs/hint-physical-writer-audit.json`. The shared
+`level-data-io.mjs` store and the dedicated v4 migration are the explicit current owners; new
+suspects fail closed pending classification.
+
+### 16. Scoped CI did not declare the ownership guards' real input surfaces
+
+The physical-reader/writer guard scans maintained source and workflow files, while the central
+persistence guard derives authority from the workflow lifecycle ledger. Those filesystem
+dependencies were not explicit in the scoped-validation contract, leaving room for a targeted CI
+selection to omit a guard after changing exactly the files it governs.
+
+**Correction:** validation routing now declares repo-input dependencies for both guards, including
+source modules/scripts, workflows, the reader/writer ledgers, package entrypoints, and workflow
+lifecycle authority.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
