@@ -153,37 +153,15 @@ jobs:
             data/stress/hints-random
             data/stress/hints-envelope
           key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-miss-probe
-      - name: Materialize runtime data on cache miss
+      - name: Checkout runtime data on cache miss
         if: steps.runtime-data-cache.outputs.cache-hit != 'true'
         uses: actions/checkout@v7
         with:
-          # Hosted runs measured post-clone sparse expansion at 52-56s after hint-tree cache
-          # invalidation. Re-check out the final desired population as one batched operation instead.
-          # fetch-depth 2 preserves the PR merge ref's base parent for incremental hygiene checks.
-          fetch-depth: 2
+          # Do not mutate the existing sparse worktree. Hosted evidence showed both in-place
+          # sparse expansion and a second root checkout taking ~55s. Fetch the large data tree in
+          # its own sparse checkout so Git can batch materialize it independently.
+          path: .runtime-data-source
           sparse-checkout: |
-            /*
-            !/logs/*
-            /logs/artifact-metadata.json
-            /logs/solver-canary-baseline.json
-            /logs/*.md
-            /logs/**/*.md
-            !/reports/*
-            /reports/*.md
-            /reports/*.json
-            /reports/**/*.md
-            /reports/stress/experiment-evidence/**/manifest.json
-            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
-            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
-            /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
-            /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
-            /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
-            /reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json
-            /reports/stress/lane-e-multi-pick-bisection-2026-09-17.json
-            /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
-            /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
-            /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
-            !/data/*
             /data/levels.json
             /data/level-heatmaps.json
             /data/themes.json
@@ -195,6 +173,13 @@ jobs:
             /data/stress/hints-random/
             /data/stress/hints-envelope/
           sparse-checkout-cone-mode: false
+      - name: Install runtime data from miss checkout
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          mkdir -p data
+          cp -a .runtime-data-source/data/. data/
+          rm -rf .runtime-data-source
       - name: Save exact runtime-data tree immediately after materialization
         if: steps.runtime-data-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
