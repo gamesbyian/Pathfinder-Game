@@ -18,6 +18,11 @@
       "path": "scripts/hint-provenance-surface-audit.mjs",
       "disposition": "false-positive-audit-fixture",
       "rationale": "Self-test source intentionally contains a literal direct-writer example so the detector proves it catches the forbidden shape; the audit does not write canonical Hint artifacts."
+    },
+    {
+      "path": "scripts/merge-hint-artifacts.mjs",
+      "disposition": "historical-compatibility-importer",
+      "rationale": "Retained mixed-era compatibility importer used by the central harvester for historical/direct Hint artifacts. It decodes semantically, referee-validates, mergeHints-dedupes, and serializes through stringifyHints; maintained source workflows no longer use direct Hint-file transport as their primary persistence route."
     }
   ]
 }
