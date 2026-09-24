@@ -19,6 +19,96 @@ permissions:
   contents: read
 
 jobs:
+  deep-services-concurrency:
+    name: deep-services-concurrency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: services-runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Require warm runtime data
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.services-runtime-data-key.outputs.key }}
+          fail-on-cache-miss: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Derive dependency-tree key
+        id: services-dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Require warm dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.services-dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+      - name: Restore Firebase CLI cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.npm/_npx
+          key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run proofs and Firestore concurrently
+        shell: bash
+        run: |
+          set +e
+          start="$(date +%s)"
+          npm run test:deep-proofs > /tmp/deep-proofs.log 2>&1 &
+          proofs_pid=$!
+          npx --yes firebase-tools@15.28.2 emulators:exec --only firestore             --project demo-pathfinder-fingerprint-boundary             "npm run test:firestore-level-fingerprint-boundary"             > /tmp/firestore.log 2>&1 &
+          firestore_pid=$!
+          wait "$proofs_pid"; proofs_status=$?
+          wait "$firestore_pid"; firestore_status=$?
+          end="$(date +%s)"
+          echo "Concurrent deep-services wall: $((end - start))s"
+          echo "=== deep proofs ==="
+          cat /tmp/deep-proofs.log
+          echo "=== firestore ==="
+          cat /tmp/firestore.log
+          if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
+            echo "::error::deep-proofs=$proofs_status firestore=$firestore_status"
+            exit 1
+          fi
+
   audit:
     runs-on: ubuntu-latest
     steps:
