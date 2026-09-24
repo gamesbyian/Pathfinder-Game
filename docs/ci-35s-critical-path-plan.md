@@ -377,7 +377,22 @@ Because the five-lane rehearsal would otherwise repeat 8–9 s installs, this op
 
 ### Phase D: runtime-balanced execution topology
 
-Do not pick shard count until A/B/C measurements are active. The first standard-runner rehearsal should use **five required lanes** because that is the smallest layout with a plausible ≤27 s budget per lane on 4-core runners.
+Standard shared-runner fan-out has now been measured directly rather than modeled only from child time.
+
+Corrected two-way Node rehearsal **36065247220**:
+- all 204 contracts passed in both the full control and partitioned population;
+- shard A: **14 s useful / 32 s runner wall**;
+- shard B: **16 s useful / 31 s runner wall**;
+- first shard start → both complete: **36 s**;
+- same-run unsharded Node population: **26 s useful**.
+
+That run used a stale 126.9-child-second timing profile, while its own corrected green control measured the current population at only **99.3 child-seconds**. Because the authority missed 35 s by only ~1 s, one final current-profile confirmation is justified before shared-runner fan-out is closed.
+
+Fresh greedy balance from the corrected control:
+- shard A: **49.6 child-seconds**;
+- shard B: **49.7 child-seconds**.
+
+This confirmation is the last standard shared-runner partition rehearsal. If it does not produce comfortable ≤35 s authority with per-lane headroom, stop retuning shared shards and move to the reserved/larger-runner path or to structural contract reductions that remove real work.
 
 #### Candidate standard-runner topology
 
