@@ -334,7 +334,7 @@ async function main() {
             const profile = enumOrder === 'admissible-slack' ? (enumTieBreak ? 'flat' : null) : null;
             const newRecords = novel.map(p => toHint(p, [makeProvenanceEntry(technique, {
                 termination: exhaustedThisLevel ? 'exhaustive' : 'solved',
-                profile,
+                scoringProfileId: profile,
                 levelRevision,
             })]));
             setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
