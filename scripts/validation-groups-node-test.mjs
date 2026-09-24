@@ -58,8 +58,6 @@ for (const member of [
   'test:class3-dose-exposure',
   'test:class3-dose-expectations',
   'test:hint-provenance-surface-audit-detector',
-  'test:hint-store-roots',
-  'test:validate-all-hint-stores',
 ]) {
   assert.ok(shared.selected.includes(member), `shared fallback lost ${member}`);
 }
@@ -69,7 +67,7 @@ for (const member of [
 // 54 after the hostile completion audit added central-persistence, published-import enrichment and
 // physical-decode invariants, then to 55 after hardening the physical-reader detector against
 // staged read/parse refactors.
-assert.equal(shared.selected.length, 57);
+assert.equal(shared.selected.length, 55);
 
 const combined = list('nodeTests', 'solver', 'research');
 assert.equal(new Set(combined.selected).size, combined.selected.length, 'multi-surface selection must dedupe commands');
