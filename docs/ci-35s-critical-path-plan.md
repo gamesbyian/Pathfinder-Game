@@ -192,6 +192,22 @@ Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forc
 
 A1c (#2061) seeds diagnostics-generated `[skip ci]` main generations. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
 
+### B1b. Right-size repair-search determinism test budgets
+
+Post-B1 coverage profiling identified `repair-search.test.ts` as the remaining dominant covered file at **~9.0 s**.
+
+Measurement-only rehearsal on the exact 37-test file:
+
+| determinism budget | default-equivalence budget | file tests | Vitest duration |
+| ---: | ---: | ---: | ---: |
+| 250k | 125k | 37/37 green | **1.43 s tests / 1.97 s total** |
+| 100k | 50k | 37/37 green | 1.54 s / 2.03 s |
+| 50k | 25k | 37/37 green | 1.49 s / 2.07 s |
+
+Lower budgets do not buy additional wall time, so production uses **250k / 125k** for more work-envelope headroom. Paired determinism/default-equivalence tests are also strengthened to require identical node counts and nonzero repair work, preventing trivial null/null success from weakening the invariant.
+
+Expected file saving: roughly **7.5 s** versus the current covered-suite profile. Full-suite wall saving must be measured separately because Vitest overlaps files.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
