@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -56,11 +56,11 @@ try {
     // level revision, read it off an already-stored real provenance entry for this exact level -- the
     // same value getLevelFingerprint() would return, since it is stable across mechanics-preserving
     // edits and this fixture never touches the level's own definition.
-    const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
+    const { readLevelCorpusDocumentWithHints, hintFilePathFor } = await import('./level-data-io.mjs');
 
-    const sourceCorpusPath = path.join(ROOT, 'data', 'levels.json');
-    const sourceDocument = readLevelCorpusDocumentWithHints(sourceCorpusPath);
-    const level = sourceDocument.levels.find(l => l.id === 'P00001');
+    const publishedCorpusPath = path.join(ROOT, 'data', 'levels.json');
+    const publishedDocument = readLevelCorpusDocumentWithHints(publishedCorpusPath);
+    const level = publishedDocument.levels.find(l => l.id === 'P00001');
     assert.ok(level, 'fixture requires the real published corpus to still carry level P00001');
     const knownHint = level.hintRecords.find(h => h.provenance?.some(p => typeof p?.context?.levelRevision === 'string' && p.context.levelRevision.length > 0));
     assert.ok(knownHint, 'fixture requires an already-known hint for P00001 with a recorded levelRevision');
@@ -68,32 +68,28 @@ try {
     const knownPath = knownHint.path;
     assert.ok(Array.isArray(knownPath) && knownPath.length > 0, 'fixture requires an already-known winning path for P00001');
 
-    // Never mutate the repository's shared data tree from a parallel Node test. The old version of
-    // this canary rewrote data/hints/P00001.json in place and restored it afterward; another test
-    // could read between truncate/write completion and observe invalid JSON. Instead copy the exact
-    // real level + Hint artifact into an isolated root and run the production harvester there.
+    // Keep the real published level/hint semantics, but never mutate the tracked corpus. The old
+    // fixture rewrote data/hints/P00001.json in place; under the parallel Node-contract runner,
+    // unrelated corpus readers could observe the file between truncate/write syscalls and fail
+    // JSON.parse with "Unexpected end of JSON input". A private one-level corpus proves the same
+    // ingestion behavior without shared mutable repository state.
     const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-real-row-'));
-    const fixtureRoot = path.join(realTemp, 'fixture-root');
-    const fixtureData = path.join(fixtureRoot, 'data');
-    mkdirSync(path.join(fixtureData, 'hints'), { recursive: true });
-    const rawCorpus = JSON.parse(readFileSync(sourceCorpusPath, 'utf8'));
-    const rawLevels = Array.isArray(rawCorpus) ? rawCorpus : rawCorpus.levels;
-    const rawLevel = rawLevels.find(l => l.id === 'P00001');
-    assert.ok(rawLevel, 'fixture requires raw P00001 level data');
-    writeFileSync(path.join(fixtureData, 'levels.json'), JSON.stringify([rawLevel]) + '\n');
-    writeFileSync(
-        path.join(fixtureData, 'hints', 'P00001.json'),
-        readFileSync(path.join(ROOT, 'data', 'hints', 'P00001.json'), 'utf8'),
-    );
-    const corpusPath = path.join(fixtureData, 'levels.json');
+    const stagingDir = path.join(realTemp, 'staging');
+    mkdirSync(stagingDir, { recursive: true });
+    const corpusPath = path.join(realTemp, 'levels.json');
+    const { hints: _hints, hintRecords: _hintRecords, ...rawLevel } = level;
+    writeFileSync(corpusPath, JSON.stringify([rawLevel], null, 2) + '\n');
+    const isolatedHintPath = hintFilePathFor(corpusPath, 'P00001');
+    mkdirSync(path.dirname(isolatedHintPath), { recursive: true });
+    writeFileSync(isolatedHintPath, readFileSync(path.join(ROOT, 'data', 'hints', 'P00001.json'), 'utf8'));
     const realReceiptPath = path.join(realTemp, 'receipt.json');
     try {
-        const reportPath = path.join(realTemp, 'diagnostics-report.json');
+        const reportPath = path.join(stagingDir, 'diagnostics-report.json');
         writeFileSync(reportPath, JSON.stringify({
             schemaVersion: 1,
             kind: 'pathfinder-solver-diagnostics-report',
             producer: 'solver-diagnostics',
-            corpus: 'data/levels.json',
+            corpus: corpusPath,
             commitSha: 'fixture-sha',
             solverRequestIdentity: 'sha256:' + 'f'.repeat(64),
             reproducibilityMode: 'deterministic-work',
@@ -117,8 +113,8 @@ try {
             'scripts/run-bundled.mjs',
             'scripts/harvest-solver-diagnostics-reports.mjs',
             '--',
-            `--root=${fixtureRoot}`,
-            `--staging-dir=${realTemp}`,
+            `--staging-dir=${stagingDir}`,
+            `--corpus=${corpusPath}`,
             '--source-run-id=fixture-real-row-run',
             '--source-run-attempt=1',
             '--source-workflow=Solver diagnostics and hint capture',
