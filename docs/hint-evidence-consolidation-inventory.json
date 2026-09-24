@@ -1215,6 +1215,21 @@
         "kind": "guard-detection-blind-spot",
         "path": "scripts/hint-provenance-surface-audit.mjs",
         "finding": "The permanent physical-reader guard only recognized inline JSON.parse(readFile...) shapes and a narrow variable-name set, so staged read/parse refactors could evade raw v4-reader detection. Hardened to combine independent read/parse/Hint-source/.hints signals and added a permanent detector self-test."
+      },
+      {
+        "id": "HPA-012",
+        "kind": "unguarded-direct-physical-writer-ownership",
+        "paths": [
+          "scripts/hint-provenance-surface-audit.mjs",
+          "docs/hint-physical-writer-audit.json"
+        ],
+        "finding": "The plan required fail-closed ownership for direct canonical Hint file writers, but existing guards covered obsolete facades and GHA persistence rather than arbitrary maintained filesystem writers. Added direct-writer detection plus an explicit reviewed-owner ledger."
+      },
+      {
+        "id": "HPA-013",
+        "kind": "scoped-validation-invalidation-gap",
+        "path": "scripts/validation-groups.json",
+        "finding": "The Hint physical-surface and central-persistence guards did not declare the filesystem authorities they dynamically inspect, so scoped CI could omit them on relevant changes. Added repo-input dependency surfaces for source/workflow/ledger and lifecycle changes."
       }
     ],
     "permanentGuards": [
