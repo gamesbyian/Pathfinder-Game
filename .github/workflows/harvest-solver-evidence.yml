@@ -169,6 +169,17 @@ jobs:
                 --source-workflow="$SOURCE_WORKFLOW" \
                 --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-level-blind.json"
 
+              # History-aware portfolio workflows use baseline/prime/cache inputs but the
+              # solver itself does not consume persisted Hint paths. Their self-describing reports now
+              # retain exact accepted path, level revision, discovery time, attempts and per-level
+              # work budget, so reconstruct them centrally during the Phase-6 dual-path window.
+              node scripts/run-bundled.mjs scripts/harvest-portfolio-solve-sweep-reports.mjs -- \
+                --staging-dir=artifact-staging \
+                --source-run-id="$SOURCE_RUN_ID" \
+                --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
+                --source-workflow="$SOURCE_WORKFLOW" \
+                --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-portfolio.json"
+
               # Solver diagnostics now preserves exact successful paths, level revisions,
               # winning attempts, request identity and discovery timestamps in its uploaded report.
               # Keep the source workflow's direct writer during Phase-6 parity, but reconstruct the
