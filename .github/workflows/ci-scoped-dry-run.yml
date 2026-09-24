@@ -73,8 +73,27 @@ jobs:
         with:
           node-version: '22.23.2'
           cache: npm
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Install dependencies from the npm cache
+        id: install-dependencies
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
         run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Save exact dependency tree after successful install
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true' && steps.install-dependencies.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Check package-script reachability
         run: npm run check:dead-scripts
       - name: Check textual source invariants
@@ -184,8 +203,27 @@ jobs:
         with:
           node-version: '22.23.2'
           cache: npm
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Install dependencies from the npm cache
+        id: install-dependencies
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
         run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Save exact dependency tree after successful install
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true' && steps.install-dependencies.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Run covered ordinary test population
         id: coverage
         if: needs.impact-shadow.outputs.needs_coverage == 'true'

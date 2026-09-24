@@ -70,8 +70,27 @@ jobs:
         with:
           node-version: '22.23.2'
           cache: npm
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Install dependencies
+        id: install-dependencies
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
         run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Save default-branch exact dependency tree
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true' && steps.install-dependencies.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
 
       - name: Derive default-branch runtime-data cache key
         id: runtime-data-key
