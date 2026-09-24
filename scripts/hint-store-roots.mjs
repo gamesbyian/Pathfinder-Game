@@ -1,6 +1,24 @@
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
+export const CANONICAL_TRACKED_HINT_STORE_DIRS = Object.freeze([
+    'data/families/hints',
+    'data/families/phaseB/hints',
+    'data/hints',
+    'data/stress/hints',
+    'data/stress/hints-envelope',
+    'data/stress/hints-random',
+]);
+
+export function assertCompleteHintStoreDirs(dirs, context = 'full Hint-store operation') {
+    const actual = [...dirs].sort();
+    const expected = [...CANONICAL_TRACKED_HINT_STORE_DIRS];
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error(`${context}: canonical Hint-store population incomplete or changed; expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+    }
+    return actual;
+}
+
 /**
  * Discover tracked canonical Hint-store directories from the repository data tree.
  *
