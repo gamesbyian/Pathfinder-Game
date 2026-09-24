@@ -23,6 +23,7 @@ const DEFAULT_DIRS = [
     'data/hints',
     'data/stress/hints',
     'data/stress/hints-random',
+    'data/stress/hints-envelope',
 ];
 
 function sha256Text(text) {
@@ -169,7 +170,10 @@ if (isMain) {
     const apply = process.argv.includes('--apply');
     const root = path.resolve(String(args.get('--root') || '.'));
     const out = args.get('--out') ? path.resolve(String(args.get('--out'))) : null;
-    const report = migrateHintStores(root, { apply });
+    const dirs = args.get('--dirs')
+        ? String(args.get('--dirs')).split(',').map(value => value.trim()).filter(Boolean)
+        : DEFAULT_DIRS;
+    const report = migrateHintStores(root, { apply, dirs });
     const json = JSON.stringify(report, null, 2);
     if (out) writeFileSync(out, json + '\n');
     console.log(json);
