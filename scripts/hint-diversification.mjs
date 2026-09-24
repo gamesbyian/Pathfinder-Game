@@ -142,17 +142,16 @@ async function main() {
         }
         const elapsedMs = Date.now() - t0;
 
-        if (outcome.novel.length > 0) {
-            totalNovel += outcome.novel.length;
-            // Attach real provenance (phase/scoring-profile/ordering-bias from the ablation generator's own
-            // discovery tracking) rather than leaving these paths with an empty provenance list —
-            // this script previously only wrote `.hints`, silently dropping provenance that
-            // hint-workbench.mjs's equivalent ablation-full step already attaches.
+        if (outcome.novel.length > 0) totalNovel += outcome.novel.length;
+        if (outcome.discoveries.size > 0) {
+            // Persist every referee-valid discovery event, not only novel paths. The shared
+            // ablation generator deliberately retains rediscoveries and exact per-discovery
+            // forcing dimensions so same-path reacquisitions remain useful evidence.
             const levelRevision = await getLevelFingerprint(raw);
-            const newRecords = outcome.novel.map(hintPath => {
-                const disc = outcome.discoveries.get(pathSignature(hintPath));
+            const discoveryRecords = [...outcome.discoveries.values()].map(disc => {
                 const prov = disc?.provenance || {};
-                return toHint(hintPath, [makeProvenanceEntry(prov.phase || 'ablation-full', {
+                const phase = prov.phase || 'ablation-full';
+                return toHint(disc.path, [makeProvenanceEntry(phase, {
                     solverVersion: getCommitSha(),
                     scoringProfileId: prov.scoringProfileId ?? prov.profile ?? null,
                     orderingBiasId: prov.orderingBiasId ?? prov.template ?? null,
@@ -165,9 +164,17 @@ async function main() {
                     seedSalt: prov.seedSalt ?? null,
                     termination: 'solved',
                     levelRevision,
+                    forcingGateKey: prov.gateKey ?? null,
+                    forcingDirection: prov.direction ?? null,
+                    forcingPortalDest: prov.portalDest ?? null,
+                    forcingPortalExitDirection: prov.portalExitDirection ?? null,
+                    forcingReversed: prov.phase == null || prov.phase === 'baseline'
+                        ? null : String(prov.phase).startsWith('swap'),
+                    forcingFlippedFilters: prov.flipFlippers ?? null,
+                    forcingDisabledFeatures: prov.disabledFeatures ?? null,
                 })]);
             });
-            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], discoveryRecords));
         }
 
         const hintProvenance = (raw.hints || []).map((hintPath, hintIndex) => {
