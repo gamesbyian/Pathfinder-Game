@@ -12,7 +12,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 import { isHintArtifactFileName, hintArtifactFileName, hintKeyForLevel } from '../modules/hint-artifact-layout.mjs';
-import { discoverHintStoreDirs } from './hint-store-roots.mjs';
+import { assertCompleteHintStoreDirs, discoverHintStoreDirs } from './hint-store-roots.mjs';
 
 const { parseRawLevel, parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
@@ -66,12 +66,16 @@ function ownerMapForHintDir(root, relativeDir) {
     return { owners, ambiguities };
 }
 
-export function validateAllTrackedHintStores(root = process.cwd()) {
+export function validateAllTrackedHintStores(root = process.cwd(), { requireComplete = true } = {}) {
     const failures = [];
     const stores = [];
     let artifacts = 0;
     let hints = 0;
-    for (const relativeDir of discoverHintStoreDirs(root)) {
+    const discoveredDirs = discoverHintStoreDirs(root);
+    const hintStoreDirs = requireComplete
+        ? assertCompleteHintStoreDirs(discoveredDirs, 'whole-store PLAY-referee validation')
+        : discoveredDirs;
+    for (const relativeDir of hintStoreDirs) {
         const { owners, ambiguities } = ownerMapForHintDir(root, relativeDir);
         failures.push(...ambiguities.map(message => `${relativeDir}: ambiguous owner: ${message}`));
         let storeArtifacts = 0;
