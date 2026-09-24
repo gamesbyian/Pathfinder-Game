@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
-const inventory = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/hint-evidence-consolidation-inventory.json'), 'utf8'));
 const lifecycle = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/solver-workflow-lifecycle.json'), 'utf8'));
 const maintained = new Set((lifecycle.workflows ?? []).filter(row => row.status === 'maintained').map(row => row.workflow));
 
