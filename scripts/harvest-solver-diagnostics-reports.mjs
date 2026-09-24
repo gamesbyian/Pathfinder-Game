@@ -45,6 +45,8 @@ const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptA
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const CORPUS = 'data/levels.json';
+const corpusPathArg = args.get('--corpus-path');
+const corpusPath = corpusPathArg ? path.resolve(corpusPathArg) : path.join(root, CORPUS);
 
 function walk(dir, out = []) {
     for (const name of readdirSync(dir)) {
@@ -55,7 +57,6 @@ function walk(dir, out = []) {
     return out;
 }
 
-const corpusPath = path.join(root, CORPUS);
 const document = readLevelCorpusDocumentWithHints(corpusPath);
 const byId = new Map(document.levels.map((level, index) => [
     String(level.id ?? index + 1),
