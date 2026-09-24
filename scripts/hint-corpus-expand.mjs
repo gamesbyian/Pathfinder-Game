@@ -317,7 +317,7 @@ async function main() {
                 return toHint(p, [makeProvenanceEntry(meta.technique || 'unknown', {
                     termination: 'solved',
                     randomSeed: cfg.seedBase + levelNumber,
-                    profile: meta.profile ?? null,
+                    scoringProfileId: meta.profile ?? null,
                     hintGuided: (meta.technique || '').startsWith('prefix-anchored'),
                     levelRevision: levelRevisionByNumber.get(levelNumber) ?? null,
                 })]);
