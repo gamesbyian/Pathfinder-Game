@@ -152,7 +152,7 @@ jobs:
             data/stress/hints
             data/stress/hints-random
             data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-miss-probe
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-isolated-probe-v2
       - name: Checkout runtime data on cache miss
         if: steps.runtime-data-cache.outputs.cache-hit != 'true'
         uses: actions/checkout@v7
@@ -194,7 +194,7 @@ jobs:
             data/stress/hints
             data/stress/hints-random
             data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-miss-probe
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-isolated-probe-v2
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
