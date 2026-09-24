@@ -18,6 +18,8 @@ Solver execution ref and durable evidence destination are separate concerns. A r
 
 **Retention is not an experimental treatment.** Hint/provenance capture is output-only, so disabling retention does not improve level-blindness or A/B isolation. Canonical solver workflows should therefore retain every referee-valid discovery and should not expose a dispatch switch whose purpose is to discard it. A workflow may defer the canonical merge to the harvester when eager writes would create contention, but the evidence itself must still survive in artifacts or reports.
 
+`hint-provenance-hostile-audit.yml` is the PR-only hostile completion gate for Hint/provenance consolidation. It re-censuses maintained producer/consumer surfaces against the current physical schema, enforces central workflow persistence ownership, and runs semantic consumer floors so a green migration transaction cannot mask a stale downstream reader.
+
 `harvest-solver-evidence.yml` runs after the canonical-level hint-producing workflows complete and persists recoverable evidence onto canonical `main`:
 
 - Existing hint artifacts, including native-solver and CP-SAT harvest output, are structurally merged by path/provenance across `data/hints`, `data/stress/hints`, and `data/stress/hints-random`; they are never copied last-writer-wins.
