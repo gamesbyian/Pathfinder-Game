@@ -3,7 +3,12 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-24 — applied the real one-time bulk v4 migration to all 1,962 tracked hint files, shrinking canonical hint storage from 732,304,443 to 571,890,961 bytes (21.9%) with zero semantic or cross-resource join-identity loss.
 > **Decision:** execute the bulk migration now rather than leave the v4 upgrade lazy-on-write indefinitely, per the plan's own Phase 8 text ("migrate canonical stores in a data-focused change") and its exit criterion ("tracked hint storage is materially smaller").
-> **Remaining gate:** none for Phase 8 — the plan's named phases 0-10 all have real, executed, verified work as of this batch.
+> **Remaining gate:** **Superseded by hostile audit.** This batch proved lossless migration for the 1,962 artifacts its then-current tooling enumerated, but PR #2072 later mechanically discovered six canonical Hint stores / 3,351 artifacts. The omitted 1,389 artifacts were migrated and revalidated in `reports/2026-09-24-hint-evidence-phase8-six-store-repair-001.md`. Whole-program completion remains gated by the hostile closeout on an exact green head.
+>
+> **Correction (2026-09-24):** References below to the "full tracked corpus" describe the population
+> known to this batch, not the true repository-wide canonical Hint-store population. The semantic
+> equivalence and byte measurements for those 1,962 files remain valid; the completeness claim does
+> not.
 >
 > **Date:** 2026-09-24
 >
