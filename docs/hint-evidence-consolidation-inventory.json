@@ -1245,6 +1245,12 @@
           "scripts/hint-store-index-node-test.mjs"
         ],
         "finding": "The consolidation plan promised a lightweight freshness-bound Hint index, but no such derived artifact/index generator existed. Added a deterministic per-artifact index using canonical decode/query/reconstructability semantics plus source content/semantic hashes and stale-index verification."
+      },
+      {
+        "id": "HPA-016",
+        "kind": "stale-schema-contraction-control-plane",
+        "path": "docs/solver-protocol-schema-contraction.json",
+        "finding": "PSC-015 remained in-progress even though its provenance-generation/missingness retirement gate had been satisfied by shared historical ingress semantics and the lossless v4 migration; PSC-001 also described the now-fixed editor bare-hints transform as an acceptable residual. Reconciled both rows to current implementation truth."
       }
     ],
     "permanentGuards": [
