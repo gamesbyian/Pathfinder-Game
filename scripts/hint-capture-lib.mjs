@@ -90,13 +90,13 @@ export async function createHintCapture({
          * (a rediscovery, which is NOT a no-op: it is what gives hint-cost-drift.mjs a comparable
          * measurement at this commit).
          */
-        record(level, result) {
-            return recordWithProvenance(level, result, provenanceFromSolveResult);
+        record(level, result, { foundAt } = {}) {
+            return recordWithProvenance(level, result, provenanceFromSolveResult, { foundAt });
         },
 
         /** Historical persisted result ingress. Current producers must call record(). */
-        recordHistorical(level, result) {
-            return recordWithProvenance(level, result, provenanceFromHistoricalSolveResult);
+        recordHistorical(level, result, { foundAt } = {}) {
+            return recordWithProvenance(level, result, provenanceFromHistoricalSolveResult, { foundAt });
         },
 
         flush(levelsJsonPath, document) {
@@ -111,7 +111,7 @@ export async function createHintCapture({
         },
     };
 
-    function recordWithProvenance(level, result, provenanceBuilder) {
+    function recordWithProvenance(level, result, provenanceBuilder, { foundAt } = {}) {
         if (!level || !result?.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
         const provenance = provenanceBuilder(result, {
                 solverVersion,
@@ -121,6 +121,7 @@ export async function createHintCapture({
                 levelRevision: levelRevisions.get(level) ?? null,
                 isolatedTechnique,
                 ...executionContext,
+                ...(typeof foundAt === 'string' && foundAt.length > 0 ? { foundAt } : {}),
             });
         const before = level.hintRecords ?? [];
         const beforeCount = before.length;
