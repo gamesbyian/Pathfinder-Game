@@ -1180,6 +1180,12 @@
         "kind": "post-merge-semantic-identity-mutation",
         "path": "scripts/family-parent-hint-replay-batch.mjs",
         "finding": "Batch replay merged provenance with levelRevision:null and filled levelRevision afterward. Because levelRevision participates in semantic event identity, reruns could create duplicates before mutating them into the same identity. Fixed by computing the hint-excluding level fingerprint once per parent before merge."
+      },
+      {
+        "id": "HPA-007",
+        "kind": "firestore-to-git-same-path-provenance-loss",
+        "path": "scripts/import-published-levels.mjs",
+        "finding": "Published-level import deduped incoming hints by path and skipped an already-known path entirely, discarding new provenance/occurrence evidence and failing to mark provenance-only changes for persistence. Fixed to use mergeHints(), persist semantic-only changes, and regression-test idempotent same-path enrichment."
       }
     ],
     "permanentGuards": [
