@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { auditHintFile } from './hint-determinism-audit-lib.mjs';
+import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -43,7 +44,7 @@ for (const root of roots) {
     for (const file of filesUnder(root)) {
         const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
         const levelId = path.basename(file, '.json');
-        const result = auditHintFile(levelId, raw.hints ?? []);
+        const result = auditHintFile(levelId, decodeHintArtifact(raw));
         summary.files += 1;
         summary.hints += result.hints;
         summary.provenanceEvents += result.provenanceEvents;
