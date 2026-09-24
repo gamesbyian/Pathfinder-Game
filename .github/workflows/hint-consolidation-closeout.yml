@@ -63,14 +63,21 @@ jobs:
           const fs = require('fs');
           const det = JSON.parse(fs.readFileSync('/tmp/hint-determinism-post-enrichment.json', 'utf8'));
           const rec = JSON.parse(fs.readFileSync('/tmp/hint-reconstructability-post-enrichment.json', 'utf8'));
-          // exactEventCrossPathGroups includes known non-Pathfinder diagnostic/replay producers;
-          // this audit is rerun as an oracle, not interpreted as a zero-violation counter.
+          // Legacy recorded-input collisions remain a reconciliation population because historical
+          // run-level configuration can be absent. A modern canonical solver-request identity,
+          // however, is the equality boundary this consolidation introduced: two repeat runs with
+          // that same effective identity must not resolve to different accepted paths.
           console.log('Determinism oracle:', JSON.stringify({
             comparableEvents: det.comparableEvents,
             canonicalComparableEvents: det.canonicalComparableEvents,
-            recordedInputCollisions: det.repeatRunRecordedInputCollisionGroups,
+            canonicalInputCollisions: det.repeatRunCanonicalInputCollisionGroups,
+            legacyRecordedInputCollisions: det.repeatRunLegacyRecordedInputCollisionGroups,
             exactEventCrossPathGroups: det.exactEventCrossPathGroups,
           }));
+          if (Number(det.repeatRunCanonicalInputCollisionGroups ?? -1) !== 0) {
+            console.error('Canonical same-effective-input/different-path determinism regression detected.');
+            process.exit(1);
+          }
           console.log('Reconstructability totals:', JSON.stringify(rec.totals));
           NODE
 
