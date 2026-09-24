@@ -55,6 +55,7 @@ import { readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { LADDER_TECHNIQUES, techniqueFamily, configKeyOf } from './hint-cost-drift-lib.mjs';
+import { decodeHintArtifact } from '../../modules/domain/hint-runtime.mjs';
 
 /** Cost of one provenance entry, preferring the machine-independent unit.
  *
@@ -122,9 +123,9 @@ for (const [corpus, dir] of Object.entries(CORPORA)) {
     if (!existsSync(abs)) continue;
     for (const file of readdirSync(abs)) {
         if (!file.endsWith('.json')) continue;
-        let doc;
-        try { doc = JSON.parse(readFileSync(path.join(abs, file), 'utf8')); } catch { continue; }
-        (doc.hints || []).forEach((hint, hintIndex) => {
+        let hints;
+        try { hints = decodeHintArtifact(JSON.parse(readFileSync(path.join(abs, file), 'utf8'))); } catch { continue; }
+        hints.forEach((hint, hintIndex) => {
             const byConfig = new Map();
             for (const e of usableEntries(hint)) {
                 const k = configKeyOf(e);
