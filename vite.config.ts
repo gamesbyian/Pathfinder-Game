@@ -1,8 +1,9 @@
 import { defineConfig, type Plugin } from 'vite';
 import { cp } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { projectRuntimeHintDirectory } from './scripts/runtime-hint-projection-lib.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
@@ -44,6 +45,36 @@ const RUNTIME_DATA_FILES = ['levels.json', 'level-heatmaps.json', 'themes.json']
  */
 const DEV_CORPUS_FILES = ['stress-levels.json', 'stress-levels-random.json'];
 
+type RuntimeHintProjectionManifest = {
+    summary: {
+        sourceBytes: number;
+        runtimeBytes: number;
+    };
+};
+
+async function runtimeHintProjection(
+    sourceRelative: string,
+    outputRelative: string,
+    cacheRelative: string,
+): Promise<RuntimeHintProjectionManifest> {
+    const output = fromRoot(`./dist/${outputRelative}`);
+    const cacheRoot = process.env.PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT;
+    if (!cacheRoot) {
+        return projectRuntimeHintDirectory(fromRoot(`./${sourceRelative}`), output);
+    }
+
+    const cacheDir = path.resolve(root, cacheRoot, cacheRelative);
+    const manifestPath = path.join(cacheDir, '_projection-manifest.json');
+    if (existsSync(manifestPath)) {
+        await cp(cacheDir, output, { recursive: true });
+        return JSON.parse(readFileSync(manifestPath, 'utf8')) as RuntimeHintProjectionManifest;
+    }
+
+    const projection = projectRuntimeHintDirectory(fromRoot(`./${sourceRelative}`), cacheDir);
+    await cp(cacheDir, output, { recursive: true });
+    return projection;
+}
+
 function copyRuntimeAssets(): Plugin {
     return {
         name: 'pathfinder-copy-runtime-assets',
@@ -53,24 +84,27 @@ function copyRuntimeAssets(): Plugin {
             for (const file of RUNTIME_DATA_FILES) {
                 await cp(fromRoot(`./data/${file}`), `${out}/data/${file}`);
             }
-            const publishedProjection = projectRuntimeHintDirectory(
-                fromRoot('./data/hints'),
-                `${out}/data/hints`,
+            const publishedProjection = await runtimeHintProjection(
+                'data/hints',
+                'data/hints',
+                'data/hints',
             );
             for (const file of DEV_CORPUS_FILES) {
                 await cp(fromRoot(`./data/stress/${file}`), `${out}/data/stress/${file}`);
             }
-            const stressProjection = projectRuntimeHintDirectory(
-                fromRoot('./data/stress/hints'),
-                `${out}/data/stress/hints`,
+            const stressProjection = await runtimeHintProjection(
+                'data/stress/hints',
+                'data/stress/hints',
+                'data/stress/hints',
             );
             // Corpus 2's sibling hints dir (see modules/dev-corpus.ts / level-data-io.mjs's
             // hintsDirFor) -- generated only if present, since it may be empty/unseeded.
             let randomProjection = null;
             if (existsSync(fromRoot('./data/stress/hints-random'))) {
-                randomProjection = projectRuntimeHintDirectory(
-                    fromRoot('./data/stress/hints-random'),
-                    `${out}/data/stress/hints-random`,
+                randomProjection = await runtimeHintProjection(
+                    'data/stress/hints-random',
+                    'data/stress/hints-random',
+                    'data/stress/hints-random',
                 );
             }
             const sourceBytes = publishedProjection.summary.sourceBytes
