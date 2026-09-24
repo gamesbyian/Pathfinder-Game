@@ -188,6 +188,17 @@ for (const file of walk(stagingDir).sort()) {
     });
     await capture.prepare(accepted.map(({ entry }) => entry.level));
 
+    // summary.workBudget only echoes an EXPLICIT --work-budget/--node-budget override -- when a run
+    // has neither, the solver still derives and uses a real, non-null work budget internally
+    // (legacyMsToWork(timeBudgetMs, ...)), and the direct-write route's real SolveResult carries that
+    // real derived value, but summary.workBudget stays null. summary.solverRequestProjection's
+    // resourceEnvelope.baseWorkBudget (docs/hint-evidence-execution-identity-storage-consolidation-
+    // plan.md section 3.2) always resolves the actual effective value, explicit-or-derived, so prefer
+    // it -- found via a real local dual-path parity canary against the direct route's own output,
+    // which otherwise silently reconstructed search.workBudget as null on every run with no explicit
+    // override (reports/2026-09-24-hint-evidence-phase6-level-blind-family-retirement-001.md).
+    const resolvedWorkBudget = summary.solverRequestProjection?.resourceEnvelope?.baseWorkBudget ?? summary.workBudget;
+
     for (const { row, entry } of accepted) {
         const syntheticResult = {
             ok: true,
@@ -197,7 +208,7 @@ for (const file of walk(stagingDir).sort()) {
             nodesExpanded: row.nodesExpanded ?? undefined,
             totalMs: row.totalMs ?? row.elapsedMs ?? undefined,
             workSpent: row.workSpent ?? undefined,
-            workBudget: summary.workBudget ?? undefined,
+            workBudget: resolvedWorkBudget ?? undefined,
         };
         if (capture.recordHistorical(entry.level, syntheticResult)) recordChanges += 1;
     }
