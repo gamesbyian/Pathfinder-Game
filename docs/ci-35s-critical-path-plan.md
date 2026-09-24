@@ -144,8 +144,10 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A2 exact Node 22.23.2 | **merged / measured green** | Production PR/main/scoped workflows are pinned to exact 22.23.2 with a separate Node-22 Firebase CLI cache generation; full-contract rehearsals were green with setup-node ~0–3 s. |
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
-| B5 runtime-hint projection cache | **production rollout in progress** | Rehearsal #2081 hit run 36063620245 restored exact projection in **1 s** and built in **2 s** (Vite compile 690 ms), versus ~25 s cold build dominated by deterministic projection. Production branch seeds/restores PR/main/scoped and post-diagnostics generations. |
-| D1 two-way Node sharding | **timing viable; hermeticity repair in progress** | #2088 current 204-contract profile balances **49.6/49.7 child-s**. Shard 2: **13 s useful / 24 s runner wall**. Shard 1: **16 s useful / 29 s runner wall**, but failed only because `test:harvest-solver-diagnostics-reports` rewrote tracked `P00001.json` while concurrent corpus readers ran. First-shard-start → both shard completions: **29 s**. Fix the shared-state test, rerun, then decide production sharding. |
+| B5 runtime-hint projection cache | **merged / measured green** | #2087 merged restore/seed across PR/main/scoped and diagnostics. Ordinary PR #2088 restored the exact projection cache and completed build in **~2.3 s** with Vite compile **672 ms**, versus ~25 s cold. |
+| D1 two-way Node sharding | **closed negative on shared hosted runners** | Post-hermetic rehearsals are semantically green and cut useful Node work to ~14–17 s/shard, but runner walls varied to **31–35 s** and **27–38 s** across confirmations. Shared bootstrap variance consumes the 35 s budget; stop shard-count tuning. |
+| B3 proofs + Firestore overlap | **production rollout in progress** | #2094 run 36068104237 kept both unchanged obligations green and collapsed their serial ~23 s tail to **14 s concurrent wall** on one warm 4-core runner. Production PR preserves independent failure statuses. |
+| D2 coverage sharding | **final warm-coordinator rescue rehearsal in progress** | Native two-shard + separate merge preserved unchanged thresholds but first-shard-start → authoritative result was **64–81 s** across rehearsals because the merge runner queued for far longer than its ~2 s work. #2098 keeps one shard runner warm as merge coordinator and uses measured 17.091/17.090 file-second bins; if that still misses materially, shared-runner coverage sharding closes negative. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
@@ -375,6 +377,13 @@ Promotion design:
 - native/install-script packages must be inventoried before treating the cache as authoritative bootstrap state.
 
 Because the five-lane rehearsal would otherwise repeat 8–9 s installs, this optimization moves ahead of lane proliferation.
+
+
+### Current full-impact baseline after bootstrap/cache work
+
+Ordinary full-impact PR run **36066406944** completed in **77 s** wall. Fast gate was **58 s**, dominated by Node/CLI at **34 s**. Deep verification was the critical path at **77 s**, dominated by serialized **30 s coverage + 10 s proofs + 13 s Firestore**.
+
+This baseline changes the optimization priority: bootstrap/cache work has mostly succeeded. Remaining latency is validation execution plus shared-runner orchestration. B3 removes real serialized work without adding a runner; D1 has already shown that adding shared Node runners does not provide enough p90 headroom; D2b is the final shared-runner coverage architecture worth testing before the plan moves that work to reserved/larger compute.
 
 ### Phase D: runtime-balanced execution topology
 
