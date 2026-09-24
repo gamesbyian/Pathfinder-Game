@@ -29,33 +29,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # --save-hints stops this pass discarding what it finds. It already solves all 160 published
-      # levels on every qualifying merge; the audit payload keeps only metrics, so before this every
-      # computed path was thrown away. Now a novel solution becomes a new hint, and a rediscovery
-      # appends a provenance entry stamped with this commit — which is what gives the cost-drift
-      # check below something to compare against previous commits.
+      # The diagnostics report is self-describing enough for the central Harvest solver hint
+      # evidence workflow to reconstruct every accepted discovery. This source workflow is
+      # intentionally report-only; it must not mutate canonical Hint files itself.
       - name: Run full SolverV2 diagnostics analysis
-        run: npm run solver:analyze-diagnostics -- --save-hints
+        run: npm run solver:analyze-diagnostics
 
       - name: Guard audit output
         run: npm run check:audit-output -- logs/solver-workflow/latest.json
 
-      # Cost-regression signal that solver:regression --check structurally cannot give: --check compares
-      # only the solved/failed set. Wherever the same attempt config found the same solution under
-      # the same budget at two different commits, provenance now holds a real before/after. Reported,
-      # never enforced — a drift is a lead, not a verdict (a retune legitimately changes cost, and a
-      # cheaper drift is a win). See docs/testing.md's "Retroactive cost drift" note.
-      - name: Report search-cost drift
-        run: |
-          node scripts/stress/hint-cost-drift.mjs --corpus=published --min-ratio=1.25 \
-            --out=reports/stress/hint-cost-drift-published.json | tee /tmp/drift.txt
-          {
-            echo '### Search-cost drift (published corpus)'
-            echo ''
-            echo '```'
-            cat /tmp/drift.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+      # Search-cost drift is computed by the central harvester after it has semantically merged
+      # this run's observations into canonical Hint evidence. Computing it here would require a
+      # second direct Hint writer and defeat the single-ingestion-path invariant.
 
       - name: Upload full diagnostics artifact
         uses: actions/upload-artifact@v7
@@ -84,7 +69,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Commit audit history, captured hints and drift report
+      - name: Commit audit history
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -93,7 +78,6 @@ jobs:
           # the uploaded standard sweep artifact, never committed as raw workflow history.
           git add logs/solver-workflow/latest.json
           git add logs/solver-workflow/????-??-??T??-??-??Z-*.json
-          git add data/hints reports/stress/hint-cost-drift-published.json
           if git diff --cached --quiet; then
             echo "No audit changes to commit."
             exit 0
