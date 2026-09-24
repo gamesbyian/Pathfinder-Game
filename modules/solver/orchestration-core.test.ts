@@ -62,6 +62,39 @@ test('solveLevel can attach a production-inert beam observer with attempt identi
     );
 });
 
+
+
+test('production multi-gate scheduling interleaves gates before advancing configs', async () => {
+    const level = makeLineLevel();
+    level.grid = { w: 3, h: 3 };
+    level.gateKeys = [PACK(0, 0), PACK(0, 2)];
+    level.goalKey = PACK(2, 0);
+    level.requiredLength = 4;
+
+    const observedGates: number[] = [];
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const gateKey = args[1];
+        const prep = args[3];
+        const out = args[9];
+        observedGates.push(gateKey);
+        if (prep._metrics) prep._metrics.nodesExpanded += 1;
+        if (out) out.nodesExpanded = 1;
+        return null;
+    }) as typeof runAttemptSearch;
+
+    await solveLevel(level, {
+        timeBudgetMs: 1000,
+        nodeBudget: 2,
+        attemptSearchForTesting: dispatch,
+    });
+
+    assert.deepEqual(
+        observedGates.slice(0, 2),
+        level.gateKeys,
+        'production scheduling must try the same config across all active gates before advancing configs',
+    );
+});
+
 test('primeAttempt: a matching winner config solves via the winner-first pre-attempt', async () => {
     const level = makeLineLevel();
     // Use a real config key from this level's own configured list (the same source solveLevel
