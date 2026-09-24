@@ -9,10 +9,8 @@
 import { writeFileSync } from 'node:fs';
 import process from 'node:process';
 import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
-import {
-    isMigrationSyntheticFoundAt,
-    provenanceEventIdentity,
-} from '../../modules/domain/hint-runtime.mjs';
+import { auditHintOccurrenceSemantics } from './hint-occurrence-acceptance-lib.mjs';
+export { auditHintOccurrenceSemantics } from './hint-occurrence-acceptance-lib.mjs';
 
 const CORPORA = [
     { name: 'published', levels: 'data/levels.json' },
@@ -23,103 +21,6 @@ const EXPECTED_SYNTHETIC_FOUND_AT_EVENTS = 662;
 
 const value = name => process.argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 const noFail = process.argv.includes('--no-fail');
-
-function occurrenceKey(occurrence) {
-    return `${occurrence?.runId ?? ''}::${occurrence?.runAttempt ?? ''}`;
-}
-
-export function auditHintOccurrenceSemantics(levels) {
-    const summary = {
-        levels: 0,
-        hints: 0,
-        provenanceEvents: 0,
-        eventsWithExecution: 0,
-        eventsWithOccurrences: 0,
-        eventsWithMultipleOccurrences: 0,
-        occurrenceRecords: 0,
-        syntheticFoundAtEvents: 0,
-        duplicateSemanticEventsWithinPath: 0,
-        duplicateOccurrenceKeysWithinEvent: 0,
-        occurrenceMissingRunId: 0,
-        occurrenceInvalidSourceRuns: 0,
-        executionWithoutSolverRequestIdentity: 0,
-        examples: {
-            duplicateSemanticEventsWithinPath: [],
-            duplicateOccurrenceKeysWithinEvent: [],
-            occurrenceMissingRunId: [],
-        },
-    };
-
-    for (const level of levels ?? []) {
-        summary.levels += 1;
-        for (const hint of level?.hintRecords ?? []) {
-            summary.hints += 1;
-            const seenSemantic = new Set();
-            for (const entry of hint?.provenance ?? []) {
-                summary.provenanceEvents += 1;
-                if (isMigrationSyntheticFoundAt(entry)) summary.syntheticFoundAtEvents += 1;
-
-                const semanticIdentity = provenanceEventIdentity(entry);
-                if (seenSemantic.has(semanticIdentity)) {
-                    summary.duplicateSemanticEventsWithinPath += 1;
-                    if (summary.examples.duplicateSemanticEventsWithinPath.length < 20) {
-                        summary.examples.duplicateSemanticEventsWithinPath.push({
-                            levelId: level.id ?? null,
-                            path: hint.path,
-                            semanticIdentity,
-                        });
-                    }
-                } else {
-                    seenSemantic.add(semanticIdentity);
-                }
-
-                if (entry?.execution && typeof entry.execution === 'object') {
-                    summary.eventsWithExecution += 1;
-                    if (entry.execution.solverRequestIdentity == null) {
-                        summary.executionWithoutSolverRequestIdentity += 1;
-                    }
-                }
-
-                const occurrences = Array.isArray(entry?.occurrences) ? entry.occurrences : [];
-                if (occurrences.length > 0) {
-                    summary.eventsWithOccurrences += 1;
-                    if (occurrences.length > 1) summary.eventsWithMultipleOccurrences += 1;
-                }
-                const seenOccurrences = new Set();
-                for (const occurrence of occurrences) {
-                    summary.occurrenceRecords += 1;
-                    if (typeof occurrence?.runId !== 'string' || occurrence.runId.length === 0) {
-                        summary.occurrenceMissingRunId += 1;
-                        if (summary.examples.occurrenceMissingRunId.length < 20) {
-                            summary.examples.occurrenceMissingRunId.push({
-                                levelId: level.id ?? null,
-                                path: hint.path,
-                                occurrence,
-                            });
-                        }
-                    }
-                    if (occurrence?.sourceRuns != null && !Array.isArray(occurrence.sourceRuns)) {
-                        summary.occurrenceInvalidSourceRuns += 1;
-                    }
-                    const key = occurrenceKey(occurrence);
-                    if (seenOccurrences.has(key)) {
-                        summary.duplicateOccurrenceKeysWithinEvent += 1;
-                        if (summary.examples.duplicateOccurrenceKeysWithinEvent.length < 20) {
-                            summary.examples.duplicateOccurrenceKeysWithinEvent.push({
-                                levelId: level.id ?? null,
-                                path: hint.path,
-                                occurrenceKey: key,
-                            });
-                        }
-                    } else {
-                        seenOccurrences.add(key);
-                    }
-                }
-            }
-        }
-    }
-    return summary;
-}
 
 export function buildHintOccurrenceAcceptanceReport() {
     const corpora = CORPORA.map(({ name, levels }) => {
