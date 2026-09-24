@@ -1,0 +1,49 @@
+name: CI semantic fault-injection audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/ci-semantic-fault-injection-audit.yml'
+      - 'scripts/ci-semantic-fault-injection-audit.mjs'
+      - 'scripts/ci-impact-classifier.mjs'
+      - 'scripts/ci-impact-rules.json'
+      - 'scripts/ci-validation-plan.mjs'
+      - 'scripts/ci-validation-plan.json'
+      - 'scripts/ci-validation-plan-node-test.mjs'
+      - 'modules/app.ts'
+      - 'modules/app.test.ts'
+      - 'modules/persistence.ts'
+      - 'modules/persistence.test.ts'
+      - 'modules/solver/orchestration.ts'
+      - 'modules/solver/orchestration-core.test.ts'
+      - 'modules/solver/routing-regime.test.ts'
+      - 'modules/solver/production-default-equivalence.test.ts'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies from the npm cache
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Inject representative semantic faults
+        run: node scripts/ci-semantic-fault-injection-audit.mjs
+      - name: Upload fault-injection evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-semantic-fault-injection-audit
+          path: tmp/ci-semantic-fault-injection-audit.json
+          if-no-files-found: warn
+          retention-days: 30
