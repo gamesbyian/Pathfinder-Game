@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -9,6 +9,9 @@ const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 
 const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-cpsat-central-harvest-'));
 const receiptPath = path.join(temp, 'receipt.json');
+const emptyWorkspace = path.join(temp, 'workspace');
+mkdirSync(path.join(emptyWorkspace, 'data'), { recursive: true });
+writeFileSync(path.join(emptyWorkspace, 'data', 'levels.json'), '[]\n');
 try {
     const run = spawnSync(process.execPath, [
         'scripts/run-bundled.mjs',
@@ -19,6 +22,7 @@ try {
         '--source-run-attempt=3',
         '--source-workflow=cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)',
         `--ingestion-receipt-out=${receiptPath}`,
+        `--workspace-root=${emptyWorkspace}`,
     ], {
         cwd: ROOT,
         encoding: 'utf8',
@@ -54,21 +58,31 @@ try {
 {
     const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
 
-    const corpusPath = path.join(ROOT, 'data', 'levels.json');
-    const document = readLevelCorpusDocumentWithHints(corpusPath);
-    const level = document.levels.find(l => l.id === 'P00002');
-    assert.ok(level, 'fixture requires the real published corpus to still carry level P00002');
-    const knownHint = level.hintRecords.find(h => h.provenance?.some(p => typeof p?.context?.levelRevision === 'string' && p.context.levelRevision.length > 0));
-    assert.ok(knownHint, 'fixture requires an already-known hint for P00002 with a recorded levelRevision');
-    const levelRevision = knownHint.provenance.find(p => typeof p?.context?.levelRevision === 'string')?.context.levelRevision;
-    const knownPath = knownHint.path;
+    const sourceLevels = JSON.parse(readFileSync(path.join(ROOT, 'data', 'levels.json'), 'utf8'));
+    const rawLevel = sourceLevels.find(l => l.id === 'P00002');
+    assert.ok(rawLevel, 'fixture requires the real published corpus to still carry level P00002');
+    const sourceHintBytes = readFileSync(path.join(ROOT, 'data', 'hints', 'P00002.json'), 'utf8');
 
     const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-cpsat-real-row-'));
+    const workspaceRoot = path.join(realTemp, 'workspace');
+    const fixtureCorpusPath = path.join(workspaceRoot, 'data', 'levels.json');
+    const fixtureHintDir = path.join(workspaceRoot, 'data', 'hints');
+    const stagingDir = path.join(realTemp, 'staging');
     const realReceiptPath = path.join(realTemp, 'receipt.json');
-    const p00002HintPath = path.join(ROOT, 'data', 'hints', 'P00002.json');
-    const originalP00002Hints = readFileSync(p00002HintPath, 'utf8');
+    mkdirSync(fixtureHintDir, { recursive: true });
+    mkdirSync(stagingDir, { recursive: true });
+    writeFileSync(fixtureCorpusPath, `${JSON.stringify([rawLevel], null, 2)}\n`);
+    writeFileSync(path.join(fixtureHintDir, 'P00002.json'), sourceHintBytes);
+
     try {
-        const reportPath = path.join(realTemp, 'discovery-report.json');
+        const document = readLevelCorpusDocumentWithHints(fixtureCorpusPath);
+        const level = document.levels[0];
+        const knownHint = level.hintRecords.find(h => h.provenance?.some(p => typeof p?.context?.levelRevision === 'string' && p.context.levelRevision.length > 0));
+        assert.ok(knownHint, 'fixture requires an already-known hint for P00002 with a recorded levelRevision');
+        const levelRevision = knownHint.provenance.find(p => typeof p?.context?.levelRevision === 'string')?.context.levelRevision;
+        const knownPath = knownHint.path;
+
+        const reportPath = path.join(stagingDir, 'discovery-report.json');
         writeFileSync(reportPath, JSON.stringify({
             schemaVersion: 1,
             kind: 'pathfinder-cpsat-hint-discovery-report',
@@ -94,17 +108,18 @@ try {
             'scripts/run-bundled.mjs',
             'scripts/harvest-cpsat-discovery-reports.mjs',
             '--',
-            `--staging-dir=${realTemp}`,
+            `--staging-dir=${stagingDir}`,
             '--source-run-id=fixture-real-row-run',
             '--source-run-attempt=1',
             '--source-workflow=cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)',
             `--ingestion-receipt-out=${realReceiptPath}`,
+            `--workspace-root=${workspaceRoot}`,
         ], { cwd: ROOT, encoding: 'utf8' });
         assert.equal(realRun.status, 0, realRun.stderr || realRun.stdout);
         assert.match(realRun.stdout, /1 report\(s\), 1 candidate\(s\), 1 eligible, 1 referee-accepted/, realRun.stdout);
 
-        const afterDocument = readLevelCorpusDocumentWithHints(corpusPath);
-        const afterLevel = afterDocument.levels.find(l => l.id === 'P00002');
+        const afterDocument = readLevelCorpusDocumentWithHints(fixtureCorpusPath);
+        const afterLevel = afterDocument.levels[0];
         const afterHint = afterLevel.hintRecords.find(h => h.path.join(',') === knownPath.join(','));
         const newEntry = afterHint.provenance.find(p => p.search?.elapsedMs === 4567);
         assert.ok(newEntry, `expected a reconstructed provenance entry with elapsedMs=4567; got entries: ${JSON.stringify(afterHint.provenance.map(p => p.search?.elapsedMs))}`);
@@ -116,7 +131,6 @@ try {
         assert.equal(newEntry.occurrences?.[0]?.runId, 'fixture-real-row-run');
         assert.equal(newEntry.occurrences?.[0]?.observedAt, '2026-09-24T00:00:00.000Z');
     } finally {
-        writeFileSync(p00002HintPath, originalP00002Hints);
         rmSync(realTemp, { recursive: true, force: true });
     }
 }
