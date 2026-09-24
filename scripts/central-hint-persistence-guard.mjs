@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { CANONICAL_TRACKED_HINT_STORE_DIRS } from './hint-store-roots.mjs';
 
 const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 const lifecycle = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/solver-workflow-lifecycle.json'), 'utf8'));
@@ -13,21 +14,48 @@ function executableLines(text) {
         .join('\n');
 }
 
+function hasCanonicalHintStorePath(text) {
+    return CANONICAL_TRACKED_HINT_STORE_DIRS.some(dir => text.includes(dir));
+}
+
+function persistenceIssues(workflow, rawText) {
+    const text = executableLines(rawText);
+    const issues = [];
+    if (/--save-hints\b/u.test(text)) {
+        issues.push(`${workflow}: --save-hints bypasses canonical harvest ownership`);
+    }
+    for (const line of text.split('\n')) {
+        if (/git\s+add\b/u.test(line) && hasCanonicalHintStorePath(line)) {
+            issues.push(`${workflow}: direct Hint git add bypasses canonical harvest ownership`);
+        }
+        if (/git\s+status\b/u.test(line) && hasCanonicalHintStorePath(line)) {
+            issues.push(`${workflow}: direct Hint changed-file staging bypasses canonical harvest ownership`);
+        }
+    }
+    return issues;
+}
+
+// Adversarial detector fixtures run on every invocation. The canonical store authority has already
+// expanded once during this program; every store in that authority must remain protected without
+// adding another hand-maintained regex here.
+for (const dir of CANONICAL_TRACKED_HINT_STORE_DIRS) {
+    const fixture = `steps:\n  - run: git add ${dir}/fixture.json\n  - run: git status --short ${dir}/\n`;
+    const found = persistenceIssues('fixture.yml', fixture);
+    if (found.length !== 2) {
+        throw new Error(`central Hint persistence guard self-test missed ${dir}: ${JSON.stringify(found)}`);
+    }
+}
+if (persistenceIssues('fixture.yml', '# git add data/hints/P00001.json\n- run: echo ok').length !== 0) {
+    throw new Error('central Hint persistence guard self-test treated a comment as executable');
+}
+
 const issues = [];
 const checked = [];
 for (const workflow of maintained) {
     if (workflow === 'harvest-solver-evidence.yml') continue;
     const file = path.join(ROOT, '.github', 'workflows', workflow);
-    const text = executableLines(fs.readFileSync(file, 'utf8'));
+    issues.push(...persistenceIssues(workflow, fs.readFileSync(file, 'utf8')));
     checked.push(workflow);
-    const forbidden = [
-        ['--save-hints', /--save-hints\b/u],
-        ['direct Hint git add', /git\s+add[^\n]*(?:data\/hints|data\/stress\/hints)/u],
-        ['direct Hint changed-file staging', /git\s+status[^\n]*(?:data\/hints|data\/stress\/hints)/u],
-    ];
-    for (const [label, re] of forbidden) {
-        if (re.test(text)) issues.push(`${workflow}: ${label} bypasses canonical harvest ownership`);
-    }
 }
 if (issues.length) {
     console.error('Central Hint persistence ownership violations:');
