@@ -116,3 +116,15 @@ With this batch, every phase the plan names through Phase 10 has real, executed,
 one previously-open design question (lazy vs. bulk v4 migration) is resolved: bulk migration was
 executed for real, closing Phase 8's exit criterion in full rather than leaving it partially satisfied
 by lazy-only adoption.
+
+## Hostile-audit correction, 2026-09-24
+
+The original report's phrase **"full tracked corpus" was incorrect**. A later hostile closeout audit
+found the tracked first-class research store `data/stress/hints-envelope/` (124 Hint artifacts),
+paired with `data/stress/stress-levels-envelope.json`, was absent from the migration tool's default
+directory list. Those artifacts therefore remained schema v3 after this migration.
+
+PR #2072 corrects the scope defect by adding the envelope store to all plan-critical whole-store
+Hint tooling and running the same schema-v4 semantic-hash / join-identity migration contract over
+the omitted store. The original 1,962-file measurements below remain valid for the three stores
+actually processed by this run; they must not be interpreted as corpus-wide totals.
