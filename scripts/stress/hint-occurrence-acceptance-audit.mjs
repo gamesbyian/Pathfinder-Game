@@ -7,7 +7,9 @@
  *   node scripts/stress/hint-occurrence-acceptance-audit.mjs [--json=<path>] [--no-fail]
  */
 import { writeFileSync } from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { auditHintOccurrenceSemantics } from './hint-occurrence-acceptance-lib.mjs';
 export { auditHintOccurrenceSemantics } from './hint-occurrence-acceptance-lib.mjs';
@@ -71,9 +73,14 @@ export function buildHintOccurrenceAcceptanceReport() {
     };
 }
 
-const report = buildHintOccurrenceAcceptanceReport();
-const out = value('json');
-if (out) writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
+const isDirectInvocation = process.argv[1] != null
+    && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
-console.log(JSON.stringify(report, null, 2));
-if (!noFail && report.violations.length > 0) process.exitCode = 1;
+if (isDirectInvocation) {
+    const report = buildHintOccurrenceAcceptanceReport();
+    const out = value('json');
+    if (out) writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
+
+    console.log(JSON.stringify(report, null, 2));
+    if (!noFail && report.violations.length > 0) process.exitCode = 1;
+}
