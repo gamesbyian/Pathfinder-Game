@@ -60,5 +60,18 @@ jobs:
           console.log('Codec baseline totals:', JSON.stringify(report.totals));
           NODE
 
+      - name: Dry-run full-corpus schema v4 migration
+        run: |
+          node scripts/hint-artifact-v4-migration.mjs --out=/tmp/hint-v4-migration.json >/tmp/hint-v4-migration.log
+          cat /tmp/hint-v4-migration.log
+          node - <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/hint-v4-migration.json', 'utf8'));
+          if (report.semanticRoundTrip !== 'pass') process.exit(1);
+          console.log('V4 representations:', JSON.stringify(report.representations));
+          console.log('V4 byte reduction:', (100 * report.bytes.reduction).toFixed(2) + '%');
+          console.log('V4 gzip reduction:', (100 * report.bytes.gzipReduction).toFixed(2) + '%');
+          NODE
+
       - name: Portfolio direct-vs-report provenance parity
         run: npm run test:portfolio-solve-sweep-cli
