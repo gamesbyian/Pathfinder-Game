@@ -12,7 +12,12 @@ try {
   const level={id:'P00001',grid:{w:2,h:2},gates:[{x:1,y:1}],goal:{x:2,y:1},reqLen:1,reqInt:0};
   writeFileSync(path.join(root,'data','levels.json'),JSON.stringify([level])+'\n');
   writeFileSync(path.join(root,'data','hints','P00001.json'),JSON.stringify(encodeHintArtifact([toHint([0,65536],[])]))+'\n');
-  let result=validateAllTrackedHintStores(root);
+  assert.throws(
+    () => validateAllTrackedHintStores(root),
+    /canonical Hint-store population incomplete or changed/u,
+    'default whole-store validation must fail closed when a canonical store is absent',
+  );
+  let result=validateAllTrackedHintStores(root,{requireComplete:false});
   assert.equal(result.ok,true,JSON.stringify(result.failures));
   assert.equal(result.artifacts,1);
   assert.equal(result.hints,1);
@@ -34,7 +39,7 @@ try {
     path.join(root,'data','families','hints','F00001-re-01.json'),
     JSON.stringify(encodeHintArtifact([toHint(Array.from({length:16},(_,i)=>i),[])]))+'\n',
   );
-  result=validateAllTrackedHintStores(root);
+  result=validateAllTrackedHintStores(root,{requireComplete:false});
   assert.equal(result.ok,true,JSON.stringify(result.failures));
   assert.equal(result.artifacts,2);
   assert.equal(result.hints,2);
