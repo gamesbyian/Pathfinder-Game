@@ -434,6 +434,24 @@
         "processEntrypoints": [
           "scripts/check-workflow-actions.mjs"
         ]
+      },
+      "test:hint-physical-decode-guard": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "scripts/**",
+          "modules/**",
+          ".github/workflows/**",
+          "docs/hint-physical-reader-audit.json",
+          "docs/hint-physical-writer-audit.json",
+          "package.json"
+        ]
+      },
+      "test:central-hint-persistence-guard": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "docs/solver-workflow-lifecycle.json",
+          ".github/workflows/**"
+        ]
       }
     }
   }
