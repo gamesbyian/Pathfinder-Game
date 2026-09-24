@@ -1382,8 +1382,11 @@ Repair current correctness seams before introducing richer identity.
   and capacity/duplicate/failure outcomes must be distinguishable. Do not prematurely choose the
   final occurrence-storage layout.
 
-**Exit:** all maintained current reads/writes pass through honest semantic ingress/mutation
-boundaries, and existing storage paths fail explicitly rather than silently destroying evidence.
+**Exit:** the mechanically derived maintained reader/writer/mutation population has no unclassified
+current seam; every maintained current read/write passes through honest semantic ingress/mutation
+boundaries; browser and Node historical fixtures agree on missingness; and every storage path touched
+by this phase fails explicitly rather than silently destroying evidence. The reachability/ownership
+guard and its scoped-CI routing must be green on the exact phase-closing head.
 
 ### Phase 2 — identity and durable join-spine consolidation
 
@@ -1421,11 +1424,20 @@ Only after identity is stable, extend the Hint semantic model.
 Acceptance must include:
 - legacy unknown round-trip;
 - 662 synthetic-`foundAt` events remain semantically undated;
-- reharvest of one acquisition occurrence is idempotent;
-- independent reacquisition adds occurrence lineage without duplicate semantic provenance;
-- cross-resource join keys survive merge and persistence.
+- exact retry of one acquisition occurrence is idempotent;
+- the same semantic event acquired in a new run/attempt adds occurrence lineage without duplicating
+  semantic provenance;
+- a distinct semantic event on an existing path is retained;
+- a new path is retained;
+- partial persistence and capacity refusal are explicit and retry-safe;
+- read/merge reconstruction recovers the intended semantic event + occurrence set;
+- cross-resource join keys survive merge and persistence;
+- the real Firestore emulator proves every Firestore-relevant case above rather than substituting an
+  in-memory repository test.
 
-**Exit:** the in-memory semantic model is final enough for producer migration and physical encoding.
+**Exit:** the semantic event/occurrence model and each persistence backend touched by this phase pass
+the explicit transition matrix above on the exact closing head. A report that defers emulator or
+backend-real validation cannot close the phase.
 
 ### Phase 4 — expose the new semantics through research/query surfaces
 
@@ -1460,8 +1472,11 @@ With semantic identities and query oracles stable, define how producers enter th
 - preserve partial-failure upload semantics;
 - add producer completeness/static ownership checks.
 
-**Exit:** representative producers can be persisted centrally and their funnel/accounting can be
-queried mechanically.
+**Exit:** the mechanically derived maintained producer population is classified as canonical
+producer, standardized observation producer, or explicit non-ingesting/legacy exception; every
+producer claimed migrated emits the canonical projection/receipt and survives its real transport
+boundary; representative direct-save, level-blind, isolated and specialist paths prove semantic
+accounting. Unclassified producers fail the ownership/completeness guard.
 
 ### Phase 6 — centralize GitHub Actions persistence incrementally
 
@@ -1479,8 +1494,11 @@ For each family:
 Retain `merge-hint-artifacts.mjs` as a historical/mixed-era compatibility importer, not a peer
 modern authority.
 
-**Exit:** modern GHA solver discovery has one canonical persistence authority and no maintained
-workflow needs physical hint-store knowledge.
+**Exit:** a mechanically derived maintained-workflow census and workflow-lifecycle authority agree
+that every discovery-bearing GHA family converges through one canonical persistence authority;
+`central-hint-persistence-guard.mjs` finds no executable direct writer, Hint-file staging, or dead
+physical-store plumbing in source workflows; every retired route has real parity/reharvest evidence;
+and the exact closing head has exercised the applicable real GHA topology.
 
 ### Phase 7 — authoritative historical enrichment
 
@@ -1508,15 +1526,21 @@ Only now optimize bytes.
 - benchmark v3, sparse v4 and sparse+interned v4 on the **post-enrichment real corpus**;
 - measure raw/gzip bytes, encode/decode runtime, diff behavior, query/startup/build effects;
 - require semantic Hint equality **and preservation of cross-resource join identity**;
-- produce the reversible migration manifest with before/after hashes, counts and referee results;
+- mechanically discover the complete tracked canonical Hint-store population from repository truth;
+- fail on an unclassified/ambiguous/orphan tracked Hint store rather than silently omitting it;
+- produce the reversible migration manifest with discovered store/artifact population, before/after
+  hashes, counts and referee results;
 - migrate canonical stores in a data-focused change;
-- preserve v1-v3 readers.
+- preserve v1-v3 readers and fail closed on declared unsupported future schema versions.
 
 Choose the representation from measured economics; do not pre-commit to interning where sparse form
 is better.
 
-**Exit:** tracked hint storage is materially smaller, deterministically encoded, fully backward
-readable and semantically/join equivalent.
+**Exit:** the mechanically discovered tracked Hint-store population has been migrated and immediately
+re-run idempotently; every discovered artifact passes semantic/join equivalence, canonical formatting
+and whole-store PLAY-referee validation; the manifest records the discovered store/artifact universe;
+tracked Hint storage is materially smaller corpus-wide, deterministically encoded and fully backward
+readable. A successful transaction over a hand-enumerated subset cannot close Phase 8.
 
 ### Phase 9 — generated runtime projection
 
