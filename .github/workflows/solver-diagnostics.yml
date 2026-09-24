@@ -170,3 +170,35 @@ jobs:
             data/stress/hints-random
             data/stress/hints-envelope
           key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+
+      - name: Derive final pushed runtime-hint projection key
+        id: runtime-hint-projection-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git hash-object scripts/runtime-hint-projection-lib.mjs
+            git hash-object modules/domain/hint-runtime.mjs
+            git hash-object modules/canonical-json.mjs
+            git hash-object vite.config.ts
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore final runtime-hint projection if already published
+        id: runtime-hint-projection-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
+      - name: Generate final runtime-hint projection on cache miss
+        id: runtime-hint-projection-build
+        if: steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        env:
+          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
+        run: npm run build
+      - name: Publish final runtime-hint projection for later PRs
+        if: steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && steps.runtime-hint-projection-build.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}

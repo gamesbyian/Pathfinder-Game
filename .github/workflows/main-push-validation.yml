@@ -232,10 +232,37 @@ jobs:
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
           PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: npm run test:node
+      - name: Derive runtime-hint projection cache key
+        id: runtime-hint-projection-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git hash-object scripts/runtime-hint-projection-lib.mjs
+            git hash-object modules/domain/hint-runtime.mjs
+            git hash-object modules/canonical-json.mjs
+            git hash-object vite.config.ts
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore default-branch runtime-hint projection
+        id: runtime-hint-projection-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
       - name: Build production bundle
         id: build
         continue-on-error: true
+        env:
+          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
         run: npm run build
+      - name: Save default-branch runtime-hint projection
+        if: steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
       - name: Solver capability canary
         id: solver_canary
         continue-on-error: true
