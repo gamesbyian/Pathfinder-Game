@@ -1349,3 +1349,32 @@ Filesystem/process/environment dependencies remain common, so static reachabilit
 
 PR #2027 independently reduced `test:portfolio-solve-sweep-worker` from roughly **6.1 s** on the post-#2025 baseline to **4.0 s** while preserving the real forked-worker + nested-race boundary. It also better matches production's intended long-lived worker/race-pool reuse topology.
 
+
+
+## Dependency-authority prototype
+
+PR #2034 tested whether dependency-local routing needs a large bespoke registry or whether sparse declarations can close the important gaps left by static imports.
+
+The prototype adds optional `contractDependencies` metadata beside `contractSurfaces`, with only three concepts:
+
+- `filesystemScope: repo-inputs | fixture-only`;
+- `repoPaths`: explicit repo-relative files or globs that invalidate the contract;
+- `processEntrypoints`: explicit local subprocess entrypoints.
+
+Six representative contracts were declared across narrow repo files, directory/glob scans, workflow-directory authority, durable research evidence files, and subprocess + fixture-only filesystem behavior. Hosted topology audit run 35954285030 reported:
+
+- strict static-import-sufficient candidates: **49**;
+- metadata-sufficient candidates: **55**;
+- candidates rescued by the six declarations: **6/6**.
+
+This is a useful architectural result, not an invitation to annotate the whole repository. The unresolved population is dominated by filesystem and process boundaries (152 filesystem flags, 94 child-process flags in the preceding audit), but many of those contracts are low-value routing targets or already adequately covered by coarse semantic surfaces.
+
+Recommended policy:
+
+1. Keep static import closure as the automatic lower bound.
+2. Add `contractDependencies` only when a contract is economically worth narrowing or when a new non-import dependency would otherwise be invisible.
+3. Treat `fixture-only` as an explicit assertion that filesystem activity is generated test state rather than a repository invalidation input.
+4. Require declared subprocess entrypoints to exist and remain mechanically validated.
+5. Do not activate dependency-local skipping from metadata alone; historical replay/fault injection remains the promotion gate for any contract whose omission could hide a meaningful defect.
+
+Stopping rule for this audit cycle: do **not** bulk-annotate the ~150 filesystem-bearing contracts. The prototype demonstrates that the authority seam works. Future declarations should be demand-driven by measured CI cost or routing value.
