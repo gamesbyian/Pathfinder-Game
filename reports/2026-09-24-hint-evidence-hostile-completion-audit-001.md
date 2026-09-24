@@ -347,6 +347,34 @@ fixtures. The canary copies the real P00001 level/Hint evidence into a temporary
 harvester there, and never mutates shared repository data. This removes a hidden serialization
 requirement from the Hint validation suite.
 
+## Planning-contract defects exposed by implementation
+
+The hostile findings do not imply that the original architecture was directionless; most of the
+eventual corrections were already conceptually anticipated. They do show that several plan
+requirements were too weakly specified to serve as falsifiable completion gates.
+
+- **Scope words lacked mechanical population ownership.** "All producers/consumers", "maintained
+  workflows", and "tracked corpus" could be satisfied against a hand-maintained list. This is how
+  Phase 8 migrated 1,962 artifacts losslessly while omitting 1,389 equally canonical tracked
+  artifacts.
+- **Definition-of-Done statements were not uniformly bound to one named executable proof.** A report
+  could state that a phase was complete while the proof exercised only a subset or a substitute
+  topology.
+- **Persistence acceptance was under-factored.** Distinct events on one path were tested, but the
+  equally important same-event/new-occurrence case was not, allowing Firestore and git to disagree.
+- **Guard existence was treated too readily as guard completeness.** The first physical-reader guard
+  could be bypassed by a harmless staged read/parse refactor, direct physical writers lacked their own
+  fail-closed ledger, and scoped CI did not initially own all guard inputs.
+- **Topology-specific validation could be deferred past a phase-complete claim.** Firestore emulator
+  evidence and remote exact-head evidence must be phase closure requirements when those boundaries are
+  touched, not later confirmation.
+- **Fresh-context closeout was described as methodology rather than an unavoidable blocking phase.**
+  PR #2072 demonstrated that reconstructing the current producer/consumer/store surface independently
+  from implementation reports is what actually falsified the premature completion claim.
+
+The plan now records these as section 0 completion-contract requirements. This report is the first
+closeout conducted under that stronger contract.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
