@@ -432,6 +432,14 @@ Decision gate:
 3. if both shard runner walls remain ≤27–30 s and first-shard-start → both-complete remains ≤35 s, two-way standard-runner Node sharding remains viable;
 4. if timing then fails, stop shard-count tuning and move to the larger/reserved-runner fallback already defined in Phase E.
 
+### B4. Coverage worker-count contention audit
+
+The remaining monolithic covered population is ~29–30 s wall. Its slow-file profile shows contention: `repair-search.test.ts` is ~2 s targeted after B1b but ~8 s inside the full suite.
+
+Before more structural test surgery, measure the unchanged full coverage contract with fixed Vitest worker counts **1, 2, 3, and 4** on otherwise identical warm standard runners.
+
+The winner is based on the coverage step wall, not summed test time. Existing coverage thresholds remain active in every cell. A lower worker count is promotable only if it materially reduces wall while all tests/thresholds remain green.
+
 ### Phase E: hosted-runner variance decision
 
 Run at least 10 comparable full-impact rehearsal executions after the candidate topology is green.
