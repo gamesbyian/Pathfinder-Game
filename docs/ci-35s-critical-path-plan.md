@@ -158,6 +158,17 @@ Implementation in progress:
 
 This does not replace a correct PR miss fallback, but it should make diagnostics-driven misses rare. It also aligns cache authority with the producer that invalidates the cache generation.
 
+### A1d. Seed every main generation from full main-push checkout
+
+Main-push `validate` already checks out the complete repository, including the canonical runtime-data tree. Publish that already-materialized tree under the same exact Git-object key PR CI uses.
+
+This closes the base-cache authority gap exposed by A1b: every ordinary merged main commit gets an exact default-branch runtime-data cache generation without additional Git materialization. A1c separately handles diagnostics `[skip ci]` hint refresh commits that bypass main-push validation.
+
+Together:
+- A1d covers ordinary merges;
+- A1c covers diagnostics-generated `[skip ci]` main commits;
+- A1b can recover a PR exact miss by restoring the cached base-parent generation and overlaying only changed runtime-data files.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
