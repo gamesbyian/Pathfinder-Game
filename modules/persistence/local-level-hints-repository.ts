@@ -12,17 +12,12 @@ const MAX_HINTS_PER_LEVEL = 5000;
 
 /** Bounded execution/run binding (docs/hint-evidence-execution-identity-storage-consolidation-
  *  plan.md section 4/W's Firestore layout item): each entry doc's ID is a composite of the path
- *  signature AND the discovery-event identity, `<pathHash>-<eventHash>`, rather than the path
- *  signature alone. A genuinely NEW discovery event for an ALREADY-known path (a different play
- *  session/technique finding the same path) is not a duplicate of the path's first-known event and
- *  must not be discarded as one -- it gets its own sibling doc under the same level's `entries`
- *  collection, reusing the exact same create-only/immutable security-rule pattern already proven
- *  for the first event (a doc-ID collision on the true duplicate case -- same path AND same exact
- *  event -- is still the existing harmless create-no-op). getLocalLevelHints() needs no change at
- *  all for this: mergeHints()/dedupeProvenanceEntries() already group multiple Firestore docs that
- *  share a path into one Hint with a combined provenance array, deduping true semantic duplicates
- *  and merging occurrence lineage exactly as they do for every other multi-event provenance source
- *  in this codebase -- reusing the single shared merge path rather than a second copy of it. */
+ *  signature AND semantic discovery-event identity, plus a physical-occurrence suffix when known.
+ *  A genuinely new discovery event for an already-known path gets its own sibling document. The
+ *  same semantic event reacquired in a new run/attempt also gets an immutable sibling document for
+ *  only that novel occurrence. Reads merge siblings through mergeHints()/dedupeProvenanceEntries(),
+ *  so storage remains create-only while semantic event identity and physical occurrence lineage stay
+ *  separate and idempotent. */
 function entryIdFor(pathSignature: string, entry: HintProvenanceEntry, hash: (s: string) => string): string {
     const occurrenceKeys = (entry.occurrences ?? []).map(hintOccurrenceKey).sort();
     const occurrenceSuffix = occurrenceKeys.length > 0 ? `-${hash(JSON.stringify(occurrenceKeys))}` : '';
@@ -77,10 +72,11 @@ export function createLocalLevelHintsRepository(client: any) {
         return mergeHints([], hints);
     }
 
-    /** Saves one newly-discovered path/event pair as its own entry, unless this exact discovery
-     *  event is already known (locally or here — callers pass `alreadyKnownEvidenceKeys`, built via
-     *  provenanceEventKey(), covering both) or the level already has MAX_HINTS_PER_LEVEL saved
-     *  entries; see SaveLocalLevelHintOutcome for why the "unless" cases return a distinguishable
+    /** Saves one newly-observed path/event/occurrence payload as its own immutable entry. Callers
+     *  pass `alreadyKnownEvidenceKeys`, containing the semantic event key plus any known atomic
+     *  occurrence keys. Occurrence-bearing input is filtered to novel runId+runAttempt acquisitions;
+     *  occurrence-less input dedupes at semantic-event grain. The level still has the
+     *  MAX_HINTS_PER_LEVEL soft document cap; see SaveLocalLevelHintOutcome for why the "unless" cases return a distinguishable
      *  reason rather than a bare false. A NEW discovery event for an already-known path is not
      *  "already known" here — see entryIdFor()'s own doc comment. Best-effort, non-atomic count
      *  check: a soft cap on puzzle-hint data, not a security boundary, so a small overshoot under
