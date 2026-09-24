@@ -665,13 +665,8 @@ const hintExecutionContext = {
     } : {}),
 };
 
-// Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs (the CI
-// audit pass). Only the SCHEDULING of writes stays here -- this tool persists incrementally after
-// every level so a killed multi-hour run keeps its finds, which is deliberately different from the
-// capture module's own flush-at-end (see persistHintsIfEnabled below).
-function mergeSolvedHint(raw, result) {
-    return hintCapture.record(raw, result);
-}
+// Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs. Only the
+// scheduling of flushes stays here so a killed multi-hour run keeps discoveries already observed.
 
 const levelRows = new Map();
 for (const row of checkpointRows.values()) levelRows.set(row.level, row);
