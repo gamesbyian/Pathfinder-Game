@@ -1,0 +1,64 @@
+name: Hint consolidation closeout canary
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'modules/**'
+      - 'data/**'
+      - 'docs/hint-evidence-**'
+      - 'reports/**hint-evidence**'
+      - '.github/workflows/harvest-solver-evidence.yml'
+      - '.github/workflows/hint-consolidation-closeout.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  closeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Prove historical enrichment authority is exhausted
+        run: |
+          node scripts/stress/hint-historical-enrichment-plan.mjs --out=/tmp/historical-plan.json
+          node scripts/stress/hint-historical-enrichment-apply.mjs --out=/tmp/historical-apply-dry-run.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const plan = JSON.parse(fs.readFileSync('/tmp/historical-plan.json', 'utf8'));
+          const apply = JSON.parse(fs.readFileSync('/tmp/historical-apply-dry-run.json', 'utf8'));
+          const remaining = Number(plan.counts?.['exact-occurrence-enrichment-candidate'] ?? 0);
+          if (remaining !== 0 || Number(apply.candidatesFound ?? 0) !== 0) {
+            console.error(JSON.stringify({ remaining, applyCandidates: apply.candidatesFound, counts: plan.counts }, null, 2));
+            process.exit(1);
+          }
+          console.log('Historical enrichment exact-candidate remainder: 0');
+          console.log(JSON.stringify(plan.counts, null, 2));
+          NODE
+
+      - name: Re-run corpus occurrence acceptance
+        run: node scripts/stress/hint-occurrence-acceptance-audit.mjs
+
+      - name: Measure current canonical codec baseline
+        run: |
+          node scripts/hint-codec-baseline-benchmark.mjs --out=/tmp/hint-codec-baseline.json >/tmp/hint-codec-baseline.log
+          cat /tmp/hint-codec-baseline.log
+          node - <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/hint-codec-baseline.json', 'utf8'));
+          console.log('Codec baseline totals:', JSON.stringify(report.totals));
+          NODE
+
+      - name: Portfolio direct-vs-report provenance parity
+        run: npm run test:portfolio-solve-sweep-cli
