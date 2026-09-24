@@ -352,5 +352,57 @@
         "research"
       ]
     }
+  },
+  "contractDependencies": {
+    "validators": {
+      "check:canvas-theme-coverage": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "modules/render/**"
+        ]
+      },
+      "check:ci-validation-plan-parity": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "scripts/ci-validation-plan.json",
+          "scripts/validation-groups.json",
+          "scripts/ci-execution-plan.json",
+          "package.json",
+          ".github/workflows/ci.yml",
+          ".github/workflows/ci-scoped-dry-run.yml"
+        ]
+      },
+      "check:current-level-facts": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json",
+          "data/stress/stress-levels.json",
+          "data/stress/stress-levels-random.json"
+        ]
+      }
+    },
+    "nodeTests": {
+      "test:workflow-lifecycle": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "docs/solver-workflow-lifecycle.json",
+          ".github/workflows/**"
+        ]
+      },
+      "test:ws2-class3-shared-acquisition": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
+          "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
+          "reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json"
+        ]
+      },
+      "test:workflow-actions": {
+        "filesystemScope": "fixture-only",
+        "processEntrypoints": [
+          "scripts/check-workflow-actions.mjs"
+        ]
+      }
+    }
   }
 }
