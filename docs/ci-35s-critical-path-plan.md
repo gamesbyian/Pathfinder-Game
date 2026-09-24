@@ -208,6 +208,38 @@ Lower budgets do not buy additional wall time, so production uses **250k / 125k*
 
 Expected file saving: roughly **7.5 s** versus the current covered-suite profile. Full-suite wall saving must be measured separately because Vitest overlaps files.
 
+### B5. Cache deterministic runtime-hint build projection
+
+Current fast-gate profiling separates the production build into two very different costs:
+
+- Vite bundle compilation: **~0.7 s**;
+- runtime-hint projection in `closeBundle()`: **~24 s**, converting roughly **572 MB source** to **150 MB path-only runtime data**.
+
+The projection is deterministic, untracked, and freshness-bound to canonical source hints. Recomputing it on every PR build is therefore derived-data work, not independent validation.
+
+Rehearsal design:
+
+1. exact cache root: `.cache/runtime-hint-projection`;
+2. cache identity binds:
+   - Git tree IDs for `data/hints`, `data/stress/hints`, `data/stress/hints-random`;
+   - `scripts/runtime-hint-projection-lib.mjs`;
+   - `modules/domain/hint-runtime.mjs`;
+   - `modules/canonical-json.mjs`;
+   - `vite.config.ts`;
+3. local/default builds are unchanged when no cache-root environment variable is supplied;
+4. on exact CI hit, Vite copies the cached projection into `dist` and reads its generated manifests for summary accounting;
+5. on miss, the same projection code generates into the cache root, copies into `dist`, and CI saves only after a successful build.
+
+No restore prefix is allowed: only the exact source+code generation may be reused.
+
+Acceptance:
+
+- cold build remains semantically/build green;
+- second same-key run restores the exact projection;
+- hit-side build step materially beats the current ~25 s step, target **≤6 s** including cache copy;
+- generated manifests and browser/runtime projection semantics remain unchanged;
+- only after hit-side evidence should main/scoped CI seed/consume the cache.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
