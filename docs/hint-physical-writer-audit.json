@@ -23,6 +23,16 @@
       "path": "scripts/merge-hint-artifacts.mjs",
       "disposition": "historical-compatibility-importer",
       "rationale": "Retained mixed-era compatibility importer used by the central harvester for historical/direct Hint artifacts. It decodes semantically, referee-validates, mergeHints-dedupes, and serializes through stringifyHints; maintained source workflows no longer use direct Hint-file transport as their primary persistence route."
+    },
+    {
+      "path": "scripts/hint-store-index-node-test.mjs",
+      "disposition": "temporary-test-fixture-writer",
+      "rationale": "Creates synthetic canonical-layout Hint files only under mkdtemp() to prove index freshness and stale detection; it never targets repository canonical data."
+    },
+    {
+      "path": "scripts/hint-workbench-node-test.mjs",
+      "disposition": "temporary-test-fixture-writer",
+      "rationale": "Creates synthetic canonical-layout Hint files only inside a temporary test directory to exercise workbench I/O compatibility; it never targets repository canonical data."
     }
   ]
 }
