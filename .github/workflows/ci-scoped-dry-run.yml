@@ -260,12 +260,8 @@ jobs:
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
-      - name: Run heavyweight implementation proofs
-        id: deep_proofs
-        if: needs.impact-shadow.outputs.needs_deep_proofs == 'true'
-        run: npm run test:deep-proofs
-      # Restore the default-branch-seeded Firebase CLI materialization. Startup acceleration only.
       - name: Restore Firebase CLI cache
+        if: needs.impact-shadow.outputs.needs_firestore == 'true'
         uses: actions/cache/restore@v5
         with:
           path: ~/.npm/_npx
@@ -275,14 +271,52 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Exercise level-fingerprint repository identity through Firestore emulator
-        id: firestore
-        if: needs.impact-shadow.outputs.needs_firestore == 'true'
-        run: >-
-          npx --yes firebase-tools@15.28.2
-          emulators:exec --only firestore
-          --project demo-pathfinder-fingerprint-boundary
-          "npm run test:firestore-level-fingerprint-boundary"
+      - name: Run selected deep services concurrently
+        if: needs.impact-shadow.outputs.needs_deep_proofs == 'true' || needs.impact-shadow.outputs.needs_firestore == 'true'
+        id: deep_services
+        shell: bash
+        env:
+          RUN_PROOFS: ${{ needs.impact-shadow.outputs.needs_deep_proofs }}
+          RUN_FIRESTORE: ${{ needs.impact-shadow.outputs.needs_firestore }}
+        run: |
+          set +e
+          proofs_status=0
+          firestore_status=0
+          proofs_pid=''
+          firestore_pid=''
+
+          if [[ "$RUN_PROOFS" == "true" ]]; then
+            npm run test:deep-proofs > /tmp/pathfinder-deep-proofs.log 2>&1 &
+            proofs_pid=$!
+          fi
+          if [[ "$RUN_FIRESTORE" == "true" ]]; then
+            npx --yes firebase-tools@15.28.2 \
+              emulators:exec --only firestore \
+              --project demo-pathfinder-fingerprint-boundary \
+              "npm run test:firestore-level-fingerprint-boundary" \
+              > /tmp/pathfinder-firestore.log 2>&1 &
+            firestore_pid=$!
+          fi
+
+          if [[ -n "$proofs_pid" ]]; then
+            wait "$proofs_pid"; proofs_status=$?
+          fi
+          if [[ -n "$firestore_pid" ]]; then
+            wait "$firestore_pid"; firestore_status=$?
+          fi
+
+          if [[ "$RUN_PROOFS" == "true" ]]; then
+            echo '=== heavyweight solver proofs ==='
+            cat /tmp/pathfinder-deep-proofs.log
+          fi
+          if [[ "$RUN_FIRESTORE" == "true" ]]; then
+            echo '=== Firestore persistence boundary ==='
+            cat /tmp/pathfinder-firestore.log
+          fi
+
+          if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
+            exit 1
+          fi
 
   ci-success:
     needs:
