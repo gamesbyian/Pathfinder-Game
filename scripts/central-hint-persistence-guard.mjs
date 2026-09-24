@@ -16,21 +16,18 @@ function executableLines(text) {
 
 const issues = [];
 const checked = [];
-for (const row of inventory.workflowIngestion ?? []) {
-    if (row.centralHarvester !== true) continue;
-    const target = String(row.migrationTarget ?? row.target ?? '').toLowerCase();
-    if (target.includes('experiment-only') || target.includes('reconciliation-only')) continue;
-    if (!maintained.has(row.workflow)) continue;
-    const file = path.join(ROOT, '.github', 'workflows', row.workflow);
+for (const workflow of maintained) {
+    if (workflow === 'harvest-solver-evidence.yml') continue;
+    const file = path.join(ROOT, '.github', 'workflows', workflow);
     const text = executableLines(fs.readFileSync(file, 'utf8'));
-    checked.push(row.workflow);
+    checked.push(workflow);
     const forbidden = [
         ['--save-hints', /--save-hints\b/u],
         ['direct Hint git add', /git\s+add[^\n]*(?:data\/hints|data\/stress\/hints)/u],
         ['direct Hint changed-file staging', /git\s+status[^\n]*(?:data\/hints|data\/stress\/hints)/u],
     ];
     for (const [label, re] of forbidden) {
-        if (re.test(text)) issues.push(`${row.workflow}: ${label} bypasses central Hint persistence`);
+        if (re.test(text)) issues.push(`${workflow}: ${label} bypasses canonical harvest ownership`);
     }
 }
 if (issues.length) {
@@ -38,4 +35,4 @@ if (issues.length) {
     for (const issue of issues) console.error('  - ' + issue);
     process.exit(1);
 }
-console.log(`central-hint-persistence-guard: ${checked.length} maintained centrally harvested workflow(s) have no direct Hint persistence`);
+console.log(`central-hint-persistence-guard: ${checked.length} maintained non-harvester workflow(s) have no direct Hint persistence`);
