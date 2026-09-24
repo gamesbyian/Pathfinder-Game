@@ -12,7 +12,7 @@
 // Runs under tsx because the canonical predicate imports modules/domain/hint-types.ts.
 import { writeFileSync } from 'node:fs';
 import process from 'node:process';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { summarizeProvenanceClasses } from './provenance-classes.mjs';
 
 const CORPORA = [
@@ -26,7 +26,7 @@ const pct = (n, d) => (d === 0 ? '—' : `${((100 * n) / d).toFixed(1)}%`);
 
 export function buildReport({ standard = 'strict' } = {}) {
     const corpora = CORPORA.map(({ name, levels }) => {
-        const hints = readLevelsWithHints(levels).flatMap(level => level.hintRecords ?? []);
+        const hints = readLevelCorpusDocumentWithHints(levels).levels.flatMap(level => level.hintRecords ?? []);
         return { corpus: name, levelsPath: levels, ...summarizeProvenanceClasses(hints, { standard }) };
     });
     const totals = corpora.reduce((acc, row) => {

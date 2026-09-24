@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { mineResidualInterfaces } from './research-analysis-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
@@ -23,7 +23,7 @@ const familyDefinitionVersion = 'structural-solution-family-v1';
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
-const selected = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 1).slice(0, levelLimit);
+const selected = readLevelCorpusDocumentWithHints(levelsFile).levels.filter(level => level.hints?.length > 1).slice(0, levelLimit);
 const rows = [];
 for (const raw of selected) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });

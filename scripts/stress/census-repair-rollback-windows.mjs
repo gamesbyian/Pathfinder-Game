@@ -3,7 +3,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { rollbackCensus } from './research-analysis-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
@@ -56,7 +56,7 @@ installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const { repairSearchFromGate } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
-const hintBearing = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0);
+const hintBearing = readLevelCorpusDocumentWithHints(levelsFile).levels.filter(level => level.hints?.length > 0);
 const selected = onlyIds
     ? hintBearing.filter(level => onlyIds.has(level.id))
     : sampleSize != null

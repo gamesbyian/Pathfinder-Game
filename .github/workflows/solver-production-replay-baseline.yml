@@ -202,6 +202,8 @@ jobs:
       # note it reads the recorded baseline, so this is a warm re-solve, not a cold-solve measurement.
       # --baseline-budget is deliberately NOT passed (it caused a 503->473 corpus-2 regression when
       # tried in the refresh workflow — see that file's comment).
+      # --save-hints dropped 2026-09-24: reconstructed centrally instead (proven parity) —
+      # reports/2026-09-24-hint-evidence-phase6-portfolio-family-retirement-001.md.
       - name: Solve this shard's corpus-1 slice
         id: sweep-corpus1
         if: ${{ matrix.c1 != '' }}
@@ -223,7 +225,6 @@ jobs:
             --baseline=logs/stress-corpus1-baseline.json \
             --prime-winner \
             $ENABLE_FLAGS_ARG \
-            --save-hints \
             --out="logs/production-replay-baseline/corpus1-batch-${{ matrix.shard }}.json" \
             --summary-out="logs/production-replay-baseline/corpus1-batch-${{ matrix.shard }}-summary.md" \
             2>&1 | tee -a "logs/production-replay-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
@@ -257,7 +258,6 @@ jobs:
             --baseline=logs/stress-corpus2-baseline.json \
             --prime-winner \
             $ENABLE_FLAGS_ARG \
-            --save-hints \
             --out="logs/production-replay-baseline/batch-${{ matrix.shard }}.json" \
             --summary-out="logs/production-replay-baseline/batch-${{ matrix.shard }}-summary.md" \
             2>&1 | tee -a "logs/production-replay-baseline/batch-${{ matrix.shard }}.console.log"
@@ -728,7 +728,9 @@ jobs:
           # NOT logs/stress-corpus*-baseline.json (see the completeness step above), and NOT the
           # raw per-shard logs: they are already uploaded as artifacts, and committing them is what
           # let a previous run's files contaminate a later combine. Only reports go to git.
-          git add data/stress/hints/ data/stress/hints-random/ reports/stress/
+          # Hints are no longer written here (--save-hints removed): harvest-solver-evidence.yml
+          # persists them centrally instead.
+          git add reports/stress/
           if git diff --cached --quiet; then
             echo "Nothing changed — not creating an empty commit."
             exit 0

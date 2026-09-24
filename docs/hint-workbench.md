@@ -108,7 +108,7 @@ npm run hints:workbench-parallel -- \
   --output=reports/hint-discovery/parallel-audit.json
 ```
 
-All flags except `--levels`, `--output`, `--parallel`, `--allow-artifact-output`, and `--write-patch` pass through. Disjoint-level `--write-levels` is safe because `writeLevelsWithHints` writes only each level's hint file. Patch mode uses temporary per-shard paths before merge. Parallelism is across levels; within-level evidence chaining stays in one child.
+All flags except `--levels`, `--output`, `--parallel`, `--allow-artifact-output`, and `--write-patch` pass through. Disjoint-level `--write-levels` is safe because `writeLevelCorpusDocumentWithHints` writes only each level's hint file. Patch mode uses temporary per-shard paths before merge. Parallelism is across levels; within-level evidence chaining stays in one child.
 
 ## Admissible-slack enumeration
 

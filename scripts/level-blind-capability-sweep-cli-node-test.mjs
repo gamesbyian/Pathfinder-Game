@@ -17,9 +17,17 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 import { analyzeEqualWorkProductionReach } from './stress/analyze-equal-work-production-reach.mjs';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// These tests intentionally exercise a local/non-GHA invocation first. GitHub Actions supplies
+// ambient run identity to the test process, so scrub it explicitly rather than letting CI change
+// the semantics of the fixture. Tests that need a real run identity inject one on that child call.
+delete process.env.GITHUB_RUN_ID;
+delete process.env.GITHUB_RUN_ATTEMPT;
 
 const dir = await mkdtemp(path.join(os.tmpdir(), 'level-blind-capability-sweep-cli-'));
 const corpusPath = path.join(dir, 'corpus.json');
@@ -37,7 +45,7 @@ await writeFile(corpusPath, JSON.stringify([{
 // node directly), so the test matches that real contract rather than inventing a new one.
 await execFile(process.execPath, [
     'scripts/run-bundled.mjs', 'scripts/level-blind-capability-sweep.mjs',
-    `--corpus=${corpusPath}`, '--budget-ms=5000', '--lifecycle-telemetry',
+    `--corpus=${corpusPath}`, '--budget-ms=5000', '--lifecycle-telemetry', '--save-hints',
     '--experiment-id=fixture-experiment', '--research-question=fixture-question', '--preflight=reports/fixture.md',
     `--out=${outFile}`, `--summary-out=${summaryOutFile}`,
 ], { cwd: ROOT });
@@ -61,6 +69,26 @@ for (const state of Object.values(report.levels[0].failureInformation.progress))
     assert.ok(Number.isSafeInteger(state.observed) && state.observed >= state.retained);
     assert.ok(state.retained <= 16, 'ordinary compact progress telemetry must remain bounded');
 }
+// Canonical solver-request identity dual-write (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.2): proves the value actually reaches the real bundled invocation
+// boundary and round-trips through the plain-Node digest owner, not merely that the fields exist.
+assert.equal(report.summary.solverRequestProjection?.kind, 'pathfinder-solver-request-projection');
+assert.equal(report.summary.solverRequestProjection?.resourceEnvelope?.timeBudgetMs, 5000,
+    '--budget-ms=5000 must reach the canonical projection unchanged');
+assert.equal(report.summary.solverRequestProjection?.scheduler?.mode, 'production');
+assert.equal(
+    report.summary.solverRequestIdentity,
+    solverRequestIdentityFromProjection(report.summary.solverRequestProjection),
+    'the persisted identity must match a fresh recomputation from the persisted projection',
+);
+assert.notEqual(report.summary.solverRequestIdentity, report.summary.effectiveConfigDigest,
+    'canonical solver-request identity and the legacy effectiveConfig digest are different identities and must not collapse to the same value');
+
+// Execution backend/reproducibility class (modules/solver/reproducibility-mode.mjs): this tool has no
+// --race-pool-size flag, so `direct`/`deterministic-work` is a certain fact here, not a guess.
+assert.equal(report.summary.backend, 'direct');
+assert.equal(report.summary.reproducibilityMode, 'deterministic-work');
+
 assert.equal(report.summary.experimentId, 'fixture-experiment');
 assert.equal(report.summary.researchQuestion, 'fixture-question');
 assert.equal(report.summary.preflight, 'reports/fixture.md');
@@ -96,5 +124,24 @@ assert.equal(reachJoin.decisionBearing, true,
     'the real level-blind report wrapper must pass the maintained production-reach reader');
 assert.deepEqual(reachJoin.production.commits, [report.summary.commit]);
 assert.deepEqual(reachJoin.production.corpora, [report.summary.corpus]);
+
+// Bounded execution/run binding on hint provenance (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W): --save-hints must actually persist the run's real
+// solverRequestIdentity/reproducibilityMode onto the saved path's provenance entry, proven through the
+// real bundled --save-hints invocation above rather than a unit-level shape check alone.
+const savedDocument = readLevelCorpusDocumentWithHints(corpusPath);
+const savedHintRecords = savedDocument.levels[0].hintRecords;
+assert.equal(savedHintRecords?.length, 1, '--save-hints must persist exactly the one solved path');
+const savedProvenance = savedHintRecords[0].provenance[0];
+assert.deepEqual(savedProvenance.execution, {
+    schemaVersion: 1,
+    solverRequestIdentity: report.summary.solverRequestIdentity,
+    protocolHash: null,
+    reproducibilityMode: report.summary.reproducibilityMode,
+    arm: null,
+}, 'the persisted hint provenance execution capsule must match this run\'s own reported identity/reproducibilityMode');
+// No GITHUB_RUN_ID in this local test process -- an occurrence must NOT be fabricated from nothing.
+assert.equal(Object.hasOwn(savedProvenance, 'occurrences'), false,
+    'a local invocation with no real run id must leave occurrences genuinely absent, not a guessed placeholder');
 
 console.log('level-blind-capability-sweep CLI: all tests passed');

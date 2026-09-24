@@ -42,7 +42,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { readLevelsWithHints, selectLevelsBySpec } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, selectLevelsBySpec } from '../level-data-io.mjs';
 import { selectEligibleCpsatBranchLevels, selectShardByRoundRobin } from './lib/cpsat-branch-label-eligibility.mjs';
 
 const root = (() => {
@@ -71,7 +71,7 @@ if ((SHARD_INDEX === null) !== (SHARD_COUNT === null)) {
     process.exit(1);
 }
 
-const corpusLevels = readLevelsWithHints(path.join(root, CORPUS_FILE));
+const { levels: corpusLevels } = readLevelCorpusDocumentWithHints(path.join(root, CORPUS_FILE));
 let levels;
 if (SHARD_INDEX !== null) {
     const eligible = selectEligibleCpsatBranchLevels(corpusLevels);

@@ -22,6 +22,12 @@ import {
     upgradeProvenanceEntry as upgradeProvenanceEntryRuntime,
     upgradeLegacyHints as upgradeLegacyHintsRuntime,
     reconcileHints as reconcileHintsRuntime,
+    isMigrationSyntheticFoundAt as isMigrationSyntheticFoundAtRuntime,
+    MIGRATION_SYNTHETIC_FOUND_AT_WINDOW,
+    decodeHintArtifact as decodeHintArtifactRuntime,
+    encodeHintArtifact as encodeHintArtifactRuntime,
+    HINT_ARTIFACT_SCHEMA_VERSION as RUNTIME_HINT_ARTIFACT_SCHEMA_VERSION,
+    provenanceEventIdentity as provenanceEventIdentityRuntime,
 } from './hint-runtime.mjs';
 
 /** Production solver provenance id. */
@@ -136,10 +142,49 @@ export interface HintContextProvenance {
     techniqueCensusCell: HintTechniqueCensusCellContext | null;
 }
 
+/**
+ * Bounded solver-request/execution-protocol identity for this discovery event
+ * (docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 4/W). Field names
+ * reuse the Phase 2 identity owners exactly: `solverRequestIdentity`
+ * (solverRequestIdentityFromProjection()), `protocolHash` (hashExecutionProtocol()'s own field name),
+ * `reproducibilityMode` (classifyReproducibilityMode()), `arm` (sourceRunBindingFromContract()'s own
+ * field name). Genuinely absent on the containing HintProvenanceEntry (no key at all) for historical
+ * entries and for non-solver producers (human path, witness generators, external solvers) that have
+ * no Pathfinder solver-request semantics to report.
+ */
+export interface HintExecutionProvenance {
+    schemaVersion: number;
+    solverRequestIdentity: string | null;
+    protocolHash: string | null;
+    reproducibilityMode: string | null;
+    arm: string | null;
+}
+
+/**
+ * One physical acquisition ("occurrence") of this semantic discovery event: a rediscovery from a
+ * different source run merges into this list rather than duplicating the whole provenance entry.
+ * Deliberately excluded from provenanceEventIdentity() so a physical run id/observation time can
+ * never make an otherwise-identical rediscovery look like a new semantic event.
+ */
+export interface HintOccurrence {
+    schemaVersion: number;
+    runId: string;
+    runAttempt: string | null;
+    contractRef: string | null;
+    /** Genuinely known observation time for THIS occurrence; never fabricated. */
+    observedAt: string | null;
+    /** Constituent acquisition-run lineage when this occurrence came from a recombined artifact. */
+    sourceRuns: string[] | null;
+}
+
 export interface HintProvenanceEntry {
     solver: HintSolverProvenance;
     search: HintSearchProvenance;
     context: HintContextProvenance;
+    /** Bounded execution/run-request identity; absent when not applicable/not recorded (see doc above). */
+    execution?: HintExecutionProvenance;
+    /** One entry per independent physical acquisition; absent when none is recorded. */
+    occurrences?: HintOccurrence[];
     /** ISO 8601 recording time. */
     foundAt: string;
 }
@@ -189,6 +234,18 @@ export interface MakeProvenanceEntryOptions {
     isolatedTechnique?: boolean;
     techniqueCensusCell?: HintTechniqueCensusCellContext | null;
     foundAt?: string;
+    /** Any of these four creates a non-null `execution` block; omitted fields become null within it. */
+    solverRequestIdentity?: string;
+    protocolHash?: string;
+    reproducibilityMode?: string;
+    executionArm?: string;
+    /** Presence of `occurrenceRunId` creates one initial occurrence entry. */
+    occurrenceRunId?: string;
+    occurrenceRunAttempt?: string | number | null;
+    occurrenceContractRef?: string | null;
+    /** Defaults to this entry's own `foundAt` when omitted. */
+    occurrenceObservedAt?: string | null;
+    occurrenceSourceRuns?: string[] | null;
 }
 
 export function makeProvenanceEntry(
@@ -200,6 +257,24 @@ export function makeProvenanceEntry(
 
 export function hintPathSignature(path: number[]): string {
     return hintPathSignatureRuntime(path);
+}
+
+/** Canonical semantic discovery-event identity for one provenance entry (excludes foundAt,
+ *  wall-clock search fields, and occurrences; includes execution) -- see hint-runtime.mjs's own
+ *  doc comment for the full exclusion rationale. The single shared identity rule every merge path
+ *  (mergeHints, reconcileHints, capture guards, the offline cleaner, and Firestore-backed
+ *  repositories that need to tell two discovery events apart) must use instead of a second one. */
+export function provenanceEventIdentity(entry: HintProvenanceEntry): string {
+    return provenanceEventIdentityRuntime(entry);
+}
+
+/** Composite (path, discovery-event) key: distinguishes "this exact path is already known" from
+ *  "this exact discovery event for this path is already known" -- a genuinely new discovery event
+ *  for an already-known path is not a duplicate and must not be conflated with one (see
+ *  local-level-hints-repository.ts's own doc comment on why its Firestore layout keys entries this
+ *  way instead of one entry per path). */
+export function provenanceEventKey(pathSignature: string, entry: HintProvenanceEntry): string {
+    return `${pathSignature}::${provenanceEventIdentity(entry)}`;
 }
 
 /** Wrap a bare path as a canonical Hint. */
@@ -238,6 +313,31 @@ export function upgradeProvenanceEntry(raw: any): HintProvenanceEntry {
 /** Upgrade bare paths or older Hint/provenance shapes to canonical Hint[]. Malformed entries drop. */
 export function upgradeLegacyHints(raw: unknown): Hint[] {
     return upgradeLegacyHintsRuntime(raw) as Hint[];
+}
+
+/** The narrow timestamp window the 2026-07-11 flat-hintMetadata migration stamped on 662 events
+ *  across 102 stress-corpus-1 files that never had a real discovery time. */
+export { MIGRATION_SYNTHETIC_FOUND_AT_WINDOW };
+
+/** True iff `entry.foundAt` is a known migration-synthetic timestamp, not a genuine discovery time.
+ *  Chronology/longitudinal consumers must treat a matching entry as undated, not drop it entirely. */
+export function isMigrationSyntheticFoundAt(entry: HintProvenanceEntry | null | undefined): boolean {
+    return isMigrationSyntheticFoundAtRuntime(entry);
+}
+
+/** Current physical Hint artifact schema version. */
+export const HINT_ARTIFACT_SCHEMA_VERSION = RUNTIME_HINT_ARTIFACT_SCHEMA_VERSION;
+
+/** Shared browser/Node decode boundary for a hint artifact's parsed JSON content -> Hint[].
+ *  Handles every historically-committed v1-v4 physical shape; see hint-runtime.mjs's own doc for
+ *  why this must be one shared function rather than separately implemented per environment. */
+export function decodeHintArtifact(parsed: unknown): Hint[] {
+    return decodeHintArtifactRuntime(parsed) as Hint[];
+}
+
+/** Encode canonical semantic Hint[] using the current lossless physical artifact schema. */
+export function encodeHintArtifact(records: Hint[]): unknown {
+    return encodeHintArtifactRuntime(records);
 }
 
 /** Reconcile authoritative path membership with provenance keyed by path signature. */

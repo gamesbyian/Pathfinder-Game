@@ -20,6 +20,10 @@ import {
     buildHintHarvestSelectionManifest,
     validateHintHarvestSelectionManifest,
 } from './hint-harvest-selection-manifest-lib.mjs';
+import {
+    hintIngestionReceiptFromSelectionManifest,
+    validateHintIngestionReceipt,
+} from './hint-ingestion-receipt-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [key, ...rest] = a.split('=');
@@ -28,12 +32,15 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
 const sourceRunId = args.get('--source-run-id') || process.env.SOURCE_RUN_ID || 'unknown';
+const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_RUN_ATTEMPT || null;
 const sourceWorkflow = args.get('--source-workflow') || process.env.SOURCE_WORKFLOW || 'unknown';
 const selectionManifestArg = args.get('--selection-manifest-out');
 const selectionManifestOut = selectionManifestArg ? path.resolve(selectionManifestArg)
     : (sourceRunId !== 'unknown'
         ? path.join(root, 'reports/stress/hint-harvest-selection', `run-${sourceRunId}.json`)
         : null);
+const ingestionReceiptArg = args.get('--ingestion-receipt-out');
+const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const ALLOWED_CORPORA = new Set([
@@ -157,12 +164,40 @@ for (const file of walk(stagingDir).sort()) {
     refereeAcceptedRows += accepted.length;
     if (!accepted.length) continue;
 
+    const executionContext = {
+        ...(typeof summary.solverRequestIdentity === 'string' && summary.solverRequestIdentity
+            ? { solverRequestIdentity: summary.solverRequestIdentity } : {}),
+        ...(typeof summary.protocolHash === 'string' && summary.protocolHash
+            ? { protocolHash: summary.protocolHash } : {}),
+        ...(typeof summary.reproducibilityMode === 'string' && summary.reproducibilityMode
+            ? { reproducibilityMode: summary.reproducibilityMode } : {}),
+        ...(typeof summary.arm === 'string' && summary.arm
+            ? { executionArm: summary.arm } : {}),
+        ...(sourceRunId !== 'unknown'
+            ? {
+                occurrenceRunId: sourceRunId,
+                ...(sourceRunAttempt ? { occurrenceRunAttempt: sourceRunAttempt } : {}),
+            }
+            : {}),
+    };
     const capture = await createHintCapture({
         solverVersion: summary.commit ?? null,
         budgetMs: summary.budgetMs ?? null,
         enabled: true,
+        executionContext,
     });
     await capture.prepare(accepted.map(({ entry }) => entry.level));
+
+    // summary.workBudget only echoes an EXPLICIT --work-budget/--node-budget override -- when a run
+    // has neither, the solver still derives and uses a real, non-null work budget internally
+    // (legacyMsToWork(timeBudgetMs, ...)), and the direct-write route's real SolveResult carries that
+    // real derived value, but summary.workBudget stays null. summary.solverRequestProjection's
+    // resourceEnvelope.baseWorkBudget (docs/hint-evidence-execution-identity-storage-consolidation-
+    // plan.md section 3.2) always resolves the actual effective value, explicit-or-derived, so prefer
+    // it -- found via a real local dual-path parity canary against the direct route's own output,
+    // which otherwise silently reconstructed search.workBudget as null on every run with no explicit
+    // override (reports/2026-09-24-hint-evidence-phase6-level-blind-family-retirement-001.md).
+    const resolvedWorkBudget = summary.solverRequestProjection?.resourceEnvelope?.baseWorkBudget ?? summary.workBudget;
 
     for (const { row, entry } of accepted) {
         const syntheticResult = {
@@ -173,7 +208,7 @@ for (const file of walk(stagingDir).sort()) {
             nodesExpanded: row.nodesExpanded ?? undefined,
             totalMs: row.totalMs ?? row.elapsedMs ?? undefined,
             workSpent: row.workSpent ?? undefined,
-            workBudget: summary.workBudget ?? undefined,
+            workBudget: resolvedWorkBudget ?? undefined,
         };
         if (capture.recordHistorical(entry.level, syntheticResult)) recordChanges += 1;
     }
@@ -181,9 +216,10 @@ for (const file of walk(stagingDir).sort()) {
     reportsHarvested += 1;
 }
 
-if (selectionManifestOut) {
+if (selectionManifestOut || ingestionReceiptOut) {
     const selectionManifest = buildHintHarvestSelectionManifest({
         sourceRunId,
+        sourceRunAttempt,
         sourceWorkflow,
         sourceReportsSeen: reportsSeen,
         sourceRowsSeen,
@@ -196,9 +232,18 @@ if (selectionManifestOut) {
         corpusScope: [...ALLOWED_CORPORA].sort(),
     });
     validateHintHarvestSelectionManifest(selectionManifest);
-    mkdirSync(path.dirname(selectionManifestOut), { recursive: true });
-    writeFileSync(selectionManifestOut, `${JSON.stringify(selectionManifest, null, 2)}\n`);
-    console.log(`Wrote hint-harvest selection manifest to ${path.relative(root, selectionManifestOut)}.`);
+    if (selectionManifestOut) {
+        mkdirSync(path.dirname(selectionManifestOut), { recursive: true });
+        writeFileSync(selectionManifestOut, `${JSON.stringify(selectionManifest, null, 2)}\n`);
+        console.log(`Wrote hint-harvest selection manifest to ${path.relative(root, selectionManifestOut)}.`);
+    }
+    if (ingestionReceiptOut) {
+        const receipt = hintIngestionReceiptFromSelectionManifest(selectionManifest);
+        validateHintIngestionReceipt(receipt);
+        mkdirSync(path.dirname(ingestionReceiptOut), { recursive: true });
+        writeFileSync(ingestionReceiptOut, `${JSON.stringify(receipt, null, 2)}\n`);
+        console.log(`Wrote hint-ingestion receipt to ${path.relative(root, ingestionReceiptOut)}.`);
+    }
 }
 
 if (pending.length > 0) {

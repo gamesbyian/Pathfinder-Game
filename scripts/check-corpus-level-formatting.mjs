@@ -13,6 +13,7 @@ import process from 'node:process';
 
 import { stringifyCorpusJson } from './level-json-format.mjs';
 import { listHintFiles, hintFilePathFor } from './level-data-io.mjs';
+import { expectedHintArtifactFileNames } from '../modules/hint-artifact-layout.mjs';
 import { prChangedFiles, readRepositoryText } from './repository-file-view.mjs';
 
 const ROOT = process.cwd();
@@ -40,6 +41,31 @@ export function corpusFormattingKind(relativePath) {
     return { kind: 'hint', recordsField: 'hints', label: 'hints' };
   }
   return null;
+}
+
+// Orphan detection needs the complete current corpus level set to know which hint filenames are
+// legitimately unowned, so unlike per-path formatting it cannot run against a single PR-changed
+// file -- only meaningful on a full scan (checkOrphanHintFiles() below, gated on !incremental).
+function checkOrphanHintFiles() {
+  const failures = [];
+  let missingHintFiles = 0;
+  for (const corpus of CORPORA) {
+    const absolute = path.join(ROOT, corpus.relative);
+    const parsed = JSON.parse(fs.readFileSync(absolute, 'utf8'));
+    const levels = Array.isArray(parsed) ? parsed : parsed?.levels;
+    const expectedHintFiles = new Set(expectedHintArtifactFileNames(levels));
+    const actualHintFiles = listHintFiles(absolute);
+    const actualHintFileSet = new Set(actualHintFiles);
+    const orphanHintFiles = actualHintFiles.filter((name) => !expectedHintFiles.has(name));
+    const missingForCorpus = [...expectedHintFiles].filter((name) => !actualHintFileSet.has(name));
+    // Missing files are valid: levels with no stored hints intentionally have no artifact. Orphans
+    // are not valid because no current level identity can own them.
+    missingHintFiles += missingForCorpus.length;
+    for (const orphan of orphanHintFiles) {
+      failures.push(`${corpus.label} hints: orphan artifact ${orphan} has no matching corpus level identity`);
+    }
+  }
+  return { failures, missingHintFiles };
 }
 
 export function canonicalFormattingIssue(relativePath, raw) {
@@ -114,6 +140,15 @@ function main() {
     else hintFilesChecked += 1;
   }
 
+  // Orphan-hint-file detection requires the complete current corpus level set, so it only runs on
+  // a full scan -- a single PR-changed hint file can't tell you whether it's orphaned.
+  let missingHintFiles = 0;
+  if (!selection.incremental) {
+    const orphanResult = checkOrphanHintFiles();
+    failures.push(...orphanResult.failures);
+    missingHintFiles = orphanResult.missingHintFiles;
+  }
+
   if (failures.length > 0) {
     console.error(`${failures.length} file(s) are misformatted:`);
     for (const failure of failures) console.error(`  - ${failure}`);
@@ -132,7 +167,8 @@ function main() {
 
   console.log(
     `${selection.incremental ? 'Changed-file' : 'Full'} corpus/hint formatting valid: `
-    + `${corporaChecked} corpus file(s), ${hintFilesChecked} hint file(s) checked.`,
+    + `${corporaChecked} corpus file(s), ${hintFilesChecked} hint file(s) checked`
+    + `${selection.incremental ? '' : `; ${missingHintFiles} level(s) intentionally have no hint artifact`}.`,
   );
 }
 

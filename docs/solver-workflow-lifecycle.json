@@ -107,6 +107,13 @@
       "retirementTrigger": "retire when the owning operational surface is removed"
     },
     {
+      "workflow": "hint-consolidation-closeout.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "pull-request gate re-running post-enrichment Hint evidence oracles (determinism, reconstructability, referee, codec/v4 migration dry-run) on hint-evidence-consolidation-relevant changes",
+      "retirementTrigger": "retire when the hint-evidence-consolidation plan closes out and its oracles fold into a permanently maintained validation surface"
+    },
+    {
       "workflow": "main-push-validation.yml",
       "role": "operational",
       "status": "maintained",

@@ -53,15 +53,35 @@ function firstFunctionPath(value: unknown, path: string, seen = new Set<unknown>
     return null;
 }
 
+// beamFlowCounters/pruneDiagnostics are mutable plain data objects (no function inside them), so
+// they pass firstFunctionPath's check and would otherwise cross postMessage's structured clone
+// silently. That clone is a COPY: the worker mutates its own private copy as the search runs, but
+// buildSolveWorkerResult (worker-result-serialization.mjs) only ever serializes the returned
+// SolveResult, never the input solveOpts, so the caller's original object is never updated. The
+// caller would see a "successful" solve with these fields looking untouched -- exactly the silent
+// worker/direct parity gap docs/solver-request-semantics-inventory.json's backendSupport entries
+// for both fields already document. Reject them the same way function-valued options already are,
+// rather than silently discarding real mutations. Direct/on-thread solveLevel() and the Node
+// worker_threads pattern in scripts/level-blind-capability-worker.mjs (which creates and reads back
+// the SAME object reference within one thread, never round-tripping it through this postMessage
+// transport) remain unaffected.
+const WORKER_UNSUPPORTED_MUTABLE_OBSERVER_KEYS = new Set(['beamFlowCounters', 'pruneDiagnostics']);
+
 /**
  * Build the serializable portion of a worker solve request.
  * timeBudgetMs has its dedicated budgetMs transport and yieldFn has its cancellation bridge.
- * Any other function anywhere in SolveOpts is direct/on-thread-only and is rejected explicitly.
+ * Any other function anywhere in SolveOpts is direct/on-thread-only and is rejected explicitly, as
+ * are beamFlowCounters/pruneDiagnostics (see WORKER_UNSUPPORTED_MUTABLE_OBSERVER_KEYS above).
  */
 export function buildWorkerSolveOpts(opts: SolveOpts = {}): Record<string, unknown> {
     const solveOpts: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(opts)) {
         if (key === 'timeBudgetMs' || key === 'yieldFn') continue;
+        if (value !== undefined && WORKER_UNSUPPORTED_MUTABLE_OBSERVER_KEYS.has(key)) {
+            throw new Error(
+                `Solver worker cannot return worker-mutated SolveOpts.${key}; it would silently discard the search's counts. Use direct solveLevel() for this observer.`,
+            );
+        }
         const functionPath = firstFunctionPath(value, key);
         if (functionPath) {
             throw new Error(

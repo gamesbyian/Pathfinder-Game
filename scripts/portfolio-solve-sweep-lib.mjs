@@ -160,6 +160,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         nodesExpanded: result?.nodesExpanded ?? null,
         // Cross-technique host-independent cost; deadline-truncated failure is indeterminate.
         workSpent: result?.workSpent ?? null,
+        workBudget: result?.workBudget ?? null,
         deadlineTruncated: !!result?.deadlineTruncated,
         stageLifecycle: result?.stageLifecycle ?? result?.techniqueLifecycle ?? null,
         // Preserve the scheduler's own resumable-pass accounting so a persisted A/B can distinguish

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { auditHintFile } from './hint-determinism-audit-lib.mjs';
+import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -19,8 +20,9 @@ function filesUnder(root) {
         .sort();
 }
 
-// Recorded-input collisions use only fields persisted in hint provenance. Full effective-config
-// identity is absent, so reconcile collisions to source experiment arms before interpreting them.
+// Modern Phase-3 provenance can carry canonical solver-request/execution identity directly.
+ // Historical entries still fall back to the older recorded-input approximation, and those
+ // collisions still require source-run/experiment reconciliation before interpretation.
 const summary = {
     schemaVersion: 1,
     roots,
@@ -28,6 +30,8 @@ const summary = {
     hints: 0,
     provenanceEvents: 0,
     comparableEvents: 0,
+    canonicalComparableEvents: 0,
+    legacyComparableEvents: 0,
     repeatRunComparableGroups: 0,
     repeatRunStableGroups: 0,
     repeatRunRecordedInputCollisionGroups: 0,
@@ -40,11 +44,13 @@ for (const root of roots) {
     for (const file of filesUnder(root)) {
         const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
         const levelId = path.basename(file, '.json');
-        const result = auditHintFile(levelId, raw.hints ?? []);
+        const result = auditHintFile(levelId, decodeHintArtifact(raw));
         summary.files += 1;
         summary.hints += result.hints;
         summary.provenanceEvents += result.provenanceEvents;
         summary.comparableEvents += result.comparableEvents;
+        summary.canonicalComparableEvents += result.canonicalComparableEvents;
+        summary.legacyComparableEvents += result.legacyComparableEvents;
         summary.exactEventCrossPathGroups += result.exactEventCrossPath.length;
         summary.repeatRunRecordedInputCollisionGroups += result.repeatRunRecordedInputCollision.length;
         summary.repeatRunStableGroups += result.repeatRunStable.length;

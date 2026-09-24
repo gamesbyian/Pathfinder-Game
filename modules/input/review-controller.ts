@@ -239,8 +239,14 @@ export function createReviewController({ state, ui, engine, editor, persistence,
 
         try {
             ui.showMessage(isHintAddition ? 'Adding hints…' : 'Approving…', 'info');
+            // approveLocalHintAddition's tally surfaces a real evidence-loss case: local_level_hints
+            // is one doc per path, so a rediscovery of an already-known path has nowhere to record
+            // its provenance (see local-level-hints-repository.ts's SaveLocalLevelHintOutcome). A
+            // submission consisting entirely of such rediscoveries would otherwise show "Hints
+            // added!" while persisting nothing.
+            let localSummary: { saved: number; duplicateNotRecorded: number; capacityReached: number } | null = null;
             if (isHintAddition && isLocal) {
-                await persistence.approveLocalHintAddition(sub.id, sub.targetLocalLevelFingerprint, hintsToPersist);
+                localSummary = await persistence.approveLocalHintAddition(sub.id, sub.targetLocalLevelFingerprint, hintsToPersist);
             } else if (isHintAddition) {
                 await persistence.approveHintAddition(sub.id, sub.targetPublishedLevelId, hintsToPersist);
             } else {
@@ -249,8 +255,17 @@ export function createReviewController({ state, ui, engine, editor, persistence,
                 await persistence.approveSubmission(sub.id, levelData, Date.now());
             }
             const { allDone } = engine.review.removeAndAdvance(idx);
+            const hintAdditionMessage = () => {
+                if (!localSummary) return 'Hints added!';
+                const skipped = localSummary.duplicateNotRecorded + localSummary.capacityReached;
+                if (skipped === 0) return `Added ${localSummary.saved} hint(s)!`;
+                const notes: string[] = [];
+                if (localSummary.duplicateNotRecorded) notes.push(`${localSummary.duplicateNotRecorded} rediscovery/ies of already-known path(s) could not be recorded`);
+                if (localSummary.capacityReached) notes.push(`${localSummary.capacityReached} hit this level's storage cap`);
+                return `Added ${localSummary.saved} hint(s); ${notes.join('; ')}.`;
+            };
             if (allDone) ui.showMessage('No more submissions.', 'muted');
-            else ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'success');
+            else ui.showMessage(isHintAddition ? hintAdditionMessage() : 'Approved!', 'success');
         } catch (err: any) {
             reportError('review.approve', err, { isHintAddition });
             ui.showMessage((isHintAddition ? 'Add hints failed: ' : 'Approve failed: ') + (err?.message || 'Error'), 'error');

@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { createFailureResponseDocument, validateFailureResponseDocument } from './solver-failure-response-lib.mjs';
+import { hashExecutionProtocol } from './solver-experiment-contract.mjs';
 
 const rawArgs = process.argv.slice(2);
 const values = new Map();
@@ -69,7 +70,18 @@ const contractFile = values.get('contract-file') || null;
 const contract = contractFile && fs.existsSync(contractFile)
     ? JSON.parse(fs.readFileSync(contractFile, 'utf8'))
     : null;
-const protocolHash = contract?.experiment?.configurationHash ?? null;
+// Execution-protocol identity is distinct from configuration identity (see
+// hashExecutionProtocol's own doc): configurationHash alone cannot show that two runs used the
+// same execution semantics (scheduler mode, limits, level-blind/history-aware mode). Only compute
+// it when a contract was actually supplied, preserving the prior "no contract -> null" state that
+// createFailureResponseDocument()/validateFailureResponseDocument() already treat as explicit unknown.
+// Deliberately no `backend` (modules/solver/reproducibility-mode.mjs): this wrapper only reads a
+// separately-declared --contract-file, which has no backend/engine concept, and never inspects the
+// primary solver report this failure evidence came from. Guessing 'direct' here would be fabricating
+// a fact this file does not actually know (no maintained workflow combines --race-pool-size with this
+// path today, but that is not proof for THIS invocation) -- omitted stays honestly 'unknown' via
+// classifyReproducibilityMode's own absent-backend rule.
+const protocolHash = contract ? hashExecutionProtocol(contract) : null;
 // Comparable-run failure evidence needs the actual solver execution identity. Do not upgrade
 // orchestration checkout metadata or legacy top-level fields into experiment identity.
 const solverRef = contract?.experiment?.resolvedSha ?? null;

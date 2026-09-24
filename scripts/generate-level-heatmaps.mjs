@@ -15,7 +15,7 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { readLevelsWithHints } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -78,7 +78,7 @@ function loadRawLevels() {
     // Hints live in the split artifact (data/hints/<NNN>.json); re-attach them so the
     // heat maps keep reflecting the FULL hint set per level.
     const filePath = path.join(ROOT, 'data', 'levels.json');
-    const levels = readLevelsWithHints(filePath);
+    const { levels } = readLevelCorpusDocumentWithHints(filePath);
     if (levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return levels;
 }

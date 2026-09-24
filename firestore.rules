@@ -46,18 +46,22 @@ service cloud.firestore {
 
     // Supplemental hints for a level that's published in the local levels.json corpus (not a
     // Firestore published_levels doc) — keyed by the same level fingerprint used everywhere else
-    // for this kind of identity match. One entry per distinct discovered path: the client picks
-    // the doc ID as a short deterministic hash of the path's signature (not the signature itself
-    // — a long path's comma-joined signature could exceed Firestore's document-ID length limit),
-    // so every legitimate client converges on the same ID for the same path. Rules can't verify
-    // that hash relationship (no hash primitive in the rules language); a client that deliberately
-    // mismatches ID and pathSignature only produces a redundant-looking entry, never data loss or
-    // an authorization gap, since entries are create-only and immutable either way — a doc ID
-    // collision (the same path already saved) is rejected as an update, which is exactly the
-    // desired no-op: never overwrite an existing entry, never delete one. Written either by an
-    // admin's reviewed hint-addition submission or invisibly whenever any player's own drawn path
-    // solves the level and isn't already known locally or here. Public read (same visibility tier
-    // as published_levels/level_ratings); anyone authenticated (every real session, including
+    // for this kind of identity match. One entry per distinct (path, discovery-event) pair, not
+    // per path alone: the client picks the doc ID as a short deterministic hash of the path's
+    // signature composed with a hash of the discovery event's own identity (not either signature
+    // directly — a long path's comma-joined signature, or a full event object, could exceed
+    // Firestore's document-ID length limit), so every legitimate client converges on the same ID
+    // for the same (path, event) pair, while a genuinely new discovery event for an already-known
+    // path still gets its own sibling doc (modules/persistence/local-level-hints-repository.ts's
+    // entryIdFor). Rules can't verify that hash relationship (no hash primitive in the rules
+    // language); a client that deliberately mismatches an ID and its document's actual fields only
+    // produces a redundant-looking entry, never data loss or an authorization gap, since entries
+    // are create-only and immutable either way — a doc ID collision (the exact same path AND exact
+    // same discovery event already saved) is rejected as an update, which is exactly the desired
+    // no-op: never overwrite an existing entry, never delete one. Written either by an admin's
+    // reviewed hint-addition submission or invisibly whenever any player's own drawn path solves
+    // the level and isn't already known locally or here. Public read (same visibility tier as
+    // published_levels/level_ratings); anyone authenticated (every real session, including
     // anonymous play, gets a Firebase auth UID at boot — see firebase-client.ts's initAuth) may
     // contribute, since this is exactly the "any player's win becomes a hint" feature.
     match /artifacts/{appId}/local_level_hints/{fingerprint}/entries/{entryId} {

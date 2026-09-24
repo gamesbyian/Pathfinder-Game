@@ -39,6 +39,10 @@ export function normalizeSolverSweepReportInput(document, source = '<input>') {
             effectiveConfig: document.effectiveConfig,
             effectiveConfigDigest: document.effectiveConfigDigest,
         } : {}),
+        ...(document.solverRequestProjection ? {
+            solverRequestProjection: document.solverRequestProjection,
+            solverRequestIdentity: document.solverRequestIdentity,
+        } : {}),
         ...(document.entrypoint ? { entrypoint: document.entrypoint } : {}),
         ...(document.producer ? { producer: document.producer } : {}),
         ...(document.workflowFamily ? { workflowFamily: document.workflowFamily } : {}),

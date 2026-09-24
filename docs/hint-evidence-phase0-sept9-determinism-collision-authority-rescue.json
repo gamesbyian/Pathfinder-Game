@@ -1,0 +1,1622 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-determinism-collision-authority-rescue",
+  "sourceDate": "2026-09-09",
+  "purpose": "Durable exact-link authority for the 15 recorded-input collision levels from the 2026-09-22 hint determinism audit. Source result SHA-256 plus canonical JSON SHA-256 of each exact solved path allow later exact linkage to the tracked Hint path without retaining megabytes of unrelated attempts. Winning attempt fields preserve the execution/action facts used in reconciliation.",
+  "affectedLevelIds": [
+    "R01523",
+    "R01554",
+    "R01930",
+    "R02076",
+    "R02269",
+    "R02314",
+    "R02349",
+    "R02510",
+    "R02515",
+    "R02557",
+    "R02699",
+    "R02715",
+    "R03001",
+    "R03267",
+    "R03304"
+  ],
+  "runs": [
+    {
+      "runId": "34315357361",
+      "runAttempt": "1",
+      "workflow": "Solver level-blind targeted sweep",
+      "sourceArtifact": "targeted-sweep-combined",
+      "repository": "gamesbyian/Pathfinder-Game",
+      "ref": "refs/heads/claude/solver-portal-restoration-queue-3boq68",
+      "solverRef": "0201e952faa911362396e6d564b5f928f108dc73",
+      "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34315357361",
+      "manifestSha256": "1f6e2b2b5063141c062feee22e7c1ebe4258412566c533f037ecb0cd58edb829",
+      "resultSha256": "881132dd68e16296a3c254262af998f54dd0a1e635ccda435357d0e8bca2525c",
+      "dispatchInputs": {
+        "ids_file": "data/stress/mc-neighbor-budget-portal-ab-001-ids.txt",
+        "corpus": "data/stress/stress-levels-random.json",
+        "node_budget": "50000000",
+        "node_budget_advisory_only": "false",
+        "strict_total_work_budget": "false",
+        "budget_ms": "86400000",
+        "workers": "4",
+        "target_wall_minutes": "20",
+        "solo_threshold_multiplier": "2.5",
+        "enable_flags": "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL",
+        "min_participating_levels": "1"
+      },
+      "shardCompleteness": {
+        "expected": 14,
+        "observed": 14,
+        "complete": true,
+        "basis": "exact expected population validated separately"
+      },
+      "resultContext": {
+        "timestamp": "2026-09-09T07:24:05.656Z",
+        "commitSha": "0201e952faa911362396e6d564b5f928f108dc73",
+        "corpus": "data/stress/stress-levels-random.json",
+        "budgetMs": 86400000,
+        "nodeBudget": 50000000,
+        "workBudget": 67000000,
+        "executionConfig": {
+          "levelBlind": true,
+          "historicalInputs": [],
+          "solverInputFields": [
+            "grid",
+            "gates",
+            "goal",
+            "reqLen",
+            "reqInt",
+            "blocks",
+            "geese",
+            "falseGoals",
+            "mustPass",
+            "mustCross",
+            "landmarks",
+            "filters",
+            "flippingFilters",
+            "portals"
+          ],
+          "workers": 4,
+          "enableFlags": [
+            "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL"
+          ],
+          "disableFlags": [],
+          "strictTotalWorkBudget": false,
+          "attemptBudgetTelemetry": false,
+          "lifecycleTelemetry": false,
+          "mainSearchLateReserveFraction": null,
+          "mainSearchLateReserveConfigCount": null,
+          "admissibleOrderNodeReserveFraction": null,
+          "admissibleOrderNonDefaultRetryBudgetFraction": null,
+          "earlyRepairSearchAdaptiveBadnessGate": null,
+          "earlyRepairSearchAdaptiveMinScale": null,
+          "repairLateProbeNodeBudget": null
+        },
+        "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 14 batch report(s))"
+      },
+      "affectedSolvedRows": [
+        {
+          "id": "R02557",
+          "level": 888,
+          "solutionLength": 94,
+          "solutionSha256": "14255f07f9ae4fc77b369b637dd5be2db3512cb6982962a754f110e7eeaeb4c7",
+          "refereeValid": true,
+          "nodesExpanded": 9495610,
+          "workSpent": 35433481,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 9,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 9,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3318,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 352681,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R01554",
+          "level": 255,
+          "solutionLength": 117,
+          "solutionSha256": "e1910128a172d1219677324e67708acd20b2644cf1b3509e17a17ccc9024fb1a",
+          "refereeValid": true,
+          "nodesExpanded": 51442571,
+          "workSpent": 150175031,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "winningActionKey": "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "gateKey": 720898,
+          "winningAttempts": [
+            {
+              "stageId": "coarse-state-near-tie-retention-disabled-retry",
+              "actionKey": "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+              "gateKey": 720898,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 8098,
+              "outcome": "success",
+              "allocatedBudgetMs": 86381300,
+              "nodesExpanded": 462127
+            }
+          ]
+        },
+        {
+          "id": "R02269",
+          "level": 600,
+          "solutionLength": 92,
+          "solutionSha256": "ae3a2defe25e214fb315b25e855eb76914739728b5a066b39d2584ee9a31ecae",
+          "refereeValid": true,
+          "nodesExpanded": 4144130,
+          "workSpent": 11977952,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 131082,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 131082,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1205,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 144124
+            }
+          ]
+        },
+        {
+          "id": "R02076",
+          "level": 407,
+          "solutionLength": 95,
+          "solutionSha256": "ee3a09dcf96cf0c54b4aaf0737b290d816ab25a845f4caa64e1a1ffca63b2869",
+          "refereeValid": true,
+          "nodesExpanded": 8358290,
+          "workSpent": 33138490,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 393219,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 393219,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,    "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 6684,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 358244,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02349",
+          "level": 680,
+          "solutionLength": 80,
+          "solutionSha256": "ba47039cce2143c881663b3a060f73c002be62fcbe88a02d344e9b02ca9302fc",
+          "refereeValid": true,
+          "nodesExpanded": 125070,
+          "workSpent": 1600445,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655362,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655362,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 2189,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 125070
+            }
+          ]
+        },
+        {
+          "id": "R02314",
+          "level": 645,
+          "solutionLength": 87,
+          "solutionSha256": "9ce21bfc5254b2e2da2036b93da8525df90dd8ea6b054f7900f2f1c1054807d0",
+          "refereeValid": true,
+          "nodesExpanded": 10125815,
+          "workSpent": 32077759,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 327691,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 327691,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1435,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 125789
+            }
+          ]
+        },
+        {
+          "id": "R02510",
+          "level": 841,
+          "solutionLength": 81,
+          "solutionSha256": "9a11921cec742bd9f5301d962e7f81b28529cf5a471bd6cfd2faab4aafb64823",
+          "refereeValid": true,
+          "nodesExpanded": 614530,
+          "workSpent": 8031900,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 589834,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 589834,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3705,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396710,
+              "nodesExpanded": 339958,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02515",
+          "level": 846,
+          "solutionLength": 81,
+          "solutionSha256": "fa88b8de6fa972258b3eb97523ae8fc86467f964ea22c0265c0194de8f2721f2",
+          "refereeValid": true,
+          "nodesExpanded": 27813767,
+          "workSpent": 48907665,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655361,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655361,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1533,
+              "outcome": "success",
+              "allocatedBudgetMs": 86361264,
+              "nodesExpanded": 123653,
+              "mainSearchLateReserve": true
+            }
+          ]
+        },
+        {
+          "id": "R02699",
+          "level": 1030,
+          "solutionLength": 83,
+          "solutionSha256": "cfcf0c48e6eaf25d5ba8d3e6be9028c0c5192ce1be6bd4e093c4e858a1bf016b",
+          "refereeValid": true,
+          "nodesExpanded": 33352609,
+          "workSpent": 23325615,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "winningActionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "gateKey": 65547,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+              "gateKey": 65547,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4341,
+              "outcome": "success",
+              "allocatedBudgetMs": 86325440,
+              "nodesExpanded": 352558,
+              "mainSearchLateReserve": true
+            }
+          ]
+        },
+        {
+          "id": "R03001",
+          "level": 1332,
+          "solutionLength": 74,
+          "solutionSha256": "3d936dd1fb68443ab7cc6d7af44bbca28f9c3ce78438aadc44e0cf21b4f63100",
+          "refereeValid": true,
+          "nodesExpanded": 4829263,
+          "workSpent": 16045640,
+          "winningConfig": "repair|score=repair|guidance=must-turn-biased",
+          "winningActionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+          "gateKey": 589824,
+          "winningAttempts": [
+            {
+              "stageId": "early-repair-search",
+              "actionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+              "gateKey": 589824,
+              "scoringProfileId": "repair",
+              "orderingBiasId": null,
+              "beamWidth": null,
+              "ok": true,
+              "elapsedMs": 11514,
+              "outcome": "success",
+              "allocatedBudgetMs": 1200000,
+              "nodesExpanded": 829253,
+              "repair": true,
+              "repairMustTurnBiased": true,
+              "randomSeed": 1194917888
+            }
+          ]
+        },
+        {
+          "id": "R03267",
+          "level": 1598,
+          "solutionLength": 75,
+          "solutionSha256": "56ae5e16bdf139f2e773db9f1f54b50de6bc3d845c5b567daed49d4a3f050f95",
+          "refereeValid": true,
+          "nodesExpanded": 10537405,
+          "workSpent": 40001130,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 131078,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 131078,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 1186,
+              "outcome": "success",
+              "allocatedBudgetMs": 86397959,
+              "nodesExpanded": 197275,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R01523",
+          "level": 250,
+          "solutionLength": 103,
+          "solutionSha256": "882a2b214e44e81a4616e902ab24357e1fd2f1d15406d3fa79c1a5c891e357e7",
+          "refereeValid": true,
+          "nodesExpanded": 744602,
+          "workSpent": 8392141,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 65543,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 65543,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 6250,
+              "outcome": "success",
+              "allocatedBudgetMs": 86395005,
+              "nodesExpanded": 431070,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": "34315398129",
+      "runAttempt": "1",
+      "workflow": "Solver level-blind targeted sweep",
+      "sourceArtifact": "targeted-sweep-combined",
+      "repository": "gamesbyian/Pathfinder-Game",
+      "ref": "refs/heads/claude/solver-portal-restoration-queue-3boq68",
+      "solverRef": "0201e952faa911362396e6d564b5f928f108dc73",
+      "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34315398129",
+      "manifestSha256": "360d9ad2e089400835b7284e3d3801821667fa0ad3812fcb427cf7cfe2cc6503",
+      "resultSha256": "65c8d160776eb5a066f13afbb83c0d0565916ee00fb9f49221808011fc4d2033",
+      "dispatchInputs": {
+        "ids_file": "data/stress/connectivity-volume-portal-ab-001-ids.txt",
+        "corpus": "data/stress/stress-levels-random.json",
+        "node_budget": "50000000",
+        "node_budget_advisory_only": "false",
+        "strict_total_work_budget": "false",
+        "budget_ms": "86400000",
+        "workers": "4",
+        "target_wall_minutes": "20",
+        "solo_threshold_multiplier": "2.5",
+        "min_participating_levels": "1",
+        "concurrency_suffix": "connvol"
+      },
+      "shardCompleteness": {
+        "expected": 19,
+        "observed": 19,
+        "complete": true,
+        "basis": "exact expected population validated separately"
+      },
+      "resultContext": {
+        "timestamp": "2026-09-09T06:35:08.992Z",
+        "commitSha": "0201e952faa911362396e6d564b5f928f108dc73",
+        "corpus": "data/stress/stress-levels-random.json",
+        "budgetMs": 86400000,
+        "nodeBudget": 50000000,
+        "workBudget": 67000000,
+        "executionConfig": {
+          "levelBlind": true,
+          "historicalInputs": [],
+          "solverInputFields": [
+            "grid",
+            "gates",
+            "goal",
+            "reqLen",
+            "reqInt",
+            "blocks",
+            "geese",
+            "falseGoals",
+            "mustPass",
+            "mustCross",
+            "landmarks",
+            "filters",
+            "flippingFilters",
+            "portals"
+          ],
+          "workers": 4,
+          "enableFlags": [],
+          "disableFlags": [],
+          "strictTotalWorkBudget": false,
+          "attemptBudgetTelemetry": false,
+          "lifecycleTelemetry": false,
+          "mainSearchLateReserveFraction": null,
+          "mainSearchLateReserveConfigCount": null,
+          "admissibleOrderNodeReserveFraction": null,
+          "admissibleOrderNonDefaultRetryBudgetFraction": null,
+          "earlyRepairSearchAdaptiveBadnessGate": null,
+          "earlyRepairSearchAdaptiveMinScale": null,
+          "repairLateProbeNodeBudget": null
+        },
+        "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 19 batch report(s))"
+      },
+      "affectedSolvedRows": [
+        {
+          "id": "R01930",
+          "level": 320,
+          "solutionLength": 99,
+          "solutionSha256": "7768d77fbd5c8ac61fd14d8b77fd4309c7413087496aa0a05bc3a37d22aba357",
+          "refereeValid": true,
+          "nodesExpanded": 9235736,
+          "workSpent": 39751169,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 6,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 6,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4994,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396235,
+              "nodesExpanded": 426793,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02715",
+          "level": 1046,
+          "solutionLength": 78,
+          "solutionSha256": "213ad158b20ba7fa946daf4376a9f0c5c96c04f8c0f46972951224053f24b17f",
+          "refereeValid": true,
+          "nodesExpanded": 6498669,
+          "workSpent": 24749899,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 393218,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 393218,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 1913,
+              "outcome": "success",
+              "allocatedBudgetMs": 86397748,
+              "nodesExpanded": 199462,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R01554",
+          "level": 255,
+          "solutionLength": 117,
+          "solutionSha256": "13d4199f95647f73a7976102d791b8ff3e074e8f2cd398db25a67b0dc26753ea",
+          "refereeValid": true,
+          "nodesExpanded": 51465043,
+          "workSpent": 153076360,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "winningActionKey": "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "gateKey": 720898,
+          "winningAttempts": [
+            {
+              "stageId": "coarse-state-near-tie-retention-disabled-retry",
+              "actionKey": "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+              "gateKey": 720898,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 7643,
+              "outcome": "success",
+              "allocatedBudgetMs": 86382525,
+              "nodesExpanded": 468891
+            }
+          ]
+        },
+        {
+          "id": "R02076",
+          "level": 407,
+          "solutionLength": 95,
+          "solutionSha256": "d5c76ec907e14ca8f4a5b0808cc27e35dfb99ac88ccc27c37759e559c1f380ae",
+          "refereeValid": true,
+          "nodesExpanded": 8376939,
+          "workSpent": 32375975,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 393219,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 393219,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4581,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 376906,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02510",
+          "level": 841,
+          "solutionLength": 82,
+          "solutionSha256": "1acf6a7b72952adfa873b8306f22927b538c694399b9ec9044ad2f25056c4780",
+          "refereeValid": true,
+          "nodesExpanded": 603825,
+          "workSpent": 7648983,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 589834,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 589834,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3510,
+              "outcome": "success",
+              "allocatedBudgetMs": 86397090,
+              "nodesExpanded": 336217,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02515",
+          "level": 846,
+          "solutionLength": 81,
+          "solutionSha256": "4b751e0304a7b1cfaa7539d71a7d85947822c9842a65e4946cca082991221369",
+          "refereeValid": true,
+          "nodesExpanded": 27934106,
+          "workSpent": 48631797,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655361,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655361,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1260,
+              "outcome": "success",
+              "allocatedBudgetMs": 86373589,
+              "nodesExpanded": 120568,
+              "mainSearchLateReserve": true
+            }
+          ]
+        },
+        {
+          "id": "R03001",
+          "level": 1332,
+          "solutionLength": 74,
+          "solutionSha256": "b7b04413279d36c2355af6d6853f80715b8914d3c8843c1f6178b8d1fa654720",
+          "refereeValid": true,
+          "nodesExpanded": 5162099,
+          "workSpent": 17183007,
+          "winningConfig": "repair|score=repair|guidance=must-turn-biased",
+          "winningActionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+          "gateKey": 589824,
+          "winningAttempts": [
+            {
+              "stageId": "early-repair-search",
+              "actionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+              "gateKey": 589824,
+              "scoringProfileId": "repair",
+              "orderingBiasId": null,
+              "beamWidth": null,
+              "ok": true,
+              "elapsedMs": 15603,
+              "outcome": "success",
+              "allocatedBudgetMs": 1200000,
+              "nodesExpanded": 1162089,
+              "repair": true,
+              "repairMustTurnBiased": true,
+              "randomSeed": 1194917888
+            }
+          ]
+        },
+        {
+          "id": "R02269",
+          "level": 600,
+          "solutionLength": 92,
+          "solutionSha256": "c5724bc23b895549cc64afa9ff4715e8e4890628d54c2c491cdd4d399b21e06f",
+          "refereeValid": true,
+          "nodesExpanded": 4140299,
+          "workSpent": 8564886,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 131082,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 131082,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1109,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 140299
+            }
+          ]
+        },
+        {
+          "id": "R02314",
+          "level": 645,
+          "solutionLength": 87,
+          "solutionSha256": "07d4cfa78f412228e98892f3738caa9e37ff553f512e55ff335bbd435cab317d",
+          "refereeValid": true,
+          "nodesExpanded": 10128815,
+          "workSpent": 32180532,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 327691,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 327691,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1082,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 128789
+            }
+          ]
+        },
+        {
+          "id": "R02349",
+          "level": 680,
+          "solutionLength": 79,
+          "solutionSha256": "242413b4ff842a8258eae0da15185d0e1ba0620b341cd5274bfcee4508fff3b8",
+          "refereeValid": true,
+          "nodesExpanded": 125084,
+          "workSpent": 1511465,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655362,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655362,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1033,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 125084
+            }
+          ]
+        },
+        {
+          "id": "R01523",
+          "level": 250,
+          "solutionLength": 104,
+          "solutionSha256": "b8932e80e3b471289eaa685642462ad2d47affb064bd62f3170a22b9f577d414",
+          "refereeValid": true,
+          "nodesExpanded": 724233,
+          "workSpent": 7745091,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 65543,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 65543,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4476,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396706,
+              "nodesExpanded": 438427,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": "34320087947",
+      "runAttempt": "1",
+      "workflow": "Solver level-blind targeted sweep",
+      "sourceArtifact": "targeted-sweep-combined",
+      "repository": "gamesbyian/Pathfinder-Game",
+      "ref": "refs/heads/claude/solver-portal-restoration-queue-3boq68",
+      "solverRef": "0201e952faa911362396e6d564b5f928f108dc73",
+      "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320087947",
+      "manifestSha256": "46f7c13caad6783bdfd1f322d61b9d26186c7203885f39055d9a5f3a7a9f23f6",
+      "resultSha256": "ab85fadcd6d695674e45ccd9e8a6afe20d618fd8f7728227df2008d7876fb79c",
+      "dispatchInputs": {
+        "ids_file": "data/stress/mc-neighbor-budget-portal-ab-001-ids.txt",
+        "corpus": "data/stress/stress-levels-random.json",
+        "node_budget": "50000000",
+        "node_budget_advisory_only": "false",
+        "strict_total_work_budget": "false",
+        "budget_ms": "86400000",
+        "workers": "4",
+        "target_wall_minutes": "5",
+        "solo_threshold_multiplier": "2.5",
+        "min_participating_levels": "1",
+        "concurrency_suffix": "mcneighbor2"
+      },
+      "shardCompleteness": {
+        "expected": 53,
+        "observed": 53,
+        "complete": true,
+        "basis": "exact expected population validated separately"
+      },
+      "resultContext": {
+        "timestamp": "2026-09-09T08:15:19.717Z",
+        "commitSha": "0201e952faa911362396e6d564b5f928f108dc73",
+        "corpus": "data/stress/stress-levels-random.json",
+        "budgetMs": 86400000,
+        "nodeBudget": 50000000,
+        "workBudget": 67000000,
+        "executionConfig": {
+          "levelBlind": true,
+          "historicalInputs": [],
+          "solverInputFields": [
+            "grid",
+            "gates",
+            "goal",
+            "reqLen",
+            "reqInt",
+            "blocks",
+            "geese",
+            "falseGoals",
+            "mustPass",
+            "mustCross",
+            "landmarks",
+            "filters",
+            "flippingFilters",
+            "portals"
+          ],
+          "workers": 4,
+          "enableFlags": [],
+          "disableFlags": [],
+          "strictTotalWorkBudget": false,
+          "attemptBudgetTelemetry": false,
+          "lifecycleTelemetry": false,
+          "mainSearchLateReserveFraction": null,
+          "mainSearchLateReserveConfigCount": null,
+          "admissibleOrderNodeReserveFraction": null,
+          "admissibleOrderNonDefaultRetryBudgetFraction": null,
+          "earlyRepairSearchAdaptiveBadnessGate": null,
+          "earlyRepairSearchAdaptiveMinScale": null,
+          "repairLateProbeNodeBudget": null
+        },
+        "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 53 batch report(s))"
+      },
+      "affectedSolvedRows": [
+        {
+          "id": "R01554",
+          "level": 255,
+          "solutionLength": 117,
+          "solutionSha256": "13d4199f95647f73a7976102d791b8ff3e074e8f2cd398db25a67b0dc26753ea",
+          "refereeValid": true,
+          "nodesExpanded": 51465043,
+          "workSpent": 153076360,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "winningActionKey": "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "gateKey": 720898,
+          "winningAttempts": [
+            {
+              "stageId": "coarse-state-near-tie-retention-disabled-retry",
+              "actionKey": "coarse-state-near-tie-retention-disabled-retry|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+              "gateKey": 720898,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3852,
+              "outcome": "success",
+              "allocatedBudgetMs": 86390853,
+              "nodesExpanded": 468891
+            }
+          ]
+        },
+        {
+          "id": "R02715",
+          "level": 1046,
+          "solutionLength": 78,
+          "solutionSha256": "213ad158b20ba7fa946daf4376a9f0c5c96c04f8c0f46972951224053f24b17f",
+          "refereeValid": true,
+          "nodesExpanded": 6498669,
+          "workSpent": 24749899,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 393218,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 393218,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 1895,
+              "outcome": "success",
+              "allocatedBudgetMs": 86397655,
+              "nodesExpanded": 199462,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R01930",
+          "level": 320,
+          "solutionLength": 99,
+          "solutionSha256": "7768d77fbd5c8ac61fd14d8b77fd4309c7413087496aa0a05bc3a37d22aba357",
+          "refereeValid": true,
+          "nodesExpanded": 9235736,
+          "workSpent": 39751169,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 6,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 6,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4560,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396607,
+              "nodesExpanded": 426793,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02557",
+          "level": 888,
+          "solutionLength": 94,
+          "solutionSha256": "5615b5e514ecccbcdf0538660e9532ef4b5a9f61191e01347fb7d96742675eb3",
+          "refereeValid": true,
+          "nodesExpanded": 9469593,
+          "workSpent": 34814758,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 9,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 9,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 1978,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 326664,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R03267",
+          "level": 1598,
+          "solutionLength": 75,
+          "solutionSha256": "4157638a226502761679e6b49adf3a197b5bba8a95d9b68bfaa3a61d1bc41f9f",
+          "refereeValid": true,
+          "nodesExpanded": 10549805,
+          "workSpent": 39886367,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 131078,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 131078,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 771,
+              "outcome": "success",
+              "allocatedBudgetMs": 86398620,
+              "nodesExpanded": 193910,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02269",
+          "level": 600,
+          "solutionLength": 92,
+          "solutionSha256": "c5724bc23b895549cc64afa9ff4715e8e4890628d54c2c491cdd4d399b21e06f",
+          "refereeValid": true,
+          "nodesExpanded": 4140299,
+          "workSpent": 8564886,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 131082,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 131082,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1567,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 140299
+            }
+          ]
+        },
+        {
+          "id": "R03001",
+          "level": 1332,
+          "solutionLength": 74,
+          "solutionSha256": "b7b04413279d36c2355af6d6853f80715b8914d3c8843c1f6178b8d1fa654720",
+          "refereeValid": true,
+          "nodesExpanded": 5162099,
+          "workSpent": 17183007,
+          "winningConfig": "repair|score=repair|guidance=must-turn-biased",
+          "winningActionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+          "gateKey": 589824,
+          "winningAttempts": [
+            {
+              "stageId": "early-repair-search",
+              "actionKey": "early-repair-search|repair|score=repair|guidance=must-turn-biased|seedSalt=0",
+              "gateKey": 589824,
+              "scoringProfileId": "repair",
+              "orderingBiasId": null,
+              "beamWidth": null,
+              "ok": true,
+              "elapsedMs": 8364,
+              "outcome": "success",
+              "allocatedBudgetMs": 1200000,
+              "nodesExpanded": 1162089,
+              "repair": true,
+              "repairMustTurnBiased": true,
+              "randomSeed": 1194917888
+            }
+          ]
+        },
+        {
+          "id": "R02349",
+          "level": 680,
+          "solutionLength": 79,
+          "solutionSha256": "242413b4ff842a8258eae0da15185d0e1ba0620b341cd5274bfcee4508fff3b8",
+          "refereeValid": true,
+          "nodesExpanded": 125084,
+          "workSpent": 1511465,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655362,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655362,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1805,
+              "outcome": "success",
+              "allocatedBudgetMs": 86399997,
+              "nodesExpanded": 125084
+            }
+          ]
+        },
+        {
+          "id": "R02314",
+          "level": 645,
+          "solutionLength": 87,
+          "solutionSha256": "07d4cfa78f412228e98892f3738caa9e37ff553f512e55ff335bbd435cab317d",
+          "refereeValid": true,
+          "nodesExpanded": 10128815,
+          "workSpent": 32180532,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 327691,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 327691,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1480,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 128789
+            }
+          ]
+        },
+        {
+          "id": "R02699",
+          "level": 1030,
+          "solutionLength": 82,
+          "solutionSha256": "8b97d7f645355dc42cfda33e8e5682a17842f22ce07eeed7b78a86118f2c6e91",
+          "refereeValid": true,
+          "nodesExpanded": 33338082,
+          "workSpent": 22758838,
+          "winningConfig": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "winningActionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+          "gateKey": 65547,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+              "gateKey": 65547,
+              "scoringProfileId": "objectiveFirst",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3534,
+              "outcome": "success",
+              "allocatedBudgetMs": 86359783,
+              "nodesExpanded": 338063,
+              "mainSearchLateReserve": true
+            }
+          ]
+        },
+        {
+          "id": "R02076",
+          "level": 407,
+          "solutionLength": 95,
+          "solutionSha256": "d5c76ec907e14ca8f4a5b0808cc27e35dfb99ac88ccc27c37759e559c1f380ae",
+          "refereeValid": true,
+          "nodesExpanded": 8376939,
+          "workSpent": 32375975,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 393219,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",      "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 393219,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3849,
+              "outcome": "success",
+              "allocatedBudgetMs": 86400000,
+              "nodesExpanded": 376906,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02510",
+          "level": 841,
+          "solutionLength": 82,
+          "solutionSha256": "1acf6a7b72952adfa873b8306f22927b538c694399b9ec9044ad2f25056c4780",
+          "refereeValid": true,
+          "nodesExpanded": 603825,
+          "workSpent": 7648983,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 589834,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 589834,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3536,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396875,
+              "nodesExpanded": 336217,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R02515",
+          "level": 846,
+          "solutionLength": 81,
+          "solutionSha256": "4b751e0304a7b1cfaa7539d71a7d85947822c9842a65e4946cca082991221369",
+          "refereeValid": true,
+          "nodesExpanded": 27934106,
+          "workSpent": 48631797,
+          "winningConfig": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "winningActionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "gateKey": 655361,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+              "gateKey": 655361,
+              "scoringProfileId": "perimeterSweep",
+              "orderingBiasId": "perimeterCW",
+              "beamWidth": 2000,
+              "ok": true,
+              "elapsedMs": 1596,
+              "outcome": "success",
+              "allocatedBudgetMs": 86373648,
+              "nodesExpanded": 120568,
+              "mainSearchLateReserve": true
+            }
+          ]
+        },
+        {
+          "id": "R01523",
+          "level": 250,
+          "solutionLength": 104,
+          "solutionSha256": "b8932e80e3b471289eaa685642462ad2d47affb064bd62f3170a22b9f577d414",
+          "refereeValid": true,
+          "nodesExpanded": 724233,
+          "workSpent": 7745091,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 65543,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 65543,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4417,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396926,
+              "nodesExpanded": 438427,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": "34320103478",
+      "runAttempt": "1",
+      "workflow": "Solver level-blind targeted sweep",
+      "sourceArtifact": "targeted-sweep-combined",
+      "repository": "gamesbyian/Pathfinder-Game",
+      "ref": "refs/heads/claude/solver-portal-restoration-queue-3boq68",
+      "solverRef": "0201e952faa911362396e6d564b5f928f108dc73",
+      "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320103478",
+      "manifestSha256": "755a5150ca8b62ec7aba4a1f553fd2ded00a1e4ea5e2f6868f3267ab90a98d42",
+      "resultSha256": "ebcb240c8b985dd9831bd8b42bf9e0a51aaed76b6fa3f34a038ab3db91a878e6",
+      "dispatchInputs": {
+        "ids_file": "data/stress/mc-neighbor-budget-portal-ab-001-ids.txt",
+        "corpus": "data/stress/stress-levels-random.json",
+        "node_budget": "50000000",
+        "node_budget_advisory_only": "false",
+        "strict_total_work_budget": "false",
+        "budget_ms": "86400000",
+        "workers": "4",
+        "target_wall_minutes": "5",
+        "solo_threshold_multiplier": "2.5",
+        "enable_flags": "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL",
+        "min_participating_levels": "1",
+        "concurrency_suffix": "mcneighbor2"
+      },
+      "shardCompleteness": {
+        "expected": 53,
+        "observed": 20,
+        "complete": false,
+        "basis": "exact expected population validated separately"
+      },
+      "resultContext": {
+        "timestamp": "2026-09-09T08:20:44.752Z",
+        "commitSha": "0201e952faa911362396e6d564b5f928f108dc73",
+        "corpus": "data/stress/stress-levels-random.json",
+        "budgetMs": 86400000,
+        "nodeBudget": 50000000,
+        "workBudget": 67000000,
+        "executionConfig": {
+          "levelBlind": true,
+          "historicalInputs": [],
+          "solverInputFields": [
+            "grid",
+            "gates",
+            "goal",
+            "reqLen",
+            "reqInt",
+            "blocks",
+            "geese",
+            "falseGoals",
+            "mustPass",
+            "mustCross",
+            "landmarks",
+            "filters",
+            "flippingFilters",
+            "portals"
+          ],
+          "workers": 4,
+          "enableFlags": [
+            "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL"
+          ],
+          "disableFlags": [],
+          "strictTotalWorkBudget": false,
+          "attemptBudgetTelemetry": false,
+          "lifecycleTelemetry": false,
+          "mainSearchLateReserveFraction": null,
+          "mainSearchLateReserveConfigCount": null,
+          "admissibleOrderNodeReserveFraction": null,
+          "admissibleOrderNonDefaultRetryBudgetFraction": null,
+          "earlyRepairSearchAdaptiveBadnessGate": null,
+          "earlyRepairSearchAdaptiveMinScale": null,
+          "repairLateProbeNodeBudget": null
+        },
+        "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 20 batch report(s))"
+      },
+      "affectedSolvedRows": [
+        {
+          "id": "R02715",
+          "level": 1046,
+          "solutionLength": 78,
+          "solutionSha256": "0dc16678fa933e51c3afa32af7ecfeb5f90dc544a3a704ee42737bf4edc7a719",
+          "refereeValid": true,
+          "nodesExpanded": 6509621,
+          "workSpent": 25125547,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 393218,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 393218,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3047,
+              "outcome": "success",      "allocatedBudgetMs": 86396379,
+              "nodesExpanded": 207077,
+              "mechanicBucketRetention": true
+            }
+          ]
+        },
+        {
+          "id": "R01930",
+          "level": 320,
+          "solutionLength": 99,
+          "solutionSha256": "3b763efb487f19fbf339ddc072f1a5c5b60e22daf71ac23f1edc04c66f9ece68",
+          "refereeValid": true,
+          "nodesExpanded": 9197649,
+          "workSpent": 39206870,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 6,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 6,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 6025,
+              "outcome": "success",
+              "allocatedBudgetMs": 86395162,
+              "nodesExpanded": 419530,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": "34337871124",
+      "runAttempt": "1",
+      "workflow": "Solver level-blind targeted sweep",
+      "sourceArtifact": "targeted-sweep-combined",
+      "repository": "gamesbyian/Pathfinder-Game",
+      "ref": "refs/heads/claude/solver-portal-restoration-queue-3boq68",
+      "solverRef": "423e4a09517787adb935136a29781f1f8234861e",
+      "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337871124",
+      "manifestSha256": "d611598e845454d55e2890fa9a808d2f2f92d95c6778b8fc5cca343fbf89ae83",
+      "resultSha256": "91eeab673b002f44b2086643e346a46a2ab795113705a3233f3e8c45b456512b",
+      "dispatchInputs": {
+        "ids_file": "data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt",
+        "corpus": "data/stress/stress-levels-random.json",
+        "node_budget": "50000000",
+        "node_budget_advisory_only": "false",
+        "strict_total_work_budget": "false",
+        "budget_ms": "86400000",
+        "workers": "4",
+        "target_wall_minutes": "1",
+        "solo_threshold_multiplier": "2.5",
+        "enable_flags": "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL",
+        "min_participating_levels": "1",
+        "concurrency_suffix": "gapfill2"
+      },
+      "shardCompleteness": {
+        "expected": 5,
+        "observed": 5,
+        "complete": true,
+        "basis": "exact expected population validated separately"
+      },
+      "resultContext": {
+        "timestamp": "2026-09-09T10:26:16.921Z",
+        "commitSha": "423e4a09517787adb935136a29781f1f8234861e",
+        "corpus": "data/stress/stress-levels-random.json",
+        "budgetMs": 86400000,
+        "nodeBudget": 50000000,
+        "workBudget": 67000000,
+        "executionConfig": {
+          "levelBlind": true,
+          "historicalInputs": [],
+          "solverInputFields": [
+            "grid",
+            "gates",
+            "goal",
+            "reqLen",
+            "reqInt",
+            "blocks",
+            "geese",
+            "falseGoals",
+            "mustPass",
+            "mustCross",
+            "landmarks",
+            "filters",
+            "flippingFilters",
+            "portals"
+          ],
+          "workers": 4,
+          "enableFlags": [
+            "PRUNE_MC_NEIGHBOR_BUDGET_PORTAL"
+          ],
+          "disableFlags": [],
+          "strictTotalWorkBudget": false,
+          "attemptBudgetTelemetry": false,
+          "lifecycleTelemetry": false,
+          "mainSearchLateReserveFraction": null,
+          "mainSearchLateReserveConfigCount": null,
+          "admissibleOrderNodeReserveFraction": null,
+          "admissibleOrderNonDefaultRetryBudgetFraction": null,
+          "earlyRepairSearchAdaptiveBadnessGate": null,
+          "earlyRepairSearchAdaptiveMinScale": null,
+          "repairLateProbeNodeBudget": null
+        },
+        "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 5 batch report(s))"
+      },
+      "affectedSolvedRows": [
+        {
+          "id": "R03304",
+          "level": 1635,
+          "solutionLength": 92,
+          "solutionSha256": "ed8ffdae094e7ad81219295ac428e07bbbbc62bd98a1ee22db8f36719e7b45a1",
+          "refereeValid": true,
+          "nodesExpanded": 544899,
+          "workSpent": 6254640,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 458764,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 458764,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 4510,
+              "outcome": "success",
+              "allocatedBudgetMs": 86396499,
+              "nodesExpanded": 329536,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": "34337880617",
+      "runAttempt": "1",
+      "workflow": "Solver level-blind targeted sweep",
+      "sourceArtifact": "targeted-sweep-combined",
+      "repository": "gamesbyian/Pathfinder-Game",
+      "ref": "refs/heads/claude/solver-portal-restoration-queue-3boq68",
+      "solverRef": "423e4a09517787adb935136a29781f1f8234861e",
+      "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337880617",
+      "manifestSha256": "6c40090d20a2f9b29d36df759ca6ea26125b20ce63d9def753ef6a9b6023c619",
+      "resultSha256": "0eac30ce1e805b738d87fbf341e6283dd316752e6a9d49d7adf549591da0495b",
+      "dispatchInputs": {
+        "ids_file": "data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt",
+        "corpus": "data/stress/stress-levels-random.json",
+        "node_budget": "50000000",
+        "node_budget_advisory_only": "false",
+        "strict_total_work_budget": "false",
+        "budget_ms": "86400000",
+        "workers": "4",
+        "target_wall_minutes": "1",
+        "solo_threshold_multiplier": "2.5",
+        "min_participating_levels": "1",
+        "concurrency_suffix": "gapfill2"
+      },
+      "shardCompleteness": {
+        "expected": 5,
+        "observed": 5,
+        "complete": true,
+        "basis": "exact expected population validated separately"
+      },
+      "resultContext": {
+        "timestamp": "2026-09-09T10:42:12.047Z",
+        "commitSha": "423e4a09517787adb935136a29781f1f8234861e",
+        "corpus": "data/stress/stress-levels-random.json",
+        "budgetMs": 86400000,
+        "nodeBudget": 50000000,
+        "workBudget": 67000000,
+        "executionConfig": {
+          "levelBlind": true,
+          "historicalInputs": [],
+          "solverInputFields": [
+            "grid",
+            "gates",
+            "goal",
+            "reqLen",
+            "reqInt",
+            "blocks",
+            "geese",
+            "falseGoals",
+            "mustPass",
+            "mustCross",
+            "landmarks",
+            "filters",
+            "flippingFilters",
+            "portals"
+          ],
+          "workers": 4,
+          "enableFlags": [],
+          "disableFlags": [],
+          "strictTotalWorkBudget": false,
+          "attemptBudgetTelemetry": false,
+          "lifecycleTelemetry": false,
+          "mainSearchLateReserveFraction": null,
+          "mainSearchLateReserveConfigCount": null,
+          "admissibleOrderNodeReserveFraction": null,
+          "admissibleOrderNonDefaultRetryBudgetFraction": null,
+          "earlyRepairSearchAdaptiveBadnessGate": null,
+          "earlyRepairSearchAdaptiveMinScale": null,
+          "repairLateProbeNodeBudget": null
+        },
+        "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 5 batch report(s))"
+      },
+      "affectedSolvedRows": [
+        {
+          "id": "R03304",
+          "level": 1635,
+          "solutionLength": 92,
+          "solutionSha256": "d6ed4ade13db5e7422991557e2ed606b582db730f22dcea4b22166bc97037021",
+          "refereeValid": true,
+          "nodesExpanded": 580626,
+          "workSpent": 6404847,
+          "winningConfig": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "winningActionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+          "gateKey": 458764,
+          "winningAttempts": [
+            {
+              "stageId": "main-search",
+              "actionKey": "main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+              "gateKey": 458764,
+              "scoringProfileId": "intersectionHarvest",
+              "orderingBiasId": null,
+              "beamWidth": 5000,
+              "ok": true,
+              "elapsedMs": 3022,
+              "outcome": "success",
+              "allocatedBudgetMs": 86397192,
+              "nodesExpanded": 339033,
+              "mechanicBucketRetention": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

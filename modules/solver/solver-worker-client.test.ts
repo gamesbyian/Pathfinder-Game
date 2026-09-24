@@ -57,6 +57,21 @@ test('worker SolveOpts serializer preserves data and rejects callback-shaped opt
     }), /failureProgressObserver\.observe/);
 });
 
+test('worker SolveOpts serializer rejects beamFlowCounters/pruneDiagnostics rather than silently discarding their mutations', () => {
+    // Both are plain data objects with no function inside, so they would otherwise pass the
+    // function-value check and cross postMessage's structured clone -- but the worker only mutates
+    // its own private copy and never returns it (worker-result-serialization.mjs serializes the
+    // SolveResult, never the input solveOpts), so the caller's object would silently stay untouched.
+    assert.throws(() => buildWorkerSolveOpts({
+        beamFlowCounters: {},
+    }), /beamFlowCounters/);
+    assert.throws(() => buildWorkerSolveOpts({
+        pruneDiagnostics: { reached: {}, rejected: {} },
+    }), /pruneDiagnostics/);
+    // Omitting them (the common case) is unaffected.
+    assert.deepEqual(buildWorkerSolveOpts({ nodeBudget: 5 }), { nodeBudget: 5 });
+});
+
 test('solveLevel transports one normalized contract and returns direct SolveResult shape', async () => {
     const worker = new FakeWorker();
     const client = createSolverWorkerClient(worker as any);

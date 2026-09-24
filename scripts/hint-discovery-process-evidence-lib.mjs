@@ -5,7 +5,7 @@
  * The owning experiment contract remains authoritative for protocol/configuration/population
  * semantics. This document carries only the small identity projection needed to join later.
  */
-import { decisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
+import { sourceRunBindingFromContract, stableHash } from './solver-experiment-contract.mjs';
 
 export const HINT_DISCOVERY_PROCESS_EVIDENCE_KIND = 'pathfinder-hint-discovery-process-evidence';
 export const HINT_DISCOVERY_PROCESS_EVIDENCE_SCHEMA_VERSION = 1;
@@ -14,43 +14,25 @@ function nonEmpty(value) {
     return typeof value === 'string' && value.trim().length > 0;
 }
 
-function resolvedSolverRef(contract, arm) {
-    if (arm != null) return contract?.experiment?.arms?.[arm]?.resolvedSha ?? null;
-    return contract?.experiment?.resolvedSha ?? null;
-}
-
 export function discoveryProcessEnvelopeFromContract(contract, {
     runId,
+    runAttempt = null,
     contractRef = null,
     arm = null,
 } = {}) {
-    const issues = decisionContractIssues(contract);
-    if (issues.length) {
-        throw new Error(`experiment contract is not decision-grade: ${issues.join(', ')}`);
-    }
-    if (!nonEmpty(runId)) throw new Error('runId is required');
-    if (arm != null && !contract?.experiment?.arms?.[arm]) {
-        throw new Error(`unknown experiment arm: ${arm}`);
-    }
-
-    const solverRef = resolvedSolverRef(contract, arm);
-    if (!nonEmpty(solverRef)) {
-        throw new Error('experiment contract does not resolve one immutable solver ref for this evidence document');
-    }
-
-    return {
+    // Deliberately no `backend` (modules/solver/reproducibility-mode.mjs): hint-discovery-process.mjs
+    // joins already-produced solver reports to hint provenance and never runs the solver itself, so it
+    // has no ground-truth backend signal to supply. Omitted stays honestly 'unknown' rather than
+    // assuming 'direct'.
+    const sourceRun = sourceRunBindingFromContract(contract, {
         runId,
-        contractRef: contractRef ?? null,
+        runAttempt,
+        contractRef,
         arm,
-        workflowFamily: contract.experiment.workflowFamily,
-        producer: contract.experiment.producer,
-        entrypoint: contract.experiment.entrypoint,
-        protocolHash: contract.experiment.configurationHash,
-        configurationHash: contract.experiment.configurationHash,
-        solverRef,
-        populationIdentity: contract.population.identityHash,
+    });
+    return {
+        ...sourceRun,
         independentUnit: contract.population.independentUnit ?? null,
-        corpusIdentity: contract.population.corpusIdentity ?? null,
         levelBlind: contract.execution.levelBlind,
         historyAware: contract.execution.historyAware,
         schedulerMode: contract.execution.schedulerMode,
@@ -63,6 +45,7 @@ export function buildHintDiscoveryProcessEvidence(joinResult, {
     levels,
     contract,
     runId,
+    runAttempt = null,
     contractRef = null,
     arm = null,
 } = {}) {
@@ -72,7 +55,7 @@ export function buildHintDiscoveryProcessEvidence(joinResult, {
     if (!nonEmpty(sourceReport)) throw new Error('sourceReport is required');
     if (!nonEmpty(levels)) throw new Error('levels is required');
 
-    const run = discoveryProcessEnvelopeFromContract(contract, { runId, contractRef, arm });
+    const run = discoveryProcessEnvelopeFromContract(contract, { runId, runAttempt, contractRef, arm });
     const records = joinResult.joined.map(item => ({
         evidenceId: stableHash({
             runId: run.runId,

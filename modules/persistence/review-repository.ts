@@ -3,16 +3,43 @@
 
 import { collection, doc, getDoc, getDocs, query, orderBy, deleteDoc, writeBatch } from 'firebase/firestore';
 import { encodeHints, decodeHints } from './level-submission-repository.js';
-import { mergeHints, upgradeLegacyHints, hintPathSignature } from '../domain/hint-types.js';
+import { mergeHints, upgradeLegacyHints, hintPathSignature, provenanceEventKey } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
 import type { ReportError } from '../ports.js';
 import type { Hint } from '../domain/hint-types.js';
+import type { SaveLocalLevelHintOutcome } from './local-level-hints-repository.js';
+
+/** Per-outcome tally for approveLocalHintAddition() — see its own doc comment for why this is
+ *  richer than a plain success/fail. */
+export interface LocalHintAdditionSummary {
+    saved: number;
+    duplicateNotRecorded: number;
+    capacityReached: number;
+}
+
+// Firestore's hard per-document limit is 1,048,576 bytes for the WHOLE document, not just the
+// hints field -- levelData also carries grid/gate/goal/provenance fields. 900,000 bytes leaves
+// ~148 KiB of headroom for the rest of levelData plus Firestore's own field/index encoding
+// overhead, matching the 900k/950k candidate thresholds the pre-implementation audit itself
+// measured against real encoded Hint arrays
+// (reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md's Firestore
+// sizing section). This is a conservative safety margin, not a claim about the eventual bounded-
+// growth persistence unit Phase 3 will define.
+export const FIRESTORE_HINT_CAPACITY_BUDGET_BYTES = 900_000;
+
+/** Byte size of an encoded levelData document (JSON + UTF-8), for comparison against Firestore's
+ *  real per-document budget. Pure/exported so this can be unit-tested without a Firestore mock —
+ *  see local-level-hints-repository.test.ts's header comment for why no persistence repo in this
+ *  codebase has emulator/mock-backed tests. */
+export function encodedLevelDataByteSize(encodedLevelData: any): number {
+    return new TextEncoder().encode(JSON.stringify(encodedLevelData)).length;
+}
 
 export function createReviewRepository(client: any, { getLevelFingerprint, getLocalLevelHints, saveLocalLevelHintIfNovel, reportError = defaultReportError }: {
     getLevelFingerprint: (level: any) => any,
     getLocalLevelHints: (levelFingerprint: string) => Promise<Hint[]>,
-    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnown: ReadonlySet<string>) => Promise<boolean>,
+    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEventKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>,
     reportError?: ReportError,
 }) {
     const { appId } = client;
@@ -73,16 +100,42 @@ export function createReviewRepository(client: any, { getLevelFingerprint, getLo
     /** `hints` is the canonical Hint[] (path + provenance) the reviewer is contributing — see
      *  review-controller.ts's reconcileHints() call at the approve-button handler. Merged against
      *  the target's existing Hint[] by path signature (mergeHints), so provenance survives and a
-     *  hint rediscovered by this addition gets its find appended rather than dropped. */
+     *  hint rediscovered by this addition gets its find appended rather than dropped.
+     *
+     *  No count-based cap: the pre-implementation audit
+     *  (reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md) found this
+     *  used to silently `.slice(0, 5)` the merged set -- a legacy pre-provenance-era value with no
+     *  current justification, discarding real evidence on every approval for any level with more
+     *  than 5 known hints. Firestore's actual constraint is a 1 MiB total document size, not a hint
+     *  count, so capacity is checked in bytes against FIRESTORE_HINT_CAPACITY_BUDGET_BYTES. When the
+     *  full merge does not fit, this throws rather than silently truncating -- the caller (see
+     *  review-controller.ts) already surfaces the thrown message to the admin, and throwing before
+     *  batch.commit() leaves the submission undeleted so it is retried, not lost. This is a Phase 1
+     *  containment fix, not the final bounded-growth persistence design (that is a Phase 3 item in
+     *  docs/hint-evidence-execution-identity-storage-consolidation-plan.md) -- it stops the known
+     *  silent-loss defect without committing to event/occurrence-child documents or any other final
+     *  physical layout. */
     async function approveHintAddition(submissionId: string, targetPublishedLevelId: string, hints: any[]): Promise<void> {
         if (!client.db) throw new Error('No Firebase connection');
         const targetRef  = doc(published(), targetPublishedLevelId);
         const targetSnap = await getDoc(targetRef);
         if (!targetSnap.exists()) throw new Error('Target published level no longer exists');
         const targetLevelData = decodeHints(targetSnap.data()!.levelData || {});
-        const mergedHints     = mergeHints(upgradeLegacyHints(targetLevelData.hints), upgradeLegacyHints(hints)).slice(0, 5);
+        const mergedHints     = mergeHints(upgradeLegacyHints(targetLevelData.hints), upgradeLegacyHints(hints));
+        const encodedLevelData = encodeHints({ ...targetLevelData, hints: mergedHints });
+        const encodedBytes = encodedLevelDataByteSize(encodedLevelData);
+        if (encodedBytes > FIRESTORE_HINT_CAPACITY_BUDGET_BYTES) {
+            throw new Error(
+                `Capacity exceeded: this level's full hint history (${mergedHints.length} hints, ` +
+                `~${encodedBytes.toLocaleString()} bytes) does not fit Firestore's per-document budget ` +
+                `(${FIRESTORE_HINT_CAPACITY_BUDGET_BYTES.toLocaleString()} bytes). Nothing was saved and ` +
+                `this submission was not removed from the queue. This level needs the capacity-aware ` +
+                `hint storage redesign tracked in the hint evidence consolidation plan before more hints ` +
+                `can be approved for it.`,
+            );
+        }
         const batch = writeBatch(client.db);
-        batch.update(targetRef, { levelData: encodeHints({ ...targetLevelData, hints: mergedHints }) });
+        batch.update(targetRef, { levelData: encodedLevelData });
         batch.delete(doc(submissions(), submissionId));
         await batch.commit();
     }
@@ -93,19 +146,33 @@ export function createReviewRepository(client: any, { getLevelFingerprint, getLo
      *  local-level-hints-repository.ts). Not a single atomic batch (each entry write is its own
      *  independent create, and the count/duplicate check is inherently best-effort already — see
      *  docs/firestore-security-model.md); the submission is deleted last so a failure partway
-     *  through leaves it in the queue for a retry rather than silently losing the report. */
-    async function approveLocalHintAddition(submissionId: string, levelFingerprint: string, hints: Hint[]): Promise<void> {
+     *  through leaves it in the queue for a retry rather than silently losing the report.
+     *
+     *  Returns a per-outcome tally rather than void: a genuinely NEW discovery event for an
+     *  already-known path gets its own sibling entry (see local-level-hints-repository.ts's
+     *  entryIdFor), but the exact same discovery event submitted twice is still a real duplicate
+     *  refused as a no-op, so a submission consisting entirely of such duplicates would otherwise
+     *  complete "successfully" while persisting nothing. Surfacing the tally lets the caller
+     *  (review-controller.ts) tell the admin what actually happened instead of a blanket "Hints
+     *  added!" regardless of outcome. */
+    async function approveLocalHintAddition(submissionId: string, levelFingerprint: string, hints: Hint[]): Promise<LocalHintAdditionSummary> {
         if (!client.db) throw new Error('No Firebase connection');
         const existing = await getLocalLevelHints(levelFingerprint);
-        const knownSignatures = new Set(existing.map((h) => hintPathSignature(h.path)));
+        const knownEventKeys = new Set(
+            existing.flatMap((h) => h.provenance.map((entry) => provenanceEventKey(hintPathSignature(h.path), entry))),
+        );
+        const summary: LocalHintAdditionSummary = { saved: 0, duplicateNotRecorded: 0, capacityReached: 0 };
         for (const hint of hints) {
             const signature = hintPathSignature(hint.path);
             const provenanceEntry = hint.provenance[hint.provenance.length - 1];
             if (!provenanceEntry) continue;
-            const saved = await saveLocalLevelHintIfNovel(levelFingerprint, hint.path, signature, provenanceEntry, knownSignatures);
-            if (saved) knownSignatures.add(signature);
+            const outcome = await saveLocalLevelHintIfNovel(levelFingerprint, hint.path, signature, provenanceEntry, knownEventKeys);
+            if (outcome.saved) { knownEventKeys.add(provenanceEventKey(signature, provenanceEntry)); summary.saved++; }
+            else if (outcome.reason === 'duplicate-provenance-not-recorded') summary.duplicateNotRecorded++;
+            else if (outcome.reason === 'capacity-reached') summary.capacityReached++;
         }
         await deleteDoc(doc(submissions(), submissionId));
+        return summary;
     }
 
     async function rejectSubmission(submissionId: string): Promise<void> {

@@ -17,6 +17,10 @@ import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { parseLevelPositions, readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
+import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.js';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.js';
 
 const args    = process.argv.slice(2);
 const argMap  = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
@@ -42,14 +46,14 @@ const Solver = createSolver();
 
 const LEVELS_PATH = path.join(new URL('..', import.meta.url).pathname, 'data', 'levels.json');
 
-function loadLevelDocument() {
-    // The canonical corpus-document reader attaches each level's existing hints/hintRecords while
-    // preserving storage-shape metadata required by the matching writer. --save-hints must keep the
-    // document object alive through flush(); passing only the levels array loses write authority.
+function loadCorpusDocument() {
+    // readLevelCorpusDocumentWithHints (rather than a bare readFileSync) attaches each level's
+    // existing hints/hintRecords, which --save-hints needs in order to MERGE into them. Without it a
+    // save would overwrite a level's hint set with the single path this run happened to find.
+    // Harmless when --save-hints is off: the extra fields are ignored, and prepareLevelForSolver
+    // takes the level as-is exactly as before.
     const document = readLevelCorpusDocumentWithHints(LEVELS_PATH);
-    if (!Array.isArray(document.levels) || document.levels.length === 0) {
-        throw new Error('data/levels.json is empty or not an array');
-    }
+    if (!Array.isArray(document.levels) || document.levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return document;
 }
 
@@ -58,11 +62,39 @@ const getCommitSha = () => {
     try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
 };
 
-const levelDocument = loadLevelDocument();
-const rawLevels = levelDocument.levels;
+const corpusDocument = loadCorpusDocument();
+const rawLevels = corpusDocument.levels;
 console.log(`Loaded ${rawLevels.length} levels. Budget: ${budgetMs}ms${saveHints ? ' (saving hints)' : ''}`);
 
-const hintCapture = await createHintCapture({ solverVersion: getCommitSha(), budgetMs, enabled: saveHints });
+// The literal object handed to Solver.solveLevel() below, and nowhere else (see
+// docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 3.2 -- request identity
+// proves what actually reached the execution boundary). `baseWorkBudget` is the live SolveOpts name;
+// `workBudget` is retired input orchestration.ts rejects, which was passed here unfixed until now.
+// `schedulerMode: 'production'` is explicit, matching level-blind-capability-sweep.mjs's own
+// convention: this tool has no --scheduler-mode flag, but orchestration.ts's own
+// `opts.schedulerMode ?? 'production'` default means every run already IS production-scheduled --
+// recording that as a real, known fact rather than an omitted, classifiable-as-'unknown' one.
+const solveOpts = { timeBudgetMs: budgetMs, schedulerMode: 'production', ...(workBudget !== undefined ? { baseWorkBudget: workBudget } : {}) };
+const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
+const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
+// backend: 'direct' -- levels run sequentially on the main thread, one solveLevel() call at a time;
+// no worker pool, no race pool, so this is a certain fact, not a guess.
+const backend = 'direct';
+const reproducibilityMode = classifyReproducibilityMode({ schedulerMode: solveOpts.schedulerMode, backend });
+
+// Bounded execution/run binding for hint provenance (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W). No experiment contract object exists for this ad hoc direct
+// driver, so protocolHash/executionArm stay genuinely absent; occurrenceRunId only when this
+// invocation is a real GHA job (solver-diagnostics.yml) -- a local debugging run has no run to bind to.
+const hintExecutionContext = {
+    solverRequestIdentity, reproducibilityMode,
+    ...(process.env.GITHUB_RUN_ID ? {
+        occurrenceRunId: process.env.GITHUB_RUN_ID,
+        ...(process.env.GITHUB_RUN_ATTEMPT ? { occurrenceRunAttempt: process.env.GITHUB_RUN_ATTEMPT } : {}),
+    } : {}),
+};
+
+const hintCapture = await createHintCapture({ solverVersion: getCommitSha(), budgetMs, enabled: saveHints, executionContext: hintExecutionContext });
 if (saveHints) await hintCapture.prepare(rawLevels);
 
 const levelNumbers = levelFilter
@@ -85,7 +117,7 @@ for (const levelNumber of levelNumbers) {
 
     const t0 = Date.now();
     let result;
-    try { result = await Solver.solveLevel(level, { timeBudgetMs: budgetMs, ...(workBudget !== undefined ? { workBudget } : {}) }); }
+    try { result = await Solver.solveLevel(level, solveOpts); }
     catch (e) { results.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 }); errorCount++; console.log(`  L${levelNumber}: ERROR — ${e?.message}`); continue; }
 
     const elapsed = Date.now() - t0;
@@ -93,8 +125,24 @@ for (const levelNumber of levelNumbers) {
     ok ? solvedCount++ : failCount++;
 
     const solvedByScoringProfileId = ok ? (result.attempts?.find(a => a.ok)?.scoringProfileId ?? 'unknown') : null;
+    const discoveryObservedAt = ok ? new Date().toISOString() : null;
+    const levelRevision = ok ? await getLevelFingerprint(raw) : null;
     if (ok) hintCapture.record(raw, result);
-    results.push({ level: levelNumber, status: result.status, ok, elapsedMs: elapsed, solvedByScoringProfileId, attempts: result.attempts });
+    results.push({
+        level: levelNumber,
+        levelId: raw.id ?? null,
+        levelRevision,
+        discoveryObservedAt,
+        status: result.status,
+        ok,
+        solution: ok && Array.isArray(result.solution) ? result.solution : null,
+        elapsedMs: elapsed,
+        nodesExpanded: result.nodesExpanded ?? null,
+        workSpent: result.workSpent ?? null,
+        workBudget: result.workBudget ?? workBudget ?? null,
+        solvedByScoringProfileId,
+        attempts: result.attempts,
+    });
 
     const marker = ok ? '✓' : '✗';
     if (verbose || !ok) console.log(`  L${levelNumber} ${marker} ${elapsed}ms${ok ? ` [score=${solvedByScoringProfileId}]` : ''}`);
@@ -104,21 +152,26 @@ for (const levelNumber of levelNumbers) {
 const totalMs = Date.now() - runStart;
 console.log(`\nDone: ${solvedCount} solved, ${failCount} failed, ${errorCount} errors / ${levelNumbers.length} total — ${totalMs}ms`);
 
-// Flush AFTER the whole run, not per level: one write pass, and writeLevelsWithHints only rewrites
-// artifacts whose content actually changed.
-const hintSummary = hintCapture.flush(LEVELS_PATH, levelDocument);
+// Flush AFTER the whole run, not per level: one write pass, and writeLevelCorpusDocumentWithHints
+// only rewrites artifacts whose content actually changed.
+const hintSummary = hintCapture.flush(LEVELS_PATH, corpusDocument);
 if (saveHints) {
     console.log(`Hints: ${hintSummary.newPaths} new path(s), ${hintSummary.rediscoveries} rediscover(ies) ` +
         `(provenance appended at this commit), ${hintSummary.hintFilesChanged} artifact(s) rewritten.`);
 }
 
 const out = {
+    schemaVersion: 1,
+    kind: 'pathfinder-direct-solver-report',
+    producer: 'run-solver-direct',
+    corpus: 'data/levels.json',
     timestamp: new Date().toISOString(),
     commitSha: getCommitSha(),
     budgetMs,
     workBudget: workBudget ?? null,
     levelFilter: levelFilter ? [...levelFilter].sort((a,b) => a-b) : 'all',
     solved: solvedCount, failed: failCount, errors: errorCount, total: levelNumbers.length, totalMs,
+    solverRequestProjection, solverRequestIdentity, backend, reproducibilityMode,
     levels: results,
 };
 

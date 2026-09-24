@@ -17,7 +17,7 @@ import type { Attempt, SolveOpts, SolveResult } from './orchestration-contracts.
 // value as build-static-portfolio-plan.mjs's own ATTEMPT_BUDGET_MS constant (kept as a literal
 // here, not a shared import, because modules/solver/ is browser-free core logic and must not
 // depend on a scripts/ tooling file — see AGENTS.md's architecture-boundary rule).
-const STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS = 600_000;
+export const STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS = 600_000;
 
 /** Fixed ordered-menu/per-technique-work-cap scheduler (`docs/solver-optimization-workstreams.md`
  *  Workstream 2 item (d); design: `reports/2026-09-03-fixed-cap-portfolio-scheduler-implementation-

@@ -189,9 +189,10 @@ test('saveWinAsHintIfNovel saves the path when it is not already known', async (
     state.engineState.levelIdx = 0;
     state.engineState.nav = { path: [1, 2, 3] } as any;
     const saved: any[] = [];
+    const otherHintProvenance = { solver: { id: 'other', technique: 'dfs' }, search: {}, context: {}, foundAt: '2026-01-01T00:00:00.000Z' };
     const data = {
         getLevel: () => ({ grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 } }),
-        getHints: async () => [{ path: [9, 9, 9], provenance: [] }],
+        getHints: async () => [{ path: [9, 9, 9], provenance: [otherHintProvenance] }],
     };
     const persistence = {
         saveLocalLevelHintIfNovel: async (fingerprint: any, path: any, sig: any, prov: any, known: any) => {
@@ -202,7 +203,8 @@ test('saveWinAsHintIfNovel saves the path when it is not already known', async (
     await saveWinAsHintIfNovel({ state, data, persistence } as any);
     assertEqual(saved.length, 1, 'a novel path should be saved');
     assertEqual(saved[0].path, state.engineState.nav.path, 'the saved path must be the winning path');
-    assert(!saved[0].known.has(saved[0].sig), 'the just-saved path itself must not already be in the known set passed in');
+    assertEqual(saved[0].known.size, 1, 'the known-event-key set must be built from the OTHER known hint\'s real provenance, not the just-saved path');
+    assert(!saved[0].known.has(saved[0].sig), 'the just-saved path\'s bare signature must never itself be an event key');
 });
 
 test('saveWinAsHintIfNovel does nothing when the path is already known', async () => {

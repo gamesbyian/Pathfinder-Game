@@ -28,6 +28,7 @@ function pendingRowCount(items) {
 
 export function buildHintHarvestSelectionManifest({
     sourceRunId,
+    sourceRunAttempt = null,
     sourceWorkflow,
     sourceReportsSeen,
     sourceRowsSeen,
@@ -58,6 +59,7 @@ export function buildHintHarvestSelectionManifest({
         source: {
             harvester: 'harvest-level-blind-report-hints',
             runId: sourceRunId ?? null,
+            runAttempt: sourceRunAttempt == null ? null : String(sourceRunAttempt),
             workflow: sourceWorkflow ?? null,
             reportsSeen: sourceReportsSeen,
             reportsHarvested,

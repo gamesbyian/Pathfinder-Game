@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
     classifyHintDiscoveryReplayability,
     summarizeHintDiscoveryReplayability,
+    effectiveSolverInputIdentityStatus,
 } from './hint-discovery-replayability-lib.mjs';
 
 function baseEntry(overrides = {}) {
@@ -11,6 +12,12 @@ function baseEntry(overrides = {}) {
             id: 'pathfinder-solver',
             version: '0123456789abcdef0123456789abcdef01234567',
             technique: 'dfs',
+            scoringProfileId: 'default',
+            orderingBiasId: null,
+            beamWidth: null,
+            mechanicBucketRetention: null,
+            gateKey: 17,
+            forcing: null,
             ...overrides.solver,
         },
         search: {
@@ -69,6 +76,81 @@ assert.deepEqual(
     classifyHintDiscoveryReplayability(baseEntry({ solver: { version: null } })),
     { replayBasis: 'historical-unverified', reason: 'missing-solver-version' },
 );
+
+const incompleteIdentity = effectiveSolverInputIdentityStatus(baseEntry());
+assert.equal(incompleteIdentity.reconstructable, false);
+assert.deepEqual(incompleteIdentity.missingDimensions, ['solverStage', 'solverRequestIdentity']);
+
+const completeIdentity = effectiveSolverInputIdentityStatus(baseEntry(), {
+    solverRequestIdentity: 'sha256:' + '2'.repeat(64),
+    solverStageId: 'main-search',
+});
+assert.equal(completeIdentity.reconstructable, true);
+assert.equal(completeIdentity.identity.attemptConfigIdentity, 'dfs|score=default|bias=none');
+assert.equal(completeIdentity.identity.gateKey, 17);
+assert.equal(completeIdentity.identity.solverStageId, 'main-search');
+
+// 'repair-probe' is the historical spelling; 'early-repair-search' is its current canonical
+// name (modules/solver/stage-id-normalization.mjs) — not to be confused with the SEPARATE
+// 'repair-probe-shrink-recovery' -> 'repair-shrink-recovery' legacy pair.
+const legacyStageIdentity = effectiveSolverInputIdentityStatus(baseEntry(), {
+    solverRequestIdentity: 'sha256:' + '5'.repeat(64),
+    solverStageId: 'repair-probe',
+});
+assert.equal(legacyStageIdentity.reconstructable, true);
+assert.equal(legacyStageIdentity.identity.solverStageId, 'early-repair-search');
+assert.equal(completeIdentity.identity.solverRequestIdentity, 'sha256:' + '2'.repeat(64));
+
+// Bounded execution capsule fallback (docs/hint-evidence-execution-identity-storage-consolidation-
+// plan.md section 4/W): a freshly-produced entry's own embedded execution.solverRequestIdentity is now
+// a real source, not only an external sibling-evidence join.
+const embeddedIdentityEntry = {
+    ...baseEntry(),
+    execution: { schemaVersion: 1, solverRequestIdentity: 'sha256:' + '9'.repeat(64), protocolHash: null, reproducibilityMode: 'deterministic-work', arm: null },
+};
+const embeddedIdentity = effectiveSolverInputIdentityStatus(embeddedIdentityEntry, { solverStageId: 'main-search' });
+assert.equal(embeddedIdentity.reconstructable, true, 'the entry\'s own execution capsule must satisfy the solverRequestIdentity dimension without an external join');
+assert.equal(embeddedIdentity.identity.solverRequestIdentity, 'sha256:' + '9'.repeat(64));
+
+// An explicit caller-supplied solverRequestIdentity still takes precedence over the embedded one.
+const overriddenIdentity = effectiveSolverInputIdentityStatus(embeddedIdentityEntry, {
+    solverRequestIdentity: 'sha256:' + '8'.repeat(64),
+    solverStageId: 'main-search',
+});
+assert.equal(overriddenIdentity.identity.solverRequestIdentity, 'sha256:' + '8'.repeat(64));
+
+// A historical entry with no execution capsule at all still has no signal -- never fabricated.
+const noExecutionIdentity = effectiveSolverInputIdentityStatus(baseEntry(), { solverStageId: 'main-search' });
+assert.equal(noExecutionIdentity.reconstructable, false);
+assert.deepEqual(noExecutionIdentity.missingDimensions, ['solverRequestIdentity']);
+
+const repairIdentity = effectiveSolverInputIdentityStatus(baseEntry({
+    solver: {
+        technique: 'repair',
+        scoringProfileId: 'repair',
+        gateKey: 9,
+        forcing: { repairMustTurnBiased: true, repairTurnBiased: false },
+    },
+    search: { workBudget: 1000, randomSeed: 123, seedSalt: 2 },
+}), {
+    solverRequestIdentity: 'sha256:' + '3'.repeat(64),
+    solverStageId: 'late-repair-search',
+});
+assert.equal(repairIdentity.reconstructable, true);
+assert.equal(repairIdentity.identity.attemptConfigIdentity,
+    'repair|score=repair|guidance=must-turn-biased');
+assert.equal(repairIdentity.identity.randomSeed, 123);
+assert.equal(repairIdentity.identity.seedSalt, 2);
+
+const missingSeed = effectiveSolverInputIdentityStatus(baseEntry({
+    solver: { technique: 'repair', scoringProfileId: 'repair', gateKey: 9 },
+    search: { workBudget: 1000, randomSeed: null },
+}), {
+    solverRequestIdentity: 'sha256:' + '4'.repeat(64),
+    solverStageId: 'repair-fallback',
+});
+assert.equal(missingSeed.reconstructable, false);
+assert.ok(missingSeed.missingDimensions.includes('randomSeed'));
 
 const summary = summarizeHintDiscoveryReplayability([
     { path: [1, 2], provenance: [baseEntry()] },

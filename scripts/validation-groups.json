@@ -123,7 +123,9 @@
       "test:hint-harvest-selection-integration",
       "test:method-probe-shard-plan",
       "test:probe-corpus-loader",
-      "test:corpus-level-formatting"
+      "test:corpus-level-formatting",
+      "test:level-sparse-serialization-benchmark",
+      "test:level-sparse-serialization-apply"
     ],
     "research": [
       "test:research-domain-ownership",
@@ -239,7 +241,33 @@
       "test:select-highbudget-gap-fill-ids",
       "test:known-support-extinction",
       "test:class3-dose-exposure",
-      "test:class3-dose-expectations"
+      "test:class3-dose-expectations",
+      "test:hint-io-facade-guard",
+      "test:portfolio-solve-sweep-cli",
+      "test:run-solver-direct-cli",
+      "test:hint-discovery-replayability",
+      "test:hint-reconstructability-report",
+      "test:solver-request-identity",
+      "test:solver-request-identity-compat",
+      "test:solver-evidence-identity-guard",
+      "test:hint-determinism-audit",
+      "test:hint-ingestion-receipt",
+      "test:runtime-hint-projection",
+      "test:hint-ingestion-receipt-query",
+      "test:hint-occurrence-acceptance",
+      "test:merge-hint-artifacts-receipt",
+      "test:harvest-cpsat-discovery-reports",
+      "test:harvest-level-blind-report-hints",
+      "test:harvest-solver-diagnostics-reports",
+      "test:harvest-source-workflow-guard",
+      "test:hint-ingestion-shadow-parity",
+      "test:hint-discovery-ingestion-projection",
+      "test:hint-ingestion-workflow-completeness",
+      "test:hint-historical-enrichment-plan",
+      "test:hint-historical-enrichment-apply",
+      "test:hint-codec-baseline-benchmark",
+      "test:harvest-portfolio-solve-sweep-reports",
+      "test:hint-artifact-v4-migration"
     ],
     "persistence": [
       "test:firestore-rules"

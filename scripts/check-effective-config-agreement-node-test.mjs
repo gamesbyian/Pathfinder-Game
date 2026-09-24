@@ -5,6 +5,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { checkAgreement, checkCompare } from './check-effective-config-agreement.mjs';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 
 let passed = 0;
 function test(name, fn) {
@@ -31,6 +32,24 @@ function writeReport(name, effectiveConfig) {
         summary: {
             effectiveConfig,
             effectiveConfigDigest: digest(effectiveConfig),
+        },
+        levels: [],
+    }));
+    return file;
+}
+
+function fakeProjection(sentinel) {
+    return { schemaVersion: 1, kind: 'pathfinder-solver-request-projection', sentinel };
+}
+function writeReportWithCanonical(name, effectiveConfig, sentinel) {
+    const file = path.join(dir, name);
+    const solverRequestProjection = fakeProjection(sentinel);
+    writeFileSync(file, JSON.stringify({
+        summary: {
+            effectiveConfig,
+            effectiveConfigDigest: digest(effectiveConfig),
+            solverRequestProjection,
+            solverRequestIdentity: solverRequestIdentityFromProjection(solverRequestProjection),
         },
         levels: [],
     }));
@@ -100,6 +119,38 @@ test('checkCompare without requireActualDiff tolerates an identical pair (a call
     const treatment = writeReport('control4-peer.json', { nodeBudget: 100 });
     const result = checkCompare(control, treatment, ['ablation'], false);
     assert.deepEqual(result.differing, []);
+});
+
+test('checkAgreement legacy mismatch notes when canonical solver-request identity still agrees', () => {
+    // Same canonical sentinel (solver-request semantics), different corpusSha256-like legacy field
+    // (population identity) -- exactly the case the canonical projection is designed to separate out.
+    const a = writeReportWithCanonical('canonical-agree-a.json', { nodeBudget: 100, corpusSha256: 'aaa' }, 'X');
+    const b = writeReportWithCanonical('canonical-agree-b.json', { nodeBudget: 100, corpusSha256: 'bbb' }, 'X');
+    assert.throws(() => checkAgreement([a, b]), /differs in \[corpusSha256\] \(canonical solver-request identity still agrees/);
+});
+
+test('checkAgreement legacy mismatch notes when canonical solver-request identity also disagrees', () => {
+    const a = writeReportWithCanonical('canonical-disagree-a.json', { nodeBudget: 100 }, 'X');
+    const b = writeReportWithCanonical('canonical-disagree-b.json', { nodeBudget: 999 }, 'Y');
+    assert.throws(() => checkAgreement([a, b]), /differs in \[nodeBudget\] \(canonical solver-request identity also disagrees\)/);
+});
+
+test('checkCompare reports canonicalDiffers when both sides carry canonical solver-request identity', () => {
+    const control = writeReportWithCanonical('canonical-compare-control.json', { nodeBudget: 100, ablation: { STRATEGY_X: false } }, 'X');
+    const treatmentSame = writeReportWithCanonical('canonical-compare-treatment-same.json', { nodeBudget: 100, ablation: { STRATEGY_X: true } }, 'X');
+    const sameResult = checkCompare(control, treatmentSame, ['ablation'], true);
+    assert.equal(sameResult.canonicalDiffers, false, 'ablation is excluded from the canonical projection, so identical sentinel means identical canonical identity');
+
+    const treatmentDifferent = writeReportWithCanonical('canonical-compare-treatment-different.json', { nodeBudget: 100, ablation: { STRATEGY_X: true } }, 'Y');
+    const differentResult = checkCompare(control, treatmentDifferent, ['ablation'], true);
+    assert.equal(differentResult.canonicalDiffers, true);
+});
+
+test('checkCompare reports canonicalDiffers as null when canonical identity is not available on both sides', () => {
+    const control = writeReport('canonical-unavailable-control.json', { nodeBudget: 100, ablation: { STRATEGY_X: false } });
+    const treatment = writeReport('canonical-unavailable-treatment.json', { nodeBudget: 100, ablation: { STRATEGY_X: true } });
+    const result = checkCompare(control, treatment, ['ablation'], true);
+    assert.equal(result.canonicalDiffers, null);
 });
 
 console.log(`\ncheck-effective-config-agreement tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);

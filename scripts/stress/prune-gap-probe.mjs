@@ -39,7 +39,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { evaluatePrunedMove } from '../../modules/solver/hard-prune-pipeline.ts';
@@ -68,7 +68,7 @@ const every = Number(arg('every', '6'));
 const oracleLimit = Number(arg('oracle-limit', '45'));
 const outFile = arg('out', null);
 
-const levels = readLevelsWithHints(CORPUS);
+const { levels } = readLevelCorpusDocumentWithHints(CORPUS);
 const idx = levels.findIndex(l => l.id === levelId);
 if (idx < 0) { console.error(`${levelId}: not in the corpus.`); process.exit(1); }
 const raw = levels[idx];

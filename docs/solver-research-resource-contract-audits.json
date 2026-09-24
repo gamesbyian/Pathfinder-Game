@@ -18,9 +18,10 @@
       "identityLayers": [
         "level structural revision",
         "accepted hint path",
-        "provenance event",
+        "semantic provenance event",
+        "bounded execution identity (modern Pathfinder events when observed)",
+        "physical acquisition occurrence lineage (excluded from semantic event identity)",
         "producer/origin plus orthogonal facets",
-        "solver/configuration/run context",
         "provenance dependency stratum"
       ],
       "producerAuthority": [
@@ -47,7 +48,12 @@
         "a later canonical-file rewrite may have materialized upgradeProvenanceEntry()'s synthesized false values for legacy capability booleans; physical false is therefore not historical proof of observed false unless source-generation/ingress semantics establish that field was actually recorded",
         "missing producer/config/run/work context is unknown and cannot be upgraded into current-capability or performance evidence",
         "absence of a provenance event does not establish solver failure",
-        "migration-derived foundAt timestamps from the 2026-07-11 schema-v1 hintMetadata migration are not historical discovery times; the mechanically reconstructed cohort is 662 events across 102 stress-1 files in the 2026-07-11T01:44:17.863Z..18.004Z normalization window, stable in the September-11 store and the current store"
+        "migration-derived foundAt timestamps from the 2026-07-11 schema-v1 hintMetadata migration are not historical discovery times; the mechanically reconstructed cohort is 662 events across 102 stress-1 files in the 2026-07-11T01:44:17.863Z..18.004Z normalization window, stable in the September-11 store and the current store",
+        "current canonical Hint provenance usually lacks canonical solver-request identity and canonical solver-stage identity; full effective-input reconstruction must therefore report those dimensions missing rather than infer them from technique names or current defaults",
+        "pre-2026-09-23 hint-discovery-process protocolHash values duplicated configurationHash and cannot independently prove execution-protocol equality without the owning experiment contract",
+        "modern Pathfinder producers may record execution.solverRequestIdentity and occurrence lineage; absence on historical rows or producers without a real signal remains unknown/not-observed, never an implied default",
+        "occurrence run identity is acquisition lineage and must not be promoted into semantic discovery-event equality",
+        "first-success raced executions do not promise stable winning-path identity and must be excluded from deterministic path-repeat claims"
       ],
       "freshnessRevisionContract": [
         "age alone does not make an event stale",
@@ -58,7 +64,9 @@
         "many legacy successful discoveries lack the attempted denominator and failures needed for technique-performance inference",
         "many legacy events lack enough execution context to prove current-production comparability",
         "dependency strata conservatively group dependence but cannot reconstruct independent experimental units that were never recorded",
-        "schema-v1 stress hintMetadata did not retain original discovery time; the 2026-07-11 migration stamped normalization time into foundAt for those observations, so original chronology is irrecoverable unless another independent source proves it"
+        "schema-v1 stress hintMetadata did not retain original discovery time; the 2026-07-11 migration stamped normalization time into foundAt for those observations, so original chronology is irrecoverable unless another independent source proves it",
+        "many legacy/current hint events cannot yet be joined to one exact canonical solver-request identity or solver-stage identity from Hint storage alone",
+        "pre-2026-09-23 discovery-process evidence did not preserve an independently-derived protocol hash; protocol equality for those documents must be recomputed from the owning experiment contract when available"
       ],
       "consumerInventory": [
         "scripts/hint-query.mjs and shared provenance applicability/dependency helpers",
@@ -66,7 +74,11 @@
         "solution-profile provenance bucketing and representative selection",
         "scripts/cross-resource-observability-audit.mjs for family/replay/profile ancestry checks",
         "winning-path/residual/portal-parity/crossing-slack research consumers that select stored paths",
-        "any current-capability or historical-cost analysis joining hint provenance to solver evidence"
+        "any current-capability or historical-cost analysis joining hint provenance to solver evidence",
+        "scripts/stress/hint-reconstructability-report.mjs",
+        "scripts/hint-discovery-replayability-lib.mjs::effectiveSolverInputIdentityStatus",
+        "scripts/hint-determinism-audit.mjs",
+        "scripts/runtime-hint-projection-lib.mjs (derived player-delivery projection; not a research-evidence authority)"
       ],
       "historicalClaimBlastRadius": [
         "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md",
@@ -81,7 +93,9 @@
         "preserve discovery-time missingness explicitly; compatibility adapters must not synthesize read/migration time as foundAt",
         "preserve exact modern occurrence join keys sufficient to bind a stored path discovery to its owning experiment/run contract and, when present, hint-discovery-process evidence without copying attempt sequences into Hint",
         "treat execution/occurrence capsules as a durable cross-resource join spine: level revision + exact path signature + immutable solver/protocol/configuration/run identity must fail closed rather than be reconstructed from filenames, timestamps or approximate configuration similarity",
-        "keep richer successful-process, failure-response and search-loss payloads at their existing natural grains; expand Hint only for semantics intrinsic to the accepted path observation"
+        "keep richer successful-process, failure-response and search-loss payloads at their existing natural grains; expand Hint only for semantics intrinsic to the accepted path observation",
+        "persist or durably exact-join canonical solver-request identity and canonical solver-stage/action identity for modern Pathfinder discoveries so effective-input reconstruction does not depend on inference from current code",
+        "reuse the canonical source-run binding for run/protocol/solver/population lineage rather than hand-assembling overlapping envelope fields in each evidence family"
       ],
       "knownIrreversibleInformationLoss": [
         "schema-v1 stress hintMetadata did not retain original discovery time; 662 surviving observations across 102 stress-1 files carry migration-time foundAt values from the 2026-07-11 normalization, so original chronology is irrecoverable unless another independent source proves it",
@@ -90,7 +104,10 @@
       "prospectiveProducerGaps": [
         "preserve semantic missingness through read/write round trips; compatibility adapters must never turn historical unknown capability context into a persistable modern false",
         "preserve discovery-time missingness explicitly; compatibility adapters must not synthesize read/migration time as foundAt",
-        "retain semantic discovery identity separately from physical occurrence/source-run lineage so retries/reharvests dedupe without losing repeat-run provenance"
+        "retain semantic discovery identity separately from physical occurrence/source-run lineage so retries/reharvests dedupe without losing repeat-run provenance",
+        "sibling evidence producers should migrate overlapping run/config/protocol/solver/population projections to the canonical source-run binding",
+        "solver stage/action identity remains an explicit reconstructability gap unless durably supplied by an exact sibling-evidence join or a future bounded schema extension",
+        "occurrence persistence still needs byte-aware bounded-growth/overflow semantics before Firestore/GHA storage can be considered Phase-3 complete"
       ],
       "auditEvidence": [
         "docs/hint-evidence-consolidation-inventory.json",

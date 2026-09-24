@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { hashConfiguration, hashPopulation } from './solver-experiment-contract.mjs';
+import { hashConfiguration, hashExecutionProtocol, hashPopulation } from './solver-experiment-contract.mjs';
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'hint-discovery-process-cli-'));
 try {
@@ -84,12 +84,16 @@ try {
         '--levels=' + levelsFile,
         '--contract=' + contractFile,
         '--run-id=run-1',
+        '--run-attempt=3',
         '--contract-ref=manifest.json#experimentContract',
     ], { cwd: process.cwd(), encoding: 'utf8' }));
 
     assert.equal(output.kind, 'pathfinder-hint-discovery-process-evidence');
     assert.equal(output.run.runId, 'run-1');
-    assert.equal(output.run.protocolHash, contract.experiment.configurationHash);
+    assert.equal(output.run.configurationHash, contract.experiment.configurationHash);
+    assert.equal(output.run.protocolHash, hashExecutionProtocol(contract));
+    assert.notEqual(output.run.protocolHash, output.run.configurationHash);
+    assert.equal(output.run.runAttempt, '3');
     assert.equal(output.records.length, 1);
     assert.equal(output.records[0].parentId, 'P1');
     assert.equal(output.records[0].process.precedingAttemptCount, 1);

@@ -19,7 +19,19 @@ const invFields = rows.map(row => row.field);
 assert.deepEqual([...invFields].sort(), [...fields].sort(),
   'SolveOpts membership changed without updating docs/solver-request-semantics-inventory.json');
 
-for (const row of rows) {
+// Plan section 13.2.J's five-bucket taxonomy: "Every canonical SolveOpts field must be classified
+// by one owner as one of" these exact five layers. A new SolveOpts field with no identityLayer, or
+// any value outside this set, must fail here rather than silently default into some layer's
+// inclusion set.
+const VALID_IDENTITY_LAYERS = new Set([
+  'solver-semantic',
+  'observation-semantic',
+  'transport-execution',
+  'level-specific-history-derived',
+  'non-semantic-output-control',
+]);
+
+function assertRowClassified(row) {
   assert.equal(typeof row.semanticClass, 'string', `${row.field}: semanticClass missing`);
   assert.equal(typeof row.effect, 'string', `${row.field}: effect missing`);
   assert.equal(typeof row.canonicalDefaultSemantics, 'string', `${row.field}: canonicalDefaultSemantics missing`);
@@ -27,7 +39,18 @@ for (const row of rows) {
   assert.equal(typeof row.backendSupport?.direct, 'string', `${row.field}: direct backend classification missing`);
   assert.equal(typeof row.backendSupport?.webWorker, 'string', `${row.field}: worker backend classification missing`);
   assert.equal(typeof row.backendSupport?.raced, 'string', `${row.field}: raced backend classification missing`);
+  assert.ok(VALID_IDENTITY_LAYERS.has(row.identityLayer),
+    `${row.field}: identityLayer missing or invalid (got ${JSON.stringify(row.identityLayer)}); must be one of ${[...VALID_IDENTITY_LAYERS].join(', ')}`);
 }
+
+for (const row of rows) assertRowClassified(row);
+
+// Prove the guard actually rejects drift rather than passing by construction: a field with no
+// identityLayer, and one with a value outside the five-bucket taxonomy, must both fail.
+assert.throws(() => assertRowClassified({ ...rows[0], identityLayer: undefined }),
+  /identityLayer missing or invalid/, 'guard must reject a row with no identityLayer at all');
+assert.throws(() => assertRowClassified({ ...rows[0], identityLayer: 'solver-semantic-ish' }),
+  /identityLayer missing or invalid/, 'guard must reject a value outside the five-bucket taxonomy');
 
 const raceCommon = RACE_LEVEL_OPTS_FIELDS.filter(field => field !== 'overallBudgetMs').sort();
 assert.deepEqual([...(inventory.backendRequests?.raced?.supportedCommonFields ?? [])].sort(), raceCommon,
@@ -38,6 +61,8 @@ assert(raceSpecific.has('poolSize'), 'raced backend must classify poolSize');
 for (const row of inventory.backendRequests.raced.backendSpecificFields) {
   assert.equal(typeof row.canonicalDefaultSemantics, 'string', `raced.${row.field}: canonicalDefaultSemantics missing`);
   assert.equal(typeof row.identityParticipation, 'string', `raced.${row.field}: identityParticipation missing`);
+  assert.ok(VALID_IDENTITY_LAYERS.has(row.identityLayer),
+    `raced.${row.field}: identityLayer missing or invalid (got ${JSON.stringify(row.identityLayer)})`);
 }
 
 console.log(`solver request semantics inventory: ${fields.length} SolveOpts fields classified; raced boundary classified`);

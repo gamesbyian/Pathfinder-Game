@@ -45,6 +45,10 @@ import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.
 import { readLevelCorpusDocumentWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
+import { stableStringify } from '../modules/canonical-json.mjs';
+import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.js';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
 import { toRaceLevelOpts } from './solver-parallel/race-opts.mjs';
@@ -311,6 +315,7 @@ function appendCheckpoint(checkpointFile, row, signature) {
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
+const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.js');
 // provenanceFromSolveResult / toHint / mergeHints / hintPaths / getLevelFingerprint are deliberately
 // NOT imported here any more — the whole hint-merge path lives in scripts/hint-capture-lib.mjs, so
 // there is exactly one implementation of it shared with run-solver-direct.mjs's CI audit pass.
@@ -368,13 +373,6 @@ const checkpointSignature = JSON.stringify({
     args: args.filter(arg => arg !== '--resume' && arg !== '--').sort(),
 });
 
-function stableStringify(value) {
-    if (value === undefined) return undefined;
-    if (value === null || typeof value !== 'object') return JSON.stringify(value);
-    if (Array.isArray(value)) return `[${value.map(item => stableStringify(item) ?? 'null').join(',')}]`;
-    const keys = Object.keys(value).filter(key => value[key] !== undefined).sort();
-    return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
-}
 const legacyLatencyPortfolioExperiment = experimentFromArgs();
 
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
@@ -628,13 +626,47 @@ const effectiveConfig = {
 };
 const effectiveConfigDigest = createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
 
-// Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs (the CI
-// audit pass). Only the SCHEDULING of writes stays here -- this tool persists incrementally after
-// every level so a killed multi-hour run keeps its finds, which is deliberately different from the
-// capture module's own flush-at-end (see persistHintsIfEnabled below).
-function mergeSolvedHint(raw, result) {
-    return hintCapture.record(raw, result);
-}
+// Canonical run-wide solver-request identity (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.2), dual-written alongside the legacy effectiveConfig pair above
+// rather than replacing it -- effectiveConfig above deliberately mixes solver-request semantics with
+// population identity (corpusSha256), execution backend/pool (engine/racePoolSize), and adaptive/
+// prime-winner history-derived per-level policy, which the canonical projection keeps separate
+// (raced-backend fields and level-specific/history-derived fields are excluded by design; see
+// solver-request-projection.ts's own doc comment). Built from the RAW base `solveOpts` (not
+// `effectiveSolveOpts`, which JSON-serializes legacyLatencyPortfolioExperiment's Set fields for the
+// legacy pair only) -- buildCanonicalSolverRequestProjection() already normalizes that itself. Uses
+// `solveOpts`, never a per-level solveOptsFor() result, matching effectiveConfig's own choice: this is
+// run-wide request identity, not per-level effective-input identity.
+const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
+const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
+
+// Execution backend/reproducibility class (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 3.3/K, modules/solver/reproducibility-mode.mjs). This is the one
+// currently-maintained producer that can actually race (--race-pool-size), so it is also the one
+// place a real, ground-truth `backend` value is known at the point of dispatch rather than guessed
+// downstream -- the legacy `engine`/`racePoolSize` fields above already carry the same fact; this adds
+// its canonical counterpart using the shared vocabulary/classifier every other producer will reuse
+// once it too has a real signal.
+const backend = racePoolSize > 0 ? 'raced' : 'direct';
+const reproducibilityMode = classifyReproducibilityMode({ schedulerMode, backend });
+
+// Bounded execution/run binding for hint provenance (docs/hint-evidence-execution-identity-storage-
+// consolidation-plan.md section 4/W). No experiment contract object exists in this producer (unlike
+// scripts/publish-solver-sweep-result.mjs's declaredContract), so protocolHash/contractRef stay
+// genuinely absent rather than guessed; executionArm is the real static-portfolio arm name when this
+// run is a confirmation arm, else genuinely absent (an ordinary run has no arm concept); occurrenceRunId
+// only when this run is a real GHA job -- a local invocation has no run to bind to.
+const hintExecutionContext = {
+    solverRequestIdentity, reproducibilityMode,
+    ...(staticPortfolioArmName ? { executionArm: staticPortfolioArmName } : {}),
+    ...(process.env.GITHUB_RUN_ID ? {
+        occurrenceRunId: process.env.GITHUB_RUN_ID,
+        ...(process.env.GITHUB_RUN_ATTEMPT ? { occurrenceRunAttempt: process.env.GITHUB_RUN_ATTEMPT } : {}),
+    } : {}),
+};
+
+// Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs. Only the
+// scheduling of flushes stays here so a killed multi-hour run keeps discoveries already observed.
 
 const levelRows = new Map();
 for (const row of checkpointRows.values()) levelRows.set(row.level, row);
@@ -645,8 +677,12 @@ let hintsAppended = 0;
 // silently keep pointing at a since-edited level) are precomputed by hintCapture.prepare() rather
 // than derived per solve: getLevelFingerprint is async, and the worker-pool onResult callback that
 // merges hints is NOT awaited (solver-worker-pool.mjs), so the merge path must stay synchronous.
-const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints });
+const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints, executionContext: hintExecutionContext });
 if (saveHints) await hintCapture.prepare(toActuallyRun.map(n => rawLevels[n - 1]));
+const levelRevisionByNumber = new Map(await Promise.all(toActuallyRun.map(async levelNumber => [
+    levelNumber,
+    await getLevelFingerprint(rawLevels[levelNumber - 1]),
+])));
 let totalHintFilesChanged = 0;
 let solvedCount = 0;
 let solvedBeforeFallbackCount = 0;
@@ -717,6 +753,10 @@ function writeReport() {
     const newFinds = levels.filter(f => f.solvedBeforeFallback);
 
     const summary = {
+        schemaVersion: 1,
+        producer: 'portfolio-solve-sweep',
+        levelBlind: false,
+        historyAware: true,
         generatedAt: new Date().toISOString(),
         commit,
         corpus: path.relative(root, corpusPath),
@@ -774,6 +814,11 @@ function writeReport() {
         disableFlags,
         effectiveConfig,
         effectiveConfigDigest,
+        solverRequestProjection,
+        solverRequestIdentity,
+        backend,
+        reproducibilityMode,
+        staticPortfolioArm: staticPortfolioArmName,
     };
 
     mkdirSync(path.dirname(outFile), { recursive: true });
@@ -848,7 +893,10 @@ if (workerCount <= 1) {
             result = { ok: false, status: 'error', error: err?.message ?? String(err), totalMs: Date.now() - t0, attempts: [] };
         }
         const row = buildRow(levelNumber, raw?.id, result, schedulerMode);
-        row.hintAppended = mergeSolvedHint(raw, result);
+        const discoveryObservedAt = result?.ok ? new Date().toISOString() : null;
+        row.levelRevision = levelRevisionByNumber.get(levelNumber) ?? null;
+        row.discoveryObservedAt = discoveryObservedAt;
+        row.hintAppended = result?.ok && saveHints ? hintCapture.record(raw, result, { foundAt: discoveryObservedAt }) : false;
         if (row.hintAppended) hintsAppended += 1;
         recordRow(row);
         logProgress(row);
@@ -880,7 +928,10 @@ if (workerCount <= 1) {
             const { id, result } = workerResult;
             attachRefereeValid(levelNumber, result);
             const row = buildRow(levelNumber, id ?? raw?.id, result, schedulerMode);
-            row.hintAppended = mergeSolvedHint(raw, result);
+            const discoveryObservedAt = result?.ok ? new Date().toISOString() : null;
+            row.levelRevision = levelRevisionByNumber.get(levelNumber) ?? null;
+            row.discoveryObservedAt = discoveryObservedAt;
+            row.hintAppended = result?.ok && saveHints ? hintCapture.record(raw, result, { foundAt: discoveryObservedAt }) : false;
             if (row.hintAppended) hintsAppended += 1;
             recordRow(row);
             logProgress(row);

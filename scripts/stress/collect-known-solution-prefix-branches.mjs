@@ -3,7 +3,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { enumerateKnownPrefixBranches } from './research-analysis-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
@@ -17,7 +17,7 @@ const outFile = args.get('--out') ?? 'reports/stress/collect-known-solution-pref
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
-const selected = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0).slice(0, levelLimit);
+const selected = readLevelCorpusDocumentWithHints(levelsFile).levels.filter(level => level.hints?.length > 0).slice(0, levelLimit);
 const levels = [];
 for (const raw of selected) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });

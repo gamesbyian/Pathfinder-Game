@@ -2,6 +2,7 @@ import { buildResearchPopulationIntegrity, classifyResearchObservationOutcome, r
 import { canonicalizeResearchIdentities, hashResearchPopulation, parseResearchIdentityLines } from './research-population-identity-lib.mjs';
 import { researchQuestionContractIssues } from './research-question-contract-lib.mjs';
 import { researchSemanticHash } from './research-semantic-identity-lib.mjs';
+import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
 
 export const EXPERIMENT_SCHEMA_VERSION = 3;
 export const EXPERIMENT_RESULT_KIND = 'pathfinder-solver-experiment-result';
@@ -33,6 +34,110 @@ export const hashPopulation = hashResearchPopulation;
 
 export function hashConfiguration(configuration) {
   return stableHash(configuration ?? {});
+}
+
+/**
+ * Canonical execution-protocol identity for experiment evidence.
+ *
+ * Configuration identity is deliberately only one component. Two runs can carry the same
+ * experiment.configurationHash while differing in execution mode, reproducibility contract,
+ * historical-input policy, or resource/deadline semantics. Those are protocol differences even
+ * when the experiment's own configured treatment is unchanged.
+ *
+ * Solver revision and source-run identity stay separate: this answers "were these observations
+ * executed under the same semantic protocol?", not "did they come from the same code/run?".
+ *
+ * `backend` (direct/webWorker/raced/external -- modules/solver/reproducibility-mode.mjs) is an
+ * optional caller-supplied dimension, not part of `contract.execution`'s own schema-validated shape:
+ * no current contract-building producer records a backend concept yet (plan section 3.3/K's
+ * "TypeScript to plain-Node bridge audit" follow-up), so it defaults to `null`, which
+ * classifyReproducibilityMode() honestly reports as 'unknown' rather than assuming determinism.
+ * schemaVersion bumped 1 -> 2 for this hash-input change; no real production evidence recorded a v1
+ * protocolHash before this bump (hashExecutionProtocol was introduced this same implementation phase).
+ */
+export function hashExecutionProtocol(contract, { arm = null, backend = null } = {}) {
+  const execution = contract?.execution ?? {};
+  const limits = contract?.limits ?? {};
+  return stableHash({
+    schemaVersion: 2,
+    configurationHash: contract?.experiment?.configurationHash ?? null,
+    arm: arm ?? null,
+    execution: {
+      levelBlind: execution.levelBlind ?? null,
+      historyAware: execution.historyAware ?? null,
+      historicalInputs: execution.historicalInputs ?? [],
+      reproducibilityExpected: execution.reproducibilityExpected ?? null,
+      producerFamily: execution.producerFamily ?? null,
+      schedulerMode: execution.schedulerMode ?? null,
+      backend: backend ?? null,
+      reproducibilityMode: classifyReproducibilityMode({ schedulerMode: execution.schedulerMode ?? null, backend }),
+    },
+    limits: {
+      cumulativeNodeCeiling: limits.cumulativeNodeCeiling ?? null,
+      initialWorkAllocation: limits.initialWorkAllocation ?? null,
+      totalWorkCeiling: limits.totalWorkCeiling ?? null,
+      wallSafetyDeadlineMs: limits.wallSafetyDeadlineMs ?? null,
+      wallDeadlineBinding: limits.wallDeadlineBinding ?? null,
+    },
+  });
+}
+
+function resolvedSolverRefForContract(contract, arm) {
+  if (arm != null) return contract?.experiment?.arms?.[arm]?.resolvedSha ?? null;
+  return contract?.experiment?.resolvedSha ?? null;
+}
+
+/**
+ * Canonical bounded source-run binding for solver research evidence.
+ *
+ * This is intentionally identity glue rather than a telemetry envelope. Specialist artifacts keep
+ * their own rich process/failure data; this projection gives them one shared way to name the run,
+ * immutable solver revision, protocol/request-era configuration identity, population and lineage.
+ *
+ * @param {object} contract decision-grade experiment contract
+ * @param {object} options
+ */
+export function sourceRunBindingFromContract(contract, {
+  runId,
+  runAttempt = null,
+  contractRef = null,
+  arm = null,
+  backend = null,
+} = {}) {
+  const issues = decisionContractIssues(contract);
+  if (issues.length) {
+    throw new Error(`experiment contract is not decision-grade: ${issues.join(', ')}`);
+  }
+  if (!isNonEmptyString(runId)) throw new Error('source-run binding requires runId');
+  if (runAttempt != null && !isNonEmptyString(String(runAttempt))) {
+    throw new Error('source-run binding runAttempt must be null or non-empty');
+  }
+  if (arm != null && !contract?.experiment?.arms?.[arm]) {
+    throw new Error(`unknown experiment arm: ${arm}`);
+  }
+
+  const solverRef = resolvedSolverRefForContract(contract, arm);
+  if (!isImmutableCommitSha(solverRef)) {
+    throw new Error('source-run binding requires one immutable solver ref');
+  }
+
+  return {
+    schemaVersion: 1,
+    kind: 'pathfinder-solver-source-run-binding',
+    runId: String(runId),
+    runAttempt: runAttempt == null ? null : String(runAttempt),
+    contractRef: contractRef ?? null,
+    workflowFamily: contract.experiment.workflowFamily,
+    producer: contract.experiment.producer,
+    entrypoint: contract.experiment.entrypoint,
+    solverRef,
+    configurationHash: contract.experiment.configurationHash,
+    protocolHash: hashExecutionProtocol(contract, { arm, backend }),
+    populationIdentity: contract.population.identityHash,
+    corpusIdentity: contract.population.corpusIdentity ?? null,
+    arm: arm ?? null,
+    sourceRuns: [...(contract.experiment.sourceRuns ?? [])],
+  };
 }
 
 export const RECOVERY_RECONCILIATION_KINDS = Object.freeze([

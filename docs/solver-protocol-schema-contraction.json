@@ -40,7 +40,7 @@
       "treatment": "single-mutable-authority",
       "status": "in-progress",
       "retirementGate": "Re-close only after a fresh maintained-writer census proves every current writer uses canonical hintRecords/setLevelHintRecords plus explicit corpus-document/HintStore persistence, removed readLevelsWithHints/writeLevelsWithHints imports are gone from maintained code, and a guard prevents projection-only `.hints` persistence.",
-      "progress": "Mechanically classified continuation census: 56 source/workflow files mention the removed hint I/O facades, but package/workflow-seeded relative-import reachability narrows the maintained live migration target to 24 files (19 directly referenced by package.json, 4 directly by workflows, plus one reachable library). The other 32 are dormant/unreachable today; notable dormant writers include dedupe-hint-provenance, family-parent-hint-replay-batch, and minizinc-probe and must not become reachable again without migration. Re-close only when all 24 maintained reachable seams use the explicit corpus/HintStore boundary and a guard blocks regression."
+      "progress": "2026-09-23 (hint evidence consolidation Phase 1 batch): a repository-local reachability guard (scripts/hint-io-facade-guard-lib.mjs + scripts/hint-io-facade-guard-node-test.mjs, wired as npm run test:hint-io-facade-guard and into test:node) now builds the same package.json/workflow-seeded relative-import reachability graph the original census used and fails on any reachable removed-facade call. Running it against the prior 56-file grep hit list found 26 maintained-reachable offenders (7 already known plus 19 the string-grep census had not separated from dormant files), all now migrated to readLevelCorpusDocumentWithHints/writeLevelCorpusDocumentWithHints/setLevelHintRecords: scripts/hint-candidate-search.mjs (also stopped its --write-levels path from mutating raw.hints with no provenance -- accepted candidates now get honest makeProvenanceEntry() records, distinguishing genuine solver-derived phases (solver.id=pathfinder-solver) from the corner-flip geometric-mutation phase (solver.id=candidate-search-geometry-mutation, a new narrowly-scoped id, not a fabricated solver identity)), dedupe-hint-provenance.mjs, family-parent-hint-replay-batch.mjs, stress/cpsat-hint-harvest.mjs (also stopped hand-assigning .hintRecords/.hints separately in favor of setLevelHintRecords), hint-expansion-audit.mjs, hint-workbench-parallel.mjs, validate-hint-paths.mjs, generate-level-heatmaps.mjs, hint-weight-calibration.mjs, req-length-sweep.mjs, run-solver-direct.mjs (this one was actually broken today: it called the shared hintCapture.flush() with a bare levels array where that helper now requires an explicit {levels,metadata,storageShape} document, so any --save-hints run with real discoveries -- e.g. via the maintained solver-diagnostics.yml workflow -- would have thrown; verified fixed with a scratch-corpus probe), and 15 scripts/stress/*.mjs readers. The guard is green on current main plus this batch. Still open: the guard only detects the two removed function names, not the broader '.hints = ' bare-path-mutation pattern PSC-001's retirement gate also names; a repo-wide scan for that pattern outside the removed-facade set found two hits (modules/editor/level-coordinate-transforms.ts), both invalidating an in-memory editor working level's hints after a coordinate remap (never touching persisted corpus documents or hintRecords) and judged benign on manual review, but no automated guard yet prevents a new canonical writer from reintroducing bare-path-only persistence. Re-close PSC-001 only once that broader guard also exists."
     },
     {
       "id": "PSC-002",
@@ -362,7 +362,7 @@
       "treatment": "permanent-archive-reader",
       "status": "in-progress",
       "retirementGate": "Reopened 2026-09-22: historical provenance ingress must normalize into one explicit semantic missingness contract before hint schema v4. Re-close only when canonical expansion distinguishes default false/null from historically absent/unknown, current writers emit one nested shape, and retained historical fixtures prove no absent capability boolean is silently promoted to modern false.",
-      "progress": "Current full-store census found 775,469 provenance events. The missingness defect is already physically historical: September 11 measured 505,993 events omitting isolatedTechnique, but current raw storage has only 32,254 absent and 507,334 explicit false. level-data-io reads through upgradeProvenanceEntry(), whose false synthesis can be serialized on a later touched-file write. Historical unknown has therefore been laundered into modern false in part of the store. Compatibility must classify by source generation/observation semantics, not current key presence."
+      "progress": "Current full-store census found 775,469 provenance events. The missingness defect is already physically historical: September 11 measured 505,993 events omitting isolatedTechnique, but current raw storage has only 32,254 absent and 507,334 explicit false. level-data-io reads through upgradeProvenanceEntry(), whose false synthesis can be serialized on a later touched-file write. Historical unknown has therefore been laundered into modern false in part of the store. Compatibility must classify by source generation/observation semantics, not current key presence. 2026-09-23: added a fourth, strictly additive optional shape within canonical nested provenance — `execution` (bounded solver-request/protocol identity; participates in provenanceEventIdentity) and `occurrences` (bounded acquisition/run lineage; explicitly excluded from provenanceEventIdentity, merged via mergeOccurrenceLineage on rediscovery rather than duplicated). Neither field is populated by any current producer yet, so this addition introduces no new missingness ambiguity by itself: every existing and newly-written entry alike simply lacks the key, which upgradeProvenanceEntry() deliberately does not synthesize a default for. The next batch (wiring real producers to supply these options) must apply the same historical-vs-current generation discipline this gate exists to enforce — an absent `execution`/`occurrences` on an old entry must stay unknown, never get defaulted once some producers start populating it. 2026-09-24 (durable solver-stage identity decision): decided AGAINST adding a `solverStageId` field to this schema. scripts/hint-discovery-replayability-lib.mjs's effectiveSolverInputIdentityStatus() already treats solverStageId as an external-join-supplied input (never persisted on the entry itself), and scripts/hint-discovery-process-evidence-lib.mjs's joinSolvedRowsToHintDiscoveryProcesses() already provides an exact join path for it — winner.stageId on the joined hint-discovery-process record, keyed by exact complete-path-signature equality to a specific solver run's report, normalized through normalizeHistoricalSolverStageId() before use. Persisting stageId durably on every Hint provenance entry would duplicate that already-exact, already-tested join for a fact only occasionally needed, and would conflict with this program's own richEvidenceInversion principle (docs/hint-evidence-consolidation-inventory.json: 'keep Hint compact; strengthen exact joins to existing richer sibling evidence resources rather than creating a universal discovery record') and Phase 4's own conservatism ('No derived Hint index was added merely because the plan mentioned one; it remains contingent on a demonstrated repeated query that earns another persistent projection' — reports/2026-09-23-hint-evidence-claude-handoff-after-phase4-6-table-setting-001.md). scripts/stress/hint-reconstructability-report.mjs deliberately stays join-free (its own comment: 'No external joins are supplied here by design. This is the durable-hint-store baseline') and is not the place to wire this join speculatively; a bespoke cross-corpus stage-identity join-and-report tool is deferred until a real, demonstrated query need earns it, matching how every other sibling-evidence join in this program was built only once a concrete consumer existed."
     },
     {
       "id": "PSC-016",
@@ -582,15 +582,17 @@
       "id": "PSC-025",
       "concept": "hint artifact layout and discovery",
       "owners": [
+        "modules/hint-artifact-layout.mjs",
         "scripts/level-data-io.mjs",
         "modules/data-asset-loaders.ts",
         "modules/dev-corpus.ts"
       ],
       "forms": [
-        "Node filename-derived hintsDirFor()",
-        "browser caller-provided hintsDirName",
-        "writer accepts arbitrary string IDs",
-        "listHintFiles() regex-limited discovery"
+        "shared levels-filename -> hint-directory rule",
+        "shared persistent-id/positional-fallback -> hint filename rule",
+        "Node path/fs adapter",
+        "browser fetch adapter",
+        "matching-only legacy hintsDirName compatibility assertion"
       ],
       "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": true,
@@ -599,7 +601,7 @@
       "treatment": "canonical-layout-authority",
       "status": "in-progress",
       "retirementGate": "Define one corpus-to-hint-artifact layout contract with Node/browser adapters; every canonical writable hint filename is discoverable by validators, formatters, migrators, and indexes; legacy numeric fallback remains explicit.",
-      "progress": "Investigation closed 2026-09-22. Node/browser corpus-to-hint directory mapping has two owners; hintFileName accepts arbitrary string ids while listHintFiles recognizes only a narrower filename regex. Phase -1 target is one neutral corpus-layout descriptor plus expected artifact names derived from corpus level ids; enumeration becomes missing/orphan verification and numeric fallback stays explicit."
+      "progress": "Implementation completed on chatgpt/continue-hint-evidence-consolidation-2026-09-23: one browser/Node-neutral layout authority now owns directory naming, safe filename/key round-tripping, positional fallback, expected filenames, and discovery vocabulary. Node listHintFiles no longer uses the narrower historical regex; browser dev-corpus mapping derives from levelsFile; corpus formatting validation classifies missing versus orphan artifacts. Focused tests are added, but execution validation/current-main reconciliation remain before closing the registry row."
     },
     {
       "id": "PSC-026",
@@ -631,7 +633,7 @@
       "treatment": "investigate",
       "status": "in-progress",
       "retirementGate": "Every canonical SolveOpts field and maintained execution backend is classified by one request-identity owner; new fields fail closed until classified. Current identity fields map to documented semantic layers (request/config, execution protocol, reproducibility class, run envelope, immutable solver ref). Determinism consumers compare only execution classes whose contract promises path-stable repeatability.",
-      "progress": "The 49-field SolveOpts inventory now has exact interface-membership parity plus per-field effective-default, identity-layer, and direct/worker/raced support classifications. A new node test fails on SolveOpts or raced-boundary drift. One new backend seam was found: beamFlowCounters and pruneDiagnostics are structured-cloneable mutable side channels, so the worker accepts them but mutates only its clone and returns no updates; either reject them as direct-only or return explicit telemetry before claiming direct/worker semantic parity."
+      "progress": "Phase 2 implementation on the Claude-descendant continuation branch now includes: CI-enforced SolveOpts identity-layer classification; explicit rejection of worker-only mutable observer side channels; one shared canonical serializer; versioned run-wide canonical solver-request projection over exactly the solver-semantic field set; plain-Node solver-request digest verification and dual-read legacy effectiveConfig compatibility; distinct execution-protocol hashing; one canonical source-run binding reused by hint-discovery-process evidence; a machine-readable identity-dialect migration map; and derived effective-input reconstructability reporting with missingDimensions plus a corpus-wide query surface. Pending: execute validation/current-main reconciliation, producer emission of canonical solverRequestProjection/identity, exact per-level solver-stage/request joins into modern provenance/occurrence lineage, raced/backend reproducibility integration, and broader source-run binding migration."
     },
     {
       "id": "PSC-027",
@@ -655,30 +657,31 @@
       "treatment": "single-mutable-authority",
       "status": "in-progress",
       "retirementGate": "Modern GHA solver discoveries use one central semantic hint-ingestion authority from specialist discovery artifacts projected through a common execution capsule. Do not force failure/exact/family/search-loss evidence into one universal artifact schema. Direct hint-file import remains historical/mixed-era compatibility after parity and partial-failure recovery are demonstrated.",
-      "progress": "Workflow matrix now names producer entrypoint, level/history semantics, persistence lane, path/config/revision availability, source lineage, partial-failure behavior, artifact sufficiency, and migration target for all harvester-relevant maintained workflows. Central harvester deliberately excludes broad/residual/static-portfolio/recombination from canonical hints. Recombination already retains constituent acquisition runs. Two harvester workflow_run names have no maintained workflow file and are stale trigger residue."
+      "progress": "Central harvest now resolves source run attempt as well as run id/workflow/SHA; all canonical import lanes emit the shared ingestion receipt. Report-based level-blind and isolated lanes reconstruct physical occurrence lineage from exact source-run facts. Direct transported Hint artifacts are structurally merged/referee-checked and report exact path/event/occurrence deltas. CP-SAT now emits self-describing exact successful-discovery JSON (path, source level revision, forcing, discovery time, external solver identity) into its existing shard artifact; the central harvester has a CP-SAT specialist adapter that rechecks source revision/path and reconstructs the same external semantic event plus source-run occurrence. CP-SAT direct hint transport is intentionally retained as the Phase-6 parity lane. Remaining Phase-6 work is family-by-family parity/recovery evidence and retirement of direct canonical mutation only after those gates pass."
     },
     {
       "id": "PSC-028",
       "concept": "hint ingestion selection/retention accounting",
       "owners": [
+        "scripts/hint-ingestion-receipt-lib.mjs",
+        "scripts/hint-ingestion-receipt-query.mjs",
         "scripts/hint-harvest-selection-manifest-lib.mjs",
         "scripts/harvest-level-blind-report-hints.mjs",
         "scripts/harvest-isolated-report-hints.mjs",
         "scripts/merge-hint-artifacts.mjs"
       ],
       "forms": [
-        "level-blind selection manifest",
-        "isolated-harvest counters/quarantine",
-        "direct artifact merger counters/quarantine"
+        "canonical hint-ingestion receipt",
+        "historical level-blind selection manifest compatibility projection"
       ],
-      "currentWritesMultipleForms": true,
+      "currentWritesMultipleForms": false,
       "currentInputsMultipleForms": false,
       "historicalRequirement": true,
       "persistedExternalRequirement": false,
       "treatment": "canonical-ingestion-receipt",
       "status": "in-progress",
       "retirementGate": "All modern ingestion lanes expose one minimal canonical funnel vocabulary for observed solved candidates, referee/compatibility rejection, already-represented semantic evidence, quarantine, and persisted changes, with producer-specific extensions allowed.",
-      "progress": "Investigation closed 2026-09-22. Only level-blind harvesting emits a structured selection manifest; isolated and direct-artifact compatibility import expose different log/quarantine counters. Phase -1 will add one versioned hint-ingestion receipt with explicit units for candidate, eligible, referee-accepted, already-represented, path/event/occurrence additions, quarantine reasons, and physical changes. It remains success-ingestion accounting, never an attempted-population denominator."
+      "progress": "Canonical receipt schema v1 is implemented and queryable across all three current canonical harvest lanes. Level-blind and isolated/report harvesters emit the shared receipt; merge-hint-artifacts measures exact path/provenance-event/occurrence additions from canonical before/after merge state and emits the same receipt. The old level-blind selection manifest remains a historical/current specialist compatibility resource and projects into the receipt without rewrite. Central GHA harvest persists all three receipts with exact source run id/attempt. Receipt accounting is implementation-complete pending real workflow validation; retirement still requires proving no maintained ingestion lane bypasses the canonical receipt vocabulary."
     },
     {
       "id": "PSC-029",
@@ -691,19 +694,19 @@
       ],
       "forms": [
         "JSON-stringified Hint values in Firestore levelData.hints",
-        "per-path local_level_hints documents",
+        "per-path-per-discovery-event local_level_hints documents",
         "git per-level hint artifact",
-        "5-hint Firestore published-level merge cap",
-        "5000 local-level soft cap"
+        "explicit byte-capacity check on the published-level merged document (FIRESTORE_HINT_CAPACITY_BUDGET_BYTES)",
+        "5000 local-level soft cap on total entry docs"
       ],
       "currentWritesMultipleForms": true,
       "currentInputsMultipleForms": true,
       "historicalRequirement": true,
       "persistedExternalRequirement": true,
       "treatment": "investigate",
-      "status": "in-progress",
-      "retirementGate": "Define one semantic Hint retention contract across Firestore backends. Remove the legacy five-path truncation or replace it with an explicit provenance-aware capacity policy, and ensure a newly accepted Hint cannot lose existing provenance merely because the target uses local_level_hints. Physical schemas may differ, but semantic merge/provenance preservation must not.",
-      "progress": "Measured current storage economics. One semantic Hint JSON is p50 1,437 B / p99 27,784 B / max 574,971 B. A local path+single-event document is p50 1,892 B / max 3,440 B. But published-level encodeHints hint arrays are p50 1,149,023 B / p99 2,044,991 B / max 5,269,927 B before level metadata and Firestore overhead. Thus 5/1000/5000 path-count caps are not principled capacity contracts. Local storage additionally cannot retain same-path rediscovery provenance and has no import-to-git convergence path. Implementation needs bounded/sharded event growth plus explicit byte preflight/overflow semantics, not silent truncation."
+      "status": "complete",
+      "retirementGate": "Satisfied 2026-09-24: both backends now merge/dedupe through the exact same shared function (mergeHints()/dedupeProvenanceEntries()) -- physical layout differs (published_levels holds one merged array per level document; local_level_hints shards one document per (path, discovery-event) pair) but semantic merge/provenance/occurrence-lineage preservation does not. The legacy 5-hint published-level truncation was already replaced (prior to this session) by review-repository.ts's approveHintAddition() explicit FIRESTORE_HINT_CAPACITY_BUDGET_BYTES check, which throws rather than silently drops when a merge would exceed Firestore's real per-document budget, leaving the submission queued for retry instead of losing evidence. This session's local_level_hints entryIdFor() composite-ID fix (see this entry's progress note below) closed the other named defect: a newly accepted Hint can no longer lose existing provenance merely because the target uses local_level_hints. No further Phase-3 capacity work is required for this entry; a bounded/sharded Firestore layout for `occurrences` specifically was never needed because local_level_hints was already sharded to one discovery event per document (p50 1,892 B / max 3,440 B per this entry's own prior measurement, far under any Firestore limit) and published_levels' byte check already covers whole-document growth from any source, occurrences included.",
+      "progress": "Measured current storage economics. One semantic Hint JSON is p50 1,437 B / p99 27,784 B / max 574,971 B. A local path+single-event document is p50 1,892 B / max 3,440 B. But published-level encodeHints hint arrays are p50 1,149,023 B / p99 2,044,991 B / max 5,269,927 B before level metadata and Firestore overhead. Thus 5/1000/5000 path-count caps are not principled capacity contracts. Local storage additionally cannot retain same-path rediscovery provenance and has no import-to-git convergence path. Implementation needs bounded/sharded event growth plus explicit byte preflight/overflow semantics, not silent truncation. 2026-09-24: closed the local_level_hints same-path rediscovery-provenance loss specifically -- local-level-hints-repository.ts's entryIdFor() now keys each entry doc's ID by a composite (path signature, discovery-event identity) hash instead of the path signature alone, so a genuinely new discovery event for an already-known path gets its own sibling doc (reusing the exact same create-only/immutable security-rule pattern, zero firestore.rules changes needed) instead of being silently dropped as a duplicate; getLocalLevelHints() needed no change since mergeHints()/dedupeProvenanceEntries() already merge multiple docs sharing a path into one Hint with a combined, deduped provenance array. review-repository.ts's approveLocalHintAddition() and win-controller.ts's saveWinAsHintIfNovel() both now build alreadyKnownEventKeys via the new provenanceEventKey() rather than a bare path-signature set. Verified (npm run check:types, full vitest, npm run test:node, and the local_level_hints repository's own unit tests) without emulator access in this environment -- the real Firestore-emulator-backed proof (scripts/firestore-level-fingerprint-boundary-test.mjs, extended with the new-discovery-event-on-known-path scenario) still needs to run in CI to confirm empirically, tracked separately from this entry's closure since it concerns test execution, not the semantic contract itself. 2026-09-24 (retirement): re-examined review-repository.ts's approveHintAddition() and confirmed the 5-hint truncation named in this gate no longer exists in code -- it was already replaced by an explicit FIRESTORE_HINT_CAPACITY_BUDGET_BYTES throw-on-overflow check in a prior Phase 1 containment batch (predating this session), which this entry's `forms` list had not caught up to. With both named defects closed and both backends sharing one merge function, this entry's retirementGate is satisfied; see retirementGate for the closure rationale."
     },
     {
       "id": "PSC-030",

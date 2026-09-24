@@ -3,7 +3,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
 import { compareProducerPopulations } from './research-analysis-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
@@ -73,7 +73,7 @@ const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/so
 const { UNPACK } = await import('../../modules/domain/cell-key.ts');
 const { repairSearchFromGate } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
-const hintBearing = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0);
+const hintBearing = readLevelCorpusDocumentWithHints(levelsFile).levels.filter(level => level.hints?.length > 0);
 const selected = sampleSize != null
     ? sampleDeterministic(hintBearing, sampleSize, hashSeed(seedStr))
     : hintBearing.slice(0, limit);

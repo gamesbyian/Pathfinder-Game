@@ -30,7 +30,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { readLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
+import { readLevelCorpusDocumentWithHints, parseLevelPositions } from './level-data-io.mjs';
 
 const args     = process.argv.slice(2);
 const argMap   = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
@@ -57,7 +57,7 @@ const root = new URL('..', import.meta.url).pathname;
 const levelsJsonAbs = path.join(root, 'data/levels.json');
 
 function loadRawLevels() {
-    const levels = readLevelsWithHints(levelsJsonAbs);
+    const { levels } = readLevelCorpusDocumentWithHints(levelsJsonAbs);
     if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return levels;
 }
