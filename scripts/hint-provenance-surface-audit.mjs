@@ -25,10 +25,14 @@ function escapeRegExp(text) {
 
 const CANONICAL_STORE_SOURCE = CANONICAL_TRACKED_HINT_STORE_DIRS.map(escapeRegExp).join('|');
 const CANONICAL_STORE_PATH_RE = new RegExp('(?:' + CANONICAL_STORE_SOURCE + ')/', 'u');
-const HINT_PATH_HELPER_RE = /\b(?:hintFilePathFor|hintsDirFor)\s*\(/u;
+const CANONICAL_STORE_JOIN_RES = CANONICAL_TRACKED_HINT_STORE_DIRS.map(dir =>
+  new RegExp(dir.split('/').map(escapeRegExp).join("['\"]\\s*,\\s*['\"]"), 'u'));
+const HINT_PATH_HELPER_RE = /\b(?:hintFilePathFor|hintsDirFor|hintArtifactFileName|isHintArtifactFileName|hintKeyForLevel)\s*\(/u;
 
 function expressionHasCanonicalHintPath(expression, pathVars = new Set()) {
-  if (CANONICAL_STORE_PATH_RE.test(expression) || HINT_PATH_HELPER_RE.test(expression)) return true;
+  if (CANONICAL_STORE_PATH_RE.test(expression)
+      || CANONICAL_STORE_JOIN_RES.some(re => re.test(expression))
+      || HINT_PATH_HELPER_RE.test(expression)) return true;
   for (const name of pathVars) {
     if (new RegExp('\\b' + escapeRegExp(name) + '\\b', 'u').test(expression)) return true;
   }
@@ -40,6 +44,7 @@ function inspectPhysicalHintReadSurface(text) {
   const consumesHintRows = /\.hints\b/u.test(text);
   const hasHintSourceSignal = /\bhint(?:File(?:Path)?|Doc|Path|Artifact(?:Path)?|Contents?|Metadata|Dir)\b/iu.test(text)
     || CANONICAL_STORE_PATH_RE.test(text)
+    || CANONICAL_STORE_JOIN_RES.some(re => re.test(text))
     || HINT_PATH_HELPER_RE.test(text);
   const usesSharedDecoder = /\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(text);
   const suspect = readsJsonFile && consumesHintRows && hasHintSourceSignal;
@@ -137,6 +142,11 @@ if (process.argv.includes('--self-test')) {
       suspect: true,
     },
     {
+      name: 'path-joined family-store raw writer',
+      text: `const target = path.join(root, 'data', 'families', 'hints', 'F00001.json');\nwriteFileSync(target, JSON.stringify(doc));`,
+      suspect: true,
+    },
+    {
       name: 'helper-derived staged raw writer',
       text: `const hintDir = hintsDirFor(corpusPath);\nconst target = path.join(hintDir, id + '.json');\nwriteFileSync(target, JSON.stringify(doc));`,
       suspect: true,
@@ -199,8 +209,9 @@ const categories = {
   ],
   physicalPathKnowledge: [
     CANONICAL_STORE_PATH_RE,
+    ...CANONICAL_STORE_JOIN_RES,
     /['"]hints(?:-random|-envelope)?['"]/u,
-    /\b(?:hintFilePathFor|hintsDirFor)\b/u,
+    /\b(?:hintFilePathFor|hintsDirFor|hintArtifactFileName|isHintArtifactFileName|hintKeyForLevel)\b/u,
   ],
   workflowPersistence: [
     /--save-hints\b/u, /git add[^\n]*hints/u, /harvest-solver-evidence/u,
