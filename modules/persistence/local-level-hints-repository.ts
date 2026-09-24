@@ -1,5 +1,5 @@
 // Supplemental hints for a level published in the local levels.json corpus (as opposed to a
-// Firestore published_levels doc) — see docs/firestore-security-model.md and CLAUDE.md's
+// Firestore published_levels doc) — see firestore.rules and CLAUDE.md's
 // Provenance section. Keyed by the level's fingerprint (domain/level-fingerprint.ts), the same
 // identity mechanism already used for submission/publish duplicate detection and Dev-Mode level
 // ratings. One Firestore doc per distinct (path, discovery-event, physical-occurrence set) observation -- see entryIdFor()'s own
@@ -84,7 +84,7 @@ export function createLocalLevelHintsRepository(client: any) {
      *  reason rather than a bare false. A NEW discovery event for an already-known path is not
      *  "already known" here — see entryIdFor()'s own doc comment. Best-effort, non-atomic count
      *  check: a soft cap on puzzle-hint data, not a security boundary, so a small overshoot under
-     *  concurrent writes is acceptable (see docs/firestore-security-model.md). Propagates failures
+     *  concurrent writes is acceptable (see firestore.rules). Propagates failures
      *  like every other repository function here — callers driving an invisible background save
      *  (rather than a submission flow already surfacing its own errors) are responsible for
      *  catching and reporting rather than letting a rejected promise go unhandled. */
