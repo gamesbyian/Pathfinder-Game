@@ -10,7 +10,6 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { stableStringify } from '../modules/canonical-json.mjs';
-import { normalizeRawLevel } from '../modules/solver/normalization.js';
 import { stringifyCorpusJson } from './level-json-format.mjs';
 
 const CORPORA = [
@@ -32,11 +31,19 @@ export function sparseLevelCandidate(level) {
     return out;
 }
 
+function comparisonProjection(level) {
+    const projected = { ...level };
+    // These fields are optional in RawLevel and every engine/parser consumer treats absence as
+    // the empty collection. Rehydrate them only for the benchmark equality proof.
+    for (const field of OPTIONAL_EMPTY_ARRAYS) {
+        if (projected[field] == null) projected[field] = [];
+    }
+    return projected;
+}
+
 export function assertSparseLevelEquivalent(level, candidate, index = 0) {
-    const before = normalizeRawLevel(level, index + 1);
-    const after = normalizeRawLevel(candidate, index + 1);
-    if (stableStringify(before) !== stableStringify(after)) {
-        throw new Error('sparse level candidate changed normalized semantics at position ' + (index + 1));
+    if (stableStringify(comparisonProjection(level)) !== stableStringify(comparisonProjection(candidate))) {
+        throw new Error('sparse level candidate changed claimed omission semantics at position ' + (index + 1));
     }
 }
 
@@ -88,7 +95,7 @@ export function benchmarkSparseLevelCorpora(root = process.cwd()) {
             targetBytes,
             reduction: sourceBytes > 0 ? 1 - targetBytes / sourceBytes : 0,
         },
-        semanticEquality: 'normalized-level exact',
+        semanticEquality: 'exact after rehydrating only optional empty mechanic arrays',
     };
 }
 
