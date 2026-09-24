@@ -146,14 +146,33 @@ The original nine-level population has now been probed at **250,000 work** and a
 
 ### A1b. Fast-gate runtime-data cache miss fallback
 
-After hint-tree churn invalidated the exact runtime-data key, ordinary PR runs measured the universal fast-gate miss path at **52-56 s** before validation. Two approaches are already rejected by hosted evidence:
+Hint-tree churn exposed a universal fast-gate cache-miss cost large enough to violate the entire 35-second target before validation starts.
 
-1. post-clone `git sparse-checkout set` on the source worktree: 52-56 s;
-2. a second full sparse checkout into the same root worktree: ~55 s.
+Hosted evidence rejects three whole-tree materialization shapes:
 
-Current rehearsal isolates the data population in `.runtime-data-source`, copies only `data/` into the source worktree, then removes the temporary checkout. The branch deliberately adds an `-a1b-miss-probe` cache-key suffix to force one miss; that suffix must be removed before merge.
+1. post-clone `git sparse-checkout set` on the source worktree: **52-56 s**;
+2. a second final-population checkout into the same root worktree: **~55 s**;
+3. a separate runtime-data-only checkout under `.runtime-data-source`: **56 s**.
 
-If this isolated checkout is still materially above ~15 s, stop optimizing PR-side miss recovery and move exact runtime-data cache publication upstream to the default-branch diagnostics/hint producer so PRs normally never materialize the hint tree.
+The problem is therefore not merely sparse-worktree mutation. Fetching/materializing the ~190 MB multi-file hint/data population from Git during PR CI is itself too expensive.
+
+Current rehearsal uses a differential cache strategy:
+
+1. exact current runtime-data cache lookup;
+2. on miss, derive the exact **base-parent** runtime-data key from `HEAD^1`;
+3. restore that base cache;
+4. batch-overlay only runtime-data files changed by the tested merge using `git archive HEAD -- <changed files>`;
+5. remove files deleted by the merge;
+6. save the resulting exact current-generation cache;
+7. only if the base cache is unavailable, fall back to the known-slow isolated full-data checkout for correctness.
+
+Rehearsal-only controls currently force:
+- an exact current-key miss via suffix `-a1b-base-overlay-probe-v3`;
+- one unchanged `data/levels.json` file through the overlay path so overlay execution is measured even though the CI-only PR does not alter runtime data.
+
+Both controls must be removed before merge.
+
+This design is complementary to A1c, which publishes exact default-branch generations immediately after diagnostics hint refreshes. A1c prevents most diagnostics-driven misses; A1b makes ordinary PR runtime-data edits proportional to their delta instead of to the whole hint tree.
 
 ## Implementation sequence
 
