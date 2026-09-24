@@ -32,8 +32,8 @@ jobs:
       - name: Enforce central Hint persistence ownership
         run: npm run test:central-hint-persistence-guard
 
-      - name: Census maintained Hint/provenance surfaces
-        run: node scripts/hint-provenance-surface-audit.mjs --out=/tmp/hint-provenance-surface-census.json
+      - name: Census and enforce maintained Hint/provenance surfaces
+        run: node scripts/hint-provenance-surface-audit.mjs --enforce --out=/tmp/hint-provenance-surface-census.json
 
       - name: Re-run consolidation empirical census
         run: node scripts/hint-evidence-consolidation-audit.mjs --out=/tmp/hint-evidence-consolidation-census.json
