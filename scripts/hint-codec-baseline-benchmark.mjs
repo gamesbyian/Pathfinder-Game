@@ -12,13 +12,9 @@ import { gzipSync } from 'node:zlib';
 import { performance } from 'node:perf_hooks';
 import { decodeHintArtifact, hintPaths } from '../modules/domain/hint-runtime.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
+import { discoverHintStoreDirs, hintStoreLabel } from './hint-store-roots.mjs';
 
-const ROOTS = [
-  { corpus: 'published', dir: 'data/hints' },
-  { corpus: 'corpus1', dir: 'data/stress/hints' },
-  { corpus: 'corpus2', dir: 'data/stress/hints-random' },
-  { corpus: 'envelope', dir: 'data/stress/hints-envelope' },
-];
+const ROOTS = discoverHintStoreDirs(process.cwd()).map(dir => ({ corpus: hintStoreLabel(dir), dir }));
 
 function pct(values, p) {
   if (!values.length) return 0;
