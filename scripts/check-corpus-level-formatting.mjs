@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import process from 'node:process';
 
 import { stringifyCorpusJson } from './level-json-format.mjs';
-import { listHintFiles, hintFilePathFor } from './level-data-io.mjs';
+import { listHintFiles } from './level-data-io.mjs';
 import { expectedHintArtifactFileNames } from '../modules/hint-artifact-layout.mjs';
 import { prChangedFiles, readRepositoryText } from './repository-file-view.mjs';
 import { discoverHintStoreDirs } from './hint-store-roots.mjs';
