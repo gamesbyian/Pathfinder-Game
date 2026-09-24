@@ -99,8 +99,8 @@
     },
     "deep-proofs": {
       "packageScript": "test:deep-proofs",
-      "workflowStepId": "deep_proofs",
-      "note": "All production-solver deep proofs remain together initially."
+      "workflowStepId": "deep_services",
+      "note": "Heavyweight solver proofs; co-executed with Firestore under deep_services while preserving independent result output."
     },
     "solver-canary": {
       "workflowStepId": "solver_canary",
@@ -113,8 +113,8 @@
     },
     "firestore-boundary": {
       "packageScript": "test:firestore-level-fingerprint-boundary",
-      "workflowStepId": "firestore",
-      "note": "Java/Firestore emulator boundary check."
+      "workflowStepId": "deep_services",
+      "note": "Java/Firestore emulator boundary check; co-executed with deep proofs under deep_services while preserving independent result output."
     }
   }
 }
