@@ -1236,6 +1236,15 @@
         "kind": "bare-hint-canonical-state-divergence",
         "path": "modules/editor/level-coordinate-transforms.ts",
         "finding": "Editor coordinate transforms cleared level.hints directly but left canonical level.hintRecords intact, allowing stale transformed Hint evidence to survive. Fixed to clear via setLevelHintRecords(level, []) and made maintained direct .hints/.hintRecords assignments fail closed through an explicit review ledger."
+      },
+      {
+        "id": "HPA-015",
+        "kind": "unfinished-derived-query-index",
+        "paths": [
+          "scripts/hint-store-index.mjs",
+          "scripts/hint-store-index-node-test.mjs"
+        ],
+        "finding": "The consolidation plan promised a lightweight freshness-bound Hint index, but no such derived artifact/index generator existed. Added a deterministic per-artifact index using canonical decode/query/reconstructability semantics plus source content/semantic hashes and stale-index verification."
       }
     ],
     "permanentGuards": [
