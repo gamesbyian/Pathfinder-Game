@@ -9,7 +9,12 @@ import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from '
 import path from 'node:path';
 import process from 'node:process';
 import { gzipSync } from 'node:zlib';
-import { decodeHintArtifact, encodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
+import {
+    decodeHintArtifact,
+    encodeHintArtifact,
+    hintPathSignature,
+    provenanceEventIdentity,
+} from '../modules/domain/hint-runtime.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
 import { stringifyCorpusJson } from './level-json-format.mjs';
 
@@ -19,13 +24,49 @@ const DEFAULT_DIRS = [
     'data/stress/hints-random',
 ];
 
+function sha256Text(text) {
+    return 'sha256:' + createHash('sha256').update(text).digest('hex');
+}
+
+function semanticSha256(records) {
+    return sha256Text(stableStringify(records));
+}
+
+function joinIdentitySha256(records) {
+    const rows = [];
+    for (const hint of records ?? []) {
+        const pathSignature = hintPathSignature(hint.path);
+        for (const entry of hint.provenance ?? []) {
+            rows.push({
+                pathSignature,
+                provenanceEventIdentity: provenanceEventIdentity(entry),
+                solverRequestIdentity: entry?.execution?.solverRequestIdentity ?? null,
+                protocolHash: entry?.execution?.protocolHash ?? null,
+                occurrences: (entry?.occurrences ?? []).map(occ => ({
+                    runId: occ?.runId ?? null,
+                    runAttempt: occ?.runAttempt ?? null,
+                    contractRef: occ?.contractRef ?? null,
+                })),
+            });
+        }
+    }
+    return sha256Text(stableStringify(rows));
+}
+
 export function measureV4ArtifactText(rawText) {
     const parsed = JSON.parse(rawText);
     const decoded = decodeHintArtifact(parsed);
     const encoded = encodeHintArtifact(decoded);
     const roundTrip = decodeHintArtifact(encoded);
-    if (stableStringify(roundTrip) !== stableStringify(decoded)) {
+    const beforeSemanticSha256 = semanticSha256(decoded);
+    const afterSemanticSha256 = semanticSha256(roundTrip);
+    if (afterSemanticSha256 !== beforeSemanticSha256) {
         throw new Error('schema v4 semantic round-trip mismatch');
+    }
+    const beforeJoinIdentitySha256 = joinIdentitySha256(decoded);
+    const afterJoinIdentitySha256 = joinIdentitySha256(roundTrip);
+    if (afterJoinIdentitySha256 !== beforeJoinIdentitySha256) {
+        throw new Error('schema v4 cross-resource join identity mismatch');
     }
     const targetText = stringifyCorpusJson(encoded, 'hints');
     return {
@@ -33,6 +74,12 @@ export function measureV4ArtifactText(rawText) {
         encoded,
         targetText,
         representation: encoded.representation,
+        sourceContentSha256: sha256Text(rawText),
+        targetContentSha256: sha256Text(targetText),
+        semanticSha256: beforeSemanticSha256,
+        joinIdentitySha256: beforeJoinIdentitySha256,
+        hints: decoded.length,
+        provenanceEvents: decoded.reduce((n, hint) => n + (hint.provenance?.length ?? 0), 0),
         sourceBytes: Buffer.byteLength(rawText),
         targetBytes: Buffer.byteLength(targetText),
         sourceGzipBytes: gzipSync(rawText).byteLength,
@@ -65,6 +112,12 @@ export function migrateHintStores(root, { apply = false, dirs = DEFAULT_DIRS } =
         rows.push({
             file: file.rel,
             representation: measured.representation,
+            sourceContentSha256: measured.sourceContentSha256,
+            targetContentSha256: measured.targetContentSha256,
+            semanticSha256: measured.semanticSha256,
+            joinIdentitySha256: measured.joinIdentitySha256,
+            hints: measured.hints,
+            provenanceEvents: measured.provenanceEvents,
             sourceBytes: measured.sourceBytes,
             targetBytes: measured.targetBytes,
             sourceGzipBytes: measured.sourceGzipBytes,
@@ -84,6 +137,8 @@ export function migrateHintStores(root, { apply = false, dirs = DEFAULT_DIRS } =
         mode: apply ? 'applied' : 'dry-run',
         files: rows.length,
         changedFiles: rows.filter(row => row.changed).length,
+        hints: rows.reduce((n, row) => n + row.hints, 0),
+        provenanceEvents: rows.reduce((n, row) => n + row.provenanceEvents, 0),
         representations,
         bytes: {
             source: sourceBytes,
@@ -94,6 +149,12 @@ export function migrateHintStores(root, { apply = false, dirs = DEFAULT_DIRS } =
             gzipReduction: sourceGzipBytes > 0 ? 1 - targetGzipBytes / sourceGzipBytes : 0,
         },
         semanticRoundTrip: 'pass',
+        crossResourceJoinIdentity: 'pass',
+        reversibility: {
+            mechanism: 'git before/after content hashes plus deterministic v1-v4 decoder',
+            everyChangedFileHasBeforeAfterHash: rows.every(row =>
+                typeof row.sourceContentSha256 === 'string' && typeof row.targetContentSha256 === 'string'),
+        },
         rows,
     };
 }
