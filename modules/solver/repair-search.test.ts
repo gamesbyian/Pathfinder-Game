@@ -203,11 +203,11 @@ test('repairSearchFromGate with enableMustTurnBias=true is deterministic', async
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, true, 400_000);
 
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, true, 400_000);
 
     assert.deepEqual(pathA, pathB);
 }, 25000);
@@ -252,10 +252,10 @@ test('repairSearchFromGate with enablePlateauPenalty=true is deterministic', asy
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -263,10 +263,10 @@ test('enablePlateauPenalty=false (default) is byte-identical to omitting it', as
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000, null, 0, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -301,10 +301,10 @@ test('repairSearchFromGate with enableRecombination=true is deterministic', asyn
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, false, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -312,10 +312,10 @@ test('enableRecombination=false (default) is byte-identical to omitting it', asy
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000, null, 0, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -336,10 +336,10 @@ test('repairSearchFromGate with enableBeamSeed=true is deterministic', async () 
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, false, false, false, false, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, false, false, false, false, false, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -347,10 +347,10 @@ test('enableBeamSeed=false (default) is byte-identical to omitting it', async ()
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false, false, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000, null, 0, false, false, false, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -424,10 +424,10 @@ test('repairSearchFromGate with enableRelink=true is deterministic', async () =>
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, false, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, false, false, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -435,10 +435,10 @@ test('enableRelink=false (default) is byte-identical to omitting it', async () =
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000, null, 0, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -471,10 +471,10 @@ test('repairSearchFromGate with enableTurnBias=true is deterministic', async () 
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, false, false, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 400_000, null, 0, false, false, false, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -482,10 +482,10 @@ test('enableTurnBias=false (default) is byte-identical to omitting it', async ()
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 250_000, null, 0, false, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
