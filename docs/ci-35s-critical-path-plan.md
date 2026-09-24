@@ -192,6 +192,10 @@ Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forc
 
 A1c (#2061) seeds diagnostics-generated `[skip ci]` main generations. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
 
+### A5 non-deep rehearsal note
+
+This stacked docs-only commit exists solely to exercise the production candidate's negative routing branch. Because its PR base is the A5 implementation branch, the tested diff is documentation-only. The expected canonical local planner result is `deep_job_required=false`, with deep-verification exiting after checkout, exact Node setup, and local planning, before runtime-data restore, dependency-tree restore, coverage, deep proofs, Java, or Firestore setup.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
