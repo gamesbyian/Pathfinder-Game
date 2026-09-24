@@ -137,13 +137,16 @@ The original nine-level population has now been probed at **250,000 work** and a
 | --- | --- | --- |
 | CI health: diagnostics audit ownership | **merged / guarded** | #2051 routes compact failure-response scratch to `tmp/`, narrows staging to canonical latest/timestamp history, removes the forbidden tracked transient, and makes `check:audit-artifacts` guard the ownership contract. |
 | A1 deep runtime-data checkout | **merged / measured green on hit** | #2045: source checkout **2 s** + exact runtime-data restore **2 s**; all deep obligations green; deep job **56 s**. |
-| A1b fast runtime-data cache-miss recovery | **investigation in progress (#2058)** | Hint-tree invalidation exposed a **52–56 s** fast-gate miss path. In-place sparse expansion and second checkout in the same worktree are rejected; #2058 is probing an isolated runtime-data checkout/copy and will remove forced-miss instrumentation before merge. |
+| A1b fast runtime-data cache-miss recovery | **merged / measured green** | #2067 production design restores the exact seeded `HEAD^1` generation, overlays only changed runtime-data blobs, then saves current exact identity. Rehearsal: base restore **2 s**, one changed-blob overlay **1 s**, save **2 s**; whole-tree fallback skipped. |
+| A1c/A1d runtime-data cache authority | **merged / guarded** | #2061 seeds exact generations after diagnostics `[skip ci]` hint refreshes; #2063 seeds every ordinary main push. Together they make seeded-base differential recovery the normal miss path. |
 | B1 lifecycle deterministic dispatch | **merged / measured green** | #2044: `orchestration-work-budget.test.ts` **~8.2 s → 195 ms**; covered-suite wall **~29.5 s → 26.48 s**; all test slots preserved. |
+| B2 coverage topology | **standard-runner architecture unresolved; evidence complete through #2074** | Two shards: **15–18 s** useful work and merged thresholds green, but fan-in/runner overhead >35 s. Three shards: **10–13 s** useful work but runner-start skew drove authority wall ~74 s. Single fast runner: thresholds green, **25.9 s** covered work / **46 s** job wall. |
+| B3 repair-search determinism budgets | **rehearsal in progress (#2076)** | `repair-search.test.ts` is the remaining fast-suite hotspot at **~9.0 s**. Current rehearsal keeps fixtures/assertions but reduces repeated deterministic envelopes 1M→400k and 500k→250k. |
 | A3 main-seeded ESLint cache | **merged / measured green** | #2054 main-push seeded the default-branch generation after a 15 s cold lint; unrelated #2059 restored that generation and lint fell to **1 s** (from 16 s cold on #2054). |
 | A4 250k solver canary | **merged / measured green** | #2056: original exact 9-level fixture set retained; repaired-stack PR run solved **9/9 in 1.7 s / 1,303,532 nodes** at 250k with no work-budget mismatch. |
-| A2 exact Node 22.23.2 | **production migration ready / measured green** | #2064 run 35963869514 passed all ordinary PR obligations; setup-node measured **0-3 s** across planner/fast/deep. Final current-main transplant pins PR/main/scoped to exact 22.23.2 and isolates the Node-22 Firebase CLI cache generation. |
-| C exact dependency-tree restore | **production implementation in progress / full-contract hit proven** | #2068 hit run: fast and deep each restored `node_modules` in **2 s**, skipped `npm ci`, and the full fast+deep contract stayed green. Production PR/main/scoped workflows now share the exact OS+arch+Node+npm+lockfile generation; main-push seeds it on misses. |
-| A5 remove planner dependency edge | **promotion ready / positive+negative rehearsals green** | #2070 full-impact run 35965966081 started deep concurrently and preserved coverage/proofs/Firestore; #2073 docs-only rehearsal started deep concurrently, both planners selected `deep_job_required=false`, and deep exited in **7 s** before runtime-data/dependency/test setup. |
+| A2 exact Node 22.23.2 | **merged / measured green** | #2066 pins PR/main/scoped CI to exact Node 22.23.2. Full-contract rehearsal and final PR were green; setup-node measured **0–3 s**. Firebase CLI cache generation is Node-22-specific. |
+| C exact dependency-tree restore | **merged / measured green** | #2069 production rollout: exact `node_modules` restore **~2 s** in fast and deep, `npm ci` skipped on hit, full fast+deep contract green. Main seeds the OS+arch+Node+npm+lockfile generation. |
+| A5 remove planner dependency edge | **merged / measured green** | #2070 is live production topology. Full-impact rehearsal started deep before independent impact-shadow and preserved coverage/proofs/Firestore; docs-only negative rehearsal exited deep in **7 s** before runtime/dependency setup. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
 
@@ -287,17 +290,25 @@ Require a targeted before/after run proving the mutation/regression would still 
 
 #### B2. Separate real deep integrations only if coverage remains sound
 
-The hosted probe with `SOLVER_DEEP_TESTS=0` stayed **green at existing coverage thresholds**, but wall time only improved from roughly **29.5 s to 26.7 s**. Existing Vitest parallelism already hides much of those real-integration costs.
+The post-B1 fast-coverage experiments are now substantially complete.
 
-**Decision:** do not create a new deep-integration tier merely for this ~2.8 s gain.
+Measured #2074 results:
 
-Instead:
+- two cross-runner shards: **15–18 s** covered work each; native merged coverage thresholds green;
+- separate aggregation runner rejected: first-shard-start → authority ~49 s;
+- in-place merge on shard 1 still ~43 s due duplicated bootstrap;
+- one runner / two concurrent shard processes rejected: ~31 s covered work / ~43 s job wall on the 4-core runner;
+- three cross-runner shards: **10–13 s** covered work each and merged thresholds green, but shared-hosted assignment skew drove first-runner-start → authority to ~74 s;
+- one standard runner with `SOLVER_DEEP_TESTS=0`: **25.90 s** Vitest / **46 s** total job wall, thresholds green.
 
-- keep current coverage composition while B1 is measured;
-- after B1, require covered-suite wall **≤19 s** to fit one standard-runner implementation lane with bootstrap headroom;
-- if it remains >19 s, build **two measured file-balanced coverage shards** and merge V8 coverage before enforcing the unchanged thresholds;
-- only split real `deepTest` integrations separately if they materially improve the shard critical path or simplify ownership;
-- never lower coverage thresholds to avoid implementing coverage merge.
+**Decision:** correctness and compute parallelism are proven; standard hosted scheduling/bootstrap is now the limiting system property. Do not productionize cross-runner coverage sharding yet.
+
+Next discriminator is testability, not more shard count:
+
+- B3 targets `repair-search.test.ts`, now the fast covered-suite hotspot at ~9 s;
+- if post-B3 single-runner covered work falls far enough to make total implementation-lane wall plausibly ≤35 s, prefer one runner;
+- if not, stop multiplying shared-hosted jobs and move the full-gate design toward the reserved/larger-runner fallback already specified below;
+- coverage thresholds remain unchanged in every topology.
 
 ### Phase C: reduce dependency materialization if it pays
 
