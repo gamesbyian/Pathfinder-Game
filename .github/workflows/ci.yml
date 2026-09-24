@@ -152,7 +152,7 @@ jobs:
             data/stress/hints
             data/stress/hints-random
             data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-decisive-probe
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-blob-overlay-probe-v2
       - name: Derive base-parent runtime-data cache key
         id: base-runtime-data-key
         if: steps.runtime-data-cache.outputs.cache-hit != 'true'
@@ -191,6 +191,7 @@ jobs:
         if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit == 'true'
         shell: bash
         env:
+          GH_TOKEN: ${{ github.token }}
           PATHFINDER_RUNTIME_DATA_OVERLAY_PROBE: data/levels.json
         run: |
           mapfile -d '' changed < <(
@@ -203,9 +204,17 @@ jobs:
           if [[ -n "$PATHFINDER_RUNTIME_DATA_OVERLAY_PROBE" ]]; then
             changed+=("$PATHFINDER_RUNTIME_DATA_OVERLAY_PROBE")
           fi
-          if (( ${#changed[@]} )); then
-            git archive --format=tar HEAD -- "${changed[@]}" | tar -x
-          fi
+          for file in "${changed[@]}"; do
+            blob="$(git rev-parse "HEAD:$file")"
+            mkdir -p "$(dirname "$file")"
+            curl --fail --silent --show-error \
+              --retry 3 \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/git/blobs/$blob" \
+              | jq -r '.content' | tr -d '\n' | base64 --decode > "$file"
+          done
           mapfile -d '' deleted < <(
             git diff --name-only -z --no-renames --diff-filter=D HEAD^1 HEAD -- \
               data/levels.json data/level-heatmaps.json data/themes.json data/hints \
@@ -255,7 +264,7 @@ jobs:
             data/stress/hints
             data/stress/hints-random
             data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-decisive-probe
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}-a1b-blob-overlay-probe-v2
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
