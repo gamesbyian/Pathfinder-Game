@@ -171,7 +171,14 @@ jobs:
             echo "exit_code=0" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          extra=("--save-hints")
+          # --save-hints deliberately dropped 2026-09-24: harvest-solver-evidence.yml already
+          # reconstructs identical canonical hint/provenance evidence from this workflow's own raw
+          # per-shard reports (harvest-level-blind-report-hints.mjs), proven byte-identical to this
+          # direct-write path at full corpus-1 scale and on a real corpus-2 sample -- see
+          # reports/2026-09-24-hint-evidence-phase6-full-scale-local-confirmation-001.md and
+          # reports/2026-09-24-hint-evidence-phase6-corpus2-sample-confirmation-001.md. Keeping both
+          # writers was pure redundant duplication, not a safety margin.
+          extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-search-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
@@ -204,7 +211,8 @@ jobs:
           DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_budget_ms }}
         run: |
           set +e
-          extra=("--save-hints")
+          # --save-hints deliberately dropped 2026-09-24: see the corpus-1 slice step above.
+          extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-search-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
@@ -581,7 +589,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Persist capability outputs and eagerly persist hints for normal refreshes
+      - name: Persist capability outputs
         if: steps.coverage.outputs.complete == 'true'
         shell: bash
         run: |
@@ -590,7 +598,10 @@ jobs:
           git add "reports/stress/capability-runs/${{ github.run_id }}/"
           git add reports/stress/solver-health-timeline.jsonl
           if [ "${{ inputs.deterministic }}" != "true" ]; then
-            git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json
+            # Hint/provenance evidence is no longer written here (see the --save-hints removal above);
+            # harvest-solver-evidence.yml reconstructs and persists it centrally from this run's own
+            # uploaded shard reports once this workflow completes.
+            git add data/stress/stress-levels.json data/stress/stress-levels-random.json
             git add logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json reports/stress/
           fi
           if git diff --cached --quiet; then exit 0; fi
