@@ -24,6 +24,12 @@ const v3 = JSON.stringify({ schemaVersion:3, hints:records }) + '\n';
 const measured = measureV4ArtifactText(v3);
 assert.equal(measured.encoded.schemaVersion, 4);
 assert.equal(stableStringify(decodeHintArtifact(JSON.parse(measured.targetText))), stableStringify(records));
+assert.match(measured.sourceContentSha256, /^sha256:[0-9a-f]{64}$/u);
+assert.match(measured.targetContentSha256, /^sha256:[0-9a-f]{64}$/u);
+assert.match(measured.semanticSha256, /^sha256:[0-9a-f]{64}$/u);
+assert.match(measured.joinIdentitySha256, /^sha256:[0-9a-f]{64}$/u);
+assert.equal(measured.hints, 2);
+assert.equal(measured.provenanceEvents, 2);
 assert.ok(measured.targetBytes > 0);
 
 const temp = mkdtempSync(path.join(tmpdir(), 'hint-v4-migration-'));
@@ -38,6 +44,8 @@ try {
     assert.equal(JSON.parse(readFileSync(file,'utf8')).schemaVersion, 3, 'dry run must not mutate');
     const applied = migrateHintStores(temp, { apply:true, dirs:['data/hints'] });
     assert.equal(applied.semanticRoundTrip, 'pass');
+    assert.equal(applied.crossResourceJoinIdentity, 'pass');
+    assert.equal(applied.reversibility.everyChangedFileHasBeforeAfterHash, true);
     assert.equal(JSON.parse(readFileSync(file,'utf8')).schemaVersion, 4);
     const second = migrateHintStores(temp, { dirs:['data/hints'] });
     assert.equal(second.changedFiles, 0, 'v4 migration must be idempotent');
