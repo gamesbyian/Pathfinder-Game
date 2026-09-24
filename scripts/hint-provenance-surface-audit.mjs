@@ -22,7 +22,7 @@ function inspectPhysicalHintReadSurface(text) {
   const readsJsonFile = /\b(?:readFileSync|readFile)\s*\(/u.test(text)
     && /\bJSON\.parse\s*\(/u.test(text);
   const consumesHintRows = /\.hints\b/u.test(text);
-  const hasHintSourceSignal = /(?:\bhint(?:File|Doc|Path|Artifact|Contents?|Metadata|Dir)\b|data\/(?:stress\/)?hints(?:-random|-envelope)?\/)/iu.test(text);
+  const hasHintSourceSignal = /(?:\bhint(?:File(?:Path)?|Doc|Path|Artifact(?:Path)?|Contents?|Metadata|Dir)\b|data\/(?:stress\/)?hints(?:-random|-envelope)?\/)/iu.test(text);
   const usesSharedDecoder = /\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(text);
   const suspect = readsJsonFile && consumesHintRows && hasHintSourceSignal;
   return { suspect, bypass: suspect && !usesSharedDecoder };
