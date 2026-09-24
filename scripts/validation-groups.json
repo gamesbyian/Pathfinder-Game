@@ -256,7 +256,9 @@
       "test:hint-discovery-ingestion-projection",
       "test:hint-ingestion-workflow-completeness",
       "test:hint-historical-enrichment-plan",
-      "test:hint-codec-baseline-benchmark"
+      "test:hint-codec-baseline-benchmark",
+      "test:harvest-portfolio-solve-sweep-reports",
+      "test:hint-historical-enrichment-apply"
     ],
     "persistence": [
       "test:firestore-rules"
