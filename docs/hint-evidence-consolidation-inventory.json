@@ -1186,6 +1186,28 @@
         "kind": "firestore-to-git-same-path-provenance-loss",
         "path": "scripts/import-published-levels.mjs",
         "finding": "Published-level import deduped incoming hints by path and skipped an already-known path entirely, discarding new provenance/occurrence evidence and failing to mark provenance-only changes for persistence. Fixed to use mergeHints(), persist semantic-only changes, and regression-test idempotent same-path enrichment."
+      },
+      {
+        "id": "HPA-008",
+        "kind": "neglected-v4-consumer",
+        "path": "scripts/guidance-distance-first-divergence.mjs",
+        "finding": "Guidance-divergence analysis parsed stress hint artifacts and iterated physical document.hints directly. Interned v4 rows are not semantic Hint provenance. Fixed to decode with decodeHintArtifact before filtering witnesses."
+      },
+      {
+        "id": "HPA-009",
+        "kind": "neglected-v4-consumer",
+        "path": "scripts/stress/hint-cost-drift.mjs",
+        "finding": "Cost-drift analysis parsed physical Hint rows directly. Under interned v4 this could silently miss/garble provenance, including on the newly-centralized diagnostics path. Fixed to decode every artifact through the shared semantic codec."
+      },
+      {
+        "id": "HPA-010",
+        "kind": "neglected-current-producer-semantics",
+        "paths": [
+          "modules/solver/hint-provenance.ts",
+          "modules/input/solver-controller.ts",
+          "modules/input/submission-controller.ts"
+        ],
+        "finding": "Browser variety-search provenance projected only newlySaved paths, dropped documented independent rediscoveries, and omitted VarietySavedMeta.scoringProfileId. Submission mode also derived usedExistingHints after adding new paths, which could label a cold successful search as history-aware. Fixed the canonical projection to preserve new + rediscovered events, scoring profile, seed/anchor identity, and pre-search hint context."
       }
     ],
     "permanentGuards": [
