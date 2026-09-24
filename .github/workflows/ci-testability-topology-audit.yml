@@ -19,6 +19,127 @@ permissions:
   contents: read
 
 jobs:
+  coverage-shards:
+    name: coverage-shard-${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: coverage-runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Require warm runtime data
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.coverage-runtime-data-key.outputs.key }}
+          fail-on-cache-miss: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Derive dependency-tree key
+        id: coverage-dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Require warm dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.coverage-dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+      - name: Run covered shard
+        env:
+          PATHFINDER_COVERAGE_SHARD: '1'
+          SOLVER_DEADLOCK_PROOF_SKIP: '1'
+          SOLVER_R02560_PROOF_SKIP: '1'
+          SHARD: ${{ matrix.shard }}
+        run: >-
+          npx vitest run --coverage --coverage.reportOnFailure
+          --reporter=blob
+          --outputFile=.vitest/blob/shard-${SHARD}.json
+          --shard=${SHARD}/2
+      - name: Upload Vitest blob
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-blob-${{ matrix.shard }}
+          path: .vitest/blob/shard-${{ matrix.shard }}.json
+          if-no-files-found: error
+          retention-days: 3
+
+  coverage-merge:
+    name: coverage-merge
+    needs: coverage-shards
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Derive dependency-tree key
+        id: merge-dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Require warm dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.merge-dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+      - name: Download shard blobs
+        uses: actions/download-artifact@v8
+        with:
+          pattern: coverage-blob-*
+          path: .vitest/blob
+          merge-multiple: true
+      - name: Merge test and coverage reports
+        run: npx vitest --merge-reports=.vitest/blob --reporter=default --coverage
+
   audit:
     runs-on: ubuntu-latest
     steps:
