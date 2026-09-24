@@ -1230,6 +1230,12 @@
         "kind": "scoped-validation-invalidation-gap",
         "path": "scripts/validation-groups.json",
         "finding": "The Hint physical-surface and central-persistence guards did not declare the filesystem authorities they dynamically inspect, so scoped CI could omit them on relevant changes. Added repo-input dependency surfaces for source/workflow/ledger and lifecycle changes."
+      },
+      {
+        "id": "HPA-014",
+        "kind": "bare-hint-canonical-state-divergence",
+        "path": "modules/editor/level-coordinate-transforms.ts",
+        "finding": "Editor coordinate transforms cleared level.hints directly but left canonical level.hintRecords intact, allowing stale transformed Hint evidence to survive. Fixed to clear via setLevelHintRecords(level, []) and made maintained direct .hints/.hintRecords assignments fail closed through an explicit review ledger."
       }
     ],
     "permanentGuards": [
