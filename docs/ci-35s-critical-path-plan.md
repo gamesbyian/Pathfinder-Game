@@ -208,6 +208,38 @@ Lower budgets do not buy additional wall time, so production uses **250k / 125k*
 
 Expected file saving: roughly **7.5 s** versus the current covered-suite profile. Full-suite wall saving must be measured separately because Vitest overlaps files.
 
+### B2 coverage topology conclusion and repair-search follow-up
+
+Coverage topology rehearsal has now established both compute and infrastructure limits:
+
+- two cross-runner shards: useful covered work **15-18 s**, but merged authority ~49 s with a separate aggregator;
+- two shards merged on shard 1: correctness preserved, but duplicated bootstrap still kept authority above the 35 s target;
+- one runner / two concurrent shard processes: covered work **31 s**, total job ~43 s; 4-core runner saturation removes the theoretical split win;
+- three cross-runner shards: useful work **10-13 s**, thresholds green, but shared-runner assignment skew produced ~74 s first-runner-start → merged authority;
+- one standard runner with existing `deepTest` integrations excluded: thresholds green, covered work **~27 s**, total runner wall **46 s**.
+
+Conclusion: test execution can be sharded below the useful-work budget, but ordinary shared-runner topology does not currently convert that into ≤35 s authoritative wall. Before escalating to larger/reserved compute, reduce the remaining single-runner long tail.
+
+Current long tail after B1:
+- `repair-search.test.ts`: **~9.0 s**;
+- next file: ~2.5 s.
+
+A measurement-only rehearsal now parameterizes only the expensive repair-search determinism/default-equivalence node budgets while leaving ordinary CI defaults unchanged. Probe envelopes:
+- 250k / 125k;
+- 100k / 50k;
+- 50k / 25k.
+
+Promotion requires the exact repair-search file to stay green and retain nontrivial deterministic execution; the lowest passing envelope then becomes a candidate production testability change.
+
+Final budget conclusion after full-coverage comparison:
+
+- 250k / 125k production candidate (#2077): ordinary covered suite **22.00 s**, repair-search file **6.3 s**;
+- 100k / 50k rehearsal: suite **25.26 s**, repair-search **8.8 s**;
+- 50k / 25k rehearsal: suite **25.21 s**, repair-search **8.6 s**;
+- latest single-fast comparison without existing deep integrations: **19.70 s useful coverage**, **38 s runner wall**.
+
+The lower repair budgets do not produce a stable coverage win, so 250k / 125k remains the production choice. Coverage sharding is proven semantically correct but rejected as a production standard-runner topology for now: shared-runner assignment/duplicated bootstrap overwhelms its compute savings. The next architecture decision should therefore use the improved single-runner costs and, if standard-runner wall remains above target, benchmark reserved/larger compute rather than adding more shared-runner shards.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
