@@ -557,12 +557,7 @@ jobs:
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
-      - name: Run heavyweight implementation proofs
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
-        id: deep_proofs
-        continue-on-error: true
-        run: npm run test:deep-proofs
-      # Restore the default-branch-seeded Firebase CLI materialization. Startup acceleration only.
+      # Restore Firestore prerequisites before launching the two independent deep services.
       - name: Restore Firebase CLI cache
         if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         uses: actions/cache/restore@v5
@@ -574,23 +569,52 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Exercise level-fingerprint repository identity through Firestore emulator
+      - name: Run heavyweight proofs and Firestore concurrently
         if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
-        id: firestore
+        id: deep_services
         continue-on-error: true
-        run: >-
-          npx --yes firebase-tools@15.28.2
-          emulators:exec --only firestore
-          --project demo-pathfinder-fingerprint-boundary
-          "npm run test:firestore-level-fingerprint-boundary"
+        shell: bash
+        run: |
+          set +e
+          npm run test:deep-proofs > /tmp/pathfinder-deep-proofs.log 2>&1 &
+          proofs_pid=$!
+          npx --yes firebase-tools@15.28.2 \
+            emulators:exec --only firestore \
+            --project demo-pathfinder-fingerprint-boundary \
+            "npm run test:firestore-level-fingerprint-boundary" \
+            > /tmp/pathfinder-firestore.log 2>&1 &
+          firestore_pid=$!
+
+          wait "$proofs_pid"; proofs_status=$?
+          wait "$firestore_pid"; firestore_status=$?
+
+          if [[ "$proofs_status" -eq 0 ]]; then
+            echo "deep_proofs=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "deep_proofs=failure" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ "$firestore_status" -eq 0 ]]; then
+            echo "firestore=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "firestore=failure" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo '=== heavyweight solver proofs ==='
+          cat /tmp/pathfinder-deep-proofs.log
+          echo '=== Firestore persistence boundary ==='
+          cat /tmp/pathfinder-firestore.log
+
+          if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
+            exit 1
+          fi
       - name: Summarize and enforce deep-verification
         if: always()
         shell: bash
         env:
           RUN_DEEP: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true' }}
           COVERAGE: ${{ steps.coverage.outcome }}
-          DEEP_PROOFS: ${{ steps.deep_proofs.outcome }}
-          FIRESTORE: ${{ steps.firestore.outcome }}
+          DEEP_PROOFS: ${{ steps.deep_services.outputs.deep_proofs }}
+          FIRESTORE: ${{ steps.deep_services.outputs.firestore }}
         run: |
           if [[ "$RUN_DEEP" != "true" ]]; then
             echo "## CI deep verification" >> "$GITHUB_STEP_SUMMARY"
