@@ -193,6 +193,29 @@ Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forc
 
 A1c (#2061) seeds diagnostics-generated `[skip ci]` main generations. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
 
+### B2 coverage topology conclusion and repair-search follow-up
+
+Coverage topology rehearsal has now established both compute and infrastructure limits:
+
+- two cross-runner shards: useful covered work **15-18 s**, but merged authority ~49 s with a separate aggregator;
+- two shards merged on shard 1: correctness preserved, but duplicated bootstrap still kept authority above the 35 s target;
+- one runner / two concurrent shard processes: covered work **31 s**, total job ~43 s; 4-core runner saturation removes the theoretical split win;
+- three cross-runner shards: useful work **10-13 s**, thresholds green, but shared-runner assignment skew produced ~74 s first-runner-start → merged authority;
+- one standard runner with existing `deepTest` integrations excluded: thresholds green, covered work **~27 s**, total runner wall **46 s**.
+
+Conclusion: test execution can be sharded below the useful-work budget, but ordinary shared-runner topology does not currently convert that into ≤35 s authoritative wall. Before escalating to larger/reserved compute, reduce the remaining single-runner long tail.
+
+Current long tail after B1:
+- `repair-search.test.ts`: **~9.0 s**;
+- next file: ~2.5 s.
+
+A measurement-only rehearsal now parameterizes only the expensive repair-search determinism/default-equivalence node budgets while leaving ordinary CI defaults unchanged. Probe envelopes:
+- 250k / 125k;
+- 100k / 50k;
+- 50k / 25k.
+
+Promotion requires the exact repair-search file to stay green and retain nontrivial deterministic execution; the lowest passing envelope then becomes a candidate production testability change.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
