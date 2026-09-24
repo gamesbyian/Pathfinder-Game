@@ -15,7 +15,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { parseLevelPositions, readLevelsWithHints } from './level-data-io.mjs';
+import { parseLevelPositions, readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 
 const args    = process.argv.slice(2);
@@ -42,15 +42,15 @@ const Solver = createSolver();
 
 const LEVELS_PATH = path.join(new URL('..', import.meta.url).pathname, 'data', 'levels.json');
 
-function loadAllLevels() {
-    // readLevelsWithHints (rather than a bare readFileSync) attaches each level's existing
-    // hints/hintRecords, which --save-hints needs in order to MERGE into them. Without it a save
-    // would overwrite a level's hint set with the single path this run happened to find. Harmless
-    // when --save-hints is off: the extra fields are ignored, and prepareLevelForSolver takes the
-    // level as-is exactly as before.
-    const levels = readLevelsWithHints(LEVELS_PATH);
-    if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
-    return levels;
+function loadLevelDocument() {
+    // The canonical corpus-document reader attaches each level's existing hints/hintRecords while
+    // preserving storage-shape metadata required by the matching writer. --save-hints must keep the
+    // document object alive through flush(); passing only the levels array loses write authority.
+    const document = readLevelCorpusDocumentWithHints(LEVELS_PATH);
+    if (!Array.isArray(document.levels) || document.levels.length === 0) {
+        throw new Error('data/levels.json is empty or not an array');
+    }
+    return document;
 }
 
 const getCommitSha = () => {
@@ -58,7 +58,8 @@ const getCommitSha = () => {
     try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
 };
 
-const rawLevels = loadAllLevels();
+const levelDocument = loadLevelDocument();
+const rawLevels = levelDocument.levels;
 console.log(`Loaded ${rawLevels.length} levels. Budget: ${budgetMs}ms${saveHints ? ' (saving hints)' : ''}`);
 
 const hintCapture = await createHintCapture({ solverVersion: getCommitSha(), budgetMs, enabled: saveHints });
@@ -105,7 +106,7 @@ console.log(`\nDone: ${solvedCount} solved, ${failCount} failed, ${errorCount} e
 
 // Flush AFTER the whole run, not per level: one write pass, and writeLevelsWithHints only rewrites
 // artifacts whose content actually changed.
-const hintSummary = hintCapture.flush(LEVELS_PATH, rawLevels);
+const hintSummary = hintCapture.flush(LEVELS_PATH, levelDocument);
 if (saveHints) {
     console.log(`Hints: ${hintSummary.newPaths} new path(s), ${hintSummary.rediscoveries} rediscover(ies) ` +
         `(provenance appended at this commit), ${hintSummary.hintFilesChanged} artifact(s) rewritten.`);
