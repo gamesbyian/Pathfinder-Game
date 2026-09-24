@@ -1,0 +1,823 @@
+{
+  "schemaVersion": 1,
+  "sourceRunId": 36062161570,
+  "sourceJobId": 107843420450,
+  "contracts": [
+    {
+      "name": "test:harvest-isolated-report-hints",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:research-domain-ownership",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-semantic-identity",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-population-identity",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-observation-integrity",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-question-contract",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-evidence-applicability",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-evaluation-evidence-role",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-claim",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-resolution-envelope",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-independence-vector",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-unit-topology",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-repository-ref",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-resolution-view",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-level-generation",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-generation-match",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-generation-origin-audit",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:solver-research-block-lineage",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:d1-production-observation",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-question-authority-audit",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:signature-collision-analysis",
+      "seconds": 0
+    },
+    {
+      "name": "test:lane-a-c0-population-derivation",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:lane-a-c2-accounting",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:ws6-dependency-interface-observer",
+      "seconds": 0.7
+    },
+    {
+      "name": "test:ws2-class3-shared-acquisition",
+      "seconds": 0
+    },
+    {
+      "name": "test:research-relations",
+      "seconds": 3.3
+    },
+    {
+      "name": "test:research-query",
+      "seconds": 5
+    },
+    {
+      "name": "test:research-queryability-audit",
+      "seconds": 4.2
+    },
+    {
+      "name": "test:research-question-dossier",
+      "seconds": 3.8
+    },
+    {
+      "name": "test:research-consumption-link",
+      "seconds": 0.9
+    },
+    {
+      "name": "test:research-integration-audit",
+      "seconds": 2
+    },
+    {
+      "name": "test:research-system-inventory",
+      "seconds": 2.2
+    },
+    {
+      "name": "test:research-system-query",
+      "seconds": 4.8
+    },
+    {
+      "name": "test:research-portfolio-retrospective",
+      "seconds": 1.3
+    },
+    {
+      "name": "test:research-system-consolidation-closeout",
+      "seconds": 2.7
+    },
+    {
+      "name": "test:documentation-index",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:investigation-report-metadata",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:experiment-result-contract-audit",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-transaction",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:ws2-failure-response-reconnaissance",
+      "seconds": 1.6
+    },
+    {
+      "name": "test:research-enrichment-link",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-acquisition-preflight",
+      "seconds": 0.8
+    },
+    {
+      "name": "test:production-search-frontier-sampler",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:experiment-response-covariance",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:work-ladder-response",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:solver-decision-observation",
+      "seconds": 0
+    },
+    {
+      "name": "test:solver-search-loss-evidence",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:search-loss-pipeline",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:solver-failure-response",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:summarize-solver-failure-response",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:sweep-publish",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:failure-evidence-disposition",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:known-prefix-oracle-set-manifest",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:ws2-experiment-readiness",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:solver-request-semantics-inventory",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:solver-experiment-contract",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:combine-population-integrity",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:publish-solver-sweep-result",
+      "seconds": 2.3
+    },
+    {
+      "name": "test:persist-decision-bearing-evidence",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:validate-solver-sweep-integrity",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:validate-reconciliation-sources",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:workflow-actions",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:cli-option-contracts",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:workflow-lifecycle",
+      "seconds": 0
+    },
+    {
+      "name": "test:research-workflow-outcome",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:classify-paired-solver-outcome",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:combine-method-probe-shards",
+      "seconds": 0.7
+    },
+    {
+      "name": "test:method-probe-staging-lib",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:startup-smoke",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:cpsat-branch-label-eligibility",
+      "seconds": 0
+    },
+    {
+      "name": "test:variant-family-dataset-root",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:build-variant-family-dataset-manifest",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:repository-file-view",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:ci-impact-classifier",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:ci-validation-plan",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:ci-execution-plan",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:stress-measurement-output-path",
+      "seconds": 0
+    },
+    {
+      "name": "test:ablation-toolchain",
+      "seconds": 0.9
+    },
+    {
+      "name": "test:current-level-facts",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:loader",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:hint-io-facade-guard",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:hint-workbench",
+      "seconds": 4.7
+    },
+    {
+      "name": "test:hint-diversification",
+      "seconds": 2.6
+    },
+    {
+      "name": "test:hint-corpus-expand",
+      "seconds": 1.2
+    },
+    {
+      "name": "test:hint-complete-sharded",
+      "seconds": 1.7
+    },
+    {
+      "name": "test:hint-provenance-identity",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:effective-config-agreement",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:experiment-opportunity-audit-cli",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:append-solver-health-record",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:verify-canary-cell",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:portfolio-solve-sweep-lib",
+      "seconds": 0.6
+    },
+    {
+      "name": "test:portfolio-solve-sweep-worker",
+      "seconds": 4.1
+    },
+    {
+      "name": "test:portfolio-solve-sweep-cli",
+      "seconds": 2.1
+    },
+    {
+      "name": "test:level-blind-capability-sweep-cli",
+      "seconds": 1
+    },
+    {
+      "name": "test:run-solver-direct-cli",
+      "seconds": 2.4
+    },
+    {
+      "name": "test:select-routing-regime-sample-cli",
+      "seconds": 1.3
+    },
+    {
+      "name": "test:collect-known-solution-prefix-survival-cli",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:early-repair-search-badness-report",
+      "seconds": 0.6
+    },
+    {
+      "name": "test:hint-query-lib",
+      "seconds": 0.7
+    },
+    {
+      "name": "test:race-stage-parity",
+      "seconds": 0.7
+    },
+    {
+      "name": "test:combine-solver-sweep-reports",
+      "seconds": 4.4
+    },
+    {
+      "name": "test:derive-timeout-recovery-population",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:plan-ab-corpus-shards",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:req-length-sweep-lib",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-cost-drift-lib",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:probe-corpus-loader",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:corpus-query",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:stress-topology-generator",
+      "seconds": 2.1
+    },
+    {
+      "name": "test:lifecycle-failure-map",
+      "seconds": 1.2
+    },
+    {
+      "name": "test:family-generate",
+      "seconds": 2.4
+    },
+    {
+      "name": "test:family-index",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:validate-variant-family-dataset-worktree",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:research-index",
+      "seconds": 0.9
+    },
+    {
+      "name": "test:family-analyze",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:family-boundary",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:family-boundary-cli",
+      "seconds": 0.9
+    },
+    {
+      "name": "test:analyze-known-solution-prefix-survival-cli",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:family-census-combine",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:family-source-selection",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:family-parent-hint-replay",
+      "seconds": 1.8
+    },
+    {
+      "name": "test:divergence-lib",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:research-analysis-lib",
+      "seconds": 0
+    },
+    {
+      "name": "test:experiment-manifest",
+      "seconds": 4.6
+    },
+    {
+      "name": "test:family-run-manifest-producer",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:merge-variant-family-dataset-shards",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:technique-campaign-analysis",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:technique-census-result-lib",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:combine-technique-census-shards",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:analyze-technique-census",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:analyze-technique-relative-advantage",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:analyze-structural-holdout-replication",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:analyze-technique-census-temporal-stability",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:analyze-ew1-static-portfolio",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:build-static-portfolio-plan",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:combine-static-portfolio-shards",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:select-random-sample",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:equal-work-production-reach",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:technique-census-cell",
+      "seconds": 1.4
+    },
+    {
+      "name": "test:operational-similarity-lib",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:winning-attempt-family",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:data-asset-runtime-smoke",
+      "seconds": 2.8
+    },
+    {
+      "name": "test:firestore-rules",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:cpsat-explicit-prefix-reference-pipeline",
+      "seconds": 1.2
+    },
+    {
+      "name": "test:cpsat-explicit-prefix-reference-lib",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:prune-gap-contract",
+      "seconds": 1
+    },
+    {
+      "name": "test:write-solver-experiment-contract",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:combine-paired-arm-integrity",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:cpsat-prefix-reference-integrity",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:plan-routing-regime-ab-shards",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:select-highbudget-gap-fill-ids",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:failure-response-query",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:failure-evidence-semantics",
+      "seconds": 0
+    },
+    {
+      "name": "test:failure-evidence-purpose-query",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:hint-termination-semantics",
+      "seconds": 0
+    },
+    {
+      "name": "test:hint-discovery-process-evidence",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-discovery-process-cli",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-failure-process-join",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-harvest-selection-manifest",
+      "seconds": 0
+    },
+    {
+      "name": "test:hint-harvest-selection-integration",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:known-support-extinction",
+      "seconds": 0
+    },
+    {
+      "name": "test:class3-dose-exposure",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:class3-dose-expectations",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:method-probe-shard-plan",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:reserve-starvation-probe",
+      "seconds": 0.8
+    },
+    {
+      "name": "test:capability-invention-demand",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:attempt-config-key",
+      "seconds": 0
+    },
+    {
+      "name": "test:freeze-response-guided-contrasts",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:response-guided-parity-contrast",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:response-guided-orientation-contrast",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:paired-beam-width-frontier",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:cut-bridge-excursion",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:cut-bridge-incidence",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:solver-capability-evidence",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:action-selection-legal-signals",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:apply-action-selection-legal-signal-model",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:reconcile-broad-solver-evidence",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-discovery-replayability",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-reconstructability-report",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:solver-request-identity",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:solver-request-identity-compat",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:solver-evidence-identity-guard",
+      "seconds": 0.2
+    },
+    {
+      "name": "test:hint-determinism-audit",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-ingestion-receipt",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:runtime-hint-projection",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-ingestion-receipt-query",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-occurrence-acceptance",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:merge-hint-artifacts-receipt",
+      "seconds": 0.5
+    },
+    {
+      "name": "test:harvest-cpsat-discovery-reports",
+      "seconds": 5
+    },
+    {
+      "name": "test:harvest-solver-diagnostics-reports",
+      "seconds": 5.9
+    },
+    {
+      "name": "test:harvest-level-blind-report-hints",
+      "seconds": 3.1
+    },
+    {
+      "name": "test:harvest-source-workflow-guard",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-ingestion-shadow-parity",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:hint-discovery-ingestion-projection",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-ingestion-workflow-completeness",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-historical-enrichment-plan",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-historical-enrichment-apply",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:hint-codec-baseline-benchmark",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:validation-groups",
+      "seconds": 0.3
+    },
+    {
+      "name": "test:corpus-level-formatting",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:run-scripts-parallel",
+      "seconds": 1
+    },
+    {
+      "name": "test:harvest-portfolio-solve-sweep-reports",
+      "seconds": 0.4
+    },
+    {
+      "name": "test:hint-artifact-v4-migration",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:level-sparse-serialization-benchmark",
+      "seconds": 0.1
+    },
+    {
+      "name": "test:level-sparse-serialization-apply",
+      "seconds": 0.1
+    }
+  ]
+}
