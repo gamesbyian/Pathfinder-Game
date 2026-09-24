@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 import { readLevelCorpusDocumentWithHints } from './level-data-io.mjs';
+import { reconstructPortfolioHintProvenance } from './portfolio-hint-reconstruction-lib.mjs';
 
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -117,5 +118,22 @@ assert.deepEqual(savedProvenance.execution, {
 assert.equal(savedProvenance.occurrences?.length, 1, 'a real GITHUB_RUN_ID must produce a real occurrence record, not leave it absent');
 assert.equal(savedProvenance.occurrences[0].runId, '998877', '--save-hints must bind the real GITHUB_RUN_ID, not a guessed value');
 assert.equal(savedProvenance.occurrences[0].runAttempt, '1');
+assert.equal(hintsReport.summary.producer, 'portfolio-solve-sweep');
+assert.equal(hintsReport.summary.levelBlind, false);
+assert.equal(hintsReport.summary.historyAware, true);
+assert.equal(typeof hintsReport.levels[0].levelRevision, 'string');
+assert.ok(hintsReport.levels[0].levelRevision.length > 0);
+assert.equal(typeof hintsReport.levels[0].discoveryObservedAt, 'string');
+assert.ok(Number.isFinite(Date.parse(hintsReport.levels[0].discoveryObservedAt)));
+assert.ok(Number.isFinite(hintsReport.levels[0].workBudget),
+    'the solved row must carry the actual effective work budget, not require run-wide inference');
+assert.deepEqual(
+    reconstructPortfolioHintProvenance(hintsReport.summary, hintsReport.levels[0], {
+        sourceRunId: '998877',
+        sourceRunAttempt: '1',
+    }),
+    savedProvenance,
+    'central report reconstruction must be semantically identical to the real direct --save-hints provenance event',
+);
 
 console.log('portfolio-solve-sweep CLI: solver request identity dual-write verified');
