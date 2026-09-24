@@ -104,6 +104,12 @@ jobs:
             echo "exit=$?"
           done
           exit 0
+      - name: Measure coverage without existing deepTest cases
+        id: fast_coverage_probe
+        continue-on-error: true
+        env:
+          SOLVER_DEEP_TESTS: '0'
+        run: npm run test:coverage
 
   checkout-current-deep-benchmark:
     runs-on: ubuntu-latest
