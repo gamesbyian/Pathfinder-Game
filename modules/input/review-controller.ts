@@ -244,7 +244,7 @@ export function createReviewController({ state, ui, engine, editor, persistence,
             // its provenance (see local-level-hints-repository.ts's SaveLocalLevelHintOutcome). A
             // submission consisting entirely of such rediscoveries would otherwise show "Hints
             // added!" while persisting nothing.
-            let localSummary: { saved: number; duplicateNotRecorded: number; capacityReached: number } | null = null;
+            let localSummary: { pathsWithSavedEvidence: number; saved: number; duplicateNotRecorded: number; capacityReached: number } | null = null;
             if (isHintAddition && isLocal) {
                 localSummary = await persistence.approveLocalHintAddition(sub.id, sub.targetLocalLevelFingerprint, hintsToPersist);
             } else if (isHintAddition) {
@@ -258,11 +258,11 @@ export function createReviewController({ state, ui, engine, editor, persistence,
             const hintAdditionMessage = () => {
                 if (!localSummary) return 'Hints added!';
                 const skipped = localSummary.duplicateNotRecorded + localSummary.capacityReached;
-                if (skipped === 0) return `Added ${localSummary.saved} hint(s)!`;
+                if (skipped === 0) return `Added evidence for ${localSummary.pathsWithSavedEvidence} hint path(s) (${localSummary.saved} provenance event(s)).`;
                 const notes: string[] = [];
                 if (localSummary.duplicateNotRecorded) notes.push(`${localSummary.duplicateNotRecorded} rediscovery/ies of already-known path(s) could not be recorded`);
                 if (localSummary.capacityReached) notes.push(`${localSummary.capacityReached} hit this level's storage cap`);
-                return `Added ${localSummary.saved} hint(s); ${notes.join('; ')}.`;
+                return `Added ${localSummary.saved} provenance event(s) across ${localSummary.pathsWithSavedEvidence} hint path(s); ${notes.join('; ')}.`;
             };
             if (allDone) ui.showMessage('No more submissions.', 'muted');
             else ui.showMessage(isHintAddition ? hintAdditionMessage() : 'Approved!', 'success');
