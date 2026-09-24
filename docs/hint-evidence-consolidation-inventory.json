@@ -1359,5 +1359,74 @@
       "scripts/central-hint-persistence-guard.mjs",
       "scripts/hint-provenance-surface-audit.mjs"
     ]
+  },
+  "hostileAudit": {
+    "findings": [
+      {
+        "id": "HPA-021",
+        "kind": "canonical-store-guard-population-drift",
+        "paths": [
+          "scripts/hint-provenance-surface-audit.mjs",
+          "scripts/hint-store-roots.mjs"
+        ],
+        "finding": "Physical Hint reader/writer detection still encoded the old published/stress path topology after six canonical stores were established. Bound detection to CANONICAL_TRACKED_HINT_STORE_DIRS, added family/helper-derived adversarial fixtures, and made review ledgers fail on stale as well as missing classifications."
+      },
+      {
+        "id": "HPA-022",
+        "kind": "whole-store-referee-fail-open-population",
+        "paths": [
+          "scripts/validate-all-hint-stores.mjs",
+          "scripts/validate-all-hint-stores-node-test.mjs"
+        ],
+        "finding": "Whole-store PLAY referee validation discovered stores but did not require the complete canonical population, so disappearance of a store could shrink the proof silently. Default validation now asserts the full store authority; fixture-only partial mode is explicit."
+      },
+      {
+        "id": "HPA-023",
+        "kind": "nonblocking-canonical-determinism-oracle",
+        "paths": [
+          "scripts/hint-determinism-audit.mjs",
+          ".github/workflows/hint-consolidation-closeout.yml"
+        ],
+        "finding": "Closeout printed same-input/different-path counts but never failed. Canonical solverRequestIdentity collisions are now separated from legacy recorded-input reconciliation and hard-fail closeout."
+      },
+      {
+        "id": "HPA-024",
+        "kind": "four-store-closeout-analysis-population",
+        "paths": [
+          "scripts/stress/hint-occurrence-acceptance-audit.mjs",
+          "scripts/stress/hint-reconstructability-report.mjs"
+        ],
+        "finding": "Occurrence acceptance and reconstructability still omitted both family stores after the six-store repair. Both now derive and assert the complete canonical store population and decode every artifact through the shared boundary."
+      },
+      {
+        "id": "HPA-025",
+        "kind": "circular-workflow-ingestion-completeness",
+        "paths": [
+          "scripts/hint-ingestion-workflow-completeness-node-test.mjs",
+          "docs/hint-evidence-consolidation-inventory.json"
+        ],
+        "finding": "Workflow-ingestion completeness checked only rows already present in its hand-maintained inventory. It now derives candidates from maintained evidence-producing lifecycle rows plus standard solver-sweep publishers and requires exactly one reviewed Hint-ingestion disposition per candidate."
+      },
+      {
+        "id": "HPA-026",
+        "kind": "hidden-family-gha-direct-persistence",
+        "paths": [
+          ".github/workflows/collect-variant-family-dataset.yml",
+          "scripts/central-hint-persistence-guard.mjs",
+          "docs/hint-workflow-persistence-audit.json"
+        ],
+        "finding": "A maintained GHA family workflow directly persists canonical family Hints and can stage data/families/ as an ancestor scope. The old guard missed both family stores and ancestor staging. The family research transaction is now an explicit, scope-limited reviewed exception; all other maintained workflows remain fail-closed."
+      },
+      {
+        "id": "HPA-027",
+        "kind": "stale-partial-failure-exception-and-routing",
+        "paths": [
+          ".github/workflows/solver-diagnostics.yml",
+          "scripts/hint-ingestion-workflow-completeness-node-test.mjs",
+          "scripts/validation-groups.json"
+        ],
+        "finding": "Diagnostics already uploads full/partial artifacts under if: always(), but inventory/test retained a false partialFailureUpload exemption. Reconciled current truth, removed the exception, and bound the mechanical workflow guards to all dynamically scanned scoped-CI inputs."
+      }
+    ]
   }
 }
