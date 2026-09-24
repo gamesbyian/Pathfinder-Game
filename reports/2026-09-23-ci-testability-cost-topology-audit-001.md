@@ -1610,3 +1610,53 @@ A 35 s target is not reachable by one more micro-optimization. The evidence poin
 4. then partition the genuinely independent expensive populations by measured runtime.
 
 The next benchmark should test these bootstrap assumptions and candidate lane shapes directly on hosted runners before fixing shard count or job topology.
+
+
+### Final discriminators for the implementation plan
+
+Additional hosted probes closed the remaining planning questions.
+
+#### Original canary population at reduced work
+
+The full original nine-level canary was rerun at **250,000 work**:
+
+- solved: **9/9**;
+- wall: **~1.5 s**;
+- nodes: **~1.30 M**.
+
+Therefore the canary does not need a fixture-set change. The correct first optimization is simply to regenerate its baseline at 250k deterministic work and preserve all nine published witnesses.
+
+#### Coverage with existing deepTest cases excluded
+
+A full `test:coverage` run with `SOLVER_DEEP_TESTS=0`:
+
+- stayed green at the existing coverage thresholds;
+- completed in **26.71 s**;
+- compared with ~29.51 s for the current covered population.
+
+The ~2.8 s wall improvement is real but smaller than the nominal per-test costs because Vitest already overlaps files. Creating a separate deep-integration tier solely for this saving is not justified.
+
+Decision: first make the ~8 s lifecycle bookkeeping regression use its existing deterministic dispatch seam and remeasure. If covered wall remains above the plan's **19 s useful-work budget**, split coverage by measured file cost and merge V8 coverage; do not lower thresholds.
+
+#### Exact node_modules restore
+
+Hosted run 35958457759 measured the dependency tree directly:
+
+- `npm ci`: **8 s**;
+- cache save: **3 s**;
+- exact cache restore after deleting `node_modules`: **3 s**;
+- restored-tree `check:types`: green.
+
+This is a material ~5 s bootstrap reduction per lane and changes the standard-runner topology economics. The implementation plan therefore targets an exact default-branch-seeded dependency tree, with a full restored-tree validation rehearsal and a strict miss fallback to `npm ci` before production activation.
+
+#### Resulting standard-runner budget
+
+With measured bootstrap reductions, the first candidate rehearsal is five lanes, each budgeted below 27 s:
+
+- static ≤18 s;
+- Node A ≤23 s;
+- Node B ≤23 s;
+- implementation coverage ≤27 s;
+- deep services ≤24 s.
+
+This leaves approximately 8 s of workflow-level headroom under the 35 s target for ordinary runner-start skew. The rehearsal must prove that p90 start skew fits that envelope. If it does not, the plan explicitly escalates to reserved/larger compute rather than deleting validation.
