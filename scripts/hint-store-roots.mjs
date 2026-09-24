@@ -29,5 +29,11 @@ export function discoverHintStoreDirs(root = process.cwd()) {
 }
 
 export function hintStoreLabel(relativeDir) {
-    return relativeDir.replace(/^data\//u, '').replaceAll('/', ':');
+    const canonical = {
+        'data/hints': 'published',
+        'data/stress/hints': 'stress1',
+        'data/stress/hints-random': 'stress2',
+        'data/stress/hints-envelope': 'envelope',
+    };
+    return canonical[relativeDir] ?? relativeDir.replace(/^data\//u, '').replaceAll('/', ':');
 }
