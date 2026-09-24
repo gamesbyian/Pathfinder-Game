@@ -41,6 +41,12 @@ const categories = {
   mutableAliases: [
     /\.hintRecords\s*=/u, /\.hints\s*=/u,
   ],
+  provenanceIdentityMutation: [
+    /\.context\.levelRevision\s*=/u,
+    /\.foundAt\s*=/u,
+    /\.execution\s*=/u,
+    /\.occurrences\s*=/u,
+  ],
   physicalShapeKnowledge: [
     /\bhintMetadata\b/u,
     /\b(?:parsed|obj|artifact|document)\??\.hints\b/u,
