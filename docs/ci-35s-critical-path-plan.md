@@ -192,6 +192,23 @@ Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forc
 
 A1c (#2061) seeds diagnostics-generated `[skip ci]` main generations. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
 
+### B3. Right-size repair-search determinism envelopes
+
+Fast covered-suite profiling after B1 and `SOLVER_DEEP_TESTS=0` shows one dominant file:
+
+- `modules/solver/repair-search.test.ts`: **~9.0 s**;
+- next-slowest files: ~2.5 s.
+
+The file contains repeated real-search determinism/default-equivalence checks on the same must-turn fixture:
+
+- feature-enabled determinism pairs use **1,000,000 nodes** per call;
+- explicit-false/default-equivalence pairs use **500,000 nodes** per call;
+- the file's own historical comment documents the hardest known convergence on this fixture around **344k nodes**.
+
+Rehearsal: 1M → **400k**, 500k → **250k**, preserving fixtures, feature flags, production repair search, deterministic node-bounded semantics, and all assertions.
+
+Promotion requires the complete file and covered suite green plus a material wall-time reduction. If any feature test loses meaningful execution, reject the blanket reduction and tune per-feature instead.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
