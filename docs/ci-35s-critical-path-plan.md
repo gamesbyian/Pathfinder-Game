@@ -135,7 +135,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 
 | Phase | Status | Evidence / next gate |
 | --- | --- | --- |
-| A1 deep runtime-data checkout | **implementation in progress** | Hosted audit measured current deep checkout 15 s vs source-only + exact runtime restore 4–6 s. Production PR must preserve full deep validation and demonstrate an exact cache hit or correct miss fallback. |
+| A1 deep runtime-data checkout | **implementation in progress** | First production run exposed a rejected miss path: post-clone `git sparse-checkout set` took **51 s**. Hit path remains source-only + exact restore; miss fallback now uses a second batched `actions/checkout` with the prior deep sparse population, so misses degrade toward the ~15 s baseline instead of expanding blobs one-by-one. |
 | A2 exact Node 22.23.2 | planned | Node 22 shadow passed typecheck, fast-unit population, and build; complete contract rehearsal still required. |
 | A3 main-seeded ESLint cache | planned | Cold new-PR lint ~12–15 s vs warmed ~2 s. |
 | A4 250k solver canary | planned | Original 9/9 fixtures solve in ~1.5 s at 250k. |
