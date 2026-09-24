@@ -1378,3 +1378,38 @@ Recommended policy:
 5. Do not activate dependency-local skipping from metadata alone; historical replay/fault injection remains the promotion gate for any contract whose omission could hide a meaningful defect.
 
 Stopping rule for this audit cycle: do **not** bulk-annotate the ~150 filesystem-bearing contracts. The prototype demonstrates that the authority seam works. Future declarations should be demand-driven by measured CI cost or routing value.
+
+
+## Critical-path compression phase: ≤35 seconds full CI
+
+The testability/cost audit is reopened under a hard wall-time target:
+
+> **A full-impact PR must complete all required validation in 35 seconds or less.**
+
+This changes the interpretation of earlier findings. The previous recommendation to avoid multiplying hosted-runner jobs was correct for the then-current objective, which balanced runner-hours, queue/setup variance, and simplicity. It is not a permanent two-lane constraint. With a hard latency ceiling, additional parallelism is justified whenever measured critical-path reduction dominates runner/setup variance.
+
+Initial full-run reference: CI run 35955087367.
+
+Approximate timestamps show:
+
+- first required runner start: 04:19:46Z;
+- impact planner complete: ~04:19:53Z;
+- fast gate complete: ~04:21:05Z;
+- deep verification complete: ~04:21:22Z;
+- full wall span: **~96 s**.
+
+### Immediate critical-path hypotheses to investigate
+
+1. **Deep checkout/materialization is anomalously expensive.** The deep runner spent roughly 16 s in checkout before setup-node, versus roughly 2 to 3 s in the fast lane. Audit its sparse-checkout pattern and actual file population before accepting that cost.
+2. **The fast lane serializes independent broad phases.** Validators (~5.6 s), lint (~14.4 s), Node/CLI contracts (~26.9 s), solver canary (~10 s), and build (~2.6 s) currently form a long serial chain after setup.
+3. **Deep work is also serialized.** Covered Vitest (~30 s), explicit deep proofs (~11.5 s), and Firestore (~11 s after cache work) are independent enough to evaluate concurrent execution/sharding.
+4. **Node/CLI already has per-command timing.** Use those measurements to construct balanced shards rather than increasing one runner's child concurrency beyond the already-measured four-worker sweet spot.
+5. **Vitest coverage needs file-level cost modeling.** Coverage output already writes timing data; evaluate two- and three-shard partitions plus report/threshold aggregation instead of assuming one monolithic coverage command.
+6. **Solver canary should be treated as a parallel batch.** Its nine fixed levels are semantically one canary but need not imply serial execution if result identity and baseline comparison can be preserved.
+7. **Repeated setup may need a different substrate.** If multiple lanes are required, benchmark prepared dependencies, artifact handoff, or a CI image/cache strategy rather than paying `npm ci` independently without measurement.
+8. **Final-status aggregation cannot consume a runner-sized latency tax.** Prefer native dependency/result semantics or an effectively zero-work aggregator.
+9. **Repository/test seams remain in scope.** Thin CLI boundaries, reusable repository models, long-lived workers, fixture-only filesystem declarations, and explicit dependency authority have already produced wins and should be applied to remaining hotspots.
+
+### Planning threshold
+
+Do not finalize an implementation plan until the audit can assign a realistic p50 timing budget to every proposed lane and explain how p90 runner/setup variance will be handled. A paper topology whose sum of command times is under 35 seconds but whose hosted execution routinely exceeds it is not sufficient.
