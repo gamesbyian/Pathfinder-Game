@@ -44,7 +44,7 @@ const ingestionReceiptArg = args.get('--ingestion-receipt-out');
 const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
-const CORPUS = 'data/levels.json';
+const CORPUS = args.get('--corpus') || 'data/levels.json';
 
 function walk(dir, out = []) {
     for (const name of readdirSync(dir)) {
