@@ -28,6 +28,13 @@ function inspectPhysicalHintReadSurface(text) {
   return { suspect, bypass: suspect && !usesSharedDecoder };
 }
 
+function inspectPhysicalHintWriteSurface(text) {
+  const writesFile = /\b(?:writeFileSync|writeFile|appendFileSync|appendFile|copyFileSync|renameSync)\s*\(/u.test(text);
+  const hasCanonicalPathSignal = /(?:data\/(?:stress\/)?hints(?:-random|-envelope)?(?:\/|['"`])|\bhint(?:FilePathFor|ArtifactFileName|sDirFor)\b)/u.test(text);
+  const ownsPhysicalEncoding = /\b(?:encodeHintArtifact|stringifyHints)\b/u.test(text);
+  return { suspect: writesFile && (hasCanonicalPathSignal || ownsPhysicalEncoding) };
+}
+
 if (process.argv.includes('--self-test')) {
   const cases = [
     {
@@ -59,6 +66,29 @@ if (process.argv.includes('--self-test')) {
     const actual = inspectPhysicalHintReadSurface(fixture.text);
     if (actual.suspect !== fixture.suspect || actual.bypass !== fixture.bypass) {
       throw new Error(`${fixture.name}: expected suspect=${fixture.suspect}, bypass=${fixture.bypass}; got ${JSON.stringify(actual)}`);
+    }
+  }
+  const writerCases = [
+    {
+      name: 'direct canonical physical writer',
+      text: `writeFileSync('data/stress/hints/P00001.json', JSON.stringify(doc));`,
+      suspect: true,
+    },
+    {
+      name: 'shared codec owner write',
+      text: `const next = stringifyHints(records); writeFileSync(hintFilePathFor(levelsFile, id), next);`,
+      suspect: true,
+    },
+    {
+      name: 'unrelated report writer',
+      text: `writeFileSync(reportPath, JSON.stringify(report));`,
+      suspect: false,
+    },
+  ];
+  for (const fixture of writerCases) {
+    const actual = inspectPhysicalHintWriteSurface(fixture.text);
+    if (actual.suspect !== fixture.suspect) {
+      throw new Error(`${fixture.name}: expected writer suspect=${fixture.suspect}; got ${JSON.stringify(actual)}`);
     }
   }
   console.log('hint-provenance-surface-audit detector self-test: all tests passed');
@@ -123,6 +153,7 @@ const categories = {
 
 const directPhysicalReadSuspects = [];
 const physicalDecodeBypasses = [];
+const directPhysicalWriteSuspects = [];
 const rows = [];
 for (const [rel, text] of sourceTexts) {
   const hits = {};
@@ -142,6 +173,8 @@ for (const [rel, text] of sourceTexts) {
   const physicalRead = inspectPhysicalHintReadSurface(text);
   if (maintainedReachable && physicalRead.suspect) directPhysicalReadSuspects.push(rel);
   if (maintainedReachable && physicalRead.bypass) physicalDecodeBypasses.push(rel);
+  const physicalWrite = inspectPhysicalHintWriteSurface(text);
+  if (maintainedReachable && physicalWrite.suspect) directPhysicalWriteSuspects.push(rel);
 }
 rows.sort((a,b)=>a.path.localeCompare(b.path));
 
@@ -162,6 +195,7 @@ const result = {
   summary,
   directPhysicalReadSuspects: [...new Set(directPhysicalReadSuspects)].sort(),
   physicalDecodeBypasses: [...new Set(physicalDecodeBypasses)].sort(),
+  directPhysicalWriteSuspects: [...new Set(directPhysicalWriteSuspects)].sort(),
   maintainedRows: maintained,
   dormantRows: rows.filter(r=>!r.maintainedReachable),
 };
@@ -176,12 +210,27 @@ else console.log(JSON.stringify({
   summary,
   directPhysicalReadSuspects: result.directPhysicalReadSuspects,
   physicalDecodeBypasses: result.physicalDecodeBypasses,
+  directPhysicalWriteSuspects: result.directPhysicalWriteSuspects,
 }, null, 2));
 if (ENFORCE) {
   const failures = [];
   if (result.physicalDecodeBypasses.length > 0) {
     failures.push(...result.physicalDecodeBypasses.map(file =>
       file + ': raw Hint artifact reader bypasses the shared decoder'));
+  }
+
+  const writerLedgerPath = path.join(ROOT, 'docs', 'hint-physical-writer-audit.json');
+  if (!fs.existsSync(writerLedgerPath)) {
+    failures.push('docs/hint-physical-writer-audit.json: reviewed physical-writer ledger is missing');
+  } else {
+    const writerLedger = JSON.parse(fs.readFileSync(writerLedgerPath, 'utf8'));
+    const reviewedWriters = new Map((writerLedger.entries ?? []).map(entry => [entry.path, entry]));
+    for (const file of result.directPhysicalWriteSuspects) {
+      const entry = reviewedWriters.get(file);
+      if (!entry) {
+        failures.push(file + ': direct physical Hint writer has not been explicitly reviewed');
+      }
+    }
   }
 
   const ledgerPath = path.join(ROOT, 'docs', 'hint-physical-reader-audit.json');
