@@ -164,7 +164,14 @@ for (const file of walk(stagingDir).sort()) {
         const provenance = provenanceFromHistoricalSolveResult({
             attempts: Array.isArray(row.attempts) ? row.attempts : [],
             nodesExpanded: Number.isFinite(row.nodesExpanded) ? row.nodesExpanded : undefined,
-            totalMs: Number.isFinite(row.elapsedMs) ? row.elapsedMs : undefined,
+            // The diagnostics report row has no `elapsedMs` field -- analyze-solver-diagnostics.mjs's
+            // convertDirectToRawPayload() writes the real solve's elapsedMs into `timeMs` (and its
+            // `totalSolveTimeMs`/`ladderTotal*` siblings, all equal for a direct-solver row), never
+            // under the key `elapsedMs` itself. Reading `row.elapsedMs` here was always undefined,
+            // silently dropping every reconstructed observation's cumulativeElapsedMs to null --
+            // found via a real local dual-path parity canary comparing this adapter's output against
+            // the direct-write route's actual provenance for the same solve.
+            totalMs: Number.isFinite(row.timeMs) ? row.timeMs : undefined,
             status: 'success',
             workSpent: Number.isFinite(row.workSpent) ? row.workSpent : undefined,
             workBudget: Number.isFinite(row.workBudget) ? row.workBudget : undefined,
