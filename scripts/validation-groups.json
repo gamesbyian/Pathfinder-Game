@@ -270,7 +270,8 @@
       "test:hint-artifact-v4-migration",
       "test:central-hint-persistence-guard",
       "test:import-published-hint-merge",
-      "test:hint-physical-decode-guard"
+      "test:hint-physical-decode-guard",
+      "test:hint-provenance-surface-audit-detector"
     ],
     "persistence": [
       "test:firestore-rules"
