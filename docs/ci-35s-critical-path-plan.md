@@ -142,7 +142,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A3 main-seeded ESLint cache | **merged / measured green** | #2054 main-push seeded the default-branch generation after a 15 s cold lint; unrelated #2059 restored that generation and lint fell to **1 s** (from 16 s cold on #2054). |
 | A4 250k solver canary | **merged / measured green** | #2056: original exact 9-level fixture set retained; repaired-stack PR run solved **9/9 in 1.7 s / 1,303,532 nodes** at 250k with no work-budget mismatch. |
 | A2 exact Node 22.23.2 | **production migration ready / measured green** | #2064 run 35963869514 passed all ordinary PR obligations; setup-node measured **0-3 s** across planner/fast/deep. Final current-main transplant pins PR/main/scoped to exact 22.23.2 and isolates the Node-22 Firebase CLI cache generation. |
-| C exact dependency-tree restore | planned | Hosted restore **3 s** vs `npm ci` **8 s**; promotion requires OS + arch + exact Node/npm generation + lockfile keying and complete restored-tree validation. |
+| C exact dependency-tree restore | **full-contract rehearsal in progress** | PR fast/deep now restore an exact `node_modules` generation keyed by OS + arch + exact Node + exact npm + lockfile hash. Fast publishes on miss; second hosted run is the required hit-side proof. |
 | A5 remove planner dependency edge | planned | Fast gate consumes no planner outputs; deep can compute the canonical plan locally, fail safe to full deep, and exit before dependency setup when not selected. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
