@@ -179,6 +179,8 @@ This target changes the next phase from cadence refinement to execution-architec
 
 ### Next gate
 
+The staged execution plan is tracked in [`ci-35s-critical-path-plan.md`](ci-35s-critical-path-plan.md).
+
 Before another production routing reduction, complete the 35-second critical-path audit:
 
 1. reconstruct per-step wall-time distributions from recent full-impact PR runs, including checkout, setup-node, cache restore, `npm ci`, validators, lint, Node/CLI contracts, solver canary, build, coverage, deep proofs, Java/Firebase setup, and Firestore;
