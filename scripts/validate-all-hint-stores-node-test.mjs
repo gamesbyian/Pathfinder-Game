@@ -9,7 +9,7 @@ import { validateAllTrackedHintStores } from './validate-all-hint-stores.mjs';
 const root=mkdtempSync(path.join(tmpdir(),'validate-all-hint-stores-'));
 try {
   mkdirSync(path.join(root,'data','hints'),{recursive:true});
-  const level={id:'P00001',grid:{w:2,h:1},gates:[{x:1,y:1}],goal:{x:2,y:1},reqLen:1,reqInt:0};
+  const level={id:'P00001',grid:{w:2,h:2},gates:[{x:1,y:1}],goal:{x:2,y:1},reqLen:1,reqInt:0};
   writeFileSync(path.join(root,'data','levels.json'),JSON.stringify([level])+'\n');
   writeFileSync(path.join(root,'data','hints','P00001.json'),JSON.stringify(encodeHintArtifact([toHint([0,65536],[])]))+'\n');
   let result=validateAllTrackedHintStores(root);
@@ -23,7 +23,7 @@ try {
   mkdirSync(path.join(root,'data','families','hints'),{recursive:true});
   const familyLevel={
     id:'F00001-re-01',
-    grid:{w:16,h:1},
+    grid:{w:16,h:16},
     gates:[{x:1,y:1}],
     goal:{x:16,y:1},
     reqLen:15,
