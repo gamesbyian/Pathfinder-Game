@@ -15,6 +15,7 @@ import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 // level would have been treated as new instead of merged.
 import { getLevelFingerprintSource } from '../modules/domain/level-fingerprint.js';
 import { mergeHints, upgradeLegacyHints } from '../modules/domain/hint-types.js';
+import { stableStringify } from '../modules/canonical-json.mjs';
 import { makeProvenanceEntry, makeLevelProvenance } from '../modules/domain/level-provenance-types.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
@@ -160,7 +161,7 @@ export function mergeNewHints(target, incoming) {
     : upgradeLegacyHints(Array.isArray(incoming.hints) ? incoming.hints : []);
   const merged = mergeHints(targetRecords, incomingRecords);
   const pathsAdded = merged.length - targetRecords.length;
-  const semanticChanged = JSON.stringify(merged) !== JSON.stringify(targetRecords);
+  const semanticChanged = stableStringify(merged) !== stableStringify(targetRecords);
   if (semanticChanged || !Array.isArray(target.hintRecords)) setLevelHintRecords(target, merged);
   return { pathsAdded, semanticChanged };
 }
