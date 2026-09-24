@@ -250,6 +250,21 @@ through `docs/hint-bare-mutation-audit.json`. The only reviewed maintained assig
 canonical synchronization owner in `hint-runtime.mjs` and ephemeral wire/clone projection in
 `level-codec.ts`.
 
+### 18. The planned lightweight freshness-bound Hint index did not exist
+
+The plan's top-level outcomes and Phase-4 hardening called for a compact derived per-artifact/store
+index so routine research questions do not require repeatedly opening multi-megabyte canonical Hint
+files. The implementation had strong query and reconstructability libraries but no generated Hint
+index or freshness contract anywhere in the repository tree.
+
+**Correction:** `scripts/hint-store-index.mjs` now builds a deterministic derived index over all
+three canonical Hint stores. Each row binds the physical artifact content hash and expanded semantic
+hash and exposes compact counts for paths/events, solver/technique/retry coverage,
+effective-input reconstructability, occurrence lineage and missing dimensions. The whole index has a
+deterministic `sourceSetSha256`, and `--verify=<index>` fails when any canonical artifact changes.
+The index reuses the shared decoder, hint-query summaries and reconstructability classifier; it is
+explicitly marked derived rather than authoritative.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
