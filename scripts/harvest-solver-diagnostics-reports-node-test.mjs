@@ -102,9 +102,7 @@ try {
         }, null, 2));
 
         const realRun = spawnSync(process.execPath, [
-            'scripts/run-bundled.mjs',
-            'scripts/harvest-solver-diagnostics-reports.mjs',
-            '--',
+            HARVEST_BUNDLE,
             `--staging-dir=${realTemp}`,
             '--source-run-id=fixture-real-row-run',
             '--source-run-attempt=1',
