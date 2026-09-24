@@ -19,6 +19,7 @@ import { normalizeRawLevel } from '../modules/solver/normalization.ts';
 import { validateCandidatePath } from '../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 import { mergeVariantDerivedHint, replayVariantPath } from './family-parent-hint-replay-lib.mjs';
+import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 import { familyArtifactRoots, variantFamilyDatasetRootArg } from './family-paths.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -93,13 +94,13 @@ for (const corpus of CORPORA) {
         for (const edge of manifest.variants || []) {
             const hintFile = path.join(path.dirname(manifestPath), 'hints', `${edge.variantId}.json`);
             if (!existsSync(hintFile)) continue;
-            let hintDoc;
+            let variantHints;
             try {
-                hintDoc = JSON.parse(readFileSync(hintFile, 'utf8'));
+                variantHints = decodeHintArtifact(JSON.parse(readFileSync(hintFile, 'utf8')));
             } catch (error) {
-                throw new Error(`${corpus}: could not parse variant hint file ${hintFile}`, { cause: error });
+                throw new Error(`${corpus}: could not decode variant hint file ${hintFile}`, { cause: error });
             }
-            for (const hint of hintDoc.hints || []) {
+            for (const hint of variantHints) {
                 variantsChecked++;
                 const result = replayVariantPath({
                     parentLevel: normalized, variantPath: hint.path, edge, validate: validateCandidatePath,
