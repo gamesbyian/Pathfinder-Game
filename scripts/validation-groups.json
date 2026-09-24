@@ -127,7 +127,8 @@
       "test:level-sparse-serialization-benchmark",
       "test:level-sparse-serialization-apply",
       "test:hint-store-index",
-      "test:hint-store-roots"
+      "test:hint-store-roots",
+      "test:validate-all-hint-stores"
     ],
     "research": [
       "test:research-domain-ownership",
@@ -474,6 +475,16 @@
         "repoPaths": [
           "data/**/hints*/**",
           "scripts/hint-store-roots.mjs"
+        ]
+      },
+      "test:validate-all-hint-stores": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/**",
+          "scripts/validate-all-hint-stores.mjs",
+          "scripts/hint-store-roots.mjs",
+          "modules/domain/**",
+          "modules/hint-artifact-layout.mjs"
         ]
       }
     }
