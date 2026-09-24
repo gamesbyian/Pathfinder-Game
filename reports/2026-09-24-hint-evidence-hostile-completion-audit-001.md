@@ -153,6 +153,64 @@ description encoded the incomplete Firestore occurrence claim.
 rows record the actual post-audit closure state. PSC-029 explicitly records this audit's same-event
 occurrence correction.
 
+### 9. Local review persistence dropped earlier provenance events and mishandled capacity refusal
+
+The local review path persisted only the last provenance event attached to a submitted Hint. That could
+silently discard earlier discovery events already present on the same submitted path. It also deleted
+the review submission after partial persistence even when the local Hint store reported capacity
+refusal.
+
+**Correction:** review persistence now iterates every provenance event, tracks semantic-event and
+occurrence evidence keys, reports path/event counts explicitly, and leaves the submission queued when
+any event hits capacity so retry is safe and idempotent.
+
+### 10. Family replay mutated a semantic identity field after merge
+
+Batch family-parent replay initially merged provenance with `context.levelRevision = null` and filled
+the revision afterward. Because level revision participates in semantic event identity, a repeated
+batch could fail to dedupe before mutating two entries into the same final identity.
+
+**Correction:** the parent fingerprint is computed once before replay merges and stamped into
+provenance before `mergeHints()`.
+
+### 11. Published-level import discarded provenance-only enrichment
+
+The published-level importer deduplicated incoming Hints by path and skipped already-known paths.
+That preserved path coverage but dropped new provenance events and occurrence lineage on those paths;
+provenance-only changes also did not trigger persistence.
+
+**Correction:** import now uses `mergeHints()`, detects semantic change independently of path-count
+growth, and persists same-path provenance enrichment idempotently.
+
+### 12. Two additional research consumers were v4-blind
+
+`guidance-distance-first-divergence.mjs` and `stress/hint-cost-drift.mjs` parsed physical Hint
+artifacts and iterated `.hints` directly. Interned v4 rows are not semantic Hint records.
+
+**Correction:** both now decode through `decodeHintArtifact()` before semantic analysis.
+
+### 13. Browser variety-search provenance omitted real discovery evidence
+
+Browser variety-search projection recorded only newly-added paths. Independent rediscoveries of an
+already-known path were discarded, `scoringProfileId` was omitted, and submission mode could compute
+`usedExistingHints` after adding newly discovered paths, incorrectly describing a cold search as
+history-aware.
+
+**Correction:** the canonical projection now records new paths plus independent rediscoveries,
+preserves scoring-profile/seed/anchor identity, and derives pre-search Hint context before mutation.
+
+### 14. The permanent physical-reader guard had a refactor-shaped blind spot
+
+The first hostile guard only recognized raw readers when `JSON.parse(readFile...)` appeared in one
+expression and when the semantic rows used a small set of variable names. A harmless refactor such as
+reading bytes into one variable, parsing them in another statement, then iterating `parsed.hints`
+could evade enforcement.
+
+**Correction:** the detector now classifies physical Hint read surfaces from independent file-read,
+JSON-parse, Hint-source, and `.hints` signals; decoder presence is checked separately. A permanent
+self-test covers inline raw reads, staged raw reads, staged reads through the shared decoder, and an
+unrelated JSON negative control.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
