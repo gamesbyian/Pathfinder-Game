@@ -1,9 +1,9 @@
 # Hint evidence consolidation — hostile completion audit — 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-24 — Exact-head validation at `00eb1b9...` exposed a whole-store referee validator domain mismatch on 65 oversized research-family levels. That validator/fixture correction is now accompanied by strengthened plan phase exits that require mechanically derived populations, persistence state-transition coverage and topology-real closeout rather than report-level completion claims.
+> **Last evidence:** 2026-09-24 — A fresh implementation critique after the six-store repair found additional fail-open population/guard defects: physical reader/writer and workflow-persistence guards still encoded the old published/stress store topology, whole-store referee validation did not require the complete store population, two closeout reports still omitted family stores, the determinism oracle printed modern collisions without failing, and workflow-ingestion completeness was circular over its own hand-maintained inventory. Those defects are now corrected on PR #2072; exact-head remote validation of the new corrections is still pending.
 > **Decision:** The prior "all phases complete" claim was premature. Treat the program as complete only after the corrections in this report are green on one exact remote CI head and the hostile maintained-surface guards report no unreviewed bypass.
-> **Remaining gate:** Re-run exact-head CI / hostile audit / closeout canary after the validator and documentation corrections; solver-evidence integrity, CI topology, whole-store referee validation and Firestore-emulator evidence must all be green on that same head.
+> **Remaining gate:** Re-run exact-head CI / hostile audit / closeout canary after the latest guard/population corrections; solver-evidence integrity, CI topology, six-store referee/occurrence/reconstructability validation and Firestore-emulator evidence must all be green on that same head. Do not treat connector-authored commits without Actions runs as validation evidence.
 
 ## Why this audit existed
 
@@ -365,6 +365,105 @@ published/stress stores. For the two canonical family stores it relaxes only the
 runs the same candidate-path referee. All other structural parse failures remain fatal. The node
 regression suite now includes an oversized family level whose path must be referee-validated
 successfully.
+
+### 25. Physical Hint reader/writer guards still encoded the pre-six-store path topology
+
+The hostile surface detector had been strengthened against staged read/parse refactors, but its notion of
+a canonical physical Hint path still matched only `data/hints` and `data/stress/hints*`. The two
+canonical family stores discovered by Finding 21 were absent. A raw reader or writer under
+`data/families/hints` or `data/families/phaseB/hints` could therefore bypass the supposedly
+fail-closed guard.
+
+**Correction:** the detector now consumes `CANONICAL_TRACKED_HINT_STORE_DIRS` from
+`hint-store-roots.mjs`, recognizes shared path helpers, tracks simple helper-derived path variables,
+and has adversarial family-store reader/writer fixtures. Physical path knowledge no longer has a
+second hand-maintained store regex.
+
+The same pass made reader/writer/bare-mutation review ledgers bidirectional: a new suspect still fails
+without review, and a stale ledger entry now also fails so obsolete classifications cannot silently
+survive code drift.
+
+### 26. Whole-store referee validation could pass after an entire canonical store disappeared
+
+`validate-all-hint-stores.mjs` mechanically discovered whatever Hint stores happened to exist and
+validated those stores, but unlike migration/index/determinism tooling it did not call
+`assertCompleteHintStoreDirs()`. Deleting, renaming, or emptying one canonical store could therefore
+turn a six-store proof into a five-store proof without making the command fail.
+
+**Correction:** whole-store referee validation now requires the complete canonical population by
+default. Its small fixture test must explicitly request partial-population mode, and the test proves
+the default fails closed when canonical stores are absent.
+
+### 27. The closeout determinism "oracle" was observational rather than blocking
+
+The closeout workflow ran `hint-determinism-audit.mjs`, printed
+`repeatRunRecordedInputCollisionGroups`, and always continued. That was appropriate for unresolved
+legacy recorded-input collisions, but not for modern entries carrying canonical
+`execution.solverRequestIdentity`: a same-canonical-request/different-path repeat is precisely the
+modern determinism regression the new identity contract exists to expose.
+
+**Correction:** the audit now separates canonical-request collisions from legacy recorded-input
+collisions. The closeout canary hard-fails on any canonical same-effective-input/different-path group
+while retaining legacy collisions and broad cross-path semantic-event groups as diagnostic/reconciliation
+populations. A regression fixture covers both identity bases.
+
+### 28. Occurrence acceptance and reconstructability still covered only four of six canonical stores
+
+After the Phase-8 repair, migration, codec, determinism, index and referee tooling used the six-store
+authority. `hint-occurrence-acceptance-audit.mjs` and `hint-reconstructability-report.mjs` still
+hard-coded published, stress1, stress2 and envelope corpus files, omitting both family Hint stores.
+The closeout workflow nevertheless presented their totals as durable corpus-wide evidence.
+
+**Correction:** both reports now derive and assert the complete canonical Hint-store population and
+decode every physical artifact through the shared decoder. Family stores participate in the same
+occurrence/deduplication and reconstructability measurements as every other canonical store.
+
+### 29. Workflow-ingestion completeness was circular and hid a real maintained GHA Hint writer
+
+`hint-ingestion-workflow-completeness-node-test.mjs` began with the hand-maintained
+`workflowIngestion` inventory and checked only rows already labelled for central ingestion. It could
+not detect a producer omitted from the inventory.
+
+A lifecycle-derived comparison immediately found four maintained evidence-producing workflows missing
+from that inventory. Three are legitimate non-Hint research producers. The fourth,
+`collect-variant-family-dataset.yml`, directly persists canonical `data/families/hints/` evidence
+from GitHub Actions and can stage the broader `data/families/` ancestor. The old central-persistence
+guard missed it because its store regex omitted family stores and because it reasoned about literal
+store paths rather than staging scopes.
+
+This does **not** mean family generation should be forced through `harvest-solver-evidence.yml`.
+Family levels and sibling Hint artifacts are one research-dataset transaction and already use shared
+semantic/physical I/O. It means the exception must be explicit rather than accidental.
+
+**Correction:** every maintained evidence-producing workflow, plus operational workflows that publish
+the standard solver-sweep envelope, is now mechanically required to have exactly one reviewed
+`hintIngestionDisposition`. The four previously invisible workflows are classified explicitly.
+A new `docs/hint-workflow-persistence-audit.json` records the single family-research direct-persistence
+exception and limits it to `data/families/`. The central persistence guard now analyzes staging
+scopes, catches ancestor-directory staging, consumes the six-store authority, and adversarially proves
+that the family exception cannot authorize stress/published persistence.
+
+### 30. Solver diagnostics' partial-failure exception was stale control-plane debt
+
+The plan says partial-failure artifact upload is a hard requirement. The completeness test nevertheless
+special-cased `solver-diagnostics.yml`, while the inventory claimed
+`partialFailureUpload: false`.
+
+Current workflow truth already contradicts that exception: diagnostics uploads its full-or-partial
+artifact and standard solver-sweep result under `if: always()`.
+
+**Correction:** the inventory now records the actual partial-failure behavior and the one-off test
+exception is removed. Central-ingestion dispositions uniformly require partial-failure upload.
+
+### 31. Scoped CI did not own the newly mechanical workflow-guard inputs
+
+Once workflow persistence and ingestion completeness were made mechanical, their dynamic inputs
+expanded beyond their old metadata. Without routing metadata, a scoped validation plan could still
+skip exactly the guards whose populations had changed.
+
+**Correction:** validation-group contract dependencies now bind central persistence to the workflow
+lifecycle, workflow-persistence exception ledger, canonical store authority and all workflow files;
+ingestion completeness is bound to lifecycle, ingestion inventory and all workflow files.
 
 ## Planning-contract defects exposed by implementation
 
