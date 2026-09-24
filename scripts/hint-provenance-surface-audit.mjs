@@ -290,9 +290,15 @@ if (ENFORCE) {
   } else {
     const bareMutationLedger = JSON.parse(fs.readFileSync(bareMutationLedgerPath, 'utf8'));
     const reviewedBareMutations = new Map((bareMutationLedger.entries ?? []).map(entry => [entry.path, entry]));
-    for (const row of maintained.filter(row => row.hits.mutableAliases)) {
-      if (!reviewedBareMutations.has(row.path)) {
-        failures.push(row.path + ': direct .hints/.hintRecords assignment has not been explicitly reviewed');
+    const currentBareMutations = new Set(maintained.filter(row => row.hits.mutableAliases).map(row => row.path));
+    for (const file of currentBareMutations) {
+      if (!reviewedBareMutations.has(file)) {
+        failures.push(file + ': direct .hints/.hintRecords assignment has not been explicitly reviewed');
+      }
+    }
+    for (const file of reviewedBareMutations.keys()) {
+      if (!currentBareMutations.has(file)) {
+        failures.push(file + ': bare-Hint mutation review entry is stale; re-review/remove the classification');
       }
     }
   }
@@ -303,10 +309,16 @@ if (ENFORCE) {
   } else {
     const writerLedger = JSON.parse(fs.readFileSync(writerLedgerPath, 'utf8'));
     const reviewedWriters = new Map((writerLedger.entries ?? []).map(entry => [entry.path, entry]));
-    for (const file of result.directPhysicalWriteSuspects) {
+    const currentWriters = new Set(result.directPhysicalWriteSuspects);
+    for (const file of currentWriters) {
       const entry = reviewedWriters.get(file);
       if (!entry) {
         failures.push(file + ': direct physical Hint writer has not been explicitly reviewed');
+      }
+    }
+    for (const file of reviewedWriters.keys()) {
+      if (!currentWriters.has(file)) {
+        failures.push(file + ': physical-writer review entry is stale; re-review/remove the classification');
       }
     }
   }
@@ -317,7 +329,8 @@ if (ENFORCE) {
   } else {
     const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
     const reviewed = new Map((ledger.entries ?? []).map(entry => [entry.path, entry]));
-    for (const file of result.directPhysicalReadSuspects) {
+    const currentReaders = new Set(result.directPhysicalReadSuspects);
+    for (const file of currentReaders) {
       const entry = reviewed.get(file);
       if (!entry) {
         failures.push(file + ': new direct physical-read suspect has not been explicitly reviewed');
@@ -331,6 +344,11 @@ if (ENFORCE) {
       if (entry.disposition === 'physical-io-owner'
           && !/\bdecodeHintArtifact\b/u.test(source)) {
         failures.push(file + ': physical I/O owner no longer delegates reads to decodeHintArtifact');
+      }
+    }
+    for (const file of reviewed.keys()) {
+      if (!currentReaders.has(file)) {
+        failures.push(file + ': physical-reader review entry is stale; re-review/remove the classification');
       }
     }
   }
