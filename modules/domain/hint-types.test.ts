@@ -221,6 +221,33 @@ test('schema v4 sparse-inline keeps historical capability missingness genuinely 
   assert.equal(Object.hasOwn(decoded[0].provenance[0].context, 'isolatedTechnique'), false);
 });
 
+test('schema v4 encoder is deterministic across equivalent JSON round-trips', () => {
+  const records = [
+    toHint([1, 2, 3], [makeProvenanceEntry('dfs', {
+      solverVersion: 'a'.repeat(40),
+      levelRevision: 'v1:test',
+      foundAt: '2026-09-23T00:00:00.000Z',
+    })]),
+  ];
+  const first = encodeHintArtifact(records);
+  const second = encodeHintArtifact(JSON.parse(JSON.stringify(records)));
+  assert.equal(JSON.stringify(first), JSON.stringify(second));
+});
+
+test('schema v4 decoder fails closed on unknown representation and malformed version-4 payloads', () => {
+  assert.throws(() => decodeHintArtifact({
+    schemaVersion: HINT_ARTIFACT_SCHEMA_VERSION,
+    representation: 'future-magic',
+    hints: [],
+  }), /unsupported schema v4 representation/);
+  assert.throws(() => decodeHintArtifact({
+    schemaVersion: HINT_ARTIFACT_SCHEMA_VERSION,
+    representation: 'interned',
+    tables: { solver: [], context: [] },
+    hints: [],
+  }), /malformed tables/);
+});
+
 test('schema v4 interned form restores shared solver/context/execution tables exactly', () => {
   const source = makeProvenanceEntry('dfs', {
     solverVersion: 'a'.repeat(40),
