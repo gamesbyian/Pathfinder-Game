@@ -91,6 +91,41 @@ test('hintsFromVarietyResult records the prefix-anchor seed on prefix-anchored f
   assert.equal(cold.provenance[0].solver.forcing, null);
 });
 
+
+test('hintsFromVarietyResult preserves scoring profile and independent rediscoveries', () => {
+  const result = {
+    newlySaved: [[1, 2, 3]],
+    newlySavedMeta: [{
+      nodesExpanded: 10,
+      elapsedMs: 1,
+      technique: 'enumerate-targeted:admissible-slack',
+      scoringProfileId: 'objectiveFirst',
+      anchorSeed: null,
+      anchorDepth: null,
+    }],
+    rediscovered: [{
+      path: [4, 5, 6],
+      nodesExpanded: 20,
+      elapsedMs: 2,
+      technique: 'prefix-anchored',
+      scoringProfileId: null,
+      anchorSeed: 'seed-1',
+      anchorDepth: 7,
+    }],
+  };
+  const records = hintsFromVarietyResult(result, { usedExistingHints: true, randomSeed: 123 });
+  assert.equal(records.length, 2, 'new paths and rediscoveries are both discovery evidence');
+  assert.deepEqual(records[0].path, [1, 2, 3]);
+  assert.equal(records[0].provenance[0].solver.scoringProfileId, 'objectiveFirst');
+  assert.equal(records[0].provenance[0].search.randomSeed, 123);
+  assert.deepEqual(records[1].path, [4, 5, 6]);
+  assert.equal(records[1].provenance[0].solver.technique, 'prefix-anchored');
+  assert.equal(records[1].provenance[0].solver.forcing?.anchorSeed, 'seed-1');
+  assert.equal(records[1].provenance[0].solver.forcing?.anchorDepth, 7);
+  assert.equal(records[1].provenance[0].context.usedExistingHints, true);
+  assert.equal(records[1].provenance[0].context.hintGuided, true);
+});
+
 test('deriveSolveAttemptInfo carries the winning repair attempt randomSeed', () => {
   const attempts = [
     currentAttempt({ scoringProfileId: 'objectiveFirst', orderingBiasId: null, beamWidth: 5000, ok: false, elapsedMs: 10 }),
