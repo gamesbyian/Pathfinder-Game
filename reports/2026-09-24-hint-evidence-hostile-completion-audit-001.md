@@ -375,6 +375,23 @@ requirements were too weakly specified to serve as falsifiable completion gates.
 The plan now records these as section 0 completion-contract requirements. This report is the first
 closeout conducted under that stronger contract.
 
+The plan's acceptance gates, per-phase method and final Definition of Done have also been tightened so
+the correction is executable rather than merely retrospective prose: populations must be mechanically
+derived, persistence closes against an explicit state-transition matrix, topology-specific boundaries
+must run before phase closure, and final completion items are bound to concrete proof classes on one
+exact head.
+
+Historical implementation reports whose broad completion claims were falsified are now explicitly
+reconciled rather than silently rewritten:
+
+- Phase 3 closeout is retained as the first semantic-event retention closure but is superseded for the
+  same-event/new-occurrence case;
+- Phase 6 portfolio retirement remains valid for that family but no longer claims it exhausted every
+  GHA Hint writer;
+- the September 23 mechanical migration audit is marked historical/reconciled;
+- the original Phase 8 bulk-migration report already records that its 1,962-artifact "full corpus"
+  claim was incomplete and points to the six-store repair.
+
 ## Producer audit result
 
 The maintained GHA discovery families currently eligible for canonical Hint persistence are:
