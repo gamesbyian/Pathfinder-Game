@@ -57,6 +57,7 @@ for (const member of [
   'test:known-support-extinction',
   'test:class3-dose-exposure',
   'test:class3-dose-expectations',
+  'test:hint-provenance-surface-audit-detector',
 ]) {
   assert.ok(shared.selected.includes(member), `shared fallback lost ${member}`);
 }
@@ -64,8 +65,9 @@ for (const member of [
 // history, then to 51 after merging the portfolio-harvester/v4-codec branch (chatgpt/hint-
 // consolidation-final-push-2026-09-24), which added its own two shared-surface entries, then to
 // 54 after the hostile completion audit added central-persistence, published-import enrichment and
-// physical-decode invariants to the shared validation surface.
-assert.equal(shared.selected.length, 54);
+// physical-decode invariants, then to 55 after hardening the physical-reader detector against
+// staged read/parse refactors.
+assert.equal(shared.selected.length, 55);
 
 const combined = list('nodeTests', 'solver', 'research');
 assert.equal(new Set(combined.selected).size, combined.selected.length, 'multi-surface selection must dedupe commands');
