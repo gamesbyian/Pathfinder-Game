@@ -377,6 +377,10 @@ test('lifecycle telemetry reports guidance-goal-distance-retry and late-repair-m
     const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         lifecycleTelemetry: true,
+        // This regression pins stage-plan/lifecycle projection, not search quality. Keep the real
+        // production scheduler and stage bookkeeping while replacing expensive search dispatches
+        // with the same deterministic exhausting seam used by the neighboring budget invariants.
+        attemptSearchForTesting: exhaustingDispatch,
     });
     const lifecycle = result.stageLifecycle as Record<string, any>;
     for (const name of ['guidance-goal-distance-retry', 'late-repair-multiseed-retry']) {
