@@ -27,6 +27,7 @@ jobs:
   impact-shadow:
     runs-on: ubuntu-latest
     outputs:
+      planner_outcome: ${{ steps.impact.outcome }}
       full: ${{ steps.impact.outputs.full }}
       surfaces: ${{ steps.impact.outputs.surfaces }}
       validator_groups: ${{ steps.impact.outputs.validator_groups }}
@@ -348,7 +349,7 @@ jobs:
       always()
       && (
         github.event_name == 'workflow_dispatch'
-        || needs.impact-shadow.result != 'success'
+        || needs.impact-shadow.outputs.planner_outcome != 'success'
         || needs.impact-shadow.outputs.deep_job_required == 'true'
       )
     runs-on: ubuntu-latest
