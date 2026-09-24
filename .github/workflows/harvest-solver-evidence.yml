@@ -136,9 +136,10 @@ jobs:
             git reset --hard origin/main
 
             if [[ "$HARVEST_HINTS" == '1' ]]; then
-              # Workflows that used --save-hints, including the CP-SAT harvesters, already carry
-              # canonical hint files in shard artifacts. Merge them structurally and referee-check
-              # every incoming path across published, corpus-1 and corpus-2 hint stores.
+              # Compatibility/backfill importer for any source artifact that genuinely contains
+              # canonical Hint files (including historical pre-centralization runs). Current
+              # maintained solver source workflows are report-only; this path must not be their
+              # ordinary persistence mechanism.
               node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
