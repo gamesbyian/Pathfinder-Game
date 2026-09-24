@@ -208,6 +208,27 @@ Lower budgets do not buy additional wall time, so production uses **250k / 125k*
 
 Expected file saving: roughly **7.5 s** versus the current covered-suite profile. Full-suite wall saving must be measured separately because Vitest overlaps files.
 
+### B6. Keep real harvest regressions, shrink their physical corpus
+
+Post-B1c Node profiling leaves the two real adapter regressions as notable contracts:
+
+- `test:harvest-solver-diagnostics-reports`: ~5-6 s;
+- `test:harvest-cpsat-discovery-reports`: ~4-5 s.
+
+Those tests intentionally exercise real levels, real committed hints, the production referee, provenance projection, merge/write behavior, and source-run lineage because earlier empty-only tests missed real field-transport bugs. The proof should remain end-to-end.
+
+The accidental cost is physical corpus breadth: each test hydrates the whole published hint store to validate one real level.
+
+Rehearsal in progress:
+
+- add optional `--workspace-root` to the production harvest adapters; default remains the repository root;
+- logical corpus IDs remain `data/levels.json` / allowed corpus names;
+- tests construct a temporary workspace containing one exact committed raw level plus its exact committed hint artifact;
+- the production adapter/referee/write path runs unchanged against that workspace;
+- real tracked hint files are no longer mutated/snapshotted during tests.
+
+Acceptance: preserve the real-row regression semantics while materially reducing both child runtimes and eliminating cross-test mutation risk.
+
 ## Implementation sequence
 
 ### Phase A: remove avoidable bootstrap and serial tax
