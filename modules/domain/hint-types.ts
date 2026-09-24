@@ -295,6 +295,17 @@ export function provenanceOccurrenceKey(
     return `${provenanceEventKey(pathSignature, entry)}::occurrence::${hintOccurrenceKey(occurrence)}`;
 }
 
+/** Persistence-level evidence keys for one provenance entry: the semantic event key plus one
+ *  atomic key per physical occurrence. Callers can use the event key to dedupe occurrence-less
+ *  evidence and the occurrence keys to retain same-event reacquisition without changing semantic
+ *  event identity. */
+export function provenanceEvidenceKeys(pathSignature: string, entry: HintProvenanceEntry): string[] {
+    return [
+        provenanceEventKey(pathSignature, entry),
+        ...(entry.occurrences ?? []).map((occurrence) => provenanceOccurrenceKey(pathSignature, entry, occurrence)),
+    ];
+}
+
 /** Wrap a bare path as a canonical Hint. */
 export function toHint(path: number[], provenance: HintProvenanceEntry[] = []): Hint {
     return toHintRuntime(path, provenance) as Hint;
