@@ -258,7 +258,8 @@
       "test:hint-historical-enrichment-plan",
       "test:hint-codec-baseline-benchmark",
       "test:harvest-portfolio-solve-sweep-reports",
-      "test:hint-historical-enrichment-apply"
+      "test:hint-historical-enrichment-apply",
+      "test:hint-artifact-v4-migration"
     ],
     "persistence": [
       "test:firestore-rules"
