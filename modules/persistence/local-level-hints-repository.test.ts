@@ -5,7 +5,7 @@ import { makeProvenanceEntry } from '../domain/hint-types.js';
 
 // Only the pure hashPathSignature/localHintEntryId helpers are unit-tested here — the rest of this
 // module is a thin Firestore wrapper (no persistence repo in this codebase has emulator/mock-
-// backed unit tests; see docs/firestore-security-model.md's "Known risks" for the tracked
+// backed unit tests; see firestore.rules's "Known risks" for the tracked
 // follow-up, and scripts/firestore-level-fingerprint-boundary-test.mjs for the real
 // emulator-backed proof of the entry-doc-per-discovery-event behavior).
 const { hashPathSignature, localHintEntryId, localHintEvidenceKeys, MAX_HINTS_PER_LEVEL } = createLocalLevelHintsRepository({ appId: 'test', db: null });
