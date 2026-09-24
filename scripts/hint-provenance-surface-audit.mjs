@@ -14,6 +14,8 @@ import { buildMaintainedReachability } from './hint-io-facade-guard-lib.mjs';
 
 const ROOT = path.resolve(process.argv.find(a => a.startsWith('--root='))?.slice(7) || process.cwd());
 const OUT = process.argv.find(a => a.startsWith('--out='))?.slice(6) || null;
+const ENFORCE = process.argv.includes('--enforce');
+const SUMMARY_ONLY = process.argv.includes('--summary-only');
 const { sourceTexts, reachable } = buildMaintainedReachability(ROOT);
 
 const categories = {
@@ -73,6 +75,7 @@ const categories = {
 };
 
 const directPhysicalReadSuspects = [];
+const physicalDecodeBypasses = [];
 const rows = [];
 for (const [rel, text] of sourceTexts) {
   const hits = {};
@@ -95,6 +98,12 @@ for (const [rel, text] of sourceTexts) {
       && /\.hints\b/u.test(text)) {
     directPhysicalReadSuspects.push(rel);
   }
+  if (maintainedReachable
+      && /JSON\.parse\s*\([^\n]*(?:readFileSync|readFile)/u.test(text)
+      && /\b(?:doc|document|hintDoc)\.hints\b/u.test(text)
+      && !/\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(text)) {
+    physicalDecodeBypasses.push(rel);
+  }
 }
 rows.sort((a,b)=>a.path.localeCompare(b.path));
 
@@ -114,6 +123,7 @@ const result = {
   root: ROOT,
   summary,
   directPhysicalReadSuspects: [...new Set(directPhysicalReadSuspects)].sort(),
+  physicalDecodeBypasses: [...new Set(physicalDecodeBypasses)].sort(),
   maintainedRows: maintained,
   dormantRows: rows.filter(r=>!r.maintainedReachable),
 };
@@ -123,4 +133,14 @@ if (OUT) {
   fs.mkdirSync(path.dirname(out), {recursive:true});
   fs.writeFileSync(out, json + '\n');
 }
-console.log(json);
+if (!SUMMARY_ONLY) console.log(json);
+else console.log(JSON.stringify({
+  summary,
+  directPhysicalReadSuspects: result.directPhysicalReadSuspects,
+  physicalDecodeBypasses: result.physicalDecodeBypasses,
+}, null, 2));
+if (ENFORCE && result.physicalDecodeBypasses.length > 0) {
+  console.error('Maintained raw Hint artifact readers bypass the shared decoder:');
+  for (const file of result.physicalDecodeBypasses) console.error('  - ' + file);
+  process.exit(1);
+}
