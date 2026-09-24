@@ -153,44 +153,98 @@ jobs:
             data/stress/hints-random
             data/stress/hints-envelope
           key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
-      - name: Materialize runtime data on cache miss
+      - name: Derive base-parent runtime-data cache key
+        id: base-runtime-data-key
         if: steps.runtime-data-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          git sparse-checkout set --no-cone --stdin <<'EOF'
-          /*
-          !/logs/*
-          /logs/artifact-metadata.json
-          /logs/solver-canary-baseline.json
-          /logs/*.md
-          /logs/**/*.md
-          !/reports/*
-          /reports/*.md
-          /reports/*.json
-          /reports/**/*.md
-          /reports/stress/experiment-evidence/**/manifest.json
-          /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
-          /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
-          /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
-          /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
-          /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
-          /reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json
-          /reports/stress/lane-e-multi-pick-bisection-2026-09-17.json
-          /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
-          /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
-          /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
-          !/data/*
-          /data/levels.json
-          /data/level-heatmaps.json
-          /data/themes.json
-          /data/hints/
-          /data/stress/stress-levels.json
-          /data/stress/stress-levels-random.json
-          /data/stress/stress-levels-envelope.json
-          /data/stress/hints/
-          /data/stress/hints-random/
-          /data/stress/hints-envelope/
-          EOF
+          {
+            git rev-parse HEAD^1:data/levels.json
+            git rev-parse HEAD^1:data/level-heatmaps.json
+            git rev-parse HEAD^1:data/themes.json
+            git rev-parse HEAD^1:data/hints
+            git rev-parse HEAD^1:data/stress/stress-levels.json
+            git rev-parse HEAD^1:data/stress/stress-levels-random.json
+            git rev-parse HEAD^1:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD^1:data/stress/hints
+            git rev-parse HEAD^1:data/stress/hints-random
+            git rev-parse HEAD^1:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore base-parent runtime-data tree
+        id: base-runtime-data-cache
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.base-runtime-data-key.outputs.key }}
+      - name: Overlay runtime-data changes from tested merge
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mapfile -d '' changed < <(
+            git diff --name-only -z --no-renames --diff-filter=ACMRT HEAD^1 HEAD -- \
+              data/levels.json data/level-heatmaps.json data/themes.json data/hints \
+              data/stress/stress-levels.json data/stress/stress-levels-random.json \
+              data/stress/stress-levels-envelope.json data/stress/hints \
+              data/stress/hints-random data/stress/hints-envelope
+          )
+          for file in "${changed[@]}"; do
+            blob="$(git rev-parse "HEAD:$file")"
+            mkdir -p "$(dirname "$file")"
+            curl --fail --silent --show-error \
+              --retry 3 \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/git/blobs/$blob" \
+              | jq -r '.content' | tr -d '\n' | base64 --decode > "$file"
+          done
+          mapfile -d '' deleted < <(
+            git diff --name-only -z --no-renames --diff-filter=D HEAD^1 HEAD -- \
+              data/levels.json data/level-heatmaps.json data/themes.json data/hints \
+              data/stress/stress-levels.json data/stress/stress-levels-random.json \
+              data/stress/stress-levels-envelope.json data/stress/hints \
+              data/stress/hints-random data/stress/hints-envelope
+          )
+          if (( ${#deleted[@]} )); then
+            rm -f -- "${deleted[@]}"
+          fi
+      - name: Last-resort runtime-data checkout when base cache is absent
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v7
+        with:
+          path: .runtime-data-source
+          sparse-checkout: |
+            /data/levels.json
+            /data/level-heatmaps.json
+            /data/themes.json
+            /data/hints/
+            /data/stress/stress-levels.json
+            /data/stress/stress-levels-random.json
+            /data/stress/stress-levels-envelope.json
+            /data/stress/hints/
+            /data/stress/hints-random/
+            /data/stress/hints-envelope/
+          sparse-checkout-cone-mode: false
+      - name: Install last-resort runtime data
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          mkdir -p data
+          cp -a .runtime-data-source/data/. data/
+          rm -rf .runtime-data-source
       - name: Save exact runtime-data tree immediately after materialization
         if: steps.runtime-data-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
