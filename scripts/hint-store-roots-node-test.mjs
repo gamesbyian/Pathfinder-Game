@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { discoverHintStoreDirs } from './hint-store-roots.mjs';
+import { discoverHintStoreDirs, hintStoreLabel } from './hint-store-roots.mjs';
 
 const root=mkdtempSync(path.join(tmpdir(),'hint-store-roots-'));
 try {
@@ -20,4 +20,9 @@ try {
   ]);
 } finally { rmSync(root,{recursive:true,force:true}); }
 
+assert.equal(hintStoreLabel('data/hints'), 'published');
+assert.equal(hintStoreLabel('data/stress/hints'), 'stress1');
+assert.equal(hintStoreLabel('data/stress/hints-random'), 'stress2');
+assert.equal(hintStoreLabel('data/stress/hints-envelope'), 'envelope');
+assert.equal(hintStoreLabel('data/families/hints'), 'families:hints');
 console.log('hint-store-roots-node-test: ok');
