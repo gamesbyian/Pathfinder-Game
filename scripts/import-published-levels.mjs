@@ -13,10 +13,10 @@ import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 // carries the landmark's derived block/must-pass cell) fingerprint identically in the app
 // but did NOT under the old local stableStringify comparison, so a republished landmark
 // level would have been treated as new instead of merged.
-import { getLevelFingerprintSource } from '../modules/domain/level-fingerprint.js';
-import { mergeHints, upgradeLegacyHints } from '../modules/domain/hint-types.js';
+import { getLevelFingerprintSource } from '../modules/domain/level-fingerprint.ts';
+import { mergeHints, upgradeLegacyHints } from '../modules/domain/hint-types.ts';
 import { stableStringify } from '../modules/canonical-json.mjs';
-import { makeProvenanceEntry, makeLevelProvenance } from '../modules/domain/level-provenance-types.js';
+import { makeProvenanceEntry, makeLevelProvenance } from '../modules/domain/level-provenance-types.ts';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
@@ -103,11 +103,9 @@ function writeLevels(document, levels, changedLevelIds) {
   writeLevelCorpusDocumentWithHints(levelsJsonPath, { ...document, levels: normalizedLevels }, { changedHintLevels });
 }
 
-// Uncapped: the 1000-hint cap was a UI-latency guard for player-initiated searches, not a data
-// limit. A dev/import script must not skip or truncate a level for already having many hints — it
-// only avoids saving DUPLICATE paths (dedup by signature, below). Runtime/UI caps are unchanged.
-const MAX_HINTS_PER_LEVEL = Infinity;
-const hintSignature = hint => (Array.isArray(hint) ? hint.join(',') : JSON.stringify(hint));
+// Uncapped: the former 1000-hint UI limit is intentionally absent here. Import merges all
+// semantic Hint records and deduplicates through mergeHints(); storage capacity is enforced at the
+// actual persistence boundary rather than by path count.
 
 export function hasProvenance(level) {
   return !!(level.provenance && Array.isArray(level.provenance.history) && level.provenance.history.length > 0);
