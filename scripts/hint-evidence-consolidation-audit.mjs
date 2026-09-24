@@ -12,6 +12,7 @@ const hintRoots = [
   ['published', 'data/hints'],
   ['stress1', 'data/stress/hints'],
   ['stress2', 'data/stress/hints-random'],
+  ['envelope', 'data/stress/hints-envelope'],
 ];
 
 const fields = [
