@@ -29,6 +29,9 @@ jobs:
           cache: npm
       - run: npm ci
 
+      - name: Enforce central Hint persistence ownership
+        run: npm run test:central-hint-persistence-guard
+
       - name: Census maintained Hint/provenance surfaces
         run: node scripts/hint-provenance-surface-audit.mjs --out=/tmp/hint-provenance-surface-census.json
 
