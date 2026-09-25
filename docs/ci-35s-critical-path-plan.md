@@ -962,6 +962,30 @@ This is a same-proof-cheaper-work reduction, not an effectiveness/cadence change
 
 One enabled mechanism also has a mechanically bounded activation cost: `enableBeamSeed` always performs a fixed 3,000-node beam prepass before restart 1, and a separate observer test asserts the seed reaches the elite pool at restart 0. Its determinism and activation tests therefore now use a 5,000-node ceiling rather than 250k/50k. Stagnation-triggered plateau/relink/turn tests remain at their existing budgets because their activation boundary is qualitatively different.
 
+## Green three-lane baseline and Node-shard promotion
+
+Exact-head CI run **36115319704** was green and established the post-fixture baseline:
+
+- `fast-gate`: ~54 s runner wall;
+- `deep-verification` (coverage): ~40 s runner wall, with Vitest itself at **25.97 s**;
+- `deep-services`: ~31 s runner wall;
+- coverage slow files after fixture cuts: repair-search ~5.2 s, diversification ~2.6 s, hint-ablation-generator ~0.9 s.
+
+The fixture work therefore materially reduced the targeted files, but the full covered population remained roughly 26 s because import/worker/other-test cost now dominates. Fast Gate became the largest blocker because selected Node/CLI contracts still consumed ~24 s serially before a ~5 s build.
+
+The earlier D1c rehearsal had already produced two clean two-runner Node samples around 23 s job wall. Production now promotes that topology **without** reviving the temporary timing-profile artifact:
+
+- `node-contracts` is an independent two-entry matrix;
+- semantic selection is unchanged;
+- shard A execution owners: `research, solver, game, persistence`;
+- shard B execution owners: `shared, data, repo`;
+- on the last measured Node population those owner bins represented ~52.2 s vs ~57.8 s summed child time, close to the former 55/55 LPT rehearsal;
+- `validation-groups.mjs --owner-groups=...` filters the semantically selected contract set by its single registry execution owner, so multi-surface contracts execute **exactly once** rather than once per semantic surface;
+- a permanent self-test proves the two owner shards are disjoint and their union exactly equals the full Node/CLI authority;
+- router failure remains fail-safe: each shard requests all semantic groups, and the two execution-owner partitions reconstruct the complete aggregate.
+
+Fast Gate now owns package/script reachability, textual invariants, selected validators, lint, and conditional build only. The next exact-head run must establish the actual production matrix wall and verify the predicted low-to-mid-20-second Node critical path.
+
 ## Current forward work order
 
 1. **Validate the three-lane production packing:** require green exact-head full-impact evidence for Fast Gate, coverage-only deep-verification, and deep-services; record first-runner→last-required completion and each lane wall.
