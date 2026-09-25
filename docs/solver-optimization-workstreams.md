@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-22.
+> **Reconciled:** 2026-09-25.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
@@ -26,6 +26,24 @@ The production refresh reproduces the prior solved sets exactly: **101/102 C1 + 
 The completed census sharpens the residual picture: full-depth T1 isolated techniques solve **83/532 current production misses (15.6%)**, with **47 singleton-supported** misses; **449** misses have no T1 solve. Conversely, **140/1,430 production-solved levels** have no T1 isolated solver at the 50M ceiling, so isolated coverage is not a production-safety oracle. The fresh run also records **332 flag/variant regressions**, reinforcing matched-work/control gates.
 
 **Standing budget decision:** keep T1/T3/T4 at **50M nodes** and retain the bounded **60-level × 10M canonical-work EW1** tranche. The next information purchase is not a deeper census or more generic failure counts: use the fresh 1,802-parent denominator plus the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win identities to sample first operational divergence and legal offer/allocation mechanisms. The remaining census work is second-order materialization plus standard-result provenance hardening, not another broad acquisition.
+
+### Supporting infrastructure — research execution efficiency
+
+**State:** ACTIVE / infrastructure support; does not reorder scientific gates.
+
+The 2026-09-23→25 CI optimization cycle exposed reusable research-system methods: exact-generation reuse, sparse input materialization, hermetic real-data fixtures, deterministic bookkeeping witnesses, callable semantic seams with retained executable smokes, and shadow-before-authority routing. The solver/research batch system already has mature weighted sharding, so generic shard-count tuning is not queued.
+
+Current repo reconciliation adds these execution facts:
+
+- maintained solver/evidence workflows still use floating `node-version: '20'`; exact runtime identity is now an explicit reproducibility follow-up;
+- none of the 11 maintained solver/evidence workflows currently uses CI's proven exact dependency-tree restore; activation is gated on measured bootstrap economics rather than bulk adoption;
+- only the routing-regime sample A/B workflow currently uses sparse checkout; level-blind workflows are the first candidate for derived full-vs-sparse input-parity rehearsal because their solver input boundary is already mechanically restricted;
+- post-consolidation canonical Hint persistence is owned by `harvest-solver-evidence.yml`; execution-efficiency work must preserve that ownership rather than recreate source-workflow writers;
+- live WS2/WS1 harnesses are the first search/plumbing separation audit surface. Scientific search stays real; configuration/provenance/aggregation assertions should use the cheapest witness that proves their contract.
+
+Authority and execution plan: [solver research execution-efficiency plan](solver-research-execution-efficiency-plan.md). Starting census: [2026-09-25 execution-topology census](../reports/2026-09-25-solver-research-execution-topology-starting-census-001.md).
+
+Immediate infrastructure gate: mechanically refresh workflow topology, rehearse exact runtime identity on representative level-blind/history-aware/A-B paths, then measure bootstrap share before activating exact dependency-tree reuse or broader sparse checkout. Negative timing experiments close their tested form; exposed hidden dependencies/ownership defects remain actionable findings.
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
