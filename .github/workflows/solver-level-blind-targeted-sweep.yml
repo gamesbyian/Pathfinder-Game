@@ -376,7 +376,6 @@ jobs:
           nodebudget=()
           [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
           levels="${{ matrix.shard.levels }}"
-          levels="pos:$(echo "$levels" | sed 's/pos://g')"
           timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="${{ inputs.corpus }}" \
             --levels="${levels}" \
@@ -678,7 +677,6 @@ jobs:
           nodebudget=()
           [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
           levels="${{ matrix.shard.levels }}"
-          levels="pos:$(echo "$levels" | sed 's/pos://g')"
           timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="${{ inputs.corpus }}" \
             --levels="${levels}" \
