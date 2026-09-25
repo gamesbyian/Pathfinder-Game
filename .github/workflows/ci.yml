@@ -21,8 +21,8 @@ concurrency:
 # so one run reports the useful failure set; setup/install failures still stop dependent validation.
 jobs:
   # Impact routing records the semantic validation plan and remains authoritative for final-status/deep-lane decisions.
-  # Fast Gate independently computes the same plan locally so selected validator/build work can start without
-  # waiting on another hosted runner. Node contracts do the same inside their reusable shard workflow. Planner failure fails safe to broad validation. This job intentionally avoids npm ci:
+  # Fast Gate independently computes the same plan locally so selected validator work can start without
+  # waiting on another hosted runner. Build and Node contracts execute in independent reusable lanes. Planner failure fails safe to broad validation. This job intentionally avoids npm ci:
   # ownership/routing authorities use Node built-ins and Git metadata only.
   impact-shadow:
     runs-on: ubuntu-latest
