@@ -798,6 +798,35 @@ This is a cadence correction, not deletion of evidence. The workflows remain dis
 
 The audit did **not** broadly disable every auxiliary PR workflow. `ci-testability-topology-audit.yml`, `ci-semantic-fault-injection-audit.yml`, and `solver-evidence-integrity-guard.yml` have materially narrower authority/input triggers and remain automatic where their owning surfaces change. `ci-node-concurrency-benchmark.yml` is now manual-only as well. It was lifecycle-described as manual measurement but still auto-triggered on `package.json`; dispatch it only when worker-count/execution-mode assumptions actually need remeasurement.
 
+## D1c: reopen two-way Node sharding after bootstrap premise change
+
+D1 closed shared-hosted Node sharding negative after run 36068242014 measured semantically green **17 s / 14 s** useful shards but **27 s / 38 s** runner walls. The deciding failure was not shard balance: shard 2 spent roughly **11 s in setup-node**, exhausting the hard 35 s margin.
+
+The cache-first bootstrap change materially changes that premise. Run 36104516509 demonstrated a **1 s** warm setup-node path when exact `node_modules` is restored before setup-node and npm's download cache is skipped.
+
+The Node rehearsal profile has therefore been refreshed from exact-head run **36103663816 / job 107971397401**. It covers the current permanent `test:node` population exactly: **209/209 contracts, zero missing/stale entries** after the historical-audit removals.
+
+Greedy two-bin balance from that profile is:
+
+| shard | contracts | predicted summed child work |
+| --- | ---: | ---: |
+| 1 | 120 | **55.0 s** |
+| 2 | 89 | **55.0 s** |
+
+These are summed child times under four-worker execution, not expected shard wall.
+
+The existing two-way rehearsal in `ci-testability-topology-audit.yml` is temporarily enabled for PR evidence and now uses the same cache-first bootstrap as production.
+
+Preregistered interpretation:
+
+1. both shards must be semantically green and the profile must exactly match the permanent registry;
+2. if both runner walls are **≤30 s** and first-shard-start → both complete is **≤30 s**, shared-hosted Node sharding is strongly revived;
+3. **30–35 s** requires repeated confirmation before production promotion;
+4. **>35 s** closes D1 negative again under the new bootstrap premise;
+5. do not promote from one favorable run, and do not tune membership after a timing miss unless the measured imbalance, rather than runner/bootstrap variance, is the cause.
+
+Remove the temporary automatic shard rehearsal after the decision is recorded.
+
 ## D2c: reopen balanced coverage sharding after bootstrap premise change
 
 The earlier D2/D2b negative result remains valid for its measured topology, but one of its deciding premises has materially changed.
