@@ -637,6 +637,8 @@ Shard 2's excess was bootstrap variance, especially `setup-node` at **11 s** ver
 
 Decision: **stop tuning Node shard membership/count on shared runners**. The partition is semantically valid and useful for a future larger/reserved-runner topology, but a hard ≤35 s wall target cannot be declared from standard hosted runners when ordinary setup variance alone pushes a healthy shard pair to 38 s.
 
+Fresh confirmation from CI Node Concurrency Benchmark run **36082154293** removes another possible false lead. Four repeated direct-invocation runs at `PATHFINDER_PARALLEL_JOBS=4` measured **35.17–35.61 s**, median **35.46 s**; the equivalent npm-mediated runs measured **45.53–46.93 s**, median **45.65 s**. Exact-head ordinary CI run **36083565019** independently measured the production Node/CLI step at **35 s**. The current direct four-worker harness is therefore behaving consistently with the dedicated benchmark; there is no evidence here for another easy wrapper/fan-out win on the same shared runner. Further material reduction requires cheaper individual contracts, a different execution topology on larger/reserved compute, or both.
+
 ### D2 result: native equal-file coverage sharding preserves thresholds but wastes the critical path
 
 Evidence-only run **36068033403** proved Vitest's merge path is semantically usable:
