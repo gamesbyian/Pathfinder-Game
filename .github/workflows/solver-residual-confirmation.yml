@@ -109,7 +109,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.23.2'
           cache: npm
 
       - name: Install dependencies
@@ -218,7 +218,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.23.2'
           cache: npm
 
       - name: Install dependencies
@@ -310,7 +310,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.23.2'
           cache: npm
 
       - name: Install dependencies
@@ -493,7 +493,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.23.2'
           cache: npm
 
       - name: Install dependencies
@@ -603,7 +603,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.23.2'
 
       - name: Download the sealed residual corpus and derive its exact expected-id population
         uses: actions/download-artifact@v8
