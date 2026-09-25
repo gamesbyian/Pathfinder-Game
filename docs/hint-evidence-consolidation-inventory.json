@@ -1503,6 +1503,14 @@
           "scripts/central-hint-persistence-guard.mjs"
         ],
         "finding": "Line-local git staging detection could miss canonical Hint scopes placed on a backslash-continued shell line. Persistence analysis now joins logical shell continuations and adversarially tests continued git add/status commands."
+      },
+      {
+        "id": "HPA-036",
+        "kind": "closeout-ci-invalidation-gap",
+        "paths": [
+          ".github/workflows/hint-consolidation-closeout.yml"
+        ],
+        "finding": "The closeout canary path filter did not include all workflow/control-plane authorities that can change its Definition-of-Done claims. It now triggers on all workflows, Hint/provenance docs/reports, lifecycle/schema-contraction authorities, source/modules/data and package scripts."
       }
     ]
   }
