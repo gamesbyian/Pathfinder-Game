@@ -181,13 +181,15 @@ Decision: **close static launch-order prioritization negative and revert the sch
 
 
 
-#### CP-SAT harvester fixture isolation — active experiment
+#### CP-SAT harvester fixture isolation — closed successful
 
 Current exact-head Node timing puts `test:harvest-cpsat-discovery-reports` at **5.1–5.9 s**. Its real-row regression still loaded the full published corpus and temporarily rewrote tracked `data/hints/P00002.json`, even though the sibling diagnostics harvester regression has already demonstrated a stronger hermetic pattern: copy one real published level and its real persisted Hint into a private temporary corpus, then exercise the real adapter/referee/merge boundary there.
 
 The scoped experiment adds only a corpus-path injection seam for the logical published corpus and moves the CP-SAT real-row fixture to a private one-level copy. Artifact identity remains canonical, and the test still uses a real P00002 path, real stored level revision, real fingerprint check, real referee validation, provenance reconstruction, occurrence lineage, and persisted Hint merge.
 
-Decision gate: retain the change if exact-head CI is green and the contract cost falls materially below the current 5.1–5.9 s range. The private fixture also removes a shared tracked-file mutation from the four-worker Node population, so hermeticity is part of the acceptance evidence.
+Exact-head run **36098786863** is green. `test:harvest-cpsat-discovery-reports` measured **2.2 s**, down from **5.1 s** on 36097915898 and **5.9 s** on 36098410201. The full Node/CLI step measured about **30.6 s** on this sample. The scoped contract therefore removed roughly **57–63%** of its own wall while preserving the real adapter/referee/merge boundary and eliminating shared tracked-file mutation.
+
+Decision: **close successful and keep the private fixture seam.** This is the preferred testability pattern for semantic harvesters whose production corpus size is incidental to the asserted adapter behavior: retain a real published level/path/revision and real persistence semantics, but inject a minimal private corpus instead of scanning or mutating the shared repository corpus.
 ### Covered Vitest
 
 Fresh production evidence from run **36090943840** / deep job **107933055611** validates the #2109 repair-search reuse change:
