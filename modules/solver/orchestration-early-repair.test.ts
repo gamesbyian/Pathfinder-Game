@@ -289,17 +289,19 @@ deepTest('the repair probe caps itself to a small external nodeBudget instead of
     // same arithmetic back at itself and could never catch a regression in it.
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
-        nodeBudget: 250_000, // far below one 2,000,000-node internal seed round
+        nodeBudget: 50_000, // far below one 2,000,000-node internal seed round
         // Isolates early-repair-search capping from the unrelated main-search late-suffix reserve (production
         // default-ON as of 2026-08-12), which would otherwise also shape node accounting here.
         mainSearchLateReserveFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.equal(result.nodeBudgetReached, true);
+    assert.equal(result.attempts.some(a => a.repair), true,
+        'the witness must reach the repair probe rather than pass by starving before the tier');
     // Without the fix, even the first ordinary seed could spend its full 2,000,000-node internal
     // allowance despite this much smaller external ceiling. With the fix, that first round itself is
-    // capped by the remaining caller budget, so total work stays close to 250,000.
-    assert.ok(result.nodesExpanded < 300_000, `expected nodesExpanded close to the 250,000 external ceiling (the old uncapped first round could spend ~2,000,000), got ${result.nodesExpanded}`);
+    // capped by the remaining caller budget, so total work stays close to 50,000.
+    assert.ok(result.nodesExpanded < 75_000, `expected nodesExpanded close to the 50,000 external ceiling (the old uncapped first round could spend ~2,000,000), got ${result.nodesExpanded}`);
 });
 
 // ── STRATEGY_REPAIR_SHRINK_RECOVERY ────────────────────────────────────
