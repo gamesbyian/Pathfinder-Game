@@ -171,15 +171,13 @@ Exact Fast Gate evidence from run **36096167198** is green for the full Node/CLI
 
 Decision: **close this process-topology experiment successful**. Preserve the three real executable boundaries (combiner smoke, planner smoke, timeout-recovery stdout integration) and do not chase the remaining 1.6 s unless it re-emerges as a material tail.
 
-#### Four-worker launch-order experiment
+#### Four-worker launch-order experiment — closed negative
 
-Exact-head run **36097915898** exposed a scheduler tail that is independent of individual-contract semantics. The permanent Node harness runs a bounded four-worker pool but, until now, consumed the 212 requested contracts strictly in package-list order. Several current multi-second contracts sit late in that list: CP-SAT harvest **5.1 s**, diagnostics harvest **3.7 s**, and level-blind harvest **3.1 s** were all launched near the end, while other 4–5 s contracts are distributed earlier. With fixed-width workers, late long jobs can determine the wall even when aggregate child work is unchanged.
+Exact-head run **36097915898** exposed a plausible scheduler-tail hypothesis: the permanent Node harness used a bounded four-worker pool but consumed all 212 requested contracts strictly in package-list order, while several 3–5 s contracts sat late in that list.
 
-A stacked experiment adds a narrow `PATHFINDER_PARALLEL_PRIORITY` scheduling hint to `run-scripts-parallel.mjs`. The named subset launches first in explicit order; every requested command still executes exactly once, child commands are unchanged, failures retain their full output, and the final report remains in caller request order. A one-worker regression proves launch ordering separately from output ordering.
+A scoped experiment added an explicit `PATHFINDER_PARALLEL_PRIORITY` launch-order hint and placed the twelve current ~3.1–5.2 s contracts first without changing commands, contract count, process isolation, output attribution, or failure semantics. Exact-head PR run **36098410201** was fully green, but the Node/CLI step moved from roughly **32.3 s** on 36097915898 to roughly **33.7 s**. Child costs remained in the same range; the supposed drain-tail saving did not survive ordinary hosted-runner variance.
 
-The first production priority set is deliberately small and evidence-derived: the twelve current contracts at roughly 3.1–5.2 s in run 36097915898. This is not a new validation tier or a permanent hand-maintained ranking contract. Keep it only if exact-head CI shows a repeatable Node/CLI wall reduction without new failures. Refresh or delete the hint when the dominant contract population materially changes. A useful result should reduce the four-worker drain tail by multiple seconds; sub-second movement is noise on shared runners.
-
-Decision gate: keep the sparse path only if all existing real-repository HEAD parity/queryability assertions stay green and the corrected Node-22 benchmark shows a repeatable reduction in the top-three contracts or total direct wall. If not, revert it rather than adding broader shared-fixture coupling.
+Decision: **close static launch-order prioritization negative and revert the scheduling machinery.** The acceptance bar was a repeatable multi-second Node wall reduction; the first production measurement instead regressed by ~1.4 s. Do not carry a hand-maintained priority list or runner complexity for a benefit below the noise floor. Revisit scheduling only if a future stable timing profile demonstrates a materially larger drain imbalance, preferably on larger/reserved compute where effective CPU is less volatile.
 
 ### Covered Vitest
 
