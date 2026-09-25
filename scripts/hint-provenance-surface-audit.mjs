@@ -52,8 +52,9 @@ function inspectPhysicalHintReadSurface(text) {
   // legitimately read unrelated manifest/report JSON and also consume hydrated level.hints through
   // the canonical corpus reader; the earlier file-level conjunction mislabeled that as a raw
   // physical Hint read (family-generate.mjs was the concrete counterexample).
+  const readCallWindows = [...text.matchAll(/\b(?:readFileSync|readFile)\s*\([\s\S]{0,320}/gu)].map(match => match[0]);
   const readsHintTarget = /\b(?:readFileSync|readFile)\s*\(\s*[^,\n]*(?:hint(?:File(?:Path)?|Artifact(?:Path)?|Path|Doc|Dir)|data\/(?:families\/(?:phaseB\/)?|stress\/)?hints(?:-random|-envelope)?\/)/iu.test(text)
-    || CANONICAL_STORE_JOIN_RES.some(re => new RegExp('(?:readFileSync|readFile)\\\\s*\\\\([^\\n]*' + re.source, 'u').test(text));
+    || readCallWindows.some(window => CANONICAL_STORE_JOIN_RES.some(re => re.test(window)));
   return { suspect, bypass: suspect && readsHintTarget && !usesSharedDecoder };
 }
 
