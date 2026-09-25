@@ -527,6 +527,37 @@ mechanically derived candidate population, otherwise they also fail as stale. Th
 bidirectional: current behavior needs a reviewed disposition, and every reviewed disposition must still
 be justified by current behavior.
 
+### 36. Review ledgers were fail-open to duplicate keys and unknown dispositions
+
+The physical reader/writer/bare-mutation ledgers and workflow-persistence exception ledger are executable
+control planes, but their parsers previously trusted the disposition vocabulary and collapsed duplicate
+keys through `Map` construction. A typoed disposition could therefore bypass disposition-specific checks,
+and duplicate entries could make review intent ambiguous while only the last entry survived mechanically.
+
+**Correction:** duplicate path/workflow entries and unknown disposition values are fatal. Each ledger now
+has an explicit accepted vocabulary, so a new classification requires a deliberate code change as well as
+a prose entry.
+
+### 37. Schema-v4 closeout proved migratability, not migration completion
+
+The closeout canary dry-ran the full-corpus v4 migrator and failed only if semantic round-trip failed.
+A reintroduced schema-v3 artifact would therefore produce a perfectly valid proposed migration,
+`semanticRoundTrip: pass`, and a green closeout despite Phase 8 no longer being complete.
+
+**Correction:** closeout now requires semantic equality, cross-resource join-identity equality, **and
+`changedFiles === 0`** from the mechanically complete six-store migration authority. Any canonical
+artifact that still needs migration reopens Phase 8.
+
+### 38. Phase-10 closeout measured sparse serialization but did not prove the cleanup remained applied
+
+The Phase-10 closeout step reran the sparse-serialization benchmark only. That could report fresh savings
+after empty optional arrays were reintroduced without failing the workflow, even though the bounded cleanup
+had already been executed and claimed complete.
+
+**Correction:** the existing mutation authority now supports non-mutating `--check` mode. Closeout runs
+that check and fails if any tracked level corpus would still change. The benchmark remains measurement;
+the fixed-point check is the completion gate.
+
 ## Exact-head validation fallout after Findings 25-33
 
 The first remote PR validation on head `06294be...` was valuable precisely because it did not stay
