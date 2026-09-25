@@ -65,14 +65,14 @@ export function classifyProvenanceClass(entry, { standard = 'strict' } = {}) {
     if (isInheritedWitness(entry)) return 'inherited-witness';
     if (entry.solver?.id !== SOLVER_ID) return 'unknown';
     const context = entry.context;
-    if (!context || !Object.hasOwn(context, 'isolatedTechnique') || !Object.hasOwn(context, 'hintGuided')) {
-        return 'unknown';
-    }
+    if (!context) return 'unknown';
     if (context.isolatedTechnique === true) return 'isolated-technique';
+    if (!Object.hasOwn(context, 'isolatedTechnique')) return 'unknown';
     if (context.hintGuided === true) return 'hint-guided';
+    if (!Object.hasOwn(context, 'hintGuided')) return 'unknown';
     if (standard === 'strict') {
-        if (!Object.hasOwn(context, 'usedExistingHints')) return 'unknown';
         if (context.usedExistingHints === true) return 'hint-guided';
+        if (!Object.hasOwn(context, 'usedExistingHints')) return 'unknown';
     }
     return 'cold-capability';
 }
