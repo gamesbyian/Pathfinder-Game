@@ -21,7 +21,7 @@ assert.deepEqual(persistence.jobs['deep-verification'].capabilities, ['unit-cove
 const full = packSurfaces(['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver']);
 assert.equal(full.jobs['fast-gate'].required, true);
 assert.equal(full.jobs['deep-verification'].required, true);
-assert.deepEqual(full.jobs['fast-gate'].capabilities, ['lint', 'solver-canary', 'build']);
+assert.deepEqual(full.jobs['fast-gate'].capabilities, ['lint', 'build']);
 assert.deepEqual(full.jobs['deep-verification'].capabilities, ['unit-coverage', 'deep-proofs', 'firestore-boundary']);
 
 assert.equal(finalStatusPasses({
