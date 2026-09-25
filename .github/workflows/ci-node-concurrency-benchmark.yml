@@ -52,5 +52,5 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: ci-node-concurrency-benchmark
-          path: tmp/ci-node-concurrency-benchmark/result.json
+          path: tmp/ci-node-concurrency-benchmark/
           retention-days: 30
