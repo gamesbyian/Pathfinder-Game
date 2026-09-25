@@ -644,6 +644,101 @@ Concrete findings and disposition:
 
 This closes the major "reconfirm unrelated repository process on every PR" defect. Remaining CI optimization should audit whether individual group ownership is still too broad, not revert to universal aggregates.
 
+## Methodology retrospective after the first 35-second cycle
+
+The last three days of CI work exposed a sequencing flaw in the original optimization method.
+
+The critical-path program began by treating the existing full-impact validation population as protected and then asking how to execute it faster. That discipline prevented casual test deletion and produced several durable wins: cache authority repairs, direct Node execution, exact dependency/bootstrap caching, the sparse Git-object batching fix, measured coverage sharding, negative shared-runner topology results, and better testability seams.
+
+However, the historical-value, impact-routing, and latest correctness/evidence audits now show that the protected population itself mixed several fundamentally different things:
+
+- merge-safety correctness and soundness;
+- repository/process-governance policy;
+- software-quality/coverage policy;
+- solver/research effectiveness characterization;
+- historical/frozen evidence reproducibility.
+
+Treating all five as one immutable "validation contract" caused optimization effort to be spent on obligations whose correct disposition was narrower cadence or explicit audit. The clearest examples are the nine-level solver capability canary and the R02560 historical treatment/control pair: both were first optimized as fixed PR obligations, then later recognized as solver-effectiveness evidence that the experiment/promotion system already measures more appropriately.
+
+The next CI cycle must therefore reverse the order of operations.
+
+### New decision order for every expensive obligation
+
+Before optimizing execution, answer these questions in order:
+
+1. **What concrete bad merge is this check intended to stop?** Name the violated current contract and consequence.
+2. **What kind of claim is it?** Runtime correctness/soundness, persistence/security, API/integration, repository governance, maintainability policy, effectiveness/quality, or historical/reproducibility evidence.
+3. **Is PR CI the authoritative process for that claim?** Identify any existing repo process that already establishes or periodically re-establishes it: experiment/promotion protocol, generated-authority writer, lifecycle audit, main-push oracle, scheduled hygiene, etc.
+4. **Would a changed result necessarily mean the change is bad?** If a solver improvement, intentional tradeoff, updated research conclusion, or regenerated snapshot can legitimately make the assertion false, it is not a permanent correctness invariant.
+5. **What changed surfaces can actually invalidate it?** Use semantic ownership before measuring universal cost.
+6. **What is its demonstrated marginal detection value?** Use root-cause/failure-family clustering and relevant exposures, not raw red counts.
+7. **What is the cheapest faithful proof of the surviving contract?** Only now optimize fixtures, process boundaries, caching, concurrency, sharding, or runner topology.
+
+This order combines the strongest parts of the historical-value audit, impact-routing work, and testability audit instead of treating them as separate programs.
+
+### Change the optimization priority metric
+
+Raw command duration is no longer the right ranking.
+
+Prioritize approximately by:
+
+> **expected critical-path burden = selected frequency × selected wall contribution × tail probability × setup coupling**
+
+and then weight by the confidence that the obligation belongs on that cadence.
+
+Consequences:
+
+- a 6-second research harness that rarely runs after semantic routing is less urgent than a 2-second contract on nearly every implementation PR;
+- a long command hidden behind another longer parallel child may have little critical-path value;
+- a setup cost that keeps an otherwise unnecessary lane alive may matter more than the command itself;
+- p90/tail behavior matters more than one favorable child timing.
+
+Refresh timing censuses **after** routing/cadence changes. Do not optimize from the old universal population.
+
+### Re-open prior topology conclusions only when their premises changed
+
+The D1/D2/B6 shared-runner experiments remain valid for the workloads and runner shape they measured. They proved that adding shared-hosted lanes to the then-full Node/coverage/deep populations lacked reliable 35-second margin.
+
+They are not timeless laws. Semantic Fast Gate routing and removal of effectiveness/historical obligations materially change common selected work. Revisit a closed topology only when a named premise changes, for example:
+
+- selected population shrinks enough to alter lane bootstrap economics;
+- longest-child tail is removed or distilled;
+- runner capacity changes materially;
+- setup is shared differently.
+
+Do not repeat an experiment merely because time passed; do repeat it when its cost model is no longer the same experiment.
+
+### Preserve the best methodological habits
+
+Several practices from the first cycle should remain mandatory:
+
+- exact-head, same-contract measurement rather than anecdotal stopwatch claims;
+- explicit p50/p90 and runner-start skew rather than one lucky run;
+- negative-result documentation so failed approaches are not rediscovered;
+- semantic fault injection before reducing cadence;
+- root-cause/failure-family clustering instead of counting red checks;
+- fail-safe routing for unknown impact;
+- synthetic/small fixtures where the repository artifact is not itself the contract;
+- preserving one real executable/integration boundary when direct-library testing replaces repeated subprocess work;
+- distinguishing hosted-runner variance from deterministic repository-owned cost;
+- permanent cardinality regressions for failures such as the #2072 sparse Git subprocess explosion.
+
+### Fresh audit lenses
+
+The next pass should explicitly look for:
+
+- **process-result duplication:** CI re-proving something already guaranteed by an authoring/generation/experiment workflow;
+- **historical assertions disguised as software contracts:** dated reports, fixed solve outcomes, frozen snapshots, old treatment/control relations;
+- **current-state acceptance tests:** tests that hard-code today's queue/report/plan state rather than validate the machinery that derives it;
+- **integration-owner duplication:** multiple tests rebuilding the same repository model when one integration owner plus pure consumer tests would suffice;
+- **policy ratchets running outside their ownership surface:** maintainability/governance checks that are useful but unnecessarily universal;
+- **coverage used as a proxy for correctness:** retain coverage as quality policy, but do not credit it as independent behavioral evidence;
+- **main/full-oracle duplication:** periodically reassess what the broad oracle is auditing and whether its frequency remains justified once scoped PR CI is stable.
+
+The important fresh question is no longer "what else can we shave?" It is:
+
+> **What is the smallest, correctly owned set of evidence that should block this merge, and only then how do we make that evidence fast?**
+
 ## Current forward work order
 
 1. **Fresh Node/CLI census:** use the machine-readable benchmark profiles and pursue structural testability wins in descending child-cost order.
