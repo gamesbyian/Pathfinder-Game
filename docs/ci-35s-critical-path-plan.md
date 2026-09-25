@@ -739,6 +739,31 @@ The important fresh question is no longer "what else can we shave?" It is:
 
 > **What is the smallest, correctly owned set of evidence that should block this merge, and only then how do we make that evidence fast?**
 
+### Solver-to-research routing discriminator — active
+
+The first selected-population census after Fast Gate activation found a coarse ownership edge worth challenging before more test micro-optimization:
+
+- the production-solver source rule currently classifies `modules/solver/**` as both `solver` and `research`;
+- selecting `research` therefore pulls the entire research validator/Node population into every production-solver PR;
+- the current rehearsal timing profile attributes roughly **46.5 child-seconds across 110 measured research-facing Node contracts**, versus roughly **17.7 child-seconds across 35 measured solver-facing contracts**. These are child-time planning figures from run 36065247220, not current hosted wall times;
+- many research contracts are pure question/evidence/query/governance machinery with no plausible dependency on solver implementation.
+
+Do **not** simply change the source rule to solver-only. First identify real downstream consumers.
+
+The dependency-local audit now emits `solverImplementationConsumers`: registered contracts whose resolved local import closure or declared subprocess entrypoints actually touch `modules/solver/**` / `modules/solver.ts`. This is deliberately a lower bound: filesystem/generated/env dependencies remain separate and must be accounted for before narrowing.
+
+Decision gate for replacing the wholesale `solver + research` escalation:
+
+1. collect the exact consumer list from the topology audit;
+2. inspect every research-owned consumer and any non-import dependency that can observe solver behavior;
+3. encode genuine downstream solver invalidation through `contractSurfaces` / dependency metadata;
+4. change the production-solver source rule to `solver` only;
+5. replay the historical #1722 unique solver-semantic catch and representative solver fault injection;
+6. run a solver-scoped rehearsal and compare selected population/timing against the current wholesale research escalation;
+7. retain full fallback for CI/router authority changes and periodic/full oracle coverage.
+
+If that evidence closes green, this is preferable to spending the next cycle shaving milliseconds from research contracts that solver PRs never needed to execute.
+
 ## Current forward work order
 
 1. **Fresh Node/CLI census:** use the machine-readable benchmark profiles and pursue structural testability wins in descending child-cost order.
