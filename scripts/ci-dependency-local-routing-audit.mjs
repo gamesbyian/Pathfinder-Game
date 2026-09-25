@@ -223,6 +223,37 @@ function metadataCoverage(row) {
 for (const row of traced) row.metadataCoverage = metadataCoverage(row);
 const metadataSufficient = traced.filter(row => row.metadataCoverage.sufficient);
 
+function productionSolverDependency(row) {
+  const graphFiles = row.graph?.files ?? [];
+  const processEntrypoints = row.dependencyDeclaration?.processEntrypoints ?? [];
+  const matchedFiles = graphFiles.filter(file =>
+    /^modules\/solver(?:\/|\.(?:ts|js|mjs|tsx|mts|cts)$)/u.test(file)
+    || /^modules\/solver\.ts$/u.test(file));
+  const matchedEntrypoints = processEntrypoints.filter(file =>
+    /^modules\/solver(?:\/|\.(?:ts|js|mjs|tsx|mts|cts)$)/u.test(file)
+    || /^modules\/solver\.ts$/u.test(file));
+  return {
+    dependsOnProductionSolver: matchedFiles.length > 0 || matchedEntrypoints.length > 0,
+    matchedFiles,
+    matchedEntrypoints,
+  };
+}
+
+for (const row of contracts) row.productionSolverDependency = productionSolverDependency(row);
+
+const solverImplementationConsumers = contracts
+  .filter(row => row.productionSolverDependency.dependsOnProductionSolver)
+  .map(row => ({
+    family: row.family,
+    ownerGroup: row.ownerGroup,
+    surfaces: row.surfaces,
+    name: row.name,
+    entrypoint: row.entrypoint,
+    matchedFiles: row.productionSolverDependency.matchedFiles,
+    matchedEntrypoints: row.productionSolverDependency.matchedEntrypoints,
+  }))
+  .sort((a, b) => a.ownerGroup.localeCompare(b.ownerGroup) || a.name.localeCompare(b.name));
+
 const bySurface = {};
 for (const surface of ['repo', 'game', 'persistence', 'solver', 'research', 'data', 'shared']) {
   const rows = contracts.filter(row => row.surfaces.includes(surface) || (surface === 'shared' && row.ownerGroup === 'shared'));
@@ -322,6 +353,7 @@ const output = {
   staticImportCandidateQueue,
   metadataSufficientCandidateQueue,
   dependencyMetadataQueue,
+  solverImplementationConsumers,
   topSharedDependencies: consumerRows.slice(0, 100),
   contracts,
 };
@@ -336,5 +368,7 @@ console.log(JSON.stringify({
   staticImportCandidateQueue: output.staticImportCandidateQueue.slice(0, 25),
   metadataSufficientCandidateQueue: output.metadataSufficientCandidateQueue.slice(0, 25),
   dependencyMetadataQueue: output.dependencyMetadataQueue.slice(0, 25),
+  solverImplementationConsumerCount: output.solverImplementationConsumers.length,
+  solverImplementationConsumers: output.solverImplementationConsumers,
   topSharedDependencies: output.topSharedDependencies.slice(0, 20),
 }, null, 2));
