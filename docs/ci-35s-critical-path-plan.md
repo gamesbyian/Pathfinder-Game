@@ -786,6 +786,18 @@ This exposes a more general routing rule: **producer ownership and downstream in
 
 After the solver edge, inspect the same pattern for runtime data and shared-domain sources before attempting dependency-local routing globally.
 
+## Workflow-trigger cruft audit
+
+The PR-level workflow layer itself was audited before interpreting new timing runs. Three automatic workflows had outlived or exceeded their appropriate cadence:
+
+- `hint-consolidation-closeout.yml` was introduced as a closeout canary for the Hint evidence consolidation plan. Its lifecycle ledger explicitly said to retire it when that plan closed. The plan is closed, so the workflow is now manual-only.
+- `hint-provenance-hostile-audit.yml` was a completion/hostile audit with broad `scripts/**`, `modules/**`, `data/**`, and workflow triggers. Its durable central-persistence, physical-reader, ingestion-completeness, query/replay/termination/cost/process, runtime-projection, and v4-migration invariants are now permanent ordinary Node contracts. The remaining full-corpus census/referee/occurrence checks are forensic/audit work. The workflow is now manual-only.
+- `ci-deep-concurrency-benchmark.yml` is explicitly evidence-only but was automatically triggered by almost any modules/scripts/test change. It is now manual-only; the 35-second program can dispatch it when a topology premise actually changes.
+
+This is a cadence correction, not deletion of evidence. The workflows remain dispatchable for deliberate forensic/measurement use. Their ordinary validation invariants remain where applicable.
+
+The audit did **not** broadly disable every auxiliary PR workflow. `ci-testability-topology-audit.yml`, `ci-semantic-fault-injection-audit.yml`, and `solver-evidence-integrity-guard.yml` have materially narrower authority/input triggers and remain automatic where their owning surfaces change. `ci-node-concurrency-benchmark.yml` remains narrow to its own harness/package wiring for now, but should be reconsidered once the Node concurrency policy fully settles.
+
 ## Current forward work order
 
 1. **Validate the newly activated semantic Fast Gate:** require green exact-head full-impact evidence plus representative scoped evidence for validator/Node selection and conditional build; verify router failure still falls back broad.
