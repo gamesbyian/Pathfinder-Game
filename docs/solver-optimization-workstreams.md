@@ -38,7 +38,7 @@ Current execution facts from the audit:
 
 Plan: [solver research execution efficiency](solver-research-execution-efficiency-plan.md). Starting evidence: [execution-topology census](../reports/2026-09-25-solver-research-execution-topology-starting-census-001.md).
 
-Immediate infrastructure gate: exact-runtime and targeted-planner sparse activations are complete, and the targeted planner now has exact dependency-tree reuse with a safe `npm ci` miss path. The next gate is production economics from a real targeted dispatch before extending reuse to other short planner/generator/combine jobs. Long solve shards remain measurement-gated. Live WS2/WS1 harnesses remain the first search-vs-plumbing audit surface.
+Immediate infrastructure gate: exact-runtime and targeted-planner sparse activations are complete, and the targeted planner now has exact dependency-tree reuse with a safe `npm ci` miss path. The first live WS2/WS1 search-vs-plumbing audit found no accidental solver-as-fixture defect in the generic targeted sweep or WS1 frozen-model scoring; preserve real search where it is the scientific payload. Next gate is production economics from a real targeted dispatch before extending reuse to other short planner/generator/combine jobs. [harness audit](../reports/2026-09-25-live-solver-harness-search-plumbing-audit-001.md)
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
