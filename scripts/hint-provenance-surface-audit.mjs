@@ -48,7 +48,13 @@ function inspectPhysicalHintReadSurface(text) {
     || HINT_PATH_HELPER_RE.test(text);
   const usesSharedDecoder = /\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(text);
   const suspect = readsJsonFile && consumesHintRows && hasHintSourceSignal;
-  return { suspect, bypass: suspect && !usesSharedDecoder };
+  // Bypass classification must tie the filesystem read itself to a Hint-shaped target. A file may
+  // legitimately read unrelated manifest/report JSON and also consume hydrated level.hints through
+  // the canonical corpus reader; the earlier file-level conjunction mislabeled that as a raw
+  // physical Hint read (family-generate.mjs was the concrete counterexample).
+  const readsHintTarget = /\b(?:readFileSync|readFile)\s*\(\s*[^,\n]*(?:hint(?:File(?:Path)?|Artifact(?:Path)?|Path|Doc|Dir)|data\/(?:families\/(?:phaseB\/)?|stress\/)?hints(?:-random|-envelope)?\/)/iu.test(text)
+    || CANONICAL_STORE_JOIN_RES.some(re => new RegExp('(?:readFileSync|readFile)\\\\s*\\\\([^\\n]*' + re.source, 'u').test(text));
+  return { suspect, bypass: suspect && readsHintTarget && !usesSharedDecoder };
 }
 
 function inspectPhysicalHintWriteSurface(text) {
@@ -104,6 +110,12 @@ if (process.argv.includes('--self-test')) {
     {
       name: 'staged reader through shared decoder',
       text: `const raw = fs.readFileSync(hintArtifactPath, 'utf8');\nconst parsed = JSON.parse(raw);\nconst doc = decodeHintArtifact(parsed);\nfor (const hint of doc.hints) use(hint);`,
+      suspect: true,
+      bypass: false,
+    },
+    {
+      name: 'manifest JSON plus hydrated semantic hints',
+      text: `const block = JSON.parse(readFileSync(blockAbs, 'utf8'));\nconst level = readLevelCorpusDocumentWithHints(corpus).levels[0];\nconsole.log(level.hints);\nconst dir = hintsDirFor(corpus);`,
       suspect: true,
       bypass: false,
     },
