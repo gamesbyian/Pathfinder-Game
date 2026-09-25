@@ -98,8 +98,16 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const report = JSON.parse(fs.readFileSync('/tmp/hint-v4-migration.json', 'utf8'));
-          if (report.semanticRoundTrip !== 'pass') process.exit(1);
+          if (report.semanticRoundTrip !== 'pass' || report.crossResourceJoinIdentity !== 'pass') {
+            console.error('V4 migration semantic/join equivalence proof failed.');
+            process.exit(1);
+          }
+          if (Number(report.changedFiles ?? -1) !== 0) {
+            console.error(`Schema-v4 closeout is not idempotent: ${report.changedFiles} canonical artifact(s) would still change.`);
+            process.exit(1);
+          }
           console.log('V4 representations:', JSON.stringify(report.representations));
+          console.log('V4 idempotency: 0 files require migration');
           console.log('V4 byte reduction:', (100 * report.bytes.reduction).toFixed(2) + '%');
           console.log('V4 gzip reduction:', (100 * report.bytes.gzipReduction).toFixed(2) + '%');
           NODE
