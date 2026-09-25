@@ -137,7 +137,8 @@
       ".github/workflows/README.md"
     ],
     "registriesCatalogues": [
-      "docs/solver-workflow-lifecycle.json for temporary workflow lifecycle/retirement"
+      "docs/solver-workflow-lifecycle.json for temporary workflow lifecycle/retirement",
+      "docs/solver-failure-evidence-disposition.json — standard compact failure-response + automatic-harvest disposition"
     ],
     "researchSystem": [
       "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE evidence role, block identity, experiment contract, result publication and durable evidence links."
@@ -352,7 +353,8 @@
     ],
     "registriesSchemas": [
       "docs/solver-workflow-lifecycle.json",
-      "Experiment/result contract surfaces if the wrapper adds no new schema"
+      "Experiment/result contract surfaces if the wrapper adds no new schema",
+      "docs/solver-failure-evidence-disposition.json"
     ],
     "generatedData": [
       "Frozen 160-parent confirmation corpus and generation manifest from tmp/ws1-late-continuation-single-001/",
