@@ -14,7 +14,7 @@ import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validateSweepIntegrity, diffPopulation } from './validate-solver-sweep-integrity.mjs';
 import { analyzeOpportunity, opportunitySampleSizeForAtLeastOne } from './experiment-opportunity-audit.mjs';
-import { simulateMakespan, packByMakespan, classifyTelemetry } from './plan-highbudget-shards.mjs';
+import { simulateMakespan, packByMakespan, classifyTelemetry, planHighbudgetShards } from './plan-highbudget-shards.mjs';
 import { calibrateMultipliers } from './backtest-shard-runtime-policy.mjs';
 import { hashConfiguration } from './solver-experiment-contract.mjs';
 import { normalizeSolverSweepReportInput } from './solver-sweep-report-input.mjs';
@@ -77,7 +77,11 @@ function runCli(args) {
     return execFile('node', ['scripts/combine-solver-sweep-reports.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
 }
 
-function runPlanner(args) {
+async function runPlanner(args) {
+    planHighbudgetShards(args, { root: ROOT });
+}
+
+function runPlannerCli(args) {
     return execFile('node', ['scripts/plan-highbudget-shards.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
 }
 
@@ -279,7 +283,7 @@ async function main() {
                 [plannerIds[1]]: { emaMsPerGiganode: 300000, samples: 2 },
             },
         }));
-        await runPlanner([
+        await runPlannerCli([
             `--ids-file=${plannerIdsFile}`,
             '--corpus2=data/stress/stress-levels-random.json',
             `--telemetry=${plannerTelemetry}`,
