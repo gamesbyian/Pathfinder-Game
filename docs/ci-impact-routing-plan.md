@@ -8,9 +8,7 @@
 
 ## Why this exists
 
-Pathfinder is simultaneously a browser game, a production solver, and a solver-research system. Ordinary work is now dominated by solver research and research-system maintenance, but PR CI still validates the entire product/solver/research stack on every change.
-
-The current gate is efficient at packing broad work into two hosted runners, but the work set itself is over-broad. A recent research-only PR still ran the production bundle build, production solver canary, the full covered implementation suite, heavyweight solver proofs, Java/Firestore validation, and the entire Node/CLI harness graph.
+Pathfinder is simultaneously a browser game, a production solver, and a solver-research system. This program began when PR CI still validated nearly the entire product/solver/research stack on every change. That universal-gate state is now historical: semantic ownership selects validator groups, Node/CLI contracts, coverage, build, proofs, and Firestore obligations independently while preserving conservative full fallbacks.
 
 This program changes the question from "which of three CI workflows should run?" to:
 
@@ -134,9 +132,7 @@ Do not optimize the registry by name alone. Names were sufficient for inventory 
 
 ## Production solver downstream routing — explicit-consumer activation
 
-The current source-impact rule maps `modules/solver/**` to both `solver` and `research` because research tooling consumes production solver behavior downstream. After semantic Fast Gate activation, that conservative edge has become economically visible: it selects the entire research validator/Node group for every solver implementation change.
-
-The router already supports a better representation: a source path can select `solver`, while individual downstream contracts declare solver invalidation through `contractSurfaces` (and explicit non-import dependency metadata where needed).
+The original source-impact rule mapped `modules/solver/**` to both `solver` and `research` because research tooling consumes production solver behavior downstream. After semantic routing made that conservative edge economically visible, the branch migrated to the narrower representation: production solver paths select `solver`, while individual downstream contracts declare solver invalidation through `contractSurfaces` and explicit dependency metadata where needed.
 
 Topology run 36103663827 emitted 59 exact lower-bound consumers from resolved imports and declared subprocess entrypoints. Those consumers are now explicitly tagged with `solver` invalidation and the production solver source rule selects only `solver`. Before declaring this settled:
 
@@ -146,7 +142,7 @@ Topology run 36103663827 emitted 59 exact lower-bound consumers from resolved im
 - inspect any broad-oracle miss for filesystem/generated/env dependencies not represented by static imports;
 - retain conservative full fallback for routing authority/unknown impact and a broad oracle.
 
-If these gates pass, change the production-solver source rule to `solver` only and let contract ownership carry downstream research invalidation. This is semantic precision, not a blanket research-test demotion.
+The production-solver source rule is now `solver` only and contract ownership carries downstream research invalidation. The remaining gates validate that activation; they are not prerequisites to a still-pending rule edit. If a gate fails, broaden the specific missing dependency/contract rather than restoring blanket `solver + research` escalation.
 
 Treat this as the pilot for a general coarse-edge audit. Runtime data currently selects `data + game + solver + research`, and shared domain code selects `game + solver + research`. Those may be justified for some consumers, but the correct proof is contract invalidation, not an assumption that every contract in every downstream administrative surface must run.
 
