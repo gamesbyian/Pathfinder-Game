@@ -9,7 +9,8 @@ const validationGroups = JSON.parse(fs.readFileSync(path.join(root, 'scripts', '
 const workflowPath = path.join(root, '.github', 'workflows', 'ci.yml');
 const workflow = fs.readFileSync(workflowPath, 'utf8');
 const nodeShardWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci-node-contract-shards.yml'), 'utf8');
-const productionWorkflows = workflow + '\n' + nodeShardWorkflow;
+const buildWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci-production-build.yml'), 'utf8');
+const productionWorkflows = workflow + '\n' + nodeShardWorkflow + '\n' + buildWorkflow;
 const errors = [];
 
 function directRuns(scriptName) {
@@ -52,7 +53,6 @@ const expectedWorkflowInvocations = [
   'check:dead-scripts',
   'check:text-source-files',
   'check:lint',
-  'build',
   'test:coverage',
   'test:deep-proofs',
 ];
@@ -62,6 +62,10 @@ for (const expected of expectedWorkflowInvocations) {
     errors.push(`ci.yml no longer invokes npm run ${expected}`);
   }
 }
+if (!/npm run build(?=\s|["']|$)/mu.test(buildWorkflow)) {
+  errors.push('production build command is missing from maintained production workflows');
+}
+
 // Direct single-command steps remain a separate classification surface. A required invocation may
 // also live inside an intentionally concurrent multiline shell step (currently deep services).
 for (const actual of workflowRuns) {
@@ -110,25 +114,36 @@ for (const [member, dependency] of Object.entries(validationGroups.contractDepen
 if (!workflow.includes('Materialize Fast Gate level documents')) {
   errors.push('ci.yml no longer materializes the minimal Fast Gate level-document set');
 }
-if (!workflow.includes('Restore runtime Hint sources for projection miss')) {
-  errors.push('ci.yml no longer defers full runtime Hint sources until a projection-cache miss');
+if (!buildWorkflow.includes('Restore runtime Hint sources for projection miss')) {
+  errors.push('production-build workflow no longer defers full runtime Hint sources until a projection-cache miss');
 }
-if (!/Restore runtime Hint sources for projection miss[\s\S]*runtime-hint-projection-cache\.outputs\.cache-hit != 'true'/u.test(workflow)) {
-  errors.push('ci.yml runtime Hint sources are no longer gated on a runtime-Hint projection cache miss');
+if (!/Restore runtime Hint sources for projection miss[\s\S]*runtime-hint-projection-cache\.outputs\.cache-hit != 'true'/u.test(buildWorkflow)) {
+  errors.push('production-build workflow runtime Hint sources are no longer gated on a projection-cache miss');
 }
-
-if (!workflow.includes('runtime-hint-projection-v2-')) {
-  errors.push('ci.yml no longer uses the rolling runtime-Hint projection cache generation');
+if (!buildWorkflow.includes('runtime-hint-projection-v2-')) {
+  errors.push('production-build workflow no longer uses the rolling runtime-Hint projection cache generation');
 }
-if (!workflow.includes('restore-keys:') || !workflow.includes('steps.runtime-hint-projection-key.outputs.authority_key')) {
-  errors.push('ci.yml no longer scopes runtime-Hint fallback caches to projection authority');
+if (!buildWorkflow.includes('restore-keys:') || !buildWorkflow.includes('steps.runtime-hint-projection-key.outputs.authority_key')) {
+  errors.push('production-build workflow no longer scopes runtime-Hint fallback caches to projection authority');
 }
-if (!workflow.includes('PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE')) {
-  errors.push('ci.yml no longer enables runtime-Hint incremental reconcile on fallback cache hits');
+if (!buildWorkflow.includes('PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE')) {
+  errors.push('production-build workflow no longer enables runtime-Hint incremental reconcile on fallback cache hits');
 }
 
 if (!workflow.includes('uses: ./.github/workflows/ci-node-contract-shards.yml')) {
   errors.push('ci.yml no longer invokes the reusable Node contract shard workflow');
+}
+if (!workflow.includes('uses: ./.github/workflows/ci-production-build.yml')) {
+  errors.push('ci.yml no longer invokes the reusable production-build workflow');
+}
+if (!buildWorkflow.includes('run: npm run build')) {
+  errors.push('production-build workflow no longer invokes npm run build');
+}
+if (!/production-build:[\s\S]*build_job_required == 'true'/u.test(workflow)) {
+  errors.push('ci.yml no longer scopes the production-build lane through build_job_required');
+}
+if (!/production-build:[\s\S]*planner_outcome != 'success'/u.test(workflow)) {
+  errors.push('ci.yml production-build lane no longer fails safe when impact planning fails');
 }
 
 if (!productionWorkflows.includes("Set up Node on warm dependency-tree path")
@@ -138,13 +153,6 @@ if (!productionWorkflows.includes("Set up Node on warm dependency-tree path")
 if (!productionWorkflows.includes("Set up Node with npm cache on dependency-tree miss")
     || !productionWorkflows.includes("nodev22.23.2-npm10.9.8")) {
   errors.push('ci.yml no longer confines npm-cache restoration to the dependency-tree miss path');
-}
-
-if (!/steps\.validation_selection\.outputs\.needs_build\s*==\s*['"]true['"]/u.test(workflow)) {
-  errors.push('ci.yml no longer scopes production build through needs_build');
-}
-if (!/RUN_BUILD[^\n]*[\s\S]*BUILD[^\n]*!=\s*["']success["']/u.test(workflow)) {
-  errors.push('ci.yml no longer makes a selected production-build failure block Fast Gate');
 }
 
 if (!/SOLVER_DEADLOCK_PROOF_SKIP:\s*['"]1['"]/.test(workflow)) {
