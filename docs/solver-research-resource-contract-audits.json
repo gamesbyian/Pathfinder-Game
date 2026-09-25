@@ -6,7 +6,8 @@
     "hint-provenance",
     "variant-family-data",
     "solution-space-profiles",
-    "stress-corpora"
+    "stress-corpora",
+    "hint-ingestion-receipts"
   ],
   "auditedResources": [
     {
@@ -333,6 +334,83 @@
         "record selection/conditioning events separately from generation ancestry, including which side/outcome conditioned membership",
         "record which descendant decisions consumed a managed population when that affects later confirmation status",
         "preserve per-generation-run statistics rather than hybrid cumulative/latest wrapper fields"
+      ]
+    },
+    {
+      "assetId": "hint-ingestion-receipts",
+      "independentUnit": [
+        "one source-run × canonical ingestion producer receipt is the accounting unit",
+        "path/event/occurrence additions inside a receipt are semantic units, not independent experimental observations"
+      ],
+      "identityLayers": [
+        "source runId/runAttempt",
+        "source workflow",
+        "ingestion producer/harvester",
+        "success-ingestion funnel",
+        "semantic path addition",
+        "semantic provenance-event addition",
+        "physical acquisition occurrence addition"
+      ],
+      "producerAuthority": [
+        "scripts/hint-ingestion-receipt-lib.mjs",
+        "scripts/hint-ingestion-receipt-query.mjs",
+        ".github/workflows/harvest-solver-evidence.yml"
+      ],
+      "selectionConditioning": [
+        "receipts begin from success-bearing observations presented to an ingestion boundary",
+        "candidate/eligible/referee-accepted/already-represented/quarantined counts describe persistence selection, not solver attempt selection",
+        "producer-specific source artifacts can differ while the receipt vocabulary remains shared"
+      ],
+      "admissibleEvidencePurposes": [
+        "selection-audit: distinguish accepted, duplicate/already-represented and quarantined success observations",
+        "ingestion-accounting: separate new paths, semantic events and physical occurrences where measured",
+        "longitudinal-process: explain Hint-store growth without attributing all growth to new semantic solver discoveries",
+        "forensic: identify the source run/workflow/producer responsible for a persistence outcome"
+      ],
+      "dependenceModel": "Receipt counts summarize one acquisition/persistence funnel. Occurrence additions are reacquisition lineage and must not be counted as independent scientific support; solve-rate/performance inference requires the originating attempted population.",
+      "missingnessSemantics": [
+        "null path/event/occurrence addition counts mean the producer cannot measure that unit exactly, never zero",
+        "absence of a receipt for a historical run is unavailable ingestion accounting, not proof that no Hint evidence was persisted",
+        "already-represented observations are successful accepted evidence that caused no new semantic-store mutation, not solver failures",
+        "quarantine/rejection reasons apply to ingestion eligibility/persistence and must not be relabeled as search failure"
+      ],
+      "freshnessRevisionContract": [
+        "interpret receipts under the versioned receipt schema and the ingestion implementation that emitted them",
+        "join to Hint state through source-run/workflow/producer identity and canonical semantic identities rather than file timestamp proximity",
+        "historical level-blind selection manifests remain a producer-specific compatibility resource, not a substitute for canonical current receipts"
+      ],
+      "knownInformationLoss": [
+        "some producers cannot distinguish exact path/event/occurrence additions and therefore retain only coarse semanticRecordChanges",
+        "success-ingestion receipts do not contain the originating attempted population or failed attempts"
+      ],
+      "consumerInventory": [
+        "scripts/hint-ingestion-receipt-query.mjs",
+        "scripts/research-asset-query.mjs",
+        "docs/solver-research-data-assets.json",
+        "longitudinal Hint/provenance and harvest-selection audits"
+      ],
+      "historicalClaimBlastRadius": [
+        "reports and analyses that interpreted raw Hint-file growth or provenance-event counts as producer novelty without separating ingestion/reacquisition effects"
+      ],
+      "auditAuthorities": [
+        "docs/hint-evidence-execution-identity-storage-consolidation-plan.md",
+        "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md"
+      ],
+      "prospectiveProducerFixes": [
+        "new canonical ingestion lanes must emit the shared receipt vocabulary rather than a producer-local accounting schema",
+        "measure exact path/event/occurrence additions when the mutation boundary exposes them; otherwise preserve null",
+        "keep source-run acquisition identity separate from semantic discovery-event identity"
+      ],
+      "knownIrreversibleInformationLoss": [
+        "historical runs that predate receipts may not permit exact reconstruction of duplicate/quarantine/path-event-occurrence persistence outcomes"
+      ],
+      "prospectiveProducerGaps": [
+        "specialist future ingestion lanes must be registered and receipt-covered before becoming canonical persistence authorities",
+        "producer-local coarse semanticRecordChanges may be refined only when exact mutation-unit measurement is available without inference"
+      ],
+      "auditEvidence": [
+        "docs/hint-evidence-consolidation-inventory.json",
+        "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md"
       ]
     }
   ]
