@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "purpose": "Shadow/future execution packing for semantic CI obligations. Does not itself authorize skipping.",
+  "purpose": "Active execution packing for semantic CI obligations; production and scoped rehearsal must preserve this capability ownership.",
   "jobs": {
     "fast-gate": {
       "alwaysMaterialized": true,
@@ -15,11 +15,17 @@
     "deep-verification": {
       "alwaysMaterialized": false,
       "capabilities": [
-        "unit-coverage",
+        "unit-coverage"
+      ],
+      "note": "Coverage-only implementation lane; expensive services are independently packed so they do not serialize behind covered Vitest."
+    },
+    "deep-services": {
+      "alwaysMaterialized": false,
+      "capabilities": [
         "deep-proofs",
         "firestore-boundary"
       ],
-      "note": "Expensive implementation/persistence lane. Future scoped CI may skip the whole job when none of these capabilities are selected."
+      "note": "Independent solver-soundness / persistence lane; selected proofs and Firestore execute concurrently and do not require canonical runtime data."
     }
   },
   "finalStatus": {
@@ -27,7 +33,8 @@
     "needs": [
       "impact-shadow",
       "fast-gate",
-      "deep-verification"
+      "deep-verification",
+      "deep-services"
     ],
     "if": "always()",
     "acceptedResults": {
@@ -40,9 +47,13 @@
       "deep-verification": [
         "success",
         "skipped"
+      ],
+      "deep-services": [
+        "success",
+        "skipped"
       ]
     },
-    "note": "Single stable required status. A skipped deep lane is acceptable only because routing decides it was unnecessary; router and fast gate must succeed."
+    "note": "Stable scoped rehearsal status: router and fast gate must succeed; coverage and deep-services lanes may skip only when semantic routing does not select their capabilities."
   },
   "activationWorkflow": ".github/workflows/ci-scoped-dry-run.yml"
 }
