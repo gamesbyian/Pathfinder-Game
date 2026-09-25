@@ -111,19 +111,19 @@ if (!workflow.includes('Materialize Fast Gate level documents')) {
   errors.push('ci.yml no longer materializes the minimal Fast Gate level-document set');
 }
 if (!workflow.includes('Restore runtime Hint sources for projection miss')) {
-  errors.push('production-build workflow no longer defers full runtime Hint sources until a projection-cache miss');
+  errors.push('deep-services build path no longer defers full runtime Hint sources until a projection-cache miss');
 }
 if (!/Restore runtime Hint sources for projection miss[\s\S]*runtime-hint-projection-cache\.outputs\.cache-hit != 'true'/u.test(workflow)) {
-  errors.push('production-build workflow runtime Hint sources are no longer gated on a projection-cache miss');
+  errors.push('deep-services build path runtime Hint sources are no longer gated on a projection-cache miss');
 }
 if (!workflow.includes('runtime-hint-projection-v2-')) {
-  errors.push('production-build workflow no longer uses the rolling runtime-Hint projection cache generation');
+  errors.push('deep-services build path no longer uses the rolling runtime-Hint projection cache generation');
 }
 if (!workflow.includes('restore-keys:') || !workflow.includes('steps.runtime-hint-projection-key.outputs.authority_key')) {
-  errors.push('production-build workflow no longer scopes runtime-Hint fallback caches to projection authority');
+  errors.push('deep-services build path no longer scopes runtime-Hint fallback caches to projection authority');
 }
 if (!workflow.includes('PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE')) {
-  errors.push('production-build workflow no longer enables runtime-Hint incremental reconcile on fallback cache hits');
+  errors.push('deep-services build path no longer enables runtime-Hint incremental reconcile on fallback cache hits');
 }
 
 if (!workflow.includes('uses: ./.github/workflows/ci-node-contract-shards.yml')) {
