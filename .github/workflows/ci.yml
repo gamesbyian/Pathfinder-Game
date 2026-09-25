@@ -39,6 +39,7 @@ jobs:
       needs_firestore: ${{ steps.impact.outputs.needs_firestore }}
       fast_job_required: ${{ steps.impact.outputs.fast_job_required }}
       deep_job_required: ${{ steps.impact.outputs.deep_job_required }}
+      deep_services_job_required: ${{ steps.impact.outputs.deep_services_job_required }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -471,26 +472,24 @@ jobs:
   # This lane is impact-scoped for PRs. Solver/game/persistence/shared and conservative full-impact
   # changes retain their deep protections; unrelated repo/research/data-only PRs may skip it.
   # Planner failure or manual dispatch always runs the lane.
+  # Coverage remains independent because it needs canonical runtime data and is the longest
+  # implementation-test obligation. Proofs/Firestore are packed separately below.
   deep-verification:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          # Start immediately instead of waiting on impact-shadow. The local canonical planner
-          # below needs HEAD^1 for PR diff classification.
           fetch-depth: 2
-          # Source-only checkout. Canonical runtime data is restored only when deep is required.
           sparse-checkout: |
             /*
             !/logs/
             !/reports/
             !/data/
           sparse-checkout-cone-mode: false
-      # The planner needs Node before deep selection, but not npm's download cache.
       - uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
-      - name: Compute local deep validation plan
+      - name: Compute local coverage validation plan
         id: deep-impact
         continue-on-error: true
         shell: bash
@@ -500,17 +499,17 @@ jobs:
           else
             node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/deep-impact-plan.json
           fi
-      - name: Record local deep planner decision
+      - name: Record local coverage planner decision
         if: always()
         shell: bash
         env:
           PLANNER_OUTCOME: ${{ steps.deep-impact.outcome }}
-          DEEP_REQUIRED: ${{ steps.deep-impact.outputs.deep_job_required }}
+          COVERAGE_REQUIRED: ${{ steps.deep-impact.outputs.deep_job_required }}
         run: |
-          echo "Local deep planner outcome: $PLANNER_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
-          echo "Local deep required: ${DEEP_REQUIRED:-unknown}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Local coverage planner outcome: $PLANNER_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Coverage lane required: ${COVERAGE_REQUIRED:-unknown}" >> "$GITHUB_STEP_SUMMARY"
           if [[ "$PLANNER_OUTCOME" != "success" ]]; then
-            echo "Planner failure fails safe: deep verification will run." >> "$GITHUB_STEP_SUMMARY"
+            echo "Planner failure fails safe: coverage will run." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Derive deep runtime-data cache key
         if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
@@ -550,9 +549,6 @@ jobs:
         if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && (steps.deep-runtime-data-cache.outputs.cache-hit != 'true')
         uses: actions/checkout@v7
         with:
-          # A second batched checkout is intentionally used on a miss. Hosted evidence showed
-          # post-clone sparse expansion taking 51s, while the equivalent initial sparse checkout is
-          # ~15s. The hit path avoids both costs; the miss path must remain no worse than baseline.
           sparse-checkout: |
             /*
             !/logs/
@@ -591,34 +587,115 @@ jobs:
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
-      # Firestore setup is selected independently from solver proofs. A coverage-only/game PR
-      # should not pay Java/emulator startup merely because all three capabilities share this job.
+      - name: Summarize and enforce coverage
+        if: always()
+        shell: bash
+        env:
+          RUN_COVERAGE: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_coverage == 'true' }}
+          COVERAGE: ${{ steps.coverage.outcome }}
+        run: |
+          if [[ "$RUN_COVERAGE" != "true" ]]; then
+            echo "## CI coverage" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Coverage not selected by the canonical local impact plan." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "## CI coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Covered ordinary implementation tests: `$COVERAGE`" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$COVERAGE" != "success" ]]; then
+            echo "::error::CI coverage finished with $COVERAGE."
+            exit 1
+          fi
+
+  # Solver soundness proofs and Firestore are independent from covered Vitest and do not
+  # require canonical runtime data. They share one runner and execute concurrently when both
+  # are selected, preserving the established same-runner packing.
+  deep-services:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Compute local deep-services validation plan
+        id: services-impact
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            node scripts/ci-impact-shadow-plan.mjs --git-diff HEAD^1 HEAD --out=tmp/deep-services-impact-plan.json
+          else
+            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/deep-services-impact-plan.json
+          fi
+      - name: Record local deep-services planner decision
+        if: always()
+        shell: bash
+        env:
+          PLANNER_OUTCOME: ${{ steps.services-impact.outcome }}
+          SERVICES_REQUIRED: ${{ steps.services-impact.outputs.deep_services_job_required }}
+        run: |
+          echo "Local deep-services planner outcome: $PLANNER_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deep-services lane required: ${SERVICES_REQUIRED:-unknown}" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$PLANNER_OUTCOME" != "success" ]]; then
+            echo "Planner failure fails safe: proofs and Firestore will run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Derive exact dependency-tree cache key
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true'
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true'
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Restore npm cache only on dependency-tree miss
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install dependencies from the npm cache
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
+        run: npm ci --prefer-offline --no-audit --fund=false
       - name: Restore Firebase CLI cache
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_firestore == 'true'
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true'
         uses: actions/cache/restore@v5
         with:
           path: ~/.npm/_npx
           key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
       - name: Restore Firestore emulator binary
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_firestore == 'true'
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true'
         id: firestore-emulator-cache
         uses: actions/cache/restore@v5
         with:
           path: ~/.cache/firebase/emulators
           key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
       - uses: actions/setup-java@v5
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_firestore == 'true'
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true'
         with:
           distribution: temurin
           java-version: '21'
       - name: Run selected heavyweight proofs and Firestore concurrently
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_deep_proofs == 'true' || steps.deep-impact.outputs.needs_firestore == 'true'
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_deep_proofs == 'true' || steps.services-impact.outputs.needs_firestore == 'true'
         id: deep_services
         continue-on-error: true
         shell: bash
         env:
-          RUN_PROOFS: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_deep_proofs == 'true' }}
-          RUN_FIRESTORE: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_firestore == 'true' }}
+          RUN_PROOFS: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_deep_proofs == 'true' }}
+          RUN_FIRESTORE: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true' }}
         run: |
           set +e
           proofs_status=0
@@ -632,13 +709,8 @@ jobs:
           else
             echo "deep_proofs=skipped" >> "$GITHUB_OUTPUT"
           fi
-
           if [[ "$RUN_FIRESTORE" == "true" ]]; then
-            npx --yes firebase-tools@15.28.2 \
-              emulators:exec --only firestore \
-              --project demo-pathfinder-fingerprint-boundary \
-              "npm run test:firestore-level-fingerprint-boundary" \
-              > /tmp/pathfinder-firestore.log 2>&1 &
+            npx --yes firebase-tools@15.28.2               emulators:exec --only firestore               --project demo-pathfinder-fingerprint-boundary               "npm run test:firestore-level-fingerprint-boundary"               > /tmp/pathfinder-firestore.log 2>&1 &
             firestore_pid=$!
           else
             echo "firestore=skipped" >> "$GITHUB_OUTPUT"
@@ -646,90 +718,62 @@ jobs:
 
           if [[ -n "$proofs_pid" ]]; then
             wait "$proofs_pid"; proofs_status=$?
-            if [[ "$proofs_status" -eq 0 ]]; then
-              echo "deep_proofs=success" >> "$GITHUB_OUTPUT"
-            else
-              echo "deep_proofs=failure" >> "$GITHUB_OUTPUT"
-            fi
+            [[ "$proofs_status" -eq 0 ]] && echo "deep_proofs=success" >> "$GITHUB_OUTPUT" || echo "deep_proofs=failure" >> "$GITHUB_OUTPUT"
             echo '=== heavyweight solver proofs ==='
             cat /tmp/pathfinder-deep-proofs.log
           fi
-
           if [[ -n "$firestore_pid" ]]; then
             wait "$firestore_pid"; firestore_status=$?
-            if [[ "$firestore_status" -eq 0 ]]; then
-              echo "firestore=success" >> "$GITHUB_OUTPUT"
-            else
-              echo "firestore=failure" >> "$GITHUB_OUTPUT"
-            fi
+            [[ "$firestore_status" -eq 0 ]] && echo "firestore=success" >> "$GITHUB_OUTPUT" || echo "firestore=failure" >> "$GITHUB_OUTPUT"
             echo '=== Firestore persistence boundary ==='
             cat /tmp/pathfinder-firestore.log
           fi
-
           if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
             exit 1
           fi
       - name: Save Firestore emulator binary after successful cold fetch
-        if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_firestore == 'true') && steps.firestore-emulator-cache.outputs.cache-hit != 'true' && steps.deep_services.outputs.firestore == 'success'
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true') && steps.firestore-emulator-cache.outputs.cache-hit != 'true' && steps.deep_services.outputs.firestore == 'success'
         uses: actions/cache/save@v5
         with:
           path: ~/.cache/firebase/emulators
           key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
-      - name: Summarize and enforce deep-verification
+      - name: Summarize and enforce deep-services
         if: always()
         shell: bash
         env:
-          RUN_DEEP: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true' }}
-          RUN_COVERAGE: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_coverage == 'true' }}
-          RUN_PROOFS: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_deep_proofs == 'true' }}
-          RUN_FIRESTORE: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_firestore == 'true' }}
-          COVERAGE: ${{ steps.coverage.outcome }}
+          RUN_SERVICES: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true' }}
+          RUN_PROOFS: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_deep_proofs == 'true' }}
+          RUN_FIRESTORE: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true' }}
           DEEP_PROOFS: ${{ steps.deep_services.outputs.deep_proofs }}
           FIRESTORE: ${{ steps.deep_services.outputs.firestore }}
         run: |
-          if [[ "$RUN_DEEP" != "true" ]]; then
-            echo "## CI deep verification" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$RUN_SERVICES" != "true" ]]; then
+            echo "## CI deep services" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Deep verification not selected by the canonical local impact plan." >> "$GITHUB_STEP_SUMMARY"
+            echo "Deep services not selected by the canonical local impact plan." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-
-          coverage_status="$COVERAGE"
           proofs_status="${DEEP_PROOFS:-skipped}"
           firestore_status="${FIRESTORE:-skipped}"
-          if [[ "$RUN_COVERAGE" != "true" ]]; then coverage_status="skipped"; fi
-          if [[ "$RUN_PROOFS" != "true" ]]; then proofs_status="skipped"; fi
-          if [[ "$RUN_FIRESTORE" != "true" ]]; then firestore_status="skipped"; fi
+          [[ "$RUN_PROOFS" == "true" ]] || proofs_status="skipped"
+          [[ "$RUN_FIRESTORE" == "true" ]] || firestore_status="skipped"
 
           failed=0
           {
-            echo '## CI deep verification'
+            echo '## CI deep services'
             echo
             echo '| Validation group | Selected | Outcome |'
             echo '| --- | --- | --- |'
-            printf '| Covered ordinary implementation tests | `%s` | `%s` |\n' "$RUN_COVERAGE" "$coverage_status"
             printf '| Heavyweight solver proofs | `%s` | `%s` |\n' "$RUN_PROOFS" "$proofs_status"
             printf '| Firestore persistence boundary | `%s` | `%s` |\n' "$RUN_FIRESTORE" "$firestore_status"
-            echo
           } >> "$GITHUB_STEP_SUMMARY"
 
-          check_selected() {
-            local name="$1" required="$2" status="$3"
-            printf '%-12s selected=%-5s status=%s\n' "$name" "$required" "$status"
-            if [[ "$required" == "true" && "$status" != "success" ]]; then
-              failed=1
-              echo "::error::CI deep-verification group $name finished with $status."
-            fi
-          }
-
-          check_selected COVERAGE "$RUN_COVERAGE" "$coverage_status"
-          check_selected DEEP_PROOFS "$RUN_PROOFS" "$proofs_status"
-          check_selected FIRESTORE "$RUN_FIRESTORE" "$firestore_status"
-
-          if [[ "$failed" == "0" ]]; then
-            echo 'All selected deep-verification groups passed.' >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo 'One or more selected deep-verification groups failed. The table above identifies the failed semantic stage(s).' >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$RUN_PROOFS" == "true" && "$proofs_status" != "success" ]]; then
+            failed=1
+            echo "::error::CI deep-services proofs finished with $proofs_status."
+          fi
+          if [[ "$RUN_FIRESTORE" == "true" && "$firestore_status" != "success" ]]; then
+            failed=1
+            echo "::error::CI deep-services Firestore finished with $firestore_status."
           fi
           exit "$failed"
-
