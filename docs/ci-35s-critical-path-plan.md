@@ -642,6 +642,8 @@ Concrete findings and disposition:
 - **Scoped by the activation above:** `check:current-level-facts`, solver-sweep/failure-evidence workflow governance, research-resource/artifact metadata governance, documentation authority checks, no-level-identity policy, level-metric ownership, CI parity, and maintenance ratchets now run only when their semantic group is selected (subject to conservative multi-surface/shared declarations).
 - Coverage thresholds remain quality policy rather than correctness evidence. Keep them for implementation surfaces where they prevent untested-code growth; do not treat coverage itself as proof of solver/game effectiveness.
 
+Production build scoping is now activated too: Fast Gate restores the runtime-hint projection and runs Vite only when the local plan selects `needs_build`; router failure still builds conservatively. Gate parity mechanically asserts both the selection condition and that a selected build failure remains blocking.
+
 This closes the major "reconfirm unrelated repository process on every PR" defect. Remaining CI optimization should audit whether individual group ownership is still too broad, not revert to universal aggregates.
 
 ## Methodology retrospective after the first 35-second cycle
