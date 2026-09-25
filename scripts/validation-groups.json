@@ -288,12 +288,10 @@
         "research"
       ],
       "test:sweep-publish": [
-        "research",
         "solver"
       ],
       "test:known-prefix-oracle-set-manifest": [
-        "solver",
-        "research"
+        "solver"
       ],
       "test:method-probe-staging-lib": [
         "research"
@@ -307,8 +305,7 @@
         "research"
       ],
       "test:portfolio-solve-sweep-lib": [
-        "solver",
-        "research"
+        "solver"
       ],
       "test:portfolio-solve-sweep-worker": [
         "solver",
@@ -346,8 +343,7 @@
         "data"
       ],
       "test:equal-work-production-reach": [
-        "solver",
-        "research"
+        "solver"
       ],
       "test:operational-similarity-lib": [
         "solver",
@@ -369,9 +365,7 @@
         "data"
       ],
       "test:select-highbudget-gap-fill-ids": [
-        "solver",
-        "research",
-        "data"
+        "solver"
       ],
       "test:known-support-extinction": [
         "solver",
@@ -558,11 +552,9 @@
         "solver"
       ],
       "test:hint-discovery-replayability": [
-        "shared",
         "solver"
       ],
       "test:hint-reconstructability-report": [
-        "shared",
         "solver"
       ]
     },
