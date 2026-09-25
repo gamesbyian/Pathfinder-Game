@@ -7,6 +7,8 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 
 const scripts = packageJson.scripts ?? {};
 const workflowPath = path.join(root, '.github', 'workflows', 'ci.yml');
 const workflow = fs.readFileSync(workflowPath, 'utf8');
+const nodeShardWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci-node-contract-shards.yml'), 'utf8');
+const productionWorkflows = workflow + '\n' + nodeShardWorkflow;
 const errors = [];
 
 function directRuns(scriptName) {
@@ -67,25 +69,28 @@ for (const actual of workflowRuns) {
   }
 }
 
-if (!/validation-groups\\.mjs\\s+validators\\s+\\$groups/u.test(workflow)) {
+if (!workflow.includes('node scripts/validation-groups.mjs validators $groups')) {
   errors.push('ci.yml no longer executes selected validators through validation-groups.mjs');
 }
 if (!workflow.includes('npm run check:validators')) {
   errors.push('ci.yml no longer fails safe to the full check:validators aggregate when routing fails');
 }
-if (!/validation-groups\\.mjs\\s+nodeTests\\s+\\$groups\\s+--owner-groups=["']?\\$OWNER_GROUPS/u.test(workflow)) {
-  errors.push('ci.yml no longer executes Node contracts through execution-owner shards');
+if (!nodeShardWorkflow.includes('node scripts/validation-groups.mjs nodeTests $groups --owner-groups="$OWNER_GROUPS"')) {
+  errors.push('Node shard workflow no longer executes Node contracts through execution-owner shards');
 }
-if (!workflow.includes('groups="repo game persistence solver research data shared"')) {
-  errors.push('ci.yml Node shards no longer fail safe across every semantic group when routing fails');
+if (!nodeShardWorkflow.includes('groups="repo game persistence solver research data shared"')) {
+  errors.push('Node shard workflow no longer fails safe across every semantic group when routing fails');
+}
+if (!workflow.includes('uses: ./.github/workflows/ci-node-contract-shards.yml')) {
+  errors.push('ci.yml no longer invokes the reusable Node contract shard workflow');
 }
 
-if (!workflow.includes("Set up Node on warm dependency-tree path")
-    || !workflow.includes("if: steps.dependency-tree-cache.outputs.cache-hit == 'true'")) {
+if (!productionWorkflows.includes("Set up Node on warm dependency-tree path")
+    || !productionWorkflows.includes("if: steps.dependency-tree-cache.outputs.cache-hit == 'true'")) {
   errors.push('ci.yml no longer has a cache-free warm dependency-tree setup-node path');
 }
-if (!workflow.includes("Set up Node with npm cache on dependency-tree miss")
-    || !workflow.includes("nodev22.23.2-npm10.9.8")) {
+if (!productionWorkflows.includes("Set up Node with npm cache on dependency-tree miss")
+    || !productionWorkflows.includes("nodev22.23.2-npm10.9.8")) {
   errors.push('ci.yml no longer confines npm-cache restoration to the dependency-tree miss path');
 }
 
