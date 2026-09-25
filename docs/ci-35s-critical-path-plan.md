@@ -1331,9 +1331,11 @@ These are qualifying hard-ceiling samples, but the p50≤30/p90≤35 declaration
 
 ## Fast Gate runtime-data minimization
 
-The latest green head showed a remaining Fast Gate variance tail dominated by serialized bootstrap rather than validator useful work. The warm path was still restoring the complete runtime-data tree even though PR validators only need four physical corpus documents:
+The latest green head showed a remaining Fast Gate variance tail dominated by serialized bootstrap rather than validator useful work. The warm path was still restoring the complete runtime-data tree even though PR validators/build only need six small physical runtime JSON files on the warm projection-cache path:
 
 - `data/levels.json`;
+- `data/level-heatmaps.json`;
+- `data/themes.json`;
 - `data/stress/stress-levels.json`;
 - `data/stress/stress-levels-random.json`;
 - `data/stress/stress-levels-envelope.json`.
@@ -1344,9 +1346,10 @@ The formatting classifier now uses the canonical tracked Hint-store roots for pa
 
 Production Fast Gate now:
 
-1. materializes only the four level corpus documents with `git show`;
+1. materializes only the six small validator/build runtime JSON files with `git show`;
 2. does **not** restore the full runtime-data cache on the normal warm path;
 3. restores canonical Hint/runtime data only if the runtime-Hint projection cache misses and source artifacts are actually required for reconcile/rebuild.
+4. cached random Hint projection remains discoverable even when its source directory is intentionally absent from the sparse checkout.
 
 This preserves projection-miss correctness while removing another multi-second cache restore from ordinary exact-hit Fast Gate execution. Gate parity now protects the minimal-data warm-path shape.
 
