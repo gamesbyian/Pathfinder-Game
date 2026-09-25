@@ -212,51 +212,9 @@ jobs:
             !/reports/
             !/data/
           sparse-checkout-cone-mode: false
-      - name: Derive deep runtime-data cache key
-        id: deep-runtime-data-key
-        shell: bash
-        run: |
-          {
-            git rev-parse HEAD:data/levels.json
-            git rev-parse HEAD:data/level-heatmaps.json
-            git rev-parse HEAD:data/themes.json
-            git rev-parse HEAD:data/hints
-            git rev-parse HEAD:data/stress/stress-levels.json
-            git rev-parse HEAD:data/stress/stress-levels-random.json
-            git rev-parse HEAD:data/stress/stress-levels-envelope.json
-            git rev-parse HEAD:data/stress/hints
-            git rev-parse HEAD:data/stress/hints-random
-            git rev-parse HEAD:data/stress/hints-envelope
-          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
-      - name: Restore exact runtime-data tree for deep verification
-        id: deep-runtime-data-cache
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            data/levels.json
-            data/level-heatmaps.json
-            data/themes.json
-            data/hints
-            data/stress/stress-levels.json
-            data/stress/stress-levels-random.json
-            data/stress/stress-levels-envelope.json
-            data/stress/hints
-            data/stress/hints-random
-            data/stress/hints-envelope
-          key: runtime-data-${{ steps.deep-runtime-data-key.outputs.key }}
-      - name: Materialize deep runtime data on cache miss
-        if: steps.deep-runtime-data-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.head_ref }}
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/*
-            /data/stress/stress-levels.json
-            /data/stress/stress-levels-random.json
-          sparse-checkout-cone-mode: false
+      - name: Restore component runtime data
+        uses: ./.github/actions/runtime-data
+
       - name: Derive exact dependency-tree cache key
         id: dependency-tree-key
         shell: bash
