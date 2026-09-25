@@ -152,3 +152,15 @@ Those workflows execute the two producer families exercised by runtime parity ru
 The targeted-sweep `plan` job now uses the rehearsed sparse materialization contract. It explicitly retains package manifests, scripts, modules, default Corpus-2, and runtime telemetry. A caller-selected `corpus` is materialized from `HEAD:<path>` before planning/canary execution, and a caller-selected `ids_file` is read from the same immutable dispatched commit rather than requiring the blob to have been physically present in the sparse worktree. This preserves the workflow's existing dispatch semantics while avoiding whole-tree materialization.
 
 The production workflow was also reduced in size during activation rather than raising its grandfathered no-growth ceiling.
+
+
+## Targeted planner exact dependency-tree reuse
+
+The targeted-sweep plan job now reuses the same exact dependency-tree generation as production CI:
+
+- key: runner OS/arch + exact Node 22.23.2 + exact npm 10.9.8 + `package-lock.json` hash;
+- hit path: restore `node_modules`, set up exact Node without npm download-cache restore, skip `npm ci`;
+- miss path: exact Node + npm cache, `npm ci --prefer-offline --no-audit --fund=false`, then save the exact tree;
+- scientific planner/canary commands and inputs are unchanged.
+
+This activation is limited to the short targeted planner because historical hosted evidence already showed setup/materialization dominating a large share of its pre-science wall. It is not evidence for blanket dependency-tree caching of long solver shards. The first real targeted dispatch after this change is the production economics measurement.
