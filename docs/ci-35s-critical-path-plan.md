@@ -190,6 +190,13 @@ The scoped experiment adds only a corpus-path injection seam for the logical pub
 Exact-head run **36098786863** is green. `test:harvest-cpsat-discovery-reports` measured **2.2 s**, down from **5.1 s** on 36097915898 and **5.9 s** on 36098410201. The full Node/CLI step measured about **30.6 s** on this sample. The scoped contract therefore removed roughly **57–63%** of its own wall while preserving the real adapter/referee/merge boundary and eliminating shared tracked-file mutation.
 
 Decision: **close successful and keep the private fixture seam.** This is the preferred testability pattern for semantic harvesters whose production corpus size is incidental to the asserted adapter behavior: retain a real published level/path/revision and real persistence semantics, but inject a minimal private corpus instead of scanning or mutating the shared repository corpus.
+
+#### Diagnostics empty-receipt fixture isolation — active experiment
+
+The sibling `test:harvest-solver-diagnostics-reports` remains **3.9 s** on run 36098786863. Its real-row regression is already hermetic, but the separate empty-staging receipt check still launches the adapter with its default `data/levels.json` corpus. Unlike the CP-SAT adapter, diagnostics eagerly loads that corpus before scanning the staging directory, so a zero-observation receipt test pays full published-corpus I/O that is irrelevant to the asserted zero counts/source metadata.
+
+The scoped follow-up passes an empty private corpus only to that empty-staging CLI invocation. The real-row block remains unchanged and continues to prove real P00001 revision/referee/provenance/persistence semantics. Keep the change if exact-head CI stays green and the diagnostics contract falls materially below its current ~3.7–4.0 s range.
+
 ### Covered Vitest
 
 Fresh production evidence from run **36090943840** / deep job **107933055611** validates the #2109 repair-search reuse change:
