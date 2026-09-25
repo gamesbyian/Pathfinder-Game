@@ -960,6 +960,8 @@ Repair-search audit found two different budget classes and they must not be conf
 
 This is a same-proof-cheaper-work reduction, not an effectiveness/cadence change. Measure the file and coverage lane before considering enabled-path reductions.
 
+One enabled mechanism also has a mechanically bounded activation cost: `enableBeamSeed` always performs a fixed 3,000-node beam prepass before restart 1, and a separate observer test asserts the seed reaches the elite pool at restart 0. Its determinism and activation tests therefore now use a 5,000-node ceiling rather than 250k/50k. Stagnation-triggered plateau/relink/turn tests remain at their existing budgets because their activation boundary is qualitatively different.
+
 ## Current forward work order
 
 1. **Validate the three-lane production packing:** require green exact-head full-impact evidence for Fast Gate, coverage-only deep-verification, and deep-services; record first-runner→last-required completion and each lane wall.
