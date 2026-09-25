@@ -1256,28 +1256,29 @@ That sample proves the data-free topology but is not latency-qualifying: useful 
 
 The same sample also proved the moved data contracts themselves green on Node shard B. A metric-boundary inventory failure was a bookkeeping consequence of extracting the codec integration into a new file; that file is now explicitly classified as a reviewed raw/wire-boundary consumer.
 
-## N1: Node shard A without runtime-data materialization
+## N1: Node shard A runtime-data minimization
 
-The current production Node matrix restores the runtime-data tree in **both** execution-owner shards. Dependency metadata now shows every explicitly declared `data/**` Node/CLI consumer in shard B (`shared,data,repo`); shard A (`research,solver,game,persistence`) has **zero declared repo-input filesystem dependencies**.
+The first `node-a-no-runtime-data` rehearsal deliberately removed the runtime-data action while preserving the full shard-A execution-owner population. It failed in exactly five of 105 contracts:
 
-That is a strong premise but not sufficient proof because legacy/dynamic reads may be undeclared.
+- `test:combine-solver-sweep-reports` → `data/stress/stress-levels-random.json`;
+- `test:prune-gap-contract` → `data/levels.json`;
+- `test:ws6-dependency-interface-observer` → `data/stress/stress-levels-random.json`;
+- `test:research-index` → `data/stress/stress-levels.json`;
+- `test:technique-census-cell` → `data/levels.json`.
 
-Temporary rehearsal `node-a-no-runtime-data` in `ci-testability-topology-audit.yml` mirrors production shard A exactly except for one variable:
+Every other owner-A contract passed. The failures exposed missing dependency metadata rather than broad Hint-tree dependence.
 
-- same sparse checkout;
-- same exact dependency-tree bootstrap;
-- same four-worker direct execution;
-- same full-impact semantic surface request;
-- same execution owners: `research,solver,game,persistence`;
-- **no runtime-data action**.
+A follow-up ownership experiment moved those five contracts to shard B. The no-data rehearsal then went green, but production Node B stretched to **~37 s**. That rebalance is closed negative: it moves useful work onto the already slower shard and worsens the critical path.
 
-Preregistered interpretation:
+Current candidate keeps the original solver/research execution ownership and preserves explicit `data + solver/research` semantic surfaces/dependency metadata. Shard A now materializes only the three required level documents directly from Git objects:
 
-1. green full owner-A population proves runtime-data materialization is unnecessary for shard A and supports removing that setup from production;
-2. a missing-data failure identifies undeclared dependency debt; classify the contract and decide whether it belongs in shard B or genuinely requires data in A before repeating;
-3. non-data functional failures reject promotion until understood;
-4. do not add synthetic data merely to make the rehearsal green;
-5. after the decision, remove the temporary rehearsal job and record the result here.
+- `data/levels.json`;
+- `data/stress/stress-levels.json`;
+- `data/stress/stress-levels-random.json`.
+
+Shard B alone restores the full runtime-data tree, including Hint stores.
+
+Temporary rehearsal `node-a-minimal-runtime-data` mirrors that production shape. Promote/retain only if the full owner-A population is green. After confirmation, remove the rehearsal job and keep dependency metadata as the guardrail against silently reintroducing Hint-tree dependence.
 
 ## V1: remove duplicate runtime-Hint referee pass from Fast Gate
 
