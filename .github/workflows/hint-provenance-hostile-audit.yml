@@ -9,8 +9,12 @@ on:
       - '.github/workflows/**'
       - 'docs/**hint**'
       - 'docs/**provenance**'
+      - 'docs/solver-workflow-lifecycle.json'
+      - 'docs/solver-protocol-schema-contraction.json'
+      - 'docs/solver-request-semantics-inventory.json'
       - 'reports/**hint**'
       - 'package.json'
+      - 'package-lock.json'
 
 permissions:
   contents: read
