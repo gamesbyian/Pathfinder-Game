@@ -612,8 +612,11 @@ contract dependent on code inspection.
 **Correction:** `review-repository.test.ts` now exercises a first pass with one saved event plus one
 capacity refusal, then a retry whose existing durable state contains the first event. The retry must
 classify the first event as duplicate, persist the formerly refused event, and finish with no capacity
-refusal. This complements the real Firestore emulator's new-path/new-event/new-occurrence/idempotent
-retry coverage without pretending a pure orchestration test is emulator evidence.
+refusal. The real Firestore emulator now also proves the review-queue boundary: after injected
+partial-success/capacity refusal the submission document remains present; a later retry dedupes the
+already-saved event, persists the remaining event, and only then deletes the submission. The capacity
+decision itself is injected so the topology proof does not manufacture 5,000 Firestore documents merely
+to trip a soft count cap.
 
 ## Exact-head validation fallout during Findings 25-42
 
