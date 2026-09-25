@@ -162,6 +162,10 @@ CI's sparse Git-ref work cut large snapshot costs but also exposed an undeclared
 - any hidden dependency discovered becomes a declared dependency or an architectural correction;
 - cold level-blind jobs do not carry research/history assets they cannot consume unless a concrete build/runtime dependency requires them.
 
+## WS1 precommitment recovery note
+
+Recovered branch `claude/solver-optimization-queue-ybpl88` contains a pre-finalization 160-parent generation under seed `2026092501` but no solver execution. Because that population existed before the corrected plan was final, it is quarantined from decision-bearing use. The live confirmation seed is `2026092591`; do not optimize or dispatch against the quarantined corpus.
+
 ## Phase 5 — harness/search separation on live gates
 
 ### Current scope
