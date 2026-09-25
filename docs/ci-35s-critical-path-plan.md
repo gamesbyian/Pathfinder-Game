@@ -798,6 +798,39 @@ This is a cadence correction, not deletion of evidence. The workflows remain dis
 
 The audit did **not** broadly disable every auxiliary PR workflow. `ci-testability-topology-audit.yml`, `ci-semantic-fault-injection-audit.yml`, and `solver-evidence-integrity-guard.yml` have materially narrower authority/input triggers and remain automatic where their owning surfaces change. `ci-node-concurrency-benchmark.yml` is now manual-only as well. It was lifecycle-described as manual measurement but still auto-triggered on `package.json`; dispatch it only when worker-count/execution-mode assumptions actually need remeasurement.
 
+## D2c: reopen balanced coverage sharding after bootstrap premise change
+
+The earlier D2/D2b negative result remains valid for its measured topology, but one of its deciding premises has materially changed.
+
+D2b run **36068829982** proved:
+
+- the two measured coverage populations are semantically complete;
+- native blob merge preserves the unchanged production coverage thresholds;
+- useful shard work was balanced at **18 s / 19 s**;
+- authoritative first-shard-start → merged-threshold completion was **38 s**;
+- one shard's runner wall reached **38 s** largely because shared-runner bootstrap, including setup-node, consumed the remaining margin.
+
+Run **36104516509** then demonstrated the new cache-first Fast Gate dependency bootstrap: exact `node_modules` restore followed by cache-free setup-node reduced the warm setup-node step from the **17 s** observed in run 36103663816 to **1 s**. That is a named premise change, so repeating the D2b coverage topology is now a genuinely different experiment rather than repetition of a closed negative.
+
+Rehearsal implementation:
+
+- reuse the exact #2098 146-file timing profile; it still matches the current covered file registry **146/146 with zero missing/stale files**;
+- reuse the measured greedy two-bin assignment and warm-coordinator/native-merge architecture;
+- require exact warm runtime-data and dependency-tree caches so the experiment measures the new hot path rather than cold-install noise;
+- restore exact `node_modules` before setup-node and do **not** restore npm's download cache;
+- keep `PATHFINDER_COVERAGE_SHARD=1` limited to shard children so per-shard thresholds are suppressed only until native merge;
+- enforce the ordinary unchanged thresholds on the merged report.
+
+Preregistered interpretation:
+
+1. any test failure, population mismatch, merge failure, or threshold failure closes the candidate as semantically invalid until repaired;
+2. **≤30 s** first-shard-start → merged authoritative result is strong evidence that the bootstrap premise change revives shared-hosted two-way coverage for the 35 s program;
+3. **30–35 s** is timing-positive but still requires repeated comparable runs before production promotion because shared-runner p90 margin remains narrow;
+4. **>35 s** closes shared-hosted coverage sharding negative again under the new bootstrap premise;
+5. do not move production coverage topology from one rehearsal sample alone.
+
+The rehearsal lives temporarily in `ci-testability-topology-audit.yml` so changing that evidence-only workflow triggers its own measurement. Remove the temporary shard jobs after the decision is recorded.
+
 ## Current forward work order
 
 1. **Validate the newly activated semantic Fast Gate:** require green exact-head full-impact evidence plus representative scoped evidence for validator/Node selection and conditional build; verify router failure still falls back broad.
