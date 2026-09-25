@@ -644,6 +644,8 @@ Concrete findings and disposition:
 
 Production build scoping is now activated too: Fast Gate restores the runtime-hint projection and runs Vite only when the local plan selects `needs_build`; router failure still builds conservatively. Gate parity mechanically asserts both the selection condition and that a selected build failure remains blocking.
 
+The plan/workflow parity audit also removed `check:ci-impact-inventory` from `always.packageScripts`. It is already owned by the repo validator group, so the manual scoped rehearsal no longer runs it a second time unconditionally. This is repository-routing governance, not an every-PR correctness obligation.
+
 This closes the major "reconfirm unrelated repository process on every PR" defect. Remaining CI optimization should audit whether individual group ownership is still too broad, not revert to universal aggregates.
 
 ## Methodology retrospective after the first 35-second cycle
