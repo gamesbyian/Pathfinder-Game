@@ -41,6 +41,11 @@ const selectionManifestOut = selectionManifestArg ? path.resolve(selectionManife
         : null);
 const ingestionReceiptArg = args.get('--ingestion-receipt-out');
 const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
+// Testability seam for the primary stress corpus. Production reports still identify the canonical
+// logical corpus; contract tests may point that identity at a private one-level copy so they do not
+// scan or mutate the shared tracked stress Hint store.
+const stressCorpusArg = args.get('--stress-corpus');
+const stressCorpusPath = stressCorpusArg ? path.resolve(stressCorpusArg) : null;
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const ALLOWED_CORPORA = new Set([
@@ -72,7 +77,9 @@ function normalizeCorpus(value) {
 const corpusState = new Map();
 function stateFor(corpusRel) {
     if (corpusState.has(corpusRel)) return corpusState.get(corpusRel);
-    const corpusPath = path.join(root, corpusRel);
+    const corpusPath = corpusRel === 'data/stress/stress-levels.json' && stressCorpusPath
+        ? stressCorpusPath
+        : path.join(root, corpusRel);
     const document = readLevelCorpusDocumentWithHints(corpusPath);
     const levels = document.levels;
     const byId = new Map(levels.map((level, i) => [String(level.id ?? i + 1), { level, index: i }]));
