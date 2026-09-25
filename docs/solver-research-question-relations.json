@@ -804,7 +804,7 @@
       "id": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
       "question": "Does fixed stage-reserve allocation recurrently starve admissible-order fallback (or another later stage) that could solve within the existing total work budget if more of that fixed budget reached it?",
       "owner": "WS2",
-      "state": "concluded-positive",
+      "state": "concluded-negative",
       "aliases": [
         "reserve starvation",
         "admissible-order reserve starvation",
@@ -814,9 +814,10 @@
         "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
         "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
         "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
-        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
+        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md",
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md"
       ],
-      "result": "Stage-1 40-parent probe concluded (2026-09-20): 2/40 independent parents show a genuine reserve-starvation opportunity (R01154 at 179.0M nodes, R03270 at 172.7M nodes, both between the 75M reserve and 300M total envelope). Clears the prespecified >=2-opportunity recurrence bar. Nominates, does not authorize, the smallest matched-total-work admissibleOrderNodeReserveFractionOverride A/B; candidate fractions must be predeclared from the observed cost curve, not fit to these two rows. The 2026-09-25 A/B design freezes that fraction from a different, better-scale-matched source: the same class3-dose-expectations file used for WS2-REPAIR-DEADLINE-ALLOCATION carries 5 admissible-order-rescued residual rows directly at normal 50M production scale (14.3M-48.2M isolated cost, uniformly capped at the current 12.5M/0.25-fraction dose). Predeclared treatment fraction 0.35 targets only the two cheapest rows (R02219 28.6%, R03354 32.2%); the three expensive rows (62.5-96.5%) are explicitly out of scope for this first step. Reuses the existing 53-parent shared-acquisition population verbatim; no implementation seam needed (the CLI override already exists).",
+      "result": "Stage-1 40-parent probe (2026-09-20) found 2/40 independent parents with a genuine reserve-starvation opportunity, clearing the recurrence bar and nominating a matched-total-work admissibleOrderNodeReserveFractionOverride=0.35 A/B, sized from the 50M-scale class3-dose-expectations rows (R02219 28.6%, R03354 32.2% headroom). That A/B dispatched 2026-09-25 on the frozen 53-parent population via GHA (after fixing two real pre-existing bugs in solver-level-blind-targeted-sweep.yml that had silently broken every multi-level dispatch of that workflow): CLOSE NEGATIVE. The treatment's solved set is byte-identical to control's (same 30/53 levels, 0 gains, 0 losses), including on both rows the fraction was specifically sized for. The reserve itself genuinely scaled as designed (canary-confirmed ~17.5M vs 12.5M default) but did not translate into any rescue at this population/scale. Closes fraction 0.35 on this population in this tested form.",
       "triggeredBy": [
         "WS2-WORK-LADDER-ECONOMICS"
       ],
@@ -827,16 +828,16 @@
         "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md",
         "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
         "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md",
-        "reports/2026-09-25-ws2-admissible-order-reserve-repricing-matched-work-ab-design-001.md"
+        "reports/2026-09-25-ws2-admissible-order-reserve-repricing-matched-work-ab-design-001.md",
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md"
       ],
       "constrains": [
         "Do not reopen the closed-negative broad 4x escalation economics question from one allocation-order example.",
-        "First size recurrence from existing/prospective compact attempt response: later-stage participation, allocated ceiling/work, censoring, and any comparable higher-budget or alternate-allocation evidence.",
-        "Only if recurrent within-total-budget starvation is non-trivial should a matched-total-work A/B vary the existing admissibleOrderNodeReserveFractionOverride.",
-        "Do not size the treatment fraction from the isolated 300M-scale probe's R01154/R03270 exemplars; use the 50M-scale dose-expectations rows instead.",
-        "Do not escalate toward the expensive band (0.625-0.965 fraction territory) without a new, separately-justified design; run the execution-family canary before dispatching the full 53-parent matrix."
+        "The tested 0.35-fraction form on the frozen 53-parent population is closed: zero gains, zero losses, including on both rows the fraction was sized for.",
+        "Do not size a treatment fraction from the isolated 300M-scale probe's R01154/R03270 exemplars; those remain far beyond any reachable reserve fraction at normal 50M production scale.",
+        "Do not escalate toward the expensive band (0.625-0.965 fraction territory) without a new, separately-justified design that explicitly models the larger earlier-stage risk."
       ],
-      "reopensOn": null,
+      "reopensOn": "A materially different premise (different population, different fraction band with its own justified design, or a different mechanism than the node-reserve fraction) -- not a retest of 0.35 on this population.",
       "premiseRefs": [],
       "measurementOpportunities": [
         "MO-004"
@@ -937,13 +938,15 @@
       "id": "WS2-REPAIR-DEADLINE-ALLOCATION",
       "question": "Can a bounded increase in repair-family per-attempt deadline recover already-demonstrated Class-3 capability at matched total work without displacing production winners?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "concluded-positive",
       "aliases": [
         "repair deadline allocation",
         "repair-family per-attempt deadline"
       ],
-      "answeredBy": [],
-      "result": "Nominated, not yet treatment-tested: 16 Class-3 censored rows show repair-family node caps well below known isolated solve cost, corroborated by residual-vs-solved-control evidence. Current production has fixed early-repair caps (2M ordinary, up to 6M biased). The implementation prerequisite is now done: SolveOpts.earlyRepairSearchOrdinaryNodeBudgetOverride/earlyRepairSearchBiasedNodeBudgetOverride (modules/solver/orchestration-contracts.ts) let a batch-tooling sweep raise either cap independently without editing the production constants; undefined preserves both exactly. A matched-work A/B over the frozen 53-parent shared-acquisition population (treatment caps 21,000,000/38,000,000, predeclared from the frozen isolated-cost p75 by family) is designed but not dispatched.",
+      "answeredBy": [
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md"
+      ],
+      "result": "Nominated from 16 Class-3 censored rows with repair-family node caps well below known isolated solve cost. The node-cap seam (SolveOpts.earlyRepairSearchOrdinaryNodeBudgetOverride/earlyRepairSearchBiasedNodeBudgetOverride) and matched-work A/B design (treatment caps 21,000,000/38,000,000) were frozen 2026-09-25 and dispatched the same day on the frozen 53-parent population via GHA (after fixing two real pre-existing bugs in solver-level-blind-targeted-sweep.yml that had silently broken every multi-level dispatch of that workflow): POSITIVE. 7 treatment-only referee-valid gains (R00306, R01086, R02138, R02892, R03109, R03251, R03323), 0 control-only losses -- meeting the preflight's own bridge-positive bar decisively. This is nomination evidence for the two node-cap constants, not a production change; the next gate is the ordinary matched-work confirmation/promotion path at production scale.",
       "triggeredBy": [
         "WS2-CLASS3-DOSE-EXPOSURE",
         "WS2-FAILURE-RESPONSE-RECONNAISSANCE"
@@ -952,13 +955,14 @@
         "docs/solver-capability-invention-program.md",
         "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
         "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md",
-        "reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md"
+        "reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md",
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md"
       ],
       "constrains": [
-        "Treat this as HARVEST: do not infer a missing semantic capability until the matched-work allocation question is resolved.",
+        "Treat this as HARVEST: no missing semantic capability was inferred or is implied by this positive result.",
         "The node-cap seam is implemented; do not add a second, competing override shape for the same two constants.",
-        "Predeclare treatment caps from the frozen isolated-cost distribution and protect earlier-stage winners under fixed total work; the wall-clock cap is already a non-binding safety tripwire and is not the treatment.",
-        "Do not revise the predeclared 21,000,000/38,000,000 treatment caps after seeing the A/B's outcome; run the execution-family canary before dispatching the full 53-parent matrix."
+        "This A/B result is nomination evidence for the two specific constants (21,000,000/38,000,000), not a production change and not authorization to reopen the closed-negative broad 4x work-ladder economics question.",
+        "Next gate is the ordinary matched-work confirmation/promotion path at production scale before any production default changes."
       ],
       "reopensOn": null,
       "premiseRefs": [
