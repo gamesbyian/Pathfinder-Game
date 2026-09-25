@@ -847,7 +847,7 @@
       "id": "WS2-PARITY-PHASE-DISTANCE",
       "question": "Does a current-input two-layer relaxed goal-distance bound conditioned on required future twist-jump parity prove decision-bearing dead states that the existing scalar goal distance misses often enough to justify a solver consumer?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "concluded-negative",
       "aliases": [
         "parity phase distance",
         "phase-conditioned distance",
@@ -855,20 +855,25 @@
       ],
       "constrainedBy": [
         "reports/2026-09-19-solver-parity-invariant-audit-001.md",
-        "docs/solver-parity-phase-capacity-preflight.md"
+        "docs/solver-parity-phase-capacity-preflight.md",
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
       ],
-      "result": "Observer implemented; corpus opportunity evidence pending. Production decisions remain unchanged.",
+      "answeredBy": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
+      ],
+      "result": "Combined shadow dispatched 2026-09-25 on the frozen 60-level EW1 population (first real dispatch of the already-implemented observer; a retired-field bug in the shadow script was fixed first). Incremental incidence beyond scalar distance is 42,411/226,236,120 = 0.0187% of evaluations, recurring across 14/42 eligible parents but at trivial per-parent magnitude. All 8 required observability axes (eligibility, opportunity, reach, participation, measurementSupport, fidelity, coverage, censoring) are satisfied -- resolution-ready, not observability-blocked. CLOSE NEGATIVE per the preflight's own negligible-incidence stop band.",
       "constrains": [
         "Do not reopen the closed August existence-only portal parity envelope unchanged; this question conditions distance on the exact required future twist phase.",
-        "No hard prune, scorer, routing feature or repair treatment is earned by synthetic witnesses or observer incidence alone."
+        "No hard prune, scorer, routing feature or repair treatment is earned by synthetic witnesses or observer incidence alone.",
+        "Do not retry this exact static conditioned-distance form on a different population expecting a different verdict; the evaluation volume (226M) is already large. Reopen only with a materially different opportunity structure (e.g. portal placement relative to a proved cut, not another decomposition of the same bound)."
       ],
-      "reopensOn": null
+      "reopensOn": "A materially different phase/distance formulation or opportunity structure, not a repeat shadow of this tested static form."
     },
     {
       "id": "WS2-CHECKERBOARD-CAPACITY",
       "question": "On current-input zero-twist states, does checkerboard-split reachable capacity prove decision-bearing dead states that the existing scalar connectivity-volume bound misses often enough to justify a solver consumer?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "concluded-negative",
       "aliases": [
         "checkerboard capacity",
         "color-split connectivity capacity",
@@ -876,14 +881,19 @@
       ],
       "constrainedBy": [
         "reports/2026-09-19-solver-parity-invariant-audit-001.md",
-        "docs/solver-parity-phase-capacity-preflight.md"
+        "docs/solver-parity-phase-capacity-preflight.md",
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
       ],
-      "result": "Observer implemented; corpus opportunity evidence pending. Production decisions remain unchanged.",
+      "answeredBy": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
+      ],
+      "result": "Combined shadow dispatched 2026-09-25 on the same frozen 60-level EW1 population as WS2-PARITY-PHASE-DISTANCE. Incremental incidence beyond scalar connectivity volume is 4,739/366,494 = 1.29% of evaluations, but 83.6% of that increment comes from a single parent (R02657); only 4/18 eligible parents contribute anything at all. All 8 required observability axes are satisfied -- resolution-ready. CLOSE NEGATIVE per the preflight's own 'negligible OR concentrated in one parent' stop band (the concentration clause, not the magnitude clause).",
       "constrains": [
         "The fixed checkerboard arrival schedule applies only when future twist phase is statically absent; twist-bearing states require a different phase-aware formulation.",
-        "No hard prune is earned until stored/referee-valid prefix replay and differential soundness checks show zero false rejects."
+        "No hard prune is earned until stored/referee-valid prefix replay and differential soundness checks show zero false rejects.",
+        "Do not retry this exact fixed-color-schedule form on a different zero-twist population expecting a different verdict absent a reason to think the single-parent concentration was population-specific."
       ],
-      "reopensOn": null
+      "reopensOn": "A twist-bearing extension with an explicit phase-layer formulation, or a materially different formulation; not a repeat shadow of this tested static form."
     },
     {
       "id": "WS2-PARITY-RESPONSE-SIGNATURE",
