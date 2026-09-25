@@ -60,6 +60,7 @@ function writeGithubOutputs(result, plan, execution) {
     `needs_firestore=${bool(capability('firestore-boundary'))}`,
     `fast_job_required=${bool(execution.jobs['fast-gate']?.required)}`,
     `deep_job_required=${bool(execution.jobs['deep-verification']?.required)}`,
+    `deep_services_job_required=${bool(execution.jobs['deep-services']?.required)}`,
   ];
   fs.appendFileSync(output, `${lines.join('\n')}\n`);
 }
@@ -84,7 +85,8 @@ function writeSummary(result, plan, execution) {
     `**Always/package scripts:** ${plan.packageScripts.join(', ') || '(none)'}`,
     `**Capabilities:** ${plan.capabilities.join(', ') || '(none)'}`,
     `**Fast lane:** ${execution.jobs['fast-gate']?.required ? 'required' : 'skip candidate'}`,
-    `**Deep lane:** ${execution.jobs['deep-verification']?.required ? 'required' : 'skip candidate'}`,
+    `**Coverage lane:** ${execution.jobs['deep-verification']?.required ? 'required' : 'skip candidate'}`,
+    `**Deep-services lane:** ${execution.jobs['deep-services']?.required ? 'required' : 'skip candidate'}`,
     packageLine,
     'The separate impact job records this plan as evidence; Fast Gate independently computes the same plan locally for semantic validator/Node-test selection and fails safe to the full aggregates if routing fails.',
     '',
