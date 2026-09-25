@@ -43,6 +43,38 @@ for (const file of readdirSync(workflowsDir).filter(name => /\.ya?ml$/u.test(nam
 
 const sources = harvestSourceNames();
 assert.ok(sources.length > 0, 'central harvester must declare at least one source workflow');
+
+const harvestText = readFileSync(harvestPath, 'utf8');
+const diagnosticsText = readFileSync(path.join(workflowsDir, 'solver-diagnostics.yml'), 'utf8');
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+
+for (const required of [
+    'Derive persisted runtime-data cache key',
+    'Publish persisted runtime-data cache for later PRs',
+    'Derive persisted runtime-hint projection key',
+    'Publish persisted runtime-hint projection for later PRs',
+]) {
+    assert.match(
+        harvestText,
+        new RegExp(escapeRegex(required), 'u'),
+        `central harvester must own post-persistence cache step: ${required}`,
+    );
+}
+assert.match(
+    harvestText,
+    /if: steps\.merge\.outputs\.result == 'persisted'/u,
+    'canonical cache publication must be conditional on the merge step reporting a persisted semantic merge',
+);
+assert.match(
+    harvestText,
+    /echo 'result=persisted' >> "\$GITHUB_OUTPUT"/u,
+    'semantic merge step must expose persisted status as a workflow step output for cache gating',
+);
+assert.doesNotMatch(
+    diagnosticsText,
+    /(?:Derive|Publish|Restore|Generate) (?:final|persisted) runtime-(?:data|hint)/u,
+    'report-only solver diagnostics must not own canonical Hint cache generation publication',
+);
 assert.equal(new Set(sources).size, sources.length, 'central harvester source workflow names must be unique');
 
 const missing = sources.filter(name => !actualNames.has(name));
