@@ -212,6 +212,16 @@
         "mode": "artifact-only",
         "reason": "This one-shot Stage A experiment publishes its frozen result and standard solver-sweep artifact; it is not a recurring compact failure-response producer."
       }
+    },
+    {
+      "id": "ws1-late-continuation-single-stage-confirmation",
+      "workflow": ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml",
+      "disposition": "standard",
+      "reason": null,
+      "durability": {
+        "mode": "automatic-harvest",
+        "reason": null
+      }
     }
   ]
 }
