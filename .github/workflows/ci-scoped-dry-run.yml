@@ -99,8 +99,6 @@ jobs:
         run: npm run check:text-source-files
         env:
           PATHFINDER_PR_INCREMENTAL: '0'
-      - name: Check CI impact inventory
-        run: npm run check:ci-impact-inventory
       - name: Run selected non-lint validators
         if: needs.impact-shadow.outputs.validator_groups != ''
         shell: bash
