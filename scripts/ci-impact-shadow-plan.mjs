@@ -88,7 +88,7 @@ function writeSummary(result, plan, execution) {
     `**Coverage lane:** ${execution.jobs['deep-verification']?.required ? 'required' : 'skip candidate'}`,
     `**Deep-services lane:** ${execution.jobs['deep-services']?.required ? 'required' : 'skip candidate'}`,
     packageLine,
-    'The separate impact job records this plan as evidence; Fast Gate independently computes the same plan locally for semantic validator/Node-test selection and fails safe to the full aggregates if routing fails.',
+    'The separate impact job records this plan as evidence; Fast Gate and the Node-contract workflow independently compute the same plan locally for validator and Node-test selection, and each fails safe to its full owned authority if routing fails.',
     '',
     ...(rows.length ? ['| Changed path | Ownership rule | Surfaces |', '|---|---|---|', ...rows] : []),
     '',
