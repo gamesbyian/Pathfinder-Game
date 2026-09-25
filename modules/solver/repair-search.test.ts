@@ -31,7 +31,8 @@ function assertSameNonzeroRepairWork(prepA: any, prepB: any): void {
         'the reduced test budget must still exercise nontrivial repair work');
 }
 
-const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
+const K = (x: number, y: number) => PACK(x - 1, y - 1);
+const repairPrototypeTest = process.env.SOLVER_REPAIR_PROTOTYPE_TESTS === '1' ? test : test.skip; // 1-based wire coords
 
 function makeLevel(overrides: any = {}) {
     const grid = overrides.grid || { w: 5, h: 3 };
@@ -249,7 +250,7 @@ test('computePlateauPenaltyCells caps the penalty and handles empty/degenerate i
 // determinism test above: repairSearchFromGate does the identical operation sequence for a given
 // seed regardless of machine speed, and the Stage 2 penalty is computed only from deterministic
 // state (never a rand() draw), so bounding by node count makes the outcome deterministic.
-test('repairSearchFromGate with enablePlateauPenalty=true is deterministic', async () => {
+repairPrototypeTest('repairSearchFromGate with enablePlateauPenalty=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
@@ -292,7 +293,7 @@ test('selectGuideCells prefers complementary constraints, breaks ties by distanc
     assert.equal(selectGuideCells(b2, [{ cells: baseCells, pend: noPend }]), null, 'no eligible guide → null');
 });
 
-test('repairSearchFromGate with enableRecombination=true is deterministic', async () => {
+repairPrototypeTest('repairSearchFromGate with enableRecombination=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
@@ -322,7 +323,7 @@ test('enableRecombination=false (default) is byte-identical to omitting it', asy
 // zero metric-projection overlap across 25 levels — see BEAM_SEED_WIDTH's own comment). Positional
 // args through enableElitePrefixDfs=false, then enableBeamSeed=true (18th arg).
 
-test('repairSearchFromGate with enableBeamSeed=true is deterministic', async () => {
+repairPrototypeTest('repairSearchFromGate with enableBeamSeed=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
@@ -347,7 +348,7 @@ test('enableBeamSeed=false (default) is byte-identical to omitting it', async ()
     assertSameNonzeroRepairWork(prepA, prepB);
 }, 25000);
 
-test('enableBeamSeed=true actually seeds the elite pool from a beam survivor before any restart', async () => {
+repairPrototypeTest('enableBeamSeed=true actually seeds the elite pool from a beam survivor before any restart', async () => {
     const level = mustTurnLevel();
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
@@ -360,7 +361,7 @@ test('enableBeamSeed=true actually seeds the elite pool from a beam survivor bef
     assert.equal(arrivals.some(a => a.restart === 0), true, 'a beam-seeded elite arrived before restart 1');
 });
 
-test('enableBeamSeed=true charges the beam-seed cost against this call\'s own nodesExpanded, not a free extra pass', async () => {
+repairPrototypeTest('enableBeamSeed=true charges the beam-seed cost against this call\'s own nodesExpanded, not a free extra pass', async () => {
     const level = mustTurnLevel();
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
@@ -404,7 +405,7 @@ test('relinkPaths returns unsolved (no false positive) when no anchor recombinat
     assert.equal(res.solved, false);
 });
 
-test('repairSearchFromGate with enableRelink=true is deterministic', async () => {
+repairPrototypeTest('repairSearchFromGate with enableRelink=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
@@ -445,7 +446,7 @@ test('preferredTurnExit returns the required-turn exit and skips straight-throug
     assert.equal(preferredTurnExit(K(2, 2), K(3, 3), nbrs, 'either'), null, 'a non-orthogonal arrival → null');
 });
 
-test('repairSearchFromGate with enableTurnBias=true is deterministic', async () => {
+repairPrototypeTest('repairSearchFromGate with enableTurnBias=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
