@@ -4,8 +4,9 @@
  *
  * This report intentionally reads only durable canonical hint artifacts. It does not infer missing
  * solver-request/stage/source-run dimensions from filenames, timestamps, or current defaults.
- * Consequently the pre-enrichment baseline is expected to report many non-reconstructable events;
- * that is useful evidence about what Phase 2/3 enrichment still needs to make joinable.
+ * Consequently historical/producer-limited records may remain non-reconstructable; that is useful
+ * evidence about irrecoverable missingness or which exact sibling/source-run join a consumer would
+ * need, not an implication that the completed consolidation still owes blanket enrichment.
  *
  * Usage:
  *   node scripts/stress/hint-reconstructability-report.mjs [--json=<path>]
