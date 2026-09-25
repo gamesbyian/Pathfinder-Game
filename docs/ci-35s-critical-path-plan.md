@@ -171,6 +171,14 @@ Exact Fast Gate evidence from run **36096167198** is green for the full Node/CLI
 
 Decision: **close this process-topology experiment successful**. Preserve the three real executable boundaries (combiner smoke, planner smoke, timeout-recovery stdout integration) and do not chase the remaining 1.6 s unless it re-emerges as a material tail.
 
+#### Four-worker launch-order experiment
+
+Exact-head run **36097915898** exposed a scheduler tail that is independent of individual-contract semantics. The permanent Node harness runs a bounded four-worker pool but, until now, consumed the 212 requested contracts strictly in package-list order. Several current multi-second contracts sit late in that list: CP-SAT harvest **5.1 s**, diagnostics harvest **3.7 s**, and level-blind harvest **3.1 s** were all launched near the end, while other 4–5 s contracts are distributed earlier. With fixed-width workers, late long jobs can determine the wall even when aggregate child work is unchanged.
+
+A stacked experiment adds a narrow `PATHFINDER_PARALLEL_PRIORITY` scheduling hint to `run-scripts-parallel.mjs`. The named subset launches first in explicit order; every requested command still executes exactly once, child commands are unchanged, failures retain their full output, and the final report remains in caller request order. A one-worker regression proves launch ordering separately from output ordering.
+
+The first production priority set is deliberately small and evidence-derived: the twelve current contracts at roughly 3.1–5.2 s in run 36097915898. This is not a new validation tier or a permanent hand-maintained ranking contract. Keep it only if exact-head CI shows a repeatable Node/CLI wall reduction without new failures. Refresh or delete the hint when the dominant contract population materially changes. A useful result should reduce the four-worker drain tail by multiple seconds; sub-second movement is noise on shared runners.
+
 Decision gate: keep the sparse path only if all existing real-repository HEAD parity/queryability assertions stay green and the corrected Node-22 benchmark shows a repeatable reduction in the top-three contracts or total direct wall. If not, revert it rather than adding broader shared-fixture coupling.
 
 ### Covered Vitest
