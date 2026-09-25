@@ -1279,6 +1279,31 @@ Preregistered interpretation:
 4. do not add synthetic data merely to make the rehearsal green;
 5. after the decision, remove the temporary rehearsal job and record the result here.
 
+## V1: remove duplicate runtime-Hint referee pass from Fast Gate
+
+Green post-v2 run **36183929285** exposed a new dominant Fast Gate tail:
+
+- `check:level-data-validity`: **~30.6 s**;
+- `test:validate-all-hint-stores` in Node shard B: **~0.5 s**.
+
+The two commands overlapped materially. The Fast Gate validator parsed the three runtime corpora through `readLevelCorpusDocumentWithHints` and referee-validated every stored Hint. The Node contract already discovers every tracked canonical Hint store, proves owner mapping/completeness, decodes every artifact, parses the owning level, and referee-validates every Hint path.
+
+The responsibility split is now explicit:
+
+- **Fast Gate / `check:level-data-validity`:** structural parseability of runtime-shipped level documents;
+- **Node / `test:validate-all-hint-stores`:** canonical Hint-store completeness, ownership, decode validity, owning-level parse, and PLAY-referee validity.
+
+The Hint referee contract is explicitly invalidated by `data + game + solver + research` surfaces so domain/referee changes still revalidate existing stored Hints. Hint-only PRs continue to select it through `data`.
+
+This is not a proof deletion. It removes a second implementation of the same Hint referee obligation from the full-impact gate while retaining the broader canonical-store proof.
+
+Decision gate:
+
+1. Fast Gate must remain green for corpus and domain changes;
+2. `test:validate-all-hint-stores` must remain green and selected on the relevant semantic surfaces;
+3. full-impact timing should show the former ~30 s duplicate pass collapse to structural-level parsing cost;
+4. if the Node proof does not cover a concrete invariant formerly unique to `check:level-data-validity`, restore that invariant explicitly rather than restoring the whole duplicate pass.
+
 ## Current forward work order
 
 1. **Get the repaired data-free coverage head fully green:** require Fast Gate, both Node shards, coverage, deep services, topology, semantic-fault, and solver-evidence guards on one exact head. The remaining known failures from the extraction were registry/metric-inventory bookkeeping and have been repaired.
