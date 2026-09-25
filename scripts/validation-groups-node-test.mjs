@@ -23,7 +23,7 @@ const solver = list('nodeTests', 'solver');
 assert.ok(solver.selected.includes('test:portfolio-solve-sweep-lib'));
 assert.ok(solver.selected.includes('test:divergence-lib'));
 assert.ok(!solver.selected.includes('test:signature-collision-analysis'));
-assert.ok(!solver.selected.includes('test:sweep-publish'));
+assert.ok(solver.selected.includes('test:sweep-publish'));
 
 const data = list('nodeTests', 'data');
 assert.ok(data.selected.includes('test:collect-known-solution-prefix-survival-cli'));
