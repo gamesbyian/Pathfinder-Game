@@ -20,6 +20,7 @@ export default defineConfig({
             'scripts/solver-parallel-unit-tests.mjs',
             'scripts/eslint-rules-unit-tests.mjs',
             'scripts/data-assets-unit-tests.mjs',
+            'scripts/level-codec-maintained-corpus-unit-tests.mjs',
         ],
         // Solver suites can solve/exhaustively enumerate real or synthetic states; hosted-runner
         // variance has exceeded 60s for the deadlock-soundness property.
