@@ -40,13 +40,12 @@ export function buildResearchQuerySnapshot(graph) {
     };
 }
 
-const RESEARCH_GIT_REF_SPARSE_DIRECTORIES = [
-    'docs',
-    'reports',
-    'scripts',
-    'modules',
-    '.github/workflows',
-    'data/stress',
+const RESEARCH_GIT_REF_SPARSE_PATTERNS = [
+    '/docs/',
+    '/reports/**/*.md',
+    '/reports/stress/experiment-evidence/',
+    '/reports/stress/solver-evidence-integrity-index.json',
+    '/data/stress/capability-invention-demand.json',
 ];
 
 export function buildResearchQuerySnapshotFromGitRef(root, ref, { discoverArtifacts = false } = {}) {
@@ -56,7 +55,7 @@ export function buildResearchQuerySnapshotFromGitRef(root, ref, { discoverArtifa
             allowHistoricalWorkstreamTable: true,
         });
         return buildResearchQuerySnapshot(graph);
-    }, { sparseDirectories: RESEARCH_GIT_REF_SPARSE_DIRECTORIES });
+    }, { sparsePatterns: RESEARCH_GIT_REF_SPARSE_PATTERNS });
 }
 
 export function diffResearchQuerySnapshots(before, after) {
