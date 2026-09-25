@@ -76,6 +76,15 @@ for (const [family, fallback] of [['validators', 'check:validators'], ['nodeTest
   }
 }
 
+if (!workflow.includes("Set up Node on warm dependency-tree path")
+    || !workflow.includes("if: steps.dependency-tree-cache.outputs.cache-hit == 'true'")) {
+  errors.push('ci.yml no longer has a cache-free warm dependency-tree setup-node path');
+}
+if (!workflow.includes("Set up Node with npm cache on dependency-tree miss")
+    || !workflow.includes("nodev22.23.2-npm10.9.8")) {
+  errors.push('ci.yml no longer confines npm-cache restoration to the dependency-tree miss path');
+}
+
 if (!/steps\.validation_selection\.outputs\.needs_build\s*==\s*['"]true['"]/u.test(workflow)) {
   errors.push('ci.yml no longer scopes production build through needs_build');
 }
