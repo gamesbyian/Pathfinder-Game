@@ -133,7 +133,6 @@ These are not solver-batch entrypoints, but remain listed here for workflow disc
 
 `ci-node-contract-shards.yml` is the reusable production Node/CLI lane called by `ci.yml`: it preserves semantic impact selection, partitions selected contracts by disjoint registry execution ownership across two runners, and fails safe to the full Node authority when routing fails. It is execution infrastructure, not an independent gate or research workflow.
 
-`ci-production-build.yml` is the reusable impact-scoped production bundle lane called by `ci.yml` and the scoped rehearsal. It owns the production build capability, exact/rolling runtime-Hint projection cache, dependency bootstrap, and projection-miss source fallback independently from Fast Gate validators/lint.
 
 Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Avoid creating a new batch runner merely for different parallelism: common entrypoints now expose or implement the worker/shard controls needed to trade concurrent footprint against tail latency.
 
