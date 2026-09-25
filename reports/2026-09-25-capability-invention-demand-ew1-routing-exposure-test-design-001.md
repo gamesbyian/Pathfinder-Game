@@ -1,9 +1,9 @@
 # Capability-invention demand: EW1 routing-gap exposure test design 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-25 — both opt-in exposure flags implemented and empirically verified via direct `getAttemptConfigs` calls against current `main`; no dispatch yet.
+> **Last evidence:** 2026-09-25 — matched-work pilot A/B dispatched for both flags via `solver-level-blind-targeted-sweep.yml` on commit `b70fac12` (13-level sample per branch: target row + 12 same-branch solved controls, `--node-budget=50000000` production default; runs 36177860900/36177853014 (CID-0027 control/treatment) and 36177843641/36177869048 (CID-0028 control/treatment); results pending.
 > **Decision:** design and implement (not dispatch) the smallest matched-work routing-exposure test for `CID-0027`/`CID-0028`, per each row's `smallestProbe` and the register's own "design (not dispatch)" gate. This report locates the exact `attempts.ts` rule each level's feature profile resolves to, and adds two new opt-in ablation exposure flags following this file's own established convention.
-> **Remaining gate:** draw the sampled same-branch pilot population from already-committed data (no new acquisition), then dispatch via `--enable-flags` on `level-blind-capability-sweep.mjs` at matched production budget.
+> **Remaining gate:** combine and interpret the four dispatched runs per each row's own `advanceIf`/`stopIf` (target-row gain, zero same-branch solved-level regressions in the sample).
 > **Evidence role:** design + implementation
 > **Research question:** `WS2-CAPABILITY-INVENTION-DEMAND`
 > **Production effect:** none. Both flags default OFF (`OPT_IN_FEATURES`); no production default changed.
@@ -110,7 +110,7 @@ sweep either branch in full:
    separately-justified design (this report does not authorize it), and the two-row evidence base is
    far too thin to justify it yet.
 
-## Protocol (for dispatch time, not dispatched here)
+## Protocol (dispatched)
 
 Matched production budget, both arms: `scripts/level-blind-capability-sweep.mjs` production defaults,
 `--node-budget=50000000`, derived `--work-budget=67000000`, generous non-binding `--budget-ms`,
@@ -119,15 +119,23 @@ flags (production default routing). Treatment: `--enable-flags=` the one relevan
 flag's branch independently — CID-0027's sample never touches CID-0028's flag and vice versa, since
 they gate disjoint rules).
 
+Dispatched 2026-09-25 on commit `b70fac12`, population per branch = target row + the 12-level
+stratified solved-control sample listed above:
+
+- CID-0027 control: [run 36177860900](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177860900)
+- CID-0027 treatment (`STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE`): [run 36177853014](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177853014)
+- CID-0028 control: [run 36177843641](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177843641)
+- CID-0028 treatment (`STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE`): [run 36177869048](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177869048)
+
 Decision, per each row's own `advanceIf`/`stopIf`: advance only on a referee-valid gain on the target
 row with zero same-branch solved-level regressions in the sample; any regression or zero gain stops
 this exposure attempt on that row without escalating to the full branch population.
 
 ## What this does not authorize
 
-- No production default change for either flag (both remain `OPT_IN_FEATURES`, default OFF).
-- No dispatch of the sampled pilot above — implementation and dispatch are separate, later gates.
-- No claim about the 335/939 branch populations' general recoverability — only base-rate context for
+- No production default change for either flag (both remain `OPT_IN_FEATURES`, default OFF) — the
+  pilot dispatch above is evidence-gathering only, not a promotion.
+- No claim about the 335/196 branch populations' general recoverability — only base-rate context for
   sizing a pilot smaller than either full branch.
 - No progress toward the separately-blocked 83/47 fresh-census cohort.
 
