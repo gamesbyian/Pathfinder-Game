@@ -1,0 +1,362 @@
+{
+  "schemaVersion": 1,
+  "plan": "reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md",
+  "status": "active",
+  "reconciledMainRef": "ced149b80ddebda2723be4668220ff3f2c8ac105",
+  "premises": [
+    {
+      "question": "Is a single N=160 fresh block large enough to test transfer of the frozen late-continuation signal without repeating the underpowered Stage-A failure mode?",
+      "evidence": [
+        "Historical nomination basis: 25.0% of solved validation-split C2 levels; overall C2 solve rate 68.8%; validation split ~30%, giving p≈0.0516 nominated parents per fresh parent.",
+        "Exact Binomial(160,0.0516) lower tail gives P(X<3)≈0.99% and P(X<4)≈3.23%."
+      ],
+      "alternatives": [
+        "Increase N until an >=8-parent floor has high power.",
+        "Retain N=160 but use >=3 as the breadth floor and keep effect magnitude in the >=5% captured-work criterion.",
+        "Abandon fresh acquisition and rely only on retained evidence."
+      ],
+      "discriminator": "Freeze N=160 with >=3 independent nominated parents because it is the largest integer breadth floor satisfying the plan's stated <2% false-stop target; failure of the other frozen criteria closes this acquisition form."
+    },
+    {
+      "question": "Can the generic level-blind targeted-sweep workflow substitute for the Stage-A portfolio producer?",
+      "evidence": [
+        "Stage A used portfolio-solve-sweep.mjs --scheduler-mode=production and the frozen-model scorer consumes per-attempt production-ladder rows from that producer.",
+        "solver-level-blind-targeted-sweep.yml executes level-blind-capability-sweep.mjs, a different producer surface."
+      ],
+      "alternatives": [
+        "Use generic targeted sweep and prove row-semantic parity before dispatch.",
+        "Use a thin one-shot wrapper around the same portfolio producer as Stage A."
+      ],
+      "discriminator": "Preserve portfolio-solve-sweep.mjs production row semantics in the one-shot workflow; do not substitute targeted sweep without a separate row-parity proof."
+    },
+    {
+      "question": "Should generation/solve/scoring be fused into a new bespoke solver harness?",
+      "evidence": [
+        "research:generate-levels already owns deterministic frozen population generation.",
+        "portfolio-solve-sweep.mjs already owns scientific solve rows.",
+        "apply-action-selection-legal-signal-model.mjs already owns deterministic frozen-model scoring."
+      ],
+      "alternatives": [
+        "Build a new monolithic WS1 runner.",
+        "Compose existing owners in a thin one-shot workflow."
+      ],
+      "discriminator": "Reuse existing owners; create only orchestration needed to move the immutable generated corpus through solve, combine, scoring and publication."
+    }
+  ],
+  "repositoryPriorArt": [
+    {
+      "candidate": "research:generate-levels / scripts/research-level-generation.mjs",
+      "disposition": "reuse",
+      "reason": "Canonical deterministic research-population generation front door with block identity, evidence role and seed handling."
+    },
+    {
+      "candidate": "scripts/portfolio-solve-sweep.mjs --scheduler-mode=production",
+      "disposition": "reuse",
+      "reason": "Exact producer used by Stage A and required for comparable per-attempt production-ladder rows."
+    },
+    {
+      "candidate": "scripts/apply-action-selection-legal-signal-model.mjs",
+      "disposition": "reuse",
+      "reason": "Frozen-model scorer already separates deterministic postprocessing from scientific search."
+    },
+    {
+      "candidate": "solver-level-blind-targeted-sweep.yml",
+      "disposition": "parallel-with-distinction",
+      "reason": "Useful generic level-blind infrastructure, but it executes a different report producer and is not assumed row-equivalent for this WS1 confirmation."
+    },
+    {
+      "candidate": "one-shot workflow lifecycle/retirement pattern in .github/workflows/README.md and docs/solver-workflow-lifecycle.json",
+      "disposition": "reuse",
+      "reason": "The acquisition wrapper is temporary campaign infrastructure and should retire after durable result capture."
+    }
+  ],
+  "impactDomains": {
+    "definitionsSchemas": [
+      "Frozen WS1 confirmation parameters: N=160, seed=2026092501, block id ws1-late-continuation-single-001, ID prefix U, >=3 nominated-parent breadth floor."
+    ],
+    "producersWriters": [
+      "scripts/research-level-generation.mjs",
+      "scripts/portfolio-solve-sweep.mjs",
+      "scripts/apply-action-selection-legal-signal-model.mjs"
+    ],
+    "transportsWorkers": [
+      "New thin one-shot GHA wrapper transporting generated corpus artifact to sharded portfolio solve and deterministic combine/score jobs."
+    ],
+    "consumersReaders": [
+      "Frozen legal-signal model scorer",
+      "WS1 result interpretation and solver queue"
+    ],
+    "persistenceStores": [
+      "Generated confirmation corpus/result artifacts remain immutable experiment evidence; no production hints/defaults are written."
+    ],
+    "cliPackage": [
+      "research:generate-levels",
+      "portfolio-solve-sweep producer CLI",
+      "research:apply-action-selection-legal-signal-model"
+    ],
+    "workflowsTriggers": [
+      "One-shot WS1 confirmation workflow, workflow lifecycle registry, workflow README"
+    ],
+    "generatedArtifacts": [
+      "tmp/ws1-late-continuation-single-001/generation-manifest.json",
+      "tmp/ws1-late-continuation-single-001/corpus.json",
+      "Per-shard portfolio reports",
+      "Combined report",
+      "Frozen-model scoring result",
+      "Standard solver result/experiment contract"
+    ],
+    "testsValidatorsGuards": [
+      "Generation contract tests",
+      "portfolio-solve-sweep CLI/lib tests",
+      "apply-action-selection-legal-signal-model test",
+      "population/experiment-contract/result integrity validators",
+      "plan-quality check"
+    ],
+    "compatibilityHistory": [
+      "Stage-A report remains historical and unchanged; new block uses distinct U namespace/seed/block id."
+    ],
+    "currentDocsAuthorities": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-research-execution-efficiency-plan.md",
+      ".github/workflows/README.md"
+    ],
+    "registriesCatalogues": [
+      "docs/solver-workflow-lifecycle.json for temporary workflow lifecycle/retirement"
+    ],
+    "researchSystem": [
+      "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE evidence role, block identity, experiment contract, result publication and durable evidence links."
+    ]
+  },
+  "solverQueueImpact": {
+    "classification": "unblocks",
+    "authoritiesChecked": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-future-work.md",
+      "docs/solver-research-execution-efficiency-plan.md"
+    ],
+    "items": [
+      "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE"
+    ],
+    "notes": "Corrects the live confirmation design so the next WS1 acquisition can be dispatched without threshold, seed or producer ambiguity. It does not change WS1 scientific priority or production solver policy."
+  },
+  "definitionsOfDone": [
+    {
+      "id": "dod-plan-frozen",
+      "claim": "The WS1 confirmation has one frozen sample size, seed, breadth floor, producer and model with no dispatch-time alternatives.",
+      "proofs": [
+        {
+          "type": "command",
+          "locator": "npm run plan:quality -- --plan=reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md",
+          "expected": "Quality manifest validates and plan prose contains N=160, seed 2026092501, >=3 breadth floor and portfolio-solve-sweep producer lock."
+        }
+      ]
+    },
+    {
+      "id": "dod-generation",
+      "claim": "Exactly 160 independent random-source confirmation parents are generated from the frozen seed/block identity.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "tmp/ws1-late-continuation-single-001/generation-manifest.json + tmp/ws1-late-continuation-single-001/corpus.json in the one-shot workflow artifact",
+          "expected": "method=random, count=160, masterSeed=2026092501, evidenceRole=confirmation, blockId=ws1-late-continuation-single-001, idPrefix=U, actualParentCount=160 and a stable population identity; generation uses no overwrite/envelope/passthrough override."
+        }
+      ]
+    },
+    {
+      "id": "dod-solve-protocol",
+      "claim": "Every confirmation row is produced by the Stage-A-compatible production portfolio producer with the frozen resource envelope and no historical inputs.",
+      "proofs": [
+        {
+          "type": "workflow",
+          "locator": "WS1 one-shot solve jobs + published experiment contract",
+          "expected": "entrypoint scripts/portfolio-solve-sweep.mjs, schedulerMode=production, node ceiling 50000000, base work budget 67000000, non-binding 86400000ms wall deadline, no baseline/prime-winner/attempt-cache/hints, all 160 expected IDs observed exactly once."
+        }
+      ]
+    },
+    {
+      "id": "dod-scoring",
+      "claim": "The unmodified frozen legal-signal model is applied after solve completion and the preregistered criteria are evaluated without refit.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "Frozen-model scoring result",
+          "expected": "model path reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json; zero winner endangerment; captured canonical pre-winner work share >=5%; >=3 independently nominated parents; no parent >35% of nominated work; same-stage late continuation remains predominant; integrity fields complete."
+        }
+      ]
+    },
+    {
+      "id": "dod-negative-discipline",
+      "claim": "A failed frozen criterion closes this exact acquisition form without seed, threshold, model or source rescue.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "Final WS1 result report",
+          "expected": "Result applies all frozen gates and records closure/reopen conditions without post-result parameter changes."
+        }
+      ]
+    },
+    {
+      "id": "dod-splash-zone",
+      "claim": "Current workflow, queue and execution-efficiency authorities reflect the completed confirmation and temporary workflow is retired when no longer needed.",
+      "proofs": [
+        {
+          "type": "test",
+          "locator": "npm run test:workflow-lifecycle",
+          "expected": "Lifecycle registry remains valid after one-shot registration/retirement."
+        },
+        {
+          "type": "command",
+          "locator": "npm run check:documentation-links",
+          "expected": "Current docs/queue/workflow references are valid after closeout."
+        }
+      ]
+    },
+    {
+      "id": "dod-hostile-closeout",
+      "claim": "A fresh-current-main reconstruction can identify the sole generation producer, solve producer, scorer, workflow, evidence artifacts and current queue state without trusting PR prose.",
+      "proofs": [
+        {
+          "type": "manual-evidence",
+          "locator": "Final independent closeout note against current main",
+          "expected": "Producer/consumer/workflow/evidence/current-authority populations match the completed plan with no stale alternative producer or threshold.",
+          "reason": "The intellectual equivalence of current repository authorities and the scientific result requires a bounded independent reconstruction beyond a single deterministic command."
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-0",
+      "name": "Plan correction and precommitment",
+      "entry": [
+        "Stage-A result and retained historical rates remain unchanged."
+      ],
+      "outputs": [
+        "Corrected acquisition plan",
+        "Quality manifest"
+      ],
+      "affectedDomains": [
+        "currentDocsAuthorities",
+        "researchSystem"
+      ],
+      "exitProofIds": [
+        "dod-plan-frozen"
+      ]
+    },
+    {
+      "id": "phase-1",
+      "name": "One-shot orchestration implementation",
+      "entry": [
+        "dod-plan-frozen is satisfied before implementation."
+      ],
+      "outputs": [
+        "Thin one-shot workflow reusing generation/portfolio/scoring owners",
+        "Lifecycle registration",
+        "Integrity/publication wiring"
+      ],
+      "affectedDomains": [
+        "workflowsTriggers",
+        "transportsWorkers",
+        "cliPackage",
+        "testsValidatorsGuards"
+      ],
+      "exitProofIds": [
+        "dod-generation",
+        "dod-solve-protocol"
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Confirmation execution and scoring",
+      "entry": [
+        "One-shot workflow implementation is green under ordinary CI and no frozen parameter has changed."
+      ],
+      "outputs": [
+        "Frozen corpus",
+        "Complete portfolio rows",
+        "Frozen-model scoring result",
+        "Decision-bearing result report"
+      ],
+      "affectedDomains": [
+        "generatedArtifacts",
+        "researchSystem",
+        "persistenceStores"
+      ],
+      "exitProofIds": [
+        "dod-generation",
+        "dod-solve-protocol",
+        "dod-scoring",
+        "dod-negative-discipline"
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Splash-zone closeout and retirement",
+      "entry": [
+        "Scientific result is recorded and durable evidence is retained."
+      ],
+      "outputs": [
+        "Updated live solver queue",
+        "Updated execution-efficiency/current workflow docs",
+        "One-shot workflow retired or explicitly retained with reason",
+        "Independent closeout note"
+      ],
+      "affectedDomains": [
+        "currentDocsAuthorities",
+        "registriesCatalogues",
+        "researchSystem",
+        "workflowsTriggers"
+      ],
+      "exitProofIds": [
+        "dod-splash-zone",
+        "dod-hostile-closeout"
+      ]
+    }
+  ],
+  "splashZone": {
+    "currentAuthorities": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-research-execution-efficiency-plan.md",
+      ".github/workflows/README.md"
+    ],
+    "workflows": [
+      "WS1 one-shot confirmation wrapper",
+      "Any reused portfolio/combine/publication workflow contracts"
+    ],
+    "registriesSchemas": [
+      "docs/solver-workflow-lifecycle.json",
+      "Experiment/result contract surfaces if the wrapper adds no new schema"
+    ],
+    "generatedData": [
+      "Frozen 160-parent confirmation corpus and generation manifest from tmp/ws1-late-continuation-single-001/",
+      "Combined solve/scoring artifacts and durable result evidence"
+    ],
+    "solverQueue": [
+      "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE state/next gate"
+    ],
+    "researchSystem": [
+      "Question/evidence role, block identity, source-run/result publication links"
+    ],
+    "retireOrArchive": [
+      "Retire the one-shot wrapper after durable evidence and queue closeout unless a concrete repeated consumer is identified."
+    ],
+    "proofIds": [
+      "dod-splash-zone",
+      "dod-hostile-closeout"
+    ]
+  },
+  "hostileCloseout": {
+    "independentReconstruction": true,
+    "inventories": [
+      "producers",
+      "consumers",
+      "workflows",
+      "persistence",
+      "compatibility-history",
+      "current-authorities"
+    ],
+    "proofIds": [
+      "dod-hostile-closeout"
+    ]
+  }
+}

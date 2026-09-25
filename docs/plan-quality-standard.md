@@ -16,6 +16,8 @@ npm run plan:quality -- --plan=docs/example-plan.md
 
 The manifest is not a second plan. It is the machine-readable closure contract for the questions prose is bad at enforcing.
 
+Every tracked `*.quality.json` manifest is also validated automatically by the permanent `test:plan-quality` Node contract. The census is derived from Git-tracked files rather than the physical worktree, so sparse CI cannot silently omit a manifest from validation. A manifest must be the sibling of its tracked plan and pass the same structural validator used by `plan:quality`.
+
 ## 1. Why this standard exists
 
 Several major Pathfinder programs have produced the same failure shape:
