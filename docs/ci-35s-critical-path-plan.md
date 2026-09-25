@@ -922,9 +922,27 @@ Interpret direct-JAR evidence conservatively:
 - only promote if the semantic result is green and removing the 42 MB Firebase CLI cache materially reduces wall/startup time;
 - retain Firebase Tools for developer/general emulator workflows if it remains useful; this experiment concerns CI launch topology only.
 
+## Production deep packing activation
+
+The independent-service evidence is now promoted into production packing:
+
+- `deep-verification` owns **covered ordinary Vitest only** and retains canonical runtime-data materialization because coverage needs it.
+- `deep-services` owns **deadlock soundness proofs + Firestore boundary**. It uses source-only checkout, no canonical runtime-data restore, and runs proofs/Firestore concurrently when both are selected.
+- the local canonical planner now emits `deep_services_job_required` in addition to the coverage-lane `deep_job_required`;
+- the scoped rehearsal and execution-plan/final-status contracts contain the same three execution lanes as production.
+
+Why this topology, specifically:
+
+- independent Firestore was green at ~22 s and ~18 s authoritative wall in runs 36105650628 and 36105868439;
+- proofs are already a short soundness obligation and pair naturally with Firestore on the service lane;
+- D2c two-way coverage sharding was **not** promoted: it produced one ~28 s success but a ~36 s confirmation, reproducing the shared-runner tail problem and failing the preregistered threshold;
+- therefore the evidence supports removing unrelated services from behind coverage, not splitting coverage across more shared runners.
+
+The old combined deep lane remains historical evidence only. Exact-head production CI must now prove the three-lane packing is semantically green and establish its wall-clock effect before this activation is called settled.
+
 ## Current forward work order
 
-1. **Validate the newly activated semantic Fast Gate:** require green exact-head full-impact evidence plus representative scoped evidence for validator/Node selection and conditional build; verify router failure still falls back broad.
+1. **Validate the three-lane production packing:** require green exact-head full-impact evidence for Fast Gate, coverage-only deep-verification, and deep-services; record first-runner→last-required completion and each lane wall.
 2. **Validate the implemented solver→research narrowing:** fault injection, historical #1722-equivalent route oracle, and solver-scoped timing must pass before calling the 59-consumer explicit routing settled.
 3. **Refresh the selected-population timing census:** regenerate Node/CLI timings after routing/cadence removals and rank by selected critical-path burden, not the obsolete universal population.
 4. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
