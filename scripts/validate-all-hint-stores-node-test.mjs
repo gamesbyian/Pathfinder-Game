@@ -11,7 +11,7 @@ try {
   mkdirSync(path.join(root,'data','hints'),{recursive:true});
   const level={id:'P00001',grid:{w:2,h:2},gates:[{x:1,y:1}],goal:{x:2,y:1},reqLen:1,reqInt:0};
   writeFileSync(path.join(root,'data','levels.json'),JSON.stringify([level])+'\n');
-  writeFileSync(path.join(root,'data','hints','P00001.json'),JSON.stringify(encodeHintArtifact([toHint([65537,131073],[])]))+'\n');
+  writeFileSync(path.join(root,'data','hints','P00001.json'),JSON.stringify(encodeHintArtifact([toHint([0,1],[])]))+'\n');
   assert.throws(
     () => validateAllTrackedHintStores(root),
     /canonical Hint-store population incomplete or changed/u,
