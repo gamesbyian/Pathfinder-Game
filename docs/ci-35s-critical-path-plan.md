@@ -146,7 +146,8 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
 | B5 runtime-hint projection cache | **merged / measured green** | #2087 merged restore/seed across PR/main/scoped and diagnostics. Ordinary PR #2088 restored the exact projection cache and completed build in **~2.3 s** with Vite compile **672 ms**, versus ~25 s cold. |
 | D1 two-way Node sharding | **closed negative on shared hosted runners** | Post-hermetic rehearsals are semantically green and cut useful Node work to ~14–17 s/shard, but runner walls varied to **31–35 s** and **27–38 s** across confirmations. Shared bootstrap variance consumes the 35 s budget; stop shard-count tuning. |
-| B3 proofs + Firestore overlap | **production rollout measured green on PR** | #2100 full-impact run kept coverage green and ran unchanged proofs + Firestore concurrently in **15 s**, with independent success outputs. Prior serialized shape was ~23 s. Awaiting final authority/parity-green merge. |
+| B3 proofs + Firestore overlap | **merged / measured green** | #2100 full-impact run kept coverage green and ran unchanged proofs + Firestore concurrently in **15 s**, with independent success outputs. Prior serialized shape was ~23 s; #2100 is merged to `main`. |
+| B6 bulk-change text-invariant batching | **closed / exact-head green with PR-scale regression** | #2072 CI run 36082154314 exposed a scaling regression: `check:text-source-files` took **6m47s** on a 1,474-file migration because each sparse changed file triggered separate `git cat-file -s` + `git show` processes. #2107 batches sparse HEAD blob reads through one `git cat-file --batch` process without changing the checked population or invariant. Exact-head CI run 36084034066 kept the direct text-invariant step below timestamp resolution and passed the permanent real-checker regression against **1,500 unmaterialized changed text blobs** inside a **20 s total Node/CLI step**. |
 | D2 coverage sharding | **technical success; shared-runner margin insufficient** | D2b run 36068829982 balanced 146 files to 17.091/17.090 test-s and produced authoritative merged coverage with unchanged thresholds in **34 s from shard start**. Only ~1 s headroom remains; D1 already demonstrated ordinary hosted setup variance can exceed that. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
@@ -404,6 +405,26 @@ Ordinary full-impact PR run **36066406944** completed in **77 s** wall. Fast gat
 
 This baseline changes the optimization priority: bootstrap/cache work has mostly succeeded. Remaining latency is validation execution plus shared-runner orchestration. B3 removes real serialized work without adding a runner; D1 has already shown that adding shared Node runners does not provide enough p90 headroom; D2b is the final shared-runner coverage architecture worth testing before the plan moves that work to reserved/larger compute.
 
+### Bulk-change Fast Gate regression discovered by #2072
+
+The hint/provenance consolidation merge exposed a CI-cost topology that ordinary PRs had not stressed. PR #2072 changed **1,474 files**, including **1,265 `data/families/**` paths** and **124 stress-Hint paths**. On exact-head CI run **36082154314**, Fast Gate entered `Check textual source invariants` at 01:30:07Z and did not leave it until 01:36:54Z: **6m47s in one invariant step**. Deep verification completed in 48 s on the same run, so this was a Fast Gate implementation regression rather than hosted-runner assignment variance.
+
+The invariant itself is cheap: changed text files must not contain NUL bytes, and `modules/` paths must obey canonical naming. The pathological cost came from the sparse repository view. For every changed text path absent from the sparse working tree, `readRepositoryText()` launched one `git cat-file -s` process to size the blob and one `git show` process to read it. Bulk migrations therefore turned an O(files) byte scan into O(files) **process launches**, with roughly two Git subprocesses per sparse file.
+
+Required correction:
+
+1. preserve working-tree reads for materialized files so local/manual semantics do not change;
+2. collect sparse missing paths and read their exact `HEAD:<path>` blobs through one batched Git object process;
+3. retain the same NUL-byte and module-path populations;
+4. keep a many-file sparse regression fixture so future repository-view refactors cannot silently restore per-file process topology;
+5. measure a bulk-change rehearsal before treating this incident as closed.
+
+Exact-head #2107 CI run **36083565019** is green. The text-invariant step entered and exited at **01:48:09Z**, versus 6m47s on #2072. Because this PR itself changes only a handful of text files, that run proves the normal path is healthy but is not alone sufficient bulk-cardinality evidence. The permanent repository-view regression therefore now constructs a synthetic **1,500-file** PR-shaped commit, removes those paths from the working tree to force sparse object reads, and invokes the real `check-text-source-files.mjs` entrypoint with `PATHFINDER_PR_INCREMENTAL=1`. Its CI timing on the next exact head is the closure evidence for the cardinality failure mode.
+
+That closure evidence is now available. Exact-head run **36084034066** passed the 1,500-file real-checker regression inside a **20 s total Node/CLI contract step**, while the direct `Check textual source invariants` step again entered and exited at **01:54:53Z**. The deterministic per-file subprocess explosion is therefore closed. Future work should treat any renewed multi-minute text-invariant timing as a regression, not normal variance.
+
+This is separate from the shared-runner p90 problem documented below. A six-minute deterministic local step is application-owned CI waste and must be removed regardless of future runner capacity.
+
 ### Phase D: runtime-balanced execution topology
 
 Do not pick shard count until A/B/C measurements are active. The first standard-runner rehearsal should use **five required lanes** because that is the smallest layout with a plausible ≤27 s budget per lane on 4-core runners.
@@ -617,6 +638,8 @@ Both shard runners started at the same second. First-shard-start → both-comple
 Shard 2's excess was bootstrap variance, especially `setup-node` at **11 s** versus 2 s on shard 1. The measured Node work itself is comfortably inside budget.
 
 Decision: **stop tuning Node shard membership/count on shared runners**. The partition is semantically valid and useful for a future larger/reserved-runner topology, but a hard ≤35 s wall target cannot be declared from standard hosted runners when ordinary setup variance alone pushes a healthy shard pair to 38 s.
+
+CI Node Concurrency Benchmark run **36082154293** still removes one possible false lead: four repeated direct-invocation runs at `PATHFINDER_PARALLEL_JOBS=4` measured **35.17–35.61 s**, median **35.46 s**, while the equivalent npm-mediated runs measured **45.53–46.93 s**, median **45.65 s**. However, subsequent exact-head ordinary CI provides an important correction to the interpretation. Run **36083565019** measured the production Node/CLI step at **35 s**, while run **36084034066** measured the same production population at only **20 s**, even after adding the PR-scale 1,500-file repository-view regression. The direct four-worker harness is clearly preferable to the npm-mediated wrapper, but useful Node wall itself is materially variable on shared runners. Do not treat 35 s as a fixed intrinsic contract cost or resume same-runner shard-count tuning from one sample; the evidence supports a broader shared-runner capacity/noise problem plus contract cost. Material p90 improvement still requires cheaper contracts, more predictable/larger compute, or both.
 
 ### D2 result: native equal-file coverage sharding preserves thresholds but wastes the critical path
 

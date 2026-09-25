@@ -11,7 +11,7 @@ import process from 'node:process';
 import {
   listRepositoryFiles,
   prChangedFiles,
-  readRepositoryText,
+  repositoryTextFilesContainingNul,
 } from './repository-file-view.mjs';
 
 const ROOT = process.cwd();
@@ -19,12 +19,8 @@ const textExtensions = new Set(['.css', '.html', '.js', '.json', '.md', '.mjs', 
 const tracked = listRepositoryFiles(ROOT);
 const incremental = prChangedFiles(ROOT);
 const candidates = incremental ?? tracked;
-const invalid = [];
-
-for (const file of candidates) {
-  if (!textExtensions.has(extname(file).toLowerCase())) continue;
-  if (readRepositoryText(ROOT, file).includes('\0')) invalid.push(file);
-}
+const textCandidates = candidates.filter(file => textExtensions.has(extname(file).toLowerCase()));
+const invalid = repositoryTextFilesContainingNul(ROOT, textCandidates);
 if (invalid.length) {
   console.error('NUL bytes make tracked text files appear binary; use an escaped string such as "\\0" instead:');
   for (const file of invalid) console.error(`  - ${file}`);
@@ -56,5 +52,5 @@ if (invalidModulePaths.length) {
   process.exit(1);
 }
 
-const checkedText = candidates.filter(file => textExtensions.has(extname(file).toLowerCase())).length;
+const checkedText = textCandidates.length;
 console.log(`${incremental ? 'Changed' : 'Tracked'} text-file check passed (${checkedText} file${checkedText === 1 ? '' : 's'} scanned); modules/ path naming is canonical.`);
