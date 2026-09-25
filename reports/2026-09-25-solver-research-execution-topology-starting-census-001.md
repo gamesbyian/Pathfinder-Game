@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-25 — exact-runtime parity run 36190221008 and full-vs-sparse targeted-planner rehearsal runs 36187498364 / 36190221143.
 > **Decision:** exact Node 22.23.2 is activated for the seven maintained workflows built on the rehearsed level-blind/history-aware producers; targeted-sweep planning now uses the earned sparse input boundary without narrowing caller-selected corpus/ID semantics.
-> **Remaining gate:** classify the four non-producer helper/integrity workflows that still float Node 20, then measure exact dependency-tree reuse where bootstrap economics are material.
+> **Remaining gate:** measure exact dependency-tree reuse where bootstrap economics are material; diagnostics remains on exact Node 20.20.2 until a separate real-solver cross-major parity rehearsal earns migration.
 
 ## Purpose
 
@@ -167,3 +167,15 @@ This activation is limited to the short targeted planner because historical host
 
 
 The static topology audit is now schema v3 and reports both exact-22.23.2 setup counts/workflow names and remaining major-only runtime workflow names. Runtime migration scope is therefore mechanically inspectable rather than inferred from this report's prose.
+
+
+## Helper runtime classification closeout
+
+All maintained research workflows now use exact Node versions.
+
+- `harvest-solver-evidence.yml`: **22.23.2**. Canonical persistence/harvest transformation; constituent import/persistence paths are permanent Node contracts under the CI runtime.
+- `solver-combine-sweep-runs.yml`: **22.23.2**. Deterministic cross-run validation/combine/publication glue; reconciliation and combiner contracts are permanent Node tests under CI.
+- `solver-evidence-integrity-guard.yml`: **22.23.2**. Deterministic audit/index rebuild; the audit implementation has a permanent Node contract and CI already executes it on the exact runtime.
+- `solver-diagnostics.yml`: **20.20.2**. Explicit conservative exception. This workflow invokes `solver:analyze-diagnostics` and therefore executes real solver behavior. Its runtime patch is now fixed, but cross-major migration waits for a diagnostics-specific semantic parity rehearsal rather than inheriting evidence from different producer families.
+
+This closes the major-only runtime drift defect without pretending every workflow has identical semantic risk.
