@@ -91,6 +91,8 @@ Workflow `run-name` values also include the inputs most useful for distinguishin
 - `solver-production-replay-baseline.yml` — history-aware/warm production replay; never compare it as cold capability evidence. Already heavily oversharded; its ordinary wall deadlines are semantically meaningful, so worker-count changes require matched measurement.
 - `solver-highbudget-unsolved-sweep.yml` — high-budget unsolved sweep with runtime-weighted bin packing and dedicated slow-level handling.
 - `solver-level-blind-targeted-sweep.yml` — targeted level-blind sweep using the weighted planner.
+- `solver-research-runtime-rehearsal.yml` — manual exact-runtime parity rehearsal comparing Node 20.20.2 with CI-proven Node 22.23.2 on real bundled level-blind and history-aware portfolio producers; evidence-only, never changes production solver policy.
+- `solver-research-input-materialization-rehearsal.yml` — manual full-tree vs sparse-tree parity rehearsal for the live targeted-sweep planner plus one real level-blind canary. Its sparse arm declares the exact corpus/runtime-telemetry inputs; missing hidden dependencies should make the rehearsal red rather than silently alter planning.
 
 ## Sample A/B
 
