@@ -189,3 +189,13 @@ The schema-v4 runtime summary is now protected by permanent Node contract `test:
 - one deliberate major-only Node 20 legacy workflow.
 
 The test asserts setup-site counts plus exact/floating workflow lists at both workflow and job granularity. This turns runtime-policy summary drift into an ordinary research-contract failure instead of relying on manual report inspection.
+
+
+## Diagnostics runtime evidence binding
+
+The conservative diagnostics exception is now visible in produced evidence, not just workflow YAML:
+- `run-solver-direct.mjs` writes `executionRuntime: { nodeVersion, platform, arch }` from the actual solver process;
+- `analyze-solver-diagnostics.mjs` preserves that tuple into the durable diagnostics report;
+- the existing real bundled direct-solver CLI contract asserts the persisted tuple matches the executing Node process.
+
+Therefore a diagnostics run pinned to exact Node 20.20.2 carries its runtime identity with the observation rows it generated. A later cross-major rehearsal can compare evidence explicitly instead of reconstructing the runtime from workflow history.
