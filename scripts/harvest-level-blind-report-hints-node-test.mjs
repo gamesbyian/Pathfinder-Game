@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -21,20 +21,30 @@ const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 // already-known winning paths (so the main referee genuinely accepts it) with a synthetic but
 // realistic level-blind sweep report shape carrying no explicit workBudget override, proving the
 // reconstructed provenance's search.workBudget still lands correctly from the projection.
-const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
+const { readLevelCorpusDocumentWithHints, hintFilePathFor } = await import('./level-data-io.mjs');
 
 const corpusRelPath = 'data/stress/stress-levels.json';
-const corpusPath = path.join(ROOT, corpusRelPath);
-const document = readLevelCorpusDocumentWithHints(corpusPath);
-const corpusSha256 = createHash('sha256').update(readFileSync(corpusPath)).digest('hex');
+const publishedCorpusPath = path.join(ROOT, corpusRelPath);
+const document = readLevelCorpusDocumentWithHints(publishedCorpusPath);
 const level = document.levels.find(l => Array.isArray(l.hintRecords) && l.hintRecords.length > 0);
 assert.ok(level, 'fixture requires at least one stress-corpus-1 level with an already-known hint');
 const knownPath = level.hintRecords[0].path;
 
 const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-level-blind-real-row-'));
 const receiptPath = path.join(temp, 'receipt.json');
-const hintFilePath = path.join(ROOT, 'data', 'stress', 'hints', `${level.id}.json`);
-const originalHints = readFileSync(hintFilePath, 'utf8');
+// Keep the fixture's real published stress-level mechanics and real persisted Hint, but isolate the
+// physical corpus. The old test rewrote data/stress/hints/<id>.json in place while 211 Node
+// contracts could be reading the same store concurrently.
+const corpusPath = path.join(temp, 'stress-levels.json');
+const { hints: _hints, hintRecords: _hintRecords, ...rawLevel } = level;
+writeFileSync(corpusPath, JSON.stringify([rawLevel], null, 2) + '\n');
+const isolatedHintPath = hintFilePathFor(corpusPath, level.id);
+mkdirSync(path.dirname(isolatedHintPath), { recursive: true });
+writeFileSync(
+    isolatedHintPath,
+    readFileSync(path.join(ROOT, 'data', 'stress', 'hints', `${level.id}.json`), 'utf8'),
+);
+const corpusSha256 = createHash('sha256').update(readFileSync(corpusPath)).digest('hex');
 try {
     writeFileSync(path.join(temp, 'report.json'), JSON.stringify({
         summary: {
@@ -70,6 +80,7 @@ try {
         'scripts/harvest-level-blind-report-hints.mjs',
         '--',
         `--staging-dir=${temp}`,
+        `--stress-corpus=${corpusPath}`,
         '--source-run-id=fixture-real-row-run',
         '--source-run-attempt=1',
         '--source-workflow=Solver stress-corpus refresh (level-blind capability)',
@@ -94,7 +105,6 @@ try {
     assert.equal(receipt.source.producer, 'harvest-level-blind-report-hints');
     assert.equal(receipt.funnel.refereeAcceptedObservations, 1);
 } finally {
-    writeFileSync(hintFilePath, originalHints);
     rmSync(temp, { recursive: true, force: true });
 }
 
