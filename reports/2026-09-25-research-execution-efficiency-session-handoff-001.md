@@ -78,6 +78,8 @@ Latest CI feedback identified only a declaration mismatch: failure-evidence regi
 4. Interpret exactly the frozen gates. A negative is scientifically valid and closes this acquisition form; do not rescue it by seed/model/threshold/source changes.
 5. Write the durable result report, update the live solver queue, run the hostile closeout required by the quality manifest, then retire the one-shot workflow/lifecycle row unless a concrete repeated consumer exists.
 
+Cross-program recommendations from the five-day retrospective are tracked in [`docs/cross-program-convergence-backlog.md`](../docs/cross-program-convergence-backlog.md). That backlog owns research cadence/claim ownership, semantic freshness, proof ownership, derived-resource ownership, governance-value auditing, phase-local hostile sampling, cost-of-knowing queryability, and evidence-gated remaining CI structural work.
+
 ## Remaining execution-efficiency work
 
 These are still worthwhile, but should not preempt the WS1 confirmation or the live WS2 scientific gates.
