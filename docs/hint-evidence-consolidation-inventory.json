@@ -1464,6 +1464,37 @@
           "docs/hint-evidence-consolidation-inventory.json"
         ],
         "finding": "Workflow persistence exceptions and ingestion dispositions could remain after the behavior that justified them disappeared. Both controls now fail stale approvals: exceptions must be exercised at their reviewed scope, and ingestion rows must still belong to the mechanically derived review-candidate population."
+      },
+      {
+        "id": "HPA-032",
+        "kind": "review-ledger-schema-fail-open",
+        "paths": [
+          "scripts/hint-provenance-surface-audit.mjs",
+          "scripts/central-hint-persistence-guard.mjs",
+          "docs/hint-physical-reader-audit.json",
+          "docs/hint-physical-writer-audit.json",
+          "docs/hint-bare-mutation-audit.json",
+          "docs/hint-workflow-persistence-audit.json"
+        ],
+        "finding": "Review ledgers accepted duplicate keys and unknown disposition strings, allowing ambiguous or typoed classifications to bypass disposition-specific checks. Parsers now reject duplicate entries and dispositions outside explicit vocabularies."
+      },
+      {
+        "id": "HPA-033",
+        "kind": "v4-closeout-migratability-not-idempotency",
+        "paths": [
+          ".github/workflows/hint-consolidation-closeout.yml",
+          "scripts/hint-artifact-v4-migration.mjs"
+        ],
+        "finding": "Closeout accepted a semantically safe dry-run even if canonical artifacts still required schema-v4 migration. It now requires semantic/join equality and changedFiles===0 across the complete six-store population."
+      },
+      {
+        "id": "HPA-034",
+        "kind": "phase10-closeout-measurement-not-fixed-point",
+        "paths": [
+          ".github/workflows/hint-consolidation-closeout.yml",
+          "scripts/level-sparse-serialization-apply.mjs"
+        ],
+        "finding": "Phase-10 closeout reran only the sparse serialization benchmark, so reintroduced omittable arrays could remain green. The mutation authority now has non-mutating --check mode and closeout requires zero residual changes."
       }
     ]
   }
