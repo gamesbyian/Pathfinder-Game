@@ -22,7 +22,7 @@ expect(
 
 expect(
   ['modules/solver/search.ts'],
-  ['research', 'solver'],
+  ['solver'],
 );
 
 expect(
@@ -172,7 +172,7 @@ assert.deepEqual(
 
 const deletedSolver = classifyChanges([{ status: 'D', path: 'modules/solver/search.ts' }]);
 assert.equal(deletedSolver.full, false);
-assert.deepEqual(deletedSolver.surfaces, ['research', 'solver']);
+assert.deepEqual(deletedSolver.surfaces, ['solver']);
 
 const renamedAcrossBoundary = classifyChanges([{
   status: 'R',
