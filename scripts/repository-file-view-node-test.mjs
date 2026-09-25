@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { readRepositoryText, readRepositoryTexts, repositoryPathKind } from './repository-file-view.mjs';
+import { readRepositoryText, repositoryPathKind, repositoryTextFilesContainingNul } from './repository-file-view.mjs';
 
 const temp = mkdtempSync(path.join(tmpdir(), 'repository-file-view-'));
 const git = (...args) => execFileSync('git', args, { cwd: temp, stdio: 'pipe', encoding: 'utf8' });
@@ -39,11 +39,7 @@ try {
   git('commit', '-m', 'bulk fixture');
   rmSync(path.join(temp, 'bulk'), { recursive: true });
 
-  const bulk = readRepositoryTexts(temp, bulkPaths);
-  assert.equal(bulk.size, bulkPaths.length);
-  assert.equal(bulk.get('bulk/file-000.json'), '{"index":0}\n');
-  assert.equal(bulk.get('bulk/file-255.json'), '{"index":255}\n');
-  assert.equal(bulk.get(nulPath), 'before\0after');
+  assert.deepEqual(repositoryTextFilesContainingNul(temp, bulkPaths), [nulPath]);
 
   console.log('repository-file-view handles large and bulk unmaterialized tracked blobs.');
 } finally {
