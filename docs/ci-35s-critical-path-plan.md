@@ -1352,13 +1352,20 @@ This preserves projection-miss correctness while removing another multi-second c
 
 ## Current forward work order
 
-1. **Get the repaired data-free coverage head fully green:** require Fast Gate, both Node shards, coverage, deep services, topology, semantic-fault, and solver-evidence guards on one exact head. The remaining known failures from the extraction were registry/metric-inventory bookkeeping and have been repaired.
-2. **Resume bounded p50/p90 confirmation:** retain run 36179322147 as qualifying sample 1; treat run 36180519546 as the diagnosed pre-v2 projection miss. Use only post-v2/data-free-coverage comparable heads for the new confirmation window.
-3. **Rehearse Node shard A without runtime-data materialization:** explicit dependency metadata places every declared `data/**` Node consumer in shard B. Run a no-data shard-A rehearsal before changing production; promote only if the full owner-A population is green.
-4. **Firestore/deep-services margin:** proofs already finish before Firestore once started. Do not split proofs merely to add a runner. If more p50 margin is needed, measure emulator startup versus repository-operation time and optimize the Firestore boundary/setup itself without weakening its semantic breadth.
-5. **Validate the implemented solver→research narrowing:** semantic fault injection is green; retain the historical #1722-equivalent route oracle / scoped timing gate before calling the 59-consumer explicit routing fully settled.
+1. **Validate Fast Gate minimal-data warm path:** require exact-head green validators/build plus a lower ordinary warm Fast Gate wall. Projection-cache miss must still restore source Hint data and remain correct.
+2. **Resume bounded p50/p90 confirmation:** retain qualifying post-v2/data-free/minimal-data samples only; record per-lane walls, first-required-runner→last-required completion, cache state, and base-churn context.
+3. **Watch Node B and coverage tails:** they are now the most common near-35 lanes. Resume testability work only when a repeatable useful-work tail, not runner/bootstrap noise, is identified.
+4. **Firestore/deep-services margin:** proofs already finish before Firestore once started. Do not split proofs merely to add a runner. If more p50 margin is needed, measure emulator startup versus repository-operation time and optimize the Firestore boundary/setup without weakening semantic breadth.
+5. **Validate the implemented solver→research narrowing:** semantic fault injection is green; retain the historical #1722-equivalent route oracle/scoped timing gate before calling the 59-consumer explicit routing fully settled.
 6. **Main/default-branch confirmation after merge:** broad main-push validation and producer cache seeding must remain green before the program can be closed.
-7. **If post-v2 confirmation still misses because of shared-runner useful-work variance:** move to reserved/larger compute rather than deleting further merge-safety validation.
+7. **If the bounded window still misses because of shared-runner variance:** move to reserved/larger compute rather than deleting further merge-safety validation.
+
+Completed items that must not be repeated as active work:
+- data-free coverage extraction is green and retained;
+- Node shard A minimal level-document materialization is green and retained;
+- runtime-Hint projection v2 rolling cache is active;
+- D2d shared-hosted coverage sharding is closed negative;
+- completed Node-A data rehearsals and other temporary measurement scaffolding have been removed.
 
 Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence. Negative experiments stay documented so later agents do not repeat them.
 
