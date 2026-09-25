@@ -15,15 +15,14 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# Keep the PR gate deliberately coarse-grained. Hosted-runner startup and npm-install latency are
-# variable enough that splitting cheap checks into many jobs increases tail latency: the PR waits
-# for the unluckiest runner. Two lanes preserve useful parallelism while paying checkout/setup/npm-ci
-# only twice. Independent validation steps within a lane continue after ordinary validation failures
+# Keep the PR gate evidence-driven rather than maximally fragmented. Fast/static-build, the
+# two-runner Node/CLI matrix, coverage, and deep services are separate only where measured critical-
+# path savings justify another runner. Independent validation steps continue after ordinary failures
 # so one run reports the useful failure set; setup/install failures still stop dependent validation.
 jobs:
   # Impact routing records the semantic validation plan and remains authoritative for final-status/deep-lane decisions.
-  # Fast Gate independently computes the same plan locally so selected validator/Node/build work can start without
-  # waiting on another hosted runner. Planner failure fails safe to broad validation. This job intentionally avoids npm ci:
+  # Fast Gate independently computes the same plan locally so selected validator/build work can start without
+  # waiting on another hosted runner. Node contracts do the same inside their reusable shard workflow. Planner failure fails safe to broad validation. This job intentionally avoids npm ci:
   # ownership/routing authorities use Node built-ins and Git metadata only.
   impact-shadow:
     runs-on: ubuntu-latest
