@@ -480,6 +480,22 @@ All tests and unchanged production coverage thresholds remained green. The remai
 
 Decision: stop shared-runner coverage topology tuning. D1 and D2 independently show the same pattern: useful validation work fits, but standard hosted-runner bootstrap/variance exhausts the hard ≤35 s budget. Future sharding evidence remains useful for a larger/reserved runner, but production should not add shared hosted lanes merely to move work around.
 
+### B6. Full same-runner deep concurrency rehearsal
+
+After B3, the warm deep path is roughly **12 s bootstrap + 21 s coverage + 12 s concurrent proofs/Firestore**.
+
+The last single-runner packing experiment launches all three unchanged deep obligations together after one warm bootstrap:
+
+- ordinary covered implementation population with existing thresholds;
+- heavyweight solver proofs;
+- Firestore persistence boundary.
+
+All child exit codes and logs remain independent.
+
+Decision:
+- if the combined validation window stays around **20–22 s**, production deep can plausibly approach the 35 s target without coverage sharding;
+- if CPU contention pushes the window materially higher, the 4-core single-runner deep path is exhausted and further work must reduce the proof population itself or change compute infrastructure.
+
 ### Phase E: hosted-runner variance decision
 
 Run at least 10 comparable full-impact rehearsal executions after the candidate topology is green.
@@ -537,3 +553,106 @@ The 35-second program is complete when:
 - the plan documents any infrastructure assumption required to sustain the target.
 
 If a shared hosted-runner topology cannot meet p90 because of runner assignment, the audit must say so explicitly and move to reserved/larger compute rather than pretending another test deletion solves the problem.
+
+## Recovered historical D1/D2 evidence from PR #2099
+
+This section preserves the exact intermediate evidence and decisions from the pre-reconciliation PR. Later sections above remain the current decision authority.
+
+### Current post-optimization full-impact baseline
+
+Ordinary full-impact CI run **36066406944** is the current architecture baseline:
+
+| lane | runner wall | dominant work |
+| --- | ---: | --- |
+| impact shadow | **7 s** | observational; no longer gates deep startup |
+| fast gate | **58 s** | Node/CLI population **34 s** |
+| deep verification | **77 s** | coverage **30 s** + heavyweight proofs **10 s** + Firestore **13 s**, serialized |
+
+The overall first-required-runner → last-required-completion span was **77 s**.
+
+Bootstrap/cache work has largely succeeded. The remaining critical path is validation execution itself: Node on fast, and especially covered Vitest + proofs + Firestore on deep.
+
+### D1. Initial two-way Node/CLI rehearsal
+
+The current Node/CLI registry has grown to **204 contracts**, so the old 176-contract timing projection is obsolete.
+
+Corrected warm full-control run in #2088 measured:
+
+- full Node/CLI population: **32 s useful step / 48 s runner wall**;
+- summed child time: **99.3 s**.
+
+A timing profile rebuilt directly from that run balances the current registry at:
+
+- shard 1: **49.6 child-seconds / 136 contracts**;
+- shard 2: **49.7 child-seconds / 68 contracts**.
+
+Hosted rehearsal 36066406943:
+
+| lane | useful Node step | runner wall | result |
+| --- | ---: | ---: | --- |
+| full warm control | 32 s | 48 s | green |
+| shard 1 | 16 s | 29 s | red: one shared-state test race |
+| shard 2 | 13 s | 24 s | green |
+
+First shard runner start to both shard completions was **29 s**, inside the 35-second full-gate objective with ~6 s margin.
+
+The shard-1 failure is not a timing-profile or selection failure. `test:harvest-solver-diagnostics-reports` deliberately rewrote the tracked `data/hints/P00001.json` while the Node-contract runner executed other corpus readers concurrently. One reader observed the file between truncate/write operations and failed with `SyntaxError: Unexpected end of JSON input`.
+
+This exposes a hidden non-hermetic test boundary that the monolithic four-worker schedule happened not to trigger in that run. The repair is to make the diagnostics harvester accept an injected corpus path and run the regression against a private one-level temporary corpus, preserving the real P00001 level/hint semantics without mutating repository state.
+
+That initial run exposed the non-hermetic diagnostics-harvest regression subsequently fixed in #2091. The post-fix rerun and final D1 decision are recorded immediately below.
+
+### D1 result: Node sharding is semantically viable, but shared-runner variance still breaks 35 s
+
+After #2091 removed the tracked-hint mutation race, topology run **36068242014** reran the exact current 204-contract two-way partition:
+
+| lane | useful Node work | runner wall | result |
+| --- | ---: | ---: | --- |
+| full warm control | 31 s | 50 s | green |
+| shard 1 | **17 s** | **27 s** | green |
+| shard 2 | **14 s** | **38 s** | green |
+
+Both shard runners started at the same second. First-shard-start → both-complete was therefore **38 s**.
+
+Shard 2's excess was bootstrap variance, especially `setup-node` at **11 s** versus 2 s on shard 1. The measured Node work itself is comfortably inside budget.
+
+Decision: **stop tuning Node shard membership/count on shared runners**. The partition is semantically valid and useful for a future larger/reserved-runner topology, but a hard ≤35 s wall target cannot be declared from standard hosted runners when ordinary setup variance alone pushes a healthy shard pair to 38 s.
+
+### D2 result: native equal-file coverage sharding preserves thresholds but wastes the critical path
+
+Evidence-only run **36068033403** proved Vitest's merge path is semantically usable:
+
+- both coverage shards passed;
+- blob reports merged successfully;
+- Pathfinder's unchanged global and `modules/input/*-core.ts` thresholds passed on the merged report.
+
+Timing:
+
+| lane | useful coverage/merge work | runner wall |
+| --- | ---: | ---: |
+| native shard 1 | 11 s | 28 s |
+| native shard 2 | 19 s | 40 s |
+| separate merge job | **2 s merge/check** | 21 s |
+
+First shard start → merged thresholds complete: **64 s**.
+
+Two problems are architectural rather than semantic:
+
+1. Vitest's equal-file partition is badly runtime-imbalanced for Pathfinder;
+2. a third hosted merge runner spends ~19 s on assignment/setup for ~2 s of actual merging.
+
+The current full-coverage timing profile has **146 files / 34.181 summed file-seconds**. Greedy measured balancing produces **17.091 / 17.090 seconds**, essentially exact.
+
+### D2b: balanced coverage shards with a warm merge coordinator
+
+The next rehearsal therefore:
+
+1. uses the measured 146-file timing profile and validates that it exactly covers the current Vitest file registry;
+2. runs two explicit file-balanced coverage populations on standard runners;
+3. keeps per-shard threshold enforcement off only while producing blob reports;
+4. makes one shard runner the coordinator after its own shard completes;
+5. polls the current workflow run for the worker's uploaded blob;
+6. downloads it into the already-warm coordinator;
+7. runs native `--merge-reports --coverage` there under the ordinary production config and unchanged thresholds.
+
+This removes the third-runner setup/queue tax. D2b is viable only if first-shard-start → merged-threshold completion approaches the ≤35 s target. If it still misses materially, coverage moves to the larger/reserved-runner fallback rather than weakening coverage.

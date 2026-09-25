@@ -19,6 +19,110 @@ permissions:
   contents: read
 
 jobs:
+  full-deep-concurrency:
+    if: github.event_name == 'workflow_dispatch'
+    name: full-deep-concurrency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Require warm runtime data
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+          fail-on-cache-miss: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Derive dependency-tree key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Require warm dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+      - name: Restore Firebase CLI cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.npm/_npx
+          key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run coverage, proofs, and Firestore concurrently
+        shell: bash
+        run: |
+          set +e
+          start="$(date +%s)"
+          SOLVER_DEADLOCK_PROOF_SKIP=1 SOLVER_R02560_PROOF_SKIP=1 \
+            npm run test:coverage > /tmp/full-deep-coverage.log 2>&1 &
+          coverage_pid=$!
+          npm run test:deep-proofs > /tmp/full-deep-proofs.log 2>&1 &
+          proofs_pid=$!
+          npx --yes firebase-tools@15.28.2 \
+            emulators:exec --only firestore \
+            --project demo-pathfinder-fingerprint-boundary \
+            "npm run test:firestore-level-fingerprint-boundary" \
+            > /tmp/full-deep-firestore.log 2>&1 &
+          firestore_pid=$!
+
+          wait "$coverage_pid"; coverage_status=$?
+          wait "$proofs_pid"; proofs_status=$?
+          wait "$firestore_pid"; firestore_status=$?
+          end="$(date +%s)"
+
+          echo "Full concurrent deep validation wall: $((end - start))s"
+          echo '=== covered implementation population ==='
+          cat /tmp/full-deep-coverage.log
+          echo '=== heavyweight solver proofs ==='
+          cat /tmp/full-deep-proofs.log
+          echo '=== Firestore persistence boundary ==='
+          cat /tmp/full-deep-firestore.log
+
+          if [[ "$coverage_status" -ne 0 || "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
+            echo "::error::coverage=$coverage_status deep-proofs=$proofs_status firestore=$firestore_status"
+            exit 1
+          fi
+
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -117,3 +221,124 @@ jobs:
             tmp/ci-testability-economics.json
             tmp/ci-dependency-local-routing-audit.json
           retention-days: 30
+
+  node-shards-cacheless:
+    if: github.event_name == 'workflow_dispatch'
+    name: node-shard-cacheless-${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/*
+            /logs/artifact-metadata.json
+            /logs/solver-canary-baseline.json
+            /logs/*.md
+            /logs/**/*.md
+            !/reports/*
+            /reports/*.md
+            /reports/*.json
+            /reports/**/*.md
+            /reports/stress/experiment-evidence/**/manifest.json
+            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
+            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
+            /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
+            /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
+            /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
+            /reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json
+            /reports/stress/lane-e-multi-pick-bisection-2026-09-17.json
+            /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
+            /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
+            /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: shard-runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Require warm runtime-data cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.shard-runtime-data-key.outputs.key }}
+          fail-on-cache-miss: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Derive exact dependency-tree cache key
+        id: shard-dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Require warm exact dependency tree
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.shard-dependency-tree-key.outputs.key }}
+          fail-on-cache-miss: true
+      - name: Run measured Node shard
+        shell: bash
+        env:
+          SHARD: ${{ matrix.shard }}
+          PATHFINDER_PARALLEL_JOBS: '4'
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
+          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+        run: |
+          mapfile -t selected < <(node - <<'NODE'
+          const fs = require('fs');
+          const shard = Number(process.env.SHARD);
+          const profile = JSON.parse(fs.readFileSync('scripts/ci-node-shard-timings.rehearsal.json', 'utf8'));
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const prefix = 'node scripts/run-scripts-parallel.mjs ';
+          const command = pkg.scripts['test:node'];
+          if (!command.startsWith(prefix)) throw new Error('test:node command shape changed');
+          const names = command.slice(prefix.length).trim().split(/\s+/);
+          const timing = new Map(profile.contracts.map(row => [row.name, Number(row.seconds)]));
+          const missing = names.filter(name => !timing.has(name));
+          const stale = profile.contracts.filter(row => !names.includes(row.name)).map(row => row.name);
+          if (missing.length || stale.length) {
+            throw new Error('timing profile does not exactly cover current test:node registry: '
+              + JSON.stringify({ missing, stale }));
+          }
+          const bins = [{ total: 0, names: [] }, { total: 0, names: [] }];
+          for (const name of [...names].sort((a, b) => timing.get(b) - timing.get(a) || a.localeCompare(b))) {
+            bins.sort((a, b) => a.total - b.total);
+            bins[0].names.push(name);
+            bins[0].total += timing.get(name);
+          }
+          const chosen = bins[shard - 1];
+          console.error(JSON.stringify({ shard, predictedChildSeconds: chosen.total, contracts: chosen.names.length }));
+          for (const name of chosen.names) console.log(name);
+          NODE
+          )
+          node scripts/run-scripts-parallel.mjs "${selected[@]}"
+
+
