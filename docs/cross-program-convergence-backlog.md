@@ -3,6 +3,7 @@
 > **Status:** active
 > **Created:** 2026-09-25
 > **Scope:** cross-cutting lessons from the September 20–25 CI, Hint/provenance, solver-research, plan-quality, and execution-efficiency work.
+> **Quality contract:** [`cross-program-convergence-backlog.quality.json`](cross-program-convergence-backlog.quality.json)
 > **Authority boundary:** this backlog does not reorder live scientific questions. `docs/solver-optimization-workstreams.md` owns solver-science priority; `docs/ci-35s-critical-path-plan.md` owns CI latency execution; `docs/ci-impact-routing-plan.md` owns validation selection/routing; `docs/solver-research-execution-efficiency-plan.md` owns research execution cost/reproducibility. This file owns cross-program follow-through where the same lesson should be applied in more than one domain.
 
 ## Why this exists
