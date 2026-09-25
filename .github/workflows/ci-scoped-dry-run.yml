@@ -285,13 +285,6 @@ jobs:
         if: needs.impact-shadow.outputs.needs_build == 'true' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
         shell: bash
         run: node scripts/ci-runtime-hint-projection-cache.mjs plan
-      - name: Save exact runtime-hint projection after successful build
-        if: needs.impact-shadow.outputs.needs_build == 'true' && steps.deep_services.outputs.build == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
-        with:
-          path: .cache/runtime-hint-projection
-          key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
-
       - name: Restore Firebase CLI cache
         if: needs.impact-shadow.outputs.needs_firestore == 'true'
         uses: actions/cache/restore@v5
@@ -352,7 +345,15 @@ jobs:
           if [[ -n "$firestore_pid" ]]; then wait "$firestore_pid"; firestore_status=$?; fi
           if [[ "$RUN_PROOFS" == "true" ]]; then cat /tmp/pathfinder-deep-proofs.log; fi
           if [[ "$RUN_FIRESTORE" == "true" ]]; then cat /tmp/pathfinder-firestore.log; fi
-          if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then exit 1; fi
+          if [[ "$build_status" -ne 0 || "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then exit 1; fi
+
+      - name: Save exact runtime-hint projection after successful build
+        if: needs.impact-shadow.outputs.needs_build == 'true' && steps.deep_services.outputs.build == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
+
 
   ci-success:
     needs:
