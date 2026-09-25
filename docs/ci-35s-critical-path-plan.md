@@ -741,7 +741,21 @@ The important fresh question is no longer "what else can we shave?" It is:
 
 ### Solver-to-research routing discriminator — active
 
-The first selected-population census after Fast Gate activation found a coarse ownership edge worth challenging before more test micro-optimization:
+The first selected-population census after Fast Gate activation found a coarse ownership edge worth challenging before more test micro-optimization.
+
+Using the checked-in rehearsal profile from run 36065247220 only as a relative child-work model (not current hosted wall-time authority):
+
+| selected surfaces | selected Node contracts | measured child-seconds |
+| --- | ---: | ---: |
+| `game` | 2 | ~0.8 |
+| `solver` | 35 | ~17.7 |
+| `research` | 111 | ~46.5 |
+| `data` | 49 | ~21.8 |
+| `solver + research` | 127 | ~57.0 |
+| `data + research` | 150 | ~66.8 |
+| `data + game + solver + research` | 168 | ~78.1 |
+
+The exact numbers will change with fresh timings, but the shape is decisive: downstream surface escalation can dominate the selected population before any individual test runtime matters.
 
 - the production-solver source rule currently classifies `modules/solver/**` as both `solver` and `research`;
 - selecting `research` therefore pulls the entire research validator/Node population into every production-solver PR;
@@ -763,6 +777,10 @@ Decision gate for replacing the wholesale `solver + research` escalation:
 7. retain full fallback for CI/router authority changes and periodic/full oracle coverage.
 
 If that evidence closes green, this is preferable to spending the next cycle shaving milliseconds from research contracts that solver PRs never needed to execute.
+
+This exposes a more general routing rule: **producer ownership and downstream invalidation are not the same axis**. Source-impact rules should normally identify the changed producer's own semantic surface. Downstream consumers should opt into invalidation through explicit contract surfaces/dependency metadata. Avoid encoding "A feeds B" by selecting all of surface B unless every B contract genuinely depends on A.
+
+After the solver edge, inspect the same pattern for runtime data and shared-domain sources before attempting dependency-local routing globally.
 
 ## Current forward work order
 
