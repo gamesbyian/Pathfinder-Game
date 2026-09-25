@@ -121,8 +121,8 @@ assert.ok(supportImpact.rows.some(row =>
 const answerability = buildResearchQueryView(graph, { view: 'answerability' });
 assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === '2A'),
   'design gate should be visible as no-fresh-solver-execution work');
-assert.ok(answerability.boundedCompute.some(row => row.workstreamId === 1),
-  'WS1 confirmation should be explicitly classified as bounded compute');
+assert.ok(answerability.boundedCompute.some(row => row.workstreamId === '1A'),
+  'WS1 remaining-length validate-then-dispatch gate should be explicitly classified as bounded compute');
 assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2R'),
   'reopen-only parity lane should not appear as an active execution gate');
 assert.equal(answerability.unclassified.length, 0,
