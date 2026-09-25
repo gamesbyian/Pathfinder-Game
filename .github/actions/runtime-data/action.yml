@@ -1,138 +1,84 @@
 name: Restore runtime data
-description: Restore exact runtime-data components and materialize only cache misses from the existing sparse checkout.
+description: Restore exact or recent runtime data and overlay only Git-object changes.
 
 inputs:
   materialize:
-    description: Materialize cache-miss components from the current sparse checkout. Set false when a full checkout already contains runtime data.
+    description: Reconcile cache contents to HEAD. Set false on a full checkout used only to seed an exact cache.
     required: false
     default: 'true'
 
 runs:
   using: composite
   steps:
-    - name: Derive runtime-data component keys
-      id: keys
+    - name: Derive exact runtime-data key
+      id: key
       shell: bash
-      run: node scripts/ci-runtime-data-components.mjs HEAD
+      run: node scripts/ci-runtime-data-cache.mjs key
 
-    - name: Restore runtime-data core
-      id: core
-      uses: actions/cache/restore@v5
-      with:
-        path: |
-          data/levels.json
-          data/level-heatmaps.json
-          data/themes.json
-        key: runtime-data-core-${{ steps.keys.outputs.core_key }}
-
-    - name: Restore published hints
-      id: published_hints
-      uses: actions/cache/restore@v5
-      with:
-        path: data/hints
-        key: runtime-data-published-hints-${{ steps.keys.outputs.published_hints_key }}
-
-    - name: Restore stress levels
-      id: stress_levels
-      uses: actions/cache/restore@v5
-      with:
-        path: |
-          data/stress/stress-levels.json
-          data/stress/stress-levels-random.json
-          data/stress/stress-levels-envelope.json
-        key: runtime-data-stress-levels-${{ steps.keys.outputs.stress_levels_key }}
-
-    - name: Restore stress hints
-      id: stress_hints
-      uses: actions/cache/restore@v5
-      with:
-        path: data/stress/hints
-        key: runtime-data-stress-hints-${{ steps.keys.outputs.stress_hints_key }}
-
-    - name: Restore random stress hints
-      id: stress_hints_random
-      uses: actions/cache/restore@v5
-      with:
-        path: data/stress/hints-random
-        key: runtime-data-stress-hints-random-${{ steps.keys.outputs.stress_hints_random_key }}
-
-    - name: Restore envelope stress hints
-      id: stress_hints_envelope
-      uses: actions/cache/restore@v5
-      with:
-        path: data/stress/hints-envelope
-        key: runtime-data-stress-hints-envelope-${{ steps.keys.outputs.stress_hints_envelope_key }}
-
-    - name: Materialize missing runtime-data components
+    - name: Restore exact or recent runtime-data tree
       if: inputs.materialize == 'true'
-      shell: bash
-      env:
-        CORE_HIT: ${{ steps.core.outputs.cache-hit }}
-        PUBLISHED_HINTS_HIT: ${{ steps.published_hints.outputs.cache-hit }}
-        STRESS_LEVELS_HIT: ${{ steps.stress_levels.outputs.cache-hit }}
-        STRESS_HINTS_HIT: ${{ steps.stress_hints.outputs.cache-hit }}
-        STRESS_HINTS_RANDOM_HIT: ${{ steps.stress_hints_random.outputs.cache-hit }}
-        STRESS_HINTS_ENVELOPE_HIT: ${{ steps.stress_hints_envelope.outputs.cache-hit }}
-      run: |
-        patterns=()
-        [[ "$CORE_HIT" == "true" ]] || patterns+=(/data/levels.json /data/level-heatmaps.json /data/themes.json)
-        [[ "$PUBLISHED_HINTS_HIT" == "true" ]] || patterns+=(/data/hints/)
-        [[ "$STRESS_LEVELS_HIT" == "true" ]] || patterns+=(/data/stress/stress-levels.json /data/stress/stress-levels-random.json /data/stress/stress-levels-envelope.json)
-        [[ "$STRESS_HINTS_HIT" == "true" ]] || patterns+=(/data/stress/hints/)
-        [[ "$STRESS_HINTS_RANDOM_HIT" == "true" ]] || patterns+=(/data/stress/hints-random/)
-        [[ "$STRESS_HINTS_ENVELOPE_HIT" == "true" ]] || patterns+=(/data/stress/hints-envelope/)
-        if (( ${#patterns[@]} == 0 )); then
-          echo "All runtime-data components restored from exact caches."
-          exit 0
-        fi
-        printf 'Materializing %d sparse runtime-data patterns from the existing checkout.\n' "${#patterns[@]}"
-        git sparse-checkout add --no-cone "${patterns[@]}"
-        git checkout --quiet HEAD -- "${patterns[@]#/}"
+      id: runtime_data
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          data/levels.json
+          data/level-heatmaps.json
+          data/themes.json
+          data/hints
+          data/stress/stress-levels.json
+          data/stress/stress-levels-random.json
+          data/stress/stress-levels-envelope.json
+          data/stress/hints
+          data/stress/hints-random
+          data/stress/hints-envelope
+          .ci-cache/runtime-data-manifest.tsv
+        key: runtime-data-v2-${{ steps.key.outputs.key }}
+        restore-keys: |
+          runtime-data-v2-
 
-    - name: Save runtime-data core
-      if: steps.core.outputs.cache-hit != 'true'
+    - name: Restore exact runtime-data tree for seed-only caller
+      if: inputs.materialize != 'true'
+      id: seed_restore
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          data/levels.json
+          data/level-heatmaps.json
+          data/themes.json
+          data/hints
+          data/stress/stress-levels.json
+          data/stress/stress-levels-random.json
+          data/stress/stress-levels-envelope.json
+          data/stress/hints
+          data/stress/hints-random
+          data/stress/hints-envelope
+          .ci-cache/runtime-data-manifest.tsv
+        key: runtime-data-v2-${{ steps.key.outputs.key }}
+
+    - name: Reconcile restored runtime data to HEAD
+      if: inputs.materialize == 'true' && steps.runtime_data.outputs.cache-hit != 'true'
+      shell: bash
+      run: node scripts/ci-runtime-data-cache.mjs reconcile
+
+    - name: Seed exact manifest from full checkout
+      if: inputs.materialize != 'true' && steps.seed_restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: node scripts/ci-runtime-data-cache.mjs seed-manifest
+
+    - name: Save exact runtime-data tree
+      if: (inputs.materialize == 'true' && steps.runtime_data.outputs.cache-hit != 'true') || (inputs.materialize != 'true' && steps.seed_restore.outputs.cache-hit != 'true')
       uses: actions/cache/save@v5
       with:
         path: |
           data/levels.json
           data/level-heatmaps.json
           data/themes.json
-        key: runtime-data-core-${{ steps.keys.outputs.core_key }}
-
-    - name: Save published hints
-      if: steps.published_hints.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
-      with:
-        path: data/hints
-        key: runtime-data-published-hints-${{ steps.keys.outputs.published_hints_key }}
-
-    - name: Save stress levels
-      if: steps.stress_levels.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
-      with:
-        path: |
+          data/hints
           data/stress/stress-levels.json
           data/stress/stress-levels-random.json
           data/stress/stress-levels-envelope.json
-        key: runtime-data-stress-levels-${{ steps.keys.outputs.stress_levels_key }}
-
-    - name: Save stress hints
-      if: steps.stress_hints.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
-      with:
-        path: data/stress/hints
-        key: runtime-data-stress-hints-${{ steps.keys.outputs.stress_hints_key }}
-
-    - name: Save random stress hints
-      if: steps.stress_hints_random.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
-      with:
-        path: data/stress/hints-random
-        key: runtime-data-stress-hints-random-${{ steps.keys.outputs.stress_hints_random_key }}
-
-    - name: Save envelope stress hints
-      if: steps.stress_hints_envelope.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
-      with:
-        path: data/stress/hints-envelope
-        key: runtime-data-stress-hints-envelope-${{ steps.keys.outputs.stress_hints_envelope_key }}
+          data/stress/hints
+          data/stress/hints-random
+          data/stress/hints-envelope
+          .ci-cache/runtime-data-manifest.tsv
+        key: runtime-data-v2-${{ steps.key.outputs.key }}
