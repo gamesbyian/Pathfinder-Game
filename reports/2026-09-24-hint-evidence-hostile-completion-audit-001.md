@@ -494,6 +494,21 @@ preservation; compatibility importers must retain shared parsing, referee valida
 merge; temporary fixture writers must still construct an isolated temporary root; and the
 audit-fixture false-positive disposition is reserved to the detector self-test itself.
 
+### 34. The family workflow persistence exception escaped upward to ancestor scopes
+
+The reviewed exception for `collect-variant-family-dataset.yml` was intended to authorize only
+`data/families/`, because family levels and their sibling Hints are one research-dataset
+transaction. The implementation checked allowed scopes symmetrically: a scope was accepted when it
+was either below the allowed prefix **or an ancestor containing it**.
+
+That meant `git add data/` in the family workflow would have passed the exception check even though
+that scope also contains published and stress canonical Hint stores. The ledger said “family only”,
+but the executable contract meant “any ancestor containing family”.
+
+**Correction:** an exception now authorizes only the exact declared prefix or a descendant of it.
+Ancestor staging is forbidden. The adversarial self-test now proves `data/families/` is accepted
+for the reviewed workflow while both `data/stress/` and `data/` are rejected.
+
 ## Exact-head validation fallout after Findings 25-33
 
 The first remote PR validation on head `06294be...` was valuable precisely because it did not stay
