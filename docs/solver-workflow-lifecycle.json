@@ -20,7 +20,7 @@
       "role": "operational",
       "status": "maintained",
       "currentConsumer": "manual CI Node-harness fan-out measurement",
-      "retirementTrigger": "retire when bounded-concurrency measurement is no longer needed or equivalent timing evidence moves elsewhere"
+      "retirementTrigger": "retire when bounded-concurrency policy is settled and this manual benchmark no longer adds decision value"
     },
     {
       "workflow": "ci-scoped-dry-run.yml",
