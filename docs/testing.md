@@ -128,6 +128,8 @@ The target is not permission to weaken correctness. It is also not a requirement
 
 Meeting the target may require restructuring runner/job topology, checkout/materialization, dependency preparation, test sharding, worker reuse, and repository/test seams. Refresh timing priorities after routing/cadence changes rather than optimizing from an obsolete universal population.
 
+Runtime-Hint projection caching follows the same correctness principle. Exact hits may reuse the complete path-only projection. Source-only churn may reuse a prior projection only under the same projection-authority key, with Git-blob-diff reconciliation regenerating changed/missing artifacts and deleting removed ones before the build consumes the cache. Projection-code/config churn forces a clean generation. `test:runtime-hint-projection` and `test:ci-runtime-hint-projection-cache` own these invariants.
+
 Runtime-data materialization is a CI infrastructure contract, not test fixture magic. PR lanes use the shared rolling runtime-data cache action: exact Git-blob identity keys, latest-prior fallback, and manifest-based changed-file overlay. A stale cache is acceptable only if reconciliation proves the working tree matches current HEAD before validation starts. The dedicated `test:ci-runtime-data-cache` contract protects that invariant.
 
 Track both median and tail behavior. A one-off sub-35-second run is not success if comparable full-impact runs routinely exceed the target. The critical-path audit should report at least p50 and p90 wall time once enough comparable runs exist, plus per-lane setup and useful-work spans.
