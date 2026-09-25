@@ -179,3 +179,13 @@ All maintained research workflows now use exact Node versions.
 - `solver-diagnostics.yml`: **20.20.2**. Explicit conservative exception. This workflow invokes `solver:analyze-diagnostics` and therefore executes real solver behavior. Its runtime patch is now fixed, but cross-major migration waits for a diagnostics-specific semantic parity rehearsal rather than inheriting evidence from different producer families.
 
 This closes the major-only runtime drift defect without pretending every workflow has identical semantic risk.
+
+
+## Runtime-topology regression ownership
+
+The schema-v4 runtime summary is now protected by permanent Node contract `test:solver-research-workflow-topology`. Its temporary fixture repo includes:
+- two exact Node 22.23.2 maintained-style workflows;
+- one exact Node 20.20.2 diagnostics-style workflow;
+- one deliberate major-only Node 20 legacy workflow.
+
+The test asserts setup-site counts plus exact/floating workflow lists at both workflow and job granularity. This turns runtime-policy summary drift into an ordinary research-contract failure instead of relying on manual report inspection.
