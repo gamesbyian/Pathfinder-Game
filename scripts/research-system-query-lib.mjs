@@ -118,11 +118,27 @@ export function buildResearchSystemFindingSnapshot(index) {
     };
 }
 
+const RESEARCH_GIT_REF_SPARSE_PATTERNS = [
+    '/package.json',
+    '/docs/',
+    '/reports/**/*.md',
+    '/reports/stress/experiment-evidence/',
+    '/reports/stress/solver-evidence-integrity-index.json',
+    '/scripts/',
+    '/modules/',
+    '/.github/workflows/',
+    '/data/stress/capability-invention-demand.json',
+];
+
 export function buildResearchSystemFindingSnapshotFromGitRef(root, ref) {
-    return withDetachedGitWorktree(root, ref, worktree =>
-        buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(worktree, {
+    return withDetachedGitWorktree(
+        root,
+        ref,
+        worktree => buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(worktree, {
             allowHistoricalWorkstreamTable: true,
-        })));
+        })),
+        { sparsePatterns: RESEARCH_GIT_REF_SPARSE_PATTERNS },
+    );
 }
 
 export function diffResearchSystemFindingSnapshots(before, after) {

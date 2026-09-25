@@ -230,50 +230,14 @@ The finish line is that every frequently executed check has a defensible margina
 
 ## 35-second critical-path extension
 
-The cadence/value work established that `deep-verification` can be impact-scoped safely enough for production activation while `fast-gate` remains universal and broad main-push validation remains the oracle.
+The cadence/value audit remains the authority for **whether** an obligation belongs on a given PR. The live authority for **how fast the fullest selected contract runs** is now [CI ≤35-second critical-path plan](ci-35s-critical-path-plan.md). Do not duplicate topology decisions here.
 
-That does **not** satisfy the current latency objective.
+Current critical-path conclusions that constrain cadence work:
 
-The new decision target is:
+- deep verification is impact-scoped while Fast Gate remains universal and broad main-push validation remains the router oracle;
+- the fullest selected contract is still above the ≤35 s target on ordinary shared runners;
+- shared-runner Node and coverage sharding are closed as production candidates because useful work balances correctly but p90 infrastructure margin is inadequate;
+- same-runner deep overlap, structural Node/Vitest testability, proof/Firestore cost reduction, residual bootstrap audit, and larger/reserved compute remain live;
+- cadence demotion may remove **irrelevant** executions, but must not be counted as satisfying the ≤35 s target for a genuinely full-impact PR.
 
-> **Execute the complete validation contract of a full-impact PR in 35 seconds or less wall-clock without deleting meaningful protection.**
-
-A recent full-impact PR run, CI run 35955087367, took roughly **96 seconds** from the first required runner starting to the last required validation lane completing. Approximate lane spans from hosted logs were:
-
-| lane | observed span |
-| --- | ---: |
-| impact planner | ~7 s |
-| fast gate | ~79 s |
-| deep verification | ~85 s |
-
-Representative useful-work spans inside that run included:
-
-| work | observed span |
-| --- | ---: |
-| fast checkout + setup/cache/install before validation | ~17 s |
-| validators | ~5.6 s |
-| lint | ~14.4 s |
-| Node/CLI contracts | ~26.9 s |
-| solver canary | ~10.0 s |
-| build | ~2.6 s |
-| deep checkout + setup/install before tests | ~29 s |
-| covered Vitest | ~30 s |
-| explicit deep proofs | ~11.5 s |
-| cached Firebase CLI + Java + Firestore boundary | ~13 s |
-
-These figures are single-run observations, not stable estimates. The critical-path audit must reconstruct distributions across comparable recent full-impact runs before choosing a topology.
-
-### New optimization rules
-
-1. **Validation breadth is fixed initially.** Do not claim success by deleting detectors, weakening coverage thresholds, shrinking solver proof fixtures, or silently moving required protection off the PR gate.
-2. **Wall time is the objective.** Runner-hours remain relevant but are secondary when they conflict with the ≤35 s critical path.
-3. **Topology is negotiable.** The old two-lane preference is historical evidence, not a constraint. Additional lanes/shards are allowed when measured end-to-end latency improves after runner/setup variance.
-4. **Setup is part of CI.** Checkout, sparse materialization, cache restore, dependency installation, Java/Firebase setup, and final aggregation count against the target.
-5. **Balance by measured runtime.** Shards must be built from observed command/file costs, not equal item counts.
-6. **Preserve failure quality.** A faster topology must still expose useful failures and must not turn one root cause into opaque cancellation/pinball.
-7. **Measure p50 and p90.** A lucky sub-35-second run is not completion.
-8. **Prefer structural testability improvements.** Repository discovery, CLI wrappers, subprocess startup, repeated bundling/model construction, and heavyweight fixture seams are valid implementation targets when they make the same proof cheaper.
-
-### Required deliverable
-
-Produce a concrete, staged implementation plan whose modeled critical path reaches **≤35 seconds** for a full-impact PR with explicit timing budgets for every lane and a fallback strategy if hosted-runner variance prevents the target.
+The protected validation breadth and current timing evidence live in the critical-path plan. Any future cadence recommendation that changes the fullest selected contract must update both documents and name the retained protection for every moved obligation.

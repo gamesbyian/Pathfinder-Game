@@ -4,16 +4,16 @@ import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { buildBundle } from './run-bundled.mjs';
 
 const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
+const HARVEST_BUNDLE = buildBundle('scripts/harvest-cpsat-discovery-reports.mjs');
 
 const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-cpsat-central-harvest-'));
 const receiptPath = path.join(temp, 'receipt.json');
 try {
     const run = spawnSync(process.execPath, [
-        'scripts/run-bundled.mjs',
-        'scripts/harvest-cpsat-discovery-reports.mjs',
-        '--',
+        HARVEST_BUNDLE,
         `--staging-dir=${temp}`,
         '--source-run-id=fixture-run',
         '--source-run-attempt=3',
@@ -91,9 +91,7 @@ try {
         }, null, 2));
 
         const realRun = spawnSync(process.execPath, [
-            'scripts/run-bundled.mjs',
-            'scripts/harvest-cpsat-discovery-reports.mjs',
-            '--',
+            HARVEST_BUNDLE,
             `--staging-dir=${realTemp}`,
             '--source-run-id=fixture-real-row-run',
             '--source-run-attempt=1',

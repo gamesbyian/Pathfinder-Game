@@ -1,0 +1,248 @@
+name: CI Deep Concurrency Benchmark
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/ci-deep-concurrency-benchmark.yml'
+      - '.github/workflows/ci.yml'
+      - 'docs/ci-35s-critical-path-plan.md'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vitest.config.mjs'
+      - 'tests/**'
+      - 'modules/**'
+      - 'scripts/**'
+      - 'firestore.rules'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+
+      - name: Derive runtime-data cache key
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+
+      - name: Restore exact runtime-data tree
+        id: runtime-data-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+
+      - name: Materialize runtime data on cache miss
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/*
+            /data/stress/stress-levels.json
+            /data/stress/stress-levels-random.json
+          sparse-checkout-cone-mode: false
+
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+
+      - name: Install dependencies from npm cache
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Restore Firebase CLI cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.npm/_npx
+          key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
+      - name: Restore Firestore emulator binary
+        id: firestore-emulator-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Run coverage, heavyweight proofs, and Firestore concurrently
+        id: concurrent
+        shell: bash
+        run: |
+          set +e
+          mkdir -p tmp
+          window_start=$(date +%s%3N)
+
+          (
+            start=$(date +%s%3N)
+            SOLVER_DEADLOCK_PROOF_SKIP=1 SOLVER_R02560_PROOF_SKIP=1 npm run test:coverage               > /tmp/pathfinder-coverage.log 2>&1
+            status=$?
+            end=$(date +%s%3N)
+            echo "$status" > /tmp/pathfinder-coverage.status
+            echo $((end - start)) > /tmp/pathfinder-coverage.ms
+            exit 0
+          ) &
+          coverage_pid=$!
+
+          (
+            start=$(date +%s%3N)
+            npm run test:deep-proofs > /tmp/pathfinder-deep-proofs.log 2>&1
+            status=$?
+            end=$(date +%s%3N)
+            echo "$status" > /tmp/pathfinder-deep-proofs.status
+            echo $((end - start)) > /tmp/pathfinder-deep-proofs.ms
+            exit 0
+          ) &
+          proofs_pid=$!
+
+          (
+            start=$(date +%s%3N)
+            npx --yes firebase-tools@15.28.2               emulators:exec --only firestore               --project demo-pathfinder-fingerprint-boundary               "npm run test:firestore-level-fingerprint-boundary"               > /tmp/pathfinder-firestore.log 2>&1
+            status=$?
+            end=$(date +%s%3N)
+            echo "$status" > /tmp/pathfinder-firestore.status
+            echo $((end - start)) > /tmp/pathfinder-firestore.ms
+            exit 0
+          ) &
+          firestore_pid=$!
+
+          wait "$coverage_pid"
+          wait "$proofs_pid"
+          wait "$firestore_pid"
+
+          window_end=$(date +%s%3N)
+          window_ms=$((window_end - window_start))
+          coverage_status=$(cat /tmp/pathfinder-coverage.status)
+          proofs_status=$(cat /tmp/pathfinder-deep-proofs.status)
+          firestore_status=$(cat /tmp/pathfinder-firestore.status)
+          coverage_ms=$(cat /tmp/pathfinder-coverage.ms)
+          proofs_ms=$(cat /tmp/pathfinder-deep-proofs.ms)
+          firestore_ms=$(cat /tmp/pathfinder-firestore.ms)
+
+          {
+            echo "window_ms=$window_ms"
+            echo "coverage_ms=$coverage_ms"
+            echo "proofs_ms=$proofs_ms"
+            echo "firestore_ms=$firestore_ms"
+            [[ "$coverage_status" -eq 0 ]] && echo "coverage=success" || echo "coverage=failure"
+            [[ "$proofs_status" -eq 0 ]] && echo "deep_proofs=success" || echo "deep_proofs=failure"
+            [[ "$firestore_status" -eq 0 ]] && echo "firestore=success" || echo "firestore=failure"
+          } >> "$GITHUB_OUTPUT"
+
+          cat > tmp/ci-deep-concurrency-benchmark.json <<JSON
+          {
+            "schemaVersion": 1,
+            "headSha": "$GITHUB_SHA",
+            "runner": "$RUNNER_NAME",
+            "windowMs": $window_ms,
+            "coverage": { "status": $coverage_status, "durationMs": $coverage_ms },
+            "deepProofs": { "status": $proofs_status, "durationMs": $proofs_ms },
+            "firestore": { "status": $firestore_status, "durationMs": $firestore_ms }
+          }
+          JSON
+
+          echo '=== covered ordinary test population ==='
+          cat /tmp/pathfinder-coverage.log
+          echo '=== heavyweight solver proofs ==='
+          cat /tmp/pathfinder-deep-proofs.log
+          echo '=== Firestore persistence boundary ==='
+          cat /tmp/pathfinder-firestore.log
+
+          if [[ "$coverage_status" -ne 0 || "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
+            exit 1
+          fi
+
+      - name: Save Firestore emulator binary after successful cold fetch
+        if: steps.firestore-emulator-cache.outputs.cache-hit != 'true' && steps.concurrent.outputs.firestore == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
+      - name: Summarize benchmark
+        if: always()
+        shell: bash
+        env:
+          WINDOW_MS: ${{ steps.concurrent.outputs.window_ms }}
+          COVERAGE_MS: ${{ steps.concurrent.outputs.coverage_ms }}
+          PROOFS_MS: ${{ steps.concurrent.outputs.proofs_ms }}
+          FIRESTORE_MS: ${{ steps.concurrent.outputs.firestore_ms }}
+          COVERAGE: ${{ steps.concurrent.outputs.coverage }}
+          DEEP_PROOFS: ${{ steps.concurrent.outputs.deep_proofs }}
+          FIRESTORE: ${{ steps.concurrent.outputs.firestore }}
+        run: |
+          {
+            echo '## Same-runner deep concurrency benchmark'
+            echo
+            echo '| obligation | outcome | child wall |'
+            echo '| --- | --- | ---: |'
+            printf '| Covered ordinary Vitest | `%s` | %.2f s |\n' "$COVERAGE" "$(awk "BEGIN {print ${COVERAGE_MS:-0}/1000}")"
+            printf '| Heavyweight solver proofs | `%s` | %.2f s |\n' "$DEEP_PROOFS" "$(awk "BEGIN {print ${PROOFS_MS:-0}/1000}")"
+            printf '| Firestore boundary | `%s` | %.2f s |\n' "$FIRESTORE" "$(awk "BEGIN {print ${FIRESTORE_MS:-0}/1000}")"
+            echo
+            printf '**Concurrent validation window:** %.2f s\n' "$(awk "BEGIN {print ${WINDOW_MS:-0}/1000}")"
+            echo
+            echo 'Timing is evidence only; semantic child failures fail the job, while missing the ≤35 s program target does not.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-deep-concurrency-benchmark
+          path: |
+            tmp/ci-deep-concurrency-benchmark.json
+            tmp/vitest-timings.json
+          if-no-files-found: warn
