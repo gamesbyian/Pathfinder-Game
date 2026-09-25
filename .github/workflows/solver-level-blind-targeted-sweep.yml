@@ -38,10 +38,6 @@ on:
         description: 'Path (in-repo) to a newline-separated ids file, for a target list too large for the ids field. Mutually exclusive with ids.'
         required: false
         default: ''
-      max_parallel:
-        description: 'Maximum concurrent shard jobs. Default 15 reserves five hosted slots for PR CI; set 20 explicitly when monopolizing the full runner pool is acceptable.'
-        required: false
-        default: '15'
       corpus:
         description: 'Corpus file the ids above live in.'
         required: false
@@ -343,7 +339,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
-      max-parallel: ${{ fromJson(inputs.max_parallel) }}
+      max-parallel: 15
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly
