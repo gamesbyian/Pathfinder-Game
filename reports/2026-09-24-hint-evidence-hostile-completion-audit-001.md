@@ -465,6 +465,59 @@ skip exactly the guards whose populations had changed.
 lifecycle, workflow-persistence exception ledger, canonical store authority and all workflow files;
 ingestion completeness is bound to lifecycle, ingestion inventory and all workflow files.
 
+### 32. Workflow-ingestion candidate discovery confused trigger dependencies with execution
+
+The first lifecycle-derived completeness pass searched the whole workflow YAML for standard solver
+publisher script names. That made a validation-only workflow, `solver-evidence-integrity-guard.yml`,
+look like a solver publisher solely because its `pull_request.paths` invalidation list mentions
+`publish-solver-sweep-result.mjs`.
+
+That is the same class of authority error this program is trying to eliminate: dependency metadata
+was being interpreted as behavior.
+
+**Correction:** operational publisher detection now inspects executable `run:` content only, including
+multiline shell blocks. Trigger/watch paths no longer classify a workflow as an evidence producer.
+The temporary compensating inventory row for the integrity guard was removed rather than preserving a
+false classification.
+
+### 33. Writer review ledgers checked membership but not the recorded disposition
+
+The hostile audit had been strengthened to fail on missing and stale physical-writer ledger entries,
+but a still-detected file could drift away from the semantics claimed by its existing disposition and
+continue to pass. In particular, a `temporary-test-fixture-writer` entry did not mechanically prove
+that the writer still creates an isolated temporary root, and the canonical I/O/migration/compatibility
+owner dispositions were not checked against their defining shared-codec/referee/merge boundaries.
+
+**Correction:** writer dispositions are now executable contracts. Canonical I/O owners must still
+delegate through the shared encoder; migration owners must retain visible decode/encode semantic
+preservation; compatibility importers must retain shared parsing, referee validation and semantic
+merge; temporary fixture writers must still construct an isolated temporary root; and the
+audit-fixture false-positive disposition is reserved to the detector self-test itself.
+
+## Exact-head validation fallout after Findings 25-33
+
+The first remote PR validation on head `06294be...` was valuable precisely because it did not stay
+green:
+
+- **Hint/provenance hostile audit failed immediately** because a stalled-session edit left
+  `central-hint-persistence-guard.mjs` syntactically malformed. The file has been reconstructed
+  cleanly from its intended semantics rather than patched around the parse error.
+- **Fast-gate / Node validation exposed control-plane fallout from the widened detectors**:
+  several temporary harvester tests became newly visible physical-writer suspects; obsolete reader
+  classifications became stale; and `validate-all-hint-stores.mjs` itself became a newly reviewed
+  shared-decoder reader. The ledgers are reconciled to the current detector population.
+- **The whole-store referee node fixture was invalid**, using packed path keys for different raw
+  coordinates than its synthetic gate/goal. The production validator had already passed remotely;
+  the fixture now uses the actual packed keys for its own level.
+- **The ingestion-completeness test falsely classified the solver-evidence integrity workflow**
+  because of the trigger-path bug described in Finding 32.
+
+On that same exact head, the consolidation closeout canary, solver-evidence integrity guard, CI
+testability topology audit and deep verification were green. Those successes remain useful evidence,
+but they do not close the program because the hostile/fast floor was red and subsequent corrections
+have moved the branch head. Final closure still requires one later exact remote head where the full
+named gate set is green together.
+
 ## Planning-contract defects exposed by implementation
 
 The hostile findings do not imply that the original architecture was directionless; most of the
