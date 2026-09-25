@@ -88,3 +88,16 @@ Those changes are safe to recover because they encode criteria frozen by the pla
 ## Closeout rule
 
 The quarantined block remains historical evidence only. It does not become a development sample after the fact, and it does not create a second chance to inspect outcomes before the replacement confirmation. Any future use requires a separate question and evidence-role decision.
+
+
+## Evidence publication boundary
+
+The one-shot workflow preserves the portfolio producer's canonical metadata (`levelBlind:false`,
+`historyAware:true`) rather than relabeling the producer. This confirmation's no-leakage claim is
+established by the actual invocation contract: `historicalInputs=[]`, no baseline, no prime winner,
+no attempt cache, and `saveHints=false`.
+
+The final standard result must be decision-bearing. It carries the canonical WS1 research-question
+contract and a completed-positive/completed-negative outcome bound to the exact population identity,
+solver revision, and combined-result bytes. The central solver-evidence harvester retains that
+decision-bearing evidence durably while explicitly skipping Hint ingestion for this workflow.
