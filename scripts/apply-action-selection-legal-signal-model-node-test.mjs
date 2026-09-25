@@ -18,7 +18,12 @@ const model={
 const result=applyFrozenLegalSignalModel(ds,model);
 assert.equal(result.validationSolvedLevels,1);
 assert.equal(result.nominatedPreWinnerWork,3000000);
+assert.equal(result.nominatedPreWinnerLevels,1);
 assert.equal(result.capturedPreWinnerWorkShare,3000000/5000000);
+assert.equal(result.diagnostics.maxNominatedParentWorkShare,1);
+assert.deepEqual(result.diagnostics.nominatedByLevel,[{
+  key:'L11',work:3000000,workShare:1,attempts:1,levels:1,
+}]);
 assert.equal(result.endangeredWinnerLevels,0);
 assert.equal(result.diagnostics.nominatedSameStageContinuationWorkShare,1);
 assert.equal(result.diagnostics.nominatedByPriorOutcome[0].key,'censored');
