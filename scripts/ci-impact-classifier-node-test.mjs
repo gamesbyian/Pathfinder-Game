@@ -52,6 +52,12 @@ expect(
 );
 
 expect(
+  ['vitest.node-contract.config.mjs'],
+  ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver'],
+  { full: true },
+);
+
+expect(
   ['.github/workflows/ci.yml'],
   ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver'],
   { full: true },
