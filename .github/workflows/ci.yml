@@ -91,8 +91,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Static checks need source/docs plus runtime level/hint data. Start without the ~2,000
-          # runtime hint files; an exact Git-object-keyed cache restores those below. This checkout
+          # Static checks need source/docs plus four runtime level documents. Hint source files are
+          # restored only if the runtime-Hint projection cache misses. This checkout
           # is also sufficient for lint, Node/CLI contracts, and the production build, so those
           # validations can share one runner and one dependency installation.
           # fetch-depth 2 exposes the PR merge ref's base parent for incremental hygiene checks.
@@ -121,8 +121,18 @@ jobs:
             /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
             !/data/
           sparse-checkout-cone-mode: false
-      - name: Restore component runtime data
-        uses: ./.github/actions/runtime-data
+      - name: Materialize Fast Gate level documents
+        shell: bash
+        run: |
+          mkdir -p data/stress
+          for file in \
+            data/levels.json \
+            data/stress/stress-levels.json \
+            data/stress/stress-levels-random.json \
+            data/stress/stress-levels-envelope.json
+          do
+            git show "HEAD:$file" > "$file"
+          done
 
       # Restore the exact dependency tree before setup-node. Node/npm are pinned, so the key
       # can be computed without a runtime probe. On the normal hit path this avoids restoring
@@ -244,6 +254,10 @@ jobs:
           key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
           restore-keys: |
             runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-
+      - name: Restore runtime Hint sources for projection miss
+        if: (steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true') && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/runtime-data
+
       - name: Plan runtime-hint projection overlay
         if: (steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true') && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
         shell: bash
