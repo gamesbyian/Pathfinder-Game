@@ -46,6 +46,7 @@ assert.ok(sources.length > 0, 'central harvester must declare at least one sourc
 
 const harvestText = readFileSync(harvestPath, 'utf8');
 const diagnosticsText = readFileSync(path.join(workflowsDir, 'solver-diagnostics.yml'), 'utf8');
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 
 for (const required of [
     'Derive persisted runtime-data cache key',
@@ -55,9 +56,7 @@ for (const required of [
 ]) {
     assert.match(
         harvestText,
-        new RegExp(required.replace(/[.*+?^$\{\}()|[\]\\]/gu, '\\const sources = harvestSourceNames();
-assert.ok(sources.length > 0, 'central harvester must declare at least one source workflow');
-'), 'u'),
+        new RegExp(escapeRegex(required), 'u'),
         `central harvester must own post-persistence cache step: ${required}`,
     );
 }
