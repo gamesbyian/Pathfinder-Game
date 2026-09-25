@@ -312,7 +312,14 @@ if (ENFORCE) {
     failures.push('docs/hint-bare-mutation-audit.json: reviewed bare-Hint mutation ledger is missing');
   } else {
     const bareMutationLedger = JSON.parse(fs.readFileSync(bareMutationLedgerPath, 'utf8'));
-    const reviewedBareMutations = new Map((bareMutationLedger.entries ?? []).map(entry => [entry.path, entry]));
+    const bareEntries = bareMutationLedger.entries ?? [];
+    const bareAllowedDispositions = new Set(['canonical-mutation-owner', 'ephemeral-wire-clone-projection']);
+    const reviewedBareMutations = new Map();
+    for (const entry of bareEntries) {
+      if (reviewedBareMutations.has(entry.path)) failures.push(entry.path + ': duplicate bare-Hint mutation review entry');
+      if (!bareAllowedDispositions.has(entry.disposition)) failures.push(entry.path + ': unknown bare-Hint mutation disposition ' + JSON.stringify(entry.disposition));
+      reviewedBareMutations.set(entry.path, entry);
+    }
     const currentBareMutations = new Set(maintained.filter(row => row.hits.mutableAliases).map(row => row.path));
     for (const file of currentBareMutations) {
       if (!reviewedBareMutations.has(file)) {
@@ -331,7 +338,20 @@ if (ENFORCE) {
     failures.push('docs/hint-physical-writer-audit.json: reviewed physical-writer ledger is missing');
   } else {
     const writerLedger = JSON.parse(fs.readFileSync(writerLedgerPath, 'utf8'));
-    const reviewedWriters = new Map((writerLedger.entries ?? []).map(entry => [entry.path, entry]));
+    const writerEntries = writerLedger.entries ?? [];
+    const writerAllowedDispositions = new Set([
+      'physical-io-owner',
+      'physical-migration-owner',
+      'false-positive-audit-fixture',
+      'historical-compatibility-importer',
+      'temporary-test-fixture-writer',
+    ]);
+    const reviewedWriters = new Map();
+    for (const entry of writerEntries) {
+      if (reviewedWriters.has(entry.path)) failures.push(entry.path + ': duplicate physical-writer review entry');
+      if (!writerAllowedDispositions.has(entry.disposition)) failures.push(entry.path + ': unknown physical-writer disposition ' + JSON.stringify(entry.disposition));
+      reviewedWriters.set(entry.path, entry);
+    }
     const currentWriters = new Set(result.directPhysicalWriteSuspects);
     for (const file of currentWriters) {
       const entry = reviewedWriters.get(file);
@@ -377,7 +397,20 @@ if (ENFORCE) {
     failures.push('docs/hint-physical-reader-audit.json: reviewed physical-reader ledger is missing');
   } else {
     const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
-    const reviewed = new Map((ledger.entries ?? []).map(entry => [entry.path, entry]));
+    const readerEntries = ledger.entries ?? [];
+    const readerAllowedDispositions = new Set([
+      'shared-decoder',
+      'codec-migration-test',
+      'false-positive-audit-infrastructure',
+      'false-positive-non-hint-json',
+      'physical-io-owner',
+    ]);
+    const reviewed = new Map();
+    for (const entry of readerEntries) {
+      if (reviewed.has(entry.path)) failures.push(entry.path + ': duplicate physical-reader review entry');
+      if (!readerAllowedDispositions.has(entry.disposition)) failures.push(entry.path + ': unknown physical-reader disposition ' + JSON.stringify(entry.disposition));
+      reviewed.set(entry.path, entry);
+    }
     const currentReaders = new Set(result.directPhysicalReadSuspects);
     for (const file of currentReaders) {
       const entry = reviewed.get(file);
