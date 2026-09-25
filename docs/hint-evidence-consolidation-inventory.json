@@ -1520,6 +1520,15 @@
           ".github/workflows/hint-consolidation-closeout.yml"
         ],
         "finding": "Dedicated hostile/closeout workflows did not invalidate on all machine authorities they depend on, including workflow lifecycle and solver-request semantics. Trigger surfaces now explicitly include lifecycle, schema-contraction, solver-request-semantics and dependency-lock authorities."
+      },
+      {
+        "id": "HPA-038",
+        "kind": "partial-persistence-retry-acceptance-gap",
+        "paths": [
+          "modules/persistence/review-repository.test.ts",
+          "modules/persistence/review-repository.ts"
+        ],
+        "finding": "The plan requires partial persistence, capacity refusal and retry-after-refusal coverage. Implementation supported the transition but tests only covered isolated aggregate outcomes. A two-pass regression now proves already-saved evidence dedupes while the formerly refused event persists on retry."
       }
     ]
   }
