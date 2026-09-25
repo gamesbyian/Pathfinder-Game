@@ -16,7 +16,10 @@ import {
 } from './repair-search-test-support.test.js';
 
 const REPAIR_DETERMINISM_NODE_BUDGET = 250_000;
-const REPAIR_DEFAULT_EQ_NODE_BUDGET = 125_000;
+// Explicit-false/default-equivalence tests prove argument/default wiring, not search capability.
+ // The feature is disabled in both arms, so a long search cannot exercise the feature and adds no
+ // evidence. Keep a deterministic nontrivial work sample only.
+const REPAIR_DEFAULT_EQ_NODE_BUDGET = 10_000;
 
 function assertSameNonzeroRepairWork(prepA: any, prepB: any): void {
     assert.equal(prepA._metrics.nodesExpanded, prepB._metrics.nodesExpanded,
