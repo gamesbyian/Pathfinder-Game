@@ -1,6 +1,6 @@
 # Hint evidence consolidation — Phase 6 portfolio family retirement — 001
 
-> **Status:** portfolio-family retirement remains valid; Phase-6-wide closure claim superseded by PR #2072 hostile audit
+> **Status:** superseded
 > **Last evidence:** 2026-09-24 — this batch correctly retired direct persistence for the two portfolio workflows, but the hostile completion audit later found residual direct canonical Hint writers in CP-SAT, solver diagnostics and technique census plus stale physical-Hint staging in already-migrated workflows.
 > **Decision:** Treat the portfolio-family result below as valid family-specific evidence, not proof that Phase 6 as a whole was closed. PR #2072 subsequently retired the remaining workflow writers and added a fail-closed central-persistence guard.
 > **Remaining gate:** current whole-program authority is `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`; exact-head hostile/closeout validation remains blocking.
