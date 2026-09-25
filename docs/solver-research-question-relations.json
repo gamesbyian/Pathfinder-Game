@@ -804,7 +804,7 @@
       "id": "WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION",
       "question": "Does fixed stage-reserve allocation recurrently starve admissible-order fallback (or another later stage) that could solve within the existing total work budget if more of that fixed budget reached it?",
       "owner": "WS2",
-      "state": "concluded-positive",
+      "state": "concluded-negative",
       "aliases": [
         "reserve starvation",
         "admissible-order reserve starvation",
@@ -814,9 +814,10 @@
         "reports/2026-09-19-expensive-success-divergence-microscope-001.md",
         "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
         "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
-        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
+        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md",
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md"
       ],
-      "result": "Stage-1 40-parent probe concluded (2026-09-20): 2/40 independent parents show a genuine reserve-starvation opportunity (R01154 at 179.0M nodes, R03270 at 172.7M nodes, both between the 75M reserve and 300M total envelope). Clears the prespecified >=2-opportunity recurrence bar. Nominates, does not authorize, the smallest matched-total-work admissibleOrderNodeReserveFractionOverride A/B; candidate fractions must be predeclared from the observed cost curve, not fit to these two rows.",
+      "result": "Stage-1 40-parent probe (2026-09-20) found 2/40 independent parents with a genuine reserve-starvation opportunity, clearing the recurrence bar and nominating a matched-total-work admissibleOrderNodeReserveFractionOverride=0.35 A/B, sized from the 50M-scale class3-dose-expectations rows (R02219 28.6%, R03354 32.2% headroom). That A/B dispatched 2026-09-25 on the frozen 53-parent population via GHA (after fixing two real pre-existing bugs in solver-level-blind-targeted-sweep.yml that had silently broken every multi-level dispatch of that workflow): CLOSE NEGATIVE. The treatment's solved set is byte-identical to control's (same 30/53 levels, 0 gains, 0 losses), including on both rows the fraction was specifically sized for. The reserve itself genuinely scaled as designed (canary-confirmed ~17.5M vs 12.5M default) but did not translate into any rescue at this population/scale. Closes fraction 0.35 on this population in this tested form.",
       "triggeredBy": [
         "WS2-WORK-LADDER-ECONOMICS"
       ],
@@ -826,14 +827,17 @@
         "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
         "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md",
         "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
-        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
+        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md",
+        "reports/2026-09-25-ws2-admissible-order-reserve-repricing-matched-work-ab-design-001.md",
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md"
       ],
       "constrains": [
         "Do not reopen the closed-negative broad 4x escalation economics question from one allocation-order example.",
-        "First size recurrence from existing/prospective compact attempt response: later-stage participation, allocated ceiling/work, censoring, and any comparable higher-budget or alternate-allocation evidence.",
-        "Only if recurrent within-total-budget starvation is non-trivial should a matched-total-work A/B vary the existing admissibleOrderNodeReserveFractionOverride."
+        "The tested 0.35-fraction form on the frozen 53-parent population is closed: zero gains, zero losses, including on both rows the fraction was sized for.",
+        "Do not size a treatment fraction from the isolated 300M-scale probe's R01154/R03270 exemplars; those remain far beyond any reachable reserve fraction at normal 50M production scale.",
+        "Do not escalate toward the expensive band (0.625-0.965 fraction territory) without a new, separately-justified design that explicitly models the larger earlier-stage risk."
       ],
-      "reopensOn": "Design the smallest matched-total-work reserve-fraction A/B with predeclared candidate fractions and explicit earlier-stage loss controls, per reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md.",
+      "reopensOn": "A materially different premise (different population, different fraction band with its own justified design, or a different mechanism than the node-reserve fraction) -- not a retest of 0.35 on this population.",
       "premiseRefs": [],
       "measurementOpportunities": [
         "MO-004"
@@ -844,7 +848,7 @@
       "id": "WS2-PARITY-PHASE-DISTANCE",
       "question": "Does a current-input two-layer relaxed goal-distance bound conditioned on required future twist-jump parity prove decision-bearing dead states that the existing scalar goal distance misses often enough to justify a solver consumer?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "concluded-negative",
       "aliases": [
         "parity phase distance",
         "phase-conditioned distance",
@@ -852,20 +856,25 @@
       ],
       "constrainedBy": [
         "reports/2026-09-19-solver-parity-invariant-audit-001.md",
-        "docs/solver-parity-phase-capacity-preflight.md"
+        "docs/solver-parity-phase-capacity-preflight.md",
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
       ],
-      "result": "Observer implemented; corpus opportunity evidence pending. Production decisions remain unchanged.",
+      "answeredBy": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
+      ],
+      "result": "Combined shadow dispatched 2026-09-25 on the frozen 60-level EW1 population (first real dispatch of the already-implemented observer; a retired-field bug in the shadow script was fixed first). Incremental incidence beyond scalar distance is 42,411/226,236,120 = 0.0187% of evaluations, recurring across 14/42 eligible parents but at trivial per-parent magnitude. All 8 required observability axes (eligibility, opportunity, reach, participation, measurementSupport, fidelity, coverage, censoring) are satisfied -- resolution-ready, not observability-blocked. CLOSE NEGATIVE per the preflight's own negligible-incidence stop band.",
       "constrains": [
         "Do not reopen the closed August existence-only portal parity envelope unchanged; this question conditions distance on the exact required future twist phase.",
-        "No hard prune, scorer, routing feature or repair treatment is earned by synthetic witnesses or observer incidence alone."
+        "No hard prune, scorer, routing feature or repair treatment is earned by synthetic witnesses or observer incidence alone.",
+        "Do not retry this exact static conditioned-distance form on a different population expecting a different verdict; the evaluation volume (226M) is already large. Reopen only with a materially different opportunity structure (e.g. portal placement relative to a proved cut, not another decomposition of the same bound)."
       ],
-      "reopensOn": null
+      "reopensOn": "A materially different phase/distance formulation or opportunity structure, not a repeat shadow of this tested static form."
     },
     {
       "id": "WS2-CHECKERBOARD-CAPACITY",
       "question": "On current-input zero-twist states, does checkerboard-split reachable capacity prove decision-bearing dead states that the existing scalar connectivity-volume bound misses often enough to justify a solver consumer?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "concluded-negative",
       "aliases": [
         "checkerboard capacity",
         "color-split connectivity capacity",
@@ -873,14 +882,19 @@
       ],
       "constrainedBy": [
         "reports/2026-09-19-solver-parity-invariant-audit-001.md",
-        "docs/solver-parity-phase-capacity-preflight.md"
+        "docs/solver-parity-phase-capacity-preflight.md",
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
       ],
-      "result": "Observer implemented; corpus opportunity evidence pending. Production decisions remain unchanged.",
+      "answeredBy": [
+        "reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md"
+      ],
+      "result": "Combined shadow dispatched 2026-09-25 on the same frozen 60-level EW1 population as WS2-PARITY-PHASE-DISTANCE. Incremental incidence beyond scalar connectivity volume is 4,739/366,494 = 1.29% of evaluations, but 83.6% of that increment comes from a single parent (R02657); only 4/18 eligible parents contribute anything at all. All 8 required observability axes are satisfied -- resolution-ready. CLOSE NEGATIVE per the preflight's own 'negligible OR concentrated in one parent' stop band (the concentration clause, not the magnitude clause).",
       "constrains": [
         "The fixed checkerboard arrival schedule applies only when future twist phase is statically absent; twist-bearing states require a different phase-aware formulation.",
-        "No hard prune is earned until stored/referee-valid prefix replay and differential soundness checks show zero false rejects."
+        "No hard prune is earned until stored/referee-valid prefix replay and differential soundness checks show zero false rejects.",
+        "Do not retry this exact fixed-color-schedule form on a different zero-twist population expecting a different verdict absent a reason to think the single-parent concentration was population-specific."
       ],
-      "reopensOn": null
+      "reopensOn": "A twist-bearing extension with an explicit phase-layer formulation, or a materially different formulation; not a repeat shadow of this tested static form."
     },
     {
       "id": "WS2-PARITY-RESPONSE-SIGNATURE",
@@ -929,8 +943,7 @@
         "repair deadline allocation",
         "repair-family per-attempt deadline"
       ],
-      "answeredBy": [],
-      "result": "Nominated, not yet treatment-tested: 16 Class-3 censored rows show repair-family node caps well below known isolated solve cost, corroborated by residual-vs-solved-control evidence. Current production has fixed early-repair caps (2M ordinary, up to 6M biased) but no dedicated top-level experiment override for them.",
+      "result": "Nominated from 16 Class-3 censored rows with repair-family node caps well below known isolated solve cost. The node-cap seam (SolveOpts.earlyRepairSearchOrdinaryNodeBudgetOverride/earlyRepairSearchBiasedNodeBudgetOverride) and matched-work A/B design (treatment caps 21,000,000/38,000,000) were frozen 2026-09-25 and dispatched the same day on the frozen 53-parent shared-acquisition population via GHA (after fixing two real pre-existing bugs in solver-level-blind-targeted-sweep.yml that had silently broken every multi-level dispatch of that workflow): POSITIVE. 7 treatment-only referee-valid gains (R00306, R01086, R02138, R02892, R03109, R03251, R03323), 0 control-only losses -- meeting the preflight's own bridge-positive bar decisively. This is nomination evidence for the two node-cap constants on a shared-acquisition (not independent-confirmation) population, not a production change and not yet a concluded result -- per this repo's standard discovery/confirmation protocol (see WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE for the same pattern), the next gate is ordinary matched-work confirmation on a disjoint population at production scale before promotion.",
       "triggeredBy": [
         "WS2-CLASS3-DOSE-EXPOSURE",
         "WS2-FAILURE-RESPONSE-RECONNAISSANCE"
@@ -938,12 +951,15 @@
       "constrainedBy": [
         "docs/solver-capability-invention-program.md",
         "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
-        "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md"
+        "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md",
+        "reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md",
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md"
       ],
       "constrains": [
-        "Treat this as HARVEST: do not infer a missing semantic capability until the matched-work allocation question is resolved.",
-        "Implementation prerequisite: add narrow experiment-only SolveOpts for ordinary and biased early-repair node caps; keep them separate so the 2M ordinary and 6M biased calibrations cannot silently move together.",
-        "Predeclare treatment caps from the frozen isolated-cost distribution and protect earlier-stage winners under fixed total work; the wall-clock cap is already a non-binding safety tripwire and is not the treatment."
+        "Treat this as HARVEST: no missing semantic capability was inferred or is implied by this positive result.",
+        "The node-cap seam is implemented; do not add a second, competing override shape for the same two constants.",
+        "This A/B result is nomination evidence for the two specific constants (21,000,000/38,000,000), not a production change and not authorization to reopen the closed-negative broad 4x work-ladder economics question.",
+        "Next gate is the ordinary matched-work confirmation/promotion path at production scale before any production default changes."
       ],
       "reopensOn": null,
       "premiseRefs": [
@@ -968,26 +984,36 @@
       "answeredBy": [
         "reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md"
       ],
-      "result": "Seed census established the acquisition instrument but is selection-biased: 26 retained-evidence rows classify 22 HARVEST, 1 EXTENSION, 3 UNKNOWN, 0 INVENTION; 23/26 are Class-3 rows selected on known historical capability. The three UNKNOWN beam rows first require current-head isolated freshness replay. Broader prevalence remains open.",
+      "result": "Seed census established the acquisition instrument but is selection-biased: 26 retained-evidence rows classify 22 HARVEST, 1 EXTENSION, 3 UNKNOWN, 0 INVENTION; 23/26 are Class-3 rows selected on known historical capability. The three UNKNOWN beam rows first require current-head isolated freshness replay. Broader prevalence remains open. The 2026-09-22 technique-census closeout then sharpened the residual picture from existing data: of 532 production-unsolved levels, 83 (15.6%) have a full-depth T1 isolated solve and 47 of those are singleton-supported by exactly one technique. Generic compact failure telemetry is now exhausted as a broad discriminator, so the earned next gate is existing-data sampling of first-loss/operational-divergence on the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win routing mismatches, not more fresh acquisition. That specific 83/47 cohort is currently BLOCKED: it requires the technique-census combine artifact (GHA run 35687337464), hosted on productionresultssa2.blob.core.windows.net, which this environment's network policy denies (confirmed 403 via download_workflow_run_artifact -> curl). A separate, fully local existing-data sample from the already-committed EW1 pricing/production-reach join (2026-09-25) found 2 exact-config F8 routing/deployment misses (CID-0027 R00118, CID-0028 R02696, one singleton-T1-supported) with zero production attempts on the winning action -- registered in data/stress/capability-invention-demand.json, HARVEST, not INVENTION. Both rows' smallestProbe was located and implemented as an opt-in exposure flag (2026-09-25): R02696 falls to attempts.ts's very-high-requiredIntersections non-portal rule (missing harvestThenFinish/knotBuilder/mustCrossFirst entirely). R00118 was originally misattributed to the catch-all intersection-heavy rule; direct getAttemptConfigs verification found it actually falls to the near-Hamiltonian rule (missing the mechanic-buckets retention variant of an already-offered beam) -- corrected the same day. A same-day 13-level matched-work pilot A/B for both flags (target row + 12 same-branch solved controls, production node budget, via solver-level-blind-targeted-sweep.yml) is a clean POSITIVE on both: R00118 and R02696 each moved from node-budget-limited unsolved (control) to referee-valid solved (treatment), with byte-identical 12-level solved-control sets in both branches (zero regressions). A same-day 40-level confirmation round (disjoint from the pilot's 12 solved controls) extended this: 40/40 solved in every one of the four runs, byte-identical control/treatment solved sets, zero regressions. Combined pilot+confirmation: 0 regressions across 52 solved-control levels per branch -- 26.5% of CID-0027's 196-level branch, 15.5% of CID-0028's 335-level branch. Still not full-branch coverage; both flags remain OPT_IN_FEATURES, default OFF, pending a separate reasoned promotion decision.",
       "triggeredBy": [],
       "constrainedBy": [
         "docs/solver-capability-invention-program.md",
         "docs/solver-first-loss-causal-taxonomy.md",
         "docs/solver-reasoning-capability-atlas.md",
         "reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md",
-        "reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md"
+        "reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md",
+        "reports/2026-09-22-technique-census-broad-evidence-closeout-001.md",
+        "reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md",
+        "reports/2026-09-25-capability-invention-demand-ew1-routing-gap-sample-001.md",
+        "reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-test-design-001.md",
+        "reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md",
+        "reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md"
       ],
       "constrains": [
         "Do not infer invention prevalence from the harvest-enriched Class-3 seed.",
         "Promote only recurrent decision-bearing semantic gaps after cheaper earlier first-loss classes are excluded.",
-        "The immediate beam-UNKNOWN gate is current-head isolated freshness, not a new beam architecture."
+        "The immediate beam-UNKNOWN gate is current-head isolated freshness, not a new beam architecture.",
+        "Do not buy more generic compact failure telemetry or another broad census; sample first-loss/operational-divergence from the existing 83/47 T1-rescuable cohorts first.",
+        "The 83/47 T1-rescuable cohort sampling is blocked on network access to the census artifact, not on missing local evidence; do not attempt to reconstruct it by guessing from hint-store diffs.",
+        "CID-0027/CID-0028 are a 2-row sample from a 60-level pricing population, not a prevalence claim; do not generalize their base rate to the full residual.",
+        "The combined 52-level-per-branch pilot+confirmation positive on both exposure flags is real evidence but not full-branch coverage (26.5%/15.5%); flipping either flag's OPT_IN_FEATURES default is a separate reasoned promotion decision, not automatic from this evidence."
       ],
       "reopensOn": null,
       "premiseRefs": [
         "P135"
       ],
       "measurementOpportunities": [],
-      "acquisitionNeed": "fresh-independent-parents"
+      "acquisitionNeed": "telemetry-or-economics"
     },
     {
       "id": "WS2-CUT-BALANCE-PROJECTION",
@@ -1034,9 +1060,12 @@
       ],
       "constrainedBy": [
         "reports/2026-09-21-prewinner-work-oracle-census-001.md",
-        "reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md"
+        "reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md",
+        "reports/2026-09-22-ws1-independent-continuation-confirmation-preflight-001.md",
+        "reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md",
+        "reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md"
       ],
-      "result": "Retained-evidence development is narrowed-positive and historically robust across three distinct scoreable C2 attempt regimes. The exact frozen 15-signature prior-response+work+next-stage model captures 6.93%, 6.99%, and 9.91% of validation pre-winner work with 0/310, 0/318, and 0/356 recorded winner losses; C1 remains 0%. Across all scoreable regimes >95% of nominated work is same-stage continuation and >85% follows censored prior work. Two older full refreshes are telemetry-inapplicable because canonical workSpent was not retained, and one later pre-promotion refresh duplicates an earlier attempt regime. Treat this as a late continuation-value seam with temporal/portfolio robustness, not independent-population confirmation or broad scheduler evidence. Retained independent-population archaeology is exhausted: the durable family/variant assets use legacy attempt semantics without modern stageId/workSpent, and current-main published-parent families provide only 9 independent parents, so the next confirmation gate genuinely requires sample-independent/current-production acquisition.",
+      "result": "Retained-evidence development is narrowed-positive and historically robust across three distinct scoreable C2 attempt regimes. The exact frozen 15-signature prior-response+work+next-stage model captures 6.93%, 6.99%, and 9.91% of validation pre-winner work with 0/310, 0/318, and 0/356 recorded winner losses; C1 remains 0%. Across all scoreable regimes >95% of nominated work is same-stage continuation and >85% follows censored prior work. Two older full refreshes are telemetry-inapplicable because canonical workSpent was not retained, and one later pre-promotion refresh duplicates an earlier attempt regime. Treat this as a late continuation-value seam with temporal/portfolio robustness, not independent-population confirmation or broad scheduler evidence. Retained independent-population archaeology is exhausted: the durable family/variant assets use legacy attempt semantics without modern stageId/workSpent, and current-main published-parent families provide only 9 independent parents, so the next confirmation gate genuinely requires sample-independent/current-production acquisition. The 2026-09-22 preflight froze this as a bounded-compute confirmation gate: Stage A is a 24-parent development/opportunity canary (seed 2026092201) from the existing random research-generation source, advancing to a separate untouched 96-parent Stage B (seed 2026092202) only if Stage A's fixed opportunity gate passes. Stage A executed 2026-09-25: 16/24 fresh parents solved, but only 5/24 fell into the model's validation split (a fixed function of level ID) and only 1 of those solved, with zero pre-winner boundaries (the winner was that level's first attempt). 0 nominated parents is below the precommitted >=3 floor, so Stage A is opportunity-starved and Stage B was not generated/dispatched. This does not overturn the retained-evidence positive result; it closes this specific fresh-acquisition attempt. A same-day power analysis found Stage A's own floor was under-sized relative to the preflight's own historical rates (25% capture, 68.8% solve): the expected nominated count at n=24 was only ~1.24, giving roughly an 81% chance of failing the >=3 floor even if the mechanism transfers exactly at the historical rate -- the negative result is consistent with pure under-sizing, not necessarily an absent mechanism. A new single-stage plan (N=160, E[nominated]~8, ~98.6% power against a pure-variance false stop) is designed as the replacement acquisition, not yet dispatched.",
       "constrains": [
         "Do not treat pre-winner work as ex-ante redundant; predecessor attempts may provide information, preserve rare capability, or change later state/budget.",
         "Do not use level identity, future attempts, eventual winner identity, hints, census membership, stored solutions, or other historical outcome leakage as candidate policy inputs.",
@@ -1047,12 +1076,14 @@
         "Do not broaden the next consumer into a generic dynamic scheduler before the frozen late-continuation model receives sample-independent/current-production confirmation.",
         "The September 12 refresh is attempt-sequence equivalent to the pre-promotion September 16 refresh and must not be counted as a separate replication.",
         "Use normalized actionBoundaryDigest rather than workflow-run ID or commit SHA alone when deciding whether retained executions are distinct evidence units for this question.",
-        "No retained family/variant population currently supplies both the modern production stage identity and canonical workSpent contract with enough independent-parent support for confirmation; do not manufacture confirmation by translating legacy attempts, re-splitting C2, or treating missing work as zero."
+        "No retained family/variant population currently supplies both the modern production stage identity and canonical workSpent contract with enough independent-parent support for confirmation; do not manufacture confirmation by translating legacy attempts, re-splitting C2, or treating missing work as zero.",
+        "Stage A's 2026-09-25 opportunity-starved outcome does not license widening the frozen model, changing the development/validation split function, or drawing a second random block under new seeds to retry exposure; any further fresh-population confirmation attempt needs a new, separately reasoned acquisition plan.",
+        "The single-stage N=160 plan is designed, not dispatched; do not treat its existence as a result, and do not dispatch a differently-sized draw without redoing its power calculation."
       ],
       "reopensOn": null,
       "premiseRefs": [],
       "measurementOpportunities": [],
-      "acquisitionNeed": "telemetry-or-economics",
+      "acquisitionNeed": "fresh-independent-parents",
       "answeredBy": [
         "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md",
         "reports/2026-09-21-ws1-legal-signal-continuation-temporal-challenge-001.md"
@@ -1079,13 +1110,16 @@
       "constrainedBy": [
         "reports/2026-09-21-forced-work-prevalence-preflight-001.md",
         "reports/2026-09-21-forced-work-prevalence-result-001.md",
-        "reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md"
+        "reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md",
+        "reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md",
+        "reports/2026-09-25-forced-work-capture-economics-per-parent-consumer-oracle-result-001.md"
       ],
-      "result": "The preregistered 64-parent C2-residual census is prevalence-positive: 39.55% of expanded parents had exactly one post-hard-prune successor and they carried 25.33% of measured canonical parent-expansion work; all 64 independent parents exceeded the 5% band. A seam audit then tightened the economics interpretation: this charged expansion work has already been spent by the time post-prune one-survivor status is knowable, so 25.33% is a gross forced-work reservoir rather than a directly removable post-prune work ceiling. The next discriminator is phase-level global singleton/singleton-to-singleton prevalence plus actual replay, retention, frontier-bookkeeping and downstream-work consequences.",
+      "result": "The preregistered 64-parent C2-residual census is prevalence-positive: 39.55% of expanded parents had exactly one post-hard-prune successor and they carried 25.33% of measured canonical parent-expansion work; all 64 independent parents exceeded the 5% band. A seam audit then tightened the economics interpretation: this charged expansion work has already been spent by the time post-prune one-survivor status is knowable, so 25.33% is a gross forced-work reservoir rather than a directly removable post-prune work ceiling. The 2026-09-25 phase census (same frozen population/protocol, reproduced the prevalence totals byte-identically) then closed the global-phase discriminator negative: only 14/5,502 resolved phases (0.25%) are singleton-outcome, 11/5,502 (0.20%) are singleton-to-singleton, and their combined discovery work is 1,234 of 90,572,067 canonical work units (0.0014%). Global beam-phase collapse is rare and economically negligible; the 25.33% reservoir is confirmed as local per-parent forcedness inside a still-branching beam. A same-day follow-up then closed both numerators the phase census left open: (1) post-recognition bookkeeping at the per-parent seam has no material skippable operation, established by a code trace showing every downstream per-candidate step (buildCurUrgencyContext, scoreMove, coarse-state-merge insert) costs the same flat amount regardless of a parent's arity; (2) earlier recognition via raw (pre-hard-prune) neighbor count is decisively negative for the cheapest case that could plausibly have been free -- a new rawNeighborCount telemetry field (zero marginal cost; getNeighbors is already unconditionally called) found 79.39% of forced parents (62.2% of the forced-work reservoir) are raw-degree-1 structural dead ends, but even those still require their single candidate's hard-pruning verdict to be evaluated (unsound to skip) and have no multi-candidate overhead to eliminate in the first place. Every concretely identified removable-work avenue is now closed negative; no candidate mechanism for a materially different sound recognizer is proposed.",
       "constrains": [
         "Do not call the 25.33% per-parent prevalence reservoir directly removable at the post-prune seam; candidate generation and hard-prune discovery work is already paid when forcedness becomes observable.",
-        "First measure stronger global deterministic-phase classes (singleton outcome and singleton->singleton) and post-recognition replay/retention/frontier consequences using existing observer stages.",
-        "Earlier recognition is a separate inference premise and needs its own soundness/economics gate; hidden semantic forcedness remains deferred.",
+        "Global singleton/singleton-to-singleton beam-phase compression is CLOSED NEGATIVE (rare, negligible discovery work); do not reopen without a materially different global-phase mechanism.",
+        "Per-parent post-recognition bookkeeping is CLOSED NEGATIVE (code trace: no per-candidate step scales with parent arity); do not reopen without identifying a specific skippable operation this trace missed.",
+        "Earlier recognition via raw neighbor count is CLOSED NEGATIVE for the raw-degree-1 dead-end case (79.4% of forced parents); a genuinely different sound recognizer remains conceptually open but is not proposed or investigated here -- do not reopen by re-testing raw neighbor count.",
         "No production contraction is earned until a production-inert study finds a material post-recognition numerator and demonstrates semantic/observer parity plus solve/capability preservation."
       ],
       "reopensOn": null,
@@ -1097,7 +1131,7 @@
       "id": "WS1-REMAINING-LENGTH-INTRA-SOLVE-BRIDGE",
       "question": "Within one repairSearchFromGate invocation, does globally ordering the existing elite-prefix bounded-completion candidate pool by the frozen ascending index-depth proxy (`requiredLength - destroyIdx`) improve solve/work under the identical candidate set and fixed shared node budget?",
       "owner": "WS1",
-      "state": "active-candidate",
+      "state": "concluded-negative",
       "aliases": [
         "remaining-length intra-solve bridge",
         "elite-prefix length order",
@@ -1110,9 +1144,10 @@
         "reports/2026-09-20-h3-independent-transfer-result-001.md",
         "reports/2026-08-07-repair-elite-prefix-dfs.md",
         "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md",
-        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md"
+        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md",
+        "reports/2026-09-25-ws1-remaining-length-intrasolve-bridge-stage-a-result-001.md"
       ],
-      "result": "Preflight + static semantics audit complete; default-inert implementation, attribution trace, and dedicated frozen 20-level direct A/B harness are present, but no Stage A outcome has been acquired. H3's independently transferred allocation signal used exact counted remaining length across rows, while the recovered elite-prefix treatment is frozen as an index-depth proxy that can diverge on portal-bearing prefixes. Static analysis narrows the causal seam: candidate searches are independently rebuilt/deterministic within one elitePrefixDfsRepair call, so ordering can matter only through the shared 90k candidate budget frontier or an earlier successful return. The harness records exact counted residual + portal jumps observationally without refitting the sort key.",
+      "result": "Stage A dispatched 2026-09-25 on the frozen 20-level population under the frozen index-depth ordering key and matched node budgets: BRIDGE-NEGATIVE per the preflight's own decision rule. Zero treatment-only solves, zero control-only losses, and treatment total work is 0.82% HIGHER than control (886.3M vs 893.5M), not lower. The treatment mechanism was genuinely exercised (1,617 triggers, 19,268 candidate attempts across 19/20 levels), ruling out a blocked verdict; the one shared solve had zero triggers in both arms and is byte-identical control/treatment. This closes the tested intra-solve transport of the cross-row H3/Card-E remaining-length allocation effect into a per-level elite-prefix completion candidate reorder; it does not affect the underlying cross-row H3/Card-E result itself.",
       "constrains": [
         "Do not treat the confirmed cross-row H3 transfer as proof of intra-solve allocation value.",
         "Control and treatment must use the exact same elite-prefix candidate multiset, per-candidate cap, total cap, outer repair cap and seed; only candidate order may differ.",
@@ -1120,9 +1155,10 @@
         "Do not interpret the frozen index-depth proxy as exact remaining-length feasibility; Pathfinder counted length excludes free portal jumps and feasibility also depends on non-length obligations/geometry.",
         "A negative frozen bridge does not reopen elite-prefix DFS for further tuning and does not invalidate the earlier cross-row H3 result.",
         "The research-only ordering switch and attribution trace are inert unless explicitly enabled by a dedicated harness; no production caller is authorized to enable them.",
-        "Use scripts/stress/ws1-remaining-length-intrasolve-bridge.mjs for the frozen Stage A; do not substitute the legacy generic elite-prefix A/B script, which cannot express this research-only ordering treatment."
+        "Use scripts/stress/ws1-remaining-length-intrasolve-bridge.mjs for the frozen Stage A; do not substitute the legacy generic elite-prefix A/B script, which cannot express this research-only ordering treatment.",
+        "This tested intra-solve form is closed: do not rescue by retuning prefix fraction, elite count, per-candidate cap or total cap, per the preflight's own foreclosure."
       ],
-      "reopensOn": null,
+      "reopensOn": "A materially different transport mechanism from the cross-row H3/Card-E effect into per-level allocation (a different seam than the elite-prefix completion candidate pool, or a different current-input proxy entirely), not a retune of this tested ordering key/cap combination.",
       "premiseRefs": [
         "P065",
         "P123"
@@ -1131,7 +1167,8 @@
       "acquisitionNeed": "telemetry-or-economics",
       "answeredBy": [
         "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md",
-        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md"
+        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md",
+        "reports/2026-09-25-ws1-remaining-length-intrasolve-bridge-stage-a-result-001.md"
       ]
     }
   ]

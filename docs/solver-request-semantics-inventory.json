@@ -615,6 +615,32 @@
       "identityLayer": "solver-semantic"
     },
     {
+      "field": "earlyRepairSearchBiasedNodeBudgetOverride",
+      "semanticClass": "solver-search-policy",
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      },
+      "identityLayer": "solver-semantic"
+    },
+    {
+      "field": "earlyRepairSearchOrdinaryNodeBudgetOverride",
+      "semanticClass": "solver-search-policy",
+      "effect": "outcome-affecting",
+      "canonicalDefaultSemantics": "EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET",
+      "identityParticipation": "canonical request identity after normalization/effective-default resolution",
+      "backendSupport": {
+        "direct": "supported",
+        "webWorker": "structured-clone-supported",
+        "raced": "unsupported"
+      },
+      "identityLayer": "solver-semantic"
+    },
+    {
       "field": "disableExtraBudgetPasses",
       "semanticClass": "solver-budget-policy",
       "effect": "outcome-affecting",

@@ -38,8 +38,11 @@ assert.deepEqual(retrospective.frozenWindow, frozenRetrospective.frozenWindow);
 assert.equal(frozenRetrospective.kind, 'pathfinder-research-portfolio-retrospective');
 assert.ok(frozenRetrospective.questions.length === frozenRetrospective.counts.windowQuestions,
   'dated retrospective remains an internally complete historical artifact');
-assert.equal(retrospective.explorationTriggers.some(row =>
-  row.kind === 'ontology-or-representation-block' || row.kind === 'shared-negative-assumption'), false);
+assert.equal(frozenRetrospective.explorationTriggers.some(row =>
+  row.kind === 'ontology-or-representation-block' || row.kind === 'shared-negative-assumption'), false,
+  'the frozen 2026-09-19 closeout artifact itself must remain free of these triggers; new data added ' +
+  'after that date can add refs that fall inside the frozen date window without retroactively changing ' +
+  'what was true at closeout time, so this must read the frozen artifact, not a live recomputation');
 
 const provenanceAudit = readFileSync(
   'reports/2026-09-19-research-candidate-provenance-gap-audit-001.md',

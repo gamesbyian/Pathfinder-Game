@@ -53,6 +53,11 @@ export function createForcedWorkCollector() {
                 const id = pathIdentity(row.path);
                 const workSpent = Number(row.workSpent) || 0;
                 const generatedCandidates = Number(row.generatedCandidates) || 0;
+                // rawNeighborCount: neighbors offered to hard pruning, before any candidate is
+                // evaluated. Absent on older captures (pre-2026-09-25) -- null, not 0, so a
+                // one-successor row without this field is excluded from the earlyRecognition
+                // split below rather than silently miscounted as a dead end.
+                const rawNeighborCount = row.rawNeighborCount === undefined ? null : Number(row.rawNeighborCount);
                 if (currentPhase) {
                     currentPhase.expandedParents++;
                     currentPhase.expansionWork += workSpent;
@@ -66,6 +71,7 @@ export function createForcedWorkCollector() {
                     depth: row.path.length - 1,
                     workSpent,
                     generatedCandidates,
+                    rawNeighborCount,
                     // Filled from the later post-hard-prune stage. The generated-stage path list
                     // intentionally includes hard-pruned diagnostic candidates, so deriving the
                     // unique survivor from it would corrupt chain anatomy while leaving prevalence
@@ -145,6 +151,18 @@ export function summarizeForcedWork(snapshot) {
         });
     }
 
+    // Earlier-recognition split (seam audit numerator 2, reports/2026-09-21-forced-work-capture-
+    // economics-seam-audit-001.md): among one-successor parents, how many were ALREADY structurally
+    // forced before any hard-pruning verdict (rawNeighborCount === 1, a dead-end corridor -- free to
+    // recognize from getNeighbors alone) versus narrowed to one survivor only by hard pruning
+    // (rawNeighborCount > 1)? Rows missing rawNeighborCount (older captures) are excluded from both
+    // buckets, not folded into either, so a partial-coverage capture cannot inflate the free-signal share.
+    const forcedRowsWithRawCount = forcedRows.filter(row => Number.isInteger(row.rawNeighborCount));
+    const triviallyForcedRows = forcedRowsWithRawCount.filter(row => row.rawNeighborCount === 1);
+    const pruneNarrowedRows = forcedRowsWithRawCount.filter(row => row.rawNeighborCount > 1);
+    const triviallyForcedWork = triviallyForcedRows.reduce((sum, row) => sum + (Number(row.workSpent) || 0), 0);
+    const pruneNarrowedWork = pruneNarrowedRows.reduce((sum, row) => sum + (Number(row.workSpent) || 0), 0);
+
     const chainLengths = chains.map(row => row.length).sort((a, b) => a - b);
     const percentile = q => {
         if (!chainLengths.length) return null;
@@ -181,6 +199,16 @@ export function summarizeForcedWork(snapshot) {
             singletonOutcomeDiscoveryWork,
             interpretation: 'singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings',
         },
+        earlyRecognition: {
+            forcedParentsWithRawCount: forcedRowsWithRawCount.length,
+            triviallyForcedParents: triviallyForcedRows.length,
+            triviallyForcedParentRate: forcedRowsWithRawCount.length ? triviallyForcedRows.length / forcedRowsWithRawCount.length : null,
+            triviallyForcedWork,
+            pruneNarrowedParents: pruneNarrowedRows.length,
+            pruneNarrowedParentRate: forcedRowsWithRawCount.length ? pruneNarrowedRows.length / forcedRowsWithRawCount.length : null,
+            pruneNarrowedWork,
+            interpretation: 'triviallyForced (rawNeighborCount===1) parents are structural dead ends, knowable from getNeighbors alone with zero hard-pruning cost -- a real free earlier-recognition signal if common; pruneNarrowed parents (rawNeighborCount>1) had multiple raw options and were narrowed to one only by paying the hard-pruning verdict for each, so no free signal exists for them without a separate cheaper sound test',
+        },
         chains: {
             count: chains.length,
             meanLength: chains.length ? chains.reduce((sum, row) => sum + row.length, 0) / chains.length : null,
@@ -204,6 +232,11 @@ export function summarizeForcedWorkAcrossRuns(runs) {
     const singletonToSingletonPhases = valid.reduce((sum, row) => sum + (row.summary.phaseEconomics?.singletonToSingletonPhases ?? 0), 0);
     const allParentsForcedPhases = valid.reduce((sum, row) => sum + (row.summary.phaseEconomics?.allParentsForcedPhases ?? 0), 0);
     const singletonOutcomeDiscoveryWork = valid.reduce((sum, row) => sum + (row.summary.phaseEconomics?.singletonOutcomeDiscoveryWork ?? 0), 0);
+    const forcedParentsWithRawCount = valid.reduce((sum, row) => sum + (row.summary.earlyRecognition?.forcedParentsWithRawCount ?? 0), 0);
+    const triviallyForcedParents = valid.reduce((sum, row) => sum + (row.summary.earlyRecognition?.triviallyForcedParents ?? 0), 0);
+    const triviallyForcedWork = valid.reduce((sum, row) => sum + (row.summary.earlyRecognition?.triviallyForcedWork ?? 0), 0);
+    const pruneNarrowedParents = valid.reduce((sum, row) => sum + (row.summary.earlyRecognition?.pruneNarrowedParents ?? 0), 0);
+    const pruneNarrowedWork = valid.reduce((sum, row) => sum + (row.summary.earlyRecognition?.pruneNarrowedWork ?? 0), 0);
     return {
         runs: valid.length,
         expandedParents,
@@ -225,6 +258,15 @@ export function summarizeForcedWorkAcrossRuns(runs) {
             allParentsForcedPhases,
             allParentsForcedPhaseRate: resolvedPhases ? allParentsForcedPhases / resolvedPhases : null,
             singletonOutcomeDiscoveryWork,
+        },
+        earlyRecognition: {
+            forcedParentsWithRawCount,
+            triviallyForcedParents,
+            triviallyForcedParentRate: forcedParentsWithRawCount ? triviallyForcedParents / forcedParentsWithRawCount : null,
+            triviallyForcedWork,
+            pruneNarrowedParents,
+            pruneNarrowedParentRate: forcedParentsWithRawCount ? pruneNarrowedParents / forcedParentsWithRawCount : null,
+            pruneNarrowedWork,
         },
     };
 }

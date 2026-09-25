@@ -456,9 +456,9 @@ assert(idsFor({ query: 'portal coarse', status: 'concluded-positive' }).includes
 assert.deepEqual(idsFor({ query: 'admissible order', status: 'deferred-reopen' }), [
     'WS2-ADMISSIBLE-ORDER-RETRY-REPRICING',
 ], 'retry repricing remains deferred');
-assert(idsFor({ query: 'admissible order', status: 'concluded-positive' })
+assert(idsFor({ query: 'admissible order', status: 'concluded-negative' })
     .includes('WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION'),
-    'reserve-starvation recurrence is now concluded-positive and nominates the matched-work A/B');
+    'reserve-starvation matched-work A/B is now concluded-negative (byte-identical solved set to control)');
 assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICAL-FULL-POOL'),
     'ordinary full-pool vocabulary must find the already-run categorical projection');
 assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), [],

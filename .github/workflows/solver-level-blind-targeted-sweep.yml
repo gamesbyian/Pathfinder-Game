@@ -106,6 +106,10 @@ on:
         description: 'Optional override truncating REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS to its first N entries (integer in [0, 7]; e.g. 6 = exactly salts 1-6) for the late-repair-multiseed-retry 7-vs-6 seed-count confirmation (reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md). Blank = production default (no override passed, full seven-salt array).'
         required: false
         default: ''
+      node_cap_overrides:
+        description: 'Optional key=value overrides, comma-separated (node-cap-flags.mjs). Keys: earlyRepairSearchOrdinaryNodeBudget, earlyRepairSearchBiasedNodeBudget (def 2M/6M), admissibleOrderNodeReserveFraction (def 0.25).'
+        required: false
+        default: ''
       required_participation_stage:
         description: 'Optional stageId that must do real work before this run is decision-bearing. Blank disables the participation gate.'
         required: false
@@ -264,6 +268,7 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
+          mapfile -t nco < <(node scripts/node-cap-flags.mjs "${{ inputs.node_cap_overrides }}"); extra+=("${nco[@]}")
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
@@ -363,6 +368,7 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
+          mapfile -t nco < <(node scripts/node-cap-flags.mjs "${{ inputs.node_cap_overrides }}"); extra+=("${nco[@]}")
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
@@ -370,7 +376,6 @@ jobs:
           nodebudget=()
           [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
           levels="${{ matrix.shard.levels }}"
-          levels="pos:$(echo "$levels" | sed 's/pos://g')"
           timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="${{ inputs.corpus }}" \
             --levels="${levels}" \
@@ -664,6 +669,7 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
+          mapfile -t nco < <(node scripts/node-cap-flags.mjs "${{ inputs.node_cap_overrides }}"); extra+=("${nco[@]}")
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
@@ -671,7 +677,6 @@ jobs:
           nodebudget=()
           [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
           levels="${{ matrix.shard.levels }}"
-          levels="pos:$(echo "$levels" | sed 's/pos://g')"
           timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="${{ inputs.corpus }}" \
             --levels="${levels}" \
@@ -813,7 +818,7 @@ jobs:
           node_ceiling=null; [ "$NODE_BUDGET_ADVISORY_ONLY" = true ] || node_ceiling="${NODE_BUDGET:-null}"
           work_ceiling=null; [ "$STRICT_TOTAL_WORK_BUDGET" != true ] || work_ceiling="${WORK_BUDGET:-null}"
           observed_hash=null
-          [ -f logs/solver-targeted-sweep/combined.json ] && observed_hash=$(node -p "JSON.stringify(require('./logs/solver-targeted-sweep/combined.json').configurationHash)")
+          [ -f logs/solver-targeted-sweep/combined.json ] && observed_hash=$(node -p "JSON.stringify(require('./logs/solver-targeted-sweep/combined.json').summary.configurationHash)")
           cat > logs/solver-targeted-sweep/experiment-contract-spec.json <<SPEC
           {"configuration": {"corpus": "$CORPUS", "nodeBudget": ${NODE_BUDGET:-null}, "nodeBudgetAdvisoryOnly": $NODE_BUDGET_ADVISORY_ONLY, "workBudget": ${WORK_BUDGET:-null}, "budgetMs": ${BUDGET_MS:-null}, "strictTotalWorkBudget": $STRICT_TOTAL_WORK_BUDGET, "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS"},
           "configurationHash": $observed_hash,

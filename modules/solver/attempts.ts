@@ -281,9 +281,9 @@ export const GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS = ['SCORE_GOAL_ATTRA
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
 interface PolicyRule {
     when: (f: LevelFeatures) => boolean;
-    /** cfg is only read by the two must-cross-heavy sibling rules gated by
-     *  STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE (see their own comments); every other rule
-     *  ignores the second parameter, which TypeScript allows for a narrower callback signature. */
+    /** cfg is read only by the small subset of rules carrying an opt-in research exposure flag
+     *  (see each such rule's own comment for which flag and why); every other rule ignores the
+     *  second parameter, which TypeScript allows for a narrower callback signature. */
     build: (f: LevelFeatures, cfg?: AblationConfig | null) => AttemptConfig[];
     why: string;
 }
@@ -355,6 +355,17 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // their suffix membership; the new action competes only in the earlier prefix.
             ...(cfg && cfg.STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE === true
                 ? [beam('intersectionHarvest', BEAM.STANDARD)] : []),
+            // CID-0028 (data/stress/capability-invention-demand.json): this rule offers no
+            // width=2000 beam other than perimeterSweep — none of harvestThenFinish/knotBuilder/
+            // mustCrossFirst appear at any width, though each independently solves R02696 (the
+            // level's only known T1-isolated rescuer family, singleton-supported) in EW1 isolation.
+            // Reserve-preserving placement (same reasoning as the sibling exposure flag immediately
+            // above): before the protected suffix, not appended after it — see
+            // STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE's own closed-negative
+            // append-last result for why appending here would risk starving objectiveFirst WIDE.
+            ...(cfg && cfg.STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE === true
+                ? [beam('harvestThenFinish', BEAM.STANDARD), beam('knotBuilder', BEAM.STANDARD), beam('mustCrossFirst', BEAM.STANDARD)]
+                : []),
             beam('objectiveFirst', BEAM.WIDE),
             dfs('intersectionHarvest'), dfs('objectiveFirst'),
             // Same residual beam-routing gap as this rule's portal-dense sibling above (see its
@@ -371,9 +382,19 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     {
         why: 'near-Hamiltonian: beams collapse over the long dense walk — DFS perimeter (both directions) leads',
         when: f => isHighInt(f) && f.requiredPathCoverageRatio >= POLICY.NEAR_HAMILTONIAN_COVERAGE_THRESHOLD,
-        build: () => [
+        build: (f, cfg) => [
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
             dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder'),
+            // CID-0027 (data/stress/capability-invention-demand.json): this rule offers
+            // intersectionHarvest only at plain retention (below), never the mechanic-buckets
+            // retention variant that solves R00118 in EW1 isolation. Reserve-preserving placement —
+            // before the protected trailing-5 window (perimeter beams through the sideCommitment DFS
+            // below), not appended after it (see STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_
+            // EXPOSURE's own closed-negative append-last result on a sibling rule for why appending
+            // here would risk starving the protected suffix).
+            ...(cfg && cfg.STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE === true
+                ? [beam('intersectionHarvest', BEAM.WIDE, null, { mechanicBucketRetention: true })]
+                : []),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
             // Cross-referencing the 2026-08-20 census against the 2026-08-21 capability run
             // (docs/solver-optimization-workstreams.md) found this rule offers only
