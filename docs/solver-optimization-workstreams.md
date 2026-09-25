@@ -72,7 +72,7 @@ Next gate: fresh random witness-first parents. Stage A is a 24-parent developmen
 
 If confirmation earns production consideration, activation follows the execution-efficiency plan's shadow-before-authority ladder. The frozen selector first observes what it would suppress while production remains unchanged; uncertainty retains the existing action menu.
 
-## Live queue
+## Workstream state
 
 | ID | State / gate | Next discriminator | Stable question |
 |---|---|---|---|
