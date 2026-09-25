@@ -109,11 +109,13 @@ For example, `test:technique-campaign-analysis` and `test:analyze-technique-cens
 
 ## CI wall-time objective
 
-The active CI optimization target is now **full PR validation in 35 seconds or less wall-clock** (implementation plan: [`ci-35s-critical-path-plan.md`](ci-35s-critical-path-plan.md)), measured from the first required runner starting to the last required validation lane completing. This is a critical-path target, not a permission to delete protection.
+The active CI optimization target is **the fullest semantically justified PR merge-safety contract in 35 seconds or less wall-clock** (implementation plan: [`ci-35s-critical-path-plan.md`](ci-35s-critical-path-plan.md)), measured from the first required runner starting to the last required validation lane completing.
 
-A full-impact PR must still preserve the validation contract selected today: universal fast-gate obligations plus covered implementation tests, heavyweight solver proofs, and Firestore persistence validation. Meeting the target may require restructuring runner/job topology, checkout/materialization, dependency preparation, test sharding, worker reuse, and repository/test seams.
+The target is not permission to weaken correctness. It is also not a requirement to preserve every historical CI obligation forever. Claim ownership and cadence are decided first: solver/research effectiveness belongs to the experiment/promotion system, frozen evidence belongs to explicit reproducibility audits, and repository-governance checks are scoped to surfaces capable of invalidating them. The full-impact target then applies to every merge-safety obligation selected by a genuinely broad change.
 
-Track both median and tail behavior. A one-off sub-35-second run is not success if ordinary full-impact runs routinely exceed the target. The critical-path audit should report at least p50 and p90 wall time once enough comparable runs exist, plus per-lane setup and useful-work spans.
+Meeting the target may require restructuring runner/job topology, checkout/materialization, dependency preparation, test sharding, worker reuse, and repository/test seams. Refresh timing priorities after routing/cadence changes rather than optimizing from an obsolete universal population.
+
+Track both median and tail behavior. A one-off sub-35-second run is not success if comparable full-impact runs routinely exceed the target. The critical-path audit should report at least p50 and p90 wall time once enough comparable runs exist, plus per-lane setup and useful-work spans.
 
 ## Timing instrumentation
 
