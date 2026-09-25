@@ -1,0 +1,111 @@
+name: Solver research input materialization rehearsal
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full:
+    name: Full-tree targeted planner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out full tree
+        uses: actions/checkout@v7
+
+      - name: Setup exact Node 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20.20.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run targeted planner/canary rehearsal
+        run: node scripts/solver-input-rehearsal.mjs --out=tmp/solver-input-rehearsal.json
+
+      - name: Upload full-tree fingerprint
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-input-rehearsal-full
+          path: tmp/solver-input-rehearsal.json
+          if-no-files-found: error
+          retention-days: 14
+
+  sparse:
+    name: Sparse targeted planner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out declared planner inputs
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /package.json
+            /package-lock.json
+            /scripts/
+            /modules/
+            /data/stress/stress-levels-random.json
+            /logs/solver-stress-refresh/corpus2-runtime-telemetry.json
+          sparse-checkout-cone-mode: false
+
+      - name: Setup exact Node 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20.20.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run targeted planner/canary rehearsal
+        run: node scripts/solver-input-rehearsal.mjs --out=tmp/solver-input-rehearsal.json
+
+      - name: Upload sparse-tree fingerprint
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-input-rehearsal-sparse
+          path: tmp/solver-input-rehearsal.json
+          if-no-files-found: error
+          retention-days: 14
+
+  compare:
+    name: Compare full and sparse semantics
+    needs: [full, sparse]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download full-tree fingerprint
+        uses: actions/download-artifact@v8
+        with:
+          name: solver-input-rehearsal-full
+          path: tmp/full
+
+      - name: Download sparse-tree fingerprint
+        uses: actions/download-artifact@v8
+        with:
+          name: solver-input-rehearsal-sparse
+          path: tmp/sparse
+
+      - name: Require byte-identical semantic fingerprints
+        id: compare
+        shell: bash
+        run: |
+          set -euo pipefail
+          diff -u tmp/full/solver-input-rehearsal.json tmp/sparse/solver-input-rehearsal.json
+          echo "semantic_match=true" >> "$GITHUB_OUTPUT"
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Solver research input materialization rehearsal'
+            echo
+            echo '- Target: live targeted-sweep planner + one real level-blind canary.'
+            echo '- Sparse declaration: package manifests, scripts, modules, exact Corpus-2 file, and exact runtime telemetry file.'
+            echo "- Full/sparse semantic parity: \`${{ steps.compare.outputs.semantic_match || 'false' }}\`"
+            echo
+            echo 'A sparse-arm failure is evidence of an undeclared input; do not weaken the fingerprint to make the rehearsal green.'
+          } >> "$GITHUB_STEP_SUMMARY"
