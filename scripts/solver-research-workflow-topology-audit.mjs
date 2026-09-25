@@ -89,8 +89,6 @@ function extractJobs(source) {
       setupNodeSites: count(block, /actions\/setup-node@/gu),
       nodeVersions: versions,
       floatingMajorOnlyNodeSites: versions.filter(version => /^\d+$/u.test(version)).length,
-    exactNode22232Sites: versions.filter(version => version === '22.23.2').length,
-    exactNode20202Sites: versions.filter(version => version === '20.20.2').length,
       exactNode22232Sites: versions.filter(version => version === '22.23.2').length,
       exactNode20202Sites: versions.filter(version => version === '20.20.2').length,
       npmCiSites: count(block, /^\s*(?:run:\s*)?npm ci\s*$/gmu),
@@ -128,6 +126,8 @@ const workflows = names.map(name => {
     setupNodeSites: count(source, /actions\/setup-node@/gu),
     nodeVersions: versions,
     floatingMajorOnlyNodeSites: versions.filter(version => /^\d+$/u.test(version)).length,
+    exactNode22232Sites: versions.filter(version => version === '22.23.2').length,
+    exactNode20202Sites: versions.filter(version => version === '20.20.2').length,
     npmCiSites: count(source, /^\s*(?:run:\s*)?npm ci\s*$/gmu),
     sparseCheckoutSites: count(source, /sparse-checkout:/gu),
     exactDependencyTreeSignals: count(
