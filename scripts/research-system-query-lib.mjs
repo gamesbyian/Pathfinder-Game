@@ -125,6 +125,7 @@ const RESEARCH_GIT_REF_SPARSE_PATTERNS = [
     '/reports/stress/experiment-evidence/',
     '/reports/stress/solver-evidence-integrity-index.json',
     '/scripts/',
+    '/modules/',
     '/.github/workflows/',
     '/data/stress/capability-invention-demand.json',
 ];
