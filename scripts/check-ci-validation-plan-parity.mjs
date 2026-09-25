@@ -122,6 +122,9 @@ for (const dependency of finalStatus?.needs ?? []) {
     failures.push(`final status has no accepted result contract for ${dependency}`);
   }
 }
+if (!(finalStatus?.acceptedResults?.['production-build'] ?? []).includes('skipped')) {
+  failures.push('final status must explicitly allow production-build=skipped for scoped PRs');
+}
 if (!(finalStatus?.acceptedResults?.['deep-verification'] ?? []).includes('skipped')) {
   failures.push('final status must explicitly allow deep-verification=skipped for scoped PRs');
 }
