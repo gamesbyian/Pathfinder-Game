@@ -16,6 +16,8 @@ for (const [file, kind] of [
   ['data/stress/hints/R00001.json', 'hint'],
   ['data/stress/hints-random/R00001.json', 'hint'],
   ['data/stress/hints-envelope/R00001.json', 'hint'],
+  ['data/families/hints/F00001.json', 'hint'],
+  ['data/families/phaseB/hints/F00002.json', 'hint'],
 ]) {
   assert.equal(corpusFormattingKind(file)?.kind, kind, file);
 }
