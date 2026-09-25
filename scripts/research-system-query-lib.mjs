@@ -118,13 +118,15 @@ export function buildResearchSystemFindingSnapshot(index) {
     };
 }
 
-const RESEARCH_GIT_REF_SPARSE_DIRECTORIES = [
-    'docs',
-    'reports',
-    'scripts',
-    'modules',
-    '.github/workflows',
-    'data/stress',
+const RESEARCH_GIT_REF_SPARSE_PATTERNS = [
+    '/package.json',
+    '/docs/',
+    '/reports/**/*.md',
+    '/reports/stress/experiment-evidence/',
+    '/reports/stress/solver-evidence-integrity-index.json',
+    '/scripts/',
+    '/.github/workflows/',
+    '/data/stress/capability-invention-demand.json',
 ];
 
 export function buildResearchSystemFindingSnapshotFromGitRef(root, ref) {
@@ -134,7 +136,7 @@ export function buildResearchSystemFindingSnapshotFromGitRef(root, ref) {
         worktree => buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(worktree, {
             allowHistoricalWorkstreamTable: true,
         })),
-        { sparseDirectories: RESEARCH_GIT_REF_SPARSE_DIRECTORIES },
+        { sparsePatterns: RESEARCH_GIT_REF_SPARSE_PATTERNS },
     );
 }
 
