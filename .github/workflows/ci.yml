@@ -602,7 +602,7 @@ jobs:
           fi
           echo "## CI coverage" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Covered ordinary implementation tests: `$COVERAGE`" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Covered ordinary implementation tests: `%s`\n' "$COVERAGE" >> "$GITHUB_STEP_SUMMARY"
           if [[ "$COVERAGE" != "success" ]]; then
             echo "::error::CI coverage finished with $COVERAGE."
             exit 1
