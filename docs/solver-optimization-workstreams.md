@@ -154,15 +154,15 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 
 ## Workstream state
 
-| ID | Workstream | State | Next gate |
-|---:|---|---|---|
-| 2 | Repair-deadline allocation | active | production-scale matched-work confirmation |
-| 2I | Capability invention | active | promotion/safety decision; more sampling only if decision requires it |
-| 1 | Automatic action selection | active | #2122 green → merge → one frozen N=160 dispatch |
-| 2X | Small exact projections | supporting | BC1 later-disposition shadow |
-| 6/7 | Repair reachability / speed | supporting | independent-parent replication/speed when immediate |
-| 5 | Exact/reference service | on-demand | truth/query service for microscopes |
-| 3 | Generalization method | method-complete | preserve independent units; scale confirmation with selection pressure |
+| ID | Workstream | Execution state | Gate class | State / context | Next gate | Stable question ref |
+|---:|---|---|---|---|---|---|
+| 2 | Repair-deadline allocation | `active` | `bounded-compute` | 7 treatment-only gains / 0 losses on frozen 53-parent nomination A/B | production-scale matched-work confirmation | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2I | Capability invention | `active` | `bounded-compute` | CID-0027/CID-0028 pilot + confirmation positive; 0 observed solved-control regressions | promotion/safety decision; broader sampling only if that decision requires it | `WS2-CAPABILITY-INVENTION-DEMAND` |
+| 1 | Automatic action selection | `active` | `implementation` | independent-population confirmation frozen; seed 2026092501 quarantined, replacement 2026092591 | #2122 green -> merge -> one frozen N=160 dispatch | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
+| 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 production-inert later-disposition economics/safety consumer | beam-hosted later-disposition shadow when immediate | `WS2-CUT-BALANCE-PROJECTION` |
+| 6/7 | Repair reachability / speed | `supporting` | `bounded-compute` | independent-parent replication/speed support lane | replication/speed profiling when immediate | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
+| 5 | Exact/reference service | `on-demand` | `service` | exact/reference truth service for microscopes | use only when a live discriminator requires it | — |
+| 3 | Generalization method | `method-complete` | `method` | independent-unit / selection-pressure methodology established | preserve method in future confirmations | — |
 
 All other tested forms are closed/reopen-only/subsumed. See the historical snapshot and future-work authority for exact reopen conditions.
 
