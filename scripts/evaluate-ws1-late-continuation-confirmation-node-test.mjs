@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -61,5 +61,31 @@ const safetyNegative=run('safety-negative',{
 });
 assert.equal(safetyNegative.verdict,'negative');
 assert.equal(safetyNegative.criteria.find(row=>row.id==='winner-safety').pass,false);
+
+const concentrated=run('concentrated',{
+  endangeredWinnerLevels:0,
+  nominatedPreWinnerLevels:4,
+  capturedPreWinnerWorkShare:0.08,
+  diagnostics:{
+    maxNominatedParentWorkShare:0.36,
+    nominatedSameStageContinuationWorkShare:0.75,
+  },
+});
+assert.equal(concentrated.verdict,'negative');
+assert.equal(concentrated.criteria.find(row=>row.id==='parent-concentration').pass,false);
+
+const halfSameStage=run('half-same-stage',{
+  endangeredWinnerLevels:0,
+  nominatedPreWinnerLevels:4,
+  capturedPreWinnerWorkShare:0.08,
+  diagnostics:{
+    maxNominatedParentWorkShare:0.30,
+    nominatedSameStageContinuationWorkShare:0.50,
+  },
+});
+assert.equal(halfSameStage.verdict,'negative');
+assert.equal(halfSameStage.criteria.find(row=>row.id==='same-stage-majority').pass,false);
+
+rmSync(dir,{recursive:true,force:true});
 
 console.log('WS1 late-continuation confirmation evaluator: ok');
