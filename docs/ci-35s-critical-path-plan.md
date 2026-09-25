@@ -860,6 +860,36 @@ Preregistered interpretation:
 
 The rehearsal lives temporarily in `ci-testability-topology-audit.yml` so changing that evidence-only workflow triggers its own measurement. Remove the temporary shard jobs after the decision is recorded.
 
+## F1: independent Firestore boundary rehearsal
+
+Current full-impact deep evidence from run **36104516509** shows:
+
+- covered ordinary Vitest: ~**29 s**;
+- Firebase CLI cache restore: ~**3 s**;
+- Firestore emulator cache restore: ~**3 s**;
+- deadlock soundness proofs: ~**7.0 s wall**;
+- Firestore boundary execution: ~**13 s wall**.
+
+The Firestore boundary does not consume canonical runtime data. Its test uses a synthetic level plus production persistence/domain modules and the Firebase emulator. Keeping it serialized behind coverage therefore couples two semantically independent obligations.
+
+A temporary `firestore-boundary-independent` topology job now rehearses the boundary on its own shared runner with:
+
+- source-only checkout;
+- exact warm `node_modules` restore before cache-free setup-node;
+- exact Firebase CLI and emulator caches;
+- Java from the hosted tool cache;
+- the unchanged production `test:firestore-level-fingerprint-boundary` command.
+
+Preregistered interpretation:
+
+1. semantic failure rejects the topology;
+2. independent runner wall **≤30 s** makes Firestore a strong candidate for its own impact-selected lane;
+3. **30–35 s** needs repeated evidence before promotion;
+4. **>35 s** means a separate shared-hosted Firestore lane cannot by itself satisfy the hard target;
+5. if promoted, remove Firestore setup from the coverage/proof runner entirely and preserve independent final-status ownership/fail-safe routing.
+
+This experiment is complementary to D2c. If two-way coverage and independent Firestore both fit comfortably under 35 s, the deep architecture can stop serializing unrelated obligations.
+
 ## Current forward work order
 
 1. **Validate the newly activated semantic Fast Gate:** require green exact-head full-impact evidence plus representative scoped evidence for validator/Node selection and conditional build; verify router failure still falls back broad.
