@@ -248,8 +248,9 @@ This plan is complete only when:
 
 ## Immediate implementation tranche
 
-1. Add a static research-workflow bootstrap/topology audit.
-2. Produce the current starting census.
-3. Reconcile the solver queue with this supporting program and post-September-22 architecture.
-4. Use hosted historical timing to prioritize short planner/canary/combine jobs: exact runtime identity first, then sparse/input materialization, then exact dependency-tree reuse. Long solve shards stay measurement-gated.
-5. Do not bulk-edit every workflow before representative parity evidence.
+1. **DONE:** add a static research-workflow bootstrap/topology audit, now with per-job classification and measurement queues.
+2. **DONE:** produce the current starting census and add hosted September-22 bootstrap timing evidence.
+3. **DONE:** reconcile and compact the solver queue with this supporting program and post-September-22 architecture.
+4. **IN PROGRESS:** exact runtime identity. Primary level-blind and history-aware producers now emit actual runtime identity; a manual Node 20.20.2 vs 22.23.2 semantic-parity rehearsal workflow is registered.
+5. Next: run/reconcile the exact-runtime rehearsal, then derive sparse/full-input parity for short planner/canary/combine jobs, then exact dependency-tree reuse. Long solve shards stay measurement-gated.
+6. Do not bulk-edit every workflow before representative parity evidence.
