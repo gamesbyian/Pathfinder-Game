@@ -481,32 +481,6 @@
       "artifactSufficientForFutureSemanticHint": "not applicable: this one-shot research workflow is not a canonical Hint discovery producer",
       "hintIngestionDisposition": "non-hint-evidence",
       "rationale": "Maintained evidence-producing workflow, explicitly classified so its exclusion from Hint ingestion is reviewable."
-    },
-    {
-      "workflow": "solver-evidence-integrity-guard.yml",
-      "currentHintMode": "integrity/validation only; does not produce or ingest Hint discoveries",
-      "centralHarvester": false,
-      "target": "non-ingesting validation workflow",
-      "partialFailureEvidence": false,
-      "producerEntrypoint": "scripts/validate-solver-evidence-integrity.mjs",
-      "executionClass": "validation-only",
-      "exactSuccessfulPathAvailability": "not applicable",
-      "winningAttemptConfigAvailability": "not applicable",
-      "levelRevisionAvailability": "not applicable",
-      "effectiveExecutionConfigAvailability": "not applicable",
-      "sourceRunLineageAvailability": "not applicable",
-      "artifactSufficientForFutureSemanticHint": "no; validation workflow only",
-      "migrationTarget": "none",
-      "levelBlind": false,
-      "historyAware": false,
-      "currentHintPersistence": "none",
-      "exactSuccessfulPath": "not applicable",
-      "winningAttemptConfig": "not applicable",
-      "levelRevision": "not applicable",
-      "effectiveExecutionConfig": "not applicable",
-      "sourceRunLineage": "not applicable",
-      "partialFailureUpload": false,
-      "hintIngestionDisposition": "non-hint-evidence"
     }
   ],
   "provenanceMissingness": [
