@@ -278,7 +278,7 @@
     "check:browser-external-dependencies": "node scripts/check-browser-external-dependencies.mjs",
     "check:solver-budget-boundaries": "node scripts/check-solver-budget-boundaries.mjs",
     "test:deep-proofs": "vitest run modules/solver/lower-bounds-deadlock-0.test.ts modules/solver/lower-bounds-deadlock-1.test.ts",
-    "test:solver-effectiveness-characterizations": "vitest run modules/solver/repair-search-partial-path-completion-enabled.test.ts modules/solver/repair-search-partial-path-completion-disabled.test.ts",
+    "test:solver-effectiveness-characterizations": "npm run test:repair-prototype-characterizations && vitest run modules/solver/repair-search-partial-path-completion-enabled.test.ts modules/solver/repair-search-partial-path-completion-disabled.test.ts",
     "check:solver-sweep-results": "node scripts/check-solver-sweep-result-contract.mjs",
     "gha:fetch-result": "node scripts/fetch-gha-result.mjs",
     "check:plain-node-import-boundaries": "node scripts/check-plain-node-import-boundaries.mjs",
@@ -470,7 +470,8 @@
     "check:hint-store-census": "node scripts/hint-store-census.mjs",
     "test:ci-runtime-data-cache": "node scripts/ci-runtime-data-cache-node-test.mjs",
     "test:solver-parallel-contract": "vitest run --config vitest.node-contract.config.mjs scripts/solver-parallel-unit-tests.mjs",
-    "test:eslint-rules-contract": "vitest run --config vitest.node-contract.config.mjs scripts/eslint-rules-unit-tests.mjs"
+    "test:eslint-rules-contract": "vitest run --config vitest.node-contract.config.mjs scripts/eslint-rules-unit-tests.mjs",
+    "test:repair-prototype-characterizations": "SOLVER_REPAIR_PROTOTYPE_TESTS=1 vitest run modules/solver/repair-search.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
