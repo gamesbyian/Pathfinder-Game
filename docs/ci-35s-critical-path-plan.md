@@ -827,6 +827,9 @@ Preregistered interpretation:
 
 Remove the temporary automatic shard rehearsal after the decision is recorded.
 
+**First D1c attempt — run 36105650628:** shard 1 was green and ran its 120-contract population in ~15 s useful wall, reaching test completion about **30 s after job start**. Shard 2 stopped on `test:ci-impact-classifier`, not a sharding/concurrency defect: the solver-consumer metadata patch had accidentally overwritten pre-existing research/data surfaces on shared-owned contracts. The classifier correctly exposed that semantic metadata regression. The registry now unions the prior surfaces with `solver`; D1c remains **inconclusive pending the automatic rerun**.
+
+
 ## D2c: reopen balanced coverage sharding after bootstrap premise change
 
 The earlier D2/D2b negative result remains valid for its measured topology, but one of its deciding premises has materially changed.
@@ -860,6 +863,9 @@ Preregistered interpretation:
 
 The rehearsal lives temporarily in `ci-testability-topology-audit.yml` so changing that evidence-only workflow triggers its own measurement. Remove the temporary shard jobs after the decision is recorded.
 
+**First D2c result — run 36105650628:** semantically green. Both shard populations passed and the native merged report passed the unchanged production coverage thresholds. Worker useful coverage ran ~17 s; coordinator useful coverage ~11 s; coordinator waited ~4 s for the worker and merged/enforced thresholds in ~2 s. First shard runner start **07:02:21** → merged authoritative threshold result **07:02:49** = about **28 s**. This clears the preregistered strong-revival threshold for one sample. Require at least one comparable confirmation before production promotion because the old D2 failure mode was shared-runner tail variance.
+
+
 ## F1: independent Firestore boundary rehearsal
 
 Current full-impact deep evidence from run **36104516509** shows:
@@ -889,6 +895,11 @@ Preregistered interpretation:
 5. if promoted, remove Firestore setup from the coverage/proof runner entirely and preserve independent final-status ownership/fail-safe routing.
 
 This experiment is complementary to D2c. If two-way coverage and independent Firestore both fit comfortably under 35 s, the deep architecture can stop serializing unrelated obligations.
+
+**First independent Firestore result — run 36105650628:** the unchanged Firebase-CLI boundary was green. Job start **07:02:22** → boundary step complete **07:02:44** = about **22 s authoritative wall** (job cleanup completed immediately afterward). This is comfortably inside the ≤30 s strong-candidate threshold and proves Firestore does not need to sit behind coverage or runtime-data materialization.
+
+The sibling direct-JAR experiment was also semantically green but slower: start **07:02:22** → boundary complete **07:02:47** ≈ **25 s**, versus ≈22 s through Firebase Tools. Avoiding the 42 MB CLI cache did not offset the direct emulator startup/readiness cost. **Close direct-JAR launch negative** and retain the maintained Firebase Tools path.
+
 
 A second benchmark-only lane, `firestore-boundary-direct-jar`, tests whether Firebase Tools is unnecessary on the hot path. Firebase Tools 15.28.2 launches the cached Firestore 1.22.0 emulator as Java with `--host`, `--port`, `--rules`, and `--project_id`; the repo's boundary needs only Firestore. The direct-JAR rehearsal therefore restores only the emulator cache, starts the **same cached JAR** with `firestore.rules` and the same demo project, exports `FIRESTORE_EMULATOR_HOST`, and runs the unchanged boundary test.
 
