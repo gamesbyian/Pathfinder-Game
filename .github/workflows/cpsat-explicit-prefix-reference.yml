@@ -30,13 +30,13 @@ on:
         required: false
         default: '1000'
       shard_count:
-        description: 'Number of round-robin case shards. Default 20 matches the usual Actions concurrency footprint; empty shards are harmless on small pilots.'
+        description: 'Number of round-robin case shards. Default 15 matches the usual Actions concurrency footprint; empty shards are harmless on small pilots.'
         required: false
         default: '20'
       max_parallel:
         description: 'Shard jobs allowed to run concurrently. Lower this to share Actions capacity without changing the selected case population.'
         required: false
-        default: '20'
+        default: '15'
       recombine_run_id:
         description: 'Skip re-executing the (expensive) shards entirely and only re-run combine/integrity/publish against an earlier run id''s already-uploaded shard artifacts -- for recovering from a downstream post-processing bug without repaying solver compute. Leave blank for an ordinary fresh dispatch.'
         required: false
