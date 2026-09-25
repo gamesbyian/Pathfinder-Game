@@ -63,9 +63,8 @@ function scopeTouchesCanonicalHintStore(scope) {
 
 function scopeAllowedByException(scope, entry) {
     const allowed = Array.isArray(entry?.allowedStagePrefixes) ? entry.allowedStagePrefixes : [];
-    return allowed.some(prefix =>
-        scope.startsWith(prefix)
-        || prefix.startsWith(scope.endsWith('/') ? scope : scope + '/'));
+    const clean = scope.endsWith('/') ? scope : scope + '/';
+    return allowed.some(prefix => clean === prefix || clean.startsWith(prefix));
 }
 
 function persistenceIssues(workflow, rawText) {
@@ -125,6 +124,9 @@ if (persistenceIssues('collect-variant-family-dataset.yml', '- run: git add data
 }
 if (persistenceIssues('collect-variant-family-dataset.yml', '- run: git add data/stress/').length !== 1) {
     throw new Error('family workflow persistence exception escaped its allowed family scope');
+}
+if (persistenceIssues('collect-variant-family-dataset.yml', '- run: git add data/').length !== 1) {
+    throw new Error('family workflow persistence exception incorrectly authorizes an ancestor of its allowed scope');
 }
 if (persistenceIssues('fixture.yml', '# git add data/hints/P00001.json\n- run: echo ok').length !== 0) {
     throw new Error('central Hint persistence guard self-test treated a comment as executable');
