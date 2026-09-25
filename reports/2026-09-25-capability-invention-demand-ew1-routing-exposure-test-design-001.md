@@ -1,9 +1,9 @@
 # Capability-invention demand: EW1 routing-gap exposure test design 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-25 — matched-work pilot A/B dispatched for both flags via `solver-level-blind-targeted-sweep.yml` on commit `b70fac12` (13-level sample per branch: target row + 12 same-branch solved controls, `--node-budget=50000000` production default; runs 36177860900/36177853014 (CID-0027 control/treatment) and 36177843641/36177869048 (CID-0028 control/treatment); results pending.
+> **Last evidence:** 2026-09-25 — matched-work pilot A/B dispatched and interpreted for both flags: **clean POSITIVE** on both (CID-0027 target R00118 and CID-0028 target R02696 each moved from node-budget-limited unsolved to referee-valid solved, zero regressions in either 12-level solved-control sample). See `reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md` for the full result and a control-run mislabeling correction (both target/treatment pairings were always correct; only the two control runs' documented labels were swapped, fixed in that report).
 > **Decision:** design and implement (not dispatch) the smallest matched-work routing-exposure test for `CID-0027`/`CID-0028`, per each row's `smallestProbe` and the register's own "design (not dispatch)" gate. This report locates the exact `attempts.ts` rule each level's feature profile resolves to, and adds two new opt-in ablation exposure flags following this file's own established convention.
-> **Remaining gate:** combine and interpret the four dispatched runs per each row's own `advanceIf`/`stopIf` (target-row gain, zero same-branch solved-level regressions in the sample).
+> **Remaining gate:** both rows cleared `advanceIf`; the next gate is a larger confirmation sample (or the full branch, cost permitting) before any `OPT_IN_FEATURES` production-default change — the 13-level pilot covers only 6.6%/3.9% of each branch.
 > **Evidence role:** design + implementation
 > **Research question:** `WS2-CAPABILITY-INVENTION-DEMAND`
 > **Production effect:** none. Both flags default OFF (`OPT_IN_FEATURES`); no production default changed.
@@ -122,10 +122,17 @@ they gate disjoint rules).
 Dispatched 2026-09-25 on commit `b70fac12`, population per branch = target row + the 12-level
 stratified solved-control sample listed above:
 
-- CID-0027 control: [run 36177860900](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177860900)
+- CID-0027 control: [run 36177843641](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177843641)
 - CID-0027 treatment (`STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE`): [run 36177853014](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177853014)
-- CID-0028 control: [run 36177843641](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177843641)
+- CID-0028 control: [run 36177860900](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177860900)
 - CID-0028 treatment (`STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE`): [run 36177869048](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/36177869048)
+
+(**Correction, same day:** the two control run links above were originally swapped — both were
+dispatched as `enable=none` a few seconds apart and I assumed creation order matched dispatch order,
+which it did not. Fixed here after verifying each control run's actual swept population against its
+job log; the treatment links were always correct. See
+`reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md` for the
+full correction and the interpreted result — both flags: clean POSITIVE.)
 
 Decision, per each row's own `advanceIf`/`stopIf`: advance only on a referee-valid gain on the target
 row with zero same-branch solved-level regressions in the sample; any regression or zero gain stops
