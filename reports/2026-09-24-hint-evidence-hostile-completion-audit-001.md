@@ -1,9 +1,9 @@
 # Hint evidence consolidation — hostile completion audit — 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-24 — Remote PR validation on head `06294be...` produced green closeout, solver-evidence integrity, CI-topology and deep-verification evidence but red hostile/fast gates. Those reds exposed a malformed persistence-guard edit, stale/new physical-surface classifications, an invalid referee fixture, and a workflow-trigger-vs-execution false positive. All were repaired, followed by further hostile findings through #40 (narrow exception ancestor escape, stale/ambiguous review control planes, fixed-point gaps in Phase 8/10 closeout, multiline staging bypasses, and closeout invalidation coverage). The latest branch head still requires its own complete remote run set.
-> **Decision:** The prior "all phases complete" claim was premature. Treat the program as complete only after the corrections in this report are green on one exact remote CI head and the hostile maintained-surface guards report no unreviewed bypass.
-> **Remaining gate:** Obtain one post-Finding-40 exact PR merge head where CI, hostile audit, closeout canary, solver-evidence integrity, CI topology, six-store referee/occurrence/reconstructability validation and Firestore-emulator evidence are all green together. Earlier green jobs remain supporting evidence only; connector-authored commits without a matching Actions run are not closure evidence.
+> **Status:** closed — operationally complete
+> **Last evidence:** 2026-09-24 — PR #2072 exact head `3ac9c52d4573` passed the complete post-Finding-42 remote closure set together: CI run 36082154314 (including green fast-gate and deep-verification jobs), Hint/provenance hostile audit 36082154311, Hint consolidation closeout canary 36082154323, Solver evidence integrity guard 36082154287, and CI testability topology audit 36082154443. Deep verification's heavyweight/Firestore step was green. That exact head then merged as `3d4080ee3244`.
+> **Decision:** The earlier "all phases complete" claim was premature, but the corrected implementation is now operationally complete against the strengthened Definition of Done. Findings 1–42 remain the durable record of what was required to make that claim defensible.
+> **Remaining gate:** None for the consolidation program. Future failures of the standing guards are maintenance regressions to repair, not evidence that this historical closeout remained pending.
 
 ## Why this audit existed
 
@@ -813,7 +813,8 @@ Final exact-head remote CI remains the closing evidence gate for this audit repo
 The pre-audit state should **not** be described as complete: the audit found multiple maintained
 workflow writers, two v4-blind consumers/tests, and a real Firestore occurrence-lineage inconsistency.
 
-If the final exact-head remote validation is green, the corrected state is suitable to call the
-consolidation program **operationally complete** against its stated definition of done. Future work
-would then be ordinary maintenance or newly-earned optimization, not unfinished execution of this
-plan.
+The final exact-head remote validation is green on PR #2072 head `3ac9c52d4573`: CI, hostile audit,
+closeout canary, solver-evidence integrity, CI topology and deep verification all passed together,
+including the heavyweight Firestore-emulator boundary. The corrected state is therefore
+**operationally complete** against the strengthened definition of done. Future work is ordinary
+maintenance or newly-earned optimization, not unfinished execution of this plan.
