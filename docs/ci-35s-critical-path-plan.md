@@ -197,6 +197,13 @@ The sibling `test:harvest-solver-diagnostics-reports` remains **3.9 s** on run 3
 
 The scoped follow-up passes an empty private corpus only to that empty-staging CLI invocation. The real-row block remains unchanged and continues to prove real P00001 revision/referee/provenance/persistence semantics. Keep the change if exact-head CI stays green and the diagnostics contract falls materially below its current ~3.7–4.0 s range.
 
+#### Level-blind harvester fixture isolation — active experiment
+
+`test:harvest-level-blind-report-hints` remains about **3.1–3.4 s** and still rewrites a tracked `data/stress/hints/<id>.json` file around its real-row regression. Mirror the CP-SAT isolation pattern: retain one real published stress level, one real persisted known path, the canonical logical corpus identity, corpus-hash compatibility checking, referee validation, provenance reconstruction, occurrence lineage, and persistence; point the physical primary stress corpus at a private one-level copy.
+
+Decision gate: retain if exact-head CI is green, the contract is materially cheaper, and no tracked stress Hint mutation remains. This is primarily a hermeticity/testability correction with expected timing benefit from avoiding full stress-corpus load/write.
+
+
 ### Covered Vitest
 
 Fresh production evidence from run **36090943840** / deep job **107933055611** validates the #2109 repair-search reuse change:
