@@ -597,7 +597,25 @@ canary's broader workflow/control-plane trigger from Finding 40 is retained. Exa
 now invalidate when their machine inputs change rather than only when files happen to contain "hint"
 or "provenance" in their path.
 
-## Exact-head validation fallout during Findings 25-41
+### 42. Partial-persistence retry semantics were implemented but not directly regression-tested
+
+The strengthened persistence acceptance matrix requires explicit coverage of partial persistence,
+capacity refusal and retry after refusal. The local-review implementation is deliberately non-atomic:
+one provenance event may persist before a later event reaches the local-store capacity boundary, the
+submission then remains queued, and a later retry must dedupe the already-saved event while persisting
+the previously refused event.
+
+The code path supported that behavior, but the unit suite only tested aggregate duplicate/capacity
+tallies independently. It did not execute the two-pass state transition, leaving a named phase-exit
+contract dependent on code inspection.
+
+**Correction:** `review-repository.test.ts` now exercises a first pass with one saved event plus one
+capacity refusal, then a retry whose existing durable state contains the first event. The retry must
+classify the first event as duplicate, persist the formerly refused event, and finish with no capacity
+refusal. This complements the real Firestore emulator's new-path/new-event/new-occurrence/idempotent
+retry coverage without pretending a pure orchestration test is emulator evidence.
+
+## Exact-head validation fallout during Findings 25-42
 
 The first remote PR validation on head `06294be...` was valuable precisely because it did not stay
 green:
