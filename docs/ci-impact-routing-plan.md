@@ -152,11 +152,12 @@ Treat this as the pilot for a general coarse-edge audit. Runtime data currently 
 
 ## Activated deep execution packing
 
-The execution plan now has three production lanes:
+The execution plan now has four logical production lane classes, materializing as five runners when both Node owner shards are required:
 
-- `fast-gate`: selected validators/Node contracts plus lint/build;
-- `deep-verification`: coverage only;
-- `deep-services`: hard-prune proofs and Firestore, concurrent when both are selected.
+- `fast-gate`: package/script reachability, textual invariants, selected non-lint validators, and lint;
+- `node-contracts`: a two-entry owner-partitioned matrix for selected Node/CLI contracts;
+- `deep-verification`: covered ordinary Vitest population only;
+- `deep-services`: selected production build, hard-prune proofs, and Firestore boundary, overlapped on one runner where required.
 
 This activation follows two clean independent Firestore samples (~22 s and ~18 s) and deliberately does **not** promote two-way coverage sharding, whose confirmation exceeded the 35 s threshold. The routing model exposes `deep_services_job_required` separately so scoped/manual rehearsal and production preserve the same capability ownership.
 
@@ -192,13 +193,15 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 Current production behavior:
 
-- `fast-gate` remains an always-materialized runner, but computes the semantic merge-diff plan locally, executes only selected validator/Node-test groups, and runs the production build only when game/solver impact selects it; routing failure falls back to the full aggregates and build;
+- `fast-gate` remains an always-materialized runner, computes the semantic merge-diff plan locally, and executes package/script reachability, textual invariants, selected non-lint validator groups, and lint; routing failure falls back to the full validator authority;
 - the historical solver capability canary is no longer an ordinary PR capability; solver effectiveness is owned by the experiment/promotion system;
-- `deep-verification` is impact-scoped under the semantic execution plan and independently selects coverage, hard-prune soundness proofs, and Firestore;
+- `node-contracts` is impact-scoped and partitions selected Node/CLI contracts across two disjoint execution-owner shards; routing failure reconstructs the full Node authority across both shards;
+- `deep-verification` is impact-scoped and owns covered ordinary Vitest execution;
+- `deep-services` independently selects build, hard-prune soundness proofs, and Firestore, with conservative full selection on planner failure;
 - planner failure fails safe by running deep verification;
 - manual `workflow_dispatch` runs deep verification;
 - CI/router/config authority changes conservatively classify as full impact;
-- `main-push-validation.yml` remains broad and authoritative as the direct-main/integration backstop;
+- `main-push-validation.yml` remains the broad direct-main/integration backstop and cache-generation seed path;
 - dependency-local `contractDependencies` metadata is validated and measured but does not yet authorize production skipping.
 
 Evidence supporting the deep-lane activation includes:
@@ -216,24 +219,21 @@ The optimization target has changed from "remove obviously irrelevant work at ac
 
 > **A full-impact PR should complete its entire required validation contract in 35 seconds or less wall-clock.**
 
-The current full-impact topology does not meet this goal. A recent full PR run took roughly 96 seconds from first required runner start to last required validation completion. The universal fast lane took roughly 79 seconds on its own and the deep lane roughly 85 seconds from its runner start.
+The original full-impact topology missed this goal badly, at roughly 96 seconds from first required runner start to last required validation completion. That architecture is historical. The current owner-routed/cache-first topology has now produced multiple <=35-second full-impact samples, including exact-head run 36196599695 at roughly 34 seconds. The stricter bounded-window declaration remains open because the canonical plan still requires p50 <=30 seconds and p90 <=35 seconds over comparable runs.
 
-This target changes the next phase from cadence refinement to execution-architecture work. Validation breadth remains protected; job topology, checkout/materialization, dependency setup, phase concurrency, sharding, worker reuse, and test/repository seams are all open to redesign.
+The target therefore remains an active distributional objective rather than a one-run milestone. Validation breadth stays protected; further work is driven by repeatable selected critical-path cost or runner-allocation variance, not by the historical universal-gate profile.
 
 ### Next gate
 
 The staged execution plan is tracked in [`ci-35s-critical-path-plan.md`](ci-35s-critical-path-plan.md).
 
-Before another production routing reduction, complete the 35-second critical-path audit:
+The original execution-architecture audit is substantially implemented. Current routing work should now follow the forward order in the 35-second plan:
 
-1. reconstruct per-step wall-time distributions from recent full-impact PR runs, including checkout, setup-node, cache restore, `npm ci`, validators, lint, Node/CLI contracts, solver canary, build, coverage, deep proofs, Java/Firebase setup, and Firestore;
-2. explain the deep checkout outlier and measure the exact file/materialization cost of its sparse-checkout definition;
-3. benchmark candidate lane topologies using the existing full validation contract, not a reduced substitute;
-4. design runtime-balanced shards for Node/CLI contracts and covered Vitest work using measured command/file timings;
-5. determine which setup costs can be shared, eliminated, prebuilt, or hidden behind useful parallel work;
-6. audit solver-canary execution for safe internal parallelism/worker reuse;
-7. model p50 and p90 critical paths, including hosted-runner startup variance;
-8. only then preregister an implementation sequence capable of reaching the ≤35s target.
+1. continue the bounded comparable p50/p90 confirmation window;
+2. act only on repeatable Node/coverage/deep-service tails, not one noisy hosted-runner sample;
+3. finish the solver→research explicit-consumer routing proof, including the retained #1722-equivalent historical route oracle;
+4. keep broad main/default-branch validation as the integration backstop;
+5. if useful work is already within budget but hosted-runner variance still breaks p90, move to reserved/larger compute rather than deleting merge-safety proof.
 
-The 35-second target does not authorize deleting tests, shrinking coverage, or weakening semantic proof obligations merely to meet the clock. If a validation obligation cannot fit, first change how it is executed or make the underlying test boundary cheaper.
+The 35-second target does not authorize deleting tests, shrinking coverage, or weakening semantic proof obligations merely to meet the clock.
 
