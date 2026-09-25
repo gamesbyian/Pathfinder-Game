@@ -26,7 +26,7 @@
     },
     {
       "id": "package-build-authority",
-      "pattern": "^(?:package(?:-lock)?\\.json|tsconfig(?:\\.[^/]+)?\\.json|vite\\.config\\.[^/]+|vitest\\.config\\.[^/]+|eslint\\.config\\.[^/]+)$",
+      "pattern": "^(?:package(?:-lock)?\\.json|tsconfig(?:\\.[^/]+)?\\.json|vite\\.config\\.[^/]+|vitest(?:\\.[^/]+)?\\.config\\.[^/]+|eslint\\.config\\.[^/]+)$",
       "surfaces": [
         "all"
       ],
