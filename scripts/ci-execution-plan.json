@@ -5,12 +5,11 @@
     "fast-gate": {
       "alwaysMaterialized": true,
       "validatorGroups": "selected",
-      "nodeTestGroups": "selected",
       "capabilities": [
         "lint",
         "build"
       ],
-      "note": "Primary installed-dependency lane. Always exists initially because lint remains universal and selected validator/Node groups run here."
+      "note": "Always-materialized static/build lane. Selected validators remain here; Node/CLI contracts execute in the independent two-shard node-contracts matrix."
     },
     "deep-verification": {
       "alwaysMaterialized": false,
@@ -26,6 +25,12 @@
         "firestore-boundary"
       ],
       "note": "Independent solver-soundness / persistence lane; selected proofs and Firestore execute concurrently and do not require canonical runtime data."
+    },
+    "node-contracts": {
+      "alwaysMaterialized": true,
+      "nodeTestGroups": "selected",
+      "capabilities": [],
+      "note": "Two-runner Node/CLI matrix. Semantic selection is preserved; execution-owner filters partition the selected commands exactly once across research+solver+game+persistence and shared+data+repo."
     }
   },
   "finalStatus": {
@@ -33,6 +38,7 @@
     "needs": [
       "impact-shadow",
       "fast-gate",
+      "node-contracts",
       "deep-verification",
       "deep-services"
     ],
@@ -51,9 +57,12 @@
       "deep-services": [
         "success",
         "skipped"
+      ],
+      "node-contracts": [
+        "success"
       ]
     },
-    "note": "Stable scoped rehearsal status: router and fast gate must succeed; coverage and deep-services lanes may skip only when semantic routing does not select their capabilities."
+    "note": "Stable scoped rehearsal status: router, fast gate, and Node-contract matrix must succeed; coverage and deep-services may skip only when semantic routing does not select their capabilities."
   },
   "activationWorkflow": ".github/workflows/ci-scoped-dry-run.yml"
 }
