@@ -23,7 +23,7 @@ As of main `7d94df87fde1ab35f46900950188f402f3fe67dc`:
 - the maintained solver workflow inventory currently contains 11 `solver-*.yml` / `harvest-solver-evidence.yml` workflows;
 - all 11 still specify floating `node-version: '20'` at their Node setup sites;
 - none currently uses the exact `node_modules` generation restore proven in production CI;
-- only `solver-routing-regime-sample-ab.yml` currently uses sparse checkout;
+- sparse checkout is now active in `solver-routing-regime-sample-ab.yml` and in the targeted-sweep short plan/canary boundary; the latter preserves arbitrary caller-selected corpus/ID blobs via immutable `git show` materialization;
 - several matrix workflows repeat checkout + setup-node + `npm ci` independently in planner/generator, solve-shard, and combine/freeze jobs;
 - `solver-highbudget-unsolved-sweep.yml` already has telemetry-weighted dynamic sharding and the workflow README explicitly treats worker/lane counts as throughput defaults rather than laws, so generic shard-count tuning is **not** an initial priority.
 
@@ -99,11 +99,11 @@ The first static audit does **not** pretend YAML occurrence counts equal runtime
 
 ### Premise
 
-The research system now binds solver request, corpus/population and provenance identity tightly, but `node-version: '20'` allows the execution runtime patch to drift between two dispatches of the same solver commit.
+The research system binds solver request, corpus/population and provenance identity tightly. The former major-only `node-version: '20'` gap is now closed: maintained workflows use exact runtimes, so runtime patch drift no longer contaminates repeated dispatches of the same solver commit.
 
 ### Work
 
-1. record exact runtime identity in experiment/run metadata where not already captured. **Started:** the level-blind capability and history-aware portfolio producers now emit actual Node version, platform, and architecture in their report summaries; workflow/runtime pinning remains unactivated.
+1. record exact runtime identity in experiment/run metadata where not already captured. **Activated:** the level-blind capability and history-aware portfolio producers emit actual Node version, platform, and architecture in their report summaries; all maintained research workflows now pin exact Node versions, with diagnostics conservatively fixed at 20.20.2 pending its own cross-major parity.
 2. rehearse a representative cross-section under an exact runtime:
    - planner/combine-only path;
    - level-blind solver path;
