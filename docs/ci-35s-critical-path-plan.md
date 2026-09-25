@@ -1647,6 +1647,32 @@ Decision gate:
 3. proofs/Firestore do not regress enough from CPU contention to erase the saved build serialization;
 4. if wall is neutral/worse, revert D3 and keep the previous serial packed-build shape.
 
+## Coverage margin: move explicitly marked deep solver integrations to Node execution
+
+Reconciled green baseline run **36193399010** remained semantically healthy but measured first-runner → last-required completion at roughly **35.35 s**. Lane walls were approximately:
+
+- Fast Gate: **17.4 s**;
+- Node A: **22.6 s**;
+- Node B: **26.6 s**;
+- deep services (including packed build): **29.4 s**;
+- coverage: **34.4 s**.
+
+Coverage was again the only lane at the edge. Its Vitest command was **23.48 s**, with the two intentionally preserved real-search integration owners contributing about:
+
+- `diversification.test.ts` full session: ~2.8 s;
+- `hint-ablation-generator.test.ts` full run: ~1.0 s.
+
+Both files already encode those heavyweight cases through the repository's explicit `SOLVER_DEEP_TESTS` gate. Production coverage now sets `SOLVER_DEEP_TESTS=0`, while new solver-owned Node contract `test:solver-deep-integrations` runs both files under the dedicated Node-contract Vitest config with the gate enabled by default.
+
+This is **execution ownership**, not test/cadence deletion:
+
+- the heavyweight real-search integration boundaries still run on every solver-impact PR;
+- the synthetic/unit portions remain in coverage;
+- coverage thresholds/source scope are unchanged;
+- the solver Node shard absorbs the ~3.8 s integration work, where recent wall time had >8 s target headroom.
+
+Decision gate: keep this move only if exact-head CI remains green, coverage thresholds remain green, coverage wall gains material margin, and solver Node wall remains below the hard target.
+
 ## Current forward work order
 
 1. **Validate the reconciled packed topology:** require exact-head green CI/oracles after the #2118 merge-forward and parity/scoped-rehearsal repair; use that head as the new comparable timing baseline.
