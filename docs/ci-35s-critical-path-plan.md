@@ -200,16 +200,21 @@ Real solver integrations stay real unless an equivalent cheaper witness proves t
 
 ### Heavy proofs
 
-Four explicit proof files already overlap internally and finish in ~11 s wall. The long tails are approximately:
+The proof-value audit found that the four-file set had conflated two different contracts.
 
-- R02560 disabled: 10.4 s;
-- deadlock root 0: 9.1 s;
-- deadlock root 1: 6.8 s;
-- R02560 enabled: 0.36 s.
+PR-blocking deep proofs now contain three files:
 
-Further speed here requires cheaper witnesses or execution on independent compute; simply adding more Vitest workers cannot beat the longest individual proof.
+- deadlock root 0: ~9 s exhaustive soundness proof;
+- deadlock root 1: ~7–9 s complementary exhaustive soundness proof;
+- R02560 enabled: ~0.25–0.36 s positive production-regression witness.
 
-Current production evidence from run **36090175881** shows the deep-proof wall is set by three genuine expensive witnesses running in parallel: deadlock root 0 **9.27 s**, deadlock root 1 **9.25 s**, R02560-disabled **10.90 s**, while R02560-enabled is only **0.25 s**. The R02560 shared ceiling is intentionally **900,000 nodes** because historical characterization places the enabled solve at 803,000 and the disabled control exhausts the 900,000-node regression ceiling. Lowering that ceiling merely for CI would weaken the proof and is not an acceptable speed optimization. Deadlock exact-reference memoization remains a possible implementation optimization only if a complete state-equivalence key can be independently justified; do not add an ad-hoc cache to the proof oracle.
+The former ~10–11 s R02560-disabled arm is retained as `test:solver-effectiveness-characterizations`, not as an ordinary PR proof. Its assertion is causal historical evidence: disabling only `STRATEGY_REPAIR_LENGTH_GAP_CLOSE` leaves R02560 unsolved within the published 900,000-node ceiling. That negative is useful when intentionally re-checking mechanism attribution, but it is not a correctness invariant and can legitimately become false if another solver mechanism improves. Blocking every merge on that negative would therefore turn an improvement into a CI regression.
+
+The cheap enabled arm has demonstrated regression value: the August backward-route scoring experiment kept the published 160/160 benchmark green while breaking the R02560 rescue, helping expose a harmful search bias. Keep that positive witness for solver-impact PRs until a smaller faithful fixture replaces it.
+
+The routing audit also found that the local planner already emits independent `needs_coverage`, `needs_deep_proofs`, and `needs_firestore` capabilities, while the production deep job previously used only coarse `deep_job_required` and ran all three obligations whenever any one was selected. That contradicted `ci-validation-plan.json`: deep proofs belong to the solver surface, Firestore to persistence, and coverage to game/solver/shared. The deep job now honors those existing per-capability outputs, with planner failure still failing safe by running all obligations.
+
+Deadlock exact-reference memoization remains a possible implementation optimization only if a complete state-equivalence key can be independently justified; do not add an ad-hoc cache to the proof oracle.
 
 
 ### Solver canary
@@ -626,7 +631,7 @@ This fallback is preferable to removing validation solely because shared hosted-
 
 1. **Fresh Node/CLI census:** use the machine-readable benchmark profiles and pursue structural testability wins in descending child-cost order.
 2. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
-3. **Proof witness audit:** reduce the longest deterministic witnesses where equivalence can be demonstrated.
+3. **Proof witness audit:** R02560-disabled cadence is corrected; next inspect the two exhaustive deadlock roots for equivalent cheaper proof machinery or smaller exhaustive fixtures without weakening soundness.
 4. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
 5. **Final bootstrap/cache serial audit:** look for redundant restores/discovery/setup and small overlap opportunities; stop if savings are noise-sized.
 6. **Reserved/larger runner rehearsal:** apply the already-proven Node/coverage partitions on at least 16 logical CPUs and re-test deep internal overlap with the larger CPU budget.
