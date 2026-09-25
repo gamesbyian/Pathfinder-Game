@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Regenerates the hint-provenance coverage/admissibility figures quoted in CLAUDE.md's Provenance
-// section, across all tracked first-class Hint corpora.
+// Regenerates hint-provenance coverage/classification figures used by DEVELOPER_REFERENCE.md and
+// research audits across all tracked first-class Hint corpora.
 //
 // These figures were previously measured by hand in throwaway scripts, which is how a wrong cold
-// share reached CLAUDE.md (see provenance-classes.mjs's header). Anything quoting them should be
+// share reached the developer reference (see provenance-classes.mjs's header). Anything quoting them should be
 // able to re-derive them with one command instead of re-implementing the predicate.
 //
 // Usage:
