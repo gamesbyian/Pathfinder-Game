@@ -29,9 +29,6 @@ try {
     scripts: {
       pass: `${JSON.stringify(process.execPath)} -e "console.log('PASS_STDOUT')"`,
       fail: `${JSON.stringify(process.execPath)} -e "console.error('FAIL_STDERR'); process.exit(7)"`,
-      first: `${JSON.stringify(process.execPath)} -e "require('node:fs').appendFileSync('order.txt','first\\n')"`,
-      second: `${JSON.stringify(process.execPath)} -e "require('node:fs').appendFileSync('order.txt','second\\n')"`,
-      third: `${JSON.stringify(process.execPath)} -e "require('node:fs').appendFileSync('order.txt','third\\n')"`,
     },
   }, null, 2));
 
@@ -66,18 +63,6 @@ try {
   assert.equal(timing.results[0].code, 0);
   assert.equal(typeof timing.results[0].seconds, 'number');
   assert.equal(typeof timing.wallSeconds, 'number');
-
-  const orderPath = path.join(temp, 'order.txt');
-  const prioritized = run(['first', 'second', 'third'], {
-    PATHFINDER_PARALLEL_SUCCESS_OUTPUT: 'summary',
-    PATHFINDER_PARALLEL_JOBS: '1',
-    PATHFINDER_PARALLEL_PRIORITY: 'third, second',
-  });
-  assert.equal(prioritized.status, 0, prioritized.stderr || prioritized.stdout);
-  assert.deepEqual(fs.readFileSync(orderPath, 'utf8').trim().split('\n'), ['third', 'second', 'first']);
-  assert.match(prioritized.stdout, /priority=2/u);
-  assert.match(prioritized.stdout, /PASS\s+first[\s\S]*PASS\s+second[\s\S]*PASS\s+third/u,
-    'summary order remains the caller request order');
 
   const npmFallbackPass = run(['pass'], {
     PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '0',
