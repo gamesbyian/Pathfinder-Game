@@ -160,8 +160,6 @@ The repair-search change removed six redundant soundness-only real searches and 
 
 Diversification remains deliberately real solver integration. Its three dominant tests measure about **2.1 s**, **1.9 s**, and **1.9 s** in the current production run. Its reusable prerequisite harvest is already shared; the remaining expensive sessions assert distinct stateful behavior and should not be conflated merely for speed.
 
-Diversification remains deliberately real solver integration. Its three dominant tests currently measure ~2.7 s, 2.4 s, and 2.3 s. Do not replace them with mocks merely to improve CI; inspect fixture/work ceilings and reusable setup only where the same integration contract remains intact.
-
 Current covered-test audit lenses:
 
 - bookkeeping tests invoking real search/solver work;
