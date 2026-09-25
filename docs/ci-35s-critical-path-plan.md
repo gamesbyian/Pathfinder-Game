@@ -1329,6 +1329,27 @@ The mirrored temporary rehearsal passed the full **105-command** owner-A populat
 
 These are qualifying hard-ceiling samples, but the p50≤30/p90≤35 declaration still requires a bounded comparable window. Current tails are Node B and coverage, not Fast Gate/deep services.
 
+## Fast Gate runtime-data minimization
+
+The latest green head showed a remaining Fast Gate variance tail dominated by serialized bootstrap rather than validator useful work. The warm path was still restoring the complete runtime-data tree even though PR validators only need four physical corpus documents:
+
+- `data/levels.json`;
+- `data/stress/stress-levels.json`;
+- `data/stress/stress-levels-random.json`;
+- `data/stress/stress-levels-envelope.json`.
+
+The apparent blocker was `check:corpus-level-formatting`, which historically discovered Hint-store prefixes from physically materialized directories. On PR CI that check is explicitly incremental: changed paths come from Git, changed file contents are read through `readRepositoryText`, and the full orphan/store scan does not run.
+
+The formatting classifier now uses the canonical tracked Hint-store roots for path recognition, independent of sparse checkout. Full/local scans still discover the physical stores and fail closed through `assertCompleteHintStoreDirs`.
+
+Production Fast Gate now:
+
+1. materializes only the four level corpus documents with `git show`;
+2. does **not** restore the full runtime-data cache on the normal warm path;
+3. restores canonical Hint/runtime data only if the runtime-Hint projection cache misses and source artifacts are actually required for reconcile/rebuild.
+
+This preserves projection-miss correctness while removing another multi-second cache restore from ordinary exact-hit Fast Gate execution. Gate parity now protects the minimal-data warm-path shape.
+
 ## Current forward work order
 
 1. **Get the repaired data-free coverage head fully green:** require Fast Gate, both Node shards, coverage, deep services, topology, semantic-fault, and solver-evidence guards on one exact head. The remaining known failures from the extraction were registry/metric-inventory bookkeeping and have been repaired.
