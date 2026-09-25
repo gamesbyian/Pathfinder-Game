@@ -9,7 +9,7 @@ assert.equal(research.jobs['deep-verification'].required, false);
 assert.equal(research.jobs['deep-services'].required, false);
 assert.deepEqual(research.jobs['fast-gate'].capabilities, ['lint']);
 
-const solver = packSurfaces(['repo', 'research', 'solver']);
+const solver = packSurfaces(['solver']);
 assert.equal(solver.jobs['fast-gate'].required, true);
 assert.equal(solver.jobs['deep-verification'].required, true);
 assert.equal(solver.jobs['deep-services'].required, true);
