@@ -89,7 +89,9 @@
       "test:winning-attempt-family",
       "test:plan-routing-regime-ab-shards",
       "test:attempt-config-key",
-      "test:solver-request-semantics-inventory"
+      "test:solver-request-semantics-inventory",
+      "test:combine-solver-sweep-reports",
+      "test:prune-gap-contract"
     ],
     "data": [
       "test:combine-method-probe-shards",
@@ -121,11 +123,6 @@
       "test:data-asset-runtime-smoke",
       "test:data-assets-contract",
       "test:level-codec-maintained-corpus-contract",
-      "test:technique-census-cell",
-      "test:research-index",
-      "test:ws6-dependency-interface-observer",
-      "test:prune-gap-contract",
-      "test:combine-solver-sweep-reports",
       "test:hint-termination-semantics",
       "test:hint-discovery-process-cli",
       "test:hint-harvest-selection-manifest",
@@ -221,7 +218,10 @@
       "test:solver-capability-evidence",
       "test:action-selection-legal-signals",
       "test:apply-action-selection-legal-signal-model",
-      "test:reconcile-broad-solver-evidence"
+      "test:reconcile-broad-solver-evidence",
+      "test:ws6-dependency-interface-observer",
+      "test:research-index",
+      "test:technique-census-cell"
     ],
     "shared": [
       "test:signature-collision-analysis",
