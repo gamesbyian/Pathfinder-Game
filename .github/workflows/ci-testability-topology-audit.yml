@@ -12,6 +12,8 @@ on:
       - '.github/workflows/ci-testability-topology-audit.yml'
       - 'scripts/ci-testability-topology-audit.mjs'
       - 'scripts/ci-dependency-local-routing-audit.mjs'
+      - 'scripts/ci-coverage-shard-plan.mjs'
+      - 'vitest.config.mjs'
       - 'scripts/validation-groups.json'
       - 'package.json'
 
