@@ -199,6 +199,15 @@ if (process.exitCode) process.exit(process.exitCode);
 const args = process.argv.slice(2);
 const listOnly = args.includes('--list');
 if (listOnly) args.splice(args.indexOf('--list'), 1);
+const ownerGroupsArgIndex = args.findIndex(arg => arg.startsWith('--owner-groups='));
+let ownerGroups = null;
+if (ownerGroupsArgIndex !== -1) {
+  const value = args.splice(ownerGroupsArgIndex, 1)[0].slice('--owner-groups='.length);
+  const parsed = value.split(',').filter(Boolean);
+  if (parsed.length === 0) fail('--owner-groups requires at least one group');
+  for (const group of parsed) if (!VALID_GROUPS.has(group)) fail(`unknown execution-owner group: ${group}`);
+  ownerGroups = new Set(parsed);
+}
 const familyName = args.shift();
 if (!VALID_FAMILIES.has(familyName)) {
   fail('usage: validation-groups.mjs --check | <validators|nodeTests> <group> [group ...] [--list]');
@@ -217,7 +226,9 @@ for (const group of args) {
   for (const member of inventories[familyName].flat) {
     const ownedByRequestedShared = group === 'shared' && inventories[familyName].seen.get(member) === 'shared';
     const touchesRequestedSurface = semanticSurfacesFor(familyName, member).includes(group);
-    if ((ownedByRequestedShared || touchesRequestedSurface) && !selectedSet.has(member)) {
+    const executionOwner = inventories[familyName].seen.get(member);
+    const ownerSelected = ownerGroups === null || ownerGroups.has(executionOwner);
+    if (ownerSelected && (ownedByRequestedShared || touchesRequestedSurface) && !selectedSet.has(member)) {
       selectedSet.add(member);
       selected.push(member);
     }
@@ -233,6 +244,7 @@ if (listOnly) {
   console.log(JSON.stringify({
     family: familyName,
     requestedSurfaces: args,
+    executionOwnerGroups: ownerGroups === null ? null : [...ownerGroups],
     selected,
   }, null, 2));
   process.exit(0);
