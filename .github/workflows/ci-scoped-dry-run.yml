@@ -28,7 +28,6 @@ jobs:
       needs_deep_proofs: ${{ steps.plan.outputs.needs_deep_proofs }}
       needs_firestore: ${{ steps.plan.outputs.needs_firestore }}
       fast_job_required: ${{ steps.plan.outputs.fast_job_required }}
-      build_job_required: ${{ steps.plan.outputs.build_job_required }}
       deep_job_required: ${{ steps.plan.outputs.deep_job_required }}
       deep_services_job_required: ${{ steps.plan.outputs.deep_services_job_required }}
     steps:
@@ -115,13 +114,6 @@ jobs:
       - name: Run lint
         id: lint
         run: npm run check:lint
-
-  production-build:
-    needs: impact-shadow
-    if: needs.impact-shadow.outputs.build_job_required == 'true'
-    uses: ./.github/workflows/ci-production-build.yml
-    with:
-      ref: ${{ inputs.head_ref }}
 
   node-contracts:
     needs: impact-shadow
@@ -258,6 +250,55 @@ jobs:
       - name: Install dependencies from the npm cache
         if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
         run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Materialize build runtime JSON
+        if: needs.impact-shadow.outputs.needs_build == 'true'
+        shell: bash
+        run: |
+          mkdir -p data/stress
+          for file in \
+            data/levels.json \
+            data/level-heatmaps.json \
+            data/themes.json \
+            data/stress/stress-levels.json \
+            data/stress/stress-levels-random.json
+          do
+            git show "HEAD:$file" > "$file"
+          done
+      - name: Derive runtime-hint projection cache identity
+        if: needs.impact-shadow.outputs.needs_build == 'true'
+        id: runtime-hint-projection-key
+        shell: bash
+        run: node scripts/ci-runtime-hint-projection-cache.mjs key
+      - name: Restore exact or recent runtime-hint projection
+        if: needs.impact-shadow.outputs.needs_build == 'true'
+        id: runtime-hint-projection-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
+          restore-keys: |
+            runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-
+      - name: Restore runtime Hint sources for projection miss
+        if: needs.impact-shadow.outputs.needs_build == 'true' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/runtime-data
+      - name: Plan runtime-hint projection overlay
+        if: needs.impact-shadow.outputs.needs_build == 'true' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: node scripts/ci-runtime-hint-projection-cache.mjs plan
+      - name: Build production bundle
+        if: needs.impact-shadow.outputs.needs_build == 'true'
+        id: build
+        env:
+          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
+          PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE: ${{ steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && '1' || '0' }}
+        run: npm run build
+      - name: Save exact runtime-hint projection after successful build
+        if: needs.impact-shadow.outputs.needs_build == 'true' && steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
+
       - name: Restore Firebase CLI cache
         if: needs.impact-shadow.outputs.needs_firestore == 'true'
         uses: actions/cache/restore@v5
@@ -306,7 +347,6 @@ jobs:
     needs:
       - impact-shadow
       - fast-gate
-      - production-build
       - node-contracts
       - deep-verification
       - deep-services
@@ -318,20 +358,17 @@ jobs:
         env:
           ROUTE_RESULT: ${{ needs.impact-shadow.result }}
           FAST_RESULT: ${{ needs.fast-gate.result }}
-          BUILD_RESULT: ${{ needs.production-build.result }}
           NODE_RESULT: ${{ needs.node-contracts.result }}
           DEEP_RESULT: ${{ needs.deep-verification.result }}
           SERVICES_RESULT: ${{ needs.deep-services.result }}
         run: |
           printf '%-18s %s\n' route "$ROUTE_RESULT"
           printf '%-18s %s\n' fast-gate "$FAST_RESULT"
-          printf '%-18s %s\n' production-build "$BUILD_RESULT"
           printf '%-18s %s\n' node-contracts "$NODE_RESULT"
           printf '%-18s %s\n' deep-verification "$DEEP_RESULT"
           printf '%-18s %s\n' deep-services "$SERVICES_RESULT"
           [[ "$ROUTE_RESULT" == "success" ]]
           [[ "$FAST_RESULT" == "success" ]]
-          [[ "$BUILD_RESULT" == "success" || "$BUILD_RESULT" == "skipped" ]]
           [[ "$NODE_RESULT" == "success" ]]
           [[ "$DEEP_RESULT" == "success" || "$DEEP_RESULT" == "skipped" ]]
           [[ "$SERVICES_RESULT" == "success" || "$SERVICES_RESULT" == "skipped" ]]
