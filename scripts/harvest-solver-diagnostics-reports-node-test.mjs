@@ -11,10 +11,16 @@ const HARVEST_BUNDLE = buildBundle('scripts/harvest-solver-diagnostics-reports.m
 
 const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-diagnostics-central-harvest-'));
 const receiptPath = path.join(temp, 'receipt.json');
+// The empty-staging receipt contract has no level observations to validate, so loading the entire
+// published corpus here proves nothing. Keep this CLI boundary real but inject the smallest valid
+// private corpus; the real-row block below separately proves canonical level/referee/Hint behavior.
+const emptyCorpusPath = path.join(temp, 'empty-corpus.json');
+writeFileSync(emptyCorpusPath, '[]\n');
 try {
     const run = spawnSync(process.execPath, [
         HARVEST_BUNDLE,
         `--staging-dir=${temp}`,
+        `--corpus=${emptyCorpusPath}`,
         '--source-run-id=fixture-run',
         '--source-run-attempt=2',
         '--source-workflow=Solver diagnostics and hint capture',
