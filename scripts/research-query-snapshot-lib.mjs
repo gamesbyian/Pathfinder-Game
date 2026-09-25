@@ -40,6 +40,15 @@ export function buildResearchQuerySnapshot(graph) {
     };
 }
 
+const RESEARCH_GIT_REF_SPARSE_DIRECTORIES = [
+    'docs',
+    'reports',
+    'scripts',
+    'modules',
+    '.github/workflows',
+    'data/stress',
+];
+
 export function buildResearchQuerySnapshotFromGitRef(root, ref, { discoverArtifacts = false } = {}) {
     return withDetachedGitWorktree(root, ref, worktree => {
         const graph = buildResearchQueryGraph(worktree, {
@@ -47,7 +56,7 @@ export function buildResearchQuerySnapshotFromGitRef(root, ref, { discoverArtifa
             allowHistoricalWorkstreamTable: true,
         });
         return buildResearchQuerySnapshot(graph);
-    });
+    }, { sparseDirectories: RESEARCH_GIT_REF_SPARSE_DIRECTORIES });
 }
 
 export function diffResearchQuerySnapshots(before, after) {
