@@ -119,7 +119,7 @@ assert.ok(supportImpact.rows.some(row =>
   'authored decisionSupport should distinguish necessary support from answeredBy-only evidence');
 
 const answerability = buildResearchQueryView(graph, { view: 'answerability' });
-assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === '2I'),
+assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === '2F'),
   'design gate should be visible as no-fresh-solver-execution work');
 assert.ok(answerability.boundedCompute.some(row => row.workstreamId === '2X'),
   'small exact projections BC1 consumer gate should be explicitly classified as bounded compute');

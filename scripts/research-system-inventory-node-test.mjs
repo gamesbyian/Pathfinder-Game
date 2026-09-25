@@ -11,11 +11,11 @@ assert.ok(inventory.currentState.queueEntries > 0, 'inventory must expose curren
 assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-question state');
 const ws2Live = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2');
 assert.ok(ws2Live);
-assert.equal(ws2Live.executionState, 'supporting');
+assert.equal(ws2Live.executionState, 'active');
 assert.equal(ws2Live.gateClass, 'bounded-compute');
 assert.equal(ws2Live.questionRef, 'WS2-REPAIR-DEADLINE-ALLOCATION');
-assert.equal(ws2Live.questionState, 'concluded-positive');
-assert.equal(ws2Live.questionExecutionRelation, 'terminal-question');
+assert.equal(ws2Live.questionState, 'active-candidate');
+assert.equal(ws2Live.questionExecutionRelation, 'active-question');
 assert.equal(ws2Live.questionReopensOn, null);
 const inventionLive = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2I');
 assert.ok(inventionLive, 'capability-invention acquisition front must remain visible at the research front door');
