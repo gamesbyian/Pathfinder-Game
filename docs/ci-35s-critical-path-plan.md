@@ -202,15 +202,13 @@ Real solver integrations stay real unless an equivalent cheaper witness proves t
 
 The proof-value audit found that the four-file set had conflated two different contracts.
 
-PR-blocking deep proofs now contain three files:
+PR-blocking deep proofs now contain only the two exhaustive deadlock-root soundness files. The historical R02560 enabled/disabled pair is retained together as `test:solver-effectiveness-characterizations`, outside ordinary PR CI.
 
-- deadlock root 0: ~9 s exhaustive soundness proof;
-- deadlock root 1: ~7–9 s complementary exhaustive soundness proof;
-- R02560 enabled: ~0.25–0.36 s positive production-regression witness.
+The disabled assertion is causal historical evidence: disabling only `STRATEGY_REPAIR_LENGTH_GAP_CLOSE` left R02560 unsolved within the published 900,000-node ceiling. The enabled assertion records the corresponding historical rescue. Both are useful during mechanism attribution, but neither is a software-correctness invariant. Another solver mechanism may legitimately make the disabled arm solve, and an intentional portfolio/search tradeoff may legitimately move the enabled rescue. Effectiveness and regression accounting belong to the experiment/promotion protocol.
 
-The former ~10–11 s R02560-disabled arm is retained as `test:solver-effectiveness-characterizations`, not as an ordinary PR proof. Its assertion is causal historical evidence: disabling only `STRATEGY_REPAIR_LENGTH_GAP_CLOSE` leaves R02560 unsolved within the published 900,000-node ceiling. That negative is useful when intentionally re-checking mechanism attribution, but it is not a correctness invariant and can legitimately become false if another solver mechanism improves. Blocking every merge on that negative would therefore turn an improvement into a CI regression.
+The enabled witness did once expose a harmful backward-route scoring experiment while the published 160/160 benchmark stayed green. That is evidence that the witness is scientifically useful, not evidence that it should block every merge: the repository's matched-work A/B, gain/loss accounting, confirmation, and production-boundary refresh process is the stronger authority for solver effectiveness.
 
-The cheap enabled arm has demonstrated regression value: the August backward-route scoring experiment kept the published 160/160 benchmark green while breaking the R02560 rescue, helping expose a harmful search bias. Keep that positive witness for solver-impact PRs until a smaller faithful fixture replaces it.
+The universal nine-published-level solver capability canary has likewise been removed from PR CI. It pinned fixed historical solve outcomes under a 250k-work ceiling, duplicating the solver research regression process. Catastrophic plumbing failure remains covered by the tiny real top-level `solveLevel()` synthetic-line test in `orchestration-core.test.ts`, plus the ordinary solver correctness/unit suite.
 
 The routing audit also found that the local planner already emits independent `needs_coverage`, `needs_deep_proofs`, and `needs_firestore` capabilities, while the production deep job previously used only coarse `deep_job_required` and ran all three obligations whenever any one was selected. That contradicted `ci-validation-plan.json`: deep proofs belong to the solver surface, Firestore to persistence, and coverage to game/solver/shared. The deep job now honors those existing per-capability outputs, with planner failure still failing safe by running all obligations.
 
@@ -626,6 +624,27 @@ Why this is the fallback:
 Initial capacity target: benchmark **at least 16 logical CPUs**. Eight cores may be borderline after setup; 16 gives headroom for the ~10 s single-proof tails and coverage transforms while Node shards/processes run concurrently.
 
 This fallback is preferable to removing validation solely because shared hosted-runner assignment is noisy.
+
+## Correctness/process/evidence audit
+
+The 35-second audit exposed a broader classification problem: the production Fast Gate is still universal even though the repository already maintains semantic validator/Node-test groups. This causes unrelated PRs to repeatedly run repository-governance and research-process checks.
+
+Use three dispositions:
+
+1. **Correctness/integration** — keep in PR CI, scoped where semantics permit. Examples: typecheck, build, data-schema validity, runtime path validation, hard-prune soundness, persistence boundary behavior, CLI/API contracts.
+2. **Repository/process integrity** — keep as change-scoped governance, not universal work. Examples: CI-plan parity, workflow lifecycle/disposition registries, documentation authority/link integrity, file-size/context-budget ratchets, no-level-identity policy, metric-boundary ownership.
+3. **Frozen evidence/process-result reconfirmation** — remove from ordinary PR CI. Dated reports and historical research outcomes are evidence, not compatibility APIs. Test analyzers with synthetic fixtures; validate historical artifacts only when intentionally auditing/regenerating them.
+
+Concrete findings:
+- `test:research-system-consolidation-closeout` re-derives a frozen 2026-09-12..19 retrospective, deep-compares the frozen window, and regex-checks dated report prose. This is a direct violation of the frozen-evidence rule and should leave ordinary CI.
+- `test:research-portfolio-retrospective` reconstructs that same historical window from current authorities and checks a dated snapshot. Keep synthetic/library behavior tests, but historical-window continuity is audit/regeneration work.
+- `test:research-system-inventory` mixes real structural integration assertions with many exact current-queue/current-report/current-plan expectations. Split synthetic structural contracts from repository-state acceptance checks; the latter belong to research-system change scope, not every PR.
+- `check:current-level-facts` recomputes a generated documentation block from canonical corpora. This is useful freshness enforcement when level data or that generated authority changes, but it is not universal correctness.
+- `check:solver-sweep-results`, `check:failure-evidence-disposition`, and the research-resource portion of `check:audit-artifacts` enforce experimental/workflow governance. They protect the research process, not the game runtime; run them when workflows/contracts/registries change.
+- `check:no-solver-level-numbers`, `check:level-metric-boundaries`, file-size/context-budget ratchets, documentation navigation checks, and CI-plan/gate parity are architectural/maintenance policy. Retain them, but scope them to relevant source/authority changes.
+- coverage thresholds are quality policy rather than a correctness proof. Keep them for implementation surfaces where they are intended to prevent untested code growth; do not treat coverage itself as evidence that behavior is correct.
+
+The next Fast Gate redesign should activate the already-authored validator/Node-test group routing instead of executing the entire governance/research contract on every PR.
 
 ## Current forward work order
 
