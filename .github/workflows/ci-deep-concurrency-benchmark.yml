@@ -1,18 +1,6 @@
 name: CI Deep Concurrency Benchmark
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/ci-deep-concurrency-benchmark.yml'
-      - '.github/workflows/ci.yml'
-      - 'docs/ci-35s-critical-path-plan.md'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'vitest.config.mjs'
-      - 'tests/**'
-      - 'modules/**'
-      - 'scripts/**'
-      - 'firestore.rules'
   workflow_dispatch:
 
 permissions:
