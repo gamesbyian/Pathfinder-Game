@@ -85,10 +85,8 @@
       "test:select-routing-regime-sample-cli",
       "test:early-repair-search-badness-report",
       "test:race-stage-parity",
-      "test:combine-solver-sweep-reports",
       "test:req-length-sweep-lib",
       "test:winning-attempt-family",
-      "test:prune-gap-contract",
       "test:plan-routing-regime-ab-shards",
       "test:attempt-config-key",
       "test:solver-request-semantics-inventory"
@@ -123,6 +121,11 @@
       "test:data-asset-runtime-smoke",
       "test:data-assets-contract",
       "test:level-codec-maintained-corpus-contract",
+      "test:technique-census-cell",
+      "test:research-index",
+      "test:ws6-dependency-interface-observer",
+      "test:prune-gap-contract",
+      "test:combine-solver-sweep-reports",
       "test:hint-termination-semantics",
       "test:hint-discovery-process-cli",
       "test:hint-harvest-selection-manifest",
@@ -158,7 +161,6 @@
       "test:research-question-authority-audit",
       "test:lane-a-c0-population-derivation",
       "test:lane-a-c2-accounting",
-      "test:ws6-dependency-interface-observer",
       "test:research-relations",
       "test:research-queryability-audit",
       "test:research-query",
@@ -192,7 +194,6 @@
       "test:level-blind-capability-sweep-cli",
       "test:derive-timeout-recovery-population",
       "test:lifecycle-failure-map",
-      "test:research-index",
       "test:family-census-combine",
       "test:research-analysis-lib",
       "test:experiment-manifest",
@@ -202,7 +203,6 @@
       "test:analyze-technique-census",
       "test:analyze-technique-relative-advantage",
       "test:analyze-technique-census-temporal-stability",
-      "test:technique-census-cell",
       "test:write-solver-experiment-contract",
       "test:combine-paired-arm-integrity",
       "test:failure-response-query",
@@ -480,6 +480,7 @@
         "solver"
       ],
       "test:research-index": [
+        "data",
         "research",
         "solver"
       ],
@@ -536,6 +537,7 @@
         "solver"
       ],
       "test:technique-census-cell": [
+        "data",
         "research",
         "solver"
       ],
@@ -560,6 +562,7 @@
         "solver"
       ],
       "test:ws6-dependency-interface-observer": [
+        "data",
         "research",
         "solver"
       ],
@@ -590,6 +593,15 @@
         "game",
         "solver",
         "research"
+      ],
+      "test:combine-solver-sweep-reports": [
+        "data",
+        "solver",
+        "research"
+      ],
+      "test:prune-gap-contract": [
+        "data",
+        "solver"
       ]
     },
     "validators": {
@@ -714,6 +726,36 @@
           "data/stress/stress-levels-random.json",
           "modules/domain/level-codec.ts",
           "modules/domain/level-fingerprint.ts"
+        ]
+      },
+      "test:combine-solver-sweep-reports": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/stress/stress-levels-random.json"
+        ]
+      },
+      "test:prune-gap-contract": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json"
+        ]
+      },
+      "test:ws6-dependency-interface-observer": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/stress/stress-levels-random.json"
+        ]
+      },
+      "test:research-index": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/stress/stress-levels.json"
+        ]
+      },
+      "test:technique-census-cell": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json"
         ]
       }
     }
