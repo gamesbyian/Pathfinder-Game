@@ -1495,6 +1495,14 @@
           "scripts/level-sparse-serialization-apply.mjs"
         ],
         "finding": "Phase-10 closeout reran only the sparse serialization benchmark, so reintroduced omittable arrays could remain green. The mutation authority now has non-mutating --check mode and closeout requires zero residual changes."
+      },
+      {
+        "id": "HPA-035",
+        "kind": "workflow-persistence-multiline-command-bypass",
+        "paths": [
+          "scripts/central-hint-persistence-guard.mjs"
+        ],
+        "finding": "Line-local git staging detection could miss canonical Hint scopes placed on a backslash-continued shell line. Persistence analysis now joins logical shell continuations and adversarially tests continued git add/status commands."
       }
     ]
   }
