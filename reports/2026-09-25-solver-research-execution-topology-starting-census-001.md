@@ -76,3 +76,37 @@ High-budget sweep already uses telemetry-weighted dynamic packing with straggler
 2. Reconcile the live solver queue to current execution architecture.
 3. Choose representative exact-runtime rehearsals before changing all workflow Node versions.
 4. Add hosted bootstrap timing evidence by job class before activating dependency-tree restore broadly.
+
+## Historical hosted timing sample
+
+The broad production refresh run `35687363645` provides a useful first economics sample on solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`.
+
+Representative Capability shard 1/60 (job `106616974719`):
+
+- checkout began 04:34:08.668 and detached HEAD was ready 04:35:02.875: **~54.2 s**;
+- setup-node began 04:35:02.917 and reported Node v20.20.2 at 04:35:08.133: **~5.2 s** to runtime availability;
+- the npm cache then restored and `npm ci` began 04:35:10.065; package installation completed 04:35:17.695: **~7.6 s**;
+- result staging began 05:31:35.995, so this particular shard then spent roughly 56 minutes in useful/scientific work and related local reporting.
+
+This means full-tree bootstrap was real and large in absolute terms, but only a small fraction of that long shard. It should **not** justify changing long-running solve jobs first.
+
+The technique-census plan job from run `35687337464` (job `106616875652`) is more revealing for short orchestration:
+
+- checkout fetch alone ran from about 04:33:38.25 to 04:34:29.48, with checkout complete around 04:34:32.82;
+- setup-node then resolved floating Node 20 to **v20.20.2** and reached environment availability around 04:34:37.34;
+- npm-cache restore completed around 04:34:38.94;
+- `npm ci` ran until about 04:34:45.90;
+- only then did plan generation/canary work begin.
+
+So the full checkout + runtime + install path consumed roughly a minute before short planning/canary work. This materially strengthens the case for input materialization and exact bootstrap reuse on non-solve jobs.
+
+### Priority consequence
+
+For short research jobs, pursue in this order:
+
+1. exact runtime identity as a reproducibility correction;
+2. sparse/derived input materialization where a real input contract can be proved;
+3. exact dependency-tree restore once runtime identity is fixed;
+4. only then smaller process/bundle taxes.
+
+For long solve shards, retain the same mechanisms as candidates but activate only when aggregate runner-minute economics or retry latency justify them.
