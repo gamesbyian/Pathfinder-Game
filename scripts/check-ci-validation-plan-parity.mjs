@@ -60,69 +60,7 @@ for (const [name, capability] of Object.entries(plan.capabilities ?? {})) {
   }
   if (capability.workflowStepId) {
     const escapedId = escapeRegex(capability.workflowStepId);
-    if (!new RegExp(`^\\s*id:\\s*${escapedId}\\s*#!/usr/bin/env node
-import fs from 'node:fs';
-import path from 'node:path';
-import process from 'node:process';
-
-const root = process.cwd();
-const plan = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'ci-validation-plan.json'), 'utf8'));
-const registry = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'validation-groups.json'), 'utf8'));
-const executionPlan = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'ci-execution-plan.json'), 'utf8'));
-const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
-const buildWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci-production-build.yml'), 'utf8');
-const productionCapabilityWorkflows = workflow + '\n' + buildWorkflow;
-const activationWorkflowPath = executionPlan.activationWorkflow;
-const activationWorkflow = typeof activationWorkflowPath === 'string'
-  ? fs.readFileSync(path.join(root, activationWorkflowPath), 'utf8')
-  : '';
-const activationCapabilityWorkflows = activationWorkflow + '\n' + buildWorkflow;
-const failures = [];
-
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-}
-
-const validatorGroups = new Set(Object.keys(registry.validators ?? {}));
-const nodeTestGroups = new Set(Object.keys(registry.nodeTests ?? {}));
-const capabilities = new Set(Object.keys(plan.capabilities ?? {}));
-
-for (const [surface, rule] of Object.entries(plan.surfaces ?? {})) {
-  for (const group of rule.validatorGroups ?? []) {
-    if (!validatorGroups.has(group)) failures.push(`${surface}: unknown validator group ${group}`);
-  }
-  for (const group of rule.nodeTestGroups ?? []) {
-    if (!nodeTestGroups.has(group)) failures.push(`${surface}: unknown Node-test group ${group}`);
-  }
-  for (const capability of rule.capabilities ?? []) {
-    if (!capabilities.has(capability)) failures.push(`${surface}: unknown capability ${capability}`);
-  }
-}
-
-for (const capability of plan.always?.capabilities ?? []) {
-  if (!capabilities.has(capability)) failures.push(`always: unknown capability ${capability}`);
-}
-
-for (const scriptName of plan.always?.packageScripts ?? []) {
-  if (typeof packageJson.scripts?.[scriptName] !== 'string') {
-    failures.push(`always: missing package script ${scriptName}`);
-  }
-}
-
-for (const [name, capability] of Object.entries(plan.capabilities ?? {})) {
-  if (capability.packageScript) {
-    if (typeof packageJson.scripts?.[capability.packageScript] !== 'string') {
-      failures.push(`${name}: missing package script ${capability.packageScript}`);
-    }
-    const escaped = escapeRegex(capability.packageScript);
-    if (!new RegExp(`npm run ${escaped}(?=\\s|["']|$)`, 'mu').test(productionCapabilityWorkflows)) {
-      failures.push(`${name}: production CI no longer runs npm run ${capability.packageScript}`);
-    }
-  }
-  if (capability.workflowStepId) {
-    const escapedId = escapeRegex(capability.workflowStepId);
-    , 'mu').test(productionCapabilityWorkflows)) {
+    if (!new RegExp(`^\\s*id:\\s*${escapedId}\\s*$`, 'mu').test(productionCapabilityWorkflows)) {
       failures.push(`${name}: production CI no longer exposes step id ${capability.workflowStepId}`);
     }
   } else {
@@ -218,25 +156,7 @@ if (!activationWorkflowPath) {
     const stepId = capability.workflowStepId;
     if (!stepId) continue;
     const escapedId = escapeRegex(stepId);
-    if (!new RegExp(`^\\s*id:\\s*${escapedId}\\s*if (!activationWorkflowPath) {
-  failures.push('execution plan is missing activationWorkflow');
-} else {
-  for (const jobId of [...Object.keys(executionPlan.jobs ?? {}), finalStatus?.jobId].filter(Boolean)) {
-    if (!new RegExp(`^  ${escapeRegex(jobId)}:\\s*$`, 'mu').test(activationWorkflow)) {
-      failures.push(`${activationWorkflowPath}: missing execution-contract job ${jobId}`);
-    }
-  }
-  for (const scriptName of plan.always?.packageScripts ?? []) {
-    const escaped = escapeRegex(scriptName);
-    if (!new RegExp(`npm run ${escaped}(?=\\s|["']|$)`, 'mu').test(activationWorkflow)) {
-      failures.push(`${activationWorkflowPath}: does not explicitly run always-on package script ${scriptName}`);
-    }
-  }
-  for (const [name, capability] of Object.entries(plan.capabilities ?? {})) {
-    const stepId = capability.workflowStepId;
-    if (!stepId) continue;
-    const escapedId = escapeRegex(stepId);
-    , 'mu').test(activationCapabilityWorkflows)) {
+    if (!new RegExp(`^\\s*id:\\s*${escapedId}\\s*$`, 'mu').test(activationCapabilityWorkflows)) {
       failures.push(`${activationWorkflowPath}: capability ${name} is missing step id ${stepId} across activation workflows`);
     }
   }
