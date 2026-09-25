@@ -544,6 +544,11 @@ const convertDirectToRawPayload = (direct = {}) => {
     runType: 'newHint',
     timestamp: direct?.timestamp || new Date().toISOString(),
     commitSha: direct?.commitSha || process.env.GITHUB_SHA || 'local',
+    executionRuntime: direct?.executionRuntime ?? {
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch
+    },
     budgetMs: direct?.budgetMs ?? null,
     workBudget: direct?.workBudget ?? null,
     solverRequestProjection: direct?.solverRequestProjection ?? null,
