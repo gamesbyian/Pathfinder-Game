@@ -1,5 +1,7 @@
 # Solver research execution-efficiency plan
 
+Current continuation/handoff: [2026-09-25 research execution-efficiency session handoff](../reports/2026-09-25-research-execution-efficiency-session-handoff-001.md).
+
 > **Status:** active / implementation started.
 > **Created:** 2026-09-25.
 > **Authority boundary:** `docs/solver-optimization-workstreams.md` remains the scientific priority/next-gate authority. This plan owns research-execution cost, reproducibility, input topology, and harness-economics work that supports those gates without changing scientific priority.
