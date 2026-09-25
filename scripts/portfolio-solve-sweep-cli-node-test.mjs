@@ -75,6 +75,9 @@ assert.ok(typeof report.summary.effectiveConfig === 'object' && report.summary.e
 
 // Execution backend/reproducibility class (modules/solver/reproducibility-mode.mjs): sequential
 // dispatch is a certain, known fact at this producer, not a guess.
+assert.equal(report.summary.executionRuntime?.nodeVersion, process.version);
+assert.equal(report.summary.executionRuntime?.platform, process.platform);
+assert.equal(report.summary.executionRuntime?.arch, process.arch);
 assert.equal(report.summary.backend, 'direct');
 assert.equal(report.summary.reproducibilityMode, 'deterministic-work');
 
