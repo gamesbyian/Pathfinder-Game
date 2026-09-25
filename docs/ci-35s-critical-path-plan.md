@@ -761,6 +761,8 @@ Using the checked-in rehearsal profile from run 36065247220 only as a relative c
 
 The exact numbers will change with fresh timings, but the shape is decisive: downstream surface escalation can dominate the selected population before any individual test runtime matters.
 
+After encoding the 59 mechanically observed consumers, current registry selection for `solver` is about **81 Node contracts / 80 measured**, with the old rehearsal profile totaling ~**57.6 child-seconds**. That is far fewer commands than the prior `solver + research` 127-contract selection, but not materially less aggregate child work because most expensive research consumers genuinely import solver authorities. Therefore **contract-count reduction is not a speed result**. Further solver-only routing optimization must be file/dependency-local (which solver files changed and which contract closures touch them), not another coarse surface edit. Do not claim a timing win until a scoped hosted rehearsal demonstrates one.
+
 - the production-solver source rule currently classifies `modules/solver/**` as both `solver` and `research`;
 - selecting `research` therefore pulls the entire research validator/Node population into every production-solver PR;
 - the current rehearsal timing profile attributes roughly **46.5 child-seconds across 110 measured research-facing Node contracts**, versus roughly **17.7 child-seconds across 35 measured solver-facing contracts**. These are child-time planning figures from run 36065247220, not current hosted wall times;
