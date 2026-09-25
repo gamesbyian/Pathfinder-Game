@@ -100,7 +100,8 @@
       "WS1 result interpretation and solver queue"
     ],
     "persistenceStores": [
-      "Generated confirmation corpus/result artifacts remain immutable experiment evidence; no production hints/defaults are written."
+      "Generated confirmation corpus/result artifacts remain immutable experiment evidence; no production hints/defaults are written.",
+      "Central harvest-solver-evidence persistence retains the decision-bearing standard result with Hint harvesting disabled for this workflow."
     ],
     "cliPackage": [
       "research:generate-levels",
@@ -189,7 +190,7 @@
         {
           "type": "workflow",
           "locator": ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml + published experiment contract",
-          "expected": "entrypoint scripts/portfolio-solve-sweep.mjs, schedulerMode=production, node ceiling 50000000, base work budget 67000000, non-binding 86400000ms wall deadline, no baseline/prime-winner/attempt-cache/hints, all 160 expected IDs observed exactly once."
+          "expected": "entrypoint scripts/portfolio-solve-sweep.mjs, canonical producer metadata levelBlind=false/historyAware=true, historicalInputs=[], schedulerMode=production, node ceiling 50000000, base work budget 67000000, non-binding 86400000ms wall deadline, no baseline/prime-winner/attempt-cache inputs, saveHints=false, all 160 expected IDs observed exactly once, and every solved row referee-valid"
         }
       ]
     },
@@ -201,6 +202,11 @@
           "type": "artifact",
           "locator": "Frozen-model scoring result",
           "expected": "model path reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json; zero winner endangerment; captured canonical pre-winner work share >=5%; >=3 independently nominated parents; no parent >35% of nominated work; same-stage late continuation remains predominant; integrity fields complete."
+        },
+        {
+          "type": "artifact",
+          "locator": "logs/solver-sweep-result/manifest.json from the one-shot workflow",
+          "expected": "decisionBearing=true; researchQuestion.questionId=WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE; researchOutcome is completed-positive or completed-negative and is bound to the exact population, solver SHA, and combined-result content bytes"
         }
       ]
     },
@@ -356,7 +362,8 @@
       "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE state/next gate"
     ],
     "researchSystem": [
-      "Question/evidence role, block identity, source-run/result publication links"
+      "Question/evidence role, block identity, source-run/result publication links",
+      "Decision-bearing positive/negative research outcome retained by the central harvester without Hint ingestion"
     ],
     "retireOrArchive": [
       "Retire the one-shot wrapper after durable evidence and queue closeout unless a concrete repeated consumer is identified."
