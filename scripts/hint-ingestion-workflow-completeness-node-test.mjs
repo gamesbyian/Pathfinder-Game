@@ -51,6 +51,7 @@ function isHintIngestionReviewCandidate(row) {
 }
 
 const candidateRows = maintainedRows.filter(isHintIngestionReviewCandidate);
+const candidateNames = new Set(candidateRows.map(row => row.workflow));
 const dispositions = new Set([
     'central-ingestion',
     'experiment-only-no-hint-ingestion',
@@ -90,7 +91,11 @@ for (const lifecycleRow of candidateRows) {
 }
 
 for (const row of inventoryRows) {
-    if (!maintained.has(row.workflow)) issues.push(`${row.workflow}: inventory row is not maintained in solver-workflow-lifecycle.json`);
+    if (!maintained.has(row.workflow)) {
+        issues.push(`${row.workflow}: inventory row is not maintained in solver-workflow-lifecycle.json`);
+    } else if (!candidateNames.has(row.workflow)) {
+        issues.push(`${row.workflow}: workflow-ingestion disposition is stale; workflow no longer meets the mechanically derived review-candidate contract`);
+    }
 }
 
 const nonCentral = inventoryRows.filter(row => row.hintIngestionDisposition !== 'central-ingestion');
