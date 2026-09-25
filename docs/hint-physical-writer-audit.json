@@ -38,6 +38,26 @@
       "path": "scripts/validate-all-hint-stores-node-test.mjs",
       "disposition": "temporary-test-fixture-writer",
       "rationale": "Creates one synthetic canonical-layout Hint file only inside mkdtemp() to prove whole-store owner/referee validation; it never targets repository canonical data."
+    },
+    {
+      "path": "scripts/harvest-cpsat-discovery-reports-node-test.mjs",
+      "disposition": "temporary-test-fixture-writer",
+      "rationale": "Creates isolated canonical-layout Hint fixtures in temporary test roots while exercising the real central CP-SAT harvester; never targets repository canonical data."
+    },
+    {
+      "path": "scripts/harvest-level-blind-report-hints-node-test.mjs",
+      "disposition": "temporary-test-fixture-writer",
+      "rationale": "Creates isolated canonical-layout Hint fixtures in temporary test roots for central level-blind ingestion parity; never targets repository canonical data."
+    },
+    {
+      "path": "scripts/harvest-solver-diagnostics-reports-node-test.mjs",
+      "disposition": "temporary-test-fixture-writer",
+      "rationale": "Creates isolated canonical-layout Hint fixtures in a temporary corpus to keep the diagnostics regression hermetic; never targets repository canonical data."
+    },
+    {
+      "path": "scripts/hint-artifact-v4-migration-node-test.mjs",
+      "disposition": "temporary-test-fixture-writer",
+      "rationale": "Creates temporary physical Hint artifacts to exercise v4 migration semantics and representation; never targets repository canonical data."
     }
   ]
 }
