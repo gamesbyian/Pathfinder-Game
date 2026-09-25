@@ -1,6 +1,6 @@
 # CI impact routing and validation architecture plan
 
-> **Status:** Phase 3 partially activated; deep verification is impact-scoped, fast-gate remains universal.
+> **Status:** Phase 3 activated for semantic validator/Node groups and deep capabilities; Fast Gate remains always-materialized but its contract population is impact-scoped.
 > **Started:** 2026-09-21.
 > **Goal:** make validation proportional to the repository surfaces a change can invalidate, while preserving conservative correctness and a full-validation oracle.
 >
@@ -152,8 +152,9 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 Current production behavior:
 
-- `fast-gate` remains universal for every PR and still executes package/script reachability, textual invariants, all validators, lint, the complete Node/CLI contract population, solver canary, and production build;
-- `deep-verification` is now impact-scoped under the semantic execution plan;
+- `fast-gate` remains an always-materialized runner, but computes the semantic merge-diff plan locally and executes only selected validator/Node-test groups; routing failure falls back to the full aggregates;
+- the historical solver capability canary is no longer an ordinary PR capability; solver effectiveness is owned by the experiment/promotion system;
+- `deep-verification` is impact-scoped under the semantic execution plan and independently selects coverage, hard-prune soundness proofs, and Firestore;
 - planner failure fails safe by running deep verification;
 - manual `workflow_dispatch` runs deep verification;
 - CI/router/config authority changes conservatively classify as full impact;
@@ -167,7 +168,7 @@ Evidence supporting the deep-lane activation includes:
 - research/data/repository-only historical and live samples repeatedly paid deep-lane cost without marginal detection;
 - the broad main-push oracle remains in place to expose integration or routing omissions.
 
-Phase 3 is therefore **partially activated**, not complete. Surface-level routing currently controls only the expensive deep lane. Fast-gate group scoping and dependency-local skipping remain deliberately unactivated.
+Phase 3 is now activated at the semantic-surface level for both Fast Gate contract populations and deep capabilities. Dependency-local skipping remains deliberately unactivated; the next routing question is whether individual semantic ownership is still too broad, not whether to return to universal aggregates.
 
 ### New latency constraint
 
