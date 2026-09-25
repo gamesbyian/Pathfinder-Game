@@ -1,9 +1,9 @@
 # Hint evidence: remaining mechanical migration audit 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-23 — Retained and reconciled as part of the active hint-evidence consolidation implementation.
-> **Decision:** Preserve this report as durable implementation/audit evidence; current code and later reconciliation records remain authoritative where they supersede earlier details.
-> **Remaining gate:** Apply the current phase-specific validation and closeout gates before treating this report as proof of whole-program completion.
+> **Status:** superseded
+> **Last evidence:** 2026-09-24 — PR #2072 hostile closeout reconstructed the maintained producer/consumer/store surface after schema-v4 migration and found additional bypasses not visible in this 2026-09-23 snapshot.
+> **Decision:** Preserve this report as a dated mechanical migration map only. For current architecture, remaining work and completion status, use the consolidation plan plus `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`.
+> **Remaining gate:** none for this historical report itself; it must not be cited as current proof of completeness.
 
 
 > **Status:** reconciled into draft PR #2002
@@ -15,6 +15,11 @@
 **Audited revision:** `23389ff4763884db4dc10689689aef216addd2b9` (`work`)  
 **Scope:** reconnaissance only; this snapshot does not contain draft PR #2002.  
 **Authority:** [`docs/hint-evidence-execution-identity-storage-consolidation-plan.md`](../docs/hint-evidence-execution-identity-storage-consolidation-plan.md)
+
+> **Current-authority note:** later implementation and hostile closeout found residual GHA writers,
+> v4-blind readers, incomplete Firestore same-event occurrence retention, incomplete ownership guards
+> and an incomplete Phase-8 store population. Those later findings do not invalidate this report's
+> observations at its audited revision, but they do supersede its scope as a completion checklist.
 
 ## Purpose and limits
 

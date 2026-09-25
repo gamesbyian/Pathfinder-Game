@@ -21,7 +21,7 @@
  *     [--max-combos=16] [--summary-out=logs/cpsat-hint-harvest-sweep/shard-01-summary.md]
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -67,12 +67,18 @@ for (let i = 0; i < levels.length; i++) {
         const out = execFileSync('node', [
             path.join(root, 'scripts/run-bundled.mjs'), path.join(root, 'scripts/stress/cpsat-hint-harvest.mjs'), '--',
             `--corpus=${CORPUS_FILE}`, `--levels=${id}`, `--time-limit=${TIME_LIMIT}`, '--forced-grid',
-            `--combo-time-limit=${COMBO_TIME_LIMIT}`, `--max-combos=${MAX_COMBOS}`, '--save-hints',
+            `--combo-time-limit=${COMBO_TIME_LIMIT}`, `--max-combos=${MAX_COMBOS}`,
             `--out=logs/cpsat-hint-harvest-sweep/discovery-${id}.json`,
         ], { cwd: root, encoding: 'utf8', timeout: 60 * 60 * 1000 });
         process.stdout.write(out);
-        const m = /hints: (\d+) new path\(s\), (\d+) rediscovery/.exec(out);
-        results.push({ id, status: 'ok', added: m ? Number(m[1]) : 0, rediscovered: m ? Number(m[2]) : 0 });
+        const discoveryFile = path.join(root, 'logs/cpsat-hint-harvest-sweep', `discovery-${id}.json`);
+        const discovery = JSON.parse(readFileSync(discoveryFile, 'utf8'));
+        const accepted = Array.isArray(discovery?.levels)
+            ? discovery.levels.filter(row => Array.isArray(row?.solution) && row.solution.length > 0)
+            : [];
+        const added = accepted.filter(row => row.novel === true).length;
+        const rediscovered = accepted.filter(row => row.novel === false).length;
+        results.push({ id, status: 'ok', added, rediscovered });
     } catch (err) {
         console.log(`    error: ${err.message?.slice(0, 300)}`);
         results.push({ id, status: `error: ${err.message?.slice(0, 200)}` });

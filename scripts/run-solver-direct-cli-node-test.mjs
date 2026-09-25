@@ -70,4 +70,27 @@ assert.equal(out.solverRequestIdentity, solverRequestIdentityFromProjection(out.
 assert.equal(out.backend, 'direct');
 assert.equal(out.reproducibilityMode, 'deterministic-work');
 
+// Partial-failure durability: kill the driver immediately after its first atomic checkpoint and
+// prove the already-observed row remains recoverable instead of disappearing with the process.
+const partialOutput = path.join(dir, 'partial.json');
+let injectedFailure = null;
+try {
+    await execFile(process.execPath, [
+        'scripts/run-bundled.mjs', 'scripts/run-solver-direct.mjs',
+        '--levels=pos:1-2', '--budget-ms=1000', '--work-budget=500000', `--output=${partialOutput}`,
+    ], {
+        cwd: ROOT,
+        env: { ...process.env, PATHFINDER_TEST_FAIL_AFTER_COMPLETED: '1' },
+    });
+} catch (error) {
+    injectedFailure = error;
+}
+assert.ok(injectedFailure, 'fault injection must terminate the driver after the first checkpoint');
+const partial = JSON.parse(await readFile(partialOutput, 'utf8'));
+assert.equal(partial.complete, false);
+assert.equal(partial.completed, 1);
+assert.equal(partial.total, 2);
+assert.equal(partial.levels.length, 1);
+assert.equal(partial.levels[0].level, 1);
+
 console.log('run-solver-direct CLI: --work-budget fix and solver-request identity dual-write verified');

@@ -22,10 +22,11 @@ import {
   isSameLevelStructure,
   LEVEL_FINGERPRINT_VERSION,
 } from '../modules/domain/level-fingerprint.ts';
-import { hintPathSignature, makeProvenanceEntry, provenanceEventKey } from '../modules/domain/hint-types.ts';
+import { hintPathSignature, makeProvenanceEntry, provenanceEventKey, provenanceEvidenceKeys } from '../modules/domain/hint-types.ts';
 import { createLevelRatingRepository } from '../modules/persistence/level-rating-repository.ts';
 import { createLevelSubmissionRepository } from '../modules/persistence/level-submission-repository.ts';
 import { createLocalLevelHintsRepository } from '../modules/persistence/local-level-hints-repository.ts';
+import { createReviewRepository } from '../modules/persistence/review-repository.ts';
 
 const emulator = process.env.FIRESTORE_EMULATOR_HOST;
 assert.ok(emulator, 'FIRESTORE_EMULATOR_HOST must be set by firebase emulators:exec');
@@ -251,6 +252,150 @@ try {
   assert.equal(mergedHints[0].provenance.length, 2, 'both discovery events must be preserved, not overwritten');
   const techniques = mergedHints[0].provenance.map((p) => p.solver.technique).sort();
   assert.deepEqual(techniques, ['firestore-emulator-boundary', 'firestore-emulator-boundary-rediscovery']);
+
+  // Same SEMANTIC event, different PHYSICAL occurrence: Phase 3's original Firestore proof covered
+  // only distinct semantic events. The occurrence model explicitly requires a later run/attempt to
+  // merge into the existing semantic event rather than disappear as a duplicate.
+  const occurrenceA = makeProvenanceEntry('firestore-emulator-occurrence', {
+    occurrenceRunId: 'run-a',
+    occurrenceRunAttempt: 1,
+    occurrenceObservedAt: '2026-09-24T01:00:00.000Z',
+    foundAt: '2026-09-24T01:00:00.000Z',
+  });
+  const occurrenceASaved = await localHints.saveLocalLevelHintIfNovel(
+    levelFingerprint, hintPath, signature, occurrenceA,
+    new Set(mergedHints.flatMap((h) => h.provenance.flatMap((p) => provenanceEvidenceKeys(signature, p)))),
+  );
+  assert.equal(occurrenceASaved.saved, true);
+
+  const afterOccurrenceA = await localHints.getLocalLevelHints(levelFingerprint);
+  const occurrenceKnown = new Set(
+    afterOccurrenceA.flatMap((h) => h.provenance.flatMap((p) => provenanceEvidenceKeys(signature, p))),
+  );
+  const occurrenceB = makeProvenanceEntry('firestore-emulator-occurrence', {
+    occurrenceRunId: 'run-b',
+    occurrenceRunAttempt: 1,
+    occurrenceObservedAt: '2026-09-24T02:00:00.000Z',
+    foundAt: '2026-09-24T02:00:00.000Z',
+  });
+  assert.equal(
+    localHints.localHintEntryId(signature, occurrenceA) === localHints.localHintEntryId(signature, occurrenceB),
+    false,
+    'same semantic event with a new physical run must have a distinct immutable Firestore doc id',
+  );
+  const occurrenceBSaved = await localHints.saveLocalLevelHintIfNovel(
+    levelFingerprint, hintPath, signature, occurrenceB, occurrenceKnown,
+  );
+  assert.equal(occurrenceBSaved.saved, true, 'new occurrence of an existing semantic event must be retained');
+
+  const afterOccurrenceB = await localHints.getLocalLevelHints(levelFingerprint);
+  const occurrenceEvents = afterOccurrenceB[0].provenance
+    .filter((p) => p.solver.technique === 'firestore-emulator-occurrence');
+  assert.equal(occurrenceEvents.length, 1, 'same-event occurrence docs must merge back into one semantic provenance event');
+  assert.deepEqual(
+    occurrenceEvents[0].occurrences?.map((o) => o.runId).sort(),
+    ['run-a', 'run-b'],
+    'both physical acquisition runs must survive the Firestore round trip',
+  );
+
+  const afterOccurrenceBKnown = new Set(
+    afterOccurrenceB.flatMap((h) => h.provenance.flatMap((p) => provenanceEvidenceKeys(signature, p))),
+  );
+  const duplicateOccurrenceB = await localHints.saveLocalLevelHintIfNovel(
+    levelFingerprint, hintPath, signature, occurrenceB, afterOccurrenceBKnown,
+  );
+  assert.deepEqual(
+    duplicateOccurrenceB,
+    { saved: false, reason: 'duplicate-provenance-not-recorded' },
+    're-saving the same run/attempt remains idempotent',
+  );
+
+  // Review-queue retry boundary: local Hint persistence is intentionally non-atomic. If some
+  // provenance persists and a later event reaches capacity, the review submission must survive so a
+  // later retry can dedupe the saved event and finish the refused one. Use the real Firestore queue
+  // document/deletion boundary while injecting the capacity outcome, avoiding a 5,000-document
+  // fixture whose only purpose would be to trip the repository's soft count cap.
+  const retrySubmissionId = 'local-hint-partial-retry';
+  const retrySubmissionRef = doc(
+    admin.db,
+    'artifacts',
+    APP_ID,
+    'submissions',
+    retrySubmissionId,
+  );
+  await setDoc(retrySubmissionRef, {
+    levelData: level,
+    levelFingerprint,
+    submittedAt: serverTimestamp(),
+    submittedBy: 'admin-user',
+    type: 'local-hint-addition',
+    targetLocalLevelFingerprint: levelFingerprint,
+  });
+  const retryPath = [0x00000000, 0x00000001, 0x00010001];
+  const retryFirst = makeProvenanceEntry('firestore-review-retry-first', {
+    foundAt: '2026-09-24T03:00:00.000Z',
+  });
+  const retrySecond = makeProvenanceEntry('firestore-review-retry-second', {
+    foundAt: '2026-09-24T04:00:00.000Z',
+  });
+  const retryHints = [{ path: retryPath, provenance: [retryFirst, retrySecond] }];
+
+  let firstReviewSave = 0;
+  const capacityReview = createReviewRepository(admin, {
+    getLevelFingerprint,
+    getLocalLevelHints: async () => [],
+    saveLocalLevelHintIfNovel: async () => {
+      firstReviewSave += 1;
+      return firstReviewSave === 1
+        ? { saved: true }
+        : { saved: false, reason: 'capacity-reached' };
+    },
+    reportError: (scope, error) => {
+      throw new Error(`${scope}: ${error instanceof Error ? error.message : String(error)}`);
+    },
+  });
+  await assert.rejects(
+    capacityReview.approveLocalHintAddition(retrySubmissionId, levelFingerprint, retryHints),
+    /Capacity exceeded/u,
+  );
+  assert.equal(
+    (await getDoc(retrySubmissionRef)).exists(),
+    true,
+    'capacity refusal after partial persistence must leave the review submission queued',
+  );
+
+  const retrySignature = hintPathSignature(retryPath);
+  const retryExisting = [{ path: retryPath, provenance: [retryFirst] }];
+  const successfulRetryReview = createReviewRepository(admin, {
+    getLevelFingerprint,
+    getLocalLevelHints: async () => retryExisting,
+    saveLocalLevelHintIfNovel: async (_fingerprint, _path, _signature, provenance, known) => {
+      const evidenceKeys = provenanceEvidenceKeys(retrySignature, provenance);
+      if (evidenceKeys.some(key => known.has(key))) {
+        return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+      }
+      return { saved: true };
+    },
+    reportError: (scope, error) => {
+      throw new Error(`${scope}: ${error instanceof Error ? error.message : String(error)}`);
+    },
+  });
+  const retrySummary = await successfulRetryReview.approveLocalHintAddition(
+    retrySubmissionId,
+    levelFingerprint,
+    retryHints,
+  );
+  assert.deepEqual(retrySummary, {
+    pathsWithSavedEvidence: 1,
+    saved: 1,
+    duplicateNotRecorded: 1,
+    capacityReached: 0,
+  });
+  assert.equal(
+    (await getDoc(retrySubmissionRef)).exists(),
+    false,
+    'successful retry deletes the review submission only after remaining evidence persists',
+  );
 
   console.log('Firestore level-fingerprint repository/emulator boundary proof passed.');
 } finally {

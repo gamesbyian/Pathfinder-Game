@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { auditHintFile, hintDiscoveryInputIdentity, inputComparability } from './hint-determinism-audit-lib.mjs';
 
-function entry({ foundAt, nodesExpanded = 10, workSpent = 20, technique = 'main-search', randomSeed = null } = {}) {
+function entry({ foundAt, nodesExpanded = 10, workSpent = 20, technique = 'main-search', randomSeed = null, solverRequestIdentity = null } = {}) {
     return {
         solver: {
             id: 'pathfinder-solver', version: 'abc123', technique,
@@ -14,6 +14,7 @@ function entry({ foundAt, nodesExpanded = 10, workSpent = 20, technique = 'main-
             cumulativeNodesExpanded: null, cumulativeElapsedMs: null, cumulativeBudgetMs: null,
             termination: 'solved', randomSeed, seedSalt: null,
         },
+        execution: solverRequestIdentity ? { solverRequestIdentity, reproducibilityMode: 'deterministic-work' } : {},
         context: {
             usedExistingHints: false, hintGuided: false, levelRevision: 'v2:level',
             isolatedTechnique: false, techniqueCensusCell: null,
@@ -45,6 +46,16 @@ const divergent = auditHintFile('P1', [
     { path: [1, 4, 3], provenance: [b] },
 ]);
 assert.equal(divergent.repeatRunRecordedInputCollision.length, 1);
+assert.equal(divergent.repeatRunRecordedInputCollision[0].identityBasis, 'legacy-recorded-input');
+
+const canonicalA = entry({ foundAt: '2026-01-01T00:00:00Z', solverRequestIdentity: 'sha256:request' });
+const canonicalB = entry({ foundAt: '2026-01-02T00:00:00Z', solverRequestIdentity: 'sha256:request' });
+const canonicalDivergent = auditHintFile('P1', [
+    { path: [1, 2, 3], provenance: [canonicalA] },
+    { path: [1, 4, 3], provenance: [canonicalB] },
+]);
+assert.equal(canonicalDivergent.repeatRunRecordedInputCollision.length, 1);
+assert.equal(canonicalDivergent.repeatRunRecordedInputCollision[0].identityBasis, 'canonical-solver-request');
 
 const exactA = entry({ foundAt: '2026-01-01T00:00:00Z' });
 const exactB = JSON.parse(JSON.stringify(exactA));
@@ -55,4 +66,4 @@ const exact = auditHintFile('P1', [
 ]);
 assert.equal(exact.exactEventCrossPath.length, 1);
 
-console.log('hint-determinism-audit tests: 6 passed, 0 failed');
+console.log('hint-determinism-audit tests: 8 passed, 0 failed');

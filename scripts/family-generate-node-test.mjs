@@ -27,6 +27,8 @@ const { validateRawLevel } = await import('../modules/domain/level-schema.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
 const { parseRawLevel } = await import('../modules/domain/level-codec.js');
 const { getLevelFingerprint, getLevelFingerprintSource } = await import('../modules/domain/level-fingerprint.js');
+const { decodeHintArtifact } = await import('../modules/domain/hint-types.js');
+const readHintRecords = async (file) => decodeHintArtifact(JSON.parse(await readFile(file, 'utf8')));
 
 async function runGenerate(args) {
     return execFile('node', [FAMILY_GENERATE_BUNDLE, ...args], {
@@ -212,12 +214,12 @@ async function main() {
         // The preserved witness's hint file carries exactly one INHERITED_WITNESS_ID-tagged entry.
         const firstSibling = generated[0];
         const hintsDirAbs = path.join(path.dirname(outPath), 'hints');
-        const siblingHint = JSON.parse(await readFile(path.join(hintsDirAbs, `${firstSibling.id}.json`), 'utf8'));
-        assert.equal(siblingHint.hints.length, 1);
-        assert.deepEqual(siblingHint.hints[0].path, witnessPath);
-        assert.equal(siblingHint.hints[0].provenance.length, 1);
-        assert.equal(siblingHint.hints[0].provenance[0].solver.id, 'sibling-inherited-witness');
-        assert.equal(siblingHint.hints[0].provenance[0].search.termination, 'witness');
+        const siblingHints = await readHintRecords(path.join(hintsDirAbs, `${firstSibling.id}.json`));
+        assert.equal(siblingHints.length, 1);
+        assert.deepEqual(siblingHints[0].path, witnessPath);
+        assert.equal(siblingHints[0].provenance.length, 1);
+        assert.equal(siblingHints[0].provenance[0].solver.id, 'sibling-inherited-witness');
+        assert.equal(siblingHints[0].provenance[0].search.termination, 'witness');
 
         // ── Test 1b: --parent-corpus/--out/--manifest-out also work as ABSOLUTE paths ──────────
         // Regression test: family-generate.mjs used to resolve these via a bare
@@ -306,10 +308,10 @@ async function main() {
             assert.equal(sibling.reqInt, parent.reqInt);
             assert.equal(sibling.provenance.history[0].detail.relation, 'symmetry');
             assert.equal(sibling.provenance.history[0].detail.witnessRelation, 'transformed');
-            const symHint = JSON.parse(await readFile(path.join(symDir, 'hints', `${sibling.id}.json`), 'utf8'));
-            assert.equal(symHint.hints[0].provenance[0].solver.id, 'sibling-transformed-witness', 'symmetry tags its witness as transformed, not inherited');
-            assert.notDeepEqual(symHint.hints[0].path, witnessPath, 'a rotated/reflected witness has different coordinates from the parent\'s (except in the coincidental self-symmetric case, not expected for this fixture)');
-            const referee = validateCandidatePath(parseRawLevel(sibling, 0), symHint.hints[0].path);
+            const symHints = await readHintRecords(path.join(symDir, 'hints', `${sibling.id}.json`));
+            assert.equal(symHints[0].provenance[0].solver.id, 'sibling-transformed-witness', 'symmetry tags its witness as transformed, not inherited');
+            assert.notDeepEqual(symHints[0].path, witnessPath, 'a rotated/reflected witness has different coordinates from the parent\'s (except in the coincidental self-symmetric case, not expected for this fixture)');
+            const referee = validateCandidatePath(parseRawLevel(sibling, 0), symHints[0].path);
             assert.ok(referee.ok, `transformed witness still validates on its own transformed level: ${referee.reason}`);
         }
 
@@ -383,8 +385,8 @@ async function main() {
             assert.equal(sibling.grid.h, biggerH, 're-embed actually grows the grid height');
             assert.equal(sibling.reqLen, parent.reqLen, 'reqLen fixed across re-embedding');
             assert.equal(sibling.reqInt, parent.reqInt, 'reqInt fixed across re-embedding');
-            const reHint = JSON.parse(await readFile(path.join(reDir, 'hints', `${sibling.id}.json`), 'utf8'));
-            const referee = validateCandidatePath(parseRawLevel(sibling, 0), reHint.hints[0].path);
+            const reHints = await readHintRecords(path.join(reDir, 'hints', `${sibling.id}.json`));
+            const referee = validateCandidatePath(parseRawLevel(sibling, 0), reHints[0].path);
             assert.ok(referee.ok, `re-embedded witness still validates in the larger grid: ${referee.reason}`);
         }
         // A grid that's too small in either dimension must be rejected, not silently clamped.
@@ -426,13 +428,13 @@ async function main() {
         // Each corpus's own hint file must still validate against ITS OWN level, not the other
         // mode's — this is the actual data-corruption check, not just an id-string check.
         for (const l of lmShared) {
-            const hint = JSON.parse(await readFile(path.join(sharedDir, 'hints', `${l.id}.json`), 'utf8'));
-            const referee = validateCandidatePath(parseRawLevel(l, 0), hint.hints[0].path);
+            const hints = await readHintRecords(path.join(sharedDir, 'hints', `${l.id}.json`));
+            const referee = validateCandidatePath(parseRawLevel(l, 0), hints[0].path);
             assert.ok(referee.ok, `${l.id}'s own hint file still validates against its own level (no cross-mode corruption): ${referee.reason}`);
         }
         for (const s of symShared) {
-            const hint = JSON.parse(await readFile(path.join(sharedDir, 'hints', `${s.id}.json`), 'utf8'));
-            const referee = validateCandidatePath(parseRawLevel(s, 0), hint.hints[0].path);
+            const hints = await readHintRecords(path.join(sharedDir, 'hints', `${s.id}.json`));
+            const referee = validateCandidatePath(parseRawLevel(s, 0), hints[0].path);
             assert.ok(referee.ok, `${s.id}'s own hint file still validates against its own level (no cross-mode corruption): ${referee.reason}`);
         }
 

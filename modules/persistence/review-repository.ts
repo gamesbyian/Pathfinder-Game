@@ -3,7 +3,7 @@
 
 import { collection, doc, getDoc, getDocs, query, orderBy, deleteDoc, writeBatch } from 'firebase/firestore';
 import { encodeHints, decodeHints } from './level-submission-repository.js';
-import { mergeHints, upgradeLegacyHints, hintPathSignature, provenanceEventKey } from '../domain/hint-types.js';
+import { mergeHints, upgradeLegacyHints, hintPathSignature, provenanceEvidenceKeys } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
 import type { ReportError } from '../ports.js';
@@ -13,9 +13,58 @@ import type { SaveLocalLevelHintOutcome } from './local-level-hints-repository.j
 /** Per-outcome tally for approveLocalHintAddition() — see its own doc comment for why this is
  *  richer than a plain success/fail. */
 export interface LocalHintAdditionSummary {
+    /** Number of distinct submitted paths for which at least one provenance event was persisted. */
+    pathsWithSavedEvidence: number;
+    /** Number of provenance events persisted across those paths. */
     saved: number;
     duplicateNotRecorded: number;
     capacityReached: number;
+}
+
+export async function persistLocalHintAdditionEvents({
+    levelFingerprint,
+    hints,
+    existing,
+    saveLocalLevelHintIfNovel,
+}: {
+    levelFingerprint: string;
+    hints: Hint[];
+    existing: Hint[];
+    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEvidenceKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>;
+}): Promise<LocalHintAdditionSummary> {
+    const knownEvidenceKeys = new Set(
+        existing.flatMap((h) => h.provenance.flatMap((entry) => provenanceEvidenceKeys(hintPathSignature(h.path), entry))),
+    );
+    const summary: LocalHintAdditionSummary = {
+        pathsWithSavedEvidence: 0,
+        saved: 0,
+        duplicateNotRecorded: 0,
+        capacityReached: 0,
+    };
+    for (const hint of hints) {
+        const signature = hintPathSignature(hint.path);
+        let pathSaved = false;
+        for (const provenanceEntry of hint.provenance ?? []) {
+            const outcome = await saveLocalLevelHintIfNovel(
+                levelFingerprint,
+                hint.path,
+                signature,
+                provenanceEntry,
+                knownEvidenceKeys,
+            );
+            if (outcome.saved) {
+                for (const key of provenanceEvidenceKeys(signature, provenanceEntry)) knownEvidenceKeys.add(key);
+                summary.saved++;
+                pathSaved = true;
+            } else if (outcome.reason === 'duplicate-provenance-not-recorded') {
+                summary.duplicateNotRecorded++;
+            } else if (outcome.reason === 'capacity-reached') {
+                summary.capacityReached++;
+            }
+        }
+        if (pathSaved) summary.pathsWithSavedEvidence++;
+    }
+    return summary;
 }
 
 // Firestore's hard per-document limit is 1,048,576 bytes for the WHOLE document, not just the
@@ -39,7 +88,7 @@ export function encodedLevelDataByteSize(encodedLevelData: any): number {
 export function createReviewRepository(client: any, { getLevelFingerprint, getLocalLevelHints, saveLocalLevelHintIfNovel, reportError = defaultReportError }: {
     getLevelFingerprint: (level: any) => any,
     getLocalLevelHints: (levelFingerprint: string) => Promise<Hint[]>,
-    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEventKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>,
+    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnownEvidenceKeys: ReadonlySet<string>) => Promise<SaveLocalLevelHintOutcome>,
     reportError?: ReportError,
 }) {
     const { appId } = client;
@@ -158,18 +207,17 @@ export function createReviewRepository(client: any, { getLevelFingerprint, getLo
     async function approveLocalHintAddition(submissionId: string, levelFingerprint: string, hints: Hint[]): Promise<LocalHintAdditionSummary> {
         if (!client.db) throw new Error('No Firebase connection');
         const existing = await getLocalLevelHints(levelFingerprint);
-        const knownEventKeys = new Set(
-            existing.flatMap((h) => h.provenance.map((entry) => provenanceEventKey(hintPathSignature(h.path), entry))),
-        );
-        const summary: LocalHintAdditionSummary = { saved: 0, duplicateNotRecorded: 0, capacityReached: 0 };
-        for (const hint of hints) {
-            const signature = hintPathSignature(hint.path);
-            const provenanceEntry = hint.provenance[hint.provenance.length - 1];
-            if (!provenanceEntry) continue;
-            const outcome = await saveLocalLevelHintIfNovel(levelFingerprint, hint.path, signature, provenanceEntry, knownEventKeys);
-            if (outcome.saved) { knownEventKeys.add(provenanceEventKey(signature, provenanceEntry)); summary.saved++; }
-            else if (outcome.reason === 'duplicate-provenance-not-recorded') summary.duplicateNotRecorded++;
-            else if (outcome.reason === 'capacity-reached') summary.capacityReached++;
+        const summary = await persistLocalHintAdditionEvents({
+            levelFingerprint,
+            hints,
+            existing,
+            saveLocalLevelHintIfNovel,
+        });
+        if (summary.capacityReached > 0) {
+            throw new Error(
+                `Capacity exceeded while saving local hint evidence: ${summary.capacityReached} provenance event(s) were not persisted. `
+                + `The submission remains in the review queue; ${summary.saved} event(s) already saved will dedupe on retry.`,
+            );
         }
         await deleteDoc(doc(submissions(), submissionId));
         return summary;

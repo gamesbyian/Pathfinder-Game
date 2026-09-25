@@ -5,10 +5,10 @@ import { makeProvenanceEntry } from '../domain/hint-types.js';
 
 // Only the pure hashPathSignature/localHintEntryId helpers are unit-tested here — the rest of this
 // module is a thin Firestore wrapper (no persistence repo in this codebase has emulator/mock-
-// backed unit tests; see docs/firestore-security-model.md's "Known risks" for the tracked
+// backed unit tests; see firestore.rules's "Known risks" for the tracked
 // follow-up, and scripts/firestore-level-fingerprint-boundary-test.mjs for the real
 // emulator-backed proof of the entry-doc-per-discovery-event behavior).
-const { hashPathSignature, localHintEntryId, MAX_HINTS_PER_LEVEL } = createLocalLevelHintsRepository({ appId: 'test', db: null });
+const { hashPathSignature, localHintEntryId, localHintEvidenceKeys, MAX_HINTS_PER_LEVEL } = createLocalLevelHintsRepository({ appId: 'test', db: null });
 
 test('hashPathSignature is deterministic for the same input', () => {
     assert.equal(hashPathSignature('1,2,3,4'), hashPathSignature('1,2,3,4'));
@@ -62,4 +62,36 @@ test('localHintEntryId ignores foundAt (same discovery event re-observed at a di
     const b = makeProvenanceEntry('dfs', { foundAt: '2026-06-01T00:00:00.000Z' });
     assert.equal(localHintEntryId(signature, a), localHintEntryId(signature, b),
         'provenanceEventIdentity() excludes foundAt by design, so the composite doc ID must too');
+});
+
+test('localHintEntryId differs for the same semantic event observed in two physical runs', () => {
+    const signature = '1,2,3';
+    const a = makeProvenanceEntry('dfs', {
+        occurrenceRunId: 'run-a', occurrenceRunAttempt: 1,
+        foundAt: '2026-01-01T00:00:00.000Z',
+    });
+    const b = makeProvenanceEntry('dfs', {
+        occurrenceRunId: 'run-b', occurrenceRunAttempt: 1,
+        foundAt: '2026-06-01T00:00:00.000Z',
+    });
+    assert.notEqual(localHintEntryId(signature, a), localHintEntryId(signature, b),
+        'same semantic event with a new physical occurrence needs a sibling immutable Firestore doc');
+    assert.equal(localHintEvidenceKeys(signature, a).length, 2,
+        'known evidence tracks the semantic event and its physical occurrence separately');
+});
+
+test('localHintEntryId is stable for the same physical run even when observation timestamp changes', () => {
+    const signature = '1,2,3';
+    const a = makeProvenanceEntry('dfs', {
+        occurrenceRunId: 'run-a', occurrenceRunAttempt: 1,
+        occurrenceObservedAt: '2026-01-01T00:00:00.000Z',
+        foundAt: '2026-01-01T00:00:00.000Z',
+    });
+    const b = makeProvenanceEntry('dfs', {
+        occurrenceRunId: 'run-a', occurrenceRunAttempt: 1,
+        occurrenceObservedAt: '2026-06-01T00:00:00.000Z',
+        foundAt: '2026-06-01T00:00:00.000Z',
+    });
+    assert.equal(localHintEntryId(signature, a), localHintEntryId(signature, b),
+        'runId+runAttempt, not host time, is the physical occurrence identity');
 });

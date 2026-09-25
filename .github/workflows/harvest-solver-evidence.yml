@@ -136,9 +136,10 @@ jobs:
             git reset --hard origin/main
 
             if [[ "$HARVEST_HINTS" == '1' ]]; then
-              # Workflows that used --save-hints, including the CP-SAT harvesters, already carry
-              # canonical hint files in shard artifacts. Merge them structurally and referee-check
-              # every incoming path across published, corpus-1 and corpus-2 hint stores.
+              # Compatibility/backfill importer for any source artifact that genuinely contains
+              # canonical Hint files (including historical pre-centralization runs). Current
+              # maintained solver source workflows are report-only; this path must not be their
+              # ordinary persistence mechanism.
               node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \
@@ -146,10 +147,9 @@ jobs:
                 --source-workflow="$SOURCE_WORKFLOW" \
                 --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-captured-artifacts.json"
 
-              # CP-SAT is an external specialist producer. Its workflow still transports canonical
-              # hint files during the Phase-6 parity window, but its self-describing discovery
-              # reports can now reconstruct the same semantic events centrally while preserving
-              # external-solver identity and source-run occurrence lineage.
+              # CP-SAT is an external specialist producer. Its source workflow is report-only;
+              # reconstruct accepted discoveries centrally while preserving external-solver
+              # identity and source-run occurrence lineage.
               if [[ "$SOURCE_WORKFLOW" == 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)' ]]; then
                 node scripts/run-bundled.mjs scripts/harvest-cpsat-discovery-reports.mjs -- \
                   --staging-dir=artifact-staging \
@@ -180,10 +180,9 @@ jobs:
                 --source-workflow="$SOURCE_WORKFLOW" \
                 --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-portfolio.json"
 
-              # Solver diagnostics now preserves exact successful paths, level revisions,
-              # winning attempts, request identity and discovery timestamps in its uploaded report.
-              # Keep the source workflow's direct writer during Phase-6 parity, but reconstruct the
-              # same observations centrally as a shadow lane.
+              # Solver diagnostics preserves exact successful paths, level revisions, winning
+              # attempts, request identity and discovery timestamps in its uploaded report. The
+              # source workflow is report-only; this is the canonical persistence lane.
               if [[ "$SOURCE_WORKFLOW" == 'Solver diagnostics and hint capture' ]]; then
                 node scripts/run-bundled.mjs scripts/harvest-solver-diagnostics-reports.mjs -- \
                   --staging-dir=artifact-staging \
@@ -191,6 +190,8 @@ jobs:
                   --source-run-attempt="$SOURCE_RUN_ATTEMPT" \
                   --source-workflow="$SOURCE_WORKFLOW" \
                   --ingestion-receipt-out="reports/stress/hint-ingestion-receipts/run-${SOURCE_RUN_ID}-diagnostics.json"
+                node scripts/stress/hint-cost-drift.mjs --corpus=published --min-ratio=1.25 \
+                  --out=reports/stress/hint-cost-drift-published.json
               fi
 
               # Direct/isolated tools serialize their valid paths too. Keep them with
@@ -213,7 +214,7 @@ jobs:
               --staging-dir=artifact-staging \
               --out-root=reports/stress/experiment-evidence
 
-            if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ reports/stress/hint-ingestion-receipts/ 2>/dev/null)" ]; then
+            if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ reports/stress/hint-ingestion-receipts/ reports/stress/hint-cost-drift-published.json 2>/dev/null)" ]; then
               echo 'No new canonical hint/provenance, ingestion-receipt, selection, pending, or decision-bearing experiment evidence to persist.'
               echo 'HARVEST_RESULT=no-new-evidence' >> "$GITHUB_ENV"
               exit 0
@@ -231,6 +232,9 @@ jobs:
             fi
             if [ -d reports/stress/hint-ingestion-receipts ]; then
               git add reports/stress/hint-ingestion-receipts/
+            fi
+            if [ -f reports/stress/hint-cost-drift-published.json ]; then
+              git add reports/stress/hint-cost-drift-published.json
             fi
             git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
             if git push origin HEAD:main; then

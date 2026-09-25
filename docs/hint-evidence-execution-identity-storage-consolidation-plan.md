@@ -1,6 +1,6 @@
 # Hint evidence, execution identity, and storage consolidation plan
 
-> **Status:** planned
+> **Status:** implementation substantially landed; prior completion claim disproven; hostile closeout and exact-head validation remain blocking on PR #2072
 >
 > **Date:** 2026-09-22
 >
@@ -13,6 +13,8 @@
 > parallel persistence/configuration paths that should be consolidated rather than permanently
 > worked around.
 >
+> **Post-implementation hostile audit:** [`reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`](../reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md) is the current closeout authority. It supersedes earlier completion claims and records corrections found after the schema-v4 migration.
+>
 > **Pre-implementation empirical audit:** [`reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md`](../reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md) verifies request/backend semantics, provenance missingness, source-run reconstructability, producer observation sufficiency, stale writers, and Firestore retention behavior.
 >
 > **Structured implementation inventories:** [`docs/hint-evidence-consolidation-inventory.json`](hint-evidence-consolidation-inventory.json) and [`docs/solver-request-semantics-inventory.json`](solver-request-semantics-inventory.json).
@@ -20,6 +22,50 @@
 > **Primary goal:** make solver evidence smaller, more queryable, more replay-/audit-friendly, and
 > harder to record incompletely, without losing semantic information, breaking historical data,
 > weakening level-blindness, or coupling offline evidence to production routing.
+
+## 0. Completion-contract correction from implementation experience
+
+This section is a **retrospective correction to the original execution contract**. The hostile
+post-implementation audit demonstrated that several requirements below were semantically sound but
+not operationally exhaustive enough. Future execution of this plan, and any claim that it is
+complete, must use the stronger rules here.
+
+1. **Words such as all, every, maintained, canonical, tracked, and full corpus require a mechanical
+   population owner.** A hand-written list may document the population but may not define it. The
+   repository must derive the relevant producers, consumers, workflows, stores, or artifacts from
+   current repository authorities and fail on unclassified additions.
+2. **Every Definition-of-Done statement maps to an executable proof.** A phase report or PR
+   description may summarize evidence, but cannot itself satisfy a closure condition. The closeout
+   record must name the exact test, guard, census, emulator run, migration manifest, or query that
+   proves each item.
+3. **Architectural guards require adversarial self-tests and CI invalidation ownership.** A guard is
+   incomplete until representative equivalent/refactored bypasses are tested and the scoped-CI
+   contract declares every source, workflow, ledger, and authority whose change must select the
+   guard.
+4. **Persistence semantics are closed by state-transition coverage, not one happy-path example.**
+   Where persistence/deduplication is touched, acceptance must distinguish at least: exact retry of
+   one occurrence; same semantic event with a new acquisition occurrence; new semantic event on an
+   existing path; new path; partial persistence; capacity refusal; retry after refusal; and semantic
+   reconstruction after read/merge.
+5. **Execution-topology-specific behavior must run in that topology before the phase closes.**
+   Firestore behavior requires the real emulator boundary; GHA transport requires the real workflow
+   path; browser/bundle behavior requires the supported browser/Vite path; sparse/full-checkout
+   checks must run in the topology that owns them. Static or local substitute evidence may keep work
+   moving but cannot close the affected phase.
+6. **Bulk migrations must mechanically discover their complete input universe and record that
+   population in the migration evidence.** The manifest/proof must include the discovered stores and
+   artifact counts, semantic/join equivalence, idempotency, and the required referee/path-validity
+   disposition. A successful migration over a hand-enumerated subset is not a full-corpus migration.
+7. **Final closeout is an independent reconstruction from current repository truth.** It must rebuild
+   producer, consumer, persistence, workflow, store, historical-compatibility, and current-document
+   inventories from the repository rather than using implementation diffs or implementation reports
+   as the checklist. Prefer fresh context.
+8. **Pending or red closing evidence means not complete.** No phase/program completion label may be
+   based on an older green SHA, a queued check, a locally substituted topology, or a report that says
+   a later check is merely follow-up.
+
+The hostile completion audit on PR #2072 is the first application of this strengthened closeout
+contract. Its corrections are part of the implementation, not optional post-plan cleanup.
 
 ## 1. Outcomes
 
@@ -648,6 +694,29 @@ Required invariants:
 17. level-blindness tests remain green;
 18. no storage-derived history becomes a production solver input.
 
+Closure additionally requires the following **population and topology proofs**, even when every
+representative fixture above is green:
+
+- the maintained producer/workflow population is derived mechanically from workflow lifecycle,
+  harvester registration, package/workflow entrypoints and current source ownership; every member is
+  classified, and an unclassified new member fails closed;
+- the maintained physical Hint reader, writer and direct-mutation populations are derived
+  mechanically and reconciled against reviewed ledgers; unreviewed suspects fail closed;
+- the tracked canonical Hint-store population is discovered mechanically from repository layout /
+  corpus ownership rather than a hand-written directory list; migration, census, formatting,
+  determinism, indexing and referee validation operate over that same discovered population;
+- every persistence boundary touched by a phase proves exact retry, same-event/new-occurrence,
+  new-event/same-path, new-path, partial persistence, capacity refusal, retry after refusal and
+  semantic reconstruction after read/merge where those states are applicable;
+- every topology-specific invariant is executed in its owning topology before closure, including
+  Firestore emulator behavior, GitHub Actions transport/harvest behavior, browser/Vite decoding and
+  sparse/full-checkout validation as applicable;
+- every architectural guard has a self-test that includes at least one structurally equivalent
+  bypass/refactor and the scoped-CI contract declares all repository inputs that can invalidate the
+  guard.
+
+A phase report may summarize these proofs, but cannot substitute for them.
+
 ## 13. Repository hardening
 
 Add a storage-boundary/ownership check that flags new code which:
@@ -1261,6 +1330,17 @@ Every phase that changes a durable authority must use the same migration discipl
    the canonical owner.
 10. **Record exit evidence.** The phase exit is a test/report/manifest or other reconstructable proof,
     not “implementation appears complete.”
+11. **Derive the affected population mechanically.** Before claiming a producer, consumer,
+    workflow, store, corpus or maintained surface is migrated, run the repository-owned census that
+    derives that population and fail on unclassified members. A phase-specific hand list is a review
+    aid only.
+12. **Close in the real execution topology.** When a phase touches GHA, Firestore, browser/Vite,
+    sparse checkout or another environment-specific boundary, the exact implementation head must
+    execute that boundary successfully before the phase may be labelled complete.
+13. **Hostile-close every durable-authority phase.** After ordinary implementation validation, use
+    an independent current-repository reconstruction of producers, consumers, stores, workflows,
+    compatibility readers and current authority documents. Do not reuse the implementation diff as
+    the inventory.
 
 Unknown historical values remain unknown throughout. No phase may gain apparent completeness by
 imputing missing history.
@@ -1302,8 +1382,11 @@ Repair current correctness seams before introducing richer identity.
   and capacity/duplicate/failure outcomes must be distinguishable. Do not prematurely choose the
   final occurrence-storage layout.
 
-**Exit:** all maintained current reads/writes pass through honest semantic ingress/mutation
-boundaries, and existing storage paths fail explicitly rather than silently destroying evidence.
+**Exit:** the mechanically derived maintained reader/writer/mutation population has no unclassified
+current seam; every maintained current read/write passes through honest semantic ingress/mutation
+boundaries; browser and Node historical fixtures agree on missingness; and every storage path touched
+by this phase fails explicitly rather than silently destroying evidence. The reachability/ownership
+guard and its scoped-CI routing must be green on the exact phase-closing head.
 
 ### Phase 2 — identity and durable join-spine consolidation
 
@@ -1341,11 +1424,20 @@ Only after identity is stable, extend the Hint semantic model.
 Acceptance must include:
 - legacy unknown round-trip;
 - 662 synthetic-`foundAt` events remain semantically undated;
-- reharvest of one acquisition occurrence is idempotent;
-- independent reacquisition adds occurrence lineage without duplicate semantic provenance;
-- cross-resource join keys survive merge and persistence.
+- exact retry of one acquisition occurrence is idempotent;
+- the same semantic event acquired in a new run/attempt adds occurrence lineage without duplicating
+  semantic provenance;
+- a distinct semantic event on an existing path is retained;
+- a new path is retained;
+- partial persistence and capacity refusal are explicit and retry-safe;
+- read/merge reconstruction recovers the intended semantic event + occurrence set;
+- cross-resource join keys survive merge and persistence;
+- the real Firestore emulator proves every Firestore-relevant case above rather than substituting an
+  in-memory repository test.
 
-**Exit:** the in-memory semantic model is final enough for producer migration and physical encoding.
+**Exit:** the semantic event/occurrence model and each persistence backend touched by this phase pass
+the explicit transition matrix above on the exact closing head. A report that defers emulator or
+backend-real validation cannot close the phase.
 
 ### Phase 4 — expose the new semantics through research/query surfaces
 
@@ -1380,8 +1472,11 @@ With semantic identities and query oracles stable, define how producers enter th
 - preserve partial-failure upload semantics;
 - add producer completeness/static ownership checks.
 
-**Exit:** representative producers can be persisted centrally and their funnel/accounting can be
-queried mechanically.
+**Exit:** the mechanically derived maintained producer population is classified as canonical
+producer, standardized observation producer, or explicit non-ingesting/legacy exception; every
+producer claimed migrated emits the canonical projection/receipt and survives its real transport
+boundary; representative direct-save, level-blind, isolated and specialist paths prove semantic
+accounting. Unclassified producers fail the ownership/completeness guard.
 
 ### Phase 6 — centralize GitHub Actions persistence incrementally
 
@@ -1399,8 +1494,11 @@ For each family:
 Retain `merge-hint-artifacts.mjs` as a historical/mixed-era compatibility importer, not a peer
 modern authority.
 
-**Exit:** modern GHA solver discovery has one canonical persistence authority and no maintained
-workflow needs physical hint-store knowledge.
+**Exit:** a mechanically derived maintained-workflow census and workflow-lifecycle authority agree
+that every discovery-bearing GHA family converges through one canonical persistence authority;
+`central-hint-persistence-guard.mjs` finds no executable direct writer, Hint-file staging, or dead
+physical-store plumbing in source workflows; every retired route has real parity/reharvest evidence;
+and the exact closing head has exercised the applicable real GHA topology.
 
 ### Phase 7 — authoritative historical enrichment
 
@@ -1428,15 +1526,21 @@ Only now optimize bytes.
 - benchmark v3, sparse v4 and sparse+interned v4 on the **post-enrichment real corpus**;
 - measure raw/gzip bytes, encode/decode runtime, diff behavior, query/startup/build effects;
 - require semantic Hint equality **and preservation of cross-resource join identity**;
-- produce the reversible migration manifest with before/after hashes, counts and referee results;
+- mechanically discover the complete tracked canonical Hint-store population from repository truth;
+- fail on an unclassified/ambiguous/orphan tracked Hint store rather than silently omitting it;
+- produce the reversible migration manifest with discovered store/artifact population, before/after
+  hashes, counts and referee results;
 - migrate canonical stores in a data-focused change;
-- preserve v1-v3 readers.
+- preserve v1-v3 readers and fail closed on declared unsupported future schema versions.
 
 Choose the representation from measured economics; do not pre-commit to interning where sparse form
 is better.
 
-**Exit:** tracked hint storage is materially smaller, deterministically encoded, fully backward
-readable and semantically/join equivalent.
+**Exit:** the mechanically discovered tracked Hint-store population has been migrated and immediately
+re-run idempotently; every discovered artifact passes semantic/join equivalence, canonical formatting
+and whole-store PLAY-referee validation; the manifest records the discovered store/artifact universe;
+tracked Hint storage is materially smaller corpus-wide, deterministically encoded and fully backward
+readable. A successful transaction over a hand-enumerated subset cannot close Phase 8.
 
 ### Phase 9 — generated runtime projection
 
@@ -1807,21 +1911,61 @@ This plan does not:
 
 ## 17. Definition of done
 
-The program is complete when:
+The program is complete only when the requirements below are satisfied **and** their current
+executable proofs are green on the same exact head. Population-scoped claims must use the mechanical
+owners required by section 0; implementation reports are supporting evidence, not closure authority.
 
-- current solver discoveries persist the effective execution dimensions necessary to distinguish
-  control/treatment and replay/determinism inputs;
-- #1996's known collisions no longer require timestamp/source-commit archaeology where authoritative
-  source envelopes survive;
-- maintained GitHub Actions solver workflows share one canonical evidence-ingestion path;
-- no maintained workflow needs to understand the physical hint-store schema;
-- browser and Node consumers use one artifact decoder;
-- canonical hint storage is materially smaller without semantic loss;
-- historical v1-v3 evidence remains readable and honestly incomplete where appropriate;
-- query/research infrastructure exposes the new identities and missingness;
-- repo checks make new parallel persistence/identity dialects difficult to introduce accidentally;
-- all referee, level-blindness, semantic identity, research applicability, and determinism
-  regressions remain green.
+The program is complete when all of the following claims and proof obligations are green on the
+same exact head:
+
+- **Execution identity:** current solver discoveries persist the effective execution dimensions
+  necessary to distinguish control/treatment and replay/determinism inputs. Proof: canonical request
+  / execution identity tests plus reconstructability and determinism oracles.
+- **Historical collision reconstruction:** #1996's known collisions no longer require
+  timestamp/source-commit archaeology where authoritative source envelopes survive. Proof:
+  historical-enrichment authority/exhaustion check plus the determinism audit; unrecoverable fields
+  remain explicitly unknown.
+- **Single GHA persistence authority:** every mechanically discovered maintained solver workflow
+  eligible for canonical Hint persistence is artifact/report-only at source and converges through
+  the central harvester. Proof: workflow-ingestion completeness plus
+  `central-hint-persistence-guard.mjs`; no unclassified workflow is permitted.
+- **No workflow physical-store coupling:** the mechanically discovered maintained workflow set has
+  no executable canonical-Hint write/staging route outside the central owner. Dead staging plumbing
+  counts as coupling and must be removed or explicitly quarantined.
+- **One semantic decoder boundary:** every mechanically discovered maintained physical Hint reader
+  either uses `decodeHintArtifact()` or is an explicit reviewed historical/compatibility exception.
+  Proof: physical-reader ledger + hostile surface guard + adversarial detector self-test.
+- **One physical writer/mutation authority:** every maintained canonical Hint writer and direct
+  `.hints` / `.hintRecords` mutation site is mechanically discovered and either owned by the
+  canonical store/migration boundary or explicitly reviewed. New suspects fail closed.
+- **Complete tracked-store migration:** the canonical Hint-store population is mechanically
+  discovered; every discovered artifact participates in codec census, semantic/join equivalence,
+  idempotency, formatting and whole-store PLAY-referee validation. A hand-enumerated subset cannot
+  satisfy this item.
+- **Material storage reduction without semantic loss:** the all-store before/after transaction shows
+  material corpus-wide reduction while preserving semantic hashes, cross-resource join identity,
+  occurrence lineage and referee validity.
+- **Historical compatibility:** v1-v3 evidence remains readable and honestly incomplete. Declared
+  unknown future schema versions fail closed rather than falling through a legacy adapter.
+- **Persistence parity:** git and Firestore may have different physical layouts, but their semantic
+  event/occurrence behavior is proved for exact retry, same-event/new-occurrence,
+  new-event/same-path, new-path, partial/capacity failure, retry and read/merge reconstruction. The
+  real Firestore emulator is required evidence.
+- **Research/query observability:** query/research infrastructure exposes the new identities,
+  missingness, occurrence lineage and freshness-bound derived index without creating a second
+  evidence authority.
+- **Guard durability:** each standing architectural guard has adversarial/self-test coverage and
+  scoped-CI invalidation ownership for the files, workflows and ledgers it governs.
+- **Current control plane:** workflow-ingestion inventories, schema-contraction rows and normal
+  documentation entrypoints describe the current architecture rather than a retired transition
+  state.
+- **Independent hostile closeout:** a fresh-context/current-repository reconstruction of producers,
+  consumers, persistence systems, stores, workflows, historical adapters and current docs finds no
+  unreviewed bypass.
+- **Exact-head validation:** referee, level-blindness, semantic identity, research applicability,
+  determinism, hostile audit, closeout canary, solver-evidence integrity, CI topology and required
+  emulator checks all succeed for the same exact head. Pending, skipped, substituted or older-head
+  evidence does not satisfy completion.
 
 ## 2026-09-22 continuation hardening findings
 

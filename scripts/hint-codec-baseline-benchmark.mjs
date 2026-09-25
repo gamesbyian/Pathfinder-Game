@@ -12,12 +12,7 @@ import { gzipSync } from 'node:zlib';
 import { performance } from 'node:perf_hooks';
 import { decodeHintArtifact, hintPaths } from '../modules/domain/hint-runtime.mjs';
 import { stableStringify } from '../modules/canonical-json.mjs';
-
-const ROOTS = [
-  { corpus: 'published', dir: 'data/hints' },
-  { corpus: 'corpus1', dir: 'data/stress/hints' },
-  { corpus: 'corpus2', dir: 'data/stress/hints-random' },
-];
+import { assertCompleteHintStoreDirs, discoverHintStoreDirs, hintStoreLabel } from './hint-store-roots.mjs';
 
 function pct(values, p) {
   if (!values.length) return 0;
@@ -78,9 +73,12 @@ function files(dir) {
   return readdirSync(dir).filter(n=>n.endsWith('.json') && !n.startsWith('_')).sort();
 }
 
-export function benchmarkHintCodecBaseline(root=process.cwd()) {
+export function benchmarkHintCodecBaseline(root=process.cwd(), { requireComplete = false } = {}) {
+  const dirs = discoverHintStoreDirs(root);
+  if (requireComplete) assertCompleteHintStoreDirs(dirs, 'full Hint codec benchmark');
+  const roots = dirs.map(dir => ({ corpus: hintStoreLabel(dir), dir }));
   const corpora=[];
-  for(const spec of ROOTS){
+  for(const spec of roots){
     const dir=path.join(root,spec.dir);
     const rows=files(dir).map(name=>measureHintArtifact(readFileSync(path.join(dir,name),'utf8')));
     corpora.push({ corpus:spec.corpus, dir:spec.dir, ...summarizeMeasurements(rows) });
@@ -117,7 +115,7 @@ export function benchmarkHintCodecBaseline(root=process.cwd()) {
 
 const isMain = process.argv[1] && import.meta.url === new URL(process.argv[1], 'file://').href;
 if (isMain) {
-  const report=benchmarkHintCodecBaseline();
+  const report=benchmarkHintCodecBaseline(process.cwd(), { requireComplete: true });
   const outArg=process.argv.find(a=>a.startsWith('--out='))?.slice(6);
   if(outArg) writeFileSync(outArg, JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify(report,null,2));

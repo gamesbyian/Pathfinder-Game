@@ -1,0 +1,70 @@
+name: Hint/provenance hostile audit
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'modules/**'
+      - 'data/**'
+      - '.github/workflows/**'
+      - 'docs/**hint**'
+      - 'docs/**provenance**'
+      - 'docs/solver-workflow-lifecycle.json'
+      - 'docs/solver-protocol-schema-contraction.json'
+      - 'docs/solver-request-semantics-inventory.json'
+      - 'reports/**hint**'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - run: npm ci
+
+      - name: Enforce central Hint persistence ownership
+        run: npm run test:central-hint-persistence-guard
+
+      - name: Census and enforce maintained Hint/provenance surfaces
+        run: node scripts/hint-provenance-surface-audit.mjs --enforce --out=/tmp/hint-provenance-surface-census.json
+
+      - name: Re-run consolidation empirical census
+        run: node scripts/hint-evidence-consolidation-audit.mjs --out=/tmp/hint-evidence-consolidation-census.json
+
+      - name: Full hint validity / occurrence / formatting floor
+        run: |
+          npm run check:hint-store-census
+          npm run test:hint-path-validation
+          npm run check:all-hint-store-referee
+          npm run hints:occurrence-acceptance-audit
+          npm run check:corpus-level-formatting
+
+      - name: Targeted semantic consumer floor
+        run: |
+          npm run test:hint-query-lib
+          npm run test:hint-discovery-replayability
+          npm run test:hint-termination-semantics
+          npm run test:hint-cost-drift-lib
+          npm run test:hint-discovery-process-evidence
+          npm run test:hint-failure-process-join
+          npm run test:runtime-hint-projection
+          npm run test:hint-artifact-v4-migration
+
+      - name: Upload audit census
+        uses: actions/upload-artifact@v7
+        with:
+          name: hint-provenance-hostile-audit
+          path: |
+            /tmp/hint-provenance-surface-census.json
+            /tmp/hint-evidence-consolidation-census.json

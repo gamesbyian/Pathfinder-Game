@@ -36,11 +36,23 @@ interface SolveResultLike {
     workBudget?: number;
 }
 
-interface VarietySavedMetaLike { nodesExpanded: number | null; elapsedMs: number | null; technique: string; anchorSeed?: string | null; anchorDepth?: number | null; }
+interface VarietySavedMetaLike {
+    nodesExpanded: number | null;
+    elapsedMs: number | null;
+    technique: string;
+    scoringProfileId?: string | null;
+    anchorSeed?: string | null;
+    anchorDepth?: number | null;
+}
+
+interface VarietyRediscoveredLike extends VarietySavedMetaLike {
+    path: number[];
+}
 
 interface VarietyResultLike {
     newlySaved: number[][];
     newlySavedMeta: VarietySavedMetaLike[];
+    rediscovered?: VarietyRediscoveredLike[];
 }
 
 /** Context unavailable from a solve result itself. Omitted tracked values remain explicit null/false. */
@@ -74,6 +86,11 @@ export interface ProvenanceContext {
     occurrenceRunAttempt?: string | number | null;
     occurrenceContractRef?: string | null;
     occurrenceSourceRuns?: string[] | null;
+    /** Caller-known forcing dimensions that are outside the winning Attempt itself (for example
+     * a tool-level forced first step or an ablation applied to the whole solve request). */
+    forcingGateKey?: number | null;
+    forcingDirection?: number | null;
+    forcingDisabledFeatures?: string[] | null;
 }
 
 interface SolveAttemptInfo {
@@ -158,6 +175,11 @@ export function deriveHistoricalSolveAttemptInfo(attempts: HistoricalAttemptLike
 }
 
 function provenanceFromSolveAttemptInfo(result: Omit<SolveResultLike, 'attempts'>, info: SolveAttemptInfo, ctx: ProvenanceContext): HintProvenanceEntry {
+    const disabledFeatures = [
+        ...(info.goalAttractionDisabledRetry ? GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS : []),
+        ...(ctx.forcingDisabledFeatures ?? []),
+    ];
+    const uniqueDisabledFeatures = [...new Set(disabledFeatures)];
     return makeProvenanceEntry(info.technique, {
         solverVersion: ctx.solverVersion ?? null,
         foundAt: ctx.foundAt,
@@ -198,8 +220,10 @@ function provenanceFromSolveAttemptInfo(result: Omit<SolveResultLike, 'attempts'
             forcingRepairMustTurnBiased: info.repairMustTurnBiased,
             forcingRepairTurnBiased: info.repairTurnBiased,
         } : {}),
-        ...(info.goalAttractionDisabledRetry ? {
-            forcingDisabledFeatures: [...GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS],
+        ...(ctx.forcingGateKey !== undefined ? { forcingGateKey: ctx.forcingGateKey } : {}),
+        ...(ctx.forcingDirection !== undefined ? { forcingDirection: ctx.forcingDirection } : {}),
+        ...(uniqueDisabledFeatures.length > 0 ? {
+            forcingDisabledFeatures: uniqueDisabledFeatures,
         } : {}),
         ...(info.retryTier !== null ? { forcingRetryTier: info.retryTier } : {}),
     });
@@ -218,21 +242,24 @@ export function provenanceFromHistoricalSolveResult(
     return provenanceFromSolveAttemptInfo(result, deriveHistoricalSolveAttemptInfo(result.attempts), ctx);
 }
 
-/** Canonical Hints for every newly saved variety-search path. Prefix-anchored finds are hint-guided. */
+/** Canonical Hints for every variety-search discovery, including independent rediscoveries
+ * of an already-known path. Prefix-anchored finds are hint-guided. */
 export function hintsFromVarietyResult(result: VarietyResultLike, ctx: ProvenanceContext = {}): Hint[] {
-    return result.newlySaved.map((path, i) => {
-        const meta = result.newlySavedMeta[i];
-        return toHint(path, [makeProvenanceEntry(meta.technique, {
-            solverVersion: ctx.solverVersion ?? null,
-            nodesExpanded: meta.nodesExpanded,
-            elapsedMs: meta.elapsedMs,
-            budgetMs: ctx.budgetMs ?? null,
-            termination: 'solved',
-            randomSeed: ctx.randomSeed ?? null,
-            usedExistingHints: ctx.usedExistingHints ?? false,
-            hintGuided: meta.technique === 'prefix-anchored',
-            levelRevision: ctx.levelRevision ?? null,
-            ...(meta.anchorSeed != null ? { forcingAnchorSeed: meta.anchorSeed, forcingAnchorDepth: meta.anchorDepth ?? null } : {}),
-        })]);
-    });
+    const observations = [
+        ...result.newlySaved.map((path, i) => ({ path, meta: result.newlySavedMeta[i] })),
+        ...(result.rediscovered ?? []).map((meta) => ({ path: meta.path, meta })),
+    ];
+    return observations.map(({ path, meta }) => toHint(path, [makeProvenanceEntry(meta.technique, {
+        solverVersion: ctx.solverVersion ?? null,
+        scoringProfileId: meta.scoringProfileId ?? null,
+        nodesExpanded: meta.nodesExpanded,
+        elapsedMs: meta.elapsedMs,
+        budgetMs: ctx.budgetMs ?? null,
+        termination: 'solved',
+        randomSeed: ctx.randomSeed ?? null,
+        usedExistingHints: ctx.usedExistingHints ?? false,
+        hintGuided: meta.technique === 'prefix-anchored',
+        levelRevision: ctx.levelRevision ?? null,
+        ...(meta.anchorSeed != null ? { forcingAnchorSeed: meta.anchorSeed, forcingAnchorDepth: meta.anchorDepth ?? null } : {}),
+    })]));
 }

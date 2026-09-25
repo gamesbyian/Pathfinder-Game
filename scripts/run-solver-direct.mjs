@@ -9,7 +9,7 @@
  * the run's result needs to be reproducible. Without it, one is derived from --budget-ms.
  *   node scripts/run-solver-direct.mjs --levels=pos:1-10
  */
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rename, writeFile } from 'node:fs/promises';
 
 import path from 'node:path';
 import process from 'node:process';
@@ -106,19 +106,78 @@ console.log(`Target: ${levelNumbers.length} level(s)`);
 const results = [];
 let solvedCount = 0, failCount = 0, errorCount = 0;
 const runStart = Date.now();
+// Explicit fault-injection seam for the durability regression test. Not a CLI option and never
+// enabled by production workflows.
+const testFailAfterCompleted = Number(process.env.PATHFINDER_TEST_FAIL_AFTER_COMPLETED || 0);
+
+const buildReport = () => ({
+    schemaVersion: 1,
+    kind: 'pathfinder-direct-solver-report',
+    producer: 'run-solver-direct',
+    corpus: 'data/levels.json',
+    timestamp: new Date().toISOString(),
+    commitSha: getCommitSha(),
+    budgetMs,
+    workBudget: workBudget ?? null,
+    levelFilter: levelFilter ? [...levelFilter].sort((a,b) => a-b) : 'all',
+    solved: solvedCount,
+    failed: failCount,
+    errors: errorCount,
+    completed: results.length,
+    total: levelNumbers.length,
+    complete: results.length === levelNumbers.length,
+    totalMs: Date.now() - runStart,
+    solverRequestProjection,
+    solverRequestIdentity,
+    backend,
+    reproducibilityMode,
+    levels: results,
+});
+
+async function checkpointReport() {
+    const resolved = path.resolve(outputFile);
+    const dir = path.dirname(resolved);
+    await mkdir(dir, { recursive: true });
+    const tmp = `${resolved}.tmp-${process.pid}`;
+    await writeFile(tmp, JSON.stringify(buildReport(), null, 2));
+    await rename(tmp, resolved);
+}
+
+async function checkpointObservation() {
+    await checkpointReport();
+    if (testFailAfterCompleted > 0 && results.length >= testFailAfterCompleted) {
+        throw new Error(`PATHFINDER_TEST_FAIL_AFTER_COMPLETED=${testFailAfterCompleted}`);
+    }
+}
 
 for (const levelNumber of levelNumbers) {
     const raw = rawLevels[levelNumber - 1];
-    if (!raw) { results.push({ level: levelNumber, status: 'error', error: 'no-raw-level' }); errorCount++; continue; }
+    if (!raw) {
+        results.push({ level: levelNumber, status: 'error', error: 'no-raw-level' });
+        errorCount++;
+        await checkpointObservation();
+        continue;
+    }
 
     let level;
     try { level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber }); }
-    catch (e) { results.push({ level: levelNumber, status: 'error', error: `normalize: ${e?.message}` }); errorCount++; continue; }
+    catch (e) {
+        results.push({ level: levelNumber, status: 'error', error: `normalize: ${e?.message}` });
+        errorCount++;
+        await checkpointObservation();
+        continue;
+    }
 
     const t0 = Date.now();
     let result;
     try { result = await Solver.solveLevel(level, solveOpts); }
-    catch (e) { results.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 }); errorCount++; console.log(`  L${levelNumber}: ERROR — ${e?.message}`); continue; }
+    catch (e) {
+        results.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 });
+        errorCount++;
+        console.log(`  L${levelNumber}: ERROR — ${e?.message}`);
+        await checkpointObservation();
+        continue;
+    }
 
     const elapsed = Date.now() - t0;
     const ok = !!result?.ok;
@@ -143,6 +202,7 @@ for (const levelNumber of levelNumbers) {
         solvedByScoringProfileId,
         attempts: result.attempts,
     });
+    await checkpointObservation();
 
     const marker = ok ? '✓' : '✗';
     if (verbose || !ok) console.log(`  L${levelNumber} ${marker} ${elapsed}ms${ok ? ` [score=${solvedByScoringProfileId}]` : ''}`);
@@ -160,22 +220,5 @@ if (saveHints) {
         `(provenance appended at this commit), ${hintSummary.hintFilesChanged} artifact(s) rewritten.`);
 }
 
-const out = {
-    schemaVersion: 1,
-    kind: 'pathfinder-direct-solver-report',
-    producer: 'run-solver-direct',
-    corpus: 'data/levels.json',
-    timestamp: new Date().toISOString(),
-    commitSha: getCommitSha(),
-    budgetMs,
-    workBudget: workBudget ?? null,
-    levelFilter: levelFilter ? [...levelFilter].sort((a,b) => a-b) : 'all',
-    solved: solvedCount, failed: failCount, errors: errorCount, total: levelNumbers.length, totalMs,
-    solverRequestProjection, solverRequestIdentity, backend, reproducibilityMode,
-    levels: results,
-};
-
-const dir = path.dirname(path.resolve(outputFile));
-await mkdir(dir, { recursive: true });
-await writeFile(outputFile, JSON.stringify(out, null, 2));
+await checkpointReport();
 console.log(`Results → ${outputFile}`);

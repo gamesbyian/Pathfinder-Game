@@ -1,35 +1,32 @@
 // Supplemental hints for a level published in the local levels.json corpus (as opposed to a
-// Firestore published_levels doc) — see docs/firestore-security-model.md and CLAUDE.md's
+// Firestore published_levels doc) — see firestore.rules and CLAUDE.md's
 // Provenance section. Keyed by the level's fingerprint (domain/level-fingerprint.ts), the same
 // identity mechanism already used for submission/publish duplicate detection and Dev-Mode level
-// ratings. One Firestore doc per distinct (path, discovery-event) pair -- see entryIdFor()'s own
+// ratings. One Firestore doc per distinct (path, discovery-event, physical-occurrence set) observation -- see entryIdFor()'s own
 // doc comment for why a path can have more than one -- under
 // artifacts/{appId}/local_level_hints/{levelFingerprint}/entries/{entryId}.
 import { collection, doc, getDocs, getCountFromServer, setDoc, Timestamp } from 'firebase/firestore';
-import { toHint, mergeHints, upgradeProvenanceEntry, provenanceEventIdentity, provenanceEventKey, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
+import { toHint, mergeHints, upgradeProvenanceEntry, provenanceEventIdentity, provenanceEventKey, provenanceOccurrenceKey, provenanceEvidenceKeys, hintOccurrenceKey, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
 
 const MAX_HINTS_PER_LEVEL = 5000;
 
 /** Bounded execution/run binding (docs/hint-evidence-execution-identity-storage-consolidation-
  *  plan.md section 4/W's Firestore layout item): each entry doc's ID is a composite of the path
- *  signature AND the discovery-event identity, `<pathHash>-<eventHash>`, rather than the path
- *  signature alone. A genuinely NEW discovery event for an ALREADY-known path (a different play
- *  session/technique finding the same path) is not a duplicate of the path's first-known event and
- *  must not be discarded as one -- it gets its own sibling doc under the same level's `entries`
- *  collection, reusing the exact same create-only/immutable security-rule pattern already proven
- *  for the first event (a doc-ID collision on the true duplicate case -- same path AND same exact
- *  event -- is still the existing harmless create-no-op). getLocalLevelHints() needs no change at
- *  all for this: mergeHints()/dedupeProvenanceEntries() already group multiple Firestore docs that
- *  share a path into one Hint with a combined provenance array, deduping true semantic duplicates
- *  and merging occurrence lineage exactly as they do for every other multi-event provenance source
- *  in this codebase -- reusing the single shared merge path rather than a second copy of it. */
+ *  signature AND semantic discovery-event identity, plus a physical-occurrence suffix when known.
+ *  A genuinely new discovery event for an already-known path gets its own sibling document. The
+ *  same semantic event reacquired in a new run/attempt also gets an immutable sibling document for
+ *  only that novel occurrence. Reads merge siblings through mergeHints()/dedupeProvenanceEntries(),
+ *  so storage remains create-only while semantic event identity and physical occurrence lineage stay
+ *  separate and idempotent. */
 function entryIdFor(pathSignature: string, entry: HintProvenanceEntry, hash: (s: string) => string): string {
-    return `${hash(pathSignature)}-${hash(provenanceEventIdentity(entry))}`;
+    const occurrenceKeys = (entry.occurrences ?? []).map(hintOccurrenceKey).sort();
+    const occurrenceSuffix = occurrenceKeys.length > 0 ? `-${hash(JSON.stringify(occurrenceKeys))}` : '';
+    return `${hash(pathSignature)}-${hash(provenanceEventIdentity(entry))}${occurrenceSuffix}`;
 }
 
 /** A rediscovery of an already-known PATH is no longer evidence-loss (see entryIdFor's own doc
- *  comment): only a true duplicate -- the exact same discovery EVENT for the exact same path,
- *  keyed by provenanceEventKey() -- is refused, and it is refused because writing it again would
+ *  comment): only a true duplicate -- the exact same discovery EVENT with no new physical occurrence for the
+ *  exact same path -- is refused, and it is refused because writing it again would
  *  be redundant, not because this backend structurally cannot represent it. Returning a
  *  discriminated outcome instead of a bare boolean still makes that redundant-duplicate case
  *  distinguishable from a real capacity refusal or a missing connection, rather than three
@@ -75,14 +72,15 @@ export function createLocalLevelHintsRepository(client: any) {
         return mergeHints([], hints);
     }
 
-    /** Saves one newly-discovered path/event pair as its own entry, unless this exact discovery
-     *  event is already known (locally or here — callers pass `alreadyKnownEventKeys`, built via
-     *  provenanceEventKey(), covering both) or the level already has MAX_HINTS_PER_LEVEL saved
-     *  entries; see SaveLocalLevelHintOutcome for why the "unless" cases return a distinguishable
+    /** Saves one newly-observed path/event/occurrence payload as its own immutable entry. Callers
+     *  pass `alreadyKnownEvidenceKeys`, containing the semantic event key plus any known atomic
+     *  occurrence keys. Occurrence-bearing input is filtered to novel runId+runAttempt acquisitions;
+     *  occurrence-less input dedupes at semantic-event grain. The level still has the
+     *  MAX_HINTS_PER_LEVEL soft document cap; see SaveLocalLevelHintOutcome for why the "unless" cases return a distinguishable
      *  reason rather than a bare false. A NEW discovery event for an already-known path is not
      *  "already known" here — see entryIdFor()'s own doc comment. Best-effort, non-atomic count
      *  check: a soft cap on puzzle-hint data, not a security boundary, so a small overshoot under
-     *  concurrent writes is acceptable (see docs/firestore-security-model.md). Propagates failures
+     *  concurrent writes is acceptable (see firestore.rules). Propagates failures
      *  like every other repository function here — callers driving an invisible background save
      *  (rather than a submission flow already surfacing its own errors) are responsible for
      *  catching and reporting rather than letting a rejected promise go unhandled. */
@@ -91,19 +89,35 @@ export function createLocalLevelHintsRepository(client: any) {
         path: number[],
         pathSignature: string,
         provenance: HintProvenanceEntry,
-        alreadyKnownEventKeys: ReadonlySet<string>,
+        alreadyKnownEvidenceKeys: ReadonlySet<string>,
     ): Promise<SaveLocalLevelHintOutcome> {
         if (!client.db || !levelFingerprint) return { saved: false, reason: 'no-connection' };
-        if (alreadyKnownEventKeys.has(provenanceEventKey(pathSignature, provenance))) {
-            return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+
+        const eventKey = provenanceEventKey(pathSignature, provenance);
+        const occurrences = provenance.occurrences ?? [];
+        let provenanceToPersist = provenance;
+
+        if (occurrences.length === 0) {
+            if (alreadyKnownEvidenceKeys.has(eventKey)) {
+                return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+            }
+        } else {
+            const novelOccurrences = occurrences.filter(
+                occurrence => !alreadyKnownEvidenceKeys.has(provenanceOccurrenceKey(pathSignature, provenance, occurrence)),
+            );
+            if (novelOccurrences.length === 0) {
+                return { saved: false, reason: 'duplicate-provenance-not-recorded' };
+            }
+            provenanceToPersist = { ...provenance, occurrences: novelOccurrences };
         }
+
         const count = await getCountFromServer(entries(levelFingerprint));
         if (count.data().count >= MAX_HINTS_PER_LEVEL) return { saved: false, reason: 'capacity-reached' };
-        const entryId = entryIdFor(pathSignature, provenance, hashPathSignature);
+        const entryId = entryIdFor(pathSignature, provenanceToPersist, hashPathSignature);
         await setDoc(doc(entries(levelFingerprint), entryId), {
             path,
             pathSignature,
-            provenance,
+            provenance: provenanceToPersist,
             createdAt: Timestamp.now(),
         });
         return { saved: true };
@@ -114,5 +128,8 @@ export function createLocalLevelHintsRepository(client: any) {
     const localHintEntryId = (pathSignature: string, provenance: HintProvenanceEntry) =>
         entryIdFor(pathSignature, provenance, hashPathSignature);
 
-    return { getLocalLevelHints, saveLocalLevelHintIfNovel, hashPathSignature, localHintEntryId, MAX_HINTS_PER_LEVEL };
+    const localHintEvidenceKeys = (pathSignature: string, provenance: HintProvenanceEntry) =>
+        provenanceEvidenceKeys(pathSignature, provenance);
+
+    return { getLocalLevelHints, saveLocalLevelHintIfNovel, hashPathSignature, localHintEntryId, localHintEvidenceKeys, MAX_HINTS_PER_LEVEL };
 }

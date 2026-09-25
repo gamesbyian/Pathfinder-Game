@@ -336,11 +336,18 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
             engine.overlays.setOverlayState(OVERLAY_NONE);
             if (res.newlySaved.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.engineState.foundHintsSinceLoad || [], res.newlySaved));
-                const levelRevision = await getLevelFingerprint(level);
-                const newlyFoundRecords = hintsFromVarietyResult(res, { usedExistingHints: existingHints.length > 0, solverVersion: SOLVER_VERSION, levelRevision });
-                setFoundHintsSinceLoadRecords(state, mergeHints(state.engineState.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 // Live-update the Edit/Review Hints button count to include the just-found solutions.
                 ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.engineState.editor.workingLevel?.hints, state.engineState.foundHintsSinceLoad)));
+            }
+            if (res.newlySaved.length > 0 || (res.rediscovered?.length ?? 0) > 0) {
+                const levelRevision = await getLevelFingerprint(level);
+                const discoveryRecords = hintsFromVarietyResult(res, {
+                    usedExistingHints: existingHints.length > 0,
+                    randomSeed: (0x50f7 ^ (state.engineState.levelIdx + 1)) >>> 0,
+                    solverVersion: SOLVER_VERSION,
+                    levelRevision,
+                });
+                setFoundHintsSinceLoadRecords(state, mergeHints(state.engineState.foundHintsSinceLoadRecords || [], discoveryRecords));
             }
             const summary = buildVarietySearchSummary(res, { target: tier.target, maxHints: currentMaxHints, mode: tier.complete ? 'complete' : 'targeted' });
             ui.showDiverseSearchResult('Search Complete', summary, { showExtend: shouldOfferExtend(res.outcome) });

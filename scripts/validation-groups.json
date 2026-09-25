@@ -125,7 +125,10 @@
       "test:probe-corpus-loader",
       "test:corpus-level-formatting",
       "test:level-sparse-serialization-benchmark",
-      "test:level-sparse-serialization-apply"
+      "test:level-sparse-serialization-apply",
+      "test:hint-store-index",
+      "test:hint-store-roots",
+      "test:validate-all-hint-stores"
     ],
     "research": [
       "test:research-domain-ownership",
@@ -267,7 +270,11 @@
       "test:hint-historical-enrichment-apply",
       "test:hint-codec-baseline-benchmark",
       "test:harvest-portfolio-solve-sweep-reports",
-      "test:hint-artifact-v4-migration"
+      "test:hint-artifact-v4-migration",
+      "test:central-hint-persistence-guard",
+      "test:import-published-hint-merge",
+      "test:hint-physical-decode-guard",
+      "test:hint-provenance-surface-audit-detector"
     ],
     "persistence": [
       "test:firestore-rules"
@@ -429,6 +436,63 @@
         "filesystemScope": "fixture-only",
         "processEntrypoints": [
           "scripts/check-workflow-actions.mjs"
+        ]
+      },
+      "test:hint-physical-decode-guard": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "scripts/**",
+          "modules/**",
+          ".github/workflows/**",
+          "docs/hint-physical-reader-audit.json",
+          "docs/hint-physical-writer-audit.json",
+          "package.json",
+          "docs/hint-bare-mutation-audit.json"
+        ]
+      },
+      "test:central-hint-persistence-guard": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "docs/solver-workflow-lifecycle.json",
+          "docs/hint-workflow-persistence-audit.json",
+          "scripts/hint-store-roots.mjs",
+          ".github/workflows/**"
+        ]
+      },
+      "test:hint-store-index": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/**/hints*/**",
+          "modules/domain/hint-runtime.mjs",
+          "scripts/hint-discovery-replayability-lib.mjs",
+          "scripts/stress/hint-reconstructability-report.mjs",
+          "scripts/hint-store-index.mjs",
+          "scripts/hint-store-roots.mjs"
+        ]
+      },
+      "test:hint-store-roots": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/**/hints*/**",
+          "scripts/hint-store-roots.mjs"
+        ]
+      },
+      "test:validate-all-hint-stores": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/**",
+          "scripts/validate-all-hint-stores.mjs",
+          "scripts/hint-store-roots.mjs",
+          "modules/domain/**",
+          "modules/hint-artifact-layout.mjs"
+        ]
+      },
+      "test:hint-ingestion-workflow-completeness": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "docs/solver-workflow-lifecycle.json",
+          "docs/hint-evidence-consolidation-inventory.json",
+          ".github/workflows/**"
         ]
       }
     }

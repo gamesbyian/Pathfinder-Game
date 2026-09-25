@@ -1,9 +1,9 @@
 # Hint evidence consolidation — Phase 3 closeout: PSC-029 retirement + stage-identity decision — 001
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-09-24 — closed PSC-029 retirement and the durable solver-stage-identity decision, clearing Phase 3's last open handoff item.
-> **Decision:** Phase 3 is complete: published_levels/local_level_hints retention is unified and durable solver-stage identity is deliberately not persisted.
-> **Remaining gate:** none for Phase 3 itself; this closure unblocks Phase 5/6 live-workflow validation and Phase 7 execution.
+> **Status:** superseded
+> **Last evidence:** 2026-09-24 — the hostile completion audit found that this closeout covered distinct semantic events on one path but did not cover the same semantic event acquired in a new run/attempt.
+> **Decision:** Preserve this report as evidence of the first Phase-3 closure, but do not use its original completion claim as current authority. PR #2072 corrected local Firestore occurrence persistence so same-event/new-occurrence acquisitions survive and exact retries remain idempotent.
+> **Remaining gate:** current authority is `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`; whole-program closure still requires its exact-head Firestore/emulator and closeout gates.
 >
 > **Date:** 2026-09-24
 >
@@ -15,6 +15,12 @@
 > instruction.
 >
 > **Base commit:** `6e70bc3`.
+>
+> **Retrospective correction:** the semantic contract here was under-factored. Proving "new semantic
+> event on an existing path" did not prove "same semantic event, new physical acquisition
+> occurrence." The strengthened plan now requires an explicit persistence state-transition matrix,
+> including exact retry, same-event/new-occurrence, new-event/same-path, capacity/partial failure,
+> retry and reconstruction. This report's original prose below is retained as historical evidence.
 
 ## 1. PSC-029 retirement: one semantic Hint retention contract across Firestore backends
 

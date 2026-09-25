@@ -2,7 +2,7 @@ import type { AppState, ControllerDeps } from '../state.js';
 import { Effects } from '../runtime/effects.js';
 import { runEffects } from '../runtime/effect-runner.js';
 import type { Effect } from '../runtime/effects.js';
-import { hintPathSignature, makeProvenanceEntry, provenanceEventKey, HUMAN_PLAYER_ID } from '../domain/hint-types.js';
+import { hintPathSignature, makeProvenanceEntry, provenanceEvidenceKeys, HUMAN_PLAYER_ID } from '../domain/hint-types.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { defaultReportError } from '../error-reporting.js';
 import { PLAY, RESOLVED } from '../app-constants.js';
@@ -46,11 +46,11 @@ export async function saveWinAsHintIfNovel(
         const signature = hintPathSignature(path);
         const alreadyKnownPaths = new Set(knownHints.map((h: any) => hintPathSignature(h.path)));
         if (alreadyKnownPaths.has(signature)) return;
-        const alreadyKnownEventKeys = new Set(
-            knownHints.flatMap((h: any) => h.provenance.map((entry: any) => provenanceEventKey(hintPathSignature(h.path), entry))),
+        const alreadyKnownEvidenceKeys = new Set(
+            knownHints.flatMap((h: any) => h.provenance.flatMap((entry: any) => provenanceEvidenceKeys(hintPathSignature(h.path), entry))),
         );
         const provenanceEntry = makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved', levelRevision: levelFingerprint });
-        await persistence.saveLocalLevelHintIfNovel(levelFingerprint, path, signature, provenanceEntry, alreadyKnownEventKeys);
+        await persistence.saveLocalLevelHintIfNovel(levelFingerprint, path, signature, provenanceEntry, alreadyKnownEvidenceKeys);
     } catch (err: any) {
         reportError('win.auto-save-hint', err);
     }

@@ -72,6 +72,7 @@ installBrowserStubs();
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
 const { enumerateFromGate, anchoredFromSeed } = await import('../modules/solver/hint-enumeration.js');
+const { varietyAnchorSeedId } = await import('../modules/solver/variety-search.js');
 const { readLevelCorpusDocumentWithHints, writeLevelCorpusDocumentWithHints, parseLevelSelector, setLevelHintRecords } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -144,6 +145,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
     const poolSigs = new Set(pool.map(pathSignature));
     const seedHints = [...(raw.hints || [])];
     const accepted = [];
+    const rediscovered = [];
     const rejected = new Map();
     let stagnation = 0;
     let validSeen = 0, considered = 0;
@@ -156,7 +158,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
     // hint-workbench plan) — see modules/domain/hint-acceptance-pipeline.ts. Exact-duplicate and
     // canonical-duplicate both surface as their own distinct reason strings now (previously both
     // bucketed under 'duplicate' here); nothing downstream parses these reason strings.
-    const consider = (candidate, technique) => {
+    const consider = (candidate, discovery) => {
         considered++;
         const outcome = evaluateCandidateAcceptance(
             level, { ...raw, hints: pool }, candidate, poolSigs,
@@ -164,17 +166,26 @@ async function processLevel(levelNumber, raw, opts, rnd) {
         );
         if (outcome.stage !== 'policy') {
             rejected.set(outcome.reason, (rejected.get(outcome.reason) || 0) + 1);
+            if (outcome.stage === 'exact-duplicate' || outcome.stage === 'canonical-duplicate') {
+                rediscovered.push({ path: outcome.path ?? candidate, ...discovery });
+            }
             return;
         }
         validSeen++;
         if (outcome.accept) {
             poolSigs.add(outcome.pathSignature);
             pool.push(outcome.path);
-            accepted.push({ path: outcome.path, reason: outcome.reason, heatmapScore: outcome.evaluation.heatmap.score, newCells: outcome.evaluation.heatmap.newCells, technique, profile: orderProfile });
+            accepted.push({
+                path: outcome.path,
+                reason: outcome.reason,
+                heatmapScore: outcome.evaluation.heatmap.score,
+                newCells: outcome.evaluation.heatmap.newCells,
+                ...discovery,
+            });
             stagnation = 0;
         } else {
             rejected.set(outcome.reason, (rejected.get(outcome.reason) || 0) + 1);
-            stagnation++; // valid but rejected — counts toward stagnation
+            stagnation++;
         }
     };
 
@@ -189,7 +200,12 @@ async function processLevel(levelNumber, raw, opts, rnd) {
     for (let r = 0; r < opts.restarts && !shouldStop(); r++) {
         for (const gateKey of level.gateKeys) {
             if (shouldStop()) break;
-            nodes += (await enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'enumerate-restart' + orderSuffix), shouldStop, ...enumOrderOpts })).nodes;
+            nodes += (await enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, {
+                technique: 'enumerate-restart' + orderSuffix,
+                profile: orderProfile,
+                gateKey,
+                hintGuided: false,
+            }), shouldStop, ...enumOrderOpts })).nodes;
         }
     }
     // Generator B: prefix-anchored completion from a shuffled sample of seed hints, sweeping anchor depth.
@@ -199,7 +215,13 @@ async function processLevel(levelNumber, raw, opts, rnd) {
             if (shouldStop()) break;
             const L = seed.length;
             for (let K = Math.max(1, Math.floor(L * 0.3)); K < L - 2 && !shouldStop(); K += Math.max(1, Math.floor(L * 0.12))) {
-                nodes += (await anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'prefix-anchored' + orderSuffix), shouldStop, ...enumOrderOpts })).nodes;
+                nodes += (await anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, {
+                    technique: 'prefix-anchored' + orderSuffix,
+                    profile: orderProfile,
+                    anchorSeed: varietyAnchorSeedId(seed),
+                    anchorDepth: K,
+                    hintGuided: true,
+                }), shouldStop, ...enumOrderOpts })).nodes;
             }
         }
     }
@@ -217,7 +239,8 @@ async function processLevel(levelNumber, raw, opts, rnd) {
         considered, validSeen, nodes, stopReason,
         rejected: Object.fromEntries([...rejected.entries()].sort()),
         acceptedPaths: accepted.map(a => a.path),
-        acceptedMeta: accepted.map(({ reason, heatmapScore, newCells, technique, profile }) => ({ reason, heatmapScore, newCells, technique, profile })),
+        acceptedMeta: accepted.map(({ path: _path, ...meta }) => meta),
+        rediscovered,
     };
 }
 
@@ -308,21 +331,25 @@ async function main() {
 
     const applyResult = (levelNumber, resultIndex, result) => {
         totalAccepted += result.acceptedCount;
-        if (writeLevels && result.acceptedCount) {
+        if (writeLevels && (result.acceptedCount || (result.rediscovered?.length ?? 0) > 0)) {
             const raw = rawLevels[levelNumber - 1];
             // Attach real provenance (which generator/technique found it) instead of leaving these
             // paths with an empty provenance list — this script previously only wrote `.hints`.
-            const newRecords = result.acceptedPaths.map((p, i) => {
-                const meta = result.acceptedMeta[i] || {};
-                return toHint(p, [makeProvenanceEntry(meta.technique || 'unknown', {
-                    termination: 'solved',
-                    randomSeed: cfg.seedBase + levelNumber,
-                    profile: meta.profile ?? null,
-                    hintGuided: (meta.technique || '').startsWith('prefix-anchored'),
-                    levelRevision: levelRevisionByNumber.get(levelNumber) ?? null,
-                })]);
-            });
-            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
+            const provenanceRecord = (p, meta = {}) => toHint(p, [makeProvenanceEntry(meta.technique || 'unknown', {
+                termination: 'solved',
+                randomSeed: cfg.seedBase + levelNumber,
+                scoringProfileId: meta.profile ?? null,
+                gateKey: meta.gateKey ?? null,
+                hintGuided: meta.hintGuided === true,
+                usedExistingHints: meta.hintGuided === true,
+                levelRevision: levelRevisionByNumber.get(levelNumber) ?? null,
+                ...(meta.anchorSeed != null
+                    ? { forcingAnchorSeed: meta.anchorSeed, forcingAnchorDepth: meta.anchorDepth ?? null }
+                    : {}),
+            })]);
+            const newRecords = result.acceptedPaths.map((p, i) => provenanceRecord(p, result.acceptedMeta[i] || {}));
+            const rediscoveryRecords = (result.rediscovered || []).map(({ path, ...meta }) => provenanceRecord(path, meta));
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], [...newRecords, ...rediscoveryRecords]));
             changedHintLevels.add(raw);
         }
         results[resultIndex] = result;

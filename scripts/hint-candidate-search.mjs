@@ -12,11 +12,16 @@
  *   npm run hints:discover-candidates -- --levels=pos:1 --max-accepted=2 --write-levels
  */
 import { mkdir, rename, writeFile } from 'node:fs/promises';
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../modules/domain/hint-novelty.ts';
-import { makeProvenanceEntry, mergeHints, setLevelHintRecords, toHint, SOLVER_ID } from '../modules/domain/hint-types.ts';
+import { makeProvenanceEntry, mergeHints, setLevelHintRecords, toHint } from '../modules/domain/hint-types.ts';
+import { provenanceFromSolveResult } from '../modules/solver/hint-provenance.ts';
+import { buildCanonicalSolverRequestProjection } from '../modules/solver/solver-request-projection.ts';
+import { classifyReproducibilityMode } from '../modules/solver/reproducibility-mode.mjs';
+import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 
 installBrowserStubs();
@@ -35,6 +40,9 @@ const CANDIDATE_SEARCH_MUTATION_ID = 'candidate-search-geometry-mutation';
 
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
+const SOLVER_VERSION = process.env.GITHUB_SHA || (() => {
+    try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
+})();
 
 function parseArgs(argv) {
     const args = new Map();
@@ -67,24 +75,25 @@ function loadCorpusDocument(levelsJsonPath) {
  *  genuine solver runs (SOLVER_ID) versus the corner-flip mutation phase, which never invokes the
  *  solver at all. */
 function candidateProvenance(accepted, opts, levelRevision) {
-    const { phase } = accepted.provenance;
+    const { phase, solveObservation } = accepted.provenance;
     if (phase === 'corner-flip') {
         return makeProvenanceEntry('candidate-search-corner-flip', {
             solverId: CANDIDATE_SEARCH_MUTATION_ID,
             levelRevision,
         });
     }
-    const flagSuffix = accepted.provenance.flag ? `:${accepted.provenance.flag}` : '';
-    const technique = `candidate-search-${phase}${flagSuffix}`;
-    const forcing = {};
-    if (accepted.provenance.gateKey !== undefined) forcing.forcingGateKey = accepted.provenance.gateKey;
-    if (accepted.provenance.stepKey !== undefined) forcing.forcingDirection = accepted.provenance.stepKey;
-    return makeProvenanceEntry(technique, {
-        solverId: SOLVER_ID,
+    if (!solveObservation?.result) {
+        throw new Error(`candidate-search ${phase} accepted a solver path without its solve observation`);
+    }
+    return provenanceFromSolveResult(solveObservation.result, {
+        solverVersion: SOLVER_VERSION,
         budgetMs: opts.timeBudgetMs,
-        termination: 'solved',
         levelRevision,
-        ...forcing,
+        solverRequestIdentity: solveObservation.solverRequestIdentity,
+        reproducibilityMode: solveObservation.reproducibilityMode,
+        ...(accepted.provenance.gateKey !== undefined ? { forcingGateKey: accepted.provenance.gateKey } : {}),
+        ...(accepted.provenance.stepKey !== undefined ? { forcingDirection: accepted.provenance.stepKey } : {}),
+        ...(accepted.provenance.flag ? { forcingDisabledFeatures: [accepted.provenance.flag] } : {}),
     });
 }
 
@@ -129,16 +138,13 @@ function cornerFlipMutations(pathToMutate, grid) {
 
 async function solveAttempt(level, opts, errors) {
     try {
-        // disableExtraBudgetPasses: this grid runs many narrow, cheap probes under a tight
-        // timeBudgetMs -- without this, each individual solve can silently balloon to up to
-        // (1 + 6 + 1 + N) x timeBudgetMs (repair fallback / attraction-diversity / admissible-
-        // order-search's own extra-budget tiers; see CLAUDE.md's solver-architecture gotcha),
-        // defeating the point of a tight per-attempt budget across a large grid. Same reasoning as
-        // hint-ablation-generator.ts's runCascade/runStrategyPhase, which set this for the same
-        // reason (the workbench's own ported candidate-grid step gained the identical fix
-        // alongside this one — see reports/2026-07-25-hint-tool-comparison.md).
-        const result = await Solver.solveLevel(level, { ...opts, disableExtraBudgetPasses: true });
-        return result?.ok && result.solution ? result.solution : null;
+        const solveOpts = { ...opts, disableExtraBudgetPasses: true, schedulerMode: 'production' };
+        const solverRequestProjection = buildCanonicalSolverRequestProjection(solveOpts);
+        const solverRequestIdentity = solverRequestIdentityFromProjection(solverRequestProjection);
+        const reproducibilityMode = classifyReproducibilityMode({ schedulerMode: solveOpts.schedulerMode, backend: 'direct' });
+        const result = await Solver.solveLevel(level, solveOpts);
+        if (!result?.ok || !result.solution) return null;
+        return { result, solverRequestIdentity, reproducibilityMode };
     } catch (err) {
         errors.push(err?.message || String(err));
         return null;
@@ -197,27 +203,36 @@ async function processLevel(levelNumber, raw, opts) {
         }
     }
 
-    consider(await solveAttempt(level, { timeBudgetMs: opts.timeBudgetMs }, errors), { phase: 'baseline' });
+    {
+        const solveObservation = await solveAttempt(level, { timeBudgetMs: opts.timeBudgetMs }, errors);
+        consider(solveObservation?.result?.solution ?? null, { phase: 'baseline', solveObservation });
+    }
     for (const flag of FEATURE_GROUPS.strategy) {
         if (accepted.length >= opts.maxAccepted) break;
-        const candidate = await solveAttempt(level, { timeBudgetMs: opts.timeBudgetMs, ablation: withFeatureDisabled(flag) }, errors);
-        consider(candidate, { phase: 'strategy', flag });
+        const solveObservation = await solveAttempt(level, { timeBudgetMs: opts.timeBudgetMs, ablation: withFeatureDisabled(flag) }, errors);
+        consider(solveObservation?.result?.solution ?? null, { phase: 'strategy', flag, solveObservation });
     }
 
     for (const gateKey of level.gateKeys) {
         if (accepted.length >= opts.maxAccepted) break;
         for (const { gateLevel, stepKey } of enumerateFirstSteps(level, gateKey)) {
             if (accepted.length >= opts.maxAccepted) break;
-            const candidate = await solveAttempt(gateLevel, { timeBudgetMs: opts.timeBudgetMs, forcedFirstStepKey: stepKey }, errors);
-            consider(candidate, { phase: 'forced-first-step', gateKey, stepKey });
+            const solveObservation = await solveAttempt(gateLevel, { timeBudgetMs: opts.timeBudgetMs, forcedFirstStepKey: stepKey }, errors);
+            consider(solveObservation?.result?.solution ?? null, { phase: 'forced-first-step', gateKey, stepKey, solveObservation });
             for (const flag of FEATURE_GROUPS.strategy) {
                 if (accepted.length >= opts.maxAccepted) break;
-                const strategyCandidate = await solveAttempt(gateLevel, {
+                const solveObservation = await solveAttempt(gateLevel, {
                     timeBudgetMs: opts.timeBudgetMs,
                     forcedFirstStepKey: stepKey,
                     ablation: withFeatureDisabled(flag),
                 }, errors);
-                consider(strategyCandidate, { phase: 'forced-first-step-strategy', gateKey, stepKey, flag });
+                consider(solveObservation?.result?.solution ?? null, {
+                    phase: 'forced-first-step-strategy',
+                    gateKey,
+                    stepKey,
+                    flag,
+                    solveObservation,
+                });
             }
         }
     }

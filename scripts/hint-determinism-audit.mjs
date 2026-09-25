@@ -4,11 +4,14 @@ import path from 'node:path';
 import process from 'node:process';
 import { auditHintFile } from './hint-determinism-audit-lib.mjs';
 import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
+import { assertCompleteHintStoreDirs, discoverHintStoreDirs } from './hint-store-roots.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
-const roots = (value('roots') ?? 'data/hints,data/stress/hints,data/stress/hints-random')
-    .split(',').map(item => item.trim()).filter(Boolean);
+const explicitRoots = value('roots');
+const roots = explicitRoots
+    ? explicitRoots.split(',').map(item => item.trim()).filter(Boolean)
+    : assertCompleteHintStoreDirs(discoverHintStoreDirs(process.cwd()), 'full Hint determinism audit');
 const outPath = value('out') ?? null;
 const sampleLimit = Number(value('sample-limit') ?? 25);
 
@@ -35,6 +38,8 @@ const summary = {
     repeatRunComparableGroups: 0,
     repeatRunStableGroups: 0,
     repeatRunRecordedInputCollisionGroups: 0,
+    repeatRunCanonicalInputCollisionGroups: 0,
+    repeatRunLegacyRecordedInputCollisionGroups: 0,
     exactEventCrossPathGroups: 0,
     excludedReasons: {},
     samples: { exactEventCrossPath: [], repeatRunRecordedInputCollision: [] },
@@ -53,6 +58,10 @@ for (const root of roots) {
         summary.legacyComparableEvents += result.legacyComparableEvents;
         summary.exactEventCrossPathGroups += result.exactEventCrossPath.length;
         summary.repeatRunRecordedInputCollisionGroups += result.repeatRunRecordedInputCollision.length;
+        summary.repeatRunCanonicalInputCollisionGroups += result.repeatRunRecordedInputCollision
+            .filter(row => row.identityBasis === 'canonical-solver-request').length;
+        summary.repeatRunLegacyRecordedInputCollisionGroups += result.repeatRunRecordedInputCollision
+            .filter(row => row.identityBasis === 'legacy-recorded-input').length;
         summary.repeatRunStableGroups += result.repeatRunStable.length;
         summary.repeatRunComparableGroups += result.repeatRunRecordedInputCollision.length + result.repeatRunStable.length;
         for (const [reason, count] of Object.entries(result.excludedReasons)) {

@@ -298,9 +298,9 @@ async function main() {
         const level = normalizeRawLevel(raw, levelNumber);
 
         const levelJobs = jobs.filter(j => j.levelNumber === levelNumber);
-        const merged = new Map(); // pathSignature -> path (shards are disjoint by construction, so
-                                   // a collision here would indicate a sharding-soundness bug, not
-                                   // legitimate overlap — Map dedup is a defensive backstop only).
+        // Keep the acquisition gate(s) attached to each discovered path. Collapsing to a bare
+        // path here used to erase a real discovery dimension before provenance construction.
+        const merged = new Map(); // pathSignature -> { path, gateKeys:Set<number> }
         let allJobsHaveResults = true;
         let allExhausted = true;
         let totalNodes = 0;
@@ -310,34 +310,39 @@ async function main() {
             if (!result) { allJobsHaveResults = false; allExhausted = false; continue; }
             if (!result.exhausted) allExhausted = false;
             totalNodes += result.nodes || 0;
-            for (const p of result.paths) merged.set(pathSignature(p), p);
+            for (const p of result.paths) {
+                const sig = pathSignature(p);
+                if (!merged.has(sig)) merged.set(sig, { path: p, gateKeys: new Set() });
+                merged.get(sig).gateKeys.add(job.gateKey);
+            }
         }
 
         const sortedSigs = [...merged.keys()].sort();
         const novel = [];
         for (const sig of sortedSigs) {
-            if (!existingSigs.has(sig)) novel.push(merged.get(sig));
+            if (!existingSigs.has(sig)) novel.push(merged.get(sig).path);
         }
         totalNovel += novel.length;
 
-        if (writeLevels && novel.length > 0) {
-            // Attach real provenance (deterministic exhaustive/sharded enumeration, which gate it
-            // was found under) instead of leaving these paths with an empty provenance list — this
-            // script previously only wrote `.hints`.
+        if (writeLevels && merged.size > 0) {
+            // Persist provenance for every discovered path, including rediscoveries of an already
+            // stored path, and one semantic event per distinct gate that reached it.
             const exhaustedThisLevel = allJobsHaveResults && allExhausted;
             const levelRevision = await getLevelFingerprint(raw);
-            // Suffix/profile convention mirrors variety-search.ts/hint-corpus-expand.mjs (see
-            // VarietySavedMeta's own doc) -- without it, a hint found via
-            // --enum-order=admissible-slack is indistinguishable in its persisted provenance from
-            // one found via plain deterministic order.
             const technique = 'enumerate-complete-sharded' + (enumOrder === 'admissible-slack' ? ':admissible-slack' : '');
             const profile = enumOrder === 'admissible-slack' ? (enumTieBreak ? 'flat' : null) : null;
-            const newRecords = novel.map(p => toHint(p, [makeProvenanceEntry(technique, {
-                termination: exhaustedThisLevel ? 'exhaustive' : 'solved',
-                profile,
-                levelRevision,
-            })]));
-            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], newRecords));
+            const discoveryRecords = sortedSigs.flatMap(sig => {
+                const discovery = merged.get(sig);
+                return [...discovery.gateKeys].sort((a, b) => a - b).map(gateKey =>
+                    toHint(discovery.path, [makeProvenanceEntry(technique, {
+                        termination: exhaustedThisLevel ? 'exhaustive' : 'solved',
+                        scoringProfileId: profile,
+                        gateKey,
+                        levelRevision,
+                    })])
+                );
+            });
+            setLevelHintRecords(raw, mergeHints(raw.hintRecords || [], discoveryRecords));
             changedHintLevels.add(raw);
         }
 

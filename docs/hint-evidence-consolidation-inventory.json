@@ -120,9 +120,9 @@
   "workflowIngestion": [
     {
       "workflow": "solver-stress-refresh.yml",
-      "currentHintMode": "direct hint files + report artifacts",
+      "currentHintMode": "artifact-only level-blind reports; central harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "report/discovery projection -> central persistence",
+      "target": "central persistence (implemented)",
       "partialFailureEvidence": true,
       "producerEntrypoint": "scripts/level-blind-capability-sweep.mjs",
       "executionClass": "level-blind production/capability sweep; canonical hints currently mutated in shard worktrees",
@@ -131,23 +131,24 @@
       "levelRevisionAvailability": "source SHA + corpus/report identity available; durable per-event level revision still required",
       "effectiveExecutionConfigAvailability": "run/report configuration available, not durably self-contained in each hint event",
       "sourceRunLineageAvailability": "GitHub source run + artifact provenance; partial-failure shard artifacts retained",
-      "artifactSufficientForFutureSemanticHint": "yes after execution capsule is added",
-      "migrationTarget": "central ingestion",
+      "artifactSufficientForFutureSemanticHint": "yes; proven by full-corpus parity before direct-write retirement",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": true,
       "historyAware": false,
-      "currentHintPersistence": "shards mutate canonical hint files with --save-hints and also emit sweep reports",
+      "currentHintPersistence": "source workflow emits report/artifact evidence only; harvest-solver-evidence.yml reconstructs and persists accepted Hint observations centrally",
       "exactSuccessfulPath": "yes: canonical shard hint artifacts and solved report rows",
       "winningAttemptConfig": "yes in sweep rows",
       "levelRevision": "partially/current corpus identity available; future Hint needs explicit level revision at discovery",
       "effectiveExecutionConfig": "experiment contract + report configuration exist but not yet projected into every Hint event",
       "sourceRunLineage": "GHA source-run manifest/harvester run id",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "solver-production-replay-baseline.yml",
-      "currentHintMode": "direct hint files + report artifacts",
+      "currentHintMode": "artifact-only history-aware portfolio reports; central harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "report/discovery projection -> central persistence",
+      "target": "central persistence (implemented)",
       "partialFailureEvidence": true,
       "producerEntrypoint": "scripts/portfolio-solve-sweep.mjs",
       "executionClass": "history-aware production replay",
@@ -156,23 +157,24 @@
       "levelRevisionAvailability": "source SHA/corpus identity available; per-event durable revision needs capsule",
       "effectiveExecutionConfigAvailability": "run-level work/deadline/ablation inputs + report configuration; not self-contained in current hint provenance",
       "sourceRunLineageAvailability": "source run and recovery combine-from-run lineage exist",
-      "artifactSufficientForFutureSemanticHint": "yes after execution capsule projection",
-      "migrationTarget": "central ingestion",
+      "artifactSufficientForFutureSemanticHint": "yes; report carries exact path, level revision, discovery time, attempts, request identity and per-level work budget",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": false,
       "historyAware": true,
-      "currentHintPersistence": "shards mutate canonical hint files with --save-hints and emit reports",
+      "currentHintPersistence": "source workflow emits portfolio reports only; central portfolio harvester reconstructs canonical Hint observations",
       "exactSuccessfulPath": "yes",
       "winningAttemptConfig": "yes",
       "levelRevision": "corpus/report identity available; event projection needs explicit binding",
       "effectiveExecutionConfig": "experiment contract/report config available",
       "sourceRunLineage": "source run + recovery/recombine lineage",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "solver-highbudget-unsolved-sweep.yml",
-      "currentHintMode": "direct hint files + report artifacts",
+      "currentHintMode": "artifact-only history-aware portfolio reports; central harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "report/discovery projection -> central persistence",
+      "target": "central persistence (implemented)",
       "partialFailureEvidence": true,
       "producerEntrypoint": "scripts/portfolio-solve-sweep.mjs",
       "executionClass": "targeted/high-budget solver discovery",
@@ -181,23 +183,24 @@
       "levelRevisionAvailability": "source/corpus identity available",
       "effectiveExecutionConfigAvailability": "report/run config available but not canonicalized into durable event capsule",
       "sourceRunLineageAvailability": "source run artifact lineage available",
-      "artifactSufficientForFutureSemanticHint": "yes after execution capsule projection",
-      "migrationTarget": "central ingestion",
+      "artifactSufficientForFutureSemanticHint": "yes; report carries exact successful-discovery reconstruction fields",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": false,
       "historyAware": true,
-      "currentHintPersistence": "direct canonical hint artifacts plus reports",
+      "currentHintPersistence": "source workflow emits portfolio reports only; central portfolio harvester reconstructs canonical Hint observations",
       "exactSuccessfulPath": "yes",
       "winningAttemptConfig": "yes",
       "levelRevision": "corpus identity available",
       "effectiveExecutionConfig": "contract/report config available",
       "sourceRunLineage": "source run",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "solver-level-blind-targeted-sweep.yml",
-      "currentHintMode": "artifact-only level-blind reports",
+      "currentHintMode": "artifact-only level-blind reports; central harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "retain central report harvest; add canonical execution capsule",
+      "target": "central persistence (implemented)",
       "partialFailureEvidence": true,
       "producerEntrypoint": "scripts/level-blind-capability-sweep.mjs",
       "executionClass": "level-blind artifact-only discovery",
@@ -207,22 +210,23 @@
       "effectiveExecutionConfigAvailability": "summary budget/work/ablation fields available; needs canonical execution capsule",
       "sourceRunLineageAvailability": "source run/workflow/artifact supplied to central harvester",
       "artifactSufficientForFutureSemanticHint": "yes after execution capsule projection",
-      "migrationTarget": "central ingestion",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": true,
       "historyAware": false,
-      "currentHintPersistence": "artifact-only solved reports; central harvester reconstructs hints",
+      "currentHintPersistence": "artifact-only solved reports; central harvester reconstructs and persists canonical Hint observations",
       "exactSuccessfulPath": "yes in solved rows",
       "winningAttemptConfig": "yes",
       "levelRevision": "population/corpus identity available",
       "effectiveExecutionConfig": "experiment contract + report config",
       "sourceRunLineage": "source run + manifest",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "solver-routing-regime-sample-ab.yml",
-      "currentHintMode": "artifact-only level-blind reports",
+      "currentHintMode": "artifact-only paired level-blind reports; central harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "retain central report harvest; add canonical execution capsule",
+      "target": "central persistence (implemented)",
       "partialFailureEvidence": true,
       "producerEntrypoint": "scripts/level-blind-capability-sweep.mjs",
       "executionClass": "paired level-blind A/B",
@@ -232,22 +236,23 @@
       "effectiveExecutionConfigAvailability": "arm configuration is present at run/report scope, which is exactly the determinism-audit gap when not copied into durable hint semantics",
       "sourceRunLineageAvailability": "run + arm artifacts available",
       "artifactSufficientForFutureSemanticHint": "yes after execution capsule projection and arm identity preservation",
-      "migrationTarget": "central ingestion",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": true,
       "historyAware": false,
-      "currentHintPersistence": "artifact-only A/B reports; central harvester reconstructs eligible hints",
+      "currentHintPersistence": "artifact-only A/B reports; central harvester reconstructs eligible Hint observations with arm identity",
       "exactSuccessfulPath": "yes",
       "winningAttemptConfig": "yes",
       "levelRevision": "population/corpus identity available",
       "effectiveExecutionConfig": "arm-specific experiment contract/configuration",
       "sourceRunLineage": "source run + arm",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "method-probe-sweep.yml",
-      "currentHintMode": "artifact-only isolated reports",
+      "currentHintMode": "artifact-only isolated reports; central isolated harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "retain isolated semantic projection; add common execution capsule",
+      "target": "central persistence (implemented)",
       "partialFailureEvidence": true,
       "producerEntrypoint": "scripts/method-probe.mjs",
       "executionClass": "isolated/direct attempt",
@@ -257,22 +262,23 @@
       "effectiveExecutionConfigAvailability": "specialist report semantics available; needs common execution capsule projection",
       "sourceRunLineageAvailability": "source run/workflow/artifact available",
       "artifactSufficientForFutureSemanticHint": "yes through isolated semantic adapter",
-      "migrationTarget": "central ingestion",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": true,
       "historyAware": false,
-      "currentHintPersistence": "isolated specialist reports; central isolated harvester",
+      "currentHintPersistence": "isolated specialist reports only; central isolated harvester owns persistence",
       "exactSuccessfulPath": "yes",
       "winningAttemptConfig": "isolated technique identity is explicit",
       "levelRevision": "corpus/level identity available",
       "effectiveExecutionConfig": "specialist method request is retained; common execution capsule still needed",
       "sourceRunLineage": "source run",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "technique-census.yml",
-      "currentHintMode": "isolated/census report evidence plus current combine-side hint handling",
+      "currentHintMode": "artifact-only isolated technique-census results; central isolated harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "one central isolated ingestion authority",
+      "target": "central persistence (implemented)",
       "partialFailureEvidence": true,
       "producerEntrypoint": "scripts/technique-census.mjs",
       "executionClass": "isolated technique census",
@@ -281,23 +287,24 @@
       "levelRevisionAvailability": "source/corpus context available",
       "effectiveExecutionConfigAvailability": "census-specific configuration available; common capsule still needed",
       "sourceRunLineageAvailability": "source run/artifact available",
-      "artifactSufficientForFutureSemanticHint": "yes after one isolated ingestion adapter owns persistence",
-      "migrationTarget": "central ingestion",
+      "artifactSufficientForFutureSemanticHint": "yes; combined cell rows contain exact solution, attempts, corpus/level identity and technique cell identity",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": true,
       "historyAware": false,
-      "currentHintPersistence": "isolated cell/shard evidence; combine currently has --save-hints semantics",
+      "currentHintPersistence": "shards/combine emit scientific reports only; harvest-isolated-report-hints.mjs reconstructs accepted solved cells centrally",
       "exactSuccessfulPath": "yes in cell results/combined hint handling",
       "winningAttemptConfig": "technique/cell identity explicit",
       "levelRevision": "sealed plan population identity",
       "effectiveExecutionConfig": "sealed plan + experiment contract",
       "sourceRunLineage": "source run/cell/shard",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "cpsat-hint-harvest-sweep.yml",
-      "currentHintMode": "direct canonical hint files + exact specialist discovery reports + central shadow reconstruction",
+      "currentHintMode": "artifact-only CP-SAT discovery reports; central specialist harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "dual-path parity/reharvest -> central persistence",
+      "target": "central persistence (implemented)",
       "partialFailureEvidence": true,
       "producerEntrypoint": "scripts/stress/cpsat-hint-harvest-sweep.mjs -> scripts/stress/cpsat-hint-harvest.mjs",
       "executionClass": "external CP-SAT reference probe; cold with optional forcing grid",
@@ -308,23 +315,24 @@
       "sourceRunLineageAvailability": "central harvester supplies exact run id/attempt and reconstructs occurrence lineage",
       "artifactSufficientForFutureSemanticHint": "yes after 2026-09-23 CP-SAT discovery projection hardening",
       "reason": "specialist schema pathfinder-cpsat-hint-discovery-report now retains exact accepted path/signature, source level revision, forcing, budget/elapsed observation, discovery time and external solver identity; central adapter re-referees and reconstructs canonical external provenance",
-      "migrationTarget": "Phase-6 dual-path parity; specialist central adapter exists in shadow mode",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": null,
       "historyAware": null,
-      "currentHintPersistence": "direct canonical hint transport retained during parity; central harvester also reconstructs from specialist discovery reports",
+      "currentHintPersistence": "source workflow emits self-describing CP-SAT discovery reports only; central harvester re-referees and persists canonical external-solver provenance",
       "exactSuccessfulPath": "yes in specialist discovery report and direct canonical hint artifact",
       "winningAttemptConfig": "external solver identity + forcing grid semantics retained in specialist report",
       "levelRevision": "exact per successful observation",
       "effectiveExecutionConfig": "external specialist forcing/budget semantics retained; native Pathfinder solver request is not applicable",
       "sourceRunLineage": "exact GHA source run id/attempt supplied by central harvester",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "solver-diagnostics.yml",
-      "currentHintMode": "direct canonical hint capture + self-describing diagnostics artifact + central shadow reconstruction",
+      "currentHintMode": "artifact-only diagnostics reports with always-uploaded full/partial evidence; central harvester is sole canonical Hint writer",
       "centralHarvester": true,
-      "target": "dual-path parity/reharvest -> central persistence; retire direct --save-hints write only after exact parity",
-      "partialFailureEvidence": false,
+      "target": "central persistence (implemented)",
+      "partialFailureEvidence": true,
       "producerEntrypoint": "npm solver:analyze-diagnostics / underlying diagnostics solver runner",
       "executionClass": "diagnostic/mixed",
       "exactSuccessfulPathAvailability": "yes: successful diagnostics rows now retain exact accepted solution path",
@@ -333,16 +341,17 @@
       "effectiveExecutionConfigAvailability": "yes for canonical solver-request identity + reproducibility mode; protocol/arm remain genuinely absent because diagnostics has no experiment contract",
       "sourceRunLineageAvailability": "central harvester supplies exact source run id + run attempt and reconstructs occurrence lineage",
       "artifactSufficientForFutureSemanticHint": "yes after 2026-09-23 diagnostics projection hardening",
-      "migrationTarget": "Phase-6 dual-path parity; central diagnostics adapter now exists in shadow mode",
+      "migrationTarget": "central ingestion complete",
       "levelBlind": false,
       "historyAware": true,
-      "currentHintPersistence": "direct canonical hint capture via --save-hints retained during parity; central harvester also reconstructs from uploaded diagnostics report",
+      "currentHintPersistence": "source workflow uploads full/partial diagnostics artifacts under if: always(); central diagnostics harvester reconstructs and persists canonical Hint observations",
       "exactSuccessfulPath": "yes in diagnostics artifact and direct hint writes",
       "winningAttemptConfig": "yes in serialized attempts",
       "levelRevision": "exact per successful observation",
       "effectiveExecutionConfig": "canonical solverRequestIdentity + reproducibilityMode retained in diagnostics artifact",
       "sourceRunLineage": "exact GHA run id/attempt supplied by central harvester",
-      "partialFailureUpload": false
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "central-ingestion"
     },
     {
       "workflow": "solver-broad-confirmation.yml",
@@ -362,7 +371,8 @@
       "levelRevision": "sealed generated/frozen population",
       "effectiveExecutionConfig": "paired experiment contract",
       "sourceRunLineage": "source run + arm",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "experiment-only-no-hint-ingestion"
     },
     {
       "workflow": "solver-residual-confirmation.yml",
@@ -382,7 +392,8 @@
       "levelRevision": "frozen pool/residual identities",
       "effectiveExecutionConfig": "paired experiment contract",
       "sourceRunLineage": "source run + phase + arm",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "experiment-only-no-hint-ingestion"
     },
     {
       "workflow": "static-portfolio-confirmation.yml",
@@ -402,7 +413,8 @@
       "levelRevision": "sealed plan",
       "effectiveExecutionConfig": "experiment contract",
       "sourceRunLineage": "source run + cell/arm",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "experiment-only-no-hint-ingestion"
     },
     {
       "workflow": "solver-combine-sweep-runs.yml",
@@ -423,7 +435,52 @@
       "levelRevision": "validated expected population",
       "effectiveExecutionConfig": "source contracts must be compatible",
       "sourceRunLineage": "typed constituent acquisition runs already retained",
-      "partialFailureUpload": true
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "reconciliation-only-no-fresh-hint-ingestion"
+    },
+    {
+      "workflow": "collect-prune-gap-labels.yml",
+      "currentHintMode": "non-Hint prune-gap label evidence only",
+      "centralHarvester": false,
+      "target": "remain non-Hint evidence-producing",
+      "migrationTarget": "remain non-Hint evidence-producing",
+      "partialFailureUpload": true,
+      "artifactSufficientForFutureSemanticHint": "not applicable: this workflow produces prune-gap labels, not accepted-path Hint discoveries",
+      "hintIngestionDisposition": "non-hint-evidence",
+      "rationale": "Maintained evidence-producing workflow, explicitly classified so omission from Hint ingestion is deliberate rather than invisible."
+    },
+    {
+      "workflow": "collect-variant-family-dataset.yml",
+      "currentHintMode": "direct canonical family-dataset Hint persistence through shared corpus I/O; explicit workflow persistence exception",
+      "centralHarvester": false,
+      "target": "retain family-research direct persistence exception",
+      "migrationTarget": "retain family-research direct persistence exception",
+      "partialFailureUpload": true,
+      "artifactSufficientForFutureSemanticHint": "not applicable to central solver ingestion: family levels and sibling Hint artifacts are one research dataset transaction",
+      "hintIngestionDisposition": "family-direct-canonical-persistence",
+      "rationale": "Variant-family generation owns data/families levels and sibling Hints together on its research branch. Direct GHA persistence is reviewed in docs/hint-workflow-persistence-audit.json and is limited to data/families/."
+    },
+    {
+      "workflow": "cpsat-explicit-prefix-reference.yml",
+      "currentHintMode": "non-Hint exact/reference evidence only",
+      "centralHarvester": false,
+      "target": "remain non-Hint exact/reference evidence",
+      "migrationTarget": "remain non-Hint evidence-producing",
+      "partialFailureUpload": true,
+      "artifactSufficientForFutureSemanticHint": "not applicable: reference/abstention evidence is not a fresh accepted-path discovery source",
+      "hintIngestionDisposition": "non-hint-evidence",
+      "rationale": "Explicitly classified to keep exact/reference evidence out of success-selected Hint ingestion."
+    },
+    {
+      "workflow": "ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
+      "currentHintMode": "non-Hint one-shot WS1 research evidence",
+      "centralHarvester": false,
+      "target": "remain non-Hint one-shot evidence",
+      "migrationTarget": "remain non-Hint evidence-producing",
+      "partialFailureUpload": true,
+      "artifactSufficientForFutureSemanticHint": "not applicable: this one-shot research workflow is not a canonical Hint discovery producer",
+      "hintIngestionDisposition": "non-hint-evidence",
+      "rationale": "Maintained evidence-producing workflow, explicitly classified so its exclusion from Hint ingestion is reviewable."
     }
   ],
   "provenanceMissingness": [
@@ -1075,13 +1132,14 @@
     }
   },
   "ingestionAccountingAuthority": {
-    "status": "implementation-substantially-complete-awaiting-live-parity",
+    "status": "implemented-and-guarded",
     "currentState": {
-      "levelBlind": "shared hint-ingestion receipt + retained specialist selection manifest compatibility",
-      "isolated": "shared hint-ingestion receipt",
-      "directArtifactCompatibilityImport": "shared hint-ingestion receipt with exact path/event/occurrence deltas",
-      "cpsatSpecialist": "shared receipt + exact successful-discovery central adapter in dual-path mode",
-      "diagnosticsSpecialist": "self-describing successful-discovery artifact + shared receipt central adapter in dual-path mode"
+      "levelBlind": "central semantic ingestion + shared receipt",
+      "portfolioHistoryAware": "central portfolio reconstruction + shared receipt",
+      "isolatedTechnique": "central isolated reconstruction + shared receipt",
+      "cpsatSpecialist": "central CP-SAT reconstruction + shared receipt",
+      "diagnosticsSpecialist": "central diagnostics reconstruction + shared receipt; source workflow report-only",
+      "directSourceWorkflowHintWriters": "none among maintained centrally harvested solver workflows; enforced by scripts/central-hint-persistence-guard.mjs"
     },
     "target": {
       "artifact": "versioned hint-ingestion receipt shared by canonical ingestion lanes",
@@ -1128,5 +1186,351 @@
       "artifact/shard/row locator when durable source exposes one"
     ],
     "rule": "schema v4 optimizes physical representation; it must preserve cross-resource join identity and may not become a ceiling on richer future research evidence"
+  },
+  "postImplementationHostileAudit": {
+    "date": "2026-09-24",
+    "branch": "chatgpt/hint-consolidation-hostile-audit-2026-09-24",
+    "status": "active",
+    "findings": [
+      {
+        "id": "HPA-001",
+        "kind": "neglected-v4-consumer",
+        "path": "scripts/hint-evidence-consolidation-audit.mjs",
+        "finding": "The empirical consolidation census parsed physical artifact rows directly, so interned v4 provenance appeared absent. Fixed to decode through the shared semantic codec."
+      },
+      {
+        "id": "HPA-002",
+        "kind": "unfinished-central-persistence",
+        "paths": [
+          ".github/workflows/cpsat-hint-harvest-sweep.yml",
+          ".github/workflows/solver-diagnostics.yml",
+          ".github/workflows/technique-census.yml"
+        ],
+        "finding": "Three maintained solver-discovery workflows still had direct canonical Hint persistence after Phase 6 was reported closed. Their source workflows are now report-only and harvest-solver-evidence.yml is the sole canonical persistence authority."
+      },
+      {
+        "id": "HPA-003",
+        "kind": "neglected-v4-consumer",
+        "path": "scripts/family-parent-hint-replay-batch.mjs",
+        "finding": "Batch family-parent replay parsed physical hint artifacts and iterated artifact.hints directly. Fixed to decode through decodeHintArtifact before semantic replay."
+      },
+      {
+        "id": "HPA-004",
+        "kind": "stale-source-workflow-storage-plumbing",
+        "paths": [
+          ".github/workflows/solver-stress-refresh.yml",
+          ".github/workflows/solver-production-replay-baseline.yml",
+          ".github/workflows/solver-highbudget-unsolved-sweep.yml"
+        ],
+        "finding": "Already-migrated workflows retained empty Hint-directory staging/git-status plumbing. Removed so source workflows no longer understand canonical Hint-store paths as transport."
+      },
+      {
+        "id": "HPA-005",
+        "kind": "firestore-local-evidence-loss",
+        "paths": [
+          "modules/persistence/review-repository.ts",
+          "modules/input/review-controller.ts"
+        ],
+        "finding": "Local-corpus hint approval persisted only the last provenance event for each submitted Hint even though the local store supports one document per (path,event), and capacity-refused submissions were still deleted. Fixed to persist every event, dedupe idempotently, and retain the submission whenever any event hits capacity."
+      },
+      {
+        "id": "HPA-006",
+        "kind": "post-merge-semantic-identity-mutation",
+        "path": "scripts/family-parent-hint-replay-batch.mjs",
+        "finding": "Batch replay merged provenance with levelRevision:null and filled levelRevision afterward. Because levelRevision participates in semantic event identity, reruns could create duplicates before mutating them into the same identity. Fixed by computing the hint-excluding level fingerprint once per parent before merge."
+      },
+      {
+        "id": "HPA-007",
+        "kind": "firestore-to-git-same-path-provenance-loss",
+        "path": "scripts/import-published-levels.mjs",
+        "finding": "Published-level import deduped incoming hints by path and skipped an already-known path entirely, discarding new provenance/occurrence evidence and failing to mark provenance-only changes for persistence. Fixed to use mergeHints(), persist semantic-only changes, and regression-test idempotent same-path enrichment."
+      },
+      {
+        "id": "HPA-008",
+        "kind": "neglected-v4-consumer",
+        "path": "scripts/guidance-distance-first-divergence.mjs",
+        "finding": "Guidance-divergence analysis parsed stress hint artifacts and iterated physical document.hints directly. Interned v4 rows are not semantic Hint provenance. Fixed to decode with decodeHintArtifact before filtering witnesses."
+      },
+      {
+        "id": "HPA-009",
+        "kind": "neglected-v4-consumer",
+        "path": "scripts/stress/hint-cost-drift.mjs",
+        "finding": "Cost-drift analysis parsed physical Hint rows directly. Under interned v4 this could silently miss/garble provenance, including on the newly-centralized diagnostics path. Fixed to decode every artifact through the shared semantic codec."
+      },
+      {
+        "id": "HPA-010",
+        "kind": "neglected-current-producer-semantics",
+        "paths": [
+          "modules/solver/hint-provenance.ts",
+          "modules/input/solver-controller.ts",
+          "modules/input/submission-controller.ts"
+        ],
+        "finding": "Browser variety-search provenance projected only newlySaved paths, dropped documented independent rediscoveries, and omitted VarietySavedMeta.scoringProfileId. Submission mode also derived usedExistingHints after adding new paths, which could label a cold successful search as history-aware. Fixed the canonical projection to preserve new + rediscovered events, scoring profile, seed/anchor identity, and pre-search hint context."
+      },
+      {
+        "id": "HPA-011",
+        "kind": "guard-detection-blind-spot",
+        "path": "scripts/hint-provenance-surface-audit.mjs",
+        "finding": "The permanent physical-reader guard only recognized inline JSON.parse(readFile...) shapes and a narrow variable-name set, so staged read/parse refactors could evade raw v4-reader detection. Hardened to combine independent read/parse/Hint-source/.hints signals and added a permanent detector self-test."
+      },
+      {
+        "id": "HPA-012",
+        "kind": "unguarded-direct-physical-writer-ownership",
+        "paths": [
+          "scripts/hint-provenance-surface-audit.mjs",
+          "docs/hint-physical-writer-audit.json"
+        ],
+        "finding": "The plan required fail-closed ownership for direct canonical Hint file writers, but existing guards covered obsolete facades and GHA persistence rather than arbitrary maintained filesystem writers. Added direct-writer detection plus an explicit reviewed-owner ledger."
+      },
+      {
+        "id": "HPA-013",
+        "kind": "scoped-validation-invalidation-gap",
+        "path": "scripts/validation-groups.json",
+        "finding": "The Hint physical-surface and central-persistence guards did not declare the filesystem authorities they dynamically inspect, so scoped CI could omit them on relevant changes. Added repo-input dependency surfaces for source/workflow/ledger and lifecycle changes."
+      },
+      {
+        "id": "HPA-014",
+        "kind": "bare-hint-canonical-state-divergence",
+        "path": "modules/editor/level-coordinate-transforms.ts",
+        "finding": "Editor coordinate transforms cleared level.hints directly but left canonical level.hintRecords intact, allowing stale transformed Hint evidence to survive. Fixed to clear via setLevelHintRecords(level, []) and made maintained direct .hints/.hintRecords assignments fail closed through an explicit review ledger."
+      },
+      {
+        "id": "HPA-015",
+        "kind": "unfinished-derived-query-index",
+        "paths": [
+          "scripts/hint-store-index.mjs",
+          "scripts/hint-store-index-node-test.mjs"
+        ],
+        "finding": "The consolidation plan promised a lightweight freshness-bound Hint index, but no such derived artifact/index generator existed. Added a deterministic per-artifact index using canonical decode/query/reconstructability semantics plus source content/semantic hashes and stale-index verification."
+      },
+      {
+        "id": "HPA-016",
+        "kind": "stale-schema-contraction-control-plane",
+        "path": "docs/solver-protocol-schema-contraction.json",
+        "finding": "PSC-015 remained in-progress even though its provenance-generation/missingness retirement gate had been satisfied by shared historical ingress semantics and the lossless v4 migration; PSC-001 also described the now-fixed editor bare-hints transform as an acceptable residual. Reconciled both rows to current implementation truth."
+      },
+      {
+        "id": "HPA-017",
+        "kind": "schema-version-fail-open",
+        "paths": [
+          "modules/domain/hint-runtime.mjs",
+          "docs/solver-protocol-schema-contraction.json"
+        ],
+        "finding": "decodeHintArtifact explicitly handled v4 but then accepted any object with a hints array as legacy, so an unsupported future declared schema could be silently misread. Added authoritative v2/v3/v4 dispatch, fail-closed unsupported versions, regression tests, and closed PSC-024."
+      },
+      {
+        "id": "HPA-018",
+        "kind": "omitted-tracked-hint-store",
+        "paths": [
+          "data/stress/hints-envelope",
+          "data/families/hints",
+          "data/families/phaseB/hints",
+          "scripts/hint-store-roots.mjs",
+          "scripts/hint-artifact-v4-migration.mjs",
+          "scripts/hint-codec-baseline-benchmark.mjs",
+          "scripts/hint-evidence-consolidation-audit.mjs",
+          "scripts/hint-determinism-audit.mjs",
+          "scripts/check-corpus-level-formatting.mjs",
+          "scripts/hint-store-index.mjs"
+        ],
+        "finding": "The original Phase-8 migration and whole-store tooling assumed three Hint stores. A mechanical tree census found six: envelope (124 files) plus two canonical family stores (788 + 477) were omitted, leaving 1,389 tracked schema-v3 artifacts after a purported full-corpus migration. Whole-store tooling now discovers Hint directories mechanically; a full six-store repair migrated exactly those 1,389 files with semantic/join equivalence and immediate idempotency."
+      },
+      {
+        "id": "HPA-019",
+        "kind": "missing-whole-store-referee-migration-proof",
+        "paths": [
+          "scripts/validate-all-hint-stores.mjs",
+          ".github/workflows/hint-provenance-hostile-audit.yml",
+          ".github/workflows/hint-envelope-v4-migration-repair.yml"
+        ],
+        "finding": "The Phase-8 migration manifest proved semantic and join-identity equivalence but contained no referee-validation disposition despite the plan requiring one; existing validators did not cover the omitted family stores. Added a mechanically discovered all-store owner/path referee validator. The repair workflow's piped invocation is explicitly rejected as evidence because it could mask failure; final hostile/closeout runs execute the validator directly."
+      },
+      {
+        "id": "HPA-020",
+        "kind": "parallel-test-shared-hint-mutation-race",
+        "paths": [
+          "scripts/harvest-solver-diagnostics-reports.mjs",
+          "scripts/harvest-solver-diagnostics-reports-node-test.mjs"
+        ],
+        "finding": "The diagnostics harvester real-row canary rewrote tracked data/hints/P00001.json while the Node suite runs concurrently, creating a race where another reader could observe truncated JSON. CI reproduced the failure. Added an explicit harvester --root fixture seam and moved the canary to an isolated temporary corpus."
+      }
+    ],
+    "permanentGuards": [
+      "scripts/central-hint-persistence-guard.mjs",
+      "scripts/hint-provenance-surface-audit.mjs"
+    ]
+  },
+  "hostileAudit": {
+    "findings": [
+      {
+        "id": "HPA-021",
+        "kind": "canonical-store-guard-population-drift",
+        "paths": [
+          "scripts/hint-provenance-surface-audit.mjs",
+          "scripts/hint-store-roots.mjs"
+        ],
+        "finding": "Physical Hint reader/writer detection still encoded the old published/stress path topology after six canonical stores were established. Bound detection to CANONICAL_TRACKED_HINT_STORE_DIRS, added family/helper-derived adversarial fixtures, and made review ledgers fail on stale as well as missing classifications."
+      },
+      {
+        "id": "HPA-022",
+        "kind": "whole-store-referee-fail-open-population",
+        "paths": [
+          "scripts/validate-all-hint-stores.mjs",
+          "scripts/validate-all-hint-stores-node-test.mjs"
+        ],
+        "finding": "Whole-store PLAY referee validation discovered stores but did not require the complete canonical population, so disappearance of a store could shrink the proof silently. Default validation now asserts the full store authority; fixture-only partial mode is explicit."
+      },
+      {
+        "id": "HPA-023",
+        "kind": "nonblocking-canonical-determinism-oracle",
+        "paths": [
+          "scripts/hint-determinism-audit.mjs",
+          ".github/workflows/hint-consolidation-closeout.yml"
+        ],
+        "finding": "Closeout printed same-input/different-path counts but never failed. Canonical solverRequestIdentity collisions are now separated from legacy recorded-input reconciliation and hard-fail closeout."
+      },
+      {
+        "id": "HPA-024",
+        "kind": "four-store-closeout-analysis-population",
+        "paths": [
+          "scripts/stress/hint-occurrence-acceptance-audit.mjs",
+          "scripts/stress/hint-reconstructability-report.mjs"
+        ],
+        "finding": "Occurrence acceptance and reconstructability still omitted both family stores after the six-store repair. Both now derive and assert the complete canonical store population and decode every artifact through the shared boundary."
+      },
+      {
+        "id": "HPA-025",
+        "kind": "circular-workflow-ingestion-completeness",
+        "paths": [
+          "scripts/hint-ingestion-workflow-completeness-node-test.mjs",
+          "docs/hint-evidence-consolidation-inventory.json"
+        ],
+        "finding": "Workflow-ingestion completeness checked only rows already present in its hand-maintained inventory. It now derives candidates from maintained evidence-producing lifecycle rows plus standard solver-sweep publishers and requires exactly one reviewed Hint-ingestion disposition per candidate."
+      },
+      {
+        "id": "HPA-026",
+        "kind": "hidden-family-gha-direct-persistence",
+        "paths": [
+          ".github/workflows/collect-variant-family-dataset.yml",
+          "scripts/central-hint-persistence-guard.mjs",
+          "docs/hint-workflow-persistence-audit.json"
+        ],
+        "finding": "A maintained GHA family workflow directly persists canonical family Hints and can stage data/families/ as an ancestor scope. The old guard missed both family stores and ancestor staging. The family research transaction is now an explicit, scope-limited reviewed exception; all other maintained workflows remain fail-closed."
+      },
+      {
+        "id": "HPA-027",
+        "kind": "stale-partial-failure-exception-and-routing",
+        "paths": [
+          ".github/workflows/solver-diagnostics.yml",
+          "scripts/hint-ingestion-workflow-completeness-node-test.mjs",
+          "scripts/validation-groups.json"
+        ],
+        "finding": "Diagnostics already uploads full/partial artifacts under if: always(), but inventory/test retained a false partialFailureUpload exemption. Reconciled current truth, removed the exception, and bound the mechanical workflow guards to all dynamically scanned scoped-CI inputs."
+      },
+      {
+        "id": "HPA-028",
+        "kind": "workflow-trigger-metadata-misclassified-as-execution",
+        "paths": [
+          "scripts/hint-ingestion-workflow-completeness-node-test.mjs",
+          ".github/workflows/solver-evidence-integrity-guard.yml"
+        ],
+        "finding": "Operational Hint-ingestion candidate discovery searched whole workflow YAML, so pull_request.paths references to publisher scripts could falsely classify validation workflows as evidence producers. Candidate derivation now inspects executable run blocks only."
+      },
+      {
+        "id": "HPA-029",
+        "kind": "writer-review-disposition-not-enforced",
+        "paths": [
+          "scripts/hint-provenance-surface-audit.mjs",
+          "docs/hint-physical-writer-audit.json"
+        ],
+        "finding": "Physical-writer review entries were checked for presence/staleness but not against the semantics claimed by their disposition. Writer dispositions now enforce shared codec/referee/merge boundaries and temporary-root isolation where applicable."
+      },
+      {
+        "id": "HPA-030",
+        "kind": "workflow-persistence-exception-ancestor-escape",
+        "paths": [
+          "scripts/central-hint-persistence-guard.mjs",
+          "docs/hint-workflow-persistence-audit.json"
+        ],
+        "finding": "The family direct-persistence exception accepted ancestor staging scopes as well as descendants, so data/families/ implicitly authorized git staging of data/. Exceptions now authorize only the exact reviewed prefix or descendants; adversarial fixtures reject data/ and data/stress/."
+      },
+      {
+        "id": "HPA-031",
+        "kind": "stale-workflow-review-approval",
+        "paths": [
+          "scripts/central-hint-persistence-guard.mjs",
+          "scripts/hint-ingestion-workflow-completeness-node-test.mjs",
+          "docs/hint-workflow-persistence-audit.json",
+          "docs/hint-evidence-consolidation-inventory.json"
+        ],
+        "finding": "Workflow persistence exceptions and ingestion dispositions could remain after the behavior that justified them disappeared. Both controls now fail stale approvals: exceptions must be exercised at their reviewed scope, and ingestion rows must still belong to the mechanically derived review-candidate population."
+      },
+      {
+        "id": "HPA-032",
+        "kind": "review-ledger-schema-fail-open",
+        "paths": [
+          "scripts/hint-provenance-surface-audit.mjs",
+          "scripts/central-hint-persistence-guard.mjs",
+          "docs/hint-physical-reader-audit.json",
+          "docs/hint-physical-writer-audit.json",
+          "docs/hint-bare-mutation-audit.json",
+          "docs/hint-workflow-persistence-audit.json"
+        ],
+        "finding": "Review ledgers accepted duplicate keys and unknown disposition strings, allowing ambiguous or typoed classifications to bypass disposition-specific checks. Parsers now reject duplicate entries and dispositions outside explicit vocabularies."
+      },
+      {
+        "id": "HPA-033",
+        "kind": "v4-closeout-migratability-not-idempotency",
+        "paths": [
+          ".github/workflows/hint-consolidation-closeout.yml",
+          "scripts/hint-artifact-v4-migration.mjs"
+        ],
+        "finding": "Closeout accepted a semantically safe dry-run even if canonical artifacts still required schema-v4 migration. It now requires semantic/join equality and changedFiles===0 across the complete six-store population."
+      },
+      {
+        "id": "HPA-034",
+        "kind": "phase10-closeout-measurement-not-fixed-point",
+        "paths": [
+          ".github/workflows/hint-consolidation-closeout.yml",
+          "scripts/level-sparse-serialization-apply.mjs"
+        ],
+        "finding": "Phase-10 closeout reran only the sparse serialization benchmark, so reintroduced omittable arrays could remain green. The mutation authority now has non-mutating --check mode and closeout requires zero residual changes."
+      },
+      {
+        "id": "HPA-035",
+        "kind": "workflow-persistence-multiline-command-bypass",
+        "paths": [
+          "scripts/central-hint-persistence-guard.mjs"
+        ],
+        "finding": "Line-local git staging detection could miss canonical Hint scopes placed on a backslash-continued shell line. Persistence analysis now joins logical shell continuations and adversarially tests continued git add/status commands."
+      },
+      {
+        "id": "HPA-036",
+        "kind": "closeout-ci-invalidation-gap",
+        "paths": [
+          ".github/workflows/hint-consolidation-closeout.yml"
+        ],
+        "finding": "The closeout canary path filter did not include all workflow/control-plane authorities that can change its Definition-of-Done claims. It now triggers on all workflows, Hint/provenance docs/reports, lifecycle/schema-contraction authorities, source/modules/data and package scripts."
+      },
+      {
+        "id": "HPA-037",
+        "kind": "dedicated-proof-workflow-invalidation-gap",
+        "paths": [
+          ".github/workflows/hint-provenance-hostile-audit.yml",
+          ".github/workflows/hint-consolidation-closeout.yml"
+        ],
+        "finding": "Dedicated hostile/closeout workflows did not invalidate on all machine authorities they depend on, including workflow lifecycle and solver-request semantics. Trigger surfaces now explicitly include lifecycle, schema-contraction, solver-request-semantics and dependency-lock authorities."
+      },
+      {
+        "id": "HPA-038",
+        "kind": "partial-persistence-retry-acceptance-gap",
+        "paths": [
+          "modules/persistence/review-repository.test.ts",
+          "modules/persistence/review-repository.ts",
+          "scripts/firestore-level-fingerprint-boundary-test.mjs"
+        ],
+        "finding": "The plan requires partial persistence, capacity refusal and retry-after-refusal coverage. Implementation supported the transition but tests only covered isolated aggregate outcomes. A two-pass unit regression now proves dedupe/retry semantics, and the real Firestore emulator proves a partially refused review submission remains queued until the retry persists remaining evidence and then deletes it."
+      }
+    ]
   }
 }

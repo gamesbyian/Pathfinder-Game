@@ -6,9 +6,9 @@
  * affect solver policy. The Pathfinder solver itself does not read persisted Hint paths during
  * solveLevel(); a same-path solution is therefore a legitimate rediscovery, not "hint-guided replay".
  *
- * Transitional Phase-6 posture: direct --save-hints files may still be merged first. This adapter
- * reconstructs the report observation independently and exact-merges it through canonical Hint
- * semantics so parity can be measured before retiring the direct route.
+ * Historical direct --save-hints artifacts remain readable through the mixed-era compatibility
+ * importer. Current portfolio source workflows are artifact-only; this adapter reconstructs report
+ * observations for the central canonical persistence authority.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';

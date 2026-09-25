@@ -10,19 +10,15 @@
  * Usage:
  *   node scripts/stress/hint-reconstructability-report.mjs [--json=<path>]
  */
-import { writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
-import { readLevelCorpusDocumentWithHints } from '../level-data-io.mjs';
+import path from 'node:path';
+import { decodeHintArtifact } from '../../modules/domain/hint-runtime.mjs';
+import { assertCompleteHintStoreDirs, discoverHintStoreDirs, hintStoreLabel } from '../hint-store-roots.mjs';
 import {
     classifyHintDiscoveryReplayability,
     effectiveSolverInputIdentityStatus,
 } from '../hint-discovery-replayability-lib.mjs';
-
-const CORPORA = [
-    { name: 'published', levels: 'data/levels.json' },
-    { name: 'corpus1', levels: 'data/stress/stress-levels.json' },
-    { name: 'corpus2', levels: 'data/stress/stress-levels-random.json' },
-];
 
 const arg = name => process.argv.find(a => a.startsWith(`--${name}=`))?.split('=').slice(1).join('=');
 
@@ -103,12 +99,24 @@ export function summarizeReconstructability(hints) {
     };
 }
 
+function hintsFromStore(relativeDir) {
+    const absDir = path.join(process.cwd(), relativeDir);
+    return readdirSync(absDir)
+        .filter(name => name.endsWith('.json') && !name.startsWith('_'))
+        .sort()
+        .flatMap(name => decodeHintArtifact(JSON.parse(readFileSync(path.join(absDir, name), 'utf8'))));
+}
+
 export function buildReport() {
-    const corpora = CORPORA.map(({ name, levels }) => {
-        const document = readLevelCorpusDocumentWithHints(levels);
-        const hints = document.levels.flatMap(level => level?.hintRecords ?? []);
-        return { corpus: name, levelsPath: levels, ...summarizeReconstructability(hints) };
-    });
+    const dirs = assertCompleteHintStoreDirs(
+        discoverHintStoreDirs(process.cwd()),
+        'Hint reconstructability report',
+    );
+    const corpora = dirs.map(relativeDir => ({
+        corpus: hintStoreLabel(relativeDir),
+        hintStoreDir: relativeDir,
+        ...summarizeReconstructability(hintsFromStore(relativeDir)),
+    }));
     const totals = {
         hints: 0,
         hintsWithProvenance: 0,

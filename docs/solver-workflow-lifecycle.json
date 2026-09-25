@@ -114,6 +114,13 @@
       "retirementTrigger": "retire when the hint-evidence-consolidation plan closes out and its oracles fold into a permanently maintained validation surface"
     },
     {
+      "workflow": "hint-provenance-hostile-audit.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "pull-request hostile completion audit for Hint/provenance physical-reader, central-persistence and semantic-consumer invariants",
+      "retirementTrigger": "retire only after its fail-closed physical-reader/persistence invariants are absorbed into permanent ordinary validation"
+    },
+    {
       "workflow": "main-push-validation.yml",
       "role": "operational",
       "status": "maintained",

@@ -550,6 +550,9 @@ const convertDirectToRawPayload = (direct = {}) => {
     solverRequestIdentity: direct?.solverRequestIdentity ?? null,
     backend: direct?.backend ?? null,
     reproducibilityMode: direct?.reproducibilityMode ?? null,
+    sourceComplete: direct?.complete !== false,
+    sourceCompletedLevels: Number.isFinite(direct?.completed) ? direct.completed : levels.length,
+    sourceExpectedLevels: Number.isFinite(direct?.total) ? direct.total : levels.length,
     levelCount: levels.length,
     levels
   };
@@ -588,15 +591,30 @@ const run = async () => {
   // stamped with THIS commit, which is exactly the per-commit cost record
   // scripts/stress/hint-cost-drift.mjs compares across commits (see docs/testing.md).
   const saveHints = process.argv.includes('--save-hints');
-  execFileSync('node', [
-    'scripts/run-bundled.mjs', 'scripts/run-solver-direct.mjs',
-    '--levels=all', `--output=${directOutPath}`,
-    ...(saveHints ? ['--save-hints'] : []),
-  ], {
-    stdio: 'inherit',
-    cwd: process.cwd()
-  });
-  const directPayload = JSON.parse(await readFile(directOutPath, 'utf8'));
+  let directRunError = null;
+  try {
+    execFileSync('node', [
+      'scripts/run-bundled.mjs', 'scripts/run-solver-direct.mjs',
+      '--levels=all', `--output=${directOutPath}`,
+      ...(saveHints ? ['--save-hints'] : []),
+    ], {
+      stdio: 'inherit',
+      cwd: process.cwd()
+    });
+  } catch (error) {
+    // run-solver-direct atomically checkpoints after every attempted level. Preserve and convert
+    // that partial observation artifact before propagating the child failure so the central
+    // harvester can recover already-accepted discoveries.
+    directRunError = error;
+    console.error('[solver-diagnostics] direct run failed; preserving the last checkpoint before failing the workflow');
+  }
+  let directPayload;
+  try {
+    directPayload = JSON.parse(await readFile(directOutPath, 'utf8'));
+  } catch (readError) {
+    if (directRunError) throw directRunError;
+    throw readError;
+  }
   const payload = normalizeAuditPayload(convertDirectToRawPayload(directPayload));
   const raw = JSON.stringify(payload, null, 2);
 
@@ -616,6 +634,7 @@ const run = async () => {
     await pruneRawExports(rawDir, 'latest.json', 10);
 
     console.log(`Solver diagnostics report written: ${path.relative(process.cwd(), rawFilePath)}`);
+    if (directRunError) throw directRunError;
 };
 
 run().catch((err) => {

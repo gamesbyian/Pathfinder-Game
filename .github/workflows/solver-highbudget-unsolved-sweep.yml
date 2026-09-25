@@ -310,24 +310,17 @@ jobs:
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Stage this shard's changed files for upload (reports + any new/changed hint files)
+      - name: Stage this shard's reports for upload
         if: always()
         shell: bash
         run: |
           stage="artifact-staging/highbudget-shard-${{ matrix.shard.idx }}"
-          mkdir -p "${stage}/logs/solver-highbudget-sweep" "${stage}/data/stress/hints" "${stage}/data/stress/hints-random"
+          mkdir -p "${stage}/logs/solver-highbudget-sweep"
           for f in logs/solver-highbudget-sweep/*-${{ matrix.shard.idx }}*.json \
                    logs/solver-highbudget-sweep/*-${{ matrix.shard.idx }}*.md \
                    logs/solver-highbudget-sweep/*-${{ matrix.shard.idx }}*.log \
                    logs/solver-highbudget-sweep/*-${{ matrix.shard.idx }}*.jsonl; do
             [ -e "$f" ] && cp "$f" "${stage}/logs/solver-highbudget-sweep/" 2>/dev/null || true
-          done
-          # Only this shard's own hint files change (disjoint id slices across shards, for each
-          # corpus independently), so a plain git-status diff against the fresh checkout is a safe,
-          # precise changed-file list.
-          git status --porcelain -- data/stress/hints/ data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
-            mkdir -p "${stage}/$(dirname "$f")"
-            cp "$f" "${stage}/${f}"
           done
 
       - name: Upload this shard's staged results as an artifact

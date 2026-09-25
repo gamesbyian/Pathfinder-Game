@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Regenerates the hint-provenance coverage/admissibility figures quoted in CLAUDE.md's Provenance
-// section, across all three real corpora.
+// section, across all tracked first-class Hint corpora.
 //
 // These figures were previously measured by hand in throwaway scripts, which is how a wrong cold
 // share reached CLAUDE.md (see provenance-classes.mjs's header). Anything quoting them should be
@@ -19,6 +19,7 @@ const CORPORA = [
     { name: 'published', levels: 'data/levels.json' },
     { name: 'stress-corpus-1', levels: 'data/stress/stress-levels.json' },
     { name: 'stress-corpus-2', levels: 'data/stress/stress-levels-random.json' },
+    { name: 'stress-envelope', levels: 'data/stress/stress-levels-envelope.json' },
 ];
 
 const arg = name => process.argv.find(a => a.startsWith(`--${name}=`))?.split('=').slice(1).join('=');

@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { comparePathTraces, tracePathRanks } from './stress/divergence-lib.mjs';
+import { decodeHintArtifact } from '../modules/domain/hint-runtime.mjs';
 
 const args = new Map(process.argv.slice(2).filter(v => v.startsWith('--') && v.includes('='))
     .map(v => { const [k, ...rest] = v.split('='); return [k, rest.join('=')]; }));
@@ -20,7 +21,7 @@ const corpus = Array.isArray(corpusRaw) ? corpusRaw : corpusRaw.levels;
 function matchingPath(levelId, expectDisabled) {
     const document = JSON.parse(readFileSync(`data/stress/hints-random/${levelId}.json`, 'utf8'));
     const matches = [];
-    for (const hint of document.hints ?? []) for (const provenance of hint.provenance ?? []) {
+    for (const hint of decodeHintArtifact(document)) for (const provenance of hint.provenance ?? []) {
         const solver = provenance.solver ?? {};
         const disabled = solver.forcing?.disabledFeatures?.includes('SCORE_GOAL_ATTRACTION') === true;
         if (solver.technique === 'beam' && solver.scoringProfileId === 'intersectionHarvest'

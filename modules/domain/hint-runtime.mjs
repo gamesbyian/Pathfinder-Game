@@ -187,8 +187,10 @@ export function provenanceEventIdentity(entry) {
     return /** @type {string} */ (stableStringify({ ...rest, search }));
 }
 
-/** @param {{runId: string, runAttempt: string | null}} occurrence */
-function occurrenceKey(occurrence) {
+/** Canonical physical-acquisition identity within one semantic provenance event.
+ *  @param {{runId: string, runAttempt: string | null}} occurrence
+ *  @returns {string} */
+export function hintOccurrenceKey(occurrence) {
     return `${occurrence.runId}::${occurrence.runAttempt ?? ''}`;
 }
 
@@ -204,9 +206,9 @@ function occurrenceKey(occurrence) {
 function mergeOccurrenceLineage(a, b) {
     if (!a && !b) return undefined;
     const seen = new Map();
-    for (const occurrence of a ?? []) seen.set(occurrenceKey(occurrence), occurrence);
+    for (const occurrence of a ?? []) seen.set(hintOccurrenceKey(occurrence), occurrence);
     for (const occurrence of b ?? []) {
-        const key = occurrenceKey(occurrence);
+        const key = hintOccurrenceKey(occurrence);
         if (!seen.has(key)) seen.set(key, occurrence);
     }
     return [...seen.values()];
@@ -555,7 +557,10 @@ function decodeV4HintArtifact(obj) {
  *   - `{ hints: path[] }` (bare paths, no provenance);
  *   - `{ hints: path[], hintMetadata: [...] }` (transitional sibling-array shape: nested provenance
  *     reconstructed from the parallel hintMetadata entry at the same index);
- *   - `{ schemaVersion, hints: Hint[] }` (canonical v2/v3, upgraded via upgradeLegacyHints).
+ *   - `{ schemaVersion: 1, hints, hintMetadata? }` (historical transitional wrapper);
+ *   - `{ schemaVersion: 2|3, hints: Hint[] }` (historical canonical wrappers);
+ *   - `{ schemaVersion: 4, ... }` (current sparse-inline/interned physical codec).
+ * Declared unknown schema versions fail closed rather than falling through to shape guessing.
  *
  * This exists because scripts/level-data-io.mjs (Node) and modules/data-asset-loaders.ts (browser)
  * used to implement this independently, and had actually drifted: the browser side never handled
@@ -565,8 +570,8 @@ function decodeV4HintArtifact(obj) {
  * a hintMetadata key -- but a future historical-enrichment or import path could reintroduce one, and
  * the divergence itself is exactly what
  * docs/hint-evidence-execution-identity-storage-consolidation-plan.md section 2.5 warns about).
- * Physical schema v4 dispatch belongs here too once it exists (Phase 8); this is deliberately v1-v3
- * only for now, per that plan's Phase 1 scope.
+ * Schema dispatch is authoritative here: unversioned legacy adapters are explicit compatibility
+ * paths, v1-v3 are retained historical readers, and v4 is the sole current write version.
  *
  * Throws a generic message on an unrecognized shape; callers that want a source-specific message
  * (e.g. a file path) should catch and rethrow with their own context.
@@ -575,20 +580,41 @@ function decodeV4HintArtifact(obj) {
  */
 export function decodeHintArtifact(parsed) {
     if (Array.isArray(parsed)) return upgradeLegacyHints(parsed);
-    if (parsed && typeof parsed === 'object' && /** @type {any} */ (parsed).schemaVersion === HINT_ARTIFACT_SCHEMA_VERSION) {
-        return decodeV4HintArtifact(/** @type {any} */ (parsed));
-    }
-    if (parsed && typeof parsed === 'object' && Array.isArray(/** @type {any} */ (parsed).hints)) {
+    if (parsed && typeof parsed === 'object') {
         const obj = /** @type {any} */ (parsed);
-        if (Array.isArray(obj.hintMetadata)) {
-            return obj.hints.map((/** @type {number[]} */ hintPath, /** @type {number} */ i) => {
-                const meta = obj.hintMetadata[i];
-                return toHint(hintPath, meta ? [upgradeProvenanceEntry(meta)] : []);
-            });
+        if (obj.schemaVersion !== undefined) {
+            if (obj.schemaVersion === HINT_ARTIFACT_SCHEMA_VERSION) return decodeV4HintArtifact(obj);
+            if (obj.schemaVersion === 1) {
+                if (!Array.isArray(obj.hints)) {
+                    throw new Error('schema v1 hint artifact must contain a hints array');
+                }
+                if (Array.isArray(obj.hintMetadata)) {
+                    return obj.hints.map((/** @type {number[]} */ hintPath, /** @type {number} */ i) => {
+                        const meta = obj.hintMetadata[i];
+                        return toHint(hintPath, meta ? [upgradeProvenanceEntry(meta)] : []);
+                    });
+                }
+                return upgradeLegacyHints(obj.hints);
+            }
+            if (obj.schemaVersion === 2 || obj.schemaVersion === 3) {
+                if (!Array.isArray(obj.hints)) {
+                    throw new Error('schema v' + obj.schemaVersion + ' hint artifact must contain a hints array');
+                }
+                return upgradeLegacyHints(obj.hints);
+            }
+            throw new Error('unsupported hint artifact schemaVersion ' + JSON.stringify(obj.schemaVersion));
         }
-        return upgradeLegacyHints(obj.hints);
+        if (Array.isArray(obj.hints)) {
+            if (Array.isArray(obj.hintMetadata)) {
+                return obj.hints.map((/** @type {number[]} */ hintPath, /** @type {number} */ i) => {
+                    const meta = obj.hintMetadata[i];
+                    return toHint(hintPath, meta ? [upgradeProvenanceEntry(meta)] : []);
+                });
+            }
+            return upgradeLegacyHints(obj.hints);
+        }
     }
-    throw new Error('hint artifact must contain a JSON array of hint paths or an object with a hints array');
+    throw new Error('hint artifact must contain a JSON array of hint paths or a supported hint artifact object');
 }
 
 /** @param {number[][]} paths @param {Hint[]} records @returns {Hint[]} */

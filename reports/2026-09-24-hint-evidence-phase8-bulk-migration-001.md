@@ -3,7 +3,12 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-24 — applied the real one-time bulk v4 migration to all 1,962 tracked hint files, shrinking canonical hint storage from 732,304,443 to 571,890,961 bytes (21.9%) with zero semantic or cross-resource join-identity loss.
 > **Decision:** execute the bulk migration now rather than leave the v4 upgrade lazy-on-write indefinitely, per the plan's own Phase 8 text ("migrate canonical stores in a data-focused change") and its exit criterion ("tracked hint storage is materially smaller").
-> **Remaining gate:** none for Phase 8 — the plan's named phases 0-10 all have real, executed, verified work as of this batch.
+> **Remaining gate:** **Superseded by hostile audit.** This batch proved lossless migration for the 1,962 artifacts its then-current tooling enumerated, but PR #2072 later mechanically discovered six canonical Hint stores / 3,351 artifacts. The omitted 1,389 artifacts were migrated and revalidated in `reports/2026-09-24-hint-evidence-phase8-six-store-repair-001.md`. Whole-program completion remains gated by the hostile closeout on an exact green head.
+>
+> **Correction (2026-09-24):** References below to the "full tracked corpus" describe the population
+> known to this batch, not the true repository-wide canonical Hint-store population. The semantic
+> equivalence and byte measurements for those 1,962 files remain valid; the completeness claim does
+> not.
 >
 > **Date:** 2026-09-24
 >
@@ -116,3 +121,32 @@ With this batch, every phase the plan names through Phase 10 has real, executed,
 one previously-open design question (lazy vs. bulk v4 migration) is resolved: bulk migration was
 executed for real, closing Phase 8's exit criterion in full rather than leaving it partially satisfied
 by lazy-only adoption.
+
+## Hostile-audit correction, 2026-09-24
+
+The original report's phrase **"full tracked corpus" was incorrect**. A later hostile closeout audit
+found three tracked canonical stores absent from the migration tool's default directory list:
+`data/stress/hints-envelope/` (124 artifacts), `data/families/hints/` (788), and
+`data/families/phaseB/hints/` (477). All 1,389 omitted artifacts remained schema v3 after this
+migration.
+
+PR #2072 corrects the scope defect by mechanically discovering tracked Hint directories for
+whole-store tooling and running the same schema-v4 semantic-hash / join-identity contract plus a
+whole-store PLAY-referee proof over the omitted stores. The original 1,962-file measurements below
+remain valid for the three stores actually processed by this run; they must not be interpreted as
+corpus-wide totals.
+
+## Six-store repair completion
+
+The hostile correction above has now been executed, not merely planned. See
+[`2026-09-24-hint-evidence-phase8-six-store-repair-001.md`](2026-09-24-hint-evidence-phase8-six-store-repair-001.md)
+and its machine summary.
+
+A full checkout contained **3,351 artifacts across six canonical Hint stores**. The repair changed
+exactly the **1,389 previously omitted files** and preserved expanded semantic and cross-resource
+join hashes; an immediate full rerun reported zero changes. The corrected all-store Phase-8
+comparison is **734,618,282 → 574,394,797 raw bytes (-21.81%)** and
+**23,131,040 → 21,364,458 gzip bytes (-7.64%)**.
+
+The original figures in this report remain the correct measurements for the three stores processed
+by the original run; the six-store repair report is the authority for corpus-wide completion.

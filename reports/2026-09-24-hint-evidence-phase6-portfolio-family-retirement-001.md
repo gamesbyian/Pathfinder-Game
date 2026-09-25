@@ -1,9 +1,9 @@
 # Hint evidence consolidation — Phase 6 portfolio family retirement — 001
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-09-24 — a real 20-level corpus-1 canary (plus a corpus-2 sample) proved portfolio-family harvester parity; --save-hints was then retired from both remaining dual-write workflows.
-> **Decision:** Phase 6 is closed — every GHA solver-discovery workflow now has exactly one canonical persistence authority.
-> **Remaining gate:** none for Phase 6; the Phase 8 bulk-migration decision and a real Phase 10 cleanup pass remain.
+> **Status:** superseded
+> **Last evidence:** 2026-09-24 — this batch correctly retired direct persistence for the two portfolio workflows, but the hostile completion audit later found residual direct canonical Hint writers in CP-SAT, solver diagnostics and technique census plus stale physical-Hint staging in already-migrated workflows.
+> **Decision:** Treat the portfolio-family result below as valid family-specific evidence, not proof that Phase 6 as a whole was closed. PR #2072 subsequently retired the remaining workflow writers and added a fail-closed central-persistence guard.
+> **Remaining gate:** current whole-program authority is `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`; exact-head hostile/closeout validation remains blocking.
 >
 > **Date:** 2026-09-24
 >
@@ -13,6 +13,11 @@
 > (`solver-production-replay-baseline.yml`, `solver-highbudget-unsolved-sweep.yml`).
 >
 > **Base commit:** `bd79bdba`.
+>
+> **Retrospective correction:** "the remaining workflows" was derived from the implementation's
+> working inventory rather than a mechanically complete workflow/persistence census. The strengthened
+> plan now requires the maintained workflow population to be derived from lifecycle, harvester,
+> workflow and entrypoint authorities and requires unclassified persistence routes to fail closed.
 
 ## 1. Why this was the last piece of ordinary Phase 6
 
