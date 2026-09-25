@@ -414,16 +414,8 @@ jobs:
         if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true') && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
         shell: bash
         run: node scripts/ci-runtime-hint-projection-cache.mjs plan
-      - name: Build production bundle
-        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true'
-        id: build
-        continue-on-error: true
-        env:
-          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
-          PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE: ${{ steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && '1' || '0' }}
-        run: npm run build
       - name: Save exact runtime-hint projection after successful build
-        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true') && steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true') && steps.deep_services.outputs.build == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: .cache/runtime-hint-projection
@@ -446,20 +438,32 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Run selected heavyweight proofs and Firestore concurrently
+      - name: Run selected build, heavyweight proofs and Firestore concurrently
         if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_deep_proofs == 'true' || steps.services-impact.outputs.needs_firestore == 'true'
         id: deep_services
         continue-on-error: true
         shell: bash
         env:
+          RUN_BUILD: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true' }}
           RUN_PROOFS: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_deep_proofs == 'true' }}
           RUN_FIRESTORE: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true' }}
+          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
+          PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE: ${{ steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && '1' || '0' }}
         run: |
           set +e
+          build_status=0
           proofs_status=0
           firestore_status=0
+          build_pid=''
           proofs_pid=''
           firestore_pid=''
+
+          if [[ "$RUN_BUILD" == "true" ]]; then
+            npm run build > /tmp/pathfinder-build.log 2>&1 &
+            build_pid=$!
+          else
+            echo "build=skipped" >> "$GITHUB_OUTPUT"
+          fi
 
           if [[ "$RUN_PROOFS" == "true" ]]; then
             npm run test:deep-proofs > /tmp/pathfinder-deep-proofs.log 2>&1 &
@@ -474,6 +478,12 @@ jobs:
             echo "firestore=skipped" >> "$GITHUB_OUTPUT"
           fi
 
+          if [[ -n "$build_pid" ]]; then
+            wait "$build_pid"; build_status=$?
+            [[ "$build_status" -eq 0 ]] && echo "build=success" >> "$GITHUB_OUTPUT" || echo "build=failure" >> "$GITHUB_OUTPUT"
+            echo '=== production build ==='
+            cat /tmp/pathfinder-build.log
+          fi
           if [[ -n "$proofs_pid" ]]; then
             wait "$proofs_pid"; proofs_status=$?
             [[ "$proofs_status" -eq 0 ]] && echo "deep_proofs=success" >> "$GITHUB_OUTPUT" || echo "deep_proofs=failure" >> "$GITHUB_OUTPUT"
@@ -486,7 +496,7 @@ jobs:
             echo '=== Firestore persistence boundary ==='
             cat /tmp/pathfinder-firestore.log
           fi
-          if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
+          if [[ "$build_status" -ne 0 || "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
             exit 1
           fi
       - name: Save Firestore emulator binary after successful cold fetch
@@ -501,7 +511,7 @@ jobs:
         env:
           RUN_SERVICES: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true' }}
           RUN_BUILD: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true' }}
-          BUILD: ${{ steps.build.outcome }}
+          BUILD: ${{ steps.deep_services.outputs.build }}
           RUN_PROOFS: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_deep_proofs == 'true' }}
           RUN_FIRESTORE: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true' }}
           DEEP_PROOFS: ${{ steps.deep_services.outputs.deep_proofs }}
