@@ -62,9 +62,8 @@ for (const required of [
         `central harvester must own post-persistence cache step: ${required}`,
     );
 }
-assert.match(
-    harvestText,
-    /runtime-hint-projection-v2-\\\$\{\{ runner\.os \}\}-\\\$\{\{ steps\.runtime-hint-projection-key\.outputs\.authority_key \}\}-/u,
+assert.ok(
+    harvestText.includes('runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-'),
     'persisted runtime-Hint fallback cache must be scoped to projection authority',
 );
 assert.match(
