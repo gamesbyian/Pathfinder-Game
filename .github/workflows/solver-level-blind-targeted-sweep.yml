@@ -186,11 +186,18 @@ jobs:
           path: node_modules
           key: ${{ steps.dependency-tree-key.outputs.key }}
 
-      - name: Setup exact Node
+      - name: Setup exact Node on dependency-tree hit
+        if: steps.dependency-tree-cache.outputs.cache-hit == 'true'
         uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
-          cache: ${{ steps.dependency-tree-cache.outputs.cache-hit == 'true' && '' || 'npm' }}
+
+      - name: Setup exact Node with npm cache on miss
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
 
       - name: Install dependencies on cache miss
         id: install-dependencies
