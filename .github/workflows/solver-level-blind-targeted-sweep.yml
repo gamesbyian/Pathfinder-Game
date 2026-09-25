@@ -173,14 +173,36 @@ jobs:
           mkdir -p "$(dirname "$corpus")"
           git show "HEAD:$corpus" > "$corpus"
 
-      - name: Setup Node
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+
+      - name: Setup exact Node
         uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
-          cache: npm
+          cache: ${{ steps.dependency-tree-cache.outputs.cache-hit == 'true' && '' || 'npm' }}
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies on cache miss
+        id: install-dependencies
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Save exact dependency tree after successful install
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true' && steps.install-dependencies.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
 
       - name: Reject the advisory-node-budget / non-strict-work-budget combination
         shell: bash
@@ -234,37 +256,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # docs/solver-research-operating-model.md's "before expensive decision-bearing runs"
-          # checklist requires an execution-family canary -- run the smallest representative cell
-          # under the EXACT resolved cap/flags/selector mode, verifying work/node/deadline stop
-          # semantics and expected output fields BEFORE scaling. Nothing previously enforced this
-          # mechanically anywhere (2026-09-09 solver-development-operating-loop audit). One level
-          # is enough to catch the structural failure modes this guards against: a resolved
-          # ablation/flag combination that eliminates every attempt config (zero attempts
-          # dispatched), a crash/exception path, a malformed output row, or a wall-clock deadline
-          # that fires when it should be non-binding -- before committing to the full (potentially
-          # 250-shard) matrix. See scripts/verify-canary-cell.mjs's own header comment for why this
-          # deliberately does NOT check target-stage participation rate (that stays validate-
-          # solver-sweep-integrity.mjs's job on the full population), which is also why the canary
-          # level need not come from the dispatched population at all.
-          #
-          # Deliberately corpus position 1, NOT the first resolved id from this dispatch's own
-          # population: that population is frequently curated specifically because it contains
-          # hard/anomalous levels (targeted-sweep ids, highbudget "still unsolved" ids, stratified
-          # samples, ...), so "the first id" can be one of the expensive ones -- exactly what
-          # happened on 2026-09-10 (connectivity-volume-portal-ab-001 treatment arm, run
-          # 34423190297: the canary alone ran past 9m28s and got killed by the plan job's own
-          # timeout before the shard planner ever ran). Position 1 is one of the known-fast,
-          # known-solvable levels recorded in logs/solver-canary-baseline.json (solved in ~300ms
-          # under production defaults); a config that is fundamentally broken -- the actual thing
-          # this canary checks for -- misbehaves on ANY level, not only hard ones, so trading
-          # "representative of this dispatch's difficulty" for "cheap and reliable every time" costs
-          # nothing here.
-          canary_pos=1
-          # Flag construction here is DELIBERATELY duplicated from "Run level-blind-capability-
-          # sweep on this shard's slice" below, not factored into a shared script: the whole point
-          # of a canary is that it runs under the SAME resolved config the real shards will use --
-          # if you change one, change the other identically.
+          # Use the known-fast corpus position-1 canary so config/plumbing failures are caught
+          # before fan-out without turning the planner itself into a hard-level experiment.
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
