@@ -307,6 +307,16 @@ jobs:
           key: typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-${{ github.sha }}
           restore-keys: |
             typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-
+      - name: Compute local validation selection
+        id: validation_selection
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            node scripts/ci-impact-shadow-plan.mjs --git-diff HEAD^1 HEAD --out=tmp/ci-fast-gate-plan.json
+          else
+            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/ci-fast-gate-plan.json
+          fi
       - name: Check package-script reachability
         id: dead_scripts
         continue-on-error: true
@@ -317,14 +327,26 @@ jobs:
         run: npm run check:text-source-files
         env:
           PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
-      - name: Run non-lint validators
+      - name: Run selected non-lint validators
         id: validators
         continue-on-error: true
-        run: npm run check:validators
+        shell: bash
         env:
+          VALIDATOR_GROUPS: ${{ steps.validation_selection.outputs.validator_groups }}
+          ROUTER_OUTCOME: ${{ steps.validation_selection.outcome }}
           PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
           PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
+        run: |
+          if [[ "$ROUTER_OUTCOME" != "success" ]]; then
+            echo "Local impact routing failed; running the full validator aggregate."
+            npm run check:validators
+          elif [[ -z "$VALIDATOR_GROUPS" ]]; then
+            echo "No non-lint validator groups selected."
+          else
+            groups="${VALIDATOR_GROUPS//,/ }"
+            node scripts/validation-groups.mjs validators $groups
+          fi
       - name: Save TypeScript incremental state
         if: steps.validators.outcome == 'success' && steps.typescript-buildinfo.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
@@ -337,14 +359,26 @@ jobs:
         id: lint
         continue-on-error: true
         run: npm run check:lint
-      - name: Run Node and CLI contract tests
+      - name: Run selected Node and CLI contract tests
         id: node_tests
         continue-on-error: true
+        shell: bash
         env:
+          NODE_TEST_GROUPS: ${{ steps.validation_selection.outputs.node_test_groups }}
+          ROUTER_OUTCOME: ${{ steps.validation_selection.outcome }}
           PATHFINDER_PARALLEL_JOBS: '4'
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
           PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
-        run: npm run test:node
+        run: |
+          if [[ "$ROUTER_OUTCOME" != "success" ]]; then
+            echo "Local impact routing failed; running the full Node/CLI aggregate."
+            npm run test:node
+          elif [[ -z "$NODE_TEST_GROUPS" ]]; then
+            echo "No Node/CLI contract groups selected."
+          else
+            groups="${NODE_TEST_GROUPS//,/ }"
+            node scripts/validation-groups.mjs nodeTests $groups
+          fi
       - name: Derive runtime-hint projection cache key
         id: runtime-hint-projection-key
         shell: bash
