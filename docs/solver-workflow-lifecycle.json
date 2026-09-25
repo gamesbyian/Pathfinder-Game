@@ -219,6 +219,13 @@
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
     },
     {
+      "workflow": "solver-research-runtime-rehearsal.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "solver research execution-efficiency exact-runtime parity audit",
+      "retirementTrigger": "retire after the maintained research runtime is pinned and equivalent runtime identity/parity protection is owned by ordinary workflow contracts"
+    },
+    {
       "workflow": "solver-routing-regime-sample-ab.yml",
       "role": "evidence-producing",
       "status": "maintained",
