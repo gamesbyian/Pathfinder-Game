@@ -42,7 +42,7 @@ const cases = [
       'modules/solver/routing-regime.test.ts',
       'modules/solver/production-default-equivalence.test.ts',
     ],
-    expectedSurfaces: ['research', 'solver'],
+    expectedSurfaces: ['solver'],
     expectedCapabilities: ['build', 'deep-proofs', 'lint', 'unit-coverage'],
   },
   {
