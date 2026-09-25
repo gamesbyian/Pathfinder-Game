@@ -51,7 +51,9 @@ const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 for (const required of [
     'Derive persisted runtime-data cache key',
     'Publish persisted runtime-data cache for later PRs',
-    'Derive persisted runtime-hint projection key',
+    'Derive persisted runtime-hint projection identity',
+    'Restore exact or recent persisted runtime-hint projection',
+    'Plan persisted runtime-hint projection overlay',
     'Publish persisted runtime-hint projection for later PRs',
 ]) {
     assert.match(
@@ -60,6 +62,16 @@ for (const required of [
         `central harvester must own post-persistence cache step: ${required}`,
     );
 }
+assert.match(
+    harvestText,
+    /runtime-hint-projection-v2-\\\$\{\{ runner\.os \}\}-\\\$\{\{ steps\.runtime-hint-projection-key\.outputs\.authority_key \}\}-/u,
+    'persisted runtime-Hint fallback cache must be scoped to projection authority',
+);
+assert.match(
+    harvestText,
+    /PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE:/u,
+    'persisted runtime-Hint cache miss must enable incremental reconcile before publication',
+);
 assert.match(
     harvestText,
     /if: steps\.merge\.outputs\.result == 'persisted'/u,
