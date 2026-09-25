@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-24.
+> **Reconciled:** 2026-09-25.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
@@ -27,6 +27,23 @@ The completed census sharpens the residual picture: full-depth T1 isolated techn
 
 **Standing budget decision:** keep T1/T3/T4 at **50M nodes** and retain the bounded **60-level × 10M canonical-work EW1** tranche. The next information purchase is not a deeper census or more generic failure counts: use the fresh 1,802-parent denominator plus the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win identities to sample first operational divergence and legal offer/allocation mechanisms. The Hint/evidence consolidation has since closed the census standard-result/source-run provenance hardening that was still outstanding at the September 22 closeout; the only census-specific follow-up here is second-order materialization, not another broad acquisition.
 
+### Supporting infrastructure — research execution efficiency
+
+**State:** ACTIVE support program; scientific ordering remains owned by this queue.
+
+The September 23–25 CI optimization cycle exposed reusable research-execution methods: exact-generation reuse, sparse input materialization, hermetic real-data fixtures, deterministic bookkeeping witnesses, callable semantic seams with retained executable smokes, and shadow-before-authority routing. The solver batch system already has mature weighted sharding, so generic shard-count tuning is not queued.
+
+Current execution facts from the audit:
+- maintained solver/evidence workflows still use floating `node-version: '20'`; primary level-blind and history-aware producers now record actual Node/platform/arch identity;
+- production CI's exact dependency-tree reuse is not yet active in solver research workflows;
+- full-tree checkout measured about 54 s on representative September-22 solver jobs, versus about 3 s in the first sparse targeted-planner rehearsal; setup-node was ~5 s and `npm ci` ~8 s;
+- the first full-vs-sparse targeted-planner + real-canary rehearsal is semantically identical when the exact corpus and `logs/solver-stress-refresh/corpus2-runtime-telemetry.json` dependency are retained;
+- canonical Hint persistence remains owned by `harvest-solver-evidence.yml`; source workflows must not recreate canonical writers.
+
+Plan: [solver research execution efficiency](solver-research-execution-efficiency-plan.md). Starting evidence: [execution-topology census](../reports/2026-09-25-solver-research-execution-topology-starting-census-001.md).
+
+Immediate infrastructure gate: finish exact-runtime parity, then activate only earned sparse/runtime changes for short orchestration jobs; exact dependency-tree reuse follows on a fixed runtime generation. Live WS2/WS1 harnesses remain the first search-vs-plumbing audit surface.
+
 ### 1. Workstream 2: residual capability + premise acquisition
 
 **State:** ACTIVE / two-front portfolio.
@@ -41,19 +58,19 @@ The completed census sharpens the residual picture: full-depth T1 isolated techn
 
 ### Premise-acquisition lanes
 
-Frozen-map mining (Lanes A-G) is complete; none earned a shared runtime substrate. Reopen only on the condition stated per lane; do not retest a tested form. [`handoff reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
+Frozen-map Lanes A–G are resolved in their tested forms and did not earn a shared runtime substrate. Preserve their specific reopen conditions rather than retesting:
+- **A separator/decomposition:** closed negative at C2; representation repetition below the frozen compactness floor. [result](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md)
+- **B exact LIVE/DEAD:** sibling handoff closed; DEAD-core size-1 clean negative, with the multi-pick sampling limitation retained. [sibling](../reports/2026-09-17-production-search-sibling-construction-result-001.md) · [core](../reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md)
+- **C typed reuse:** phase-0 negative; reopen only on recurring typed reason/state evidence. [result](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md)
+- **D relational feasibility:** D1 premise positive but tested ranking consumer closed; constrained-event and commutativity results remain narrow, not production classifiers. [D1](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
+- **E causal revision:** negative. [result](../reports/2026-09-17-lane-e-multi-pick-bisection-result-001.md)
+- **F exposure/representation:** class-3 dose resolved; Card-E mixed; F3 qualified-positive with no reliable decision-bearing consumer. [F3](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md)
+- **G independent search objects:** complete-path LNS closed at 2M/16M; backward/bidirectional remains deferred pending a compact sound signature. [G1](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
+- **H parity:** phase-distance and checkerboard-capacity shadows are now closed negative; reopen only with materially different opportunity structure/formulation. [result](../reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md)
+- **I exact projections:** BC1 remains live only as a production-inert later-disposition safety/economics consumer. [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md)
 
-- **A (separator/decomposition): CLOSED NEGATIVE at C2** — 39/546 decisive rows (7.14%) repeat, below the 20% compactness floor. Reopen only with a materially different compact interface. [`result`](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md)
-- **B (fresh exact LIVE/DEAD asset + causal cores): CLOSED** — sibling-asset handoff found 2/25 referee-verified LIVE via multi-pick after naive/single-pick found none (sampling limitation); DEAD-core size-1 is a clean negative (215 queries, 0 cores/alarms). [`sibling`](../reports/2026-09-17-production-search-sibling-construction-result-001.md) · [`dead-core`](../reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md)
-- **C (solve-local typed knowledge reuse): PHASE-0 NEGATIVE** — no new fact family earned an observer. Reopen on demonstrated recurring typed reason/state evidence. [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md)
-- **D (per-instance relational feasibility):** D1 premise positive but its tested ranking consumer is closed (0 retention disagreements on an independent slice); constrained-event feasibility is narrowed-positive (DEAD infeasibility trivial, not a LIVE/DEAD classifier); residual-interface commutativity is positive but narrow (46.6% pooled support, 3 levels only, 0% flipper-bearing). [`preflight`](solver-per-instance-relational-feasibility-preflight.md) · [`D1`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md) · [`constrained-event`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md) · [`commutativity`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md)
-- **E (dependency-defined causal revision): NEGATIVE** — across 6 B2/multi-pick pairs, causal point equals naive divergence even with rollback room. [`result`](../reports/2026-09-17-lane-e-multi-pick-bisection-result-001.md)
-- **F (bounded exposure/representation):** Class-3 dose resolved (0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative); Card-E quotient mixed (survives permutation tests, insufficient for a classifier); F3 topology qualified-positive with no consumer (8/8 untied, but covers zero discordant decisions). [`class3`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [`card-e`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md) · [`f3`](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md)
-- **G (independent search-object nursery):** G1 complete-path LNS closed (0/45 at both 2M/16M); G2 backward/bidirectional abstraction deferred until A/D/topology yields a compact sound signature. [`dose`](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
+**Current WS2 gate:** repair node-cap A/B is positive (**7 gains / 0 losses** on the frozen 53-parent population) and advances to ordinary matched-work promotion confirmation. Admissible-order reserve fraction 0.35 is closed negative on the same population. Capability-invention exposure pilots/confirmation are positive for both target rows with zero observed solved-control regressions, but promotion remains a separate decision. Forced-work global compression and the remaining post-recognition numerators are closed negative; the 25.33% per-parent reservoir remains local-forcedness evidence, not removable global work. [repair/reserve result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [capability confirmation](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md) · [forced-work result](../reports/2026-09-25-forced-work-capture-economics-per-parent-consumer-oracle-result-001.md)
 
-Lane H (parity invariants) is now fully closed: static portal decomposition was already closed beyond raw portal count, and the combined phase-distance/checkerboard-capacity shadow (rows 2P/2C) closed both remaining premises negative. Lane I (small exact projections) remains live, carried by the table below (row 2X), not restated here. [`H preflight`](solver-parity-phase-capacity-preflight.md) · [`I program`](solver-small-exact-projections-program.md)
-
-**Current WS2 gate:** the repair node-cap A/B is POSITIVE (7 net gains/0 losses on the frozen 53-parent population) and advances to ordinary matched-work promotion confirmation; the admissible-order reserve A/B is CLOSE NEGATIVE (byte-identical solved set to control) and closes at fraction 0.35 on this population. [`result`](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) ACQUISITION's T1-cohort sampling is blocked on a network-denied census artifact; the EW1 routing-gap sample found 2 F8 rows instead ([`sample`](../reports/2026-09-25-capability-invention-demand-ew1-routing-gap-sample-001.md)). A candidate residual phenotype must differ from solved-parent failed-attempt controls at the parent level before it earns richer capture. BC1 advances to inert safety/economics. Forced-work global-phase compression is closed negative (0.25% singleton-outcome phases, 1,234 canonical work units of discovery cost); the 25.33% per-parent reservoir stands as local-forcedness evidence. [`fresh failure evidence`](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md) · [`invention`](solver-capability-invention-program.md) · [`forced-work`](../reports/2026-09-21-forced-work-prevalence-result-001.md) · [`phase census`](../reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md)
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** LATE-CONTINUATION SIGNAL POSITIVE / CONFIRMATION NEXT. Exact frozen model is positive across three distinct scoreable retained C2 attempt regimes: 6.93%, 6.99%, and 9.91% validation pre-winner-work capture with zero observed winner losses; C1 remains 0%. The fresh canonical refresh reproduces the signal without refit at **9.75%** combined pre-winner-work capture, **0 endangered winner levels**, 96.48% same-stage continuation, and 85.94% following censored work. This strengthens temporal/portfolio robustness but is still not independent-population confirmation. [`result`](../reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md) · [`fresh challenge`](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md)
