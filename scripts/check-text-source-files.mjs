@@ -11,7 +11,7 @@ import process from 'node:process';
 import {
   listRepositoryFiles,
   prChangedFiles,
-  readRepositoryTexts,
+  repositoryTextFilesContainingNul,
 } from './repository-file-view.mjs';
 
 const ROOT = process.cwd();
@@ -19,13 +19,8 @@ const textExtensions = new Set(['.css', '.html', '.js', '.json', '.md', '.mjs', 
 const tracked = listRepositoryFiles(ROOT);
 const incremental = prChangedFiles(ROOT);
 const candidates = incremental ?? tracked;
-const invalid = [];
 const textCandidates = candidates.filter(file => textExtensions.has(extname(file).toLowerCase()));
-const texts = readRepositoryTexts(ROOT, textCandidates);
-
-for (const file of textCandidates) {
-  if (texts.get(file).includes('\0')) invalid.push(file);
-}
+const invalid = repositoryTextFilesContainingNul(ROOT, textCandidates);
 if (invalid.length) {
   console.error('NUL bytes make tracked text files appear binary; use an escaped string such as "\\0" instead:');
   for (const file of invalid) console.error(`  - ${file}`);
