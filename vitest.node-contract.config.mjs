@@ -9,6 +9,8 @@ export default defineConfig({
             'scripts/solver-parallel-unit-tests.mjs',
             'scripts/eslint-rules-unit-tests.mjs',
             'scripts/data-assets-unit-tests.mjs',
+            'modules/solver/diversification.test.ts',
+            'modules/solver/hint-ablation-generator.test.ts',
             'scripts/level-codec-maintained-corpus-unit-tests.mjs',
         ],
         testTimeout: 90000,
