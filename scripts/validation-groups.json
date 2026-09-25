@@ -122,6 +122,7 @@
       "test:combine-static-portfolio-shards",
       "test:data-asset-runtime-smoke",
       "test:data-assets-contract",
+      "test:level-codec-maintained-corpus-contract",
       "test:hint-termination-semantics",
       "test:hint-discovery-process-cli",
       "test:hint-harvest-selection-manifest",
@@ -577,6 +578,10 @@
       ],
       "test:data-assets-contract": [
         "data"
+      ],
+      "test:level-codec-maintained-corpus-contract": [
+        "data",
+        "shared"
       ]
     },
     "validators": {
