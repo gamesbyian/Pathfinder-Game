@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-22.
+> **Reconciled:** 2026-09-24.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
@@ -25,7 +25,7 @@ The production refresh reproduces the prior solved sets exactly: **101/102 C1 + 
 
 The completed census sharpens the residual picture: full-depth T1 isolated techniques solve **83/532 current production misses (15.6%)**, with **47 singleton-supported** misses; **449** misses have no T1 solve. Conversely, **140/1,430 production-solved levels** have no T1 isolated solver at the 50M ceiling, so isolated coverage is not a production-safety oracle. The fresh run also records **332 flag/variant regressions**, reinforcing matched-work/control gates.
 
-**Standing budget decision:** keep T1/T3/T4 at **50M nodes** and retain the bounded **60-level × 10M canonical-work EW1** tranche. The next information purchase is not a deeper census or more generic failure counts: use the fresh 1,802-parent denominator plus the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win identities to sample first operational divergence and legal offer/allocation mechanisms. The remaining census work is second-order materialization plus standard-result provenance hardening, not another broad acquisition.
+**Standing budget decision:** keep T1/T3/T4 at **50M nodes** and retain the bounded **60-level × 10M canonical-work EW1** tranche. The next information purchase is not a deeper census or more generic failure counts: use the fresh 1,802-parent denominator plus the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win identities to sample first operational divergence and legal offer/allocation mechanisms. The Hint/evidence consolidation has since closed the census standard-result/source-run provenance hardening that was still outstanding at the September 22 closeout; the only census-specific follow-up here is second-order materialization, not another broad acquisition.
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
