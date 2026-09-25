@@ -51,24 +51,25 @@ export function readRepositoryText(root, relativePath) {
 }
 
 /**
- * Read many tracked text paths while preserving working-tree semantics for materialized files.
- * Sparse-checkout misses are fetched from HEAD through one `git cat-file --batch` process instead
- * of spawning `cat-file -s` + `git show` for every path.
+ * Return tracked text paths containing NUL bytes while preserving working-tree semantics for
+ * materialized files. Sparse-checkout misses are fetched through one `git cat-file --batch`
+ * process, and their raw bytes are inspected in place so bulk migrations do not duplicate large
+ * Hint/report blobs into decoded strings.
  */
-export function readRepositoryTexts(root, relativePaths) {
-  const texts = new Map();
+export function repositoryTextFilesContainingNul(root, relativePaths) {
+  const invalid = [];
   const missing = [];
 
   for (const relativePath of relativePaths) {
     const full = path.resolve(root, relativePath);
     if (fs.existsSync(full) && fs.statSync(full).isFile()) {
-      texts.set(relativePath, fs.readFileSync(full, 'utf8'));
+      if (fs.readFileSync(full).includes(0)) invalid.push(relativePath);
     } else {
       missing.push(relativePath);
     }
   }
 
-  if (missing.length === 0) return texts;
+  if (missing.length === 0) return invalid;
 
   const input = Buffer.from(missing.map(relativePath => `HEAD:${relativePath}\n`).join(''));
   const result = spawnSync('git', ['cat-file', '--batch'], {
@@ -76,6 +77,7 @@ export function readRepositoryTexts(root, relativePaths) {
     input,
     maxBuffer: 1024 * 1024 * 1024,
   });
+  if (result.error) throw result.error;
   if (result.status !== 0) {
     throw new Error(`git cat-file --batch failed: ${result.stderr?.toString('utf8').trim() || `exit ${result.status}`}`);
   }
@@ -95,11 +97,11 @@ export function readRepositoryTexts(root, relativePaths) {
     if (contentEnd >= output.length || output[contentEnd] !== 0x0a) {
       throw new Error(`Malformed git cat-file payload for ${relativePath}`);
     }
-    texts.set(relativePath, output.subarray(contentStart, contentEnd).toString('utf8'));
+    if (output.subarray(contentStart, contentEnd).includes(0)) invalid.push(relativePath);
     offset = contentEnd + 1;
   }
 
-  return texts;
+  return invalid;
 }
 
 /** File/directory existence that remains correct under sparse checkout. */
