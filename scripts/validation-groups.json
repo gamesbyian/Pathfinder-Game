@@ -288,7 +288,8 @@
         "research"
       ],
       "test:sweep-publish": [
-        "research"
+        "research",
+        "solver"
       ],
       "test:known-prefix-oracle-set-manifest": [
         "solver",
@@ -383,6 +384,192 @@
       "test:class3-dose-expectations": [
         "solver",
         "research"
+      ],
+      "test:combine-static-portfolio-shards": [
+        "data",
+        "solver"
+      ],
+      "test:corpus-query": [
+        "data",
+        "solver"
+      ],
+      "test:data-asset-runtime-smoke": [
+        "data",
+        "solver"
+      ],
+      "test:family-boundary": [
+        "data",
+        "solver"
+      ],
+      "test:family-index": [
+        "data",
+        "solver"
+      ],
+      "test:family-run-manifest-producer": [
+        "data",
+        "solver"
+      ],
+      "test:hint-discovery-process-cli": [
+        "data",
+        "solver"
+      ],
+      "test:hint-query-lib": [
+        "data",
+        "solver"
+      ],
+      "test:hint-store-index": [
+        "data",
+        "solver"
+      ],
+      "test:stress-topology-generator": [
+        "data",
+        "solver"
+      ],
+      "test:loader": [
+        "game",
+        "solver"
+      ],
+      "test:analyze-technique-census": [
+        "research",
+        "solver"
+      ],
+      "test:analyze-technique-census-temporal-stability": [
+        "research",
+        "solver"
+      ],
+      "test:cut-bridge-incidence": [
+        "research",
+        "solver"
+      ],
+      "test:experiment-manifest": [
+        "research",
+        "solver"
+      ],
+      "test:hint-discovery-process-evidence": [
+        "research",
+        "solver"
+      ],
+      "test:hint-failure-process-join": [
+        "research",
+        "solver"
+      ],
+      "test:level-blind-capability-sweep-cli": [
+        "research",
+        "solver"
+      ],
+      "test:lifecycle-failure-map": [
+        "research",
+        "solver"
+      ],
+      "test:paired-beam-width-frontier": [
+        "research",
+        "solver"
+      ],
+      "test:persist-decision-bearing-evidence": [
+        "research",
+        "solver"
+      ],
+      "test:research-consumption-link": [
+        "research",
+        "solver"
+      ],
+      "test:research-index": [
+        "research",
+        "solver"
+      ],
+      "test:research-integration-audit": [
+        "research",
+        "solver"
+      ],
+      "test:research-query": [
+        "research",
+        "solver"
+      ],
+      "test:research-queryability-audit": [
+        "research",
+        "solver"
+      ],
+      "test:research-question-dossier": [
+        "research",
+        "solver"
+      ],
+      "test:research-relations": [
+        "research",
+        "solver"
+      ],
+      "test:research-system-inventory": [
+        "research",
+        "solver"
+      ],
+      "test:research-system-query": [
+        "research",
+        "solver"
+      ],
+      "test:research-transaction": [
+        "research",
+        "solver"
+      ],
+      "test:response-guided-orientation-contrast": [
+        "research",
+        "solver"
+      ],
+      "test:response-guided-parity-contrast": [
+        "research",
+        "solver"
+      ],
+      "test:solver-experiment-contract": [
+        "research",
+        "solver"
+      ],
+      "test:solver-failure-response": [
+        "research",
+        "solver"
+      ],
+      "test:solver-search-loss-evidence": [
+        "research",
+        "solver"
+      ],
+      "test:technique-census-cell": [
+        "research",
+        "solver"
+      ],
+      "test:technique-census-result-lib": [
+        "research",
+        "solver"
+      ],
+      "test:validate-reconciliation-sources": [
+        "research",
+        "solver"
+      ],
+      "test:write-solver-experiment-contract": [
+        "research",
+        "solver"
+      ],
+      "test:ws2-experiment-readiness": [
+        "research",
+        "solver"
+      ],
+      "test:ws2-failure-response-reconnaissance": [
+        "research",
+        "solver"
+      ],
+      "test:ws6-dependency-interface-observer": [
+        "research",
+        "solver"
+      ],
+      "test:hint-discovery-replayability": [
+        "shared",
+        "solver"
+      ],
+      "test:hint-reconstructability-report": [
+        "shared",
+        "solver"
+      ]
+    },
+    "validators": {
+      "check:research-integration": [
+        "research",
+        "solver"
       ]
     }
   },
