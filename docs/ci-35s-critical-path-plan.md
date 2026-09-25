@@ -1174,14 +1174,62 @@ The repair-prototype cadence cut also behaved as intended:
 
 **Interpretation:** this is a qualifying sample, not program completion. The stop condition requires a bounded comparable window with p50 ≤30 s and p90 ≤35 s. Do not resume broad optimization merely because one sample passed; use subsequent exact-head/full-impact runs to measure stability first. If the confirmation window fails because shared-runner variance alone pushes otherwise healthy lanes over 35 s, move to the reserved/larger-runner fallback rather than deleting more validation.
 
+## Confirmation sample 2: runtime-Hint projection miss dominates p90 risk
+
+Exact-head CI run **36180519546** was semantically green but not latency-qualifying:
+
+- Fast Gate: ~53 s;
+- coverage: ~39 s;
+- Node A: ~29 s;
+- Node B: ~36 s;
+- deep services: ~31 s.
+
+The critical Fast Gate miss was not generic hosted-runner noise. Runtime-data fallback worked as designed: a newer base changed 12 runtime-data blobs, the rolling cache restored the previous exact tree, and each lane overlaid only those changed blobs.
+
+Fast Gate then missed the **runtime-Hint projection** cache. The build spent roughly **26 s** regenerating the complete projection:
+
+- ~573 MB canonical/source Hint bytes;
+- ~150 MB path-only runtime projection;
+- one tree-level source key meant any Hint-tree churn invalidated the entire projection.
+
+That is now the highest-value p90-margin target.
+
+### Rolling runtime-Hint projection cache v2
+
+The projection cache now separates two identities:
+
+- **authority key:** projection library + runtime decoder + canonical JSON + Vite projection config;
+- **source key:** Git blob identities for files under published/stress/random Hint roots.
+
+Cache key shape is `runtime-hint-projection-v2-<os>-<authority>-<source>`.
+
+Behavior:
+
+1. exact authority+source hit: unchanged fast path, copy cached projection;
+2. source-only miss: restore the newest cache under the **same authority**;
+3. compare the cached source Git-blob manifest to current HEAD;
+4. hand Vite an exact changed/deleted source-file plan;
+5. regenerate only changed/missing projection files, delete removed outputs, and reuse every unchanged projection byte-for-byte;
+6. projection-authority churn cannot use fallback and therefore forces a clean full rebuild.
+
+The canonical post-harvest producer and PR Fast Gate share this cache identity. Permanent contracts cover:
+
+- incremental projection regeneration/deletion;
+- source-only churn preserves authority identity while changing source identity;
+- projection-code churn changes fallback authority;
+- CI parity requires same-authority fallback and incremental reconcile mode.
+
+The implementation head will necessarily pay one clean v2 generation because the projection authority itself changed. Subsequent same-authority source churn is the decision evidence for the overlay path.
+
 ## Current forward work order
 
-1. **Bounded p50/p90 confirmation window:** treat run 36179322147 as sample 1. Collect comparable full-impact exact-head runs before further optimization; record each lane wall, first-runner→last-required wall, cache state, and runner skew.
-2. **Validate rolling-cache stale-overlay timing when naturally exercised:** correctness is permanently covered by `test:ci-runtime-data-cache`; when base/runtime Hint churn produces a fallback restore, record whether the overlay avoids the old 10–20 s second-checkout tax.
-3. **Validate the implemented solver→research narrowing:** semantic fault injection is green; retain the historical #1722-equivalent route oracle / scoped timing gate before calling the 59-consumer explicit routing fully settled.
-4. **Main/default-branch confirmation after merge:** broad main-push validation and cache seeding must remain green before the program can be closed.
-5. **Only if the confirmation window misses:** distinguish useful-work regression from shared-runner/bootstrap variance. Resume targeted testability work only for a measured software tail; use reserved/larger compute if infrastructure variance is the limiting factor.
-6. **Deferred audits, not current priorities:** deadlock proof machinery, Firestore bootstrap, refreshed Node/coverage censuses, and larger-runner rehearsals remain documented fallbacks rather than automatic next work.
+1. **Validate rolling runtime-Hint projection v2:** first exact-head run may perform the intentional clean v2 generation; require green projection/cache contracts. Then capture an exact-hit or same-authority source-overlay sample and compare Fast Gate wall against the 26 s full-regeneration miss.
+2. **Resume bounded p50/p90 confirmation:** retain run 36179322147 as qualifying sample 1 and run 36180519546 as a diagnosed non-qualifying projection-cache miss. Collect comparable full-impact samples after v2 cache seeding rather than mixing old/new cache architectures.
+3. **Validate rolling runtime-data stale-overlay timing:** sample 2 exercised it successfully across 12 changed blobs; record additional natural overlay samples for tail confidence, but no redesign is currently indicated.
+4. **Validate the implemented solver→research narrowing:** semantic fault injection is green; retain the historical #1722-equivalent route oracle / scoped timing gate before calling the 59-consumer explicit routing fully settled.
+5. **Main/default-branch confirmation after merge:** broad main-push validation and producer cache seeding must remain green before the program can be closed.
+6. **Only if post-v2 confirmation still misses:** distinguish useful-work regression from shared-runner/bootstrap variance. Resume targeted software/testability work only for a measured software tail; use reserved/larger compute if infrastructure variance is the limiting factor.
+7. **Deferred audits:** deadlock proof machinery, Firestore bootstrap, refreshed Node/coverage censuses, and larger-runner rehearsals remain documented fallbacks rather than automatic next work.
 
 Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence. Negative experiments stay documented so later agents do not repeat them.
 
