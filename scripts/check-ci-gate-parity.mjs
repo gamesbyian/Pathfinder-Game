@@ -9,8 +9,7 @@ const validationGroups = JSON.parse(fs.readFileSync(path.join(root, 'scripts', '
 const workflowPath = path.join(root, '.github', 'workflows', 'ci.yml');
 const workflow = fs.readFileSync(workflowPath, 'utf8');
 const nodeShardWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci-node-contract-shards.yml'), 'utf8');
-const buildWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci-production-build.yml'), 'utf8');
-const productionWorkflows = workflow + '\n' + nodeShardWorkflow + '\n' + buildWorkflow;
+const productionWorkflows = workflow + '\n' + nodeShardWorkflow;
 const errors = [];
 
 function directRuns(scriptName) {
@@ -55,6 +54,7 @@ const expectedWorkflowInvocations = [
   'check:lint',
   'test:coverage',
   'test:deep-proofs',
+  'build',
 ];
 for (const expected of expectedWorkflowInvocations) {
   const escaped = expected.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
@@ -62,10 +62,6 @@ for (const expected of expectedWorkflowInvocations) {
     errors.push(`ci.yml no longer invokes npm run ${expected}`);
   }
 }
-if (!/npm run build(?=\s|["']|$)/mu.test(buildWorkflow)) {
-  errors.push('production build command is missing from maintained production workflows');
-}
-
 // Direct single-command steps remain a separate classification surface. A required invocation may
 // also live inside an intentionally concurrent multiline shell step (currently deep services).
 for (const actual of workflowRuns) {
@@ -114,36 +110,34 @@ for (const [member, dependency] of Object.entries(validationGroups.contractDepen
 if (!workflow.includes('Materialize Fast Gate level documents')) {
   errors.push('ci.yml no longer materializes the minimal Fast Gate level-document set');
 }
-if (!buildWorkflow.includes('Restore runtime Hint sources for projection miss')) {
+if (!workflow.includes('Restore runtime Hint sources for projection miss')) {
   errors.push('production-build workflow no longer defers full runtime Hint sources until a projection-cache miss');
 }
-if (!/Restore runtime Hint sources for projection miss[\s\S]*runtime-hint-projection-cache\.outputs\.cache-hit != 'true'/u.test(buildWorkflow)) {
+if (!/Restore runtime Hint sources for projection miss[\s\S]*runtime-hint-projection-cache\.outputs\.cache-hit != 'true'/u.test(workflow)) {
   errors.push('production-build workflow runtime Hint sources are no longer gated on a projection-cache miss');
 }
-if (!buildWorkflow.includes('runtime-hint-projection-v2-')) {
+if (!workflow.includes('runtime-hint-projection-v2-')) {
   errors.push('production-build workflow no longer uses the rolling runtime-Hint projection cache generation');
 }
-if (!buildWorkflow.includes('restore-keys:') || !buildWorkflow.includes('steps.runtime-hint-projection-key.outputs.authority_key')) {
+if (!workflow.includes('restore-keys:') || !workflow.includes('steps.runtime-hint-projection-key.outputs.authority_key')) {
   errors.push('production-build workflow no longer scopes runtime-Hint fallback caches to projection authority');
 }
-if (!buildWorkflow.includes('PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE')) {
+if (!workflow.includes('PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE')) {
   errors.push('production-build workflow no longer enables runtime-Hint incremental reconcile on fallback cache hits');
 }
 
 if (!workflow.includes('uses: ./.github/workflows/ci-node-contract-shards.yml')) {
   errors.push('ci.yml no longer invokes the reusable Node contract shard workflow');
 }
-if (!workflow.includes('uses: ./.github/workflows/ci-production-build.yml')) {
-  errors.push('ci.yml no longer invokes the reusable production-build workflow');
+if (!/^  deep-services:\s*$/mu.test(workflow)
+    || !/deep-services:[\s\S]*id:\s*build\s*$/mu.test(workflow)) {
+  errors.push('ci.yml no longer packs production build into deep-services');
 }
-if (!buildWorkflow.includes('run: npm run build')) {
-  errors.push('production-build workflow no longer invokes npm run build');
+if (!/Materialize build runtime JSON[\s\S]*services-impact\.outputs\.needs_build == 'true'/u.test(workflow)) {
+  errors.push('ci.yml deep-services no longer scopes build work through needs_build');
 }
-if (!/production-build:[\s\S]*build_job_required == 'true'/u.test(workflow)) {
-  errors.push('ci.yml no longer scopes the production-build lane through build_job_required');
-}
-if (!/production-build:[\s\S]*planner_outcome != 'success'/u.test(workflow)) {
-  errors.push('ci.yml production-build lane no longer fails safe when impact planning fails');
+if (!/Materialize build runtime JSON[\s\S]*steps\.services-impact\.outcome != 'success'/u.test(workflow)) {
+  errors.push('ci.yml deep-services build path no longer fails safe when impact planning fails');
 }
 
 if (!productionWorkflows.includes("Set up Node on warm dependency-tree path")
