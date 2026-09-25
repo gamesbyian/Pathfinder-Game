@@ -509,6 +509,24 @@ but the executable contract meant “any ancestor containing family”.
 Ancestor staging is forbidden. The adversarial self-test now proves `data/families/` is accepted
 for the reviewed workflow while both `data/stress/` and `data/` are rejected.
 
+### 35. Reviewed workflow exceptions/dispositions could outlive the behavior they reviewed
+
+After making workflow persistence and ingestion review explicit, both control planes still enforced only
+one half of freshness:
+
+- a persistence exception had to name a maintained workflow and a canonical-store-containing prefix,
+  but could remain indefinitely after the workflow stopped using that exception;
+- an ingestion row had to name a maintained workflow, but could remain indefinitely after the workflow
+  stopped satisfying the mechanically derived review-candidate contract.
+
+Dormant approvals are dangerous because later code can accidentally inherit them without a fresh review.
+
+**Correction:** persistence exceptions must now be exercised by the current workflow at their reviewed
+scope, otherwise the guard fails them as stale. Workflow-ingestion rows must correspond to the current
+mechanically derived candidate population, otherwise they also fail as stale. The control plane is now
+bidirectional: current behavior needs a reviewed disposition, and every reviewed disposition must still
+be justified by current behavior.
+
 ## Exact-head validation fallout after Findings 25-33
 
 The first remote PR validation on head `06294be...` was valuable precisely because it did not stay
