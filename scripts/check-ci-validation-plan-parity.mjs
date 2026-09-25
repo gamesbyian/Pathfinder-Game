@@ -9,13 +9,12 @@ const registry = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'validati
 const executionPlan = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'ci-execution-plan.json'), 'utf8'));
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
-const buildWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci-production-build.yml'), 'utf8');
-const productionCapabilityWorkflows = workflow + '\n' + buildWorkflow;
+const productionCapabilityWorkflows = workflow;
 const activationWorkflowPath = executionPlan.activationWorkflow;
 const activationWorkflow = typeof activationWorkflowPath === 'string'
   ? fs.readFileSync(path.join(root, activationWorkflowPath), 'utf8')
   : '';
-const activationCapabilityWorkflows = activationWorkflow + '\n' + buildWorkflow;
+const activationCapabilityWorkflows = activationWorkflow;
 const failures = [];
 
 function escapeRegex(value) {
@@ -124,9 +123,6 @@ for (const dependency of finalStatus?.needs ?? []) {
       || finalStatus.acceptedResults[dependency].length === 0) {
     failures.push(`final status has no accepted result contract for ${dependency}`);
   }
-}
-if (!(finalStatus?.acceptedResults?.['production-build'] ?? []).includes('skipped')) {
-  failures.push('final status must explicitly allow production-build=skipped for scoped PRs');
 }
 if (!(finalStatus?.acceptedResults?.['deep-verification'] ?? []).includes('skipped')) {
   failures.push('final status must explicitly allow deep-verification=skipped for scoped PRs');
