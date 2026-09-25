@@ -37,7 +37,40 @@ The target does not authorize removing the current full-impact obligations:
 
 Impact routing may still skip the entire deep obligation set on PRs where it is semantically irrelevant. This plan is about the **fullest selected form**.
 
-## Reference baseline
+## Current authority snapshot (2026-09-24)
+
+The original ~98 s run below is retained as the historical starting baseline. The current production shape is materially different and **this section is the forward-looking authority**.
+
+Recent exact-head full-impact evidence:
+
+| run | fast gate | deep verification | notable useful work |
+| --- | ---: | ---: | --- |
+| 36083565019 | **60 s** | **44 s** | Node/CLI 35 s; coverage 18 s; proofs+Firestore 10 s |
+| 36084034066 | **44 s** | **70 s** | Node/CLI 20 s; coverage 31 s; proofs+Firestore 15 s |
+| 36086954088 | **71 s** | **67 s** | Node/CLI 36 s; coverage 30 s; proofs+Firestore 14 s |
+
+This variability is now itself evidence. Shared hosted runners vary materially not only in assignment/setup but in effective useful-work wall time. One fast sample must not be promoted to an intrinsic cost model.
+
+The current biggest permanent-speed opportunities, in order of expected leverage, are:
+
+1. **Same-runner deep overlap:** rehearse ordinary covered Vitest concurrently with the already-overlapped heavyweight proofs + Firestore boundary. This preserves all obligations and could remove most of the current 14–15 s serial tail if 4-core contention is tolerable.
+2. **Node/CLI contract testability:** refresh per-contract timings, then attack structural tails: import-time corpus scans, repeated large-corpus parsing, avoidable subprocess/CLI wrappers, repository-wide discovery in synthetic tests, redundant fixture construction, and tests that invoke real solver/search work for bookkeeping-only assertions. Do not resume shared-runner shard-count tuning.
+3. **Covered Vitest testability:** refresh the slow-file/slow-test census from the JSON reporter and make expensive assertions cheaper without weakening coverage or converting real integration semantics into mocks. Preserve balanced coverage sharding as a proven topology for larger/reserved compute.
+4. **Heavy proof witnesses:** inspect the longest proof fixtures for smaller deterministic witnesses, tighter work budgets, or reusable setup while preserving the same property. Internal parallelism is already near the current 4-core limit.
+5. **Firestore boundary:** split emulator/bootstrap cost from rule-test cost; remove duplicated initialization/materialization if present; preserve the full rules proof.
+6. **Residual bootstrap/cache critical path:** audit serialized exact-cache restores, setup-node, TypeScript state, validator/lint sequencing, and duplicate repository discovery. Treat each as a measured small-opportunity audit, not a reason to weaken validation.
+7. **Larger/reserved compute:** benchmark the already-proven balanced Node and coverage topologies on more predictable compute after software costs are slimmed. At least 16 logical CPUs remains the initial capacity target.
+8. **Cadence/impact routing:** continue using the separate historical-value/impact-routing program to avoid irrelevant work. Do not use cadence demotion as a substitute for making the fullest selected form fast.
+
+Closed or currently low-value directions:
+
+- **bulk text invariant:** closed by #2107 with a permanent 1,500-file sparse regression;
+- **same-runner Node fan-out tuning:** direct 4-worker execution is preferred; npm mediation is worse;
+- **more shared-hosted Node/coverage shards:** semantically proven but p90 margin is inadequate because of hosted variance;
+- **solver canary, lint, warm build:** now ~1–2 s each and no longer priority targets;
+- **coverage threshold reduction, proof deletion, fixture deletion solely for speed:** prohibited by the protected validation contract.
+
+## Historical starting baseline
 
 Full-impact PR run **35955087367**:
 
@@ -68,40 +101,48 @@ Hosted runner: **4 logical CPUs**.
 
 ## Established findings
 
-### Bootstrap
+### Bootstrap and routing
 
-1. Current deep sparse checkout materializes ~207 MB / 3,269 files, ~190 MB of it data.
-2. Hosted measurement: current deep checkout **15 s**.
-3. Source-only checkout + exact runtime-data cache restore measured **~4 s** on the best second pass (3 s checkout + 1 s restore; first pass ~6 s total).
-4. Exact cached Node **22.23.2** setup measured **~1 s**, versus **5–6 s** for floating Node 20 downloading 20.20.2.
-5. Node 22.23.2 passed production typecheck, all 1,524 fast-unit test slots (1,513 passed / 11 intentionally skipped), and production Vite compilation/build when runtime assets were present.
-6. Raw system Node is not currently preferred: it removes setup-node but loses the setup-node-managed npm-cache version and gives up a pinned runtime for a marginal additional setup saving.
-7. Main-push validation does not seed ESLint cache today. This explains why unrelated new PRs cold-lint while same-PR revisions can fall near 2 s.
-
-### Router startup
-
-The impact plan computation itself is negligible, but full-impact deep verification waits on a separate planner runner. Recent planner jobs have taken roughly 9–45 s due to hosted startup/checkout/setup. That dependency is incompatible with the 35 s target.
+1. Deep and fast lanes now use source-focused checkout plus exact runtime-data caches; the former ~15 s deep data checkout is no longer the normal path.
+2. Exact Node **22.23.2** is pinned and setup-node is usually low single digits, though individual shared-runner samples can still vary.
+3. Exact dependency-tree restore is active and skips `npm ci` on a hit.
+4. Main and diagnostics producers seed runtime-data/runtime-hint cache generations; cold whole-tree materialization is a correctness fallback rather than normal PR work.
+5. Main seeds ESLint cache; warm PR lint is now ~1 s.
+6. The separate planner runner is no longer a dependency edge for full-impact deep verification; deep computes the canonical plan locally and can start immediately.
+7. Remaining bootstrap time is fragmented across checkout, several exact cache restores, setup-node, TypeScript state, and small validators. A final critical-path audit is worthwhile, but evidence no longer supports expecting one large bootstrap-only win on ordinary shared runners.
 
 ### Node/CLI
 
-The 176-contract population is unusually balanceable from measured timings:
+The permanent production harness uses direct four-worker execution. Dedicated benchmark run **36082154293** measured direct invocation at **35.17–35.61 s** across four repeats, while npm-mediated execution was roughly 10 s slower. Ordinary CI has since measured the same production population at both **20 s** and **35–36 s**, demonstrating substantial shared-runner useful-work variance.
 
-- two shards: ~53.8/53.9 child-s;
-- three shards: ~35.9 each;
-- four shards: ~26.9 each.
+The old 176-contract and 204-contract timing profiles are historical planning aids, not current cost authority. Before changing individual tests, regenerate a current per-contract profile from the current registry.
 
-At the existing four-worker execution inside a shard, two balanced shards project near **13–14 s useful wall each** before bootstrap. Shards must be generated/validated from measured timing data rather than frozen by item count.
+The previously identified `test:hint-occurrence-acceptance` 15.8 s import-side-effect defect is **already fixed in code**: `hint-occurrence-acceptance-lib.mjs` is side-effect free, the synthetic node test imports it directly, and the corpus CLI only scans persisted stores under direct invocation. The checked-in rehearsal timing profile now records that contract at 0.0 s. Do not carry B1c as unfinished work.
+
+Current Node testability audit lenses:
+
+- CLI modules with top-level work on import;
+- repeated parsing/indexing of the same large corpus across synthetic contracts;
+- repository-wide discovery where a private fixture/root can prove the same invariant;
+- subprocess or package-manager wrappers around assertions that can invoke a pure library directly;
+- real solver/search execution for bookkeeping/serialization/identity assertions;
+- redundant fixture generation or large JSON write/read round trips;
+- many ultra-cheap isolated processes where process startup itself becomes a meaningful floor, while preserving isolation where global/module/process state matters.
 
 ### Covered Vitest
 
-Two fixtures dominate the current covered suite:
+The covered population remains around **30–31 s** on recent ordinary runs, although a 18 s sample also exists. The old lifecycle telemetry outlier and repair-search budget tail have already received deterministic-work/testability reductions. Therefore the next action is a **fresh** slow-file and slow-test census from `tmp/vitest-timings.json`, not continued optimization against historical names.
 
-- `orchestration-work-budget.test.ts`: ~8.2 s; one lifecycle-telemetry bookkeeping regression is ~8.0 s;
-- `diversification.test.ts`: ~7.0 s; deliberately real solver integration.
+Worthwhile lenses:
 
-The lifecycle test already lives beside tests that use `attemptSearchForTesting: exhaustingDispatch` to exercise the same orchestration/budget machinery cheaply. Its assertion is lifecycle bookkeeping, not search effectiveness, so it is a high-confidence testability refactor target.
+- bookkeeping tests invoking real search/solver work;
+- repeated expensive beforeEach/setup or corpus/model construction;
+- duplicate parsing/bundling across files;
+- deterministic work budgets far above the minimum robust envelope;
+- fixture cardinality larger than the asserted property needs;
+- Vitest pool/worker configuration only where a controlled rehearsal shows lower full-suite wall without semantic changes.
 
-The diversification integration should not be stubbed merely for speed. It should either remain in covered execution or move intact to an explicit parallel deep-integration obligation.
+Real solver integrations stay real unless an equivalent cheaper witness proves the same contract. Coverage thresholds remain unchanged. The measured-balanced two-shard coverage topology is preserved for larger/reserved compute, not promoted on shared hosted runners.
 
 ### Heavy proofs
 
@@ -425,26 +466,16 @@ That closure evidence is now available. Exact-head run **36084034066** passed th
 
 This is separate from the shared-runner p90 problem documented below. A six-minute deterministic local step is application-owned CI waste and must be removed regardless of future runner capacity.
 
-### Phase D: runtime-balanced execution topology
+### Phase D: execution topology after shared-runner sharding experiments
 
-Do not pick shard count until A/B/C measurements are active. The first standard-runner rehearsal should use **five required lanes** because that is the smallest layout with a plausible ≤27 s budget per lane on 4-core runners.
+The earlier five-shared-runner candidate is **superseded**. D1 and D2 proved that Node and coverage can be balanced correctly, but additional ordinary hosted runners do not leave reliable p90 headroom once setup/assignment/effective-CPU variance is included.
 
-#### Candidate standard-runner topology
+Forward topology work is now:
 
-| lane | obligations | target bootstrap | target useful work | lane budget |
-| --- | --- | ---: | ---: | ---: |
-| static | reachability/text + validators + warm lint + build | **≤8 s** | 8–10 s | **≤18 s** |
-| node-a | ~50% measured Node/CLI cost | **≤8 s** | 13–14 s | **≤23 s** |
-| node-b | ~50% measured Node/CLI cost | **≤8 s** | 13–14 s | **≤23 s** |
-| implementation | ordinary coverage after B1; shard if >19 s | **≤8 s** | ≤19 s | **≤27 s** |
-| deep-services | heavy proofs + Firestore + 250k canary, overlapping independent processes where measured safe | **≤8 s** | ≤14–16 s critical path | **≤24 s** |
-
-Notes:
-
-- `deep-services` must benchmark concurrency rather than simply background every command. Firestore startup is partly external/IO and may overlap well with proof CPU; prove it.
-- If `implementation` remains above 30 s, split covered Vitest by measured file cost and merge V8 coverage/thresholds. Do not lower coverage thresholds.
-- Do not add a separate runner merely to aggregate status. Use native required checks or an effectively dependency-only result contract that does not put another hosted-runner queue on the critical path.
-- Generate Node shard membership from a checked-in timing profile plus deterministic fallback, and validate that every registered Node contract is assigned exactly once.
+1. test **same-runner deep overlap** first, because it removes serial work without adding runner assignment;
+2. keep the proven two-way Node and balanced coverage partitions as ready-to-use building blocks for larger/reserved compute;
+3. do not add a separate aggregation runner to the production critical path;
+4. after testability reductions, benchmark a larger/reserved runner with internal parallelism and measure p50/p90 across comparable full-impact runs.
 
 ### D1. Two-way Node/CLI sharding — current rehearsal
 
@@ -547,20 +578,18 @@ Initial capacity target: benchmark **at least 16 logical CPUs**. Eight cores may
 
 This fallback is preferable to removing validation solely because shared hosted-runner assignment is noisy.
 
-## Activation order
+## Current forward work order
 
-1. A1 deep checkout.
-2. A3 main-seeded ESLint cache.
-3. A4 canary budget.
-4. B1 lifecycle deterministic dispatch.
-5. A2 exact Node 22 after a complete Node22 shadow/full contract.
-6. C exact dependency-tree restore after a complete restored-tree validation rehearsal.
-7. A5 remove planner dependency edge.
-8. B2 coverage-shard decision from post-B1 timing; do not create a deep-integration tier by default.
-9. D candidate five-lane rehearsal.
-10. E standard-vs-reserved runner decision.
+1. **Deep same-runner concurrency rehearsal:** run ordinary covered Vitest concurrently with unchanged heavyweight proofs and Firestore; preserve independent logs/exit codes and unchanged coverage thresholds.
+2. **Fresh Node/CLI census:** regenerate current per-contract timings and pursue structural testability wins in descending child-cost order.
+3. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
+4. **Proof witness audit:** reduce the longest deterministic witnesses where equivalence can be demonstrated.
+5. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
+6. **Final bootstrap/cache serial audit:** look for redundant restores/discovery/setup and small overlap opportunities; stop if savings are noise-sized.
+7. **Reserved/larger runner rehearsal:** apply the already-proven Node/coverage partitions and internal deep overlap on at least 16 logical CPUs.
+8. **Bounded p50/p90 window:** declare success only from comparable full-impact runs meeting the stop conditions below.
 
-Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence.
+Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence. Negative experiments stay documented so later agents do not repeat them.
 
 ## Stop conditions
 
