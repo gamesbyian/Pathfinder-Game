@@ -1426,6 +1426,24 @@
           "scripts/validation-groups.json"
         ],
         "finding": "Diagnostics already uploads full/partial artifacts under if: always(), but inventory/test retained a false partialFailureUpload exemption. Reconciled current truth, removed the exception, and bound the mechanical workflow guards to all dynamically scanned scoped-CI inputs."
+      },
+      {
+        "id": "HPA-028",
+        "kind": "workflow-trigger-metadata-misclassified-as-execution",
+        "paths": [
+          "scripts/hint-ingestion-workflow-completeness-node-test.mjs",
+          ".github/workflows/solver-evidence-integrity-guard.yml"
+        ],
+        "finding": "Operational Hint-ingestion candidate discovery searched whole workflow YAML, so pull_request.paths references to publisher scripts could falsely classify validation workflows as evidence producers. Candidate derivation now inspects executable run blocks only."
+      },
+      {
+        "id": "HPA-029",
+        "kind": "writer-review-disposition-not-enforced",
+        "paths": [
+          "scripts/hint-provenance-surface-audit.mjs",
+          "docs/hint-physical-writer-audit.json"
+        ],
+        "finding": "Physical-writer review entries were checked for presence/staleness but not against the semantics claimed by their disposition. Writer dispositions now enforce shared codec/referee/merge boundaries and temporary-root isolation where applicable."
       }
     ]
   }
