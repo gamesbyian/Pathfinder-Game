@@ -351,7 +351,7 @@ if (ENFORCE) {
         failures.push(file + ': physical migration owner no longer visibly proves decode/encode semantic preservation');
       }
       if (entry.disposition === 'historical-compatibility-importer'
-          && (!/\bdecodeHintArtifact\b/u.test(source)
+          && (!/\b(?:decodeHintArtifact|parseHintFileContents)\b/u.test(source)
               || !/\bmergeHints\b/u.test(source)
               || !/\bvalidateCandidatePath\b/u.test(source))) {
         failures.push(file + ': compatibility importer no longer visibly decodes, referee-validates and semantically merges');
