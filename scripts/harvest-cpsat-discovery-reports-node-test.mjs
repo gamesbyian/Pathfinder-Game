@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -52,10 +52,10 @@ try {
 // sharing one level id let one test's write and restore race the other's -- caught for real when
 // test:node ran under full parallelism and produced `got entries: [null,null,null]` nondeterministically.
 {
-    const { readLevelCorpusDocumentWithHints } = await import('./level-data-io.mjs');
+    const { readLevelCorpusDocumentWithHints, hintFilePathFor } = await import('./level-data-io.mjs');
 
-    const corpusPath = path.join(ROOT, 'data', 'levels.json');
-    const document = readLevelCorpusDocumentWithHints(corpusPath);
+    const publishedCorpusPath = path.join(ROOT, 'data', 'levels.json');
+    const document = readLevelCorpusDocumentWithHints(publishedCorpusPath);
     const level = document.levels.find(l => l.id === 'P00002');
     assert.ok(level, 'fixture requires the real published corpus to still carry level P00002');
     const knownHint = level.hintRecords.find(h => h.provenance?.some(p => typeof p?.context?.levelRevision === 'string' && p.context.levelRevision.length > 0));
@@ -65,8 +65,16 @@ try {
 
     const realTemp = mkdtempSync(path.join(tmpdir(), 'pathfinder-cpsat-real-row-'));
     const realReceiptPath = path.join(realTemp, 'receipt.json');
-    const p00002HintPath = path.join(ROOT, 'data', 'hints', 'P00002.json');
-    const originalP00002Hints = readFileSync(p00002HintPath, 'utf8');
+    // Preserve the real published level/hint semantics while keeping this contract hermetic. The
+    // old version rewrote tracked data/hints/P00002.json and forced the adapter to load the entire
+    // published corpus. A private one-level corpus proves the same referee/merge boundary without
+    // racing other Node contracts or paying full-corpus fixture cost.
+    const corpusPath = path.join(realTemp, 'levels.json');
+    const { hints: _hints, hintRecords: _hintRecords, ...rawLevel } = level;
+    writeFileSync(corpusPath, JSON.stringify([rawLevel], null, 2) + '\n');
+    const isolatedHintPath = hintFilePathFor(corpusPath, 'P00002');
+    mkdirSync(path.dirname(isolatedHintPath), { recursive: true });
+    writeFileSync(isolatedHintPath, readFileSync(path.join(ROOT, 'data', 'hints', 'P00002.json'), 'utf8'));
     try {
         const reportPath = path.join(realTemp, 'discovery-report.json');
         writeFileSync(reportPath, JSON.stringify({
@@ -93,6 +101,7 @@ try {
         const realRun = spawnSync(process.execPath, [
             HARVEST_BUNDLE,
             `--staging-dir=${realTemp}`,
+            `--published-corpus=${corpusPath}`,
             '--source-run-id=fixture-real-row-run',
             '--source-run-attempt=1',
             '--source-workflow=cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)',
@@ -114,7 +123,6 @@ try {
         assert.equal(newEntry.occurrences?.[0]?.runId, 'fixture-real-row-run');
         assert.equal(newEntry.occurrences?.[0]?.observedAt, '2026-09-24T00:00:00.000Z');
     } finally {
-        writeFileSync(p00002HintPath, originalP00002Hints);
         rmSync(realTemp, { recursive: true, force: true });
     }
 }
