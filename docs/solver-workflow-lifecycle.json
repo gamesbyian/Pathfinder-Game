@@ -23,6 +23,13 @@
       "retirementTrigger": "retire when bounded-concurrency policy is settled and this manual benchmark no longer adds decision value"
     },
     {
+      "workflow": "ci-node-contract-shards.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "reusable two-runner Node/CLI contract execution lane called by ci.yml",
+      "retirementTrigger": "retire only when Node/CLI execution is repacked into an equivalent maintained CI lane"
+    },
+    {
       "workflow": "ci-scoped-dry-run.yml",
       "role": "operational",
       "status": "maintained",
