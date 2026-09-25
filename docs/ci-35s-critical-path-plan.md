@@ -141,7 +141,11 @@ Corrected Node-22 benchmark run **36090943731** now provides the current machine
 | `test:portfolio-solve-sweep-worker` | **3.70 s** |
 | `test:harvest-cpsat-discovery-reports` | **3.30 s** |
 
-This is now the primary Node software target. The top three independently derive overlapping read-only research graph/inventory state from the same repository snapshot. Investigate shared derivation/composite-contract seams before touching the sub-4-second tail.
+This is now the primary Node software target. Audit showed that all three dominant contracts also pay for real Git-ref reconstruction: query and system-query assert HEAD snapshot parity, while queryability benchmark QB-010 performs a temporal-change query against HEAD. Simply combining the tests would serialize currently overlapping work and risk increasing wall time.
+
+#2109 therefore attacks the common Git-ref cost first without weakening the integration boundary. `withDetachedGitWorktree()` now supports optional cone-mode sparse materialization; research query/system snapshots request the complete research surfaces they consume (`docs`, `reports`, `scripts`, `modules`, `.github/workflows`, and `data/stress`) while excluding unrelated bulk such as `data/families` and canonical Hint stores. The snapshot builders still execute against a real detached requested ref. A tiny dedicated Git fixture asserts that requested directories and root files materialize, excluded directories do not, and the detached HEAD matches the requested ref.
+
+Decision gate: keep the sparse path only if all existing real-repository HEAD parity/queryability assertions stay green and the corrected Node-22 benchmark shows a repeatable reduction in the top-three contracts or total direct wall. If not, revert it rather than adding broader shared-fixture coupling.
 
 ### Covered Vitest
 
