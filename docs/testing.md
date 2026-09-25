@@ -83,7 +83,20 @@ Do not mark a test deep merely because it is slow. Stub search when assertions o
 
 A deep test can prove a specific invariant over its fixtures. It does not make a selected heuristic treatment statistically independent or generally effective.
 
-### Historical level witnesses
+### ### Closed default-OFF solver prototypes
+
+A closed/default-OFF research mechanism does not acquire a permanent right to expensive enabled-path PR integration merely because its implementation remains retained for diagnostics, counterfactuals, or future archaeology.
+
+Ordinary CI should retain the smallest contracts that protect production software:
+
+- default-off/omitted behavior must remain inert;
+- production dispatch must not accidentally enable the prototype;
+- pure helper/operator correctness and soundness tests remain ordinary software tests;
+- any production-enabled descendant keeps its own integration coverage.
+
+Long enabled-path searches whose purpose is to reconfirm a closed research mechanism belong in an explicit characterization command unless their failure would demonstrate a concrete production correctness defect. Current repair-search examples live under `test:repair-prototype-characterizations`.
+
+Historical level witnesses
 
 A production/stress level may document where a regression was discovered, but ordinary correctness CI should prefer the smallest synthetic or distilled witness that exercises the implementation invariant. Do not make “this historical level still solves” a permanent correctness contract merely because it was once solved in research.
 
