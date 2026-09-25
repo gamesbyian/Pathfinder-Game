@@ -86,7 +86,7 @@ function writeSummary(result, plan, execution) {
     `**Fast lane:** ${execution.jobs['fast-gate']?.required ? 'required' : 'skip candidate'}`,
     `**Deep lane:** ${execution.jobs['deep-verification']?.required ? 'required' : 'skip candidate'}`,
     packageLine,
-    'This is shadow-only. The existing full CI gate remains authoritative and no validation is skipped.',
+    'The separate impact job records this plan as evidence; Fast Gate independently computes the same plan locally for semantic validator/Node-test selection and fails safe to the full aggregates if routing fails.',
     '',
     ...(rows.length ? ['| Changed path | Ownership rule | Surfaces |', '|---|---|---|', ...rows] : []),
     '',
