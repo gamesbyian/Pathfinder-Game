@@ -583,7 +583,21 @@ as the hostile audit: all workflows, Hint/provenance docs and reports, lifecycle
 authorities, source/modules/data and package scripts. A skipped closeout can no longer masquerade as
 same-head closure merely because the changed authority fell outside an obsolete path filter.
 
-## Exact-head validation fallout during Findings 25-40
+### 41. Dedicated hostile/closeout workflows did not invalidate on all machine authorities
+
+The dedicated hostile audit already watched broad Hint/provenance source changes, but it did not trigger
+on the workflow lifecycle authority even though the central persistence guard derives its maintained
+workflow population from that file. Likewise, solver request semantics and dependency-lock changes can
+alter execution-identity or runtime validation behavior without matching the old Hint/provenance name
+patterns.
+
+**Correction:** hostile and closeout workflow path filters now explicitly include workflow lifecycle,
+schema-contraction and solver-request-semantics authorities plus the dependency lockfile. The closeout
+canary's broader workflow/control-plane trigger from Finding 40 is retained. Exact-head proof workflows
+now invalidate when their machine inputs change rather than only when files happen to contain "hint"
+or "provenance" in their path.
+
+## Exact-head validation fallout during Findings 25-41
 
 The first remote PR validation on head `06294be...` was valuable precisely because it did not stay
 green:
