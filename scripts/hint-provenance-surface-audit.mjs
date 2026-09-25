@@ -337,6 +337,32 @@ if (ENFORCE) {
       const entry = reviewedWriters.get(file);
       if (!entry) {
         failures.push(file + ': direct physical Hint writer has not been explicitly reviewed');
+        continue;
+      }
+      const source = sourceTexts.get(file) ?? '';
+      if (entry.disposition === 'physical-io-owner'
+          && !/\b(?:encodeHintArtifact|stringifyHints)\b/u.test(source)) {
+        failures.push(file + ': physical I/O owner no longer delegates writes through the shared Hint encoder');
+      }
+      if (entry.disposition === 'physical-migration-owner'
+          && (!/\bdecodeHintArtifact\b/u.test(source)
+              || !/\bencodeHintArtifact\b/u.test(source)
+              || !/semantic/u.test(source))) {
+        failures.push(file + ': physical migration owner no longer visibly proves decode/encode semantic preservation');
+      }
+      if (entry.disposition === 'historical-compatibility-importer'
+          && (!/\bdecodeHintArtifact\b/u.test(source)
+              || !/\bmergeHints\b/u.test(source)
+              || !/\bvalidateCandidatePath\b/u.test(source))) {
+        failures.push(file + ': compatibility importer no longer visibly decodes, referee-validates and semantically merges');
+      }
+      if (entry.disposition === 'temporary-test-fixture-writer'
+          && !/\b(?:mkdtempSync|mkdtemp)\b/u.test(source)) {
+        failures.push(file + ': temporary fixture writer no longer creates an isolated temporary root');
+      }
+      if (entry.disposition === 'false-positive-audit-fixture'
+          && file !== 'scripts/hint-provenance-surface-audit.mjs') {
+        failures.push(file + ': false-positive audit-fixture disposition is reserved for the detector self-test');
       }
     }
     for (const file of reviewedWriters.keys()) {
