@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { projectRuntimeHintDirectory } from './scripts/runtime-hint-projection-lib.mjs';
+import { projectRuntimeHintDirectory, reconcileRuntimeHintDirectory } from './scripts/runtime-hint-projection-lib.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const fromRoot = (p: string) => fileURLToPath(new URL(p, import.meta.url));
@@ -65,12 +65,32 @@ async function runtimeHintProjection(
 
     const cacheDir = path.resolve(root, cacheRoot, cacheRelative);
     const manifestPath = path.join(cacheDir, '_projection-manifest.json');
-    if (existsSync(manifestPath)) {
-        await cp(cacheDir, output, { recursive: true });
-        return JSON.parse(readFileSync(manifestPath, 'utf8')) as RuntimeHintProjectionManifest;
+    const reconcile = process.env.PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE === '1';
+    let projection: RuntimeHintProjectionManifest;
+
+    if (existsSync(manifestPath) && reconcile) {
+        const planPath = path.resolve(root, cacheRoot, '_reconcile-plan.json');
+        const plan = existsSync(planPath)
+            ? JSON.parse(readFileSync(planPath, 'utf8')) as { changed: string[]; deleted: string[] }
+            : { changed: [], deleted: [] };
+        const prefix = `${sourceRelative}/`;
+        const changedFiles = plan.changed
+            .filter(file => file.startsWith(prefix))
+            .map(file => file.slice(prefix.length));
+        const deletedFiles = plan.deleted
+            .filter(file => file.startsWith(prefix))
+            .map(file => file.slice(prefix.length));
+        projection = reconcileRuntimeHintDirectory(
+            fromRoot(`./${sourceRelative}`),
+            cacheDir,
+            { changedFiles, deletedFiles },
+        );
+    } else if (existsSync(manifestPath)) {
+        projection = JSON.parse(readFileSync(manifestPath, 'utf8')) as RuntimeHintProjectionManifest;
+    } else {
+        projection = projectRuntimeHintDirectory(fromRoot(`./${sourceRelative}`), cacheDir);
     }
 
-    const projection = projectRuntimeHintDirectory(fromRoot(`./${sourceRelative}`), cacheDir);
     await cp(cacheDir, output, { recursive: true });
     return projection;
 }
