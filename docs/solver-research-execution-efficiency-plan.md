@@ -114,7 +114,7 @@ The research system now binds solver request, corpus/population and provenance i
 
 ### Exit
 
-- maintained scientific workflows in rehearsed producer families no longer float a major-only Node version; remaining maintained workflow exceptions are explicitly classified rather than silently floating;
+- maintained research workflows no longer float a major-only Node version. Rehearsed scientific producer workflows and deterministic helper/harvest/integrity workflows use exact Node 22.23.2; solver diagnostics is the explicit exact-20.20.2 exception because it still executes real solver analysis without a cross-major parity rehearsal;
 - runtime identity is inspectable in produced evidence;
 - migration evidence demonstrates no unexplained solved-set/config/provenance drift.
 
@@ -254,5 +254,6 @@ This plan is complete only when:
 4. **ACTIVATED:** run 36190221008 proved byte-identical semantics for exact Node 20.20.2 vs 22.23.2 across the primary level-blind and history-aware producers. The seven maintained workflows whose scientific execution uses `level-blind-capability-sweep.mjs` or `portfolio-solve-sweep.mjs` now pin exact Node **22.23.2** at every setup site. Helper/harvest/integrity workflows outside those rehearsed producer families are deliberately not swept into this activation merely for uniformity.
 5. **ACTIVATED:** run 36187498364 proved byte-identical full-tree vs sparse-tree semantics for the live targeted-sweep planner + one real level-blind canary. The production targeted planner now sparse-checks out package manifests, scripts, modules, the default Corpus-2 file, and runtime telemetry. Caller-selected `corpus` and `ids_file` remain authoritative: the planner materializes those exact blobs from the dispatched immutable commit with `git show`, so sparse activation does not narrow the workflow's input contract.
 6. **ACTIVATED FOR ONE SHORT ORCHESTRATOR:** the targeted-sweep plan job now restores the exact CI-proven `node_modules` generation keyed by runner OS/arch + Node 22.23.2 + npm 10.9.8 + lockfile hash, skips npm-cache restore/`npm ci` on a hit, and preserves `npm ci` plus exact-cache save on a miss. Historical short-orchestration evidence showed roughly a minute of checkout/runtime/install before useful planner/canary work; the next real targeted dispatch supplies production hit/miss economics without changing solver semantics.
-7. **NEXT:** inspect the first real targeted-sweep hit/miss timing, then extend exact dependency-tree reuse only to other short planner/generator/combine jobs where bootstrap remains material. Long solve shards stay measurement-gated.
-8. Do not bulk-optimize helper workflows or long solver shards before their own semantics/economics justify it.
+7. **DONE — runtime classification:** the remaining helper workflows are no longer major-only. Harvester, cross-run combine, and evidence-integrity guard pin 22.23.2 because their deterministic transforms are already covered by permanent CI contracts on that runtime; solver diagnostics pins exact 20.20.2 because it executes real solver analysis and has not earned the cross-major move.
+8. **NEXT:** inspect the first real targeted-sweep hit/miss timing, then extend exact dependency-tree reuse only to other short planner/generator/combine jobs where bootstrap remains material. Long solve shards stay measurement-gated.
+9. Do not bulk-optimize long solver shards before their own semantics/economics justify it.
