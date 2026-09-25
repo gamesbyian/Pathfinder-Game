@@ -21,12 +21,33 @@ function workflowText(workflow) {
     return readFileSync(path.join(root, '.github', 'workflows', workflow), 'utf8');
 }
 
+function workflowRunText(workflow) {
+    const lines = workflowText(workflow).split(/\r?\n/u);
+    const out = [];
+    for (let i = 0; i < lines.length; i += 1) {
+        const match = lines[i].match(/^(\s*)run:\s*(.*)$/u);
+        if (!match) continue;
+        const indent = match[1].length;
+        const inline = match[2].trim();
+        if (inline && inline !== '|' && inline !== '>-') out.push(inline);
+        if (inline !== '|' && inline !== '>-') continue;
+        for (i += 1; i < lines.length; i += 1) {
+            const line = lines[i];
+            if (!line.trim()) { out.push(line); continue; }
+            const childIndent = line.match(/^\s*/u)?.[0].length ?? 0;
+            if (childIndent <= indent) { i -= 1; break; }
+            out.push(line.trim());
+        }
+    }
+    return out.join('\n');
+}
+
 function isHintIngestionReviewCandidate(row) {
     if (row.role === 'evidence-producing') return true;
     // Some routine operational workflows still produce solver evidence rather than being classified
-    // as research campaigns. Standard solver-sweep publication is a mechanical signal that their
-    // ingestion disposition must also be reviewed rather than disappearing from the hand inventory.
-    return /\b(?:publish-solver-sweep-result\.mjs|sweep-publish\.mjs)\b/u.test(workflowText(row.workflow));
+    // as research campaigns. Only executable run blocks count: trigger path filters mentioning a
+    // publisher script are invalidation metadata, not evidence that the workflow publishes anything.
+    return /\b(?:publish-solver-sweep-result\.mjs|sweep-publish\.mjs)\b/u.test(workflowRunText(row.workflow));
 }
 
 const candidateRows = maintainedRows.filter(isHintIngestionReviewCandidate);
