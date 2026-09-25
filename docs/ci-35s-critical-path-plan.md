@@ -951,7 +951,12 @@ The diversification audit found repeated real-solver work being used for session
 
 This follows the testing doctrine already stated in `docs/testing.md`: stub search when the assertion is scheduling/routing/budget/provenance behavior rather than search capability. Do not count this as a speed win until exact-head coverage timings show the file and total lane actually fall.
 
-Next coverage target is `repair-search.test.ts`, where several deterministic/default-equivalence assertions currently execute 125k–250k node searches each. Audit those budgets/fixtures before changing them; the invariant is deterministic/equivalent behavior, not a particular amount of search work.
+Repair-search audit found two different budget classes and they must not be conflated:
+
+- enabled prototype determinism tests may need enough work to reach their actual mechanism (plateau/relink/turn mechanisms are stagnation-triggered at 6,000 restarts; beam seeding has its own 3,000-node prepass), so their 250k budget is not being cut without activation evidence;
+- explicit-`false` vs omitted-default equivalence tests cannot exercise the disabled mechanism by definition. Their 125k-node budget added no feature coverage, only repeated the same inert trajectory farther. Those tests now use **10k nodes**, still requiring equal nonzero canonical work in both arms.
+
+This is a same-proof-cheaper-work reduction, not an effectiveness/cadence change. Measure the file and coverage lane before considering enabled-path reductions.
 
 ## Current forward work order
 
