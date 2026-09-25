@@ -1511,6 +1511,15 @@
           ".github/workflows/hint-consolidation-closeout.yml"
         ],
         "finding": "The closeout canary path filter did not include all workflow/control-plane authorities that can change its Definition-of-Done claims. It now triggers on all workflows, Hint/provenance docs/reports, lifecycle/schema-contraction authorities, source/modules/data and package scripts."
+      },
+      {
+        "id": "HPA-037",
+        "kind": "dedicated-proof-workflow-invalidation-gap",
+        "paths": [
+          ".github/workflows/hint-provenance-hostile-audit.yml",
+          ".github/workflows/hint-consolidation-closeout.yml"
+        ],
+        "finding": "Dedicated hostile/closeout workflows did not invalidate on all machine authorities they depend on, including workflow lifecycle and solver-request semantics. Trigger surfaces now explicitly include lifecycle, schema-contraction, solver-request-semantics and dependency-lock authorities."
       }
     ]
   }
