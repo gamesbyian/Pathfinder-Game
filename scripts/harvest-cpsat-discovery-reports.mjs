@@ -49,6 +49,11 @@ const sourceRunAttempt = args.get('--source-run-attempt') || process.env.SOURCE_
 const sourceWorkflow = args.get('--source-workflow') || process.env.SOURCE_WORKFLOW || 'unknown';
 const ingestionReceiptArg = args.get('--ingestion-receipt-out');
 const ingestionReceiptOut = ingestionReceiptArg ? path.resolve(ingestionReceiptArg) : null;
+// Testability seam matching the diagnostics harvester's injectable corpus: production artifacts
+// still name the canonical data/levels.json corpus, while a contract test may point that logical
+// corpus at a private one-level copy instead of mutating/scanning the shared tracked Hint store.
+const publishedCorpusArg = args.get('--published-corpus');
+const publishedCorpusPath = publishedCorpusArg ? path.resolve(publishedCorpusArg) : null;
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const ALLOWED = new Set([
@@ -74,7 +79,9 @@ const states = new Map();
 function stateFor(corpusRel) {
     let state = states.get(corpusRel);
     if (state) return state;
-    const corpusPath = path.join(root, corpusRel);
+    const corpusPath = corpusRel === 'data/levels.json' && publishedCorpusPath
+        ? publishedCorpusPath
+        : path.join(root, corpusRel);
     const document = readLevelCorpusDocumentWithHints(corpusPath);
     const byId = new Map(document.levels.map((level, index) => [
         String(level.id ?? index + 1),
