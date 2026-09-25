@@ -150,6 +150,16 @@ If these gates pass, change the production-solver source rule to `solver` only a
 
 Treat this as the pilot for a general coarse-edge audit. Runtime data currently selects `data + game + solver + research`, and shared domain code selects `game + solver + research`. Those may be justified for some consumers, but the correct proof is contract invalidation, not an assumption that every contract in every downstream administrative surface must run.
 
+## Activated deep execution packing
+
+The execution plan now has three production lanes:
+
+- `fast-gate`: selected validators/Node contracts plus lint/build;
+- `deep-verification`: coverage only;
+- `deep-services`: hard-prune proofs and Firestore, concurrent when both are selected.
+
+This activation follows two clean independent Firestore samples (~22 s and ~18 s) and deliberately does **not** promote two-way coverage sharding, whose confirmation exceeded the 35 s threshold. The routing model exposes `deep_services_job_required` separately so scoped/manual rehearsal and production preserve the same capability ownership.
+
 ## Measurement and success criteria
 
 Track separately:
