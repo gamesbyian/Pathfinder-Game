@@ -160,6 +160,17 @@ The execution plan now has three production lanes:
 
 This activation follows two clean independent Firestore samples (~22 s and ~18 s) and deliberately does **not** promote two-way coverage sharding, whose confirmation exceeded the 35 s threshold. The routing model exposes `deep_services_job_required` separately so scoped/manual rehearsal and production preserve the same capability ownership.
 
+## Independent Node execution lane
+
+Production Node/CLI contracts now run in a two-entry `node-contracts` matrix instead of serializing inside Fast Gate. The split is expressed through existing validation ownership rather than a permanent timing profile:
+
+- shard A owns research/solver/game/persistence contracts;
+- shard B owns shared/data/repo contracts;
+- semantic surface selection happens first;
+- execution-owner filtering then assigns each selected contract to exactly one shard.
+
+A self-test requires the two shards to be disjoint and collectively exhaustive for the full Node authority. Planner failure requests every semantic surface and therefore reconstructs the full aggregate across the two shards.
+
 ## Measurement and success criteria
 
 Track separately:
