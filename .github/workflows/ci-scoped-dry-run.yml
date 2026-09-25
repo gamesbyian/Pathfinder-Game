@@ -29,6 +29,7 @@ jobs:
       needs_firestore: ${{ steps.plan.outputs.needs_firestore }}
       fast_job_required: ${{ steps.plan.outputs.fast_job_required }}
       deep_job_required: ${{ steps.plan.outputs.deep_job_required }}
+      deep_services_job_required: ${{ steps.plan.outputs.deep_services_job_required }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -217,51 +218,95 @@ jobs:
             /data/stress/stress-levels.json
             /data/stress/stress-levels-random.json
           sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22.23.2'
-          cache: npm
       - name: Derive exact dependency-tree cache key
         id: dependency-tree-key
         shell: bash
         run: |
-          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
       - name: Restore exact dependency tree
         id: dependency-tree-cache
         uses: actions/cache/restore@v5
         with:
           path: node_modules
           key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Set up Node on warm dependency-tree path
+        if: steps.dependency-tree-cache.outputs.cache-hit == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Set up Node with npm cache on dependency-tree miss
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
       - name: Install dependencies from the npm cache
-        id: install-dependencies
         if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
         run: npm ci --prefer-offline --no-audit --fund=false
-      - name: Save exact dependency tree after successful install
-        if: steps.dependency-tree-cache.outputs.cache-hit != 'true' && steps.install-dependencies.outcome == 'success'
-        uses: actions/cache/save@v5
-        with:
-          path: node_modules
-          key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Run covered ordinary test population
         id: coverage
-        if: needs.impact-shadow.outputs.needs_coverage == 'true'
         run: npm run test:coverage
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
+
+  deep-services:
+    needs: impact-shadow
+    if: needs.impact-shadow.outputs.deep_services_job_required == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.head_ref }}
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Set up Node on warm dependency-tree path
+        if: steps.dependency-tree-cache.outputs.cache-hit == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Set up Node with npm cache on dependency-tree miss
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install dependencies from the npm cache
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --fund=false
       - name: Restore Firebase CLI cache
         if: needs.impact-shadow.outputs.needs_firestore == 'true'
         uses: actions/cache/restore@v5
         with:
           path: ~/.npm/_npx
           key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
+      - name: Restore Firestore emulator binary
+        if: needs.impact-shadow.outputs.needs_firestore == 'true'
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
       - uses: actions/setup-java@v5
         if: needs.impact-shadow.outputs.needs_firestore == 'true'
         with:
           distribution: temurin
           java-version: '21'
       - name: Run selected deep services concurrently
-        if: needs.impact-shadow.outputs.needs_deep_proofs == 'true' || needs.impact-shadow.outputs.needs_firestore == 'true'
         id: deep_services
         shell: bash
         env:
@@ -279,39 +324,21 @@ jobs:
             proofs_pid=$!
           fi
           if [[ "$RUN_FIRESTORE" == "true" ]]; then
-            npx --yes firebase-tools@15.28.2 \
-              emulators:exec --only firestore \
-              --project demo-pathfinder-fingerprint-boundary \
-              "npm run test:firestore-level-fingerprint-boundary" \
-              > /tmp/pathfinder-firestore.log 2>&1 &
+            npx --yes firebase-tools@15.28.2               emulators:exec --only firestore               --project demo-pathfinder-fingerprint-boundary               "npm run test:firestore-level-fingerprint-boundary"               > /tmp/pathfinder-firestore.log 2>&1 &
             firestore_pid=$!
           fi
-
-          if [[ -n "$proofs_pid" ]]; then
-            wait "$proofs_pid"; proofs_status=$?
-          fi
-          if [[ -n "$firestore_pid" ]]; then
-            wait "$firestore_pid"; firestore_status=$?
-          fi
-
-          if [[ "$RUN_PROOFS" == "true" ]]; then
-            echo '=== heavyweight solver proofs ==='
-            cat /tmp/pathfinder-deep-proofs.log
-          fi
-          if [[ "$RUN_FIRESTORE" == "true" ]]; then
-            echo '=== Firestore persistence boundary ==='
-            cat /tmp/pathfinder-firestore.log
-          fi
-
-          if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
-            exit 1
-          fi
+          if [[ -n "$proofs_pid" ]]; then wait "$proofs_pid"; proofs_status=$?; fi
+          if [[ -n "$firestore_pid" ]]; then wait "$firestore_pid"; firestore_status=$?; fi
+          if [[ "$RUN_PROOFS" == "true" ]]; then cat /tmp/pathfinder-deep-proofs.log; fi
+          if [[ "$RUN_FIRESTORE" == "true" ]]; then cat /tmp/pathfinder-firestore.log; fi
+          if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then exit 1; fi
 
   ci-success:
     needs:
       - impact-shadow
       - fast-gate
       - deep-verification
+      - deep-services
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -321,10 +348,13 @@ jobs:
           ROUTE_RESULT: ${{ needs.impact-shadow.result }}
           FAST_RESULT: ${{ needs.fast-gate.result }}
           DEEP_RESULT: ${{ needs.deep-verification.result }}
+          SERVICES_RESULT: ${{ needs.deep-services.result }}
         run: |
           printf '%-18s %s\n' route "$ROUTE_RESULT"
           printf '%-18s %s\n' fast-gate "$FAST_RESULT"
           printf '%-18s %s\n' deep-verification "$DEEP_RESULT"
+          printf '%-18s %s\n' deep-services "$SERVICES_RESULT"
           [[ "$ROUTE_RESULT" == "success" ]]
           [[ "$FAST_RESULT" == "success" ]]
           [[ "$DEEP_RESULT" == "success" || "$DEEP_RESULT" == "skipped" ]]
+          [[ "$SERVICES_RESULT" == "success" || "$SERVICES_RESULT" == "skipped" ]]
