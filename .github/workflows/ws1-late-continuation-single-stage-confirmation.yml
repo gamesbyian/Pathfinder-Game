@@ -182,6 +182,28 @@ jobs:
           node scripts/combine-solver-sweep-reports.mjs             --in="$joined"             --expected-ids=artifact-staging/plan/tmp/ws1-late-continuation-single-001/ids.txt             --out=logs/ws1-late-continuation-single-001/combined.json
           node scripts/validate-solver-sweep-integrity.mjs             --expected-ids=artifact-staging/plan/tmp/ws1-late-continuation-single-001/ids.txt             --result=logs/ws1-late-continuation-single-001/combined.json             --integrity-out=logs/ws1-late-continuation-single-001/population-integrity.json
 
+      - name: Verify frozen producer/result contract
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p='logs/ws1-late-continuation-single-001/combined.json';
+          const d=JSON.parse(fs.readFileSync(p,'utf8'));
+          if (!Array.isArray(d.levels) || d.levels.length !== 160) throw new Error('combined result must contain exactly 160 rows');
+          if (d.summary?.schedulerMode !== 'production') throw new Error(`scheduler mode drifted: ${d.summary?.schedulerMode}`);
+          if (d.summary?.nodeBudget !== 50000000) throw new Error(`node budget drifted: ${d.summary?.nodeBudget}`);
+          if (d.summary?.workBudget !== 67000000) throw new Error(`work budget drifted: ${d.summary?.workBudget}`);
+          if (d.summary?.budgetMs !== 86400000) throw new Error(`wall safety deadline drifted: ${d.summary?.budgetMs}`);
+          const request=d.summary?.solverRequestProjection;
+          if (!request || request.scheduler?.mode !== 'production') throw new Error('canonical solver request is missing production scheduler identity');
+          if (request.resourceEnvelope?.nodeBudget !== 50000000) throw new Error('canonical request node budget drifted');
+          if (request.resourceEnvelope?.baseWorkBudget !== 67000000) throw new Error('canonical request work budget drifted');
+          if (request.resourceEnvelope?.timeBudgetMs !== 86400000) throw new Error('canonical request wall deadline drifted');
+          const solved=d.levels.filter(row=>row?.ok === true || row?.status === 'success' || row?.outcome === 'success');
+          const invalid=solved.filter(row=>row?.refereeValid !== true);
+          if (invalid.length) throw new Error(`${invalid.length} solved row(s) are not referee-valid: ${invalid.slice(0,8).map(row=>row.id ?? row.levelId ?? row.level).join(', ')}`);
+          NODE
+
       - name: Apply frozen model and preregistered verdict gates
         shell: bash
         run: |
