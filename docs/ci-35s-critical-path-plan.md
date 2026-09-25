@@ -1696,6 +1696,23 @@ This is not a deletion of evidence. Both workflows remain dispatchable. The purp
 
 The next exact-head full-impact sample is therefore the first clean production-only runner-allocation measurement after this correction.
 
+## Repository-wide hosted-runner headroom policy
+
+The production-only CI sample showed healthy per-lane software cost but also revealed a second source of runner starvation: long solver/research workflows historically defaulted to **20 concurrent shard jobs**.
+
+The active targeted sweep run 36193789016 demonstrated that this is real capacity, not merely a high configured ceiling: its first wave launched roughly 20 shard runners concurrently while PR CI remained queued.
+
+The repo now reserves hosted capacity by default:
+
+- high-fan-out solver/research workflows default to **15** concurrent shard jobs;
+- configurable workflows retain an explicit `max_parallel` override, so **20 remains available** when monopolizing the runner pool is intentional;
+- previously hard-coded 20-lane workflows now expose `max_parallel` with default 15;
+- shard count, worker count, solver budgets, selected populations, and evidence semantics are unchanged.
+
+The operational rationale is simple: production full-impact CI currently requires five independent runners. A 15-lane solver default plus five CI lanes fits the observed 20-runner hosted footprint, whereas a 20-lane solver default can make PR latency unbounded regardless of how fast each CI job becomes.
+
+This is a scheduling/default change, not a scientific treatment. Node/work-bounded solver evidence is unchanged; only calendar throughput differs. If a decision-bearing workflow has wall-bound semantics, its existing per-shard timeout/evidence rules remain authoritative.
+
 ## Current forward work order
 
 1. **Validate the reconciled packed topology:** require exact-head green CI/oracles after the #2118 merge-forward and parity/scoped-rehearsal repair; use that head as the new comparable timing baseline.
