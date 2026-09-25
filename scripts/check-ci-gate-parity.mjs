@@ -81,6 +81,16 @@ if (!nodeShardWorkflow.includes('node scripts/validation-groups.mjs nodeTests $g
 if (!nodeShardWorkflow.includes('groups="repo game persistence solver research data shared"')) {
   errors.push('Node shard workflow no longer fails safe across every semantic group when routing fails');
 }
+if (!workflow.includes('runtime-hint-projection-v2-')) {
+  errors.push('ci.yml no longer uses the rolling runtime-Hint projection cache generation');
+}
+if (!workflow.includes('restore-keys:') || !workflow.includes('steps.runtime-hint-projection-key.outputs.authority_key')) {
+  errors.push('ci.yml no longer scopes runtime-Hint fallback caches to projection authority');
+}
+if (!workflow.includes('PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE')) {
+  errors.push('ci.yml no longer enables runtime-Hint incremental reconcile on fallback cache hits');
+}
+
 if (!workflow.includes('uses: ./.github/workflows/ci-node-contract-shards.yml')) {
   errors.push('ci.yml no longer invokes the reusable Node contract shard workflow');
 }
