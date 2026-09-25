@@ -788,13 +788,15 @@ After the solver edge, inspect the same pattern for runtime data and shared-doma
 
 ## Current forward work order
 
-1. **Fresh Node/CLI census:** use the machine-readable benchmark profiles and pursue structural testability wins in descending child-cost order.
-2. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
-3. **Proof witness audit:** R02560-disabled cadence is corrected; next inspect the two exhaustive deadlock roots for equivalent cheaper proof machinery or smaller exhaustive fixtures without weakening soundness.
-4. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
-5. **Final bootstrap/cache serial audit:** look for redundant restores/discovery/setup and small overlap opportunities; stop if savings are noise-sized.
-6. **Reserved/larger runner rehearsal:** apply the already-proven Node/coverage partitions on at least 16 logical CPUs and re-test deep internal overlap with the larger CPU budget.
-7. **Bounded p50/p90 window:** declare success only from comparable full-impact runs meeting the stop conditions below.
+1. **Validate the newly activated semantic Fast Gate:** require green exact-head full-impact evidence plus representative scoped evidence for validator/Node selection and conditional build; verify router failure still falls back broad.
+2. **Close the solver→research coarse-edge discriminator:** consume `solverImplementationConsumers`, inspect non-import dependencies, encode genuine downstream solver consumers explicitly, replay #1722/fault injection, and only then consider changing the production-solver rule from `solver + research` to `solver`.
+3. **Refresh the selected-population timing census:** regenerate Node/CLI timings after routing/cadence removals and rank by selected critical-path burden, not the obsolete universal population.
+4. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
+5. **Proof witness audit:** both R02560 arms are now characterization-only; inspect the two exhaustive deadlock roots for equivalent cheaper proof machinery or smaller exhaustive fixtures without weakening soundness.
+6. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
+7. **Final bootstrap/cache serial audit:** look for redundant restores/discovery/setup and small overlap opportunities; stop if savings are noise-sized.
+8. **Reserved/larger runner rehearsal:** apply the already-proven Node/coverage partitions on at least 16 logical CPUs and re-test deep internal overlap with the larger CPU budget if the still-justified full contract requires it.
+9. **Bounded p50/p90 window:** declare success only from comparable full-impact runs meeting the stop conditions below.
 
 Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence. Negative experiments stay documented so later agents do not repeat them.
 
