@@ -1002,6 +1002,36 @@ Three concrete defects were exposed and repaired:
 
 The reusable shard workflow is registered in the workflow lifecycle inventory and README. Do not grandfather the old oversized `ci.yml`; the extraction is the intended structural fix.
 
+## Runtime-data cold-path redesign
+
+Green CI run **36116857362** validated the Node-shard semantics but exposed a cache-authority critical-path problem:
+
+- Node shard useful work remained healthy at roughly **16–17 s**;
+- coverage Vitest remained roughly **25.2 s**;
+- but a new main-base Hint commit changed only `data/stress/hints-random/R03312.json`;
+- the monolithic runtime-data key changed, so Node A, Node B, coverage, and Fast Gate all missed the exact cache;
+- the old fallback materialized the full runtime-data tree through a second `actions/checkout`, adding roughly **10–20 s** per affected lane.
+
+The new runtime-data cache model is a **single rolling exact cache with Git-blob manifest overlay**:
+
+1. derive an exact key from the sorted blob IDs of every runtime-data file;
+2. restore the exact cache when available;
+3. otherwise restore the newest prior `runtime-data-v2-` cache through `restore-keys`;
+4. compare its cached path→blob manifest with current HEAD;
+5. materialize only changed/added blobs with `git show HEAD:path`, delete removed paths, and preserve all unchanged cached files;
+6. on a true empty cache, expand the existing sparse checkout once rather than launching a second checkout action;
+7. save the reconciled tree under the exact new key.
+
+This preserves one cache restore on the warm path. It deliberately replaces the six-component experiment before measurement because six serialized `actions/cache` restores risked increasing every warm run.
+
+The shared local action `.github/actions/runtime-data/action.yml` now owns this behavior for Fast Gate, coverage, Node shards, scoped rehearsal, and default-branch cache seeding. `scripts/ci-runtime-data-cache-node-test.mjs` owns the one-file-overlay regression.
+
+Decision gate:
+- exact-hit warm path must remain comparable to the old one-cache restore;
+- stale-cache one-file Hint churn must avoid a second checkout and materialize only the changed blob;
+- true empty-cache fallback must remain semantically complete;
+- if restore-key lookup or manifest reconciliation adds material warm-path cost, revert rather than preserving architectural complexity.
+
 ## Current forward work order
 
 1. **Validate the three-lane production packing:** require green exact-head full-impact evidence for Fast Gate, coverage-only deep-verification, and deep-services; record first-runner→last-required completion and each lane wall.
