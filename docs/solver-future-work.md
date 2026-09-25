@@ -28,7 +28,7 @@ Deferred/reopen only. [Workstreams](solver-optimization-workstreams.md) owns act
 
 ## Hint/failure hooks
 
-Use compact response first; never backfill pre-contract attempts. Try cheap joins before exact/search-loss work. Rich producer -> P8; explicit first-loss -> P9. Sampled hints cannot prove whole-space extinction.
+Use compact response first; never backfill pre-contract attempts. Try cheap joins before exact/search-loss work. Canonical Hint evidence now exposes semantic discovery events, physical occurrence lineage, source-run/execution identity, reconstructability status, and ingestion receipts through the consolidated evidence surfaces; use those before inventing another Hint/provenance sidecar or persistence path. Rich producer -> P8; explicit first-loss -> P9. Sampled hints cannot prove whole-space extinction.
 
 ## Deferred architectural questions
 
