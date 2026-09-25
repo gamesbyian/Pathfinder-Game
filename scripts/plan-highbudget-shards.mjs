@@ -118,12 +118,11 @@ export function classifyTelemetry(id, { telemetryById, nodeBudget: requestedNode
     return { tier: 'confident', rawMs };
 }
 
-function main() {
-    const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
+export function planHighbudgetShards(argv = process.argv.slice(2), { root = process.cwd() } = {}) {
+    const args = new Map(argv.filter(a => a.startsWith('--')).map(a => {
         const [k, ...v] = a.split('=');
         return [k, v.join('=')];
     }));
-    const root = process.cwd();
     const req = (name) => {
         const v = args.get(name);
         if (!v) { console.error(`Missing required ${name}`); process.exit(2); }
@@ -369,5 +368,5 @@ function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-    main();
+    planHighbudgetShards();
 }
