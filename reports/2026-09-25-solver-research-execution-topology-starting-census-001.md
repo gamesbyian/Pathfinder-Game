@@ -1,9 +1,9 @@
 # Research workflow execution-topology starting census — 2026-09-25
 
 > **Status:** active
-> **Last evidence:** 2026-09-25 — hosted full-vs-sparse targeted-planner rehearsal run 36187498364 plus September-22 bootstrap timing sample.
-> **Decision:** targeted-planner sparse input contract is earned; exact runtime remains under rehearsal; do not blanket-optimize long solve shards.
-> **Remaining gate:** exact-runtime parity, then transplant the earned sparse boundary into short orchestration and measure exact dependency-tree reuse.
+> **Last evidence:** 2026-09-25 — exact-runtime parity run 36190221008 and full-vs-sparse targeted-planner rehearsal runs 36187498364 / 36190221143.
+> **Decision:** targeted-planner sparse input contract and exact Node 22.23.2 semantic parity are earned; do not blanket-optimize long solve shards.
+> **Remaining gate:** pin the earned exact research runtime and transplant the earned sparse boundary into short orchestration, then measure exact dependency-tree reuse.
 
 ## Purpose
 
@@ -126,3 +126,9 @@ PR rehearsal run `36187498364` compared the live targeted-sweep planner plus one
 - the sparse contract explicitly retains `data/stress/stress-levels-random.json` and `logs/solver-stress-refresh/corpus2-runtime-telemetry.json`; dropping the telemetry would silently change planning economics and is therefore not an allowed optimization.
 
 Decision: **sparse materialization is earned for this targeted planner/canary boundary.** Production activation should preserve the declared input set and full-tree correctness fallback/rehearsal rather than generalizing immediately to unrelated solve jobs.
+
+## Hosted exact-runtime result
+
+Run `36190221008` compared exact **Node 20.20.2** with CI-proven **Node 22.23.2** after fixing the rehearsal's explicit level-selector contract. Both arms successfully ran the real bundled level-blind and history-aware portfolio producers. After removing only the intentionally different runtime identity field, the semantic fingerprints were byte-identical.
+
+Decision: **Node 22.23.2 is semantically cleared as the candidate exact research runtime for these primary producers.** Production research workflow pinning remains an activation step, not something inferred from a major-version selector.
