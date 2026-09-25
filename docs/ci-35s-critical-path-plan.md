@@ -29,7 +29,7 @@ The target does not authorize removing the current full-impact obligations:
 - validator population;
 - lint;
 - full Node/CLI contract population;
-- solver capability canary;
+- production-relevant solver correctness contracts and semantic routing/fault-injection oracles;
 - production build;
 - covered ordinary Vitest population and coverage thresholds;
 - heavyweight solver proofs;
@@ -1059,7 +1059,7 @@ They now execute as permanent Node contracts:
 - `test:solver-parallel-contract`, solver-owned with explicit `solver + research` invalidation;
 - `test:eslint-rules-contract`, repo-owned.
 
-They remain in ordinary local/main unit runs, but are excluded from the covered PR invocation to avoid serially exercising the same executable/tooling contracts in both coverage and Node lanes. Coverage thresholds and instrumented source scope are unchanged.
+They remain explicit permanent Node contracts (and therefore still run on main through `test:node`), but are excluded from the default covered/unit Vitest config to avoid serially exercising the same executable/tooling contracts in both coverage and Node lanes. Coverage thresholds and instrumented source scope are unchanged.
 
 Decision gate: keep this move only if the exact-head coverage thresholds remain green and the coverage runner wall drops materially below 35 s without pushing either Node shard beyond the target.
 
@@ -1097,16 +1097,23 @@ Preregistered interpretation:
 5. do not tune shard membership after a miss unless measured imbalance, rather than runner/bootstrap variance, is the cause;
 6. remove the temporary planner/rehearsal/threshold seam immediately after the decision is recorded.
 
+
+**First D2d attempt — run 36178419057:** semantically green but methodologically invalid. The timing seed contained only the heavy measured files, while unmeasured files were assigned zero cost; greedy packing therefore produced a 134/10 file split. The merged report reproduced the full unchanged thresholds, proving the blob/merge path, but the ~64 s coordinator wall is not decision evidence. The planner was repaired to assign a small nonzero scheduling weight to unmeasured files.
+
+**Corrected D2d — run 36178559153:** both shards and the merged report were green. The live population was 144 files, balanced to **70/74 files** with predicted weighted work **11.921/11.902 s**. Merged thresholds reproduced the production result (87.76% statements, 80.48% branches, 94.05% functions, 92.79% lines). Despite that balanced population, worker start→completion was **~43.6 s** and coordinator start→merged authoritative thresholds was **~44.9 s**.
+
+**Decision: D2d closes negative again on standard shared-hosted runners.** The current workload premise changed materially and the shard semantics are sound, but shared-runner useful-work/CPU variance still overwhelms the theoretical split. Do not tune membership further. The temporary planner, shard jobs, and threshold seam were removed immediately after the decision.
+
 ## Current forward work order
 
-1. **Resolve the final coverage tail:** D2d is the only active topology experiment. Decide it against the preregistered ≤30 / 30–35 / >35 s thresholds, then remove its temporary scaffolding.
+1. **Reduce the remaining single-runner coverage work:** D2d is closed negative. Audit the remaining expensive covered solver tests for obsolete/default-off research-prototype obligations and same-proof-cheaper activation witnesses before any further topology change.
 2. **Validate the implemented solver→research narrowing:** fault injection, historical #1722-equivalent route oracle, and solver-scoped timing must pass before calling the 59-consumer explicit routing settled.
 3. **Refresh the selected-population timing census:** regenerate Node/CLI timings after routing/cadence removals and rank by selected critical-path burden, not the obsolete universal population.
 4. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
 5. **Proof witness audit:** both R02560 arms are now characterization-only; inspect the two exhaustive deadlock roots for equivalent cheaper proof machinery or smaller exhaustive fixtures without weakening soundness.
 6. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
 7. **Validate warm bootstrap topology:** measure setup-node and first-validation start after the cache-first dependency-tree change; keep only if warm-path wall improves without harming cold fallback. Then audit remaining serial restores/discovery.
-8. **Reserved/larger runner rehearsal:** apply the already-proven Node/coverage partitions on at least 16 logical CPUs and re-test deep internal overlap with the larger CPU budget if the still-justified full contract requires it.
+8. **Reserved/larger runner rehearsal:** if remaining software/testability work cannot create reliable margin on shared runners, apply the semantically proven Node/coverage partitions on at least 16 logical CPUs and re-test there. D2d confirms this is now a variance/capacity fallback, not an untested sharding idea.
 9. **Bounded p50/p90 window:** declare success only from comparable full-impact runs meeting the stop conditions below.
 
 Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence. Negative experiments stay documented so later agents do not repeat them.
