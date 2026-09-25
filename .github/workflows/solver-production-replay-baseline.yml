@@ -48,7 +48,7 @@ on:
       max_parallel:
         description: 'Shards running concurrently. Lower than `shards` on purpose: a short shard frees its lane immediately instead of idling, which is the whole reason for slicing this finely.'
         required: false
-        default: '20'
+        default: '15'
       corpus2_work_budget:
         description: 'Corpus-2: per-level WORK budget (26800000 = the work equivalent of the 8000ms refresh budget)'
         required: false
