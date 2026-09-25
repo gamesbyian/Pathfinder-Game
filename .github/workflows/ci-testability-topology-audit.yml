@@ -18,7 +18,6 @@ on:
 permissions:
   contents: read
   actions: read
-  actions: read
 
 jobs:
   full-deep-concurrency:
@@ -218,8 +217,10 @@ jobs:
             echo "::error::Timed out waiting for coverage worker artifact."
             exit 1
           fi
-          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" > /tmp/coverage-worker.zip
-          unzip -q /tmp/coverage-worker.zip -d tmp/coverage-blobs
+          gh run download "${GITHUB_RUN_ID}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name "${ARTIFACT_NAME}" \
+            --dir tmp/coverage-blobs
           echo "Merging coverage blobs from coordinator + worker."
           npx vitest --merge-reports=tmp/coverage-blobs --reporter=default --coverage
 
