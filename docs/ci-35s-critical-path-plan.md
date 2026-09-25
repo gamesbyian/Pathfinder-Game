@@ -890,6 +890,15 @@ Preregistered interpretation:
 
 This experiment is complementary to D2c. If two-way coverage and independent Firestore both fit comfortably under 35 s, the deep architecture can stop serializing unrelated obligations.
 
+A second benchmark-only lane, `firestore-boundary-direct-jar`, tests whether Firebase Tools is unnecessary on the hot path. Firebase Tools 15.28.2 launches the cached Firestore 1.22.0 emulator as Java with `--host`, `--port`, `--rules`, and `--project_id`; the repo's boundary needs only Firestore. The direct-JAR rehearsal therefore restores only the emulator cache, starts the **same cached JAR** with `firestore.rules` and the same demo project, exports `FIRESTORE_EMULATOR_HOST`, and runs the unchanged boundary test.
+
+Interpret direct-JAR evidence conservatively:
+
+- it must pass the unchanged production repository/emulator boundary test;
+- compare against the sibling Firebase-CLI independent lane from the same evidence window;
+- only promote if the semantic result is green and removing the 42 MB Firebase CLI cache materially reduces wall/startup time;
+- retain Firebase Tools for developer/general emulator workflows if it remains useful; this experiment concerns CI launch topology only.
+
 ## Current forward work order
 
 1. **Validate the newly activated semantic Fast Gate:** require green exact-head full-impact evidence plus representative scoped evidence for validator/Node selection and conditional build; verify router failure still falls back broad.
