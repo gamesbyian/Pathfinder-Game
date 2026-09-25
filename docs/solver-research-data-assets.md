@@ -41,7 +41,8 @@ Broad asset mining creates selection pressure; discoveries remain development ev
 | Published/stress levels | level × source/generator/selection | What population and selection process is this? |
 | Hint provenance | path discovery | Who/what found this path, under which context? |
 | Hint discovery process | run × parent × exact stored path | What failed/ran before this accepted path was found under a named experiment contract? |
-| Hint harvest selection | source run × harvest funnel | Which solved candidate rows entered, duplicated, or were quarantined from the hint store? |
+| Hint harvest selection | source run × level-blind harvest funnel | Historical/compatibility view of which solved candidate rows entered, duplicated, or were quarantined by the level-blind harvester. |
+| Hint ingestion receipts | source run × ingestion producer × semantic addition unit | Across canonical ingestion lanes, what was seen, accepted, already represented, added as path/event/occurrence evidence, or quarantined? |
 | Structural fingerprint | level structure | Is persisted evidence about the same revision? |
 | Solution profiles | level × provenance source × sample support | What do known sampled solutions look like? |
 | Technique census/capability map | level × technique/config | What isolated capability exists at measured dose? |
@@ -67,7 +68,7 @@ Generic exact/reference workflows are acquisition surfaces, not universal archiv
 
 ## High-value joins
 
-Use the smallest useful join: failure response × census/benchmarks, provenance × profiles/census, hint process × failure response/manifests, harvest selection × provenance/manifests, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units.
+Use the smallest useful join: failure response × census/benchmarks, provenance × profiles/census, hint process × failure response/manifests, ingestion receipts × provenance/manifests, legacy level-blind harvest selection × provenance/manifests when that historical funnel is specifically the question, exact labels × traces/prefix survival, and manifests × runs. Parent joins use parents as independent units.
 
 ### Four-resource lineage recipe
 
@@ -107,7 +108,7 @@ Variant siblings, generator batches, rediscoveries, and repeated level rows are 
 
 Declare the evidence purpose before consuming provenance: `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process`. Use shared applicability/dependency-stratum helpers rather than a local “trusted hint” predicate.
 
-A referee-valid path remains useful oracle/atlas evidence regardless of producer. Variant replay, witnesses, external/guided/isolated discoveries and old regimes can be valuable history while proving nothing about current cold capability. Missing legacy booleans remain unknown; age alone does not prove staleness; rediscovery-event count is not independent support. Technique performance requires the attempted population, failures, comparable `workSpent`, and protocol identity. Run-linked discovery-process evidence can recover pre-success failed attempts for exact stored paths without bloating Hint records; harvest-selection manifests explain how already-solved candidates entered the store but are not attempted-population denominators. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
+A referee-valid path remains useful oracle/atlas evidence regardless of producer. Variant replay, witnesses, external/guided/isolated discoveries and old regimes can be valuable history while proving nothing about current cold capability. Missing legacy booleans remain unknown; age alone does not prove staleness; rediscovery-event count is not independent support. Technique performance requires the attempted population, failures, comparable `workSpent`, and protocol identity. Run-linked discovery-process evidence can recover pre-success failed attempts for exact stored paths without bloating Hint records. Canonical ingestion receipts explain cross-harvester success-ingestion outcomes and distinguish path, semantic-event and physical-occurrence additions where observed. The older level-blind harvest-selection manifests remain a producer-specific compatibility view. Neither receipt family is an attempted-population denominator. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 ### Freshness and reuse are evidence-specific
 
