@@ -252,5 +252,6 @@ This plan is complete only when:
 2. **DONE:** produce the current starting census and add hosted September-22 bootstrap timing evidence.
 3. **DONE:** reconcile and compact the solver queue with this supporting program and post-September-22 architecture.
 4. **IN PROGRESS:** exact runtime identity. Primary level-blind and history-aware producers now emit actual runtime identity; a manual Node 20.20.2 vs 22.23.2 semantic-parity rehearsal workflow is registered.
-5. Next: run/reconcile the exact-runtime rehearsal, then derive sparse/full-input parity for short planner/canary/combine jobs, then exact dependency-tree reuse. Long solve shards stay measurement-gated.
+5. **REHEARSAL READY:** full-tree vs sparse-tree parity for the live targeted-sweep planner + one real level-blind canary. The sparse declaration includes package manifests, source scripts/modules, the exact default Corpus-2 file, and the planner's exact runtime telemetry; hidden dependencies should fail the sparse arm.
+6. Next: execute/reconcile both manual rehearsals, then activate only the earned exact-runtime/input changes and measure exact dependency-tree reuse. Long solve shards stay measurement-gated.
 6. Do not bulk-edit every workflow before representative parity evidence.
