@@ -151,6 +151,12 @@ The exact-pattern implementation produced a much larger speedup on run **3609369
 
 The parity diff localized the omission to `sharedFailureModes`, whose dependency closure follows local imports from research package-script entrypoints into `modules/`. The file-pattern system snapshot had retained package/scripts/workflows but omitted modules. #2109 now restores only `/modules/` to the system snapshot pattern; query/queryability remain on the narrower payload. A green exact-head parity run is required before calling the optimization complete.
 
+Post-snapshot timing now exposes the next Node/CLI tail clearly. On the same benchmark population, dominant medians moved to roughly **5.3 s** `test:harvest-cpsat-discovery-reports`, **4.6 s** `test:run-solver-direct-cli`, **4.4 s** `test:hint-workbench`, **4.4 s** `test:combine-solver-sweep-reports`, **4.3 s** `test:harvest-solver-diagnostics-reports`, and **4.1 s** `test:portfolio-solve-sweep-worker`.
+
+Three of those tails exposed a trivial repeated-bundling tax. `run-bundled.mjs` already exports `buildBundle()` specifically for callers that spawn the same entry multiple times. #2109 now uses that intended seam in the CP-SAT harvester, direct-solver CLI, and diagnostics-harvester Node contracts so each entry is bundled once and reused across its real CLI cases. This preserves executable integration coverage while removing redundant esbuild work.
+
+The sweep-combiner contract is a different class: its ~4.4 s test launches **22 Node subprocesses** (14 combiner, 8 planner) across a 930-line semantic suite. That is a promising process-topology target, but extracting a callable semantic seam is a larger refactor because later cases intentionally assert planner/recovery CLI stdout. Treat it as the next structural Node candidate after the sparse snapshot and bundle-reuse changes are measured green; do not collapse CLI boundaries blindly.
+
 Decision gate: keep the sparse path only if all existing real-repository HEAD parity/queryability assertions stay green and the corrected Node-22 benchmark shows a repeatable reduction in the top-three contracts or total direct wall. If not, revert it rather than adding broader shared-fixture coupling.
 
 ### Covered Vitest
