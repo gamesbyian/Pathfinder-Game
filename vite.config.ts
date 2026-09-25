@@ -120,7 +120,11 @@ function copyRuntimeAssets(): Plugin {
             // Corpus 2's sibling hints dir (see modules/dev-corpus.ts / level-data-io.mjs's
             // hintsDirFor) -- generated only if present, since it may be empty/unseeded.
             let randomProjection = null;
-            if (existsSync(fromRoot('./data/stress/hints-random'))) {
+            const runtimeHintCacheRoot = process.env.PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT;
+            const randomProjectionCached = runtimeHintCacheRoot
+                ? existsSync(path.resolve(root, runtimeHintCacheRoot, 'data/stress/hints-random', '_projection-manifest.json'))
+                : false;
+            if (existsSync(fromRoot('./data/stress/hints-random')) || randomProjectionCached) {
                 randomProjection = await runtimeHintProjection(
                     'data/stress/hints-random',
                     'data/stress/hints-random',
