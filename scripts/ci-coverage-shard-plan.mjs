@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 
+// The current log parser captures the materially slow files, not every sub-100ms file.
+// Give unmeasured files a small nonzero scheduling weight so process/import overhead is
+// distributed rather than silently piling every "zero" file onto one shard.
+const UNMEASURED_SECONDS = 0.02;
+
 const measured = new Map([
   ['modules/solver/repair-search.test.ts', 5.460],
   ['modules/solver/diversification.test.ts', 2.845],
@@ -50,18 +55,19 @@ const bins = [
   { seconds: 0, files: [] },
 ];
 for (const file of [...files].sort((a, b) =>
-  (measured.get(b) ?? 0) - (measured.get(a) ?? 0) || a.localeCompare(b))) {
+  (measured.get(b) ?? UNMEASURED_SECONDS) - (measured.get(a) ?? UNMEASURED_SECONDS) || a.localeCompare(b))) {
   bins.sort((a, b) => a.seconds - b.seconds || a.files.length - b.files.length);
   bins[0].files.push(file);
-  bins[0].seconds += measured.get(file) ?? 0;
+  bins[0].seconds += measured.get(file) ?? UNMEASURED_SECONDS;
 }
 const chosen = bins[shard - 1];
 console.error(JSON.stringify({
   shard,
   files: chosen.files.length,
   totalFiles: files.length,
-  predictedMeasuredSeconds: +chosen.seconds.toFixed(3),
+  predictedWeightedSeconds: +chosen.seconds.toFixed(3),
   unmeasuredFiles: files.filter(file => !measured.has(file)).length,
-  bothBins: bins.map(bin => ({ files: bin.files.length, predictedMeasuredSeconds: +bin.seconds.toFixed(3) })),
+  unmeasuredWeightSeconds: UNMEASURED_SECONDS,
+  bothBins: bins.map(bin => ({ files: bin.files.length, predictedWeightedSeconds: +bin.seconds.toFixed(3) })),
 }));
 for (const file of chosen.files) console.log(file);
