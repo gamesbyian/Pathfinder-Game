@@ -1145,17 +1145,43 @@ They remain executable through `npm run test:repair-prototype-characterizations`
 
 This is a cadence correction under the same principle as the R02560 audit: CI protects production correctness and default-off isolation; the research protocol owns repeated confirmation of closed mechanism behavior when that behavior is scientifically relevant.
 
+## First qualifying full-impact production sample
+
+Exact-head CI run **36179322147** is the first production sample to satisfy the hard full-impact wall target with the current protected contract:
+
+| lane | runner wall |
+| --- | ---: |
+| Fast Gate | **~20.3 s** |
+| Node shard A | **~30.4 s** |
+| Node shard B | **~30.4 s** |
+| coverage | **~33.0 s** |
+| deep services | **~33.6 s** |
+
+First required runner start → last required completion was **~34.2 s**.
+
+All required semantics were green in the same head:
+
+- CI;
+- CI testability topology audit;
+- CI semantic fault-injection audit;
+- solver evidence integrity guard.
+
+The repair-prototype cadence cut also behaved as intended:
+
+- `repair-search.test.ts` fell to ~2.6 s with seven closed/default-OFF prototype characterizations skipped;
+- production must-turn-biased repair remains PR-blocking;
+- the skipped prototype cases remain executable through `test:repair-prototype-characterizations` / `test:solver-effectiveness-characterizations`.
+
+**Interpretation:** this is a qualifying sample, not program completion. The stop condition requires a bounded comparable window with p50 ≤30 s and p90 ≤35 s. Do not resume broad optimization merely because one sample passed; use subsequent exact-head/full-impact runs to measure stability first. If the confirmation window fails because shared-runner variance alone pushes otherwise healthy lanes over 35 s, move to the reserved/larger-runner fallback rather than deleting more validation.
+
 ## Current forward work order
 
-1. **Validate the repair-prototype cadence cut:** require exact-head green coverage, unchanged thresholds, and a material repair-search/coverage wall reduction. If green, move directly toward a bounded full-impact confirmation window before inventing another optimization.
-2. **Validate the implemented solver→research narrowing:** fault injection, historical #1722-equivalent route oracle, and solver-scoped timing must pass before calling the 59-consumer explicit routing settled.
-3. **Refresh the selected-population timing census:** regenerate Node/CLI timings after routing/cadence removals and rank by selected critical-path burden, not the obsolete universal population.
-4. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
-5. **Proof witness audit:** both R02560 arms are now characterization-only; inspect the two exhaustive deadlock roots for equivalent cheaper proof machinery or smaller exhaustive fixtures without weakening soundness.
-6. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
-7. **Validate warm bootstrap topology:** measure setup-node and first-validation start after the cache-first dependency-tree change; keep only if warm-path wall improves without harming cold fallback. Then audit remaining serial restores/discovery.
-8. **Reserved/larger runner rehearsal:** if remaining software/testability work cannot create reliable margin on shared runners, apply the semantically proven Node/coverage partitions on at least 16 logical CPUs and re-test there. D2d confirms this is now a variance/capacity fallback, not an untested sharding idea.
-9. **Bounded p50/p90 window:** declare success only from comparable full-impact runs meeting the stop conditions below.
+1. **Bounded p50/p90 confirmation window:** treat run 36179322147 as sample 1. Collect comparable full-impact exact-head runs before further optimization; record each lane wall, first-runner→last-required wall, cache state, and runner skew.
+2. **Validate rolling-cache stale-overlay timing when naturally exercised:** correctness is permanently covered by `test:ci-runtime-data-cache`; when base/runtime Hint churn produces a fallback restore, record whether the overlay avoids the old 10–20 s second-checkout tax.
+3. **Validate the implemented solver→research narrowing:** semantic fault injection is green; retain the historical #1722-equivalent route oracle / scoped timing gate before calling the 59-consumer explicit routing fully settled.
+4. **Main/default-branch confirmation after merge:** broad main-push validation and cache seeding must remain green before the program can be closed.
+5. **Only if the confirmation window misses:** distinguish useful-work regression from shared-runner/bootstrap variance. Resume targeted testability work only for a measured software tail; use reserved/larger compute if infrastructure variance is the limiting factor.
+6. **Deferred audits, not current priorities:** deadlock proof machinery, Firestore bootstrap, refreshed Node/coverage censuses, and larger-runner rehearsals remain documented fallbacks rather than automatic next work.
 
 Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence. Negative experiments stay documented so later agents do not repeat them.
 
