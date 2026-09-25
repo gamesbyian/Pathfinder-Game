@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-ingestion-receipt",
+  "source": {
+    "producer": "merge-hint-artifacts",
+    "runId": "36181311678",
+    "runAttempt": "1",
+    "workflow": "Targeted sweep · inline IDs · enable=STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE · disable=none",
+    "artifact": null
+  },
+  "scope": {
+    "corpus": [
+      "data/hints",
+      "data/stress/hints",
+      "data/stress/hints-random"
+    ]
+  },
+  "funnel": {
+    "candidateObservations": 0,
+    "eligibleObservations": 0,
+    "refereeAcceptedObservations": 0,
+    "acceptedAlreadyRepresented": 0,
+    "quarantinedObservations": 0,
+    "quarantineReasons": {}
+  },
+  "additions": {
+    "semanticRecordChanges": 0,
+    "paths": 0,
+    "provenanceEvents": 0,
+    "occurrences": 0
+  },
+  "physical": {
+    "filesChanged": 0
+  },
+  "semantics": {
+    "successSelected": true,
+    "notAttemptedPopulation": true,
+    "candidateObservation": "a success-bearing row/artifact presented to this ingestion boundary",
+    "eligibleObservation": "a candidate with enough identity/path information to undergo canonical referee/merge handling",
+    "refereeAcceptedObservation": "an eligible observation whose exact path is valid against the target level revision",
+    "acceptedAlreadyRepresented": "referee-valid observation that produced no semantic store change",
+    "semanticRecordChange": "coarse producer-observed change when the current mutation API cannot distinguish path/event/occurrence units",
+    "nullAdditionUnit": "this producer cannot measure that addition unit exactly; null is unknown/not-observed, never zero",
+    "notes": "direct transported canonical-hint compatibility importer; detailed semantic additions are measured by before/after canonical merge state per referee-accepted observation"
+  }
+}

@@ -3,6 +3,8 @@
 > **Status:** Phase 3 partially activated; deep verification is impact-scoped, fast-gate remains universal.
 > **Started:** 2026-09-21.
 > **Goal:** make validation proportional to the repository surfaces a change can invalidate, while preserving conservative correctness and a full-validation oracle.
+>
+> **Latency authority:** execution-topology and full-impact ≤35 s work now lives in [`ci-35s-critical-path-plan.md`](ci-35s-critical-path-plan.md). This document owns selection/routing, not runner topology.
 
 ## Why this exists
 

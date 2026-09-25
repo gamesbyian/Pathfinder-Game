@@ -3,9 +3,10 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-export function withDetachedGitWorktree(root, ref, callback) {
+export function withDetachedGitWorktree(root, ref, callback, { sparseDirectories = [], sparsePatterns = [] } = {}) {
     const gitRef = String(ref ?? '').trim();
     if (!gitRef) throw new Error('git ref is required');
+    if (sparseDirectories.length && sparsePatterns.length) throw new Error('choose sparseDirectories or sparsePatterns, not both');
     if (typeof callback !== 'function') throw new Error('git worktree callback is required');
 
     const gitRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], {
@@ -18,11 +19,27 @@ export function withDetachedGitWorktree(root, ref, callback) {
     let added = false;
 
     try {
-        execFileSync('git', ['worktree', 'add', '--detach', '--quiet', worktree, gitRef], {
+        const addArgs = ['worktree', 'add', '--detach', '--quiet'];
+        if (sparseDirectories.length || sparsePatterns.length) addArgs.push('--no-checkout');
+        addArgs.push(worktree, gitRef);
+        execFileSync('git', addArgs, {
             cwd: gitRoot,
             stdio: ['ignore', 'pipe', 'pipe'],
         });
         added = true;
+        if (sparseDirectories.length || sparsePatterns.length) {
+            const sparseArgs = sparsePatterns.length
+                ? ['sparse-checkout', 'set', '--no-cone', ...sparsePatterns]
+                : ['sparse-checkout', 'set', '--cone', ...sparseDirectories];
+            execFileSync('git', sparseArgs, {
+                cwd: worktree,
+                stdio: ['ignore', 'pipe', 'pipe'],
+            });
+            execFileSync('git', ['checkout', '--detach', '--quiet', gitRef], {
+                cwd: worktree,
+                stdio: ['ignore', 'pipe', 'pipe'],
+            });
+        }
         return callback(worktree);
     } catch (error) {
         const detail = String(error?.stderr ?? error?.message ?? error).trim();

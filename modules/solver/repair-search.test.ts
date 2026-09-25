@@ -188,14 +188,6 @@ test('repairSearchFromGate defaults enableMustTurnBias to false (omitted 8th arg
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
-test('repairSearchFromGate with enableMustTurnBias=true only ever returns sound, valid solutions', async () => {
-    const level = mustTurnLevel();
-    const prep = prepLevel(level);
-    prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, true);
-    if (path) assert.equal(replayAndValidate(path, level, prep), true);
-});
-
 // This level's biased search needs a real ~344k nodes to converge (~250ms uncontended) — a much
 // thinner wall-clock margin against a 1500ms budget than the sibling determinism test above
 // (~2.4k nodes, ~5-17ms), which made this test flaky in CI: two back-to-back calls with identical
@@ -220,6 +212,7 @@ test('repairSearchFromGate with enableMustTurnBias=true is deterministic', async
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, true, REPAIR_DETERMINISM_NODE_BUDGET);
 
     assert.deepEqual(pathA, pathB);
+    if (pathA) assert.equal(replayAndValidate(pathA, level, prepA), true, 'deterministic result must be a valid solution');
     assertSameNonzeroRepairWork(prepA, prepB);
 }, 25000);
 
@@ -246,15 +239,6 @@ test('computePlateauPenaltyCells caps the penalty and handles empty/degenerate i
     assert.equal(computePlateauPenaltyCells(new Map([[1, 5]]), 5, new Map([[1, 5]]), 5, 2.5, 4, 8).size, 0, 'zero global baseline denominator → empty, no throw');
 });
 
-test('repairSearchFromGate with enablePlateauPenalty=true only ever returns sound, valid solutions', async () => {
-    const level = mustTurnLevel();
-    const prep = prepLevel(level);
-    prep._metrics = { nodesExpanded: 0 };
-    // Positional args through seedSalt=0, then enablePlateauPenalty=true (13th arg).
-    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, true);
-    if (path) assert.equal(replayAndValidate(path, level, prep), true);
-});
-
 // Node-budget-bounded (not wall-clock) for the same CI-throttling reason as the enableMustTurnBias
 // determinism test above: repairSearchFromGate does the identical operation sequence for a given
 // seed regardless of machine speed, and the Stage 2 penalty is computed only from deterministic
@@ -268,6 +252,7 @@ test('repairSearchFromGate with enablePlateauPenalty=true is deterministic', asy
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_DETERMINISM_NODE_BUDGET, null, 0, true);
     assert.deepEqual(pathA, pathB);
+    if (pathA) assert.equal(replayAndValidate(pathA, level, prepA), true, 'deterministic result must be a valid solution');
     assertSameNonzeroRepairWork(prepA, prepB);
 }, 25000);
 
@@ -301,15 +286,6 @@ test('selectGuideCells prefers complementary constraints, breaks ties by distanc
     assert.equal(selectGuideCells(b2, [{ cells: baseCells, pend: noPend }]), null, 'no eligible guide → null');
 });
 
-test('repairSearchFromGate with enableRecombination=true only ever returns sound, valid solutions', async () => {
-    const level = mustTurnLevel();
-    const prep = prepLevel(level);
-    prep._metrics = { nodesExpanded: 0 };
-    // Positional args through enablePlateauPenalty=false, then enableRecombination=true (14th arg).
-    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, true);
-    if (path) assert.equal(replayAndValidate(path, level, prep), true);
-});
-
 test('repairSearchFromGate with enableRecombination=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
@@ -319,6 +295,7 @@ test('repairSearchFromGate with enableRecombination=true is deterministic', asyn
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_DETERMINISM_NODE_BUDGET, null, 0, false, true);
     assert.deepEqual(pathA, pathB);
+    if (pathA) assert.equal(replayAndValidate(pathA, level, prepA), true, 'deterministic result must be a valid solution');
     assertSameNonzeroRepairWork(prepA, prepB);
 }, 25000);
 
@@ -339,14 +316,6 @@ test('enableRecombination=false (default) is byte-identical to omitting it', asy
 // zero metric-projection overlap across 25 levels — see BEAM_SEED_WIDTH's own comment). Positional
 // args through enableElitePrefixDfs=false, then enableBeamSeed=true (18th arg).
 
-test('repairSearchFromGate with enableBeamSeed=true only ever returns sound, valid solutions', async () => {
-    const level = mustTurnLevel();
-    const prep = prepLevel(level);
-    prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, false, false, true);
-    if (path) assert.equal(replayAndValidate(path, level, prep), true);
-});
-
 test('repairSearchFromGate with enableBeamSeed=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
@@ -356,6 +325,7 @@ test('repairSearchFromGate with enableBeamSeed=true is deterministic', async () 
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_DETERMINISM_NODE_BUDGET, null, 0, false, false, false, false, false, true);
     assert.deepEqual(pathA, pathB);
+    if (pathA) assert.equal(replayAndValidate(pathA, level, prepA), true, 'deterministic result must be a valid solution');
     assertSameNonzeroRepairWork(prepA, prepB);
 }, 25000);
 
@@ -428,15 +398,6 @@ test('relinkPaths returns unsolved (no false positive) when no anchor recombinat
     assert.equal(res.solved, false);
 });
 
-test('repairSearchFromGate with enableRelink=true only ever returns sound, valid solutions', async () => {
-    const level = mustTurnLevel();
-    const prep = prepLevel(level);
-    prep._metrics = { nodesExpanded: 0 };
-    // Positional args through enableRecombination=false, then enableRelink=true (15th arg).
-    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, true);
-    if (path) assert.equal(replayAndValidate(path, level, prep), true);
-});
-
 test('repairSearchFromGate with enableRelink=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
@@ -446,6 +407,7 @@ test('repairSearchFromGate with enableRelink=true is deterministic', async () =>
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_DETERMINISM_NODE_BUDGET, null, 0, false, false, true);
     assert.deepEqual(pathA, pathB);
+    if (pathA) assert.equal(replayAndValidate(pathA, level, prepA), true, 'deterministic result must be a valid solution');
     assertSameNonzeroRepairWork(prepA, prepB);
 }, 25000);
 
@@ -477,15 +439,6 @@ test('preferredTurnExit returns the required-turn exit and skips straight-throug
     assert.equal(preferredTurnExit(K(2, 2), K(3, 3), nbrs, 'either'), null, 'a non-orthogonal arrival → null');
 });
 
-test('repairSearchFromGate with enableTurnBias=true only ever returns sound, valid solutions', async () => {
-    const level = mustTurnLevel();
-    const prep = prepLevel(level);
-    prep._metrics = { nodesExpanded: 0 };
-    // Positional args through enableRelink=false, then enableTurnBias=true (16th arg).
-    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, true);
-    if (path) assert.equal(replayAndValidate(path, level, prep), true);
-});
-
 test('repairSearchFromGate with enableTurnBias=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
@@ -495,6 +448,7 @@ test('repairSearchFromGate with enableTurnBias=true is deterministic', async () 
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_DETERMINISM_NODE_BUDGET, null, 0, false, false, false, true);
     assert.deepEqual(pathA, pathB);
+    if (pathA) assert.equal(replayAndValidate(pathA, level, prepA), true, 'deterministic result must be a valid solution');
     assertSameNonzeroRepairWork(prepA, prepB);
 }, 25000);
 
