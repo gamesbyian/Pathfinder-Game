@@ -153,10 +153,25 @@ jobs:
       shards: ${{ steps.plan.outputs.shards }}
       shard_count: ${{ steps.plan.outputs.shard_count }}
     steps:
-      - name: Check out the dispatched commit exactly
+      - name: Check out declared planner inputs
         uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
+          sparse-checkout: |
+            /package.json
+            /package-lock.json
+            /scripts/
+            /modules/
+            /data/stress/stress-levels-random.json
+            /logs/solver-stress-refresh/corpus2-runtime-telemetry.json
+          sparse-checkout-cone-mode: false
+
+      - name: Materialize the caller-selected corpus
+        shell: bash
+        run: |
+          corpus="${{ inputs.corpus }}"
+          mkdir -p "$(dirname "$corpus")"
+          git show "HEAD:$corpus" > "$corpus"
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -171,21 +186,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # 2026-09-09 historical regression-risk audit item #3: with node_budget_advisory_only=true,
-          # --node-budget is never passed to the solve at all (nodeBudgetReached can't bind), so the
-          # ONLY thing bounding a level's real worst-case cost is work_budget -- but strict_total_work_
-          # budget defaults false, and work_budget is then only a STARTING allocation additive fallback/
-          # retry tiers can spend 1.5x-467x beyond (measured, see reports/2026-08-28-additive-tier-
-          # participation-audit.md). plan-highbudget-shards.mjs sizes each shard's job timeout from the
-          # SAME nominal work_budget-derived estimate with only a flat 1.5x safety margin -- nowhere
-          # near enough headroom for that measured multiplier -- so this combination recreates exactly
-          # the timeout/selective-censoring mechanism found during the admissible-order confirmation
-          # work: some levels get killed by the job timeout well before they would have finished or
-          # genuinely exhausted, non-uniformly biasing which levels count as "unsolved" in a way that
-          # looks like real solver evidence. Reject it outright rather than let it plan and run: a
-          # caller needing node_budget_advisory_only for a work-budget-share comparison (its own
-          # documented purpose) must also pass strict_total_work_budget=true, which makes work_budget
-          # an actual whole-solve ceiling and makes the planner's timeout estimate bounding again.
+          # Advisory node budgeting removes the node ceiling, so strict work budgeting is mandatory;
+          # otherwise additive tiers can outrun the planner's timeout model and selectively censor results.
           if [ "${{ inputs.node_budget_advisory_only }}" = "true" ] && [ "${{ inputs.strict_total_work_budget }}" != "true" ]; then
             echo "node_budget_advisory_only=true requires strict_total_work_budget=true." >&2
             echo "Without a node-budget ceiling AND without a strict work-budget ceiling, a level's real" >&2
@@ -208,7 +210,7 @@ jobs:
             echo "ids and ids_file are mutually exclusive." >&2
             exit 2
           elif [ -n "${{ inputs.ids_file }}" ]; then
-            cp "${{ inputs.ids_file }}" logs/solver-targeted-sweep/ids.txt
+            git show "HEAD:${{ inputs.ids_file }}" > logs/solver-targeted-sweep/ids.txt
           elif [ -n "${{ inputs.ids }}" ]; then
             printf '%s' "${{ inputs.ids }}" | tr ',' '\n' | tr -s ' \t' '\n' | sed '/^\s*$/d' > logs/solver-targeted-sweep/ids.txt
           else
