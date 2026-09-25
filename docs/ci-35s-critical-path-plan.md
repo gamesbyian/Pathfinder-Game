@@ -1696,6 +1696,24 @@ This is not a deletion of evidence. Both workflows remain dispatchable. The purp
 
 The next exact-head full-impact sample is therefore the first clean production-only runner-allocation measurement after this correction.
 
+## Repaired exact-head confirmation after runner-headroom policy
+
+Exact-head CI run **36196599695** is fully green after repairing the targeted-sweep dispatch-input/file-size regression exposed by 36195986059.
+
+| lane | runner wall |
+| --- | ---: |
+| Fast Gate | **~22 s** |
+| Node shard A | **~33 s** |
+| Node shard B | **~28 s** |
+| coverage | **~30 s** |
+| deep services | **~30 s** |
+
+First required runner start → last required completion was **~34 s** (22:25:12Z → 22:25:46Z). All five production lanes started within about one second, so this sample is not inflated by runner-assignment skew.
+
+The immediately preceding head, run **36195986059**, had all five substantive execution lanes green and failed only repository governance: adding a `max_parallel` dispatch control made `solver-level-blind-targeted-sweep.yml` exceed GitHub's 25-input limit and the workflow's no-growth size ratchet. The repair fixes that workflow at 15 concurrent shards rather than deleting a scientific/operational input or grandfathering more file growth. Sibling newly-configurable workflows were audited at 6, 9, and 11 dispatch inputs and require no analogous repair.
+
+This is another qualifying ≤35-second sample, but it does **not** satisfy the plan's p50≤30 declaration threshold. Continue the bounded comparable window rather than declaring victory from hard-ceiling compliance alone.
+
 ## Repository-wide hosted-runner headroom policy
 
 The production-only CI sample showed healthy per-lane software cost but also revealed a second source of runner starvation: long solver/research workflows historically defaulted to **20 concurrent shard jobs**.
@@ -1716,7 +1734,7 @@ This is a scheduling/default change, not a scientific treatment. Node/work-bound
 
 ## Current forward work order
 
-1. **Validate the reconciled packed topology:** require exact-head green CI/oracles after the #2118 merge-forward and parity/scoped-rehearsal repair; use that head as the new comparable timing baseline.
+1. **DONE — validate the reconciled packed topology:** exact-head CI is green after the #2118 merge-forward and targeted-sweep governance repair; run 36196599695 is the current comparable baseline.
 2. **Resume bounded p50/p90 confirmation:** use comparable post-v2/data-free/minimal-data/build-packed full-impact heads; record every lane wall, first-required-runner→last-required completion, cache state, and base-churn context.
 3. **Watch Node B, Node A, and coverage tails:** resume testability work only for repeatable useful-work tails rather than one noisy runner sample.
 4. **Firestore/deep-services margin:** proofs already finish before Firestore once started. Optimize emulator/bootstrap only if the confirmation window identifies it as a recurring tail.
