@@ -1,9 +1,9 @@
 # Research workflow execution-topology starting census — 2026-09-25
 
 > **Status:** active
-> **Last evidence:** 2026-09-25 — static current-main workflow census plus hosted September-22 bootstrap timing sample.
-> **Decision:** prioritize exact runtime identity and short-job input/bootstrap work; do not blanket-optimize long solve shards.
-> **Remaining gate:** exact-runtime rehearsal, then full-vs-sparse short-job parity and measured dependency-tree reuse.
+> **Last evidence:** 2026-09-25 — hosted full-vs-sparse targeted-planner rehearsal run 36187498364 plus September-22 bootstrap timing sample.
+> **Decision:** targeted-planner sparse input contract is earned; exact runtime remains under rehearsal; do not blanket-optimize long solve shards.
+> **Remaining gate:** exact-runtime parity, then transplant the earned sparse boundary into short orchestration and measure exact dependency-tree reuse.
 
 ## Purpose
 
@@ -115,3 +115,14 @@ For short research jobs, pursue in this order:
 4. only then smaller process/bundle taxes.
 
 For long solve shards, retain the same mechanisms as candidates but activate only when aggregate runner-minute economics or retry latency justify them.
+
+## Hosted sparse-input result
+
+PR rehearsal run `36187498364` compared the live targeted-sweep planner plus one real level-blind canary under full-tree and explicitly sparse materialization.
+
+- full and sparse semantic fingerprints were byte-identical;
+- sparse checkout reached the tested PR merge HEAD in about **3.3 s** from checkout start, versus about **45.7 s** for the full-tree arm;
+- both arms then ran exact Node 20.20.2, `npm ci`, the same shard planner, the same runtime telemetry input, and the same real canary;
+- the sparse contract explicitly retains `data/stress/stress-levels-random.json` and `logs/solver-stress-refresh/corpus2-runtime-telemetry.json`; dropping the telemetry would silently change planning economics and is therefore not an allowed optimization.
+
+Decision: **sparse materialization is earned for this targeted planner/canary boundary.** Production activation should preserve the declared input set and full-tree correctness fallback/rehearsal rather than generalizing immediately to unrelated solve jobs.
