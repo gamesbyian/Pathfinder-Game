@@ -486,6 +486,26 @@ export interface SolveOpts {
      *  scalar. Undefined (every production/interactive caller) preserves
      *  EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE exactly. */
     earlyRepairSearchAdaptiveBiasedMinScaleOverride?: number;
+    /** Override for EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET for this solve only — same
+     *  dedicated-override shape as earlyRepairSearchAdaptiveBiasedBadnessGateOverride above (NOT an
+     *  ablation flag: the cap is read unconditionally once the probe runs at all, so there is no
+     *  existing opt-in/opt-out plumbing to piggyback on). Exists for WS2-REPAIR-DEADLINE-ALLOCATION
+     *  (reports/2026-09-20-class3-dose-exposure-resolved-result-001.md): a matched-work batch-tooling
+     *  A/B needs to raise the ordinary-tier probe's node ceiling toward the T1-isolated rescuer cost
+     *  for a frozen population without editing the constant and rebuilding. Deliberately a SEPARATE
+     *  field from earlyRepairSearchBiasedNodeBudgetOverride below — the 2,000,000/6,000,000
+     *  calibrations were derived from different evidence (this file's header comment) and must be
+     *  movable independently, never coupled through one shared override. Undefined (every
+     *  production/interactive caller) preserves EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET exactly. */
+    earlyRepairSearchOrdinaryNodeBudgetOverride?: number;
+    /** Override for EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET for this solve only — same shape and
+     *  rationale as earlyRepairSearchOrdinaryNodeBudgetOverride above, and likewise NOT folded into
+     *  one shared override with it (see that field's comment for why). This is the cap BEFORE
+     *  STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET's own live-evidence scale is applied (that
+     *  scale multiplies whichever value resolves here, so this override still interacts with the
+     *  adaptive shrink exactly as the production constant does). Undefined (every
+     *  production/interactive caller) preserves EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET exactly. */
+    earlyRepairSearchBiasedNodeBudgetOverride?: number;
     /** Convenience for offline batch tooling: sets repairAdditiveBudgetMultiplierOverride,
      *  goalAttractionDisabledRetryBudgetFractionOverride, coarseStateNearTieRetentionRetryBudgetFractionOverride,
      *  admissibleOrderBudgetFractionOverride, admissibleOrderNonDefaultRetryBudgetFractionOverride,

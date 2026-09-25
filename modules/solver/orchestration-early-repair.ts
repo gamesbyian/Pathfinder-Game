@@ -80,7 +80,9 @@ import type { Attempt, SearchResult, ShrunkBiasedTier, YieldFn } from './orchest
  *  Re-measure (repairSearchFromGate called directly per the recipe above, NOT the full
  *  2000-level stress corpus — too slow for this kind of per-level direct-replay measurement)
  *  before changing either value. */
-const EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET = 2_000_000;
+// Exported for SolveOpts.earlyRepairSearchOrdinaryNodeBudgetOverride's default and for batch-tooling
+// tests/sweeps that need the production value without duplicating it.
+export const EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET = 2_000_000;
 // Exported for orchestration.test.ts's STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET regression
 // tests, which assert the exact scaled node budget a mocked biased-tier attempt is called with.
 export const EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET = 6_000_000;
@@ -305,6 +307,12 @@ export async function runEarlyRepairSearch(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
     prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null, nodeBudget = Infinity,
     badnessGate = EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, minScale = EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
+    // Experiment-only overrides for the ordinary/biased probe node caps (SolveOpts.
+    // earlyRepairSearchOrdinaryNodeBudgetOverride/earlyRepairSearchBiasedNodeBudgetOverride — see
+    // those fields' own comments). Deliberately two separate parameters, not one: the two tiers
+    // were independently calibrated against different evidence (see this file's header comment)
+    // and a batch-tooling sweep must be able to move one without silently moving the other.
+    ordinaryNodeBudget = EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET, biasedNodeBudget = EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     const shrunkBiased: ShrunkBiasedTier[] = [];
@@ -324,16 +332,16 @@ export async function runEarlyRepairSearch(
     // first-in-array accident.
     const biasedConfigCount = repairConfigs.filter(c => c.repairMustTurnBiased || c.repairTurnBiased).length;
     const biasedNodeBudgetForTier = (indexAmongBiased: number): number => {
-        if (biasedConfigCount <= 1) return EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET;
+        if (biasedConfigCount <= 1) return biasedNodeBudget;
         const share = indexAmongBiased === 0 ? EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE : 1 - EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE;
-        return Math.floor(EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET * share);
+        return Math.floor(biasedNodeBudget * share);
     };
     let biasedSeen = 0;
     for (const repairConfig of repairConfigs) {
         // The turn-biased attempt, like the must-turn-biased one, is a heavier single-seed search
         // (see repair-search.ts) — give it the biased probe budget and a single seed salt.
         const isBiased = repairConfig.repairMustTurnBiased || repairConfig.repairTurnBiased;
-        let fixedProbeNodeBudget = isBiased ? biasedNodeBudgetForTier(biasedSeen++) : EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET;
+        let fixedProbeNodeBudget = isBiased ? biasedNodeBudgetForTier(biasedSeen++) : ordinaryNodeBudget;
         // STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13 —
         // see EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE's own comment for the full derivation):
         // scale the biased tier's node budget down when the ordinary tier's own live bestBadness
