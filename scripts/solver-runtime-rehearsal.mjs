@@ -56,7 +56,7 @@ const portfolio = await run('scripts/portfolio-solve-sweep.mjs', [
   '--scheduler-mode=production',
   '--budget-ms=5000',
   '--node-budget=250000',
-  '--levels=1',
+  '--levels=pos:1',
   `--checkpoint=${path.join(dir, 'portfolio.checkpoint.jsonl')}`,
 ], 'portfolio');
 
