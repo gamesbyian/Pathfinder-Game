@@ -106,6 +106,12 @@ jobs:
         with:
           path: ~/.npm/_npx
           key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
+      - name: Restore Firestore emulator binary
+        id: firestore-emulator-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
 
       - uses: actions/setup-java@v5
         with:
@@ -199,6 +205,12 @@ jobs:
             exit 1
           fi
 
+      - name: Save Firestore emulator binary after successful cold fetch
+        if: steps.firestore-emulator-cache.outputs.cache-hit != 'true' && steps.concurrent.outputs.firestore == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
       - name: Summarize benchmark
         if: always()
         shell: bash
