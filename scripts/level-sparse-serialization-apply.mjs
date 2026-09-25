@@ -35,6 +35,7 @@ export function applySparseLevelDocument(parsed) {
 const isMain = process.argv[1] && import.meta.url === new URL(process.argv[1], 'file://').href;
 if (isMain) {
     const root = process.cwd();
+    const checkOnly = process.argv.includes('--check');
     const results = [];
     for (const file of CORPORA) {
         const absolute = path.join(root, file);
@@ -42,7 +43,7 @@ if (isMain) {
         const candidate = applySparseLevelDocument(parsed);
         const sourceText = stringifyCorpusJson(parsed);
         const targetText = stringifyCorpusJson(candidate);
-        if (sourceText !== targetText) {
+        if (!checkOnly && sourceText !== targetText) {
             writeFileSync(absolute, targetText);
         }
         results.push({
@@ -52,5 +53,7 @@ if (isMain) {
             targetBytes: Buffer.byteLength(targetText),
         });
     }
-    console.log(JSON.stringify({ schemaVersion: 1, kind: 'pathfinder-level-sparse-serialization-apply', results }, null, 2));
+    const changedFiles = results.filter(row => row.changed).length;
+    console.log(JSON.stringify({ schemaVersion: 1, kind: 'pathfinder-level-sparse-serialization-apply', mode: checkOnly ? 'check' : 'apply', changedFiles, results }, null, 2));
+    if (checkOnly && changedFiles > 0) process.exitCode = 1;
 }
