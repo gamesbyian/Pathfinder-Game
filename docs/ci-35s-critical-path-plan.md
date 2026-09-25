@@ -49,6 +49,7 @@ Recent exact-head full-impact evidence:
 | 36084034066 | **44 s** | **70 s** | Node/CLI 20 s; coverage 31 s; proofs+Firestore 15 s |
 | 36086954088 | **71 s** | **67 s** | Node/CLI 36 s; coverage 30 s; proofs+Firestore 14 s |
 | 36090943840 | **~58 s** | **~40 s** | Node/CLI 36 s; coverage 18 s; proofs+Firestore 8 s |
+| 36096284051 | **~99 s** | **~73 s** | Node/CLI 32 s; **21 s runtime-data fallback + 25 s cold build** after canonical harvester changed Hint trees without publishing the new cache generation |
 
 This variability is now itself evidence. Shared hosted runners vary materially not only in assignment/setup but in effective useful-work wall time. One fast sample must not be promoted to an intrinsic cost model.
 
@@ -58,9 +59,10 @@ The current biggest permanent-speed opportunities, in order of expected leverage
 2. **Covered Vitest testability:** refresh the slow-file/slow-test census from the JSON reporter and make expensive assertions cheaper without weakening coverage or converting real integration semantics into mocks. Preserve balanced coverage sharding as a proven topology for larger/reserved compute.
 3. **Heavy proof witnesses:** inspect the longest proof fixtures for smaller deterministic witnesses, tighter work budgets, or reusable setup while preserving the same property. Internal parallelism is already near the current 4-core limit.
 4. **Firestore boundary:** #2109 now caches `~/.cache/firebase/emulators` under an exact Firebase Tools/emulator-version key. Run 36090943840 restored `firestore-emulator-Linux-firebase-tools-15.28.2-v1.22.0-v1`, emitted no jar-download message, and the combined proofs+Firestore stage fell to about **8 s** on that sample. Treat emulator download waste as closed; retain the exact cache and only pursue test-code reductions if Firestore itself becomes a measured tail.
-5. **Residual bootstrap/cache critical path:** audit serialized exact-cache restores, setup-node, TypeScript state, validator/lint sequencing, and duplicate repository discovery. Treat each as a measured small-opportunity audit, not a reason to weaken validation.
-6. **Larger/reserved compute:** benchmark the already-proven balanced Node and coverage topologies on more predictable compute after software costs are slimmed. Re-test internal deep overlap there because the 4-core negative result is contention-specific. At least 16 logical CPUs remains the initial capacity target.
-7. **Cadence/impact routing:** continue using the separate historical-value/impact-routing program to avoid irrelevant work. Do not use cadence demotion as a substitute for making the fullest selected form fast.
+5. **Canonical Hint cache authority:** run 36096284051 proved the diagnostics-side seeding is attached to the wrong producer. `solver-diagnostics.yml` seeds the pre-harvest tree, then `harvest-solver-evidence.yml` creates the actual Hint commit and invalidates both exact caches. Move runtime-data and runtime-hint publication to the central harvester's post-persistence HEAD before returning to smaller bootstrap audits.
+6. **Residual bootstrap/cache critical path:** after canonical Hint cache ownership is fixed, audit serialized exact-cache restores, setup-node, TypeScript state, validator/lint sequencing, and duplicate repository discovery. Treat each as a measured small-opportunity audit, not a reason to weaken validation.
+7. **Larger/reserved compute:** benchmark the already-proven balanced Node and coverage topologies on more predictable compute after software costs are slimmed. Re-test internal deep overlap there because the 4-core negative result is contention-specific. At least 16 logical CPUs remains the initial capacity target.
+8. **Cadence/impact routing:** continue using the separate historical-value/impact-routing program to avoid irrelevant work. Do not use cadence demotion as a substitute for making the fullest selected form fast.
 
 Closed or currently low-value directions:
 
@@ -240,34 +242,42 @@ The original nine-level population has now been probed at **250,000 work** and a
 | A2 exact Node 22.23.2 | **merged / measured green** | Production PR/main/scoped workflows are pinned to exact 22.23.2 with a separate Node-22 Firebase CLI cache generation; full-contract rehearsals were green with setup-node ~0–3 s. |
 | C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
 | A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
-| B5 runtime-hint projection cache | **merged / measured green** | #2087 merged restore/seed across PR/main/scoped and diagnostics. Ordinary PR #2088 restored the exact projection cache and completed build in **~2.3 s** with Vite compile **672 ms**, versus ~25 s cold. |
+| B5 runtime-hint projection cache | **merged; producer-ownership repair in progress** | Warm exact restores remain ~2 s, but #2111 run 36096284051 paid ~25 s cold because report-only diagnostics seeded the pre-harvest key. Publication is moving to `harvest-solver-evidence.yml` post-persistence HEAD, the producer that actually changes canonical Hint trees. |
 | D1 two-way Node sharding | **closed negative on shared hosted runners** | Post-hermetic rehearsals are semantically green and cut useful Node work to ~14–17 s/shard, but runner walls varied to **31–35 s** and **27–38 s** across confirmations. Shared bootstrap variance consumes the 35 s budget; stop shard-count tuning. |
 | B3 proofs + Firestore overlap | **merged / measured green** | #2100 full-impact run kept coverage green and ran unchanged proofs + Firestore concurrently in **15 s**, with independent success outputs. Prior serialized shape was ~23 s; #2100 is merged to `main`. |
 | B6 bulk-change text-invariant batching | **closed / exact-head green with PR-scale regression** | #2072 CI run 36082154314 exposed a scaling regression: `check:text-source-files` took **6m47s** on a 1,474-file migration because each sparse changed file triggered separate `git cat-file -s` + `git show` processes. #2107 batches sparse HEAD blob reads through one `git cat-file --batch` process without changing the checked population or invariant. Exact-head CI run 36084034066 kept the direct text-invariant step below timestamp resolution and passed the permanent real-checker regression against **1,500 unmaterialized changed text blobs** inside a **20 s total Node/CLI step**. |
 | D2 coverage sharding | **technical success; shared-runner margin insufficient** | D2b run 36068829982 balanced 146 files to 17.091/17.090 test-s and produced authoritative merged coverage with unchanged thresholds in **34 s from shard start**. Only ~1 s headroom remains; D1 already demonstrated ordinary hosted setup variance can exceed that. |
 
-### A1c. Publish runtime-data cache from diagnostics hint refresh
+### A1c. Publish runtime-data cache from the canonical Hint harvester
 
-The diagnostics workflow can change `data/hints` and push a `[skip ci]` commit. That changes the exact runtime-data Git-object key **without running main-push CI**, so the next PR can encounter a cold runtime-data generation even though the change originated on the default branch.
+**Correction after #2111 evidence:** the original #2061 ownership model was wrong.
 
-Merged in #2061:
+`solver-diagnostics.yml` is intentionally report-only. It may push audit-history logs, but it does **not** mutate canonical Hint files. The later `harvest-solver-evidence.yml` workflow consumes that report, semantically merges accepted observations, commits the canonical Hint changes, and pushes the tree that actually changes the runtime-data key.
 
-1. after diagnostics commits/pushes its hint/audit refresh, derive the runtime-data key from the final local `HEAD` (after any retry/rebase);
-2. check whether that exact key is already cached;
-3. if not, save the canonical runtime-data tree from the default-branch workflow;
-4. later PRs can then restore the new exact generation instead of materializing the ~190 MB hint/data tree.
+Run **36095878551** demonstrated the defect concretely:
 
-This does not replace a correct PR miss fallback, but it should make diagnostics-driven misses rare. It also aligns cache authority with the producer that invalidates the cache generation.
+- diagnostics derived/restored `runtime-data-2240ada3…` after its audit-history push;
+- the central harvester then committed Hint changes as `aecc858d…`;
+- #2111 CI run **36096284051** needed `runtime-data-730d97f4…`, missed both current and base generations, and paid roughly **21 s** for the whole-tree correctness fallback.
 
+Correct ownership:
+
+1. after `harvest-solver-evidence.yml` successfully persists its semantic merge, local `HEAD` is the exact commit just pushed to `main`;
+2. derive the runtime-data key from that post-persistence `HEAD`;
+3. restore that exact generation if it already exists;
+4. otherwise save the fully materialized canonical runtime-data tree already present in the harvester checkout;
+5. source/report workflows such as solver diagnostics must not claim canonical Hint-cache authority.
+
+A focused workflow guard mechanically requires the cache-publication steps in the central harvester and forbids them in report-only solver diagnostics.
 ### A1d. Seed every main generation from full main-push checkout
 
 Main-push `validate` already checks out the complete repository, including the canonical runtime-data tree. Publish that already-materialized tree under the same exact Git-object key PR CI uses.
 
-This closes the base-cache authority gap exposed by A1b: every ordinary merged main commit gets an exact default-branch runtime-data cache generation without additional Git materialization. A1c separately handles diagnostics `[skip ci]` hint refresh commits that bypass main-push validation.
+This closes the base-cache authority gap exposed by A1b: every ordinary merged main commit gets an exact default-branch runtime-data cache generation without additional Git materialization. A1c separately handles central-harvester Hint persistence commits that are created after the source workflow and therefore do not inherit the source workflow's cache generation.
 
 Together:
 - A1d covers ordinary merges;
-- A1c covers diagnostics-generated `[skip ci]` main commits;
+- A1c covers central-harvester canonical Hint commits;
 - A1b can recover a PR exact miss by restoring the cached base-parent generation and overlaying only changed runtime-data files.
 
 ### A1b. Differential runtime-data miss recovery — measured green
@@ -291,7 +301,7 @@ Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forc
 - exact current cache save: **2 s**;
 - fast gate remained green.
 
-A1c (#2061) seeds diagnostics-generated `[skip ci]` main generations. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
+A1c now seeds canonical central-harvester Hint generations from the actual post-persistence HEAD. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
 
 ### B1b. Right-size repair-search determinism test budgets
 
@@ -359,7 +369,7 @@ Production rollout:
 2. PR fast-gate restores the exact generation, builds from it or generates it on miss, then saves only after successful cold build;
 3. main-push does the same and therefore seeds default-branch generations reusable by later PRs;
 4. scoped rehearsal mirrors the same exact authority;
-5. solver diagnostics derives the key from final local `HEAD` after any push/rebase and seeds a new generation when a `[skip ci]` hint refresh changes canonical hint trees.
+5. the canonical central harvester derives both cache keys from its post-persistence local `HEAD` after a successful semantic merge/push and seeds the exact generations created by that Hint commit; report-only solver diagnostics does not seed canonical Hint generations.
 
 No restore prefix is allowed. A stale projection must never be reused across source/code generations.
 
