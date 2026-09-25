@@ -127,6 +127,8 @@ jobs:
           mkdir -p data/stress
           for file in \
             data/levels.json \
+            data/level-heatmaps.json \
+            data/themes.json \
             data/stress/stress-levels.json \
             data/stress/stress-levels-random.json \
             data/stress/stress-levels-envelope.json
