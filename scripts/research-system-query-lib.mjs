@@ -128,10 +128,14 @@ const RESEARCH_GIT_REF_SPARSE_DIRECTORIES = [
 ];
 
 export function buildResearchSystemFindingSnapshotFromGitRef(root, ref) {
-    return withDetachedGitWorktree(root, ref, worktree =>
-        buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(worktree, {
+    return withDetachedGitWorktree(
+        root,
+        ref,
+        worktree => buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(worktree, {
             allowHistoricalWorkstreamTable: true,
-        })));
+        })),
+        { sparseDirectories: RESEARCH_GIT_REF_SPARSE_DIRECTORIES },
+    );
 }
 
 export function diffResearchSystemFindingSnapshots(before, after) {
