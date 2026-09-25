@@ -171,8 +171,23 @@ Exact Fast Gate evidence from run **36096167198** is green for the full Node/CLI
 
 Decision: **close this process-topology experiment successful**. Preserve the three real executable boundaries (combiner smoke, planner smoke, timeout-recovery stdout integration) and do not chase the remaining 1.6 s unless it re-emerges as a material tail.
 
-Decision gate: keep the sparse path only if all existing real-repository HEAD parity/queryability assertions stay green and the corrected Node-22 benchmark shows a repeatable reduction in the top-three contracts or total direct wall. If not, revert it rather than adding broader shared-fixture coupling.
+#### Four-worker launch-order experiment — closed negative
 
+Exact-head run **36097915898** exposed a plausible scheduler-tail hypothesis: the permanent Node harness used a bounded four-worker pool but consumed all 212 requested contracts strictly in package-list order, while several 3–5 s contracts sat late in that list.
+
+A scoped experiment added an explicit `PATHFINDER_PARALLEL_PRIORITY` launch-order hint and placed the twelve current ~3.1–5.2 s contracts first without changing commands, contract count, process isolation, output attribution, or failure semantics. Exact-head PR run **36098410201** was fully green, but the Node/CLI step moved from roughly **32.3 s** on 36097915898 to roughly **33.7 s**. Child costs remained in the same range; the supposed drain-tail saving did not survive ordinary hosted-runner variance.
+
+Decision: **close static launch-order prioritization negative and revert the scheduling machinery.** The acceptance bar was a repeatable multi-second Node wall reduction; the first production measurement instead regressed by ~1.4 s. Do not carry a hand-maintained priority list or runner complexity for a benefit below the noise floor. Revisit scheduling only if a future stable timing profile demonstrates a materially larger drain imbalance, preferably on larger/reserved compute where effective CPU is less volatile.
+
+
+
+#### CP-SAT harvester fixture isolation — active experiment
+
+Current exact-head Node timing puts `test:harvest-cpsat-discovery-reports` at **5.1–5.9 s**. Its real-row regression still loaded the full published corpus and temporarily rewrote tracked `data/hints/P00002.json`, even though the sibling diagnostics harvester regression has already demonstrated a stronger hermetic pattern: copy one real published level and its real persisted Hint into a private temporary corpus, then exercise the real adapter/referee/merge boundary there.
+
+The scoped experiment adds only a corpus-path injection seam for the logical published corpus and moves the CP-SAT real-row fixture to a private one-level copy. Artifact identity remains canonical, and the test still uses a real P00002 path, real stored level revision, real fingerprint check, real referee validation, provenance reconstruction, occurrence lineage, and persisted Hint merge.
+
+Decision gate: retain the change if exact-head CI is green and the contract cost falls materially below the current 5.1–5.9 s range. The private fixture also removes a shared tracked-file mutation from the four-worker Node population, so hermeticity is part of the acceptance evidence.
 ### Covered Vitest
 
 Fresh production evidence from run **36090943840** / deep job **107933055611** validates the #2109 repair-search reuse change:
