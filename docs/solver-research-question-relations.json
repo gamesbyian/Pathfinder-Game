@@ -970,7 +970,7 @@
       "answeredBy": [
         "reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md"
       ],
-      "result": "Seed census established the acquisition instrument but is selection-biased: 26 retained-evidence rows classify 22 HARVEST, 1 EXTENSION, 3 UNKNOWN, 0 INVENTION; 23/26 are Class-3 rows selected on known historical capability. The three UNKNOWN beam rows first require current-head isolated freshness replay. Broader prevalence remains open. The 2026-09-22 technique-census closeout then sharpened the residual picture from existing data: of 532 production-unsolved levels, 83 (15.6%) have a full-depth T1 isolated solve and 47 of those are singleton-supported by exactly one technique. Generic compact failure telemetry is now exhausted as a broad discriminator, so the earned next gate is existing-data sampling of first-loss/operational-divergence on the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win routing mismatches, not more fresh acquisition.",
+      "result": "Seed census established the acquisition instrument but is selection-biased: 26 retained-evidence rows classify 22 HARVEST, 1 EXTENSION, 3 UNKNOWN, 0 INVENTION; 23/26 are Class-3 rows selected on known historical capability. The three UNKNOWN beam rows first require current-head isolated freshness replay. Broader prevalence remains open. The 2026-09-22 technique-census closeout then sharpened the residual picture from existing data: of 532 production-unsolved levels, 83 (15.6%) have a full-depth T1 isolated solve and 47 of those are singleton-supported by exactly one technique. Generic compact failure telemetry is now exhausted as a broad discriminator, so the earned next gate is existing-data sampling of first-loss/operational-divergence on the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win routing mismatches, not more fresh acquisition. That specific 83/47 cohort is currently BLOCKED: it requires the technique-census combine artifact (GHA run 35687337464), hosted on productionresultssa2.blob.core.windows.net, which this environment's network policy denies (confirmed 403 via download_workflow_run_artifact -> curl). A separate, fully local existing-data sample from the already-committed EW1 pricing/production-reach join (2026-09-25) found 2 exact-config F8 routing/deployment misses (CID-0027 R00118, CID-0028 R02696, one singleton-T1-supported) with zero production attempts on the winning action -- registered in data/stress/capability-invention-demand.json, HARVEST, not INVENTION.",
       "triggeredBy": [],
       "constrainedBy": [
         "docs/solver-capability-invention-program.md",
@@ -979,13 +979,16 @@
         "reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md",
         "reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md",
         "reports/2026-09-22-technique-census-broad-evidence-closeout-001.md",
-        "reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md"
+        "reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md",
+        "reports/2026-09-25-capability-invention-demand-ew1-routing-gap-sample-001.md"
       ],
       "constrains": [
         "Do not infer invention prevalence from the harvest-enriched Class-3 seed.",
         "Promote only recurrent decision-bearing semantic gaps after cheaper earlier first-loss classes are excluded.",
         "The immediate beam-UNKNOWN gate is current-head isolated freshness, not a new beam architecture.",
-        "Do not buy more generic compact failure telemetry or another broad census; sample first-loss/operational-divergence from the existing 83/47 T1-rescuable cohorts first."
+        "Do not buy more generic compact failure telemetry or another broad census; sample first-loss/operational-divergence from the existing 83/47 T1-rescuable cohorts first.",
+        "The 83/47 T1-rescuable cohort sampling is blocked on network access to the census artifact, not on missing local evidence; do not attempt to reconstruct it by guessing from hint-store diffs.",
+        "CID-0027/CID-0028 are a 2-row sample from a 60-level pricing population, not a prevalence claim; do not generalize their base rate to the full residual."
       ],
       "reopensOn": null,
       "premiseRefs": [

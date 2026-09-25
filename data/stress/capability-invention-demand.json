@@ -824,6 +824,70 @@
       },
       "recurrenceScope": "multiple-independent-parents",
       "notes": "Exact-action production participation confirmed; disposition censored-dose. Rescuer action(s): admissible-order|tieBreak=none|lds=off."
+    },
+    {
+      "id": "CID-0027",
+      "subject": {
+        "levelId": "R00118",
+        "population": "EW1 bounded 60-level frozen pricing sample x fresh production reach join",
+        "corpus": "Corpus 2",
+        "parentId": "R00118"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F8",
+      "workClass": "HARVEST",
+      "evidenceStrength": "development",
+      "evidenceRefs": [
+        "reports/stress/capability-runs/35687363645/equal-work-production-reach.json",
+        "reports/stress/capability-runs/35687363645/equal-work-production-reach.md",
+        "reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Offer beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets on this level's feature profile (requiredIntersections=6, no mustCross, no portals); production currently offers the same score/width beam only at retention=plain (confirmed via a direct getAttemptConfigs dump), zero attempts at the mechanic-buckets retention variant.",
+      "demand": "No new semantic operation. The mechanic-bucket-retention beam variant already exists and solves this exact level at 3,063,399 canonical work in EW1 isolation; production's attempts.ts routing for this level's feature profile never includes that retention variant, only the plain-retention sibling at the same score/width.",
+      "atlasDimensions": [
+        "action"
+      ],
+      "smallestProbe": {
+        "question": "Does adding the mechanic-buckets retention variant to this level's routed feature-profile branch recover the level at matched total work without regressing other same-branch production-solved levels?",
+        "decisionSeam": "attempts.ts feature-profile config routing",
+        "advanceIf": "A matched-work exposure test on the same feature-profile population shows net referee-valid gains with zero same-branch losses.",
+        "stopIf": "Exposure produces zero gains or any same-branch solved-level regression."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Paired recurrence evidence is CID-0028 (R02696) under the same EW1/production-reach join; both are exact-config routing gaps, not budget/reserve starvation (contrast with the F7 rows above). Bounded EW1-eligible base rate: 2/60 (3.3%) of the frozen pricing sample. productionAttempts=0 confirmed directly from the join (never a starved/failed attempt)."
+    },
+    {
+      "id": "CID-0028",
+      "subject": {
+        "levelId": "R02696",
+        "population": "EW1 bounded 60-level frozen pricing sample x fresh production reach join",
+        "corpus": "Corpus 2",
+        "parentId": "R02696"
+      },
+      "diagnosisStatus": "resolved",
+      "firstLossClass": "F8",
+      "workClass": "HARVEST",
+      "evidenceStrength": "development",
+      "evidenceRefs": [
+        "reports/stress/capability-runs/35687363645/equal-work-production-reach.json",
+        "reports/stress/capability-runs/35687363645/equal-work-production-reach.md",
+        "reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md"
+      ],
+      "unresolvedEarlierClasses": [],
+      "minimalCounterfactual": "Offer any of beam|score=harvestThenFinish|bias=none|width=2000|retention=plain, beam|score=knotBuilder|bias=none|width=2000|retention=plain, or beam|score=mustCrossFirst|bias=none|width=2000|retention=plain on this level's feature profile (requiredIntersections=12, no mustCross, no portals); a direct getAttemptConfigs dump confirms production's routed set for this profile contains zero width=2000 beams other than perimeterSweep (CW/CCW) -- none of the three winning score functions appear at any width.",
+      "demand": "No new semantic operation. All three beam score functions already exist and each independently solves this exact level in EW1 isolation at 604,008-660,150 canonical work (cheaper than this level's own production work-spent-while-unsolved, 145,012,385). Full T1 census additionally flags this level as singleton-supported (frozenT1SupportClass=production-miss-frozen-t1-solvable, solverCount=1, singleton=true), so the production routing branch for this feature profile omits the level's only known T1-isolated rescuer family entirely.",
+      "atlasDimensions": [
+        "action"
+      ],
+      "smallestProbe": {
+        "question": "Does adding one or more of the three missing width=2000 beam score functions to this level's routed feature-profile branch recover the level at matched total work without regressing other same-branch production-solved levels?",
+        "decisionSeam": "attempts.ts feature-profile config routing",
+        "advanceIf": "A matched-work exposure test on the same feature-profile population shows net referee-valid gains with zero same-branch losses.",
+        "stopIf": "Exposure produces zero gains or any same-branch solved-level regression."
+      },
+      "recurrenceScope": "multiple-independent-parents",
+      "notes": "Paired recurrence evidence is CID-0027 (R00118) under the same EW1/production-reach join; both are exact-config routing gaps, not budget/reserve starvation (contrast with the F7 rows above). Bounded EW1-eligible base rate: 2/60 (3.3%) of the frozen pricing sample. productionAttempts=0 confirmed directly from the join for all three candidate actions (never starved/failed attempts). This is the higher-priority of the two rows: it is singleton-T1-supported (the level's only known rescuer family is entirely unrouted here), while CID-0027's missing variant is one of 7 T1-supporting techniques."
     }
   ]
 }
