@@ -55,6 +55,10 @@ on:
         description: 'Cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 4 vCPUs)'
         required: false
         default: '4'
+      max_parallel:
+        description: 'Maximum concurrent shard jobs. Default 15 reserves five hosted slots for PR CI; set 20 explicitly when monopolizing the full runner pool is acceptable.'
+        required: false
+        default: '15'
       target_wall_minutes:
         description: 'Target wall-clock minutes per shard (shard count is derived from this, not fixed -- tune UP when node_budget grows a lot round over round, since the typical predicted-per-level time grows with it)'
         required: false
@@ -212,7 +216,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
-      max-parallel: 20
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out dispatched immutable SHA
