@@ -1,7 +1,5 @@
 import { defineConfig } from 'vitest/config';
 
-const coverageShardRehearsal = process.env.PATHFINDER_COVERAGE_SHARD === '1';
-
 // `*-unit-tests.mjs` is the positive Vitest convention for script-level unit suites.
 // Standalone Node/CLI harnesses use `*-node-test.mjs` and are owned by `test:node`.
 
@@ -38,7 +36,7 @@ export default defineConfig({
                 'modules/**/types.ts',
                 'modules/solver/testing-api.ts',
             ],
-            thresholds: coverageShardRehearsal ? undefined : {
+            thresholds: {
                 statements: 82,
                 branches: 72,
                 functions: 90,
