@@ -4,10 +4,12 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { readRepositoryText, repositoryPathKind, repositoryTextFilesContainingNul } from './repository-file-view.mjs';
 
 const temp = mkdtempSync(path.join(tmpdir(), 'repository-file-view-'));
+const checkTextSourceFiles = path.join(path.dirname(fileURLToPath(import.meta.url)), 'check-text-source-files.mjs');
 const git = (...args) => execFileSync('git', args, { cwd: temp, stdio: 'pipe', encoding: 'utf8' });
 
 try {
@@ -44,7 +46,26 @@ try {
 
   assert.deepEqual(repositoryTextFilesContainingNul(temp, bulkPaths), [nulPath]);
 
-  console.log('repository-file-view handles large and bulk unmaterialized tracked blobs.');
+  // Exercise the real PR-incremental checker at the cardinality that exposed #2072's process storm.
+  mkdirSync(path.join(temp, 'bulk-pr'), { recursive: true });
+  for (let index = 0; index < 1500; index += 1) {
+    writeFileSync(
+      path.join(temp, 'bulk-pr', `file-${String(index).padStart(4, '0')}.json`),
+      `{"index":${index}}\n`,
+    );
+  }
+  git('add', 'bulk-pr');
+  git('commit', '-m', 'bulk pr fixture');
+  rmSync(path.join(temp, 'bulk-pr'), { recursive: true });
+
+  const bulkCheck = execFileSync(process.execPath, [checkTextSourceFiles], {
+    cwd: temp,
+    env: { ...process.env, PATHFINDER_PR_INCREMENTAL: '1' },
+    encoding: 'utf8',
+  });
+  assert.match(bulkCheck, /Changed text-file check passed \(1500 files scanned\)/);
+
+  console.log('repository-file-view handles large and PR-scale bulk unmaterialized tracked blobs.');
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }
