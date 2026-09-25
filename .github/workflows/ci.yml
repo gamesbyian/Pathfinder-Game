@@ -21,8 +21,9 @@ concurrency:
 # only twice. Independent validation steps within a lane continue after ordinary validation failures
 # so one run reports the useful failure set; setup/install failures still stop dependent validation.
 jobs:
-  # Impact routing is authoritative only for whether the expensive deep lane is required.
-  # The fast gate remains universal. Planner failure fails safe by running deep verification. It intentionally avoids npm ci:
+  # Impact routing records the semantic validation plan and remains authoritative for final-status/deep-lane decisions.
+  # Fast Gate independently computes the same plan locally so selected validator/Node/build work can start without
+  # waiting on another hosted runner. Planner failure fails safe to broad validation. This job intentionally avoids npm ci:
   # ownership/routing authorities use Node built-ins and Git metadata only.
   impact-shadow:
     runs-on: ubuntu-latest
@@ -82,7 +83,7 @@ jobs:
           echo "Impact planner outcome: $SHADOW_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
           if [[ "$SHADOW_OUTCOME" != "success" ]]; then
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Planner failure fails safe: fast-gate remains universal and deep-verification runs conservatively." >> "$GITHUB_STEP_SUMMARY"
+            echo "Planner failure fails safe: Fast Gate falls back broad and deep-verification runs conservatively." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   fast-gate:
