@@ -1032,6 +1032,37 @@ Decision gate:
 - true empty-cache fallback must remain semantically complete;
 - if restore-key lookup or manifest reconciliation adds material warm-path cost, revert rather than preserving architectural complexity.
 
+## Coverage lane de-duplication: script integrations
+
+Warm rolling-cache run **36176115286** established the first near-target topology:
+
+- Fast Gate: ~21.8 s runner wall;
+- Node shard A: ~31.5 s;
+- Node shard B: ~30.7 s;
+- deep services: ~26.9 s;
+- coverage: ~35.5 s.
+
+Coverage was therefore the only lane still above the hard 35 s ceiling.
+
+The covered Vitest census showed that two script-level suites accounted for ~**2.64 s** of the ~3.12 s total script-unit file time:
+
+- `scripts/solver-parallel-unit-tests.mjs`: ~1.68 s;
+- `scripts/eslint-rules-unit-tests.mjs`: ~0.96 s.
+
+These are not ordinary coverage-owner tests:
+
+- solver-parallel is a real worker-thread/executable solver integration boundary;
+- ESLint rules are repository/tooling rule tripwires.
+
+They now execute as permanent Node contracts:
+
+- `test:solver-parallel-contract`, solver-owned with explicit `solver + research` invalidation;
+- `test:eslint-rules-contract`, repo-owned.
+
+They remain in ordinary local/main unit runs, but are excluded from the covered PR invocation to avoid serially exercising the same executable/tooling contracts in both coverage and Node lanes. Coverage thresholds and instrumented source scope are unchanged.
+
+Decision gate: keep this move only if the exact-head coverage thresholds remain green and the coverage runner wall drops materially below 35 s without pushing either Node shard beyond the target.
+
 ## Current forward work order
 
 1. **Validate the three-lane production packing:** require green exact-head full-impact evidence for Fast Gate, coverage-only deep-verification, and deep-services; record first-runner→last-required completion and each lane wall.
