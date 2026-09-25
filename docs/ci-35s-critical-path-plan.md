@@ -147,6 +147,7 @@ The original nine-level population has now been probed at **250,000 work** and a
 | B5 runtime-hint projection cache | **merged / measured green** | #2087 merged restore/seed across PR/main/scoped and diagnostics. Ordinary PR #2088 restored the exact projection cache and completed build in **~2.3 s** with Vite compile **672 ms**, versus ~25 s cold. |
 | D1 two-way Node sharding | **closed negative on shared hosted runners** | Post-hermetic rehearsals are semantically green and cut useful Node work to ~14–17 s/shard, but runner walls varied to **31–35 s** and **27–38 s** across confirmations. Shared bootstrap variance consumes the 35 s budget; stop shard-count tuning. |
 | B3 proofs + Firestore overlap | **production rollout measured green on PR** | #2100 full-impact run kept coverage green and ran unchanged proofs + Firestore concurrently in **15 s**, with independent success outputs. Prior serialized shape was ~23 s. Awaiting final authority/parity-green merge. |
+| B6 bulk-change text-invariant batching | **implementation in #2107; remote timing pending** | #2072 CI run 36082154314 exposed a scaling regression: `check:text-source-files` took **6m47s** on a 1,474-file migration because each sparse changed file triggered separate `git cat-file -s` + `git show` processes. #2107 batches sparse HEAD blob reads through one `git cat-file --batch` process without changing the checked population or invariant. |
 | D2 coverage sharding | **technical success; shared-runner margin insufficient** | D2b run 36068829982 balanced 146 files to 17.091/17.090 test-s and produced authoritative merged coverage with unchanged thresholds in **34 s from shard start**. Only ~1 s headroom remains; D1 already demonstrated ordinary hosted setup variance can exceed that. |
 
 ### A1c. Publish runtime-data cache from diagnostics hint refresh
@@ -403,6 +404,22 @@ Preserve the measured coverage profile and warm-coordinator architecture. The ne
 Ordinary full-impact PR run **36066406944** completed in **77 s** wall. Fast gate was **58 s**, dominated by Node/CLI at **34 s**. Deep verification was the critical path at **77 s**, dominated by serialized **30 s coverage + 10 s proofs + 13 s Firestore**.
 
 This baseline changes the optimization priority: bootstrap/cache work has mostly succeeded. Remaining latency is validation execution plus shared-runner orchestration. B3 removes real serialized work without adding a runner; D1 has already shown that adding shared Node runners does not provide enough p90 headroom; D2b is the final shared-runner coverage architecture worth testing before the plan moves that work to reserved/larger compute.
+
+### Bulk-change Fast Gate regression discovered by #2072
+
+The hint/provenance consolidation merge exposed a CI-cost topology that ordinary PRs had not stressed. PR #2072 changed **1,474 files**, including **1,265 `data/families/**` paths** and **124 stress-Hint paths**. On exact-head CI run **36082154314**, Fast Gate entered `Check textual source invariants` at 01:30:07Z and did not leave it until 01:36:54Z: **6m47s in one invariant step**. Deep verification completed in 48 s on the same run, so this was a Fast Gate implementation regression rather than hosted-runner assignment variance.
+
+The invariant itself is cheap: changed text files must not contain NUL bytes, and `modules/` paths must obey canonical naming. The pathological cost came from the sparse repository view. For every changed text path absent from the sparse working tree, `readRepositoryText()` launched one `git cat-file -s` process to size the blob and one `git show` process to read it. Bulk migrations therefore turned an O(files) byte scan into O(files) **process launches**, with roughly two Git subprocesses per sparse file.
+
+Required correction:
+
+1. preserve working-tree reads for materialized files so local/manual semantics do not change;
+2. collect sparse missing paths and read their exact `HEAD:<path>` blobs through one batched Git object process;
+3. retain the same NUL-byte and module-path populations;
+4. keep a many-file sparse regression fixture so future repository-view refactors cannot silently restore per-file process topology;
+5. measure a bulk-change rehearsal before treating this incident as closed.
+
+This is separate from the shared-runner p90 problem documented below. A six-minute deterministic local step is application-owned CI waste and must be removed regardless of future runner capacity.
 
 ### Phase D: runtime-balanced execution topology
 
