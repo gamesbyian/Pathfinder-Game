@@ -17,13 +17,16 @@ try {
 
   const payload = `${'x'.repeat(2 * 1024 * 1024)}\n`;
   writeFileSync(path.join(temp, 'large-report.json'), payload);
-  git('add', 'large-report.json');
+  writeFileSync(path.join(temp, 'materialized.json'), '{"state":"committed"}\n');
+  git('add', 'large-report.json', 'materialized.json');
   git('commit', '-m', 'fixture');
 
   // Simulate sparse checkout: the file remains tracked in HEAD but is not materialized.
   rmSync(path.join(temp, 'large-report.json'));
   assert.equal(repositoryPathKind(temp, 'large-report.json'), 'file');
   assert.equal(readRepositoryText(temp, 'large-report.json'), payload);
+  writeFileSync(path.join(temp, 'materialized.json'), 'working\0tree');
+  assert.deepEqual(repositoryTextFilesContainingNul(temp, ['materialized.json']), ['materialized.json']);
 
   mkdirSync(path.join(temp, 'bulk'), { recursive: true });
   const bulkPaths = [];
