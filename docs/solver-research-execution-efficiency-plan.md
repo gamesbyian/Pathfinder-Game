@@ -103,7 +103,7 @@ The research system now binds solver request, corpus/population and provenance i
 
 ### Work
 
-1. record exact Node and npm versions in experiment/run metadata where not already captured;
+1. record exact runtime identity in experiment/run metadata where not already captured. **Started:** the level-blind capability and history-aware portfolio producers now emit actual Node version, platform, and architecture in their report summaries; workflow/runtime pinning remains unactivated.
 2. rehearse a representative cross-section under an exact runtime:
    - planner/combine-only path;
    - level-blind solver path;
