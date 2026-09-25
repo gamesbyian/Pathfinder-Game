@@ -558,7 +558,18 @@ had already been executed and claimed complete.
 that check and fails if any tracked level corpus would still change. The benchmark remains measurement;
 the fixed-point check is the completion gate.
 
-## Exact-head validation fallout after Findings 25-33
+### 39. Multiline shell continuations could bypass workflow persistence scope detection
+
+The central workflow-persistence guard parsed `git add` and `git status` one physical line at a time.
+A valid Actions shell block could therefore put the command verb on one line and the canonical Hint
+scope on the next via a trailing backslash. In that shape neither physical line contained both pieces
+of evidence, so a direct canonical staging route could evade the guard.
+
+**Correction:** workflow shell text is normalized into logical commands before variable/scope analysis,
+joining backslash-newline continuations. Permanent adversarial fixtures cover continued `git add`
+and `git status` commands against published/stress Hint stores.
+
+## Exact-head validation fallout during Findings 25-39
 
 The first remote PR validation on head `06294be...` was valuable precisely because it did not stay
 green:
