@@ -89,6 +89,8 @@ function extractJobs(source) {
       setupNodeSites: count(block, /actions\/setup-node@/gu),
       nodeVersions: versions,
       floatingMajorOnlyNodeSites: versions.filter(version => /^\d+$/u.test(version)).length,
+    exactNode22232Sites: versions.filter(version => version === '22.23.2').length,
+      exactNode22232Sites: versions.filter(version => version === '22.23.2').length,
       npmCiSites: count(block, /^\s*(?:run:\s*)?npm ci\s*$/gmu),
       sparseCheckoutSites: count(block, /sparse-checkout:/gu),
       exactDependencyTreeSignals: count(
@@ -153,6 +155,9 @@ const summary = {
   checkoutSites: workflows.reduce((sum, row) => sum + row.checkoutSites, 0),
   setupNodeSites: workflows.reduce((sum, row) => sum + row.setupNodeSites, 0),
   floatingMajorOnlyNodeSites: workflows.reduce((sum, row) => sum + row.floatingMajorOnlyNodeSites, 0),
+  exactNode22232Sites: workflows.reduce((sum, row) => sum + row.exactNode22232Sites, 0),
+  floatingMajorOnlyWorkflows: workflows.filter(row => row.floatingMajorOnlyNodeSites > 0).map(row => row.name),
+  exactNode22232Workflows: workflows.filter(row => row.exactNode22232Sites > 0).map(row => row.name),
   npmCiSites: workflows.reduce((sum, row) => sum + row.npmCiSites, 0),
   workflowsWithSparseCheckout: workflows.filter(row => row.sparseCheckoutSites > 0).length,
   workflowsWithExactDependencyTreeSignals: workflows.filter(row => row.exactDependencyTreeSignals > 0).length,
@@ -181,7 +186,7 @@ const measurementQueues = {
 };
 
 const output = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   generatedAt: new Date().toISOString(),
   note: 'Static topology only. Site counts identify candidate measurement/refactor surfaces and are not runtime cost estimates.',
   summary,

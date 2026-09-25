@@ -114,7 +114,7 @@ The research system now binds solver request, corpus/population and provenance i
 
 ### Exit
 
-- maintained evidence-producing workflows no longer float a major-only Node version;
+- maintained scientific workflows in rehearsed producer families no longer float a major-only Node version; remaining maintained workflow exceptions are explicitly classified rather than silently floating;
 - runtime identity is inspectable in produced evidence;
 - migration evidence demonstrates no unexplained solved-set/config/provenance drift.
 
@@ -251,7 +251,8 @@ This plan is complete only when:
 1. **DONE:** add a static research-workflow bootstrap/topology audit, now with per-job classification and measurement queues.
 2. **DONE:** produce the current starting census and add hosted September-22 bootstrap timing evidence.
 3. **DONE:** reconcile and compact the solver queue with this supporting program and post-September-22 architecture.
-4. **PARITY EARNED:** run 36190221008 proved byte-identical semantics for exact Node 20.20.2 vs 22.23.2 across the primary level-blind and history-aware producers; both producers emit actual runtime identity. Exact Node 22.23.2 workflow pinning is the activation step.
-5. **REHEARSAL GREEN:** run 36187498364 proved byte-identical full-tree vs sparse-tree semantics for the live targeted-sweep planner + one real level-blind canary. Sparse checkout reached HEAD in ~3.3 s versus ~45.7 s full-tree while retaining the exact Corpus-2 and runtime-telemetry inputs.
-6. Next: pin the earned exact runtime and activate the earned targeted-planner sparse boundary, then measure exact dependency-tree reuse. Long solve shards stay measurement-gated.
-6. Do not bulk-edit every workflow before representative parity evidence.
+4. **ACTIVATED:** run 36190221008 proved byte-identical semantics for exact Node 20.20.2 vs 22.23.2 across the primary level-blind and history-aware producers. The seven maintained workflows whose scientific execution uses `level-blind-capability-sweep.mjs` or `portfolio-solve-sweep.mjs` now pin exact Node **22.23.2** at every setup site. Helper/harvest/integrity workflows outside those rehearsed producer families are deliberately not swept into this activation merely for uniformity.
+5. **ACTIVATED:** run 36187498364 proved byte-identical full-tree vs sparse-tree semantics for the live targeted-sweep planner + one real level-blind canary. The production targeted planner now sparse-checks out package manifests, scripts, modules, the default Corpus-2 file, and runtime telemetry. Caller-selected `corpus` and `ids_file` remain authoritative: the planner materializes those exact blobs from the dispatched immutable commit with `git show`, so sparse activation does not narrow the workflow's input contract.
+6. **ACTIVATED FOR ONE SHORT ORCHESTRATOR:** the targeted-sweep plan job now restores the exact CI-proven `node_modules` generation keyed by runner OS/arch + Node 22.23.2 + npm 10.9.8 + lockfile hash, skips npm-cache restore/`npm ci` on a hit, and preserves `npm ci` plus exact-cache save on a miss. Historical short-orchestration evidence showed roughly a minute of checkout/runtime/install before useful planner/canary work; the next real targeted dispatch supplies production hit/miss economics without changing solver semantics.
+7. **NEXT:** inspect the first real targeted-sweep hit/miss timing, then extend exact dependency-tree reuse only to other short planner/generator/combine jobs where bootstrap remains material. Long solve shards stay measurement-gated.
+8. Do not bulk-optimize helper workflows or long solver shards before their own semantics/economics justify it.
