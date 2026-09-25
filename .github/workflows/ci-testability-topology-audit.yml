@@ -124,9 +124,9 @@ jobs:
             exit 1
           fi
 
-  node-a-no-runtime-data:
+  node-a-minimal-runtime-data:
     if: github.event_name == 'pull_request'
-    name: node-a-no-runtime-data
+    name: node-a-minimal-runtime-data
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -156,6 +156,17 @@ jobs:
             /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
             !/data/
           sparse-checkout-cone-mode: false
+      - name: Materialize shard-A level documents
+        shell: bash
+        run: |
+          mkdir -p data/stress
+          for file in \
+            data/levels.json \
+            data/stress/stress-levels.json \
+            data/stress/stress-levels-random.json
+          do
+            git show "HEAD:$file" > "$file"
+          done
       - name: Derive exact dependency-tree cache key
         id: dependency-tree-key
         shell: bash
