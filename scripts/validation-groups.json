@@ -691,6 +691,24 @@
           "docs/hint-evidence-consolidation-inventory.json",
           ".github/workflows/**"
         ]
+      },
+      "test:data-assets-contract": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json",
+          "data/themes.json",
+          "data/hints/**"
+        ]
+      },
+      "test:level-codec-maintained-corpus-contract": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json",
+          "data/stress/stress-levels.json",
+          "data/stress/stress-levels-random.json",
+          "modules/domain/level-codec.ts",
+          "modules/domain/level-fingerprint.ts"
+        ]
       }
     }
   }
