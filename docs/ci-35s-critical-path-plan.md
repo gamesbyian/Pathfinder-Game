@@ -1673,6 +1673,29 @@ This is **execution ownership**, not test/cadence deletion:
 
 Decision gate: keep this move only if exact-head CI remains green, coverage thresholds remain green, coverage wall gains material margin, and solver Node wall remains below the hard target.
 
+## Auxiliary audit runner contention
+
+The first exact-head sample after moving marked deep solver integrations out of coverage was semantically green on every substantive CI lane, and each lane individually met the software budget:
+
+- coverage: ~30.5 s;
+- deep services: ~24.8 s;
+- Node A: ~28.0 s, including the new ~3.4 s deep-integration contract;
+- Node B: ~26.8 s;
+- Fast Gate: ~25.7 s.
+
+However, the five production runners were allocated over roughly **114 seconds**: the first started at 21:58:37Z and the last did not start until 22:00:31Z. First-runner → last-required completion was therefore ~142 s despite every lane being individually healthy.
+
+The production workflow has no dependency edges between these lanes. The same PR also auto-launched separate `ci-semantic-fault-injection-audit.yml` and `ci-testability-topology-audit.yml` workflows, consuming additional hosted-runner allocations while production CI was trying to fan out.
+
+Both are now **manual-only**:
+
+- topology audit was already documented/lifecycle-classified as manual, so its pull-request trigger was stale;
+- semantic fault injection remains maintained forensic/audit infrastructure, but ordinary routing/classifier/parity/correctness contracts remain permanent CI and the separate mutation campaign no longer auto-runs on every routing edit.
+
+This is not a deletion of evidence. Both workflows remain dispatchable. The purpose is to stop evidence/audit jobs from distorting production-gate runner allocation and the confirmation window.
+
+The next exact-head full-impact sample is therefore the first clean production-only runner-allocation measurement after this correction.
+
 ## Current forward work order
 
 1. **Validate the reconciled packed topology:** require exact-head green CI/oracles after the #2118 merge-forward and parity/scoped-rehearsal repair; use that head as the new comparable timing baseline.
