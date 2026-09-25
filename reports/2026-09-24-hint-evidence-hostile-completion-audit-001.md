@@ -1,6 +1,6 @@
 # Hint evidence consolidation — hostile completion audit — 001
 
-> **Status:** closed — operationally complete
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-24 — PR #2072 exact head `3ac9c52d4573` passed the complete post-Finding-42 remote closure set together: CI run 36082154314 (including green fast-gate and deep-verification jobs), Hint/provenance hostile audit 36082154311, Hint consolidation closeout canary 36082154323, Solver evidence integrity guard 36082154287, and CI testability topology audit 36082154443. Deep verification's heavyweight/Firestore step was green. That exact head then merged as `3d4080ee3244`.
 > **Decision:** The earlier "all phases complete" claim was premature, but the corrected implementation is now operationally complete against the strengthened Definition of Done. Findings 1–42 remain the durable record of what was required to make that claim defensible.
 > **Remaining gate:** None for the consolidation program. Future failures of the standing guards are maintenance regressions to repair, not evidence that this historical closeout remained pending.

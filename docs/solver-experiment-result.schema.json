@@ -512,8 +512,7 @@
           "const": "pathfinder-solver-source-run-binding"
         },
         "runId": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "runAttempt": {
           "type": [

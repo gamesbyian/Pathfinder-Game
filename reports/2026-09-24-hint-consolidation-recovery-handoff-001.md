@@ -1,6 +1,6 @@
 # Hint consolidation recovery handoff — 001
 
-> **Status:** retired — recovery objective completed
+> **Status:** superseded
 > **Last evidence:** 2026-09-24 — The recovered continuation became PR #2072, whose final exact head `3ac9c52d4573` passed the complete remote closure set and merged as `3d4080ee3244`.
 > **Decision:** This document remains historical branch-recovery provenance only. New work must start from current `main`; PR #2072 and its branch are no longer continuation authorities.
 > **Remaining gate:** None. The consolidation program's current closeout authority is `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`.
