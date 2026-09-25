@@ -57,7 +57,6 @@ function writeGithubOutputs(result, plan, execution) {
     `needs_build=${bool(capability('build'))}`,
     `needs_coverage=${bool(capability('unit-coverage'))}`,
     `needs_deep_proofs=${bool(capability('deep-proofs'))}`,
-    `needs_solver_canary=${bool(capability('solver-canary'))}`,
     `needs_firestore=${bool(capability('firestore-boundary'))}`,
     `fast_job_required=${bool(execution.jobs['fast-gate']?.required)}`,
     `deep_job_required=${bool(execution.jobs['deep-verification']?.required)}`,
