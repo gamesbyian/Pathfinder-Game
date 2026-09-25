@@ -145,6 +145,10 @@ This is now the primary Node software target. Audit showed that all three domina
 
 #2109 therefore attacks the common Git-ref cost first without weakening the integration boundary. `withDetachedGitWorktree()` now supports both cone-directory and explicit file-pattern sparse materialization. Research snapshots use explicit patterns: all docs; report Markdown; experiment-evidence manifests/bundles; the solver-evidence integrity index; the capability-invention-demand register; and, for system inventory only, package/scripts/workflows. This avoids materializing the ~449 MB `data/stress` tree and ~623 MB `reports` tree wholesale, while preserving every source the builders actually read. The snapshot builders still execute against a real detached requested ref. A tiny dedicated Git fixture asserts that requested directories and root files materialize, excluded directories do not, and the detached HEAD matches the requested ref.
 
+Preliminary coarse-cone benchmark evidence from run **36093286575** is already positive on the three target contracts: `research-query` fell from ~9.2 s to roughly **5.7–7.2 s**, queryability from ~8.9 s to **5.2–6.4 s**, and system-query from ~8.8 s to **4.6–5.0 s**. That run was red only because the new `test:git-ref-worktree` contract had not yet been added to the permanent research validation group; the contract itself and all three research-query contracts passed. The registry defect is fixed in #2109.
+
+The exact-pattern implementation should reduce materialized data further and remains the decision authority once a green Node-22 benchmark completes.
+
 Decision gate: keep the sparse path only if all existing real-repository HEAD parity/queryability assertions stay green and the corrected Node-22 benchmark shows a repeatable reduction in the top-three contracts or total direct wall. If not, revert it rather than adding broader shared-fixture coupling.
 
 ### Covered Vitest
