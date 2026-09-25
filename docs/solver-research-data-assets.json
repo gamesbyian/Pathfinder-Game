@@ -141,7 +141,8 @@
       "grain": [
         "level",
         "hint-path",
-        "provenance-event",
+        "semantic-provenance-event",
+        "physical-acquisition-occurrence",
         "dependency-stratum"
       ],
       "locations": [
@@ -155,7 +156,8 @@
         "scripts/level-data-io.mjs",
         "scripts/hint-query.mjs",
         "docs/solver-evaluation-evidence.md",
-        "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md"
+        "docs/hint-evidence-execution-identity-storage-consolidation-plan.md",
+        "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md"
       ],
       "queryEntryPoints": [
         "npx tsx scripts/hint-query.mjs --id=<ID> --summary",
@@ -197,7 +199,8 @@
         "technique-census",
         "level-structure-fingerprint",
         "hint-discovery-process",
-        "hint-harvest-selection-provenance"
+        "hint-harvest-selection-provenance",
+        "hint-ingestion-receipts"
       ],
       "affordances": [
         "Ask an explicit evidence-purpose question instead of treating every valid historical discovery as equivalent evidence.",
@@ -207,8 +210,9 @@
         "Collapse dependent replay/configuration clouds into conservative within-path dependency strata before interpreting support volume.",
         "Test whether an apparent technique, corpus, solution-profile or current-capability effect is confounded by how and when known solutions were discovered.",
         "Use the reconstructability report to see exactly which effective-input dimensions are absent before attempting replay, determinism grouping, or historical enrichment.",
-        "Measure execution-capsule, solver-request-identity and occurrence-lineage coverage directly before interpreting modern/historical joinability.",
-        "Use the canonical determinism audit to distinguish modern canonical-request comparisons from legacy recorded-input approximations and to exclude first-success races from path-stability claims."
+        "Use the canonical determinism audit to distinguish modern canonical-request comparisons from legacy recorded-input approximations and to exclude first-success races from path-stability claims.",
+        "Separate semantic discovery-event identity from physical reacquisition/occurrence lineage so retries and reharvests do not inflate event identity while repeat-run provenance remains queryable.",
+        "Measure execution-capsule, canonical solver-request identity, source-run binding and occurrence-lineage coverage directly before interpreting modern/historical joinability."
       ],
       "caveats": [
         "Evidence applicability is query-dependent: one event may be strong atlas/history evidence and inadmissible current-capability evidence.",
@@ -219,7 +223,7 @@
         "Old solver versions are not automatically stale, but current capability/performance use requires audited code/config/scheduler/work equivalence or bounded current replay.",
         "Technique-performance claims require originating-run denominators/failures and comparable work; success-selected hint events alone cannot establish solve rate or relative performance.",
         "Provenance is powerful offline evidence but must not become level-specific runtime steering.",
-        "Modern solve-and-save Pathfinder producers can now embed solver-request identity and physical occurrence lineage; historical entries and producers without a real signal remain legitimately sparse. Solver stage is still not embedded, so full effective-input reconstruction must continue to report that missing dimension rather than infer it."
+        "Canonical modern Pathfinder ingestion preserves bounded execution identity and physical occurrence lineage when those signals are observed; historical entries and specialist producers without a real signal remain legitimately sparse. Solver stage/action is not intrinsic to every Hint event, so consumers that require full effective-input reconstruction must obtain it through an exact sibling-evidence/source-run join rather than inference."
       ]
     },
     {
@@ -347,7 +351,7 @@
     {
       "id": "hint-ingestion-receipts",
       "name": "Canonical hint-ingestion receipts",
-      "status": "generated-interface",
+      "status": "current-generated-interface",
       "grain": [
         "source-run",
         "harvester/producer",
@@ -398,8 +402,8 @@
       ],
       "caveats": [
         "This is success-ingestion accounting, not an attempted solver population; it cannot establish solve rate or technique performance.",
-        "The level-blind and isolated/report importers currently emit this receipt; direct captured-hint artifact merging is still a separate receipt gap.",
-        "Some current producers expose only a coarse semanticRecordChanges count. Exact path/provenance-event/occurrence additions remain null until the mutation boundary can measure those units independently.",
+        "Canonical central ingestion lanes emit the shared receipt vocabulary, including direct captured-Hint compatibility import, diagnostics, isolated, level-blind and portfolio harvesters when invoked; producer-specific specialist lanes may still expose null for addition units they cannot measure exactly.",
+        "Some producers expose only a coarse semanticRecordChanges count. Exact path/provenance-event/occurrence additions remain null where the mutation boundary cannot measure those units independently.",
         "A null addition unit means unknown/not observed by that producer, never zero.",
         "Historical level-blind selection manifests remain a compatibility resource and should not be rewritten."
       ]
@@ -1111,7 +1115,7 @@
     },
     {
       "id": "experiment-manifests",
-      "name": "Experiment and family-run manifests",
+      "name": "Experiment contracts, standard results, and family-run manifests",
       "status": "generated-interface",
       "grain": [
         "experiment arm",
@@ -1125,19 +1129,26 @@
         }
       ],
       "authorities": [
+        "scripts/solver-experiment-contract.mjs",
+        "scripts/publish-solver-sweep-result.mjs",
+        "docs/solver-experiment-result.schema.json",
         "scripts/experiment-manifest-lib.mjs",
         "scripts/solver-experiment-preflight.mjs",
         "docs/investigation-report-conventions.md"
       ],
       "queryEntryPoints": [
         "npm run solver:experiment-preflight",
-        "validateExperimentManifest(...)"
+        "validateExperimentManifest(...)",
+        "sourceRunBindingFromContract(...)",
+        "standard solver-sweep-result manifest/sourceRunBinding"
       ],
       "joinKeys": [
         "experimentId",
-        "runId",
-        "solverRef/commit",
-        "levelSelectionHash",
+        "sourceRunBinding.runId/runAttempt",
+        "sourceRunBinding.solverRef",
+        "sourceRunBinding.protocolHash",
+        "sourceRunBinding.configurationHash",
+        "sourceRunBinding.populationIdentity/corpusIdentity",
         "arm",
         "output artifact paths"
       ],
@@ -1153,12 +1164,14 @@
         "solver-determinism-fingerprints",
         "raw-logs-and-baselines",
         "solver-capability-evidence",
-        "hint-discovery-process"
+        "hint-discovery-process",
+        "hint-ingestion-receipts"
       ],
       "affordances": [
         "Recover exactly what code, population, flags, workflow inputs, seeds, budgets, and output produced a result.",
+        "Use the canonical source-run binding as bounded cross-resource identity glue for run, immutable solver revision, protocol/configuration, population/corpus, arm and constituent source-run lineage.",
         "Detect invalid A/B comparisons where non-treatment dimensions changed.",
-        "Join family observations to solver/data provenance without reconstructing invocation history from filenames."
+        "Join family, Hint, failure/process and solver-result observations without reconstructing invocation identity from filenames or timestamps."
       ],
       "caveats": [
         "Older artifacts may predate current manifest schemas and must remain explicitly historical/unknown where fields are absent.",
@@ -1966,6 +1979,21 @@
         "Does the same phenotype change recur across unrelated parent families strongly enough to nominate a generic mechanism?"
       ],
       "boundary": "Sibling variants are dependent observations; use parent family as the independent unit for cross-family claims. Historical family outcomes require protocol reconciliation before decision-bearing reuse."
+    },
+    {
+      "id": "hint-provenance-to-ingestion-receipts",
+      "assets": [
+        "hint-provenance",
+        "hint-ingestion-receipts",
+        "experiment-manifests"
+      ],
+      "join": "source runId/runAttempt + workflow/producer to canonical Hint semantic-event/occurrence additions and owning experiment/source-run evidence",
+      "questions": [
+        "Did this acquisition create a new accepted path, a new semantic discovery event on an existing path, a new physical occurrence of an existing event, or no new semantic evidence?",
+        "Was an accepted observation already represented, quarantined, or persisted through another central ingestion lane?",
+        "Can longitudinal Hint growth be separated into solver novelty, reacquisition/occurrence growth and ingestion/reconciliation effects?"
+      ],
+      "boundary": "Receipts are success-ingestion accounting, not attempted-population denominators. Physical occurrence additions are acquisition lineage rather than independent support; join the originating experiment population/failures for solve-rate or technique-performance claims."
     }
   ]
 }

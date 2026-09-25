@@ -17,13 +17,13 @@ const entry = (context = {}, solver = { id: SOLVER_ID }) => ({ solver, context }
 
 describe('classifyProvenanceClass', () => {
     test('a clean production-solver find is cold under both standards', () => {
-        const e = entry({ hintGuided: false, usedExistingHints: false });
+        const e = entry({ hintGuided: false, usedExistingHints: false, isolatedTechnique: false });
         assert.equal(classifyProvenanceClass(e), 'cold-capability');
         assert.equal(classifyProvenanceClass(e, { standard: 'narrow' }), 'cold-capability');
     });
 
     test('hintGuided is guided under both standards', () => {
-        const e = entry({ hintGuided: true, usedExistingHints: true });
+        const e = entry({ hintGuided: true, usedExistingHints: true, isolatedTechnique: false });
         assert.equal(classifyProvenanceClass(e), 'hint-guided');
         assert.equal(classifyProvenanceClass(e, { standard: 'narrow' }), 'hint-guided');
     });
@@ -31,14 +31,14 @@ describe('classifyProvenanceClass', () => {
     // The regression this module exists for: 36,381 real entries have this exact shape, and
     // treating them as cold overstated corpus 1's cold share by 13 points.
     test('usedExistingHints without hintGuided splits the two standards', () => {
-        const e = entry({ hintGuided: false, usedExistingHints: true });
+        const e = entry({ hintGuided: false, usedExistingHints: true, isolatedTechnique: false });
         assert.equal(classifyProvenanceClass(e), 'hint-guided');
         assert.equal(classifyProvenanceClass(e, { standard: 'narrow' }), 'cold-capability');
     });
 
     test('witness, human, inherited and transformed witness origins are never cold', () => {
         for (const id of [WITNESS_GENERATOR_ID, HUMAN_PLAYER_ID, INHERITED_WITNESS_ID, TRANSFORMED_WITNESS_ID]) {
-            const e = entry({ hintGuided: false, usedExistingHints: false }, { id });
+            const e = entry({ hintGuided: false, usedExistingHints: false, isolatedTechnique: false }, { id });
             assert.equal(classifyProvenanceClass(e), 'inherited-witness');
             assert.equal(classifyProvenanceClass(e, { standard: 'narrow' }), 'inherited-witness');
             assert.equal(isColdCapabilityEvidence(e), false);
@@ -47,7 +47,7 @@ describe('classifyProvenanceClass', () => {
 
     test('external, variant-replay, and unrecognized producers are unknown for production capability', () => {
         for (const id of [EXTERNAL_SOLVER_ID, 'variant-corpus-diagnostic', 'future-non-production-producer']) {
-            const e = entry({ hintGuided: false, usedExistingHints: false }, { id });
+            const e = entry({ hintGuided: false, usedExistingHints: false, isolatedTechnique: false }, { id });
             assert.equal(classifyProvenanceClass(e), 'unknown');
             assert.equal(classifyProvenanceClass(e, { standard: 'narrow' }), 'unknown');
             assert.equal(isColdCapabilityEvidence(e), false);
@@ -63,8 +63,10 @@ describe('classifyProvenanceClass', () => {
         }
     });
 
-    test('absent flags on a production-solver event are treated as false, not as contamination', () => {
-        assert.equal(classifyProvenanceClass(entry({})), 'cold-capability');
+    test('absent legacy capability flags remain unknown rather than becoming clean cold evidence', () => {
+        assert.equal(classifyProvenanceClass(entry({})), 'unknown');
+        assert.equal(classifyProvenanceClass(entry({ hintGuided: false, isolatedTechnique: false })), 'unknown');
+        assert.equal(classifyProvenanceClass(entry({ hintGuided: false, isolatedTechnique: false }), { standard: 'narrow' }), 'cold-capability');
     });
 
     test('an unknown standard is rejected rather than silently defaulting', () => {
@@ -80,8 +82,8 @@ describe('classifyProvenanceClass', () => {
 
 describe('isColdCapabilityEvidence', () => {
     test('admits only clean production-solver finds under the strict standard', () => {
-        assert.equal(isColdCapabilityEvidence(entry({ hintGuided: false, usedExistingHints: false })), true);
-        assert.equal(isColdCapabilityEvidence(entry({ hintGuided: true })), false);
+        assert.equal(isColdCapabilityEvidence(entry({ hintGuided: false, usedExistingHints: false, isolatedTechnique: false })), true);
+        assert.equal(isColdCapabilityEvidence(entry({ hintGuided: true, isolatedTechnique: false })), false);
         assert.equal(isColdCapabilityEvidence(entry({ usedExistingHints: true })), false);
         assert.equal(isColdCapabilityEvidence(entry({}, { id: WITNESS_GENERATOR_ID })), false);
         assert.equal(isColdCapabilityEvidence(entry({}, { id: EXTERNAL_SOLVER_ID })), false);
@@ -89,14 +91,14 @@ describe('isColdCapabilityEvidence', () => {
     });
 
     test('the narrow standard admits usedExistingHints-only production events', () => {
-        assert.equal(isColdCapabilityEvidence(entry({ usedExistingHints: true }), { standard: 'narrow' }), true);
-        assert.equal(isColdCapabilityEvidence(entry({ hintGuided: true }), { standard: 'narrow' }), false);
+        assert.equal(isColdCapabilityEvidence(entry({ hintGuided: false, isolatedTechnique: false, usedExistingHints: true }), { standard: 'narrow' }), true);
+        assert.equal(isColdCapabilityEvidence(entry({ hintGuided: true, isolatedTechnique: false }), { standard: 'narrow' }), false);
     });
 });
 
 describe('hint-level aggregation', () => {
     test('a hint rediscovered cold and guided belongs to both classes', () => {
-        const hint = { provenance: [entry({ hintGuided: true }), entry({ hintGuided: false, usedExistingHints: false })] };
+        const hint = { provenance: [entry({ hintGuided: true, isolatedTechnique: false }), entry({ hintGuided: false, usedExistingHints: false, isolatedTechnique: false })] };
         assert.deepEqual(hintProvenanceClasses(hint), new Set(['hint-guided', 'cold-capability']));
         assert.equal(hasColdCapabilityEvidence(hint), true);
     });
@@ -108,7 +110,12 @@ describe('hint-level aggregation', () => {
     });
 
     test('one guided entry does not disqualify a hint that also has a cold one', () => {
-        const hint = { provenance: [entry({ hintGuided: true }), entry({ usedExistingHints: true }), entry({})] };
+        const hint = { provenance: [
+            entry({ hintGuided: true, isolatedTechnique: false }),
+            entry({ hintGuided: false, usedExistingHints: true, isolatedTechnique: false }),
+            entry({}),
+            entry({ hintGuided: false, usedExistingHints: false, isolatedTechnique: false }),
+        ] };
         assert.equal(hasColdCapabilityEvidence(hint), true);
     });
 
@@ -122,9 +129,9 @@ describe('hint-level aggregation', () => {
 describe('summarizeProvenanceClasses', () => {
     test('counts hints and entries, keeping the no-provenance blind spot separate', () => {
         const hints = [
-            { provenance: [entry({})] },
-            { provenance: [entry({ hintGuided: true })] },
-            { provenance: [entry({ usedExistingHints: true })] },
+            { provenance: [entry({ hintGuided: false, usedExistingHints: false, isolatedTechnique: false })] },
+            { provenance: [entry({ hintGuided: true, isolatedTechnique: false })] },
+            { provenance: [entry({ hintGuided: false, usedExistingHints: true, isolatedTechnique: false })] },
             { provenance: [entry({}, { id: WITNESS_GENERATOR_ID })] },
             { provenance: [] },
         ];
@@ -135,7 +142,7 @@ describe('summarizeProvenanceClasses', () => {
     });
 
     test('the narrow standard reclassifies usedExistingHints-only production hints as cold', () => {
-        const hints = [{ provenance: [entry({ usedExistingHints: true })] }];
+        const hints = [{ provenance: [entry({ hintGuided: false, usedExistingHints: true, isolatedTechnique: false })] }];
         assert.equal(summarizeProvenanceClasses(hints).coldHints, 0);
         assert.equal(summarizeProvenanceClasses(hints, { standard: 'narrow' }).coldHints, 1);
     });

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "date": "2026-09-22",
-  "purpose": "Pre-implementation executable inventory for hint evidence consolidation. This file is descriptive planning input, not a runtime authority.",
+  "purpose": "Historical pre-implementation census captured on 2026-09-22. Preserve its defects/targets as planning and audit provenance; do not use its current-regression/pending language as current repository state. Current authority is the completed consolidation plan, hostile closeout, and maintained physical/workflow audit ledgers.",
   "writerCensus": [
     {
       "path": "scripts/hint-candidate-search.mjs",
@@ -1532,5 +1532,15 @@
         "finding": "The plan requires partial persistence, capacity refusal and retry-after-refusal coverage. Implementation supported the transition but tests only covered isolated aggregate outcomes. A two-pass unit regression now proves dedupe/retry semantics, and the real Firestore emulator proves a partially refused review submission remains queued until the retry persists remaining evidence and then deletes it."
       }
     ]
-  }
+  },
+  "status": "historical-preimplementation-snapshot",
+  "currentAuthority": false,
+  "supersededBy": [
+    "docs/hint-evidence-execution-identity-storage-consolidation-plan.md",
+    "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md",
+    "docs/hint-physical-reader-audit.json",
+    "docs/hint-physical-writer-audit.json",
+    "docs/hint-bare-mutation-audit.json",
+    "docs/hint-workflow-persistence-audit.json"
+  ]
 }

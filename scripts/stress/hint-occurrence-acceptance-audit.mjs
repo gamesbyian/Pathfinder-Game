@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Corpus-scale Phase-3 acceptance audit for Hint provenance execution/occurrence semantics.
+ * Corpus-scale steady-state acceptance audit for Hint provenance execution/occurrence semantics.
  *
  * This is read-only. It verifies persisted canonical stores without enriching or rewriting them.
  * Usage:

@@ -305,6 +305,7 @@ export default [
                 Buffer: 'readonly',
                 fetch: 'readonly',
                 queueMicrotask: 'readonly',
+                structuredClone: 'readonly',
                 globalThis: 'readonly',
                 window: 'readonly',
             },

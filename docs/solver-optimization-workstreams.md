@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-22.
+> **Reconciled:** 2026-09-24.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
@@ -19,7 +19,13 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 ### Broad evidence refresh closed
 
-Stress refresh `35687363645` and technique census `35687337464` (solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`) are scientifically complete: census **120/120 shards**, **80,538 cells**, no missing/partial; final red badge was only a post-combine hint-persistence rebase conflict, harvested onto `main` at `afd744a195b2177a865670d3ec3afc00ed5352a7`. Do not rerun. Boundary/T1-cohort numbers are restated in Workstream 2's production-boundary line below; do not duplicate them here. **Standing budget decision:** keep T1/T3/T4 at 50M nodes, retain the bounded 60-level x 10M EW1 tranche. Next purchase is sampled first-loss/operational-divergence and offer/allocation mechanisms from the existing denominator, not a deeper census. [census closeout](../reports/2026-09-22-technique-census-broad-evidence-closeout-001.md) · [reconciliation](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md)
+The canonical stress refresh `35687363645` and technique census `35687337464` were dispatched from the same solver ref `39d14d49023aa09cb680053b975ef786eeae9b01` and are now scientifically complete. The census finished **120/120 shards**, **80,538 unique cells**, no missing/partial shards; its final red badge came only from the legacy post-combine hint-persistence rebase. The automatic harvester subsequently preserved the discoveries on current `main` at `afd744a195b2177a865670d3ec3afc00ed5352a7`. Do not rerun the census. [census closeout](../reports/2026-09-22-technique-census-broad-evidence-closeout-001.md)
+
+The production refresh reproduces the prior solved sets exactly: **101/102 C1 + 1,169/1,700 C2, 0 gains / 0 losses in both corpora**. Compact failure response covers all 1,802 parents and 56,906 attempts, but same-stage failed solved controls largely match residual work/cap behavior, so generic compact response is exhausted as a broad discriminator. [production-side reconciliation](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md)
+
+The completed census sharpens the residual picture: full-depth T1 isolated techniques solve **83/532 current production misses (15.6%)**, with **47 singleton-supported** misses; **449** misses have no T1 solve. Conversely, **140/1,430 production-solved levels** have no T1 isolated solver at the 50M ceiling, so isolated coverage is not a production-safety oracle. The fresh run also records **332 flag/variant regressions**, reinforcing matched-work/control gates.
+
+**Standing budget decision:** keep T1/T3/T4 at **50M nodes** and retain the bounded **60-level × 10M canonical-work EW1** tranche. The next information purchase is not a deeper census or more generic failure counts: use the fresh 1,802-parent denominator plus the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win identities to sample first operational divergence and legal offer/allocation mechanisms. The Hint/evidence consolidation has since closed the census standard-result/source-run provenance hardening that was still outstanding at the September 22 closeout; the only census-specific follow-up here is second-order materialization, not another broad acquisition.
 
 ### 1. Workstream 2: residual capability + premise acquisition
 

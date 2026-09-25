@@ -277,17 +277,20 @@ Also follow the new-mechanic checklist in [`solver-aware-game-architecture.md`](
 
 Check:
 
-1. canonical in-memory type and constructors;
-2. `reconcileHints` / `mergeHints` behavior;
-3. sidecar read/write through the shared level-data I/O;
-4. backwards compatibility with older records;
-5. Firestore supplemental-hint merge where applicable;
-6. cold-capability evidence classification;
-7. batch/report producers that create provenance;
-8. coverage/reporting tools;
-9. round-trip tests with old and new records.
+1. canonical semantic `Hint` / provenance / occurrence types and constructors;
+2. semantic-event identity versus physical `occurrences[]` identity and idempotent merge behavior;
+3. the shared physical codec in `modules/domain/hint-runtime.mjs` plus Node/browser read parity;
+4. writes through the shared level-data/Hint persistence boundary, with explicit changed-level intent;
+5. backwards compatibility with historical v1-v3/transitional records without laundering unknown fields into modern defaults;
+6. Firestore supplemental-hint merge and bounded occurrence-overflow/retry semantics where applicable;
+7. canonical solver-request / execution-protocol / source-run binding and reconstructability semantics;
+8. central GHA ingestion ownership plus ingestion receipts; maintained workflows must not invent a second canonical persistence rail;
+9. cold-capability evidence classification, dependency strata, and success-selected-versus-attempted-population boundaries;
+10. batch/report producers and consumers that create, join, query, or summarize provenance;
+11. physical reader/writer/bare-mutation/workflow-persistence audit ledgers and their hostile self-tests;
+12. round-trip/adversarial tests across old and current records, including same-event/new-occurrence and exact retry idempotency.
 
-Do not hand-write hint sidecars or introduce a second default-merging path.
+Do not hand-write Hint sidecars, create producer-local provenance identity/defaulting, or introduce a second canonical persistence/receipt path.
 
 ## Application state shape or action change
 

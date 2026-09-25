@@ -21,9 +21,10 @@
 # targets the two frozen id lists below (each level already confirmed unsolved as of the last
 # baseline refresh) and does NOT recompile logs/stress-corpus{1,2}-baseline.json or
 # data/level-heatmaps.json -- those represent FULL-corpus truth, and overwriting them from a
-# subset-only run would silently corrupt them. Any level this sweep solves gets a real hint saved
-# (--save-hints, same mechanism as every other batch tool) and shows up in the combined report;
-# merging newly-solved ids into the official baseline is a separate, explicit step (see
+# subset-only run would silently corrupt them. Any level this sweep solves is retained in the
+# self-describing report/artifact evidence and is eligible for canonical Hint persistence by the
+# central harvest-solver-evidence workflow; this source workflow does not write Hint stores directly.
+# Merging newly-solved ids into the official baseline is a separate, explicit step (see
 # scripts/patch-benchmark-with-sweep.mjs) run after reviewing a round's results.
 #
 # GAP-FILL DISPATCH: gap_fill_corpus1_ids/gap_fill_corpus2_ids narrow a round to an explicit
@@ -33,7 +34,7 @@
 # narrow the population, never grow it. A gap-fill round still solves, seals, and publishes
 # normally, but does NOT commit the aggregate reports/telemetry to main -- those represent the
 # FULL frozen cohort as one semantic unit, and this round only observed a subset. Newly-solved
-# hints are still committed (safe, per-id evidence). Reconcile a gap-fill round's published
+# Hint evidence is still centrally harvestable (safe, per-id evidence). Reconcile a gap-fill round's published
 # solver-sweep-result artifact with the prior full round via solver-combine-sweep-runs.yml before
 # merging its results into the canonical committed report.
 name: Solver high-budget sweep (unsolved-only, both corpora)

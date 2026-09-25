@@ -126,11 +126,12 @@ This rule does not require committing every raw artifact. Preserve the smallest 
 
 ## Prospective producer rule
 
-When a resource repeatedly loses information that later research needs, fix the producer prospectively rather than fabricating history. The four audited resources currently nominate these producer improvements:
+When a resource repeatedly loses information that later research needs, fix the producer prospectively rather than fabricating history. The audited resources currently nominate these producer improvements:
 
 - **Stress/managed populations:** record selection/conditioning events separately from generation ancestry, including which side/outcome conditioned membership and which descendant decisions consumed the population.
 - **Variant families:** current `family-generate.mjs` now retains invocation-local requested/attempted/accepted/budget counters inside each generation-run record; historical generation runs that omitted them remain irrecoverably unknown. The remaining producer gap is preserving per-technique outcome/context when a family evaluation is intended to support technique counterfactuals.
-- **Hint provenance:** wherever practical, reference the originating run/experiment manifest so attempted denominator, failures, protocol identity, and work semantics are recoverable for performance claims.
+- **Hint provenance:** current Pathfinder acquisitions use the consolidated execution/source-run/occurrence spine. Preserve those exact joins and historical missingness; when performance claims are made, join to the originating attempted population/failures rather than inferring them from success-selected Hint evidence.
+- **Hint ingestion receipts:** every canonical ingestion lane should use the shared success-ingestion vocabulary, preserve null for unmeasured path/event/occurrence units, and keep acquisition occurrence identity separate from semantic discovery-event identity.
 - **Solution profiles:** keep mechanics-applicability/support distinct from statistical sample/stability support; do not let one nominal coverage number imply both.
 
 The inference-first experiment-lifecycle audit adds a cross-resource producer rule: future decision-bearing experiment closeouts should durably preserve the experiment/selection contract plus the combined primary rows or an equivalently reconstructable decision bundle before ephemeral workflow artifacts expire.
@@ -157,15 +158,16 @@ If those questions materially change the answer, record them in the decision-bea
 
 ## Initial audited resources
 
-The first audited-resource declarations cover the four resources whose September 2026 audits produced this contract:
+The audited-resource baseline now covers the original four September resources plus canonical Hint ingestion receipts, which became a recurring decision-bearing persistence/selection resource during Hint consolidation:
 
 - `hint-provenance`
 - `variant-family-data`
 - `solution-space-profiles`
 - `stress-corpora`
+- `hint-ingestion-receipts`
 
 Other registry entries remain legitimate catalogue-grade resources. Upgrade one to audited grade when a focused resource audit is performed or before relying on subtle resource semantics for a new broad decision. Do not force full audit ceremony onto every diagnostic helper merely because it is listed in the registry.
 
 ## Enforcement boundary
 
-`npm run check:audit-artifacts` validates the existing registry's catalogue shape and relationship references, validates the audit-declaration overlay against real registry IDs, and requires the four initial audited resources to have complete declarations. It can catch missing declarations, broken references, duplicate IDs, and malformed contract fields. It cannot certify that a scientific claim is true, that a population is actually independent, that a manifest establishes causal participation, or that a consumer inventory is complete. Those remain audit/review questions.
+`npm run check:audit-artifacts` validates the existing registry's catalogue shape and relationship references, validates the audit-declaration overlay against real registry IDs, and requires the declared audited-resource baseline, including the original four protected resources and canonical Hint ingestion receipts, to have complete declarations. It can catch missing declarations, broken references, duplicate IDs, and malformed contract fields. It cannot certify that a scientific claim is true, that a population is actually independent, that a manifest establishes causal participation, or that a consumer inventory is complete. Those remain audit/review questions.

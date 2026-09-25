@@ -42,6 +42,9 @@ function runVariant(variant, mode, repeat) {
     else env.PATHFINDER_PARALLEL_JOBS = variant;
     if (mode === 'direct') env.PATHFINDER_DIRECT_PACKAGE_SCRIPTS = '1';
     else delete env.PATHFINDER_DIRECT_PACKAGE_SCRIPTS;
+    const safeVariant = variant.replace(/[^a-z0-9_-]/giu, '_');
+    const timingPath = `tmp/ci-node-concurrency-benchmark/contracts-${mode}-jobs-${safeVariant}-repeat-${repeat}.json`;
+    env.PATHFINDER_PARALLEL_TIMING_JSON = timingPath;
     console.log(`\n=== benchmark mode=${mode} jobs=${variant} repeat=${repeat} ===`);
     const child = spawn(npmCmd, ['run', 'test:node'], { stdio: 'inherit', env });
     child.on('error', error => {

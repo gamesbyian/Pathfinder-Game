@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.23.2'
           cache: npm
       - name: Install dependencies from the npm cache
         run: npm ci --prefer-offline --no-audit --fund=false
@@ -50,7 +50,8 @@ jobs:
           --modes="$EXECUTION_MODES"
           --repeats="$REPEATS"
       - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: ci-node-concurrency-benchmark
-          path: tmp/ci-node-concurrency-benchmark/result.json
+          path: tmp/ci-node-concurrency-benchmark/
           retention-days: 30

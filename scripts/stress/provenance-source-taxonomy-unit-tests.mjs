@@ -123,6 +123,15 @@ test('current capability requires an explicit matching regime and strict cold co
     }).reason, 'unknown-solver-regime');
 });
 
+test('dependency strata do not relabel missing capability context as cold', () => {
+    const knownCold = entry({ solver: { version: 'v2' } });
+    assert.match(provenanceDependencyStratum(knownCold), /\|cold-context$/);
+
+    const ambiguous = { ...knownCold, context: { hintGuided: false, usedExistingHints: false } };
+    assert.equal(hasExplicitCapabilityContext(ambiguous), false);
+    assert.match(provenanceDependencyStratum(ambiguous), /\|unknown-context$/);
+});
+
 test('technique performance requires isolated Pathfinder work evidence', () => {
     const isolated = entry({ solver: { version: 'v2' }, context: { isolatedTechnique: true } });
     assert.equal(classifyEvidenceApplicability(isolated, 'technique-performance').applicability, 'context-bound');

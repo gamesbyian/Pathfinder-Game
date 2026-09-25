@@ -1,31 +1,31 @@
 {
   "schemaVersion": 1,
-  "date": "2026-09-23",
-  "purpose": "Machine-readable map from existing solver research identity spellings to the canonical identity layers established by the hint-evidence consolidation plan. This is a migration/reader map, not permission to copy legacy names into new outputs.",
+  "date": "2026-09-24",
+  "purpose": "Machine-readable map from existing solver research identity spellings to the canonical identity layers established and operationalized by the hint-evidence consolidation plan. This is a compatibility/reader map, not permission to copy legacy names into new outputs.",
   "canonicalLayers": [
     {
       "id": "solver-request",
       "meaning": "Run-wide Pathfinder solver request semantics after canonical default normalization; excludes level/history-derived forcing, backend scheduling/reproducibility, solver revision, source run and population.",
       "currentOwner": "modules/solver/solver-request-projection.ts",
-      "status": "implemented-awaiting-execution-validation"
+      "status": "operational-current"
     },
     {
       "id": "effective-solver-input",
       "meaning": "Per-level/per-attempt effective input identity: level revision + immutable solver version + canonical solver request identity + solver stage/action/config + gate/forcing + relevant resource envelope + seed dimensions.",
       "currentOwner": "scripts/hint-discovery-replayability-lib.mjs::effectiveSolverInputIdentityStatus (derived availability/query scaffold)",
-      "status": "query-scaffold-implemented; persistence/join population pending"
+      "status": "operational-current; persisted/queryable through consolidated discovery-event, occurrence-lineage, and reconstructability surfaces"
     },
     {
       "id": "execution-protocol",
       "meaning": "Protocol comparability semantics across observations: configuration identity plus execution mode, history policy, reproducibility contract, scheduler and declared limits. Does not include solver revision or source-run identity.",
       "currentOwner": "scripts/solver-experiment-contract.mjs::hashExecutionProtocol",
-      "status": "implemented-awaiting-execution-validation"
+      "status": "operational-current"
     },
     {
       "id": "source-run-binding",
       "meaning": "Bounded identity glue for one acquisition run: run/attempt, immutable solver ref, configuration/protocol identity, producer/workflow/entrypoint, population/corpus, arm and source-run lineage.",
       "currentOwner": "scripts/solver-experiment-contract.mjs::sourceRunBindingFromContract",
-      "status": "implemented-awaiting-execution-validation"
+      "status": "operational-current"
     },
     {
       "id": "immutable-solver-ref",
