@@ -285,15 +285,8 @@ jobs:
         if: needs.impact-shadow.outputs.needs_build == 'true' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
         shell: bash
         run: node scripts/ci-runtime-hint-projection-cache.mjs plan
-      - name: Build production bundle
-        if: needs.impact-shadow.outputs.needs_build == 'true'
-        id: build
-        env:
-          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
-          PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE: ${{ steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && '1' || '0' }}
-        run: npm run build
       - name: Save exact runtime-hint projection after successful build
-        if: needs.impact-shadow.outputs.needs_build == 'true' && steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        if: needs.impact-shadow.outputs.needs_build == 'true' && steps.deep_services.outputs.build == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: .cache/runtime-hint-projection
@@ -316,18 +309,30 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Run selected deep services concurrently
+      - name: Run selected build and deep services concurrently
         id: deep_services
         shell: bash
         env:
+          RUN_BUILD: ${{ needs.impact-shadow.outputs.needs_build }}
           RUN_PROOFS: ${{ needs.impact-shadow.outputs.needs_deep_proofs }}
           RUN_FIRESTORE: ${{ needs.impact-shadow.outputs.needs_firestore }}
+          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
+          PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE: ${{ steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && '1' || '0' }}
         run: |
           set +e
+          build_status=0
           proofs_status=0
           firestore_status=0
+          build_pid=''
           proofs_pid=''
           firestore_pid=''
+
+          if [[ "$RUN_BUILD" == "true" ]]; then
+            npm run build > /tmp/pathfinder-build.log 2>&1 &
+            build_pid=$!
+          else
+            echo "build=skipped" >> "$GITHUB_OUTPUT"
+          fi
 
           if [[ "$RUN_PROOFS" == "true" ]]; then
             npm run test:deep-proofs > /tmp/pathfinder-deep-proofs.log 2>&1 &
@@ -336,6 +341,12 @@ jobs:
           if [[ "$RUN_FIRESTORE" == "true" ]]; then
             npx --yes firebase-tools@15.28.2               emulators:exec --only firestore               --project demo-pathfinder-fingerprint-boundary               "npm run test:firestore-level-fingerprint-boundary"               > /tmp/pathfinder-firestore.log 2>&1 &
             firestore_pid=$!
+          fi
+          if [[ -n "$build_pid" ]]; then
+            wait "$build_pid"; build_status=$?
+            [[ "$build_status" -eq 0 ]] && echo "build=success" >> "$GITHUB_OUTPUT" || echo "build=failure" >> "$GITHUB_OUTPUT"
+            echo '=== production build ==='
+            cat /tmp/pathfinder-build.log
           fi
           if [[ -n "$proofs_pid" ]]; then wait "$proofs_pid"; proofs_status=$?; fi
           if [[ -n "$firestore_pid" ]]; then wait "$firestore_pid"; firestore_status=$?; fi
