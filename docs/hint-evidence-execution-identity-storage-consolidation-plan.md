@@ -1,6 +1,6 @@
 # Hint evidence, execution identity, and storage consolidation plan
 
-> **Status:** implementation substantially landed; prior completion claim disproven; hostile closeout and exact-head validation remain blocking on PR #2072
+> **Status:** operationally complete. The prior completion claim was disproven and repaired by the hostile closeout; PR #2072 exact head `3ac9c52d4573` subsequently passed the full named closure gate set before merge.
 >
 > **Date:** 2026-09-22
 >
@@ -13,7 +13,7 @@
 > parallel persistence/configuration paths that should be consolidated rather than permanently
 > worked around.
 >
-> **Post-implementation hostile audit:** [`reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`](../reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md) is the current closeout authority. It supersedes earlier completion claims and records corrections found after the schema-v4 migration.
+> **Post-implementation hostile audit:** [`reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`](../reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md) is the closeout authority. It supersedes earlier completion claims, records corrections found after the schema-v4 migration, and records the exact-head remote evidence that closed the program.
 >
 > **Pre-implementation empirical audit:** [`reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md`](../reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md) verifies request/backend semantics, provenance missingness, source-run reconstructability, producer observation sufficiency, stale writers, and Firestore retention behavior.
 >
