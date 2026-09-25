@@ -9,7 +9,7 @@ assert.equal(research.jobs['node-contracts'].required, true);
 assert.equal(research.jobs['deep-verification'].required, false);
 assert.equal(research.jobs['deep-services'].required, false);
 assert.deepEqual(research.jobs['fast-gate'].capabilities, ['lint']);
-assert.deepEqual(research.jobs['node-contracts'].nodeTestGroups, research.nodeTestGroups);
+assert.deepEqual(research.jobs['node-contracts'].nodeTestGroups, ['repo', 'research']);
 
 const solver = packSurfaces(['solver']);
 assert.equal(solver.jobs['fast-gate'].required, true);
@@ -17,7 +17,7 @@ assert.equal(solver.jobs['node-contracts'].required, true);
 assert.equal(solver.jobs['deep-verification'].required, true);
 assert.equal(solver.jobs['deep-services'].required, true);
 assert.deepEqual(solver.jobs['fast-gate'].capabilities, ['lint', 'build']);
-assert.deepEqual(solver.jobs['node-contracts'].nodeTestGroups, solver.nodeTestGroups);
+assert.deepEqual(solver.jobs['node-contracts'].nodeTestGroups, ['solver']);
 assert.deepEqual(solver.jobs['deep-verification'].capabilities, ['unit-coverage']);
 assert.deepEqual(solver.jobs['deep-services'].capabilities, ['deep-proofs']);
 
@@ -29,6 +29,7 @@ assert.deepEqual(persistence.jobs['deep-services'].capabilities, ['firestore-bou
 
 const full = packSurfaces(['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver']);
 assert.equal(full.jobs['fast-gate'].required, true);
+assert.equal(full.jobs['node-contracts'].required, true);
 assert.equal(full.jobs['deep-verification'].required, true);
 assert.equal(full.jobs['deep-services'].required, true);
 assert.deepEqual(full.jobs['fast-gate'].capabilities, ['lint', 'build']);
