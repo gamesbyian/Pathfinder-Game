@@ -150,8 +150,11 @@ Replacement seed `2026092591` was selected after this recovery. Default-branch c
   preflight).
 - Production solve protocol: unchanged from Stage A and **producer-locked** —
   `scripts/portfolio-solve-sweep.mjs --scheduler-mode=production`, node budget 50,000,000, canonical
-  work budget 67,000,000, non-binding wall deadline, no baseline/prime-winner/attempt-cache/hints,
-  level-blind. The frozen-model scorer consumes this producer's per-attempt production-ladder rows;
+  work budget 67,000,000, non-binding wall deadline, no baseline/prime-winner/attempt-cache inputs,
+  and no Hint persistence. Canonical portfolio-producer metadata remains `levelBlind:false` /
+  `historyAware:true`; this confirmation's coldness claim is narrower and explicit: the invocation
+  consumes **zero historical inputs**. The frozen-model scorer consumes this producer's per-attempt
+  production-ladder rows;
   `solver-level-blind-targeted-sweep.yml` is not an interchangeable execution surface unless a separate
   row-semantics parity proof is added before dispatch.
 - Analysis: `scripts/apply-action-selection-legal-signal-model.mjs` against the same frozen model
@@ -163,7 +166,9 @@ Replacement seed `2026092591` was selected after this recovery. Default-branch c
   production solve over that immutable corpus, (3) combine the produced rows, and (4) run the frozen
   model + integrity/reporting deterministically. Reuse existing generation, portfolio-sweep, combiner,
   experiment-contract and publication primitives; do not create a second solver implementation or
-  alternate row schema. The one-shot workflow is retired after the result is durably recorded. Its scientific protocol has no dispatch-time parameters; workflow dispatch selects only the repository ref/commit.
+  alternate row schema. Publication must carry the canonical WS1 research-question contract, an exact
+  positive/negative research-outcome binding, and a decision-bearing standard result that the central
+  harvester retains durably without canonicalizing discovered paths as Hints. The one-shot workflow is retired after the result is durably recorded. Its scientific protocol has no dispatch-time parameters; workflow dispatch selects only the repository ref/commit.
 
 ## Plan-quality closure
 
