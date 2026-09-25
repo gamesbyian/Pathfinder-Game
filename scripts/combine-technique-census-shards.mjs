@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 /**
- * Combine technique-census shard results into reusable aggregate reports and optionally persist
- * newly discovered hints. Supports --combined-file for re-deriving reports from an already-committed
- * raw matrix without rerunning the expensive census; add --derived-only to leave that raw file intact.
+ * Combine technique-census shard results into reusable aggregate reports. An explicit local/manual
+ * --save-hints mode can persist newly discovered hints through the shared semantic/physical I/O
+ * boundary, but maintained GHA technique-census runs are report-only and central
+ * harvest-solver-evidence owns canonical workflow persistence. Supports --combined-file for
+ * re-deriving reports from an already-committed raw matrix without rerunning the expensive census;
+ * add --derived-only to leave that raw file intact.
  */
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
 import path from 'node:path';
