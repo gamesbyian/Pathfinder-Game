@@ -58,7 +58,10 @@ try {
   assert.equal(diagnostics.exactNode22232Sites, 0);
   assert.equal(diagnostics.floatingMajorOnlyNodeSites, 0);
 
-  const modernJob = audit.jobs.find(row => row.workflow === 'solver-exact-modern.yml');
+  const modernWorkflow = audit.workflows.find(row => row.name === 'solver-exact-modern.yml');
+  assert.ok(modernWorkflow, 'solver-exact-modern.yml must be present in the fixture census');
+  const modernJob = modernWorkflow.jobs.find(row => row.id === 'job');
+  assert.ok(modernJob, 'fixture workflow job must be present in the nested workflow job list');
   assert.equal(modernJob.exactNode22232Sites, 1);
   assert.equal(modernJob.exactNode20202Sites, 0);
   assert.equal(modernJob.floatingMajorOnlyNodeSites, 0);
