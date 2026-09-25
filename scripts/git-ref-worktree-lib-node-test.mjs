@@ -38,6 +38,24 @@ try {
   assert.equal(observed.excluded, false, 'unrequested directory is not materialized');
   assert.equal(observed.head, git('rev-parse', 'HEAD').trim(), 'detached sparse worktree resolves the requested ref');
 
+  const patternObserved = withDetachedGitWorktree(root, 'HEAD', worktree => ({
+    root: existsSync(path.join(worktree, 'root.txt')),
+    kept: existsSync(path.join(worktree, 'kept', 'value.txt')),
+    excluded: existsSync(path.join(worktree, 'excluded', 'value.txt')),
+  }), { sparsePatterns: ['/root.txt', '/kept/value.txt'] });
+
+  assert.equal(patternObserved.root, true, 'explicit root-file pattern is materialized');
+  assert.equal(patternObserved.kept, true, 'explicit nested-file pattern is materialized');
+  assert.equal(patternObserved.excluded, false, 'unmatched file-pattern path is excluded');
+
+  assert.throws(
+    () => withDetachedGitWorktree(root, 'HEAD', () => null, {
+      sparseDirectories: ['kept'],
+      sparsePatterns: ['/root.txt'],
+    }),
+    /choose sparseDirectories or sparsePatterns/,
+  );
+
   console.log('git-ref-worktree sparse checkout test passed');
 } finally {
   rmSync(root, { recursive: true, force: true });
