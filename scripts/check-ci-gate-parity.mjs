@@ -67,13 +67,17 @@ for (const actual of workflowRuns) {
   }
 }
 
-for (const [family, fallback] of [['validators', 'check:validators'], ['nodeTests', 'test:node']]) {
-  if (!new RegExp(`validation-groups\\.mjs\\s+${family}\\s+\\$groups`, 'u').test(workflow)) {
-    errors.push(`ci.yml no longer executes selected ${family} through validation-groups.mjs`);
-  }
-  if (!workflow.includes(`npm run ${fallback}`)) {
-    errors.push(`ci.yml no longer fails safe to the full ${fallback} aggregate when routing fails`);
-  }
+if (!/validation-groups\\.mjs\\s+validators\\s+\\$groups/u.test(workflow)) {
+  errors.push('ci.yml no longer executes selected validators through validation-groups.mjs');
+}
+if (!workflow.includes('npm run check:validators')) {
+  errors.push('ci.yml no longer fails safe to the full check:validators aggregate when routing fails');
+}
+if (!/validation-groups\\.mjs\\s+nodeTests\\s+\\$groups\\s+--owner-groups=["']?\\$OWNER_GROUPS/u.test(workflow)) {
+  errors.push('ci.yml no longer executes Node contracts through execution-owner shards');
+}
+if (!workflow.includes('groups="repo game persistence solver research data shared"')) {
+  errors.push('ci.yml Node shards no longer fail safe across every semantic group when routing fails');
 }
 
 if (!workflow.includes("Set up Node on warm dependency-tree path")
