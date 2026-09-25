@@ -19,13 +19,9 @@ Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalenc
 
 ### Broad evidence refresh closed
 
-The canonical stress refresh `35687363645` and technique census `35687337464` were dispatched from the same solver ref `39d14d49023aa09cb680053b975ef786eeae9b01` and are now scientifically complete. The census finished **120/120 shards**, **80,538 unique cells**, no missing/partial shards; its final red badge came only from the legacy post-combine hint-persistence rebase. The automatic harvester subsequently preserved the discoveries on current `main` at `afd744a195b2177a865670d3ec3afc00ed5352a7`. Do not rerun the census. [census closeout](../reports/2026-09-22-technique-census-broad-evidence-closeout-001.md)
+Canonical refresh `35687363645` and technique census `35687337464` are scientifically complete on solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`; do not rerun them. Production remains **101/102 C1 + 1,169/1,700 C2** with zero solved-set churn. The census completed **120/120 shards / 80,538 cells**. [refresh](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md) · [census](../reports/2026-09-22-technique-census-broad-evidence-closeout-001.md)
 
-The production refresh reproduces the prior solved sets exactly: **101/102 C1 + 1,169/1,700 C2, 0 gains / 0 losses in both corpora**. Compact failure response covers all 1,802 parents and 56,906 attempts, but same-stage failed solved controls largely match residual work/cap behavior, so generic compact response is exhausted as a broad discriminator. [production-side reconciliation](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md)
-
-The completed census sharpens the residual picture: full-depth T1 isolated techniques solve **83/532 current production misses (15.6%)**, with **47 singleton-supported** misses; **449** misses have no T1 solve. Conversely, **140/1,430 production-solved levels** have no T1 isolated solver at the 50M ceiling, so isolated coverage is not a production-safety oracle. The fresh run also records **332 flag/variant regressions**, reinforcing matched-work/control gates.
-
-**Standing budget decision:** keep T1/T3/T4 at **50M nodes** and retain the bounded **60-level × 10M canonical-work EW1** tranche. The next information purchase is not a deeper census or more generic failure counts: use the fresh 1,802-parent denominator plus the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win identities to sample first operational divergence and legal offer/allocation mechanisms. The Hint/evidence consolidation has since closed the census standard-result/source-run provenance hardening that was still outstanding at the September 22 closeout; the only census-specific follow-up here is second-order materialization, not another broad acquisition.
+Retained evidence now covers **1,802 parents / 56,906 attempts**; generic compact failure response is exhausted as a broad discriminator. T1 isolated techniques rescue **83/532** production misses (**47 singleton-supported**), while **449** misses have no T1 solve and **140/1,430** production-solved levels have no T1 isolated solve at 50M, so isolated coverage is not a safety oracle. Keep T1/T3/T4 at **50M nodes** and the bounded **60-level × 10M-work EW1** tranche. Hint/evidence consolidation has closed the previously outstanding standard-result/source-run provenance hardening.
 
 ### Supporting infrastructure — research execution efficiency
 
@@ -46,15 +42,7 @@ Immediate infrastructure gate: finish exact-runtime parity, then activate only e
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / two-front portfolio.
-
-**Production boundary:** `35687363645`: **101/102 C1 + 1,169/1,700 C2**, C2 residual 531; exact solved-set churn versus `35066677597` is 0 gained / 0 lost in both corpora. Historical class counts remain 17/30/23/71/390 until a class-specific refresh changes them. [`fresh reconciliation`](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md) · [`prior class refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
-
-- **Classes 1-3:** class 1 has no menu headroom. **Class 3 RESOLVED:** 0/23 exposure-gap, 20/23 censored-dose, 3/23 exposed-and-negative; repair deadline and admissible-order reserve starvation have separate follow-ups. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`resolution`](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md)
-- **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
-- **Class 5:** topology remains research-only; F3 population 14 pairs/7 parents. No raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
-- **Card-E:** 17/156 reconstructable-unexposed; both tested descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
-- **Post-topology:** H1 + DEAD-core size-1 closed; H3/H2 negative; behavioral quotient research-only. H3 allocation: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md)
+**State:** ACTIVE / two-front portfolio. Production boundary remains **101/102 C1 + 1,169/1,700 C2** (residual 531). Class 1 has no menu headroom; class 3 dose is resolved; class 4 portal coarse-state retry is promoted; class 5 topology remains research-only. [boundary](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md) · [class-3](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [class-4](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
 ### Premise-acquisition lanes
 
