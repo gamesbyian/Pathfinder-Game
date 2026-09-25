@@ -70,7 +70,7 @@ Closed or currently low-value directions:
 - **same-runner Node fan-out tuning:** direct 4-worker execution is preferred; npm mediation is worse;
 - **three-way deep overlap on a standard 4-core runner:** run 36090175972 stayed semantically green but stretched coverage/proofs/Firestore to 43.0/21.0/29.0 s and only reduced the serial sibling window by roughly 3 s;
 - **more shared-hosted Node/coverage shards:** semantically proven but p90 margin is inadequate because of hosted variance;
-- **solver canary, lint, warm build:** now ~1–2 s each and no longer priority targets;
+- **solver canary, lint, warm build:** now ~1–2 s each and no longer priority targets; **setup-node is not closed** after run 36103663816 measured a 17 s npm-cache restore on a warm dependency-tree hit.
 - **coverage threshold reduction, proof deletion, fixture deletion solely for speed:** prohibited by the protected validation contract.
 
 ## Historical starting baseline
@@ -107,8 +107,8 @@ Hosted runner: **4 logical CPUs**.
 ### Bootstrap and routing
 
 1. Deep and fast lanes now use source-focused checkout plus exact runtime-data caches; the former ~15 s deep data checkout is no longer the normal path.
-2. Exact Node **22.23.2** is pinned and setup-node is usually low single digits, though individual shared-runner samples can still vary.
-3. Exact dependency-tree restore is active and skips `npm ci` on a hit.
+2. Exact Node **22.23.2** is pinned. Run **36103663816** exposed a pathological but real hot-path bootstrap: `actions/setup-node` with `cache: npm` took **17 s** even though the subsequent exact `node_modules` cache hit and `npm ci` never ran. The production lanes now restore the exact dependency tree first where possible and use setup-node **without npm-cache restore on a hit**; npm-cache restoration is reserved for the dependency-tree miss path.
+3. Exact dependency-tree restore is active and skips `npm ci` on a hit. The cache identity is now explicitly pinned to Node 22.23.2 / npm 10.9.8 so it can be restored before probing a live runtime on the Fast Gate.
 4. Main and diagnostics producers seed runtime-data/runtime-hint cache generations; cold whole-tree materialization is a correctness fallback rather than normal PR work.
 5. Main seeds ESLint cache; warm PR lint is now ~1 s.
 6. The separate planner runner is no longer a dependency edge for full-impact deep verification; deep computes the canonical plan locally and can start immediately.
@@ -806,7 +806,7 @@ The audit did **not** broadly disable every auxiliary PR workflow. `ci-testabili
 4. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
 5. **Proof witness audit:** both R02560 arms are now characterization-only; inspect the two exhaustive deadlock roots for equivalent cheaper proof machinery or smaller exhaustive fixtures without weakening soundness.
 6. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
-7. **Final bootstrap/cache serial audit:** look for redundant restores/discovery/setup and small overlap opportunities; stop if savings are noise-sized.
+7. **Validate warm bootstrap topology:** measure setup-node and first-validation start after the cache-first dependency-tree change; keep only if warm-path wall improves without harming cold fallback. Then audit remaining serial restores/discovery.
 8. **Reserved/larger runner rehearsal:** apply the already-proven Node/coverage partitions on at least 16 logical CPUs and re-test deep internal overlap with the larger CPU budget if the still-justified full contract requires it.
 9. **Bounded p50/p90 window:** declare success only from comparable full-impact runs meeting the stop conditions below.
 
