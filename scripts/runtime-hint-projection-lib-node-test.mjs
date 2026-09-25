@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
     projectRuntimeHintArtifact,
     projectRuntimeHintDirectory,
+    reconcileRuntimeHintDirectory,
 } from './runtime-hint-projection-lib.mjs';
 import { decodeHintArtifact, hintPaths, makeProvenanceEntry, toHint } from '../modules/domain/hint-runtime.mjs';
 
@@ -54,6 +55,28 @@ try {
     const manifestOnDisk = JSON.parse(readFileSync(path.join(target, '_projection-manifest.json'), 'utf8'));
     assert.equal(manifestOnDisk.files.length, 2);
     assert.deepEqual(manifestOnDisk.files.map(row => row.file), ['P00001.json', 'P00002.json']);
+
+    const p2Before = readFileSync(path.join(target, 'P00002.json'), 'utf8');
+    const changedCanonical = {
+        ...canonical,
+        hints: [...canonical.hints, toHint([7, 7, 7], [])],
+    };
+    writeFileSync(path.join(source, 'P00001.json'), JSON.stringify(changedCanonical));
+    const reconciled = reconcileRuntimeHintDirectory(source, target, {
+        changedFiles: ['P00001.json'],
+    });
+    assert.equal(reconciled.summary.files, 2);
+    assert.equal(reconciled.summary.hints, 4);
+    assert.equal(readFileSync(path.join(target, 'P00002.json'), 'utf8'), p2Before,
+        'unchanged projection must be reused byte-for-byte');
+
+    rmSync(path.join(source, 'P00002.json'));
+    const deleted = reconcileRuntimeHintDirectory(source, target, {
+        deletedFiles: ['P00002.json'],
+    });
+    assert.equal(deleted.summary.files, 1);
+    assert.equal(existsSync(path.join(target, 'P00002.json')), false,
+        'deleted source artifact must remove its cached projection');
 } finally {
     rmSync(temp, { recursive: true, force: true });
 }
