@@ -1123,7 +1123,7 @@
       "id": "WS1-REMAINING-LENGTH-INTRA-SOLVE-BRIDGE",
       "question": "Within one repairSearchFromGate invocation, does globally ordering the existing elite-prefix bounded-completion candidate pool by the frozen ascending index-depth proxy (`requiredLength - destroyIdx`) improve solve/work under the identical candidate set and fixed shared node budget?",
       "owner": "WS1",
-      "state": "active-candidate",
+      "state": "concluded-negative",
       "aliases": [
         "remaining-length intra-solve bridge",
         "elite-prefix length order",
@@ -1136,9 +1136,10 @@
         "reports/2026-09-20-h3-independent-transfer-result-001.md",
         "reports/2026-08-07-repair-elite-prefix-dfs.md",
         "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md",
-        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md"
+        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md",
+        "reports/2026-09-25-ws1-remaining-length-intrasolve-bridge-stage-a-result-001.md"
       ],
-      "result": "Preflight + static semantics audit complete; default-inert implementation, attribution trace, and dedicated frozen 20-level direct A/B harness are present, but no Stage A outcome has been acquired. H3's independently transferred allocation signal used exact counted remaining length across rows, while the recovered elite-prefix treatment is frozen as an index-depth proxy that can diverge on portal-bearing prefixes. Static analysis narrows the causal seam: candidate searches are independently rebuilt/deterministic within one elitePrefixDfsRepair call, so ordering can matter only through the shared 90k candidate budget frontier or an earlier successful return. The harness records exact counted residual + portal jumps observationally without refitting the sort key.",
+      "result": "Stage A dispatched 2026-09-25 on the frozen 20-level population under the frozen index-depth ordering key and matched node budgets: BRIDGE-NEGATIVE per the preflight's own decision rule. Zero treatment-only solves, zero control-only losses, and treatment total work is 0.82% HIGHER than control (886.3M vs 893.5M), not lower. The treatment mechanism was genuinely exercised (1,617 triggers, 19,268 candidate attempts across 19/20 levels), ruling out a blocked verdict; the one shared solve had zero triggers in both arms and is byte-identical control/treatment. This closes the tested intra-solve transport of the cross-row H3/Card-E remaining-length allocation effect into a per-level elite-prefix completion candidate reorder; it does not affect the underlying cross-row H3/Card-E result itself.",
       "constrains": [
         "Do not treat the confirmed cross-row H3 transfer as proof of intra-solve allocation value.",
         "Control and treatment must use the exact same elite-prefix candidate multiset, per-candidate cap, total cap, outer repair cap and seed; only candidate order may differ.",
@@ -1146,9 +1147,10 @@
         "Do not interpret the frozen index-depth proxy as exact remaining-length feasibility; Pathfinder counted length excludes free portal jumps and feasibility also depends on non-length obligations/geometry.",
         "A negative frozen bridge does not reopen elite-prefix DFS for further tuning and does not invalidate the earlier cross-row H3 result.",
         "The research-only ordering switch and attribution trace are inert unless explicitly enabled by a dedicated harness; no production caller is authorized to enable them.",
-        "Use scripts/stress/ws1-remaining-length-intrasolve-bridge.mjs for the frozen Stage A; do not substitute the legacy generic elite-prefix A/B script, which cannot express this research-only ordering treatment."
+        "Use scripts/stress/ws1-remaining-length-intrasolve-bridge.mjs for the frozen Stage A; do not substitute the legacy generic elite-prefix A/B script, which cannot express this research-only ordering treatment.",
+        "This tested intra-solve form is closed: do not rescue by retuning prefix fraction, elite count, per-candidate cap or total cap, per the preflight's own foreclosure."
       ],
-      "reopensOn": null,
+      "reopensOn": "A materially different transport mechanism from the cross-row H3/Card-E effect into per-level allocation (a different seam than the elite-prefix completion candidate pool, or a different current-input proxy entirely), not a retune of this tested ordering key/cap combination.",
       "premiseRefs": [
         "P065",
         "P123"
@@ -1157,7 +1159,8 @@
       "acquisitionNeed": "telemetry-or-economics",
       "answeredBy": [
         "reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md",
-        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md"
+        "reports/2026-09-22-ws1-remaining-length-semantics-and-answerability-001.md",
+        "reports/2026-09-25-ws1-remaining-length-intrasolve-bridge-stage-a-result-001.md"
       ]
     }
   ]

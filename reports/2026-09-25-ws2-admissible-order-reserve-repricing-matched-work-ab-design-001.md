@@ -118,11 +118,21 @@ without a new, separately-justified design.
 Per the operating model's "before expensive decision-bearing runs" checklist: run one representative
 execution-family canary under the exact resolved treatment config (one admissible-order-gated level,
 e.g. R02219) verifying the override actually reaches `SolveOpts` and that the reserve is genuinely
-14,999,968 attempted budget under fraction 0.35 (was avg dose observed at 12,499,968 under 0.25)
-before committing to the full 53-parent matrix. Both arms are small (53 levels total, 50M-node
-ceiling) — this does not need GHA sharding; a local `level-blind-capability-sweep.mjs` run is
-sufficient, matching how the WS1 Stage A canary and the WS2 repair-deadline seam validation both ran
-locally in this same session.
+~17,499,968 attempted budget under fraction 0.35 (was avg dose observed at 12,499,968 under 0.25;
+corrected from this report's original "14,999,968" transcription, which did not match 0.35 x 50M).
+
+**Canary confirmation (2026-09-25):** ran `--corpus=data/stress/stress-levels-random.json --levels=pos:550
+--node-budget=50000000 --work-budget=67000000 --admissible-order-node-reserve-fraction=0.35` against
+R02219 (corpus position 550). `effectiveConfig.admissibleOrderNodeReserveFractionOverride: 0.35`
+confirms the override reached `SolveOpts`; the `admissible-order-fallback` attempt's
+`allocatedNodeCeiling` was `17,499,829` (vs. `12,499,950` for the untreated
+`admissible-order-alternate-tiebreak-retry` stage, which this override does not touch), matching the
+predicted 0.35/0.25 = 1.4x ratio to within rounding. `deadlineTruncated: false`. Canary passes; given
+the empirical ~450s single-level cost at this budget observed on this canary and the WS2 repair-
+deadline canary's ~235s, the full 53-level x 2-arm matrix (106 solves) is now dispatched via GHA
+(`solver-level-blind-targeted-sweep.yml`, `node_cap_overrides=admissibleOrderNodeReserveFraction=0.35`
+for treatment), not locally — this revises this report's original plan to run locally, made before
+real per-level costs at this budget were observed.
 
 ## What this design does not authorize
 

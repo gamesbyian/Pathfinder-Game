@@ -188,10 +188,21 @@ production change by itself — the next gate after a clean positive is the ordi
 Per the operating model's "before expensive decision-bearing runs" checklist: run one representative
 execution-family canary under the exact resolved treatment config (one repair-gated level, e.g.
 R00306) verifying the override actually reaches `SolveOpts` and that `deadlineTruncated` no longer
-fires below the raised cap, before committing to the full 53-parent matrix. Both arms are small
-(53 levels total, 50M-node ceiling) — this does not need GHA sharding; a local
-`level-blind-capability-sweep.mjs` run is sufficient, matching how the WS1 Stage A canary in this
-same session ran locally.
+fires below the raised cap, before committing to the full 53-parent matrix.
+
+**Canary confirmation (2026-09-25):** ran `--corpus=data/stress/stress-levels-random.json --levels=pos:38
+--node-budget=50000000 --work-budget=67000000 --early-repair-search-ordinary-node-budget=21000000
+--early-repair-search-biased-node-budget=38000000` against R00306 (corpus position 38).
+`effectiveConfig` confirms both overrides reached `SolveOpts`
+(`earlyRepairSearchOrdinaryNodeBudgetOverride: 21000000`, `...BiasedNodeBudgetOverride: 38000000`);
+the level solved (`deadlineTruncated: false`) with its ordinary-tier `early-repair-search` attempt
+using `allocatedNodeCeiling: 21000000` (matching the raised cap) before falling through to a
+successful retry. Canary passes. Given the observed ~235s single-level cost at this budget (and the
+WS2-2A canary's ~450s at the same node/work scale), the full 53-level x 2-arm matrix (106 solves) is
+dispatched via GHA (`solver-level-blind-targeted-sweep.yml`,
+`node_cap_overrides=earlyRepairSearchOrdinaryNodeBudget=21000000,earlyRepairSearchBiasedNodeBudget=38000000`
+for treatment), not locally — this revises this report's original local-run plan, made before real
+per-level costs at this budget were observed.
 
 ## What this preflight does not authorize
 
