@@ -165,7 +165,9 @@ Follow-up implementation now lives in the combiner-topology PR. `combine-solver-
 
 The Node contract preserves one real combiner CLI smoke and one real planner CLI smoke for executable/argument/file-output integration. The remaining **13 combiner** and **7 planner** semantic cases run in-process through the exported seams. The separate timeout-recovery executable remains a real subprocess because its stdout is explicitly part of the asserted contract. This reduces this portion of the suite from **22 combiner/planner subprocess launches to 3 real executable boundaries** without dropping semantic cases.
 
-Decision gate: retain only if exact-head semantic CI stays green and the measured combiner contract or total Node wall improves. Any further process-boundary reduction must name the specific executable behavior it would preserve elsewhere.
+Exact Fast Gate evidence from run **36096167198** is green for the full Node/CLI population. `test:combine-solver-sweep-reports` measured **1.6 s**, down from roughly **4.0 s median** in the final #2109 Node benchmark, a ~60% contract-level reduction. The full Node step measured **31 s** on this shared-runner sample, reinforcing the standing rule that child-level timing is the cleaner signal for scoped testability changes.
+
+Decision: **close this process-topology experiment successful**. Preserve the three real executable boundaries (combiner smoke, planner smoke, timeout-recovery stdout integration) and do not chase the remaining 1.6 s unless it re-emerges as a material tail.
 
 Decision gate: keep the sparse path only if all existing real-repository HEAD parity/queryability assertions stay green and the corrected Node-22 benchmark shows a repeatable reduction in the top-three contracts or total direct wall. If not, revert it rather than adding broader shared-fixture coupling.
 
