@@ -219,6 +219,13 @@
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
     },
     {
+      "workflow": "solver-research-input-materialization-rehearsal.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "solver research execution-efficiency sparse/full input-boundary parity audit",
+      "retirementTrigger": "retire after short-job sparse input contracts are settled and equivalent dependency/input-boundary protection is permanently owned elsewhere"
+    },
+    {
       "workflow": "solver-research-runtime-rehearsal.yml",
       "role": "operational",
       "status": "maintained",
