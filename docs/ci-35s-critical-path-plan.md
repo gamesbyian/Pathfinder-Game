@@ -1104,9 +1104,50 @@ Preregistered interpretation:
 
 **Decision: D2d closes negative again on standard shared-hosted runners.** The current workload premise changed materially and the shard semantics are sound, but shared-runner useful-work/CPU variance still overwhelms the theoretical split. Do not tune membership further. The temporary planner, shard jobs, and threshold seam were removed immediately after the decision.
 
+## Repair-search closed-prototype cadence audit
+
+After D2d closed negative, the largest remaining covered file was `modules/solver/repair-search.test.ts` at roughly 5.5 s in the latest green sample. The expensive cases were audited against production dispatch and the authoritative opt-in disposition ledger.
+
+Production dispatch in `attempt-dispatch.ts` passes the Stage-2/3 direct-prototype parameters as:
+
+- `enablePlateauPenalty = false`;
+- `enableRecombination = false`;
+- `enableRelink = false`.
+
+Those mechanisms therefore cannot activate through ordinary solver orchestration.
+
+Additional prototype mechanisms are explicit default-OFF experiment flags:
+
+- `STRATEGY_REPAIR_TURN_BIAS`: **closed negative** in `docs/solver-opt-in-experiment-ledger.md`;
+- `STRATEGY_REPAIR_BEAM_SEED`: **closed** after its apparent isolated gain vanished through the full ladder;
+- elite-prefix DFS is likewise closed/default-OFF, though its characterization lives outside the expensive set changed here.
+
+The production must-turn-biased repair attempt is different: it remains part of the ordinary must-turn repair ladder, so its 250k-node determinism/validity integration stays PR-blocking.
+
+Ordinary CI now keeps:
+
+- all pure prototype helper/operator correctness tests;
+- cheap explicit-false/default-omitted byte-equivalence tests, proving dormant parameters remain inert;
+- production must-turn-biased repair integration;
+- attempt-dispatch wiring tests, including the permanent beam-seed flag-threading/restart-0 observer boundary.
+
+Seven **enabled closed-prototype integration characterizations** are now gated by `SOLVER_REPAIR_PROTOTYPE_TESTS=1`:
+
+- plateau-penalty determinism;
+- recombination determinism;
+- relink determinism;
+- turn-bias determinism;
+- beam-seed determinism;
+- beam-seed restart-0 arrival characterization;
+- beam-seed local-node-accounting characterization.
+
+They remain executable through `npm run test:repair-prototype-characterizations`, which is included by the on-demand `test:solver-effectiveness-characterizations` aggregate.
+
+This is a cadence correction under the same principle as the R02560 audit: CI protects production correctness and default-off isolation; the research protocol owns repeated confirmation of closed mechanism behavior when that behavior is scientifically relevant.
+
 ## Current forward work order
 
-1. **Reduce the remaining single-runner coverage work:** D2d is closed negative. Audit the remaining expensive covered solver tests for obsolete/default-off research-prototype obligations and same-proof-cheaper activation witnesses before any further topology change.
+1. **Validate the repair-prototype cadence cut:** require exact-head green coverage, unchanged thresholds, and a material repair-search/coverage wall reduction. If green, move directly toward a bounded full-impact confirmation window before inventing another optimization.
 2. **Validate the implemented solver→research narrowing:** fault injection, historical #1722-equivalent route oracle, and solver-scoped timing must pass before calling the 59-consumer explicit routing settled.
 3. **Refresh the selected-population timing census:** regenerate Node/CLI timings after routing/cadence removals and rank by selected critical-path burden, not the obsolete universal population.
 4. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
