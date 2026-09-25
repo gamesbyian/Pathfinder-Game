@@ -47,7 +47,17 @@ jobs:
             /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
             !/data/
           sparse-checkout-cone-mode: false
-      - name: Restore component runtime data
+      - name: Materialize shard-A level documents
+        if: matrix.shard == 'a'
+        shell: bash
+        run: |
+          mkdir -p data/stress
+          for file in             data/levels.json             data/stress/stress-levels.json             data/stress/stress-levels-random.json
+          do
+            git show "HEAD:$file" > "$file"
+          done
+      - name: Restore full runtime data for shard B
+        if: matrix.shard == 'b'
         uses: ./.github/actions/runtime-data
 
       - name: Derive exact dependency-tree cache key
