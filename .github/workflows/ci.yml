@@ -426,6 +426,7 @@ jobs:
           BUILD: ${{ steps.build.outcome }}
         run: |
           failed=0
+          if [[ "$RUN_BUILD" != "true" ]]; then BUILD="skipped"; fi
           {
             echo '## CI fast gate'
             echo
@@ -439,7 +440,6 @@ jobs:
             printf '| Production build | `%s` |\n' "$BUILD"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$RUN_BUILD" != "true" ]]; then BUILD="skipped"; fi
           for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS; do
             status="${!name}"
             printf '%-14s %s\n' "$name" "$status"
@@ -448,7 +448,11 @@ jobs:
               echo "::error::CI fast-gate group $name finished with $status."
             fi
           done
-          if [[ "$failed" == 0 ]]; then
+          if [[ "$RUN_BUILD" == "true" && "$BUILD" != "success" ]]; then
+            failed=1
+            echo "::error::CI fast-gate group BUILD finished with $BUILD."
+          fi
+          if [[ "$failed" == "0" ]]; then
             echo 'All fast-gate validation groups passed.' >> "$GITHUB_STEP_SUMMARY"
           else
             echo 'One or more fast-gate groups failed. The table above is the first inspection surface; open only the failed group steps for detail.' >> "$GITHUB_STEP_SUMMARY"
