@@ -1,5 +1,10 @@
 # Research workflow execution-topology starting census — 2026-09-25
 
+> **Status:** active
+> **Last evidence:** 2026-09-25 — static current-main workflow census plus hosted September-22 bootstrap timing sample.
+> **Decision:** prioritize exact runtime identity and short-job input/bootstrap work; do not blanket-optimize long solve shards.
+> **Remaining gate:** exact-runtime rehearsal, then full-vs-sparse short-job parity and measured dependency-tree reuse.
+
 ## Purpose
 
 Start Phase 1 of `docs/solver-research-execution-efficiency-plan.md` with current-main facts. This is a static topology census, not a runtime-cost claim.
