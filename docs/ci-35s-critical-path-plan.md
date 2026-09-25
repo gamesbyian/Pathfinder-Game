@@ -743,7 +743,7 @@ The important fresh question is no longer "what else can we shave?" It is:
 
 > **What is the smallest, correctly owned set of evidence that should block this merge, and only then how do we make that evidence fast?**
 
-### Solver-to-research routing discriminator — active
+### Solver-to-research routing discriminator — implemented, awaiting oracle evidence
 
 The first selected-population census after Fast Gate activation found a coarse ownership edge worth challenging before more test micro-optimization.
 
@@ -766,18 +766,16 @@ The exact numbers will change with fresh timings, but the shape is decisive: dow
 - the current rehearsal timing profile attributes roughly **46.5 child-seconds across 110 measured research-facing Node contracts**, versus roughly **17.7 child-seconds across 35 measured solver-facing contracts**. These are child-time planning figures from run 36065247220, not current hosted wall times;
 - many research contracts are pure question/evidence/query/governance machinery with no plausible dependency on solver implementation.
 
-Do **not** simply change the source rule to solver-only. First identify real downstream consumers.
+The successful topology audit run 36103663827 emitted **59** registered production-solver consumers. Those exact consumers are now encoded with explicit `solver` contract surfaces across research/data/game/shared ownership, while the production-solver source rule itself selects only `solver`. Unrelated research administration is therefore no longer selected merely because solver is a producer. This remains conservative for the mechanically observed import/process boundary; filesystem/generated/env dependencies are still covered by the broad oracle and fault-injection evidence gate.
 
-The dependency-local audit now emits `solverImplementationConsumers`: registered contracts whose resolved local import closure or declared subprocess entrypoints actually touch `modules/solver/**` / `modules/solver.ts`. This is deliberately a lower bound: filesystem/generated/env dependencies remain separate and must be accounted for before narrowing.
+Implementation/evidence gate:
 
-Decision gate for replacing the wholesale `solver + research` escalation:
-
-1. collect the exact consumer list from the topology audit;
-2. inspect every research-owned consumer and any non-import dependency that can observe solver behavior;
-3. encode genuine downstream solver invalidation through `contractSurfaces` / dependency metadata;
-4. change the production-solver source rule to `solver` only;
-5. replay the historical #1722 unique solver-semantic catch and representative solver fault injection;
-6. run a solver-scoped rehearsal and compare selected population/timing against the current wholesale research escalation;
+1. **done:** collect the exact 59-consumer list from topology run 36103663827;
+2. **done:** encode mechanically observed downstream solver invalidation through explicit `contractSurfaces`;
+3. **done:** change the production-solver source rule to `solver` only;
+4. **pending:** representative semantic fault injection must pass under solver-only source routing;
+5. **pending:** replay the historical #1722 unique solver-semantic catch / equivalent historical route oracle;
+6. **pending:** run a solver-scoped rehearsal and compare selected population/timing against the prior wholesale research escalation;
 7. retain full fallback for CI/router authority changes and periodic/full oracle coverage.
 
 If that evidence closes green, this is preferable to spending the next cycle shaving milliseconds from research contracts that solver PRs never needed to execute.
@@ -801,7 +799,7 @@ The audit did **not** broadly disable every auxiliary PR workflow. `ci-testabili
 ## Current forward work order
 
 1. **Validate the newly activated semantic Fast Gate:** require green exact-head full-impact evidence plus representative scoped evidence for validator/Node selection and conditional build; verify router failure still falls back broad.
-2. **Close the solver→research coarse-edge discriminator:** consume `solverImplementationConsumers`, inspect non-import dependencies, encode genuine downstream solver consumers explicitly, replay #1722/fault injection, and only then consider changing the production-solver rule from `solver + research` to `solver`.
+2. **Validate the implemented solver→research narrowing:** fault injection, historical #1722-equivalent route oracle, and solver-scoped timing must pass before calling the 59-consumer explicit routing settled.
 3. **Refresh the selected-population timing census:** regenerate Node/CLI timings after routing/cadence removals and rank by selected critical-path burden, not the obsolete universal population.
 4. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
 5. **Proof witness audit:** both R02560 arms are now characterization-only; inspect the two exhaustive deadlock roots for equivalent cheaper proof machinery or smaller exhaustive fixtures without weakening soundness.
