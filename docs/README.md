@@ -9,6 +9,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`architecture.md`](architecture.md) | Application structure and code ownership |
 | [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining authority/mutable-lifetime architecture debt |
 | [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes |
+| [`plan-quality-standard.md`](plan-quality-standard.md) | Repository-wide standard for creating, auditing, and mechanically closing substantial plans |
 | [`periodic-repository-hygiene.md`](periodic-repository-hygiene.md) | Recurring repository entropy-control procedure |
 | [`naming-and-vocabulary.md`](naming-and-vocabulary.md) | Canonical naming and vocabulary |
 | [`testing.md`](testing.md) | Validation and finish-line gates |

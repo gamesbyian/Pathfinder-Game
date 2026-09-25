@@ -7,6 +7,7 @@ Compact router. Load task-specific material, not history. [`DEVELOPER_REFERENCE.
 | Task | Read first |
 |---|---|
 | Product/code change | [`docs/architecture.md`](docs/architecture.md), then changed files |
+| Plan creation/review / “check this plan against repo standards” | [`docs/plan-quality-standard.md`](docs/plan-quality-standard.md); substantial plans use a sibling `.quality.json` and `npm run plan:quality -- --plan=<path>` |
 | Cross-cutting schema/state/telemetry | [`docs/change-recipes.md`](docs/change-recipes.md), then owning topic doc |
 | Periodic repository hygiene / “periodic hygiene check plan” | Execute [`docs/periodic-repository-hygiene.md`](docs/periodic-repository-hygiene.md) end-to-end from current `main`; it owns the recurring hygiene procedure |
 | Naming / future rename | Cleanup is complete through Phase 15. Use [`docs/naming-and-vocabulary.md`](docs/naming-and-vocabulary.md) + [`docs/change-recipes.md`](docs/change-recipes.md); history: `npm run naming:status`. Do not reopen it. |
