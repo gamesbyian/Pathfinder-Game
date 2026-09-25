@@ -5,6 +5,7 @@ import path from 'node:path';
 const root = process.cwd();
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const scripts = packageJson.scripts ?? {};
+const validationGroups = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'validation-groups.json'), 'utf8'));
 const workflowPath = path.join(root, '.github', 'workflows', 'ci.yml');
 const workflow = fs.readFileSync(workflowPath, 'utf8');
 const nodeShardWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci-node-contract-shards.yml'), 'utf8');
@@ -80,6 +81,31 @@ if (!nodeShardWorkflow.includes('node scripts/validation-groups.mjs nodeTests $g
 }
 if (!nodeShardWorkflow.includes('groups="repo game persistence solver research data shared"')) {
   errors.push('Node shard workflow no longer fails safe across every semantic group when routing fails');
+}
+if (!nodeShardWorkflow.includes("if: matrix.shard == 'a'")
+    || !nodeShardWorkflow.includes('data/stress/stress-levels-random.json')
+    || !nodeShardWorkflow.includes("if: matrix.shard == 'b'")
+    || !nodeShardWorkflow.includes('uses: ./.github/actions/runtime-data')) {
+  errors.push('Node shard workflow no longer preserves minimal level-data shard A plus full-runtime-data shard B');
+}
+
+const shardAOwners = new Set(['research', 'solver', 'game', 'persistence']);
+const ownerByNodeContract = new Map();
+for (const [group, members] of Object.entries(validationGroups.nodeTests ?? {})) {
+  for (const member of members) ownerByNodeContract.set(member, group);
+}
+const allowedShardADataPaths = new Set([
+  'data/levels.json',
+  'data/stress/stress-levels.json',
+  'data/stress/stress-levels-random.json',
+]);
+for (const [member, dependency] of Object.entries(validationGroups.contractDependencies?.nodeTests ?? {})) {
+  if (!shardAOwners.has(ownerByNodeContract.get(member))) continue;
+  for (const repoPath of dependency.repoPaths ?? []) {
+    if (repoPath.startsWith('data/') && !allowedShardADataPaths.has(repoPath)) {
+      errors.push(`Node shard A contract ${member} declares unsupported runtime-data dependency ${repoPath}`);
+    }
+  }
 }
 if (!workflow.includes('runtime-hint-projection-v2-')) {
   errors.push('ci.yml no longer uses the rolling runtime-Hint projection cache generation');
