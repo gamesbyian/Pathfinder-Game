@@ -1607,6 +1607,46 @@ No restore prefix is allowed. A stale projection must never be reused across sou
 
 These are independent, low-risk changes and should be activated separately so their effects remain attributable.
 
+## Reconciled #2118 baseline and D3 build/service overlap
+
+After merging current main/#2118 and repairing stale parity/scoped authorities, exact-head run **36192815917** is the new comparable production baseline:
+
+| lane | runner wall |
+| --- | ---: |
+| Fast Gate | **~25 s** |
+| Node shard A | **~28 s** |
+| Node shard B | **~27 s** |
+| coverage | **~33 s** |
+| deep services | **~33 s** |
+
+First required runner start → last required completion was **~34 s**. CI, topology audit, and semantic fault injection were green.
+
+Useful-work evidence shows the remaining tails are mostly packing/bootstrap:
+
+- coverage Vitest: **17.29 s** useful wall; largest file is the one real diversification integration at ~2.4 s;
+- Node A selected contracts: ~17 s useful wall;
+- Node B selected contracts: ~18 s useful wall;
+- deep-services spends substantial serial time on dependency/projection/build plus Firebase/Java setup before the ~10 s concurrent proof/Firestore phase.
+
+### D3 — overlap build with proofs + Firestore on the same deep-services runner
+
+The packed-build topology is retained, but production build no longer runs as a standalone serial step before service setup. After dependency/projection preparation and Firestore/Java setup, the combined `deep_services` shell now launches:
+
+- `npm run build`;
+- `npm run test:deep-proofs`;
+- Firestore emulator boundary;
+
+concurrently and preserves independent `build`, `deep_proofs`, and `firestore` result outputs.
+
+This is a packing experiment, not validation demotion and not another hosted runner. Build-only changes are explicitly included in the combined-step selector; build failure blocks the lane; projection cache publication waits for `deep_services.outputs.build == success`. The scoped rehearsal and capability step-ID authority mirror production.
+
+Decision gate:
+
+1. exact-head CI, topology, semantic-fault and validation-plan parity green;
+2. full-impact deep-services wall materially below the ~33 s reconciled baseline;
+3. proofs/Firestore do not regress enough from CPU contention to erase the saved build serialization;
+4. if wall is neutral/worse, revert D3 and keep the previous serial packed-build shape.
+
 ## Current forward work order
 
 1. **Validate the reconciled packed topology:** require exact-head green CI/oracles after the #2118 merge-forward and parity/scoped-rehearsal repair; use that head as the new comparable timing baseline.
