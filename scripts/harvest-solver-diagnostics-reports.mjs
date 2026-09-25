@@ -262,7 +262,7 @@ if (ingestionReceiptOut) {
         filesChanged,
         pending,
         corpusScope: CORPUS,
-        notes: 'native Pathfinder diagnostics successful-discovery projection reconstructed from the durable diagnostics artifact; direct source-workflow mutation remains during Phase-6 parity',
+        notes: 'native Pathfinder diagnostics successful-discovery projection reconstructed from the durable diagnostics artifact; canonical Hint mutation is owned by central harvest-solver-evidence ingestion',
     });
     validateHintIngestionReceipt(receipt);
     mkdirSync(path.dirname(ingestionReceiptOut), { recursive: true });

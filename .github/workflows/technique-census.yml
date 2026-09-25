@@ -13,14 +13,14 @@
 # the same convention solver-stress-refresh.yml/method-probe-sweep.yml already use for level ranges).
 #
 # SHARDS NEVER WRITE TO GIT-TRACKED DATA. A level can appear in cells assigned to different shards
-# across different tiers (the plan shards the flat CELL list, not the level list), so two shards
-# could otherwise race to rewrite the same level's hint file. Every shard is strictly read-only
-# against the repo; the COMBINE job is the sole writer, running once after every shard finishes -- see
-# technique-census.mjs's and combine-technique-census-shards.mjs's own header comments.
+# across different tiers (the plan shards the flat CELL list, not the level list), so every shard is
+# strictly read-only against the repo. The COMBINE job reconstructs the immutable scientific result
+# and derived reports only; it does not mutate canonical Hint stores in this maintained workflow.
 #
-# Every referee-valid discovery is retained. Hint capture is output-only and never enters any solve,
-# so experiment isolation is not a reason to discard evidence. The combine job writes canonical hint
-# files and the main-branch evidence harvester provides the branch-independent durability layer.
+# Every referee-valid discovery is retained in the uploaded result/report evidence. Hint capture is
+# output-only and never enters any solve, so experiment isolation is not a reason to discard evidence.
+# The central harvest-solver-evidence workflow is the sole maintained GHA authority that converts
+# these discoveries into canonical Hint mutations.
 #
 # PER-SHARD WALL-CLOCK SAFETY NET. GitHub-hosted runners hard-cap a job at 360 minutes; this cannot
 # be raised. Each shard uses scripts/technique-census.mjs's OS-level worker pool

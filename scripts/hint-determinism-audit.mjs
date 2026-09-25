@@ -23,7 +23,7 @@ function filesUnder(root) {
         .sort();
 }
 
-// Modern Phase-3 provenance can carry canonical solver-request/execution identity directly.
+// Modern provenance can carry canonical solver-request/execution identity directly.
  // Historical entries still fall back to the older recorded-input approximation, and those
  // collisions still require source-run/experiment reconciliation before interpretation.
 const summary = {

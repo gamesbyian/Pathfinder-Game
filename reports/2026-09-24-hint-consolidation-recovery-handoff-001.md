@@ -1,17 +1,17 @@
 # Hint consolidation recovery handoff — 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-24 — Reconstructed recent PRs and Hint/provenance branches after PR #2089 synchronized `main` into `chatgpt/hint-consolidation-hostile-audit-2026-09-24`. The hostile-audit branch contains 32 commits after that sync, including the strengthened consolidation plan, reconciled historical audit reports, whole-store validation corrections, and current hostile-completion findings.
-> **Decision:** PR #2072 / `chatgpt/hint-consolidation-hostile-audit-2026-09-24` is the authoritative continuation branch for the Hint evidence consolidation program. Future implementation work should continue from this branch rather than older continuation/final-push/Codex/Claude branches.
-> **Remaining gate:** Bring the branch to the exact current `main` when work resumes, preserve Hint conflicts through semantic `mergeHints()` reconciliation rather than line-based choice, then continue only the remaining plan implementation/closeout work and require the named exact-head CI/hostile/closeout/integrity/topology/Firestore gates before declaring completion.
+> **Status:** superseded
+> **Last evidence:** 2026-09-24 — The recovered continuation became PR #2072, whose final exact head `3ac9c52d4573` passed the complete remote closure set and merged as `3d4080ee3244`.
+> **Decision:** This document remains historical branch-recovery provenance only. New work must start from current `main`; PR #2072 and its branch are no longer continuation authorities.
+> **Remaining gate:** None. The consolidation program's current closeout authority is `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`.
 
 ## Why this handoff exists
 
 Several agents worked this program in parallel on September 23–24, and the repository accumulated multiple branches whose names plausibly look current. This handoff records the recovery pass so another agent can begin implementation without replaying branch archaeology.
 
-## Authoritative continuation surface
+## Historical continuation surface
 
-Continue from:
+The recovered continuation was:
 
 - PR #2072: **Hostile audit of completed hint/provenance consolidation**
 - branch: `chatgpt/hint-consolidation-hostile-audit-2026-09-24`

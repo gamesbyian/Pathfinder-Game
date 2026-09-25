@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       corpus:
-        description: 'Corpus to harvest; published uses data/levels.json and writes data/hints.'
+        description: 'Corpus to probe; published uses data/levels.json. Successful discoveries are persisted centrally after this artifact-only run.'
         type: choice
         options: [corpus-2, published]
         default: corpus-2

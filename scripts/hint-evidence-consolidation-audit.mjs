@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+/**
+ * Historical/preimplementation Hint-consolidation census.
+ *
+ * Kept runnable for forensic comparison and to reproduce the 2026-09-22 baseline. Its field/gap
+ * vocabulary is not current architecture authority; use the completed consolidation plan, hostile
+ * closeout, current research-resource contracts, and maintained Hint audit ledgers for current state.
+ * Default output goes to tmp/ so a forensic rerun cannot silently overwrite the frozen 2026-09-22
+ * baseline report; replacing a committed historical artifact requires an explicit --out path.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -7,7 +16,7 @@ import { assertCompleteHintStoreDirs, discoverHintStoreDirs, hintStoreLabel } fr
 
 const ROOT = path.resolve(process.argv.find(a => a.startsWith('--root='))?.slice(7) || process.cwd());
 const OUT = process.argv.find(a => a.startsWith('--out='))?.slice(6)
-  || 'reports/2026-09-22-hint-evidence-consolidation-census.json';
+  || 'tmp/hint-evidence-consolidation-census-current.json';
 
 const hintDirs = assertCompleteHintStoreDirs(discoverHintStoreDirs(ROOT), 'Hint evidence consolidation census');
 const hintRoots = hintDirs.map(dir => [hintStoreLabel(dir), dir]);

@@ -115,6 +115,7 @@ const BASELINE_AUDITED_RESOURCE_IDS = new Set([
   'variant-family-data',
   'solution-space-profiles',
   'stress-corpora',
+  'hint-ingestion-receipts',
 ]);
 const catalogueArrayFields = [
   'grain', 'locations', 'authorities', 'queryEntryPoints', 'joinKeys', 'evidenceRoles',
