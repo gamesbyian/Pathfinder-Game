@@ -48,6 +48,7 @@ Recent exact-head full-impact evidence:
 | 36083565019 | **60 s** | **44 s** | Node/CLI 35 s; coverage 18 s; proofs+Firestore 10 s |
 | 36084034066 | **44 s** | **70 s** | Node/CLI 20 s; coverage 31 s; proofs+Firestore 15 s |
 | 36086954088 | **71 s** | **67 s** | Node/CLI 36 s; coverage 30 s; proofs+Firestore 14 s |
+| 36090943840 | **~58 s** | **~40 s** | Node/CLI 36 s; coverage 18 s; proofs+Firestore 8 s |
 
 This variability is now itself evidence. Shared hosted runners vary materially not only in assignment/setup but in effective useful-work wall time. One fast sample must not be promoted to an intrinsic cost model.
 
@@ -56,7 +57,7 @@ The current biggest permanent-speed opportunities, in order of expected leverage
 1. **Node/CLI contract testability:** use the new machine-readable per-contract timing profiles, then attack structural tails: import-time corpus scans, repeated large-corpus parsing, avoidable subprocess/CLI wrappers, repository-wide discovery in synthetic tests, redundant fixture construction, and tests that invoke real solver/search work for bookkeeping-only assertions. Do not resume shared-runner shard-count tuning.
 2. **Covered Vitest testability:** refresh the slow-file/slow-test census from the JSON reporter and make expensive assertions cheaper without weakening coverage or converting real integration semantics into mocks. Preserve balanced coverage sharding as a proven topology for larger/reserved compute.
 3. **Heavy proof witnesses:** inspect the longest proof fixtures for smaller deterministic witnesses, tighter work budgets, or reusable setup while preserving the same property. Internal parallelism is already near the current 4-core limit.
-4. **Firestore boundary:** production logs show Firebase downloading `cloud-firestore-emulator-v1.22.0.jar` on every Deep run despite the CLI cache. #2109 now restores/saves `~/.cache/firebase/emulators` under an exact Firebase Tools/emulator-version key; measure warm-hit savings before looking for test-code reductions.
+4. **Firestore boundary:** #2109 now caches `~/.cache/firebase/emulators` under an exact Firebase Tools/emulator-version key. Run 36090943840 restored `firestore-emulator-Linux-firebase-tools-15.28.2-v1.22.0-v1`, emitted no jar-download message, and the combined proofs+Firestore stage fell to about **8 s** on that sample. Treat emulator download waste as closed; retain the exact cache and only pursue test-code reductions if Firestore itself becomes a measured tail.
 5. **Residual bootstrap/cache critical path:** audit serialized exact-cache restores, setup-node, TypeScript state, validator/lint sequencing, and duplicate repository discovery. Treat each as a measured small-opportunity audit, not a reason to weaken validation.
 6. **Larger/reserved compute:** benchmark the already-proven balanced Node and coverage topologies on more predictable compute after software costs are slimmed. Re-test internal deep overlap there because the 4-core negative result is contention-specific. At least 16 logical CPUs remains the initial capacity target.
 7. **Cadence/impact routing:** continue using the separate historical-value/impact-routing program to avoid irrelevant work. Do not use cadence demotion as a substitute for making the fullest selected form fast.
@@ -129,22 +130,31 @@ Current Node testability audit lenses:
 - redundant fixture generation or large JSON write/read round trips;
 - many ultra-cheap isolated processes where process startup itself becomes a meaningful floor, while preserving isolation where global/module/process state matters.
 
+
+Corrected Node-22 benchmark run **36090943731** now provides the current machine-readable census. Direct four-worker execution completed four green repeats at **24.13–26.48 s**, median **24.70 s**, versus npm-mediated median **30.52 s**. Current dominant direct-mode child medians are:
+
+| contract | median child wall |
+| --- | ---: |
+| `test:research-query` | **9.20 s** |
+| `test:research-queryability-audit` | **8.85 s** |
+| `test:research-system-query` | **8.75 s** |
+| `test:portfolio-solve-sweep-worker` | **3.70 s** |
+| `test:harvest-cpsat-discovery-reports` | **3.30 s** |
+
+This is now the primary Node software target. The top three independently derive overlapping read-only research graph/inventory state from the same repository snapshot. Investigate shared derivation/composite-contract seams before touching the sub-4-second tail.
+
 ### Covered Vitest
 
-Fresh uncontended production evidence from run **36090175881** / deep job **107930730496** measured **1595 tests across 162 files** with a ~30 s covered-suite step. Current file tails are:
+Fresh production evidence from run **36090943840** / deep job **107933055611** validates the #2109 repair-search reuse change:
 
-| file | wall |
-| --- | ---: |
-| `modules/solver/repair-search.test.ts` | **8.6 s** |
-| `modules/solver/diversification.test.ts` | **7.4 s** |
-| `modules/solver/hint-ablation-generator.test.ts` | **2.7 s** |
-| `modules/solver/restart-continuation-harness.test.ts` | **2.6 s** |
-| `scripts/solver-parallel-unit-tests.mjs` | **2.3 s** |
-| `modules/solver/orchestration-early-repair.test.ts` | **2.1 s** |
+- covered ordinary population: **~18 s**, down from the immediately preceding ~30 s sample;
+- `repair-search.test.ts`: **3.8 s**, down from **8.6 s**;
+- `diversification.test.ts`: **6.0 s**, now the largest covered file;
+- all remaining files are materially smaller.
 
-Everything else is below ~1.5 s. This sharply narrows software testability work.
+The repair-search change removed six redundant soundness-only real searches and moved validity assertions onto the already-fresh determinism pairs. All 31 remaining repair-search tests are green. This is a demonstrated same-proof-cheaper-testability win, not merely a standalone microbenchmark.
 
-The repair-search 250k/125k deterministic/default-equivalence budgets **are already landed**. The file remains expensive because several feature groups separately ran one real search for soundness and two more fresh real searches for determinism, plus another pair for default equivalence. PR #2109 therefore removes the redundant soundness-only invocation for six feature groups and asserts solution validity on the already-fresh deterministic pair instead. This preserves fresh-state determinism, identical nonzero work, and validity while deleting one real repair search per feature. Measure the full covered-suite effect before pursuing further repair-search restructuring.
+Diversification remains deliberately real solver integration. Its three dominant tests measure about **2.1 s**, **1.9 s**, and **1.9 s** in the current production run. Its reusable prerequisite harvest is already shared; the remaining expensive sessions assert distinct stateful behavior and should not be conflated merely for speed.
 
 Diversification remains deliberately real solver integration. Its three dominant tests currently measure ~2.7 s, 2.4 s, and 2.3 s. Do not replace them with mocks merely to improve CI; inspect fixture/work ceilings and reusable setup only where the same integration contract remains intact.
 
