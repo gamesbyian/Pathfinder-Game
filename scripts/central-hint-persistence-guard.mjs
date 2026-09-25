@@ -86,6 +86,20 @@ function persistenceIssues(workflow, rawText) {
     return issues;
 }
 
+function workflowExercisesException(workflow, rawText) {
+    const entry = exceptions.get(workflow);
+    if (!entry) return false;
+    const text = executableLines(rawText);
+    const variables = discoverPathVariables(text);
+    for (const line of text.split('\n')) {
+        if (!/\bgit\s+(?:add|status)\b/u.test(line)) continue;
+        for (const scope of commandStageScopes(line, variables)) {
+            if (scopeTouchesCanonicalHintStore(scope) && scopeAllowedByException(scope, entry)) return true;
+        }
+    }
+    return false;
+}
+
 for (const [workflow, entry] of exceptions) {
     if (!maintained.has(workflow)) {
         throw new Error(`${workflow}: Hint persistence exception does not name a maintained workflow`);
@@ -97,6 +111,10 @@ for (const [workflow, entry] of exceptions) {
         if (!scopeTouchesCanonicalHintStore(scope)) {
             throw new Error(`${workflow}: exception scope ${scope} does not cover a canonical Hint store`);
         }
+    }
+    const workflowText = fs.readFileSync(path.join(ROOT, '.github', 'workflows', workflow), 'utf8');
+    if (!workflowExercisesException(workflow, workflowText)) {
+        throw new Error(`${workflow}: Hint persistence exception is stale; current workflow no longer exercises its reviewed scope`);
     }
 }
 
