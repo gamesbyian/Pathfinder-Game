@@ -30,8 +30,8 @@ Retained evidence now covers **1,802 parents / 56,906 attempts**; generic compac
 The September 23–25 CI optimization cycle exposed reusable research-execution methods: exact-generation reuse, sparse input materialization, hermetic real-data fixtures, deterministic bookkeeping witnesses, callable semantic seams with retained executable smokes, and shadow-before-authority routing. The solver batch system already has mature weighted sharding, so generic shard-count tuning is not queued.
 
 Current execution facts from the audit:
-- maintained solver/evidence workflows still use floating `node-version: '20'`; primary level-blind and history-aware producers now record actual Node/platform/arch identity;
-- production CI's exact dependency-tree reuse is not yet active in solver research workflows;
+- maintained solver/evidence workflows now use exact Node runtimes: 22.23.2 for parity-rehearsed scientific producers and deterministic helper/harvest/integrity workflows, with solver diagnostics pinned to exact 20.20.2 pending a diagnostics-specific cross-major parity;
+- exact dependency-tree reuse is active in the short targeted-sweep plan/canary job with a safe `npm ci` miss path; broader research reuse remains measurement-gated;
 - full-tree checkout measured about 54 s on representative September-22 solver jobs, versus about 3 s in the first sparse targeted-planner rehearsal; setup-node was ~5 s and `npm ci` ~8 s;
 - the first full-vs-sparse targeted-planner + real-canary rehearsal is semantically identical when the exact corpus and `logs/solver-stress-refresh/corpus2-runtime-telemetry.json` dependency are retained;
 - canonical Hint persistence remains owned by `harvest-solver-evidence.yml`; source workflows must not recreate canonical writers.
