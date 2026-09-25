@@ -119,8 +119,8 @@ assert.ok(supportImpact.rows.some(row =>
   'authored decisionSupport should distinguish necessary support from answeredBy-only evidence');
 
 const answerability = buildResearchQueryView(graph, { view: 'answerability' });
-assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === 2),
-  'implementation gate should be visible as no-fresh-solver-execution work');
+assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === '2A'),
+  'design gate should be visible as no-fresh-solver-execution work');
 assert.ok(answerability.boundedCompute.some(row => row.workstreamId === 1),
   'WS1 confirmation should be explicitly classified as bounded compute');
 assert.ok(answerability.dormantOrConditional.some(row => row.workstreamId === '2R'),
@@ -153,11 +153,11 @@ assert.deepEqual(headSnapshot.gates, snapshot.gates,
 const earlier = structuredClone(snapshot);
 const ws2 = earlier.gates.find(row => row.workstreamId === 2);
 assert.ok(ws2);
-ws2.gateClass = 'bounded-compute';
+ws2.gateClass = 'implementation';
 const temporal = diffResearchQuerySnapshots(earlier, snapshot);
 assert.equal(temporal.gateClassComparison.comparable, true);
-assert.ok(temporal.newlyNoFreshSolverExecution.some(row => row.workstreamId === 2),
-  'snapshot diff should identify workstreams that became advanceable without solver compute');
+assert.ok(temporal.newlyBoundedCompute.some(row => row.workstreamId === 2),
+  'snapshot diff should identify workstreams whose gate moved into requiring fresh solver compute');
 
 const preGateClass = structuredClone(snapshot);
 preGateClass.gates[0].gateClass = null;
