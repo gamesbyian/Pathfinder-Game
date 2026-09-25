@@ -98,8 +98,8 @@
       "One-shot WS1 confirmation workflow, workflow lifecycle registry, workflow README"
     ],
     "generatedArtifacts": [
-      "Generation manifest",
-      "Frozen 160-parent corpus",
+      "tmp/ws1-late-continuation-single-001/generation-manifest.json",
+      "tmp/ws1-late-continuation-single-001/corpus.json",
       "Per-shard portfolio reports",
       "Combined report",
       "Frozen-model scoring result",
@@ -157,8 +157,8 @@
       "proofs": [
         {
           "type": "artifact",
-          "locator": "One-shot run generation manifest and frozen corpus artifact",
-          "expected": "method=random, count=160, masterSeed=2026092501, evidenceRole=confirmation, blockId=ws1-late-continuation-single-001, idPrefix=U, actualParentCount=160 and a stable population identity."
+          "locator": "tmp/ws1-late-continuation-single-001/generation-manifest.json + tmp/ws1-late-continuation-single-001/corpus.json in the one-shot workflow artifact",
+          "expected": "method=random, count=160, masterSeed=2026092501, evidenceRole=confirmation, blockId=ws1-late-continuation-single-001, idPrefix=U, actualParentCount=160 and a stable population identity; generation uses no overwrite/envelope/passthrough override."
         }
       ]
     },
@@ -328,7 +328,7 @@
       "Experiment/result contract surfaces if the wrapper adds no new schema"
     ],
     "generatedData": [
-      "Frozen confirmation corpus and generation manifest",
+      "Frozen 160-parent confirmation corpus and generation manifest from tmp/ws1-late-continuation-single-001/",
       "Combined solve/scoring artifacts and durable result evidence"
     ],
     "solverQueue": [
