@@ -241,10 +241,10 @@ The cadence/value audit remains the authority for **whether** an obligation belo
 
 Current critical-path conclusions that constrain cadence work:
 
-- deep verification and Fast Gate validator/Node populations are both impact-scoped by semantic ownership; Fast Gate remains always materialized for shared setup/lint/build and fails safe to the full aggregates if routing fails;
+- deep capabilities, Fast Gate validator groups, and the independent two-shard Node/CLI population are impact-scoped by semantic ownership; Fast Gate remains always materialized for structural checks/validators/lint, while build is owned by deep-services; routing failure reconstructs the corresponding full validator/Node/deep authorities;
 - the fullest selected contract is still above the ≤35 s target on ordinary shared runners;
 - shared-runner Node and coverage sharding are closed as production candidates because useful work balances correctly but p90 infrastructure margin is inadequate;
-- same-runner deep overlap, structural Node/Vitest testability, proof/Firestore cost reduction, residual bootstrap audit, and larger/reserved compute remain live;
+- structural Node/Vitest testability, bounded p50/p90 confirmation, remaining proof/Firestore/bootstrap tails, and larger/reserved compute remain live when current timing evidence earns them; closed same-runner/sharding experiments stay closed unless a named premise changes;
 - cadence/ownership changes may remove obligations that never belonged to merge-safety CI; the ≤35 s target applies to the fullest **semantically justified merge-safety contract**, not to every historical check that happened to be present when the target was announced.
 
 The protected validation breadth and current timing evidence live in the critical-path plan. Any future cadence recommendation that changes the fullest selected contract must update both documents and name the retained protection for every moved obligation.
