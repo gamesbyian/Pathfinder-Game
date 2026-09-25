@@ -114,7 +114,7 @@ The research system binds solver request, corpus/population and provenance ident
 
 ### Exit
 
-- maintained research workflows no longer float a major-only Node version. Rehearsed scientific producer workflows and deterministic helper/harvest/integrity workflows use exact Node 22.23.2; solver diagnostics is the explicit exact-20.20.2 exception because it still executes real solver analysis without a cross-major parity rehearsal;
+- maintained research workflows no longer float a major-only Node version. Rehearsed scientific producer workflows and deterministic helper/harvest/integrity workflows use exact Node 22.23.2; solver diagnostics is the explicit exact-20.20.2 exception because it still executes real solver analysis without a cross-major parity rehearsal; its direct solver report now records Node/platform/arch and diagnostics preserves that tuple into durable audit evidence;
 - runtime identity is inspectable in produced evidence;
 - migration evidence demonstrates no unexplained solved-set/config/provenance drift.
 
