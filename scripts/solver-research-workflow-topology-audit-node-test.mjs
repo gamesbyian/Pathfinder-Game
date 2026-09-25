@@ -66,4 +66,36 @@ try {
   rmSync(root, { recursive: true, force: true });
 }
 
+// Production policy regression: maintained solver/research workflows must not drift back to a
+// major-only Node selector. Diagnostics is intentionally held at exact 20.20.2 until its own
+// cross-major solver-semantic parity is earned.
+const productionRoot = process.cwd();
+const productionOut = path.join(
+  mkdtempSync(path.join(os.tmpdir(), 'solver-research-workflow-topology-production-')),
+  'topology.json',
+);
+try {
+  const script = path.resolve('scripts/solver-research-workflow-topology-audit.mjs');
+  const result = spawnSync(process.execPath, [
+    script,
+    '--root', productionRoot,
+    '--output', productionOut,
+  ], {
+    cwd: productionRoot,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  const audit = JSON.parse(readFileSync(productionOut, 'utf8'));
+  assert.equal(audit.summary.floatingMajorOnlyNodeSites, 0,
+    `maintained research workflows must use exact Node runtimes: ${audit.summary.floatingMajorOnlyWorkflows.join(', ')}`);
+
+  const diagnostics = audit.workflows.find(row => row.name === 'solver-diagnostics.yml');
+  assert.ok(diagnostics, 'solver-diagnostics.yml must remain in the maintained workflow census');
+  assert.equal(diagnostics.exactNode20202Sites, diagnostics.setupNodeSites,
+    'solver diagnostics must remain exactly pinned to Node 20.20.2 until diagnostics-specific cross-major parity is earned');
+} finally {
+  rmSync(path.dirname(productionOut), { recursive: true, force: true });
+}
+
 console.log('solver research workflow topology audit tests passed');
