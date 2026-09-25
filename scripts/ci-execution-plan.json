@@ -6,10 +6,16 @@
       "alwaysMaterialized": true,
       "validatorGroups": "selected",
       "capabilities": [
-        "lint",
+        "lint"
+      ],
+      "note": "Always-materialized static/validator/lint lane. Node contracts and production build execute independently."
+    },
+    "production-build": {
+      "alwaysMaterialized": false,
+      "capabilities": [
         "build"
       ],
-      "note": "Always-materialized static/build lane. Selected validators remain here; Node/CLI contracts execute in the independent two-shard node-contracts matrix."
+      "note": "Impact-scoped production bundle lane; independent from validators/lint so build/projection work does not serialize Fast Gate."
     },
     "deep-verification": {
       "alwaysMaterialized": false,
@@ -38,6 +44,7 @@
     "needs": [
       "impact-shadow",
       "fast-gate",
+      "production-build",
       "node-contracts",
       "deep-verification",
       "deep-services"
@@ -60,9 +67,13 @@
       ],
       "node-contracts": [
         "success"
+      ],
+      "production-build": [
+        "success",
+        "skipped"
       ]
     },
-    "note": "Stable scoped rehearsal status: router, fast gate, and Node-contract matrix must succeed; coverage and deep-services may skip only when semantic routing does not select their capabilities."
+    "note": "Router, Fast Gate and Node matrix must succeed; production build, coverage and deep-services may skip only when semantic routing does not select their capabilities."
   },
   "activationWorkflow": ".github/workflows/ci-scoped-dry-run.yml"
 }
