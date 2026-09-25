@@ -30,6 +30,7 @@ jobs:
       fast_job_required: ${{ steps.plan.outputs.fast_job_required }}
       deep_job_required: ${{ steps.plan.outputs.deep_job_required }}
       deep_services_job_required: ${{ steps.plan.outputs.deep_services_job_required }}
+      deep_services_job_required: ${{ steps.plan.outputs.deep_services_job_required }}
     steps:
       - uses: actions/checkout@v7
         with:
