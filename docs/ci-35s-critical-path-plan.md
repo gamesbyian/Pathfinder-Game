@@ -1705,8 +1705,9 @@ The active targeted sweep run 36193789016 demonstrated that this is real capacit
 The repo now reserves hosted capacity by default:
 
 - high-fan-out solver/research workflows default to **15** concurrent shard jobs;
-- configurable workflows retain an explicit `max_parallel` override, so **20 remains available** when monopolizing the runner pool is intentional;
-- previously hard-coded 20-lane workflows now expose `max_parallel` with default 15;
+- workflows that already have dispatch-input capacity retain an explicit `max_parallel` override, so **20 remains available** there when monopolizing the runner pool is intentional;
+- previously hard-coded 20-lane workflows default to 15; they expose an override where the workflow-dispatch contract has room for it;
+- `solver-level-blind-targeted-sweep.yml` remains fixed at 15 because its 25 scientific/operational dispatch inputs already consume GitHub's workflow-dispatch limit; runner-pool override does not displace a research input merely for scheduling convenience;
 - shard count, worker count, solver budgets, selected populations, and evidence semantics are unchanged.
 
 The operational rationale is simple: production full-impact CI currently requires five independent runners. A 15-lane solver default plus five CI lanes fits the observed 20-runner hosted footprint, whereas a 20-lane solver default can make PR latency unbounded regardless of how fast each CI job becomes.
