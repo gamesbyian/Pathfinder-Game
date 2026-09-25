@@ -153,7 +153,6 @@
       "test:lane-a-c0-population-derivation",
       "test:lane-a-c2-accounting",
       "test:ws6-dependency-interface-observer",
-      "test:ws2-class3-shared-acquisition",
       "test:research-relations",
       "test:research-queryability-audit",
       "test:research-query",
@@ -421,14 +420,6 @@
         "repoPaths": [
           "docs/solver-workflow-lifecycle.json",
           ".github/workflows/**"
-        ]
-      },
-      "test:ws2-class3-shared-acquisition": {
-        "filesystemScope": "repo-inputs",
-        "repoPaths": [
-          "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
-          "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
-          "reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json"
         ]
       },
       "test:workflow-actions": {
