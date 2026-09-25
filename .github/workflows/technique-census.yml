@@ -101,7 +101,7 @@ on:
       max_parallel:
         description: 'Shards running concurrently'
         required: false
-        default: '20'
+        default: '15'
 
 concurrency:
   group: technique-census

@@ -149,13 +149,18 @@ A demotion/removal recommendation must name the retained protection for the cont
 
 Do not hide judgment inside one numeric score. Ask, in order:
 
-1. Does the check protect a still-real contract? If no, retire.
-2. Is the contract covered more cheaply elsewhere? If yes, replace/demote duplicate coverage.
-3. Can source impact select it reliably? If yes, prefer scoped to universal.
-4. Has it produced unique or materially earlier true catches?
-5. What is the consequence of delayed detection?
-6. What does it cost on relevant versus irrelevant changes?
-7. Is the check itself a meaningful source of false-red CI?
+1. **What claim does this check establish, and which repository process owns that claim?** Distinguish merge-safety correctness/soundness from repository governance, maintainability policy, solver/research effectiveness, generated-authority freshness, and historical/reproducibility evidence.
+2. **Does PR CI own that claim at all?** If an experiment/promotion protocol, generator, closeout/audit, scheduled hygiene process, or other authority already establishes it more directly, move the check to that process/cadence before optimizing its runtime.
+3. **Would a changed result necessarily mean a bad merge?** If an improvement, intentional tradeoff, regenerated artifact, or updated research conclusion can legitimately make it false, it is not a permanent merge-safety invariant.
+4. Does the surviving check protect a still-real current contract? If no, retire.
+5. Is the contract covered more cheaply elsewhere? If yes, replace/demote duplicate coverage.
+6. Can source impact select it reliably? If yes, prefer scoped to universal.
+7. Has it produced unique or materially earlier true catches?
+8. What is the consequence of delayed detection?
+9. What does it cost on relevant versus irrelevant changes, including lane/setup costs that exist only because this obligation is selected?
+10. Is the check itself a meaningful source of false-red CI?
+
+Only after this decision test should testability/topology work ask how to execute the surviving obligation faster.
 
 ## Deliverables
 
@@ -196,13 +201,15 @@ Assign U/S/M/N/W/D/R buckets with evidence and residual risk.
 ### Phase 7 — shadow before weakening
 Run the proposed policy in shadow beside the existing full gate for a bounded observation window. Any full-only genuine regression is a veto/data point requiring routing or cadence revision.
 
-## Important distinction: tests versus cadence
+## Important distinction: claim ownership, cadence, then execution cost
 
-Be aggressive about **when** useful tests run before deleting them. Adding ten narrow regression tests is cheap if they execute only on relevant changes. The pathological quantity is:
+Be aggressive about **where the claim belongs** before deciding how often its test runs. A useful historical/research audit may deserve to exist without belonging to PR CI at any cadence.
 
-**test count × irrelevant execution frequency × setup/tail cost.**
+For claims that do belong in CI, be aggressive about **when** useful tests run before deleting them. Adding ten narrow regression tests is cheap if they execute only on relevant changes. The pathological quantity is approximately:
 
-Optimize that product.
+**selected frequency × selected wall contribution × tail probability × setup coupling.**
+
+Raw command duration alone is no longer a sufficient priority metric once semantic routing is active. Optimize the selected critical path, not the old universal population.
 
 ## Questions the final report must answer plainly
 
@@ -234,10 +241,10 @@ The cadence/value audit remains the authority for **whether** an obligation belo
 
 Current critical-path conclusions that constrain cadence work:
 
-- deep verification is impact-scoped while Fast Gate remains universal and broad main-push validation remains the router oracle;
+- deep capabilities, Fast Gate validator groups, and the independent two-shard Node/CLI population are impact-scoped by semantic ownership; Fast Gate remains always materialized for structural checks/validators/lint, while build is owned by deep-services; routing failure reconstructs the corresponding full validator/Node/deep authorities;
 - the fullest selected contract is still above the ≤35 s target on ordinary shared runners;
 - shared-runner Node and coverage sharding are closed as production candidates because useful work balances correctly but p90 infrastructure margin is inadequate;
-- same-runner deep overlap, structural Node/Vitest testability, proof/Firestore cost reduction, residual bootstrap audit, and larger/reserved compute remain live;
-- cadence demotion may remove **irrelevant** executions, but must not be counted as satisfying the ≤35 s target for a genuinely full-impact PR.
+- structural Node/Vitest testability, bounded p50/p90 confirmation, remaining proof/Firestore/bootstrap tails, and larger/reserved compute remain live when current timing evidence earns them; closed same-runner/sharding experiments stay closed unless a named premise changes;
+- cadence/ownership changes may remove obligations that never belonged to merge-safety CI; the ≤35 s target applies to the fullest **semantically justified merge-safety contract**, not to every historical check that happened to be present when the target was announced.
 
 The protected validation breadth and current timing evidence live in the critical-path plan. Any future cadence recommendation that changes the fullest selected contract must update both documents and name the retained protection for every moved obligation.

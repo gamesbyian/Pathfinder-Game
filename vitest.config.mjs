@@ -11,7 +11,17 @@ export default defineConfig({
             'scripts/**/*-unit-tests.mjs',
             'scripts/path-state-invariant-tests.mjs',
         ],
-        exclude: ['node_modules/**', 'dist/**', 'modules/**/*-test-support.test.ts'],
+        exclude: [
+            'node_modules/**',
+            'dist/**',
+            'modules/**/*-test-support.test.ts',
+            // Expensive executable/tooling integration contracts run in the sharded Node lane.
+            // They remain in ordinary unit runs; only covered PR execution is de-duplicated.
+            'scripts/solver-parallel-unit-tests.mjs',
+            'scripts/eslint-rules-unit-tests.mjs',
+            'scripts/data-assets-unit-tests.mjs',
+            'scripts/level-codec-maintained-corpus-unit-tests.mjs',
+        ],
         // Solver suites can solve/exhaustively enumerate real or synthetic states; hosted-runner
         // variance has exceeded 60s for the deadlock-soundness property.
         testTimeout: 90000,

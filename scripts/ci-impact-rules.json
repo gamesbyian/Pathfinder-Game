@@ -13,7 +13,7 @@
   "policy": {
     "firstMatchWins": true,
     "unknown": "all",
-    "note": "Phase-1 conservative classifier. all means every semantic surface. package/dependency/router authorities intentionally escalate until semantic diffing or repo reshaping earns a narrower rule."
+    "note": "Active conservative classifier. all means every semantic surface. Unknown/router authorities still escalate, while downstream invalidation should be encoded on contracts rather than by wholesale consumer-surface escalation."
   },
   "rules": [
     {
@@ -26,7 +26,7 @@
     },
     {
       "id": "package-build-authority",
-      "pattern": "^(?:package(?:-lock)?\\.json|tsconfig(?:\\.[^/]+)?\\.json|vite\\.config\\.[^/]+|vitest\\.config\\.[^/]+|eslint\\.config\\.[^/]+)$",
+      "pattern": "^(?:package(?:-lock)?\\.json|tsconfig(?:\\.[^/]+)?\\.json|vite\\.config\\.[^/]+|vitest(?:\\.[^/]+)?\\.config\\.[^/]+|eslint\\.config\\.[^/]+)$",
       "surfaces": [
         "all"
       ],
@@ -121,10 +121,9 @@
       "id": "production-solver",
       "pattern": "^modules/(?:solver(?:/|\\.(?:ts|js)$)|solver\\.ts$)",
       "surfaces": [
-        "solver",
-        "research"
+        "solver"
       ],
-      "reason": "production solver producer; research consumers are downstream"
+      "reason": "production solver producer; explicit contract surfaces carry downstream invalidation"
     },
     {
       "id": "shared-domain",

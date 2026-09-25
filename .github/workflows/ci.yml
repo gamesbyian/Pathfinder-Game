@@ -15,86 +15,20 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# Keep the PR gate deliberately coarse-grained. Hosted-runner startup and npm-install latency are
-# variable enough that splitting cheap checks into many jobs increases tail latency: the PR waits
-# for the unluckiest runner. Two lanes preserve useful parallelism while paying checkout/setup/npm-ci
-# only twice. Independent validation steps within a lane continue after ordinary validation failures
+# Keep the PR gate evidence-driven rather than maximally fragmented. Fast static validation,
+# the two-runner Node/CLI matrix, coverage, and combined build/deep-services are separate only where
+# measured critical-path savings justify another runner. Independent validation steps continue after ordinary failures
 # so one run reports the useful failure set; setup/install failures still stop dependent validation.
 jobs:
-  # Impact routing is authoritative only for whether the expensive deep lane is required.
-  # The fast gate remains universal. Planner failure fails safe by running deep verification. It intentionally avoids npm ci:
-  # ownership/routing authorities use Node built-ins and Git metadata only.
-  impact-shadow:
-    runs-on: ubuntu-latest
-    outputs:
-      planner_outcome: ${{ steps.impact.outcome }}
-      full: ${{ steps.impact.outputs.full }}
-      surfaces: ${{ steps.impact.outputs.surfaces }}
-      validator_groups: ${{ steps.impact.outputs.validator_groups }}
-      node_test_groups: ${{ steps.impact.outputs.node_test_groups }}
-      needs_build: ${{ steps.impact.outputs.needs_build }}
-      needs_coverage: ${{ steps.impact.outputs.needs_coverage }}
-      needs_deep_proofs: ${{ steps.impact.outputs.needs_deep_proofs }}
-      needs_solver_canary: ${{ steps.impact.outputs.needs_solver_canary }}
-      needs_firestore: ${{ steps.impact.outputs.needs_firestore }}
-      fast_job_required: ${{ steps.impact.outputs.fast_job_required }}
-      deep_job_required: ${{ steps.impact.outputs.deep_job_required }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 2
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /package.json
-            /scripts/ci-impact-classifier.mjs
-            /scripts/ci-impact-rules.json
-            /scripts/ci-impact-shadow-plan.mjs
-            /scripts/ci-execution-plan.json
-            /scripts/ci-execution-plan.mjs
-            /scripts/ci-validation-plan.json
-            /scripts/ci-validation-plan.mjs
-            /scripts/validation-groups.json
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22.23.2'
-      - name: Compute shadow validation plan
-        id: impact
-        continue-on-error: true
-        shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            node scripts/ci-impact-shadow-plan.mjs --git-diff HEAD^1 HEAD --out=tmp/ci-impact-shadow.json
-          else
-            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/ci-impact-shadow.json
-          fi
-      - name: Upload shadow validation plan
-        if: steps.impact.outcome == 'success'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ci-impact-shadow
-          path: tmp/ci-impact-shadow.json
-          retention-days: 14
-      - name: Record impact planner status
-        if: always()
-        shell: bash
-        env:
-          SHADOW_OUTCOME: ${{ steps.impact.outcome }}
-        run: |
-          echo "Impact planner outcome: $SHADOW_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$SHADOW_OUTCOME" != "success" ]]; then
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Planner failure fails safe: fast-gate remains universal and deep-verification runs conservatively." >> "$GITHUB_STEP_SUMMARY"
-          fi
-
+  # Every production lane computes the same semantic plan locally so validation does not
+  # serialize behind a routing runner. Fast Gate also publishes its plan for observability.
   fast-gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          # Static checks need source/docs plus runtime level/hint data. Start without the ~2,000
-          # runtime hint files; an exact Git-object-keyed cache restores those below. This checkout
-          # is also sufficient for lint, Node/CLI contracts, and the production build, so those
-          # validations can share one runner and one dependency installation.
+          # Static checks need source/docs plus four runtime corpus documents. Production build
+          # runs independently so Fast Gate never needs runtime Hint sources or build-only assets.
           # fetch-depth 2 exposes the PR merge ref's base parent for incremental hygiene checks.
           fetch-depth: 2
           sparse-checkout: |
@@ -121,147 +55,41 @@ jobs:
             /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
             !/data/
           sparse-checkout-cone-mode: false
-      - name: Derive runtime-data cache key
-        id: runtime-data-key
+      - name: Materialize Fast Gate level documents
         shell: bash
         run: |
-          {
-            git rev-parse HEAD:data/levels.json
-            git rev-parse HEAD:data/level-heatmaps.json
-            git rev-parse HEAD:data/themes.json
-            git rev-parse HEAD:data/hints
-            git rev-parse HEAD:data/stress/stress-levels.json
-            git rev-parse HEAD:data/stress/stress-levels-random.json
-            git rev-parse HEAD:data/stress/stress-levels-envelope.json
-            git rev-parse HEAD:data/stress/hints
-            git rev-parse HEAD:data/stress/hints-random
-            git rev-parse HEAD:data/stress/hints-envelope
-          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
-      - name: Restore exact runtime-data tree
-        id: runtime-data-cache
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            data/levels.json
-            data/level-heatmaps.json
-            data/themes.json
-            data/hints
-            data/stress/stress-levels.json
-            data/stress/stress-levels-random.json
+          mkdir -p data/stress
+          for file in \
+            data/levels.json \
+            data/stress/stress-levels.json \
+            data/stress/stress-levels-random.json \
             data/stress/stress-levels-envelope.json
-            data/stress/hints
-            data/stress/hints-random
-            data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
-      - name: Derive base-parent runtime-data cache key
-        id: base-runtime-data-key
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          {
-            git rev-parse HEAD^1:data/levels.json
-            git rev-parse HEAD^1:data/level-heatmaps.json
-            git rev-parse HEAD^1:data/themes.json
-            git rev-parse HEAD^1:data/hints
-            git rev-parse HEAD^1:data/stress/stress-levels.json
-            git rev-parse HEAD^1:data/stress/stress-levels-random.json
-            git rev-parse HEAD^1:data/stress/stress-levels-envelope.json
-            git rev-parse HEAD^1:data/stress/hints
-            git rev-parse HEAD^1:data/stress/hints-random
-            git rev-parse HEAD^1:data/stress/hints-envelope
-          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
-      - name: Restore base-parent runtime-data tree
-        id: base-runtime-data-cache
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            data/levels.json
-            data/level-heatmaps.json
-            data/themes.json
-            data/hints
-            data/stress/stress-levels.json
-            data/stress/stress-levels-random.json
-            data/stress/stress-levels-envelope.json
-            data/stress/hints
-            data/stress/hints-random
-            data/stress/hints-envelope
-          key: runtime-data-${{ steps.base-runtime-data-key.outputs.key }}
-      - name: Overlay runtime-data changes from tested merge
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit == 'true'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mapfile -d '' changed < <(
-            git diff --name-only -z --no-renames --diff-filter=ACMRT HEAD^1 HEAD -- \
-              data/levels.json data/level-heatmaps.json data/themes.json data/hints \
-              data/stress/stress-levels.json data/stress/stress-levels-random.json \
-              data/stress/stress-levels-envelope.json data/stress/hints \
-              data/stress/hints-random data/stress/hints-envelope
-          )
-          for file in "${changed[@]}"; do
-            blob="$(git rev-parse "HEAD:$file")"
-            mkdir -p "$(dirname "$file")"
-            curl --fail --silent --show-error \
-              --retry 3 \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/$GITHUB_REPOSITORY/git/blobs/$blob" \
-              | jq -r '.content' | tr -d '\n' | base64 --decode > "$file"
+          do
+            git show "HEAD:$file" > "$file"
           done
-          mapfile -d '' deleted < <(
-            git diff --name-only -z --no-renames --diff-filter=D HEAD^1 HEAD -- \
-              data/levels.json data/level-heatmaps.json data/themes.json data/hints \
-              data/stress/stress-levels.json data/stress/stress-levels-random.json \
-              data/stress/stress-levels-envelope.json data/stress/hints \
-              data/stress/hints-random data/stress/hints-envelope
-          )
-          if (( ${#deleted[@]} )); then
-            rm -f -- "${deleted[@]}"
-          fi
-      - name: Last-resort runtime-data checkout when base cache is absent
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v7
-        with:
-          path: .runtime-data-source
-          sparse-checkout: |
-            /data/levels.json
-            /data/level-heatmaps.json
-            /data/themes.json
-            /data/hints/
-            /data/stress/stress-levels.json
-            /data/stress/stress-levels-random.json
-            /data/stress/stress-levels-envelope.json
-            /data/stress/hints/
-            /data/stress/hints-random/
-            /data/stress/hints-envelope/
-          sparse-checkout-cone-mode: false
-      - name: Install last-resort runtime data
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true' && steps.base-runtime-data-cache.outputs.cache-hit != 'true'
+
+      # Restore the exact dependency tree before setup-node. Node/npm are pinned, so the key
+      # can be computed without a runtime probe. On the normal hit path this avoids restoring
+      # npm's download cache even though npm ci will never run.
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
         shell: bash
         run: |
-          mkdir -p data
-          cp -a .runtime-data-source/data/. data/
-          rm -rf .runtime-data-source
-      - name: Save exact runtime-data tree immediately after materialization
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
         with:
-          path: |
-            data/levels.json
-            data/level-heatmaps.json
-            data/themes.json
-            data/hints
-            data/stress/stress-levels.json
-            data/stress/stress-levels-random.json
-            data/stress/stress-levels-envelope.json
-            data/stress/hints
-            data/stress/hints-random
-            data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
-      - uses: actions/setup-node@v7
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Set up Node on warm dependency-tree path
+        if: steps.dependency-tree-cache.outputs.cache-hit == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Set up Node with npm cache on dependency-tree miss
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
           cache: npm
@@ -274,23 +102,9 @@ jobs:
           key: eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-${{ github.sha }}
           restore-keys: |
             eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-
-      - name: Derive exact dependency-tree cache key
-        id: dependency-tree-key
-        shell: bash
-        run: |
-          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
-      - name: Restore exact dependency tree
-        id: dependency-tree-cache
-        uses: actions/cache/restore@v5
-        with:
-          path: node_modules
-          key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Install dependencies from the npm cache
         id: install-dependencies
         if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
-        # setup-node already restores npm's content cache. Prefer it over registry freshness checks;
-        # npm-audit output was informational here, not a CI gate, and security checks have their own
-        # explicit repository commands.
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Save exact dependency tree after successful install
         if: steps.dependency-tree-cache.outputs.cache-hit != 'true' && steps.install-dependencies.outcome == 'success'
@@ -308,6 +122,23 @@ jobs:
           key: typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-${{ github.sha }}
           restore-keys: |
             typescript-buildinfo-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'tsconfig.test.json') }}-
+      - name: Compute local validation selection
+        id: validation_selection
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            node scripts/ci-impact-shadow-plan.mjs --git-diff HEAD^1 HEAD --out=tmp/ci-fast-gate-plan.json
+          else
+            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/ci-fast-gate-plan.json
+          fi
+      - name: Upload impact validation plan
+        if: steps.validation_selection.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-impact-shadow
+          path: tmp/ci-fast-gate-plan.json
+          retention-days: 14
       - name: Check package-script reachability
         id: dead_scripts
         continue-on-error: true
@@ -318,14 +149,26 @@ jobs:
         run: npm run check:text-source-files
         env:
           PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
-      - name: Run non-lint validators
+      - name: Run selected non-lint validators
         id: validators
         continue-on-error: true
-        run: npm run check:validators
+        shell: bash
         env:
+          VALIDATOR_GROUPS: ${{ steps.validation_selection.outputs.validator_groups }}
+          ROUTER_OUTCOME: ${{ steps.validation_selection.outcome }}
           PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
           PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
+        run: |
+          if [[ "$ROUTER_OUTCOME" != "success" ]]; then
+            echo "Local impact routing failed; running the full validator aggregate."
+            npm run check:validators
+          elif [[ -z "$VALIDATOR_GROUPS" ]]; then
+            echo "No non-lint validator groups selected."
+          else
+            groups="${VALIDATOR_GROUPS//,/ }"
+            node scripts/validation-groups.mjs validators $groups
+          fi
       - name: Save TypeScript incremental state
         if: steps.validators.outcome == 'success' && steps.typescript-buildinfo.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
@@ -338,65 +181,6 @@ jobs:
         id: lint
         continue-on-error: true
         run: npm run check:lint
-      - name: Run Node and CLI contract tests
-        id: node_tests
-        continue-on-error: true
-        env:
-          PATHFINDER_PARALLEL_JOBS: '4'
-          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
-          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
-        run: npm run test:node
-      - name: Solver capability canary
-        id: solver_canary
-        continue-on-error: true
-        # Tiny semantic canary, not a batch tier: 9 fixed representative levels (data/levels.json),
-        # a few seconds total. This is the ONLY solver-capability check anywhere in this repo that
-        # runs automatically on every PR -- every corpus-scale sweep is a manually-dispatched GHA
-        # workflow, never wired into CI, so nothing previously caught a wholesale solver regression
-        # (a broken attempt ladder, a mis-wired ablation default, a hard-prune correctness bug)
-        # before merge. Reuses scripts/solver-bench.mjs's existing --check/--baseline/--levels
-        # machinery unchanged (see that file's --update-baseline guard, relaxed to allow an
-        # explicit --baseline path to pair with --levels for exactly this "isolated smoke fixture"
-        # use, per its own pre-existing header-comment intent) rather than writing new solve/assert
-        # logic. Regenerate logs/solver-canary-baseline.json with the same --levels/--budget-ms/
-        # --work-budget flags plus --update-baseline whenever this canary set's expected outcome
-        # should change (e.g. a deliberate solvability change to one of these 9 levels).
-        run: |
-          node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
-            --baseline=logs/solver-canary-baseline.json \
-            --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
-            --budget-ms=15000 --work-budget=250000
-      - name: Derive runtime-hint projection cache key
-        id: runtime-hint-projection-key
-        shell: bash
-        run: |
-          {
-            git rev-parse HEAD:data/hints
-            git rev-parse HEAD:data/stress/hints
-            git rev-parse HEAD:data/stress/hints-random
-            git hash-object scripts/runtime-hint-projection-lib.mjs
-            git hash-object modules/domain/hint-runtime.mjs
-            git hash-object modules/canonical-json.mjs
-            git hash-object vite.config.ts
-          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
-      - name: Restore exact runtime-hint projection
-        id: runtime-hint-projection-cache
-        uses: actions/cache/restore@v5
-        with:
-          path: .cache/runtime-hint-projection
-          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
-      - name: Build production bundle
-        id: build
-        continue-on-error: true
-        env:
-          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
-        run: npm run build
-      - name: Save exact runtime-hint projection after successful cold build
-        if: steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
-        with:
-          path: .cache/runtime-hint-projection
-          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
       - name: Summarize and enforce fast-gate
         if: always()
         shell: bash
@@ -405,9 +189,6 @@ jobs:
           TEXT_SOURCE: ${{ steps.text_source.outcome }}
           VALIDATORS: ${{ steps.validators.outcome }}
           LINT: ${{ steps.lint.outcome }}
-          NODE_TESTS: ${{ steps.node_tests.outcome }}
-          SOLVER_CANARY: ${{ steps.solver_canary.outcome }}
-          BUILD: ${{ steps.build.outcome }}
         run: |
           failed=0
           {
@@ -419,12 +200,9 @@ jobs:
             printf '| Textual source invariants | `%s` |\n' "$TEXT_SOURCE"
             printf '| Repository/domain validators | `%s` |\n' "$VALIDATORS"
             printf '| Lint | `%s` |\n' "$LINT"
-            printf '| Node + CLI contracts | `%s` |\n' "$NODE_TESTS"
-            printf '| Solver capability canary | `%s` |\n' "$SOLVER_CANARY"
-            printf '| Production build | `%s` |\n' "$BUILD"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
-          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD; do
+          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT; do
             status="${!name}"
             printf '%-14s %s\n' "$name" "$status"
             if [[ "$status" != "success" ]]; then
@@ -432,26 +210,31 @@ jobs:
               echo "::error::CI fast-gate group $name finished with $status."
             fi
           done
-          if [[ "$failed" == 0 ]]; then
+          if [[ "$failed" == "0" ]]; then
             echo 'All fast-gate validation groups passed.' >> "$GITHUB_STEP_SUMMARY"
           else
             echo 'One or more fast-gate groups failed. The table above is the first inspection surface; open only the failed group steps for detail.' >> "$GITHUB_STEP_SUMMARY"
           fi
           exit "$failed"
 
+  # Node/CLI contracts run in a reusable two-shard execution-owner workflow. Keeping its
+  # bootstrap out of this file preserves the main CI workflow's size/testability boundary.
+  node-contracts:
+    uses: ./.github/workflows/ci-node-contract-shards.yml
+
   # Coverage, heavyweight implementation proofs, and Firestore share one runner/install.
   # This lane is impact-scoped for PRs. Solver/game/persistence/shared and conservative full-impact
   # changes retain their deep protections; unrelated repo/research/data-only PRs may skip it.
   # Planner failure or manual dispatch always runs the lane.
+  # Coverage remains independent as the longest instrumented implementation-test obligation.
+  # Committed-data integrity lives in the data-owned Node lane, so coverage needs no runtime-data tree.
+  # Proofs/Firestore are packed separately below.
   deep-verification:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          # Start immediately instead of waiting on impact-shadow. The local canonical planner
-          # below needs HEAD^1 for PR diff classification.
           fetch-depth: 2
-          # Source-only checkout. Canonical runtime data is restored only when deep is required.
           sparse-checkout: |
             /*
             !/logs/
@@ -461,8 +244,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
-          cache: npm
-      - name: Compute local deep validation plan
+      - name: Compute local coverage validation plan
         id: deep-impact
         continue-on-error: true
         shell: bash
@@ -472,73 +254,24 @@ jobs:
           else
             node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/deep-impact-plan.json
           fi
-      - name: Record local deep planner decision
+      - name: Record local coverage planner decision
         if: always()
         shell: bash
         env:
           PLANNER_OUTCOME: ${{ steps.deep-impact.outcome }}
-          DEEP_REQUIRED: ${{ steps.deep-impact.outputs.deep_job_required }}
+          COVERAGE_REQUIRED: ${{ steps.deep-impact.outputs.deep_job_required }}
         run: |
-          echo "Local deep planner outcome: $PLANNER_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
-          echo "Local deep required: ${DEEP_REQUIRED:-unknown}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Local coverage planner outcome: $PLANNER_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Coverage lane required: ${COVERAGE_REQUIRED:-unknown}" >> "$GITHUB_STEP_SUMMARY"
           if [[ "$PLANNER_OUTCOME" != "success" ]]; then
-            echo "Planner failure fails safe: deep verification will run." >> "$GITHUB_STEP_SUMMARY"
+            echo "Planner failure fails safe: coverage will run." >> "$GITHUB_STEP_SUMMARY"
           fi
-      - name: Derive deep runtime-data cache key
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
-        id: deep-runtime-data-key
-        shell: bash
-        run: |
-          {
-            git rev-parse HEAD:data/levels.json
-            git rev-parse HEAD:data/level-heatmaps.json
-            git rev-parse HEAD:data/themes.json
-            git rev-parse HEAD:data/hints
-            git rev-parse HEAD:data/stress/stress-levels.json
-            git rev-parse HEAD:data/stress/stress-levels-random.json
-            git rev-parse HEAD:data/stress/stress-levels-envelope.json
-            git rev-parse HEAD:data/stress/hints
-            git rev-parse HEAD:data/stress/hints-random
-            git rev-parse HEAD:data/stress/hints-envelope
-          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
-      - name: Restore exact runtime-data tree for deep verification
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
-        id: deep-runtime-data-cache
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            data/levels.json
-            data/level-heatmaps.json
-            data/themes.json
-            data/hints
-            data/stress/stress-levels.json
-            data/stress/stress-levels-random.json
-            data/stress/stress-levels-envelope.json
-            data/stress/hints
-            data/stress/hints-random
-            data/stress/hints-envelope
-          key: runtime-data-${{ steps.deep-runtime-data-key.outputs.key }}
-      - name: Materialize deep runtime data on cache miss
-        if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && (steps.deep-runtime-data-cache.outputs.cache-hit != 'true')
-        uses: actions/checkout@v7
-        with:
-          # A second batched checkout is intentionally used on a miss. Hosted evidence showed
-          # post-clone sparse expansion taking 51s, while the equivalent initial sparse checkout is
-          # ~15s. The hit path avoids both costs; the miss path must remain no worse than baseline.
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/*
-            /data/stress/stress-levels.json
-            /data/stress/stress-levels-random.json
-          sparse-checkout-cone-mode: false
       - name: Derive exact dependency-tree cache key
         if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: dependency-tree-key
         shell: bash
         run: |
-          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
       - name: Restore exact dependency tree
         if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: dependency-tree-cache
@@ -546,117 +279,279 @@ jobs:
         with:
           path: node_modules
           key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Restore npm cache only on dependency-tree miss
+        if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
       - name: Install dependencies from the npm cache
         if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Run covered ordinary test population
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_coverage == 'true'
         id: coverage
         continue-on-error: true
         run: npm run test:coverage
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
-      # Restore Firestore prerequisites before launching the two independent deep services.
+          SOLVER_DEEP_TESTS: '0'
+      - name: Summarize and enforce coverage
+        if: always()
+        shell: bash
+        env:
+          RUN_COVERAGE: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.needs_coverage == 'true' }}
+          COVERAGE: ${{ steps.coverage.outcome }}
+        run: |
+          if [[ "$RUN_COVERAGE" != "true" ]]; then
+            echo "## CI coverage" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Coverage not selected by the canonical local impact plan." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "## CI coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Covered ordinary implementation tests: `%s`\n' "$COVERAGE" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$COVERAGE" != "success" ]]; then
+            echo "::error::CI coverage finished with $COVERAGE."
+            exit 1
+          fi
+
+  # Production build, solver soundness proofs, and Firestore share one impact-scoped runner.
+  # Build runs serially with service setup; proofs and Firestore remain concurrent. This keeps
+  # full-impact useful wall under the target while reducing hosted-runner allocation pressure.
+  deep-services:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Compute local deep-services validation plan
+        id: services-impact
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            node scripts/ci-impact-shadow-plan.mjs --git-diff HEAD^1 HEAD --out=tmp/deep-services-impact-plan.json
+          else
+            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/deep-services-impact-plan.json
+          fi
+      - name: Record local deep-services planner decision
+        if: always()
+        shell: bash
+        env:
+          PLANNER_OUTCOME: ${{ steps.services-impact.outcome }}
+          SERVICES_REQUIRED: ${{ steps.services-impact.outputs.deep_services_job_required }}
+        run: |
+          echo "Local deep-services planner outcome: $PLANNER_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deep-services lane required: ${SERVICES_REQUIRED:-unknown}" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$PLANNER_OUTCOME" != "success" ]]; then
+            echo "Planner failure fails safe: build, proofs, and Firestore will run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Derive exact dependency-tree cache key
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true'
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true'
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Restore npm cache only on dependency-tree miss
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install dependencies from the npm cache
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Materialize build runtime JSON
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true'
+        shell: bash
+        run: |
+          mkdir -p data/stress
+          for file in \
+            data/levels.json \
+            data/level-heatmaps.json \
+            data/themes.json \
+            data/stress/stress-levels.json \
+            data/stress/stress-levels-random.json
+          do
+            git show "HEAD:$file" > "$file"
+          done
+      - name: Derive runtime-hint projection cache identity
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true'
+        id: runtime-hint-projection-key
+        shell: bash
+        run: node scripts/ci-runtime-hint-projection-cache.mjs key
+      - name: Restore exact or recent runtime-hint projection
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true'
+        id: runtime-hint-projection-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
+          restore-keys: |
+            runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-
+      - name: Restore runtime Hint sources for projection miss
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true') && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/runtime-data
+      - name: Plan runtime-hint projection overlay
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true') && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: node scripts/ci-runtime-hint-projection-cache.mjs plan
       - name: Restore Firebase CLI cache
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true'
         uses: actions/cache/restore@v5
         with:
           path: ~/.npm/_npx
           key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
       - name: Restore Firestore emulator binary
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true'
         id: firestore-emulator-cache
         uses: actions/cache/restore@v5
         with:
           path: ~/.cache/firebase/emulators
           key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
       - uses: actions/setup-java@v5
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true'
         with:
           distribution: temurin
           java-version: '21'
-      - name: Run heavyweight proofs and Firestore concurrently
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
+      - name: Run selected build, heavyweight proofs and Firestore concurrently
+        if: steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true' || steps.services-impact.outputs.needs_deep_proofs == 'true' || steps.services-impact.outputs.needs_firestore == 'true'
         id: deep_services
         continue-on-error: true
         shell: bash
+        env:
+          RUN_BUILD: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true' }}
+          RUN_PROOFS: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_deep_proofs == 'true' }}
+          RUN_FIRESTORE: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true' }}
+          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
+          PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE: ${{ steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && '1' || '0' }}
         run: |
           set +e
-          npm run test:deep-proofs > /tmp/pathfinder-deep-proofs.log 2>&1 &
-          proofs_pid=$!
-          npx --yes firebase-tools@15.28.2 \
-            emulators:exec --only firestore \
-            --project demo-pathfinder-fingerprint-boundary \
-            "npm run test:firestore-level-fingerprint-boundary" \
-            > /tmp/pathfinder-firestore.log 2>&1 &
-          firestore_pid=$!
+          build_status=0
+          proofs_status=0
+          firestore_status=0
+          build_pid=''
+          proofs_pid=''
+          firestore_pid=''
 
-          wait "$proofs_pid"; proofs_status=$?
-          wait "$firestore_pid"; firestore_status=$?
-
-          if [[ "$proofs_status" -eq 0 ]]; then
-            echo "deep_proofs=success" >> "$GITHUB_OUTPUT"
+          if [[ "$RUN_BUILD" == "true" ]]; then
+            npm run build > /tmp/pathfinder-build.log 2>&1 &
+            build_pid=$!
           else
-            echo "deep_proofs=failure" >> "$GITHUB_OUTPUT"
-          fi
-          if [[ "$firestore_status" -eq 0 ]]; then
-            echo "firestore=success" >> "$GITHUB_OUTPUT"
-          else
-            echo "firestore=failure" >> "$GITHUB_OUTPUT"
+            echo "build=skipped" >> "$GITHUB_OUTPUT"
           fi
 
-          echo '=== heavyweight solver proofs ==='
-          cat /tmp/pathfinder-deep-proofs.log
-          echo '=== Firestore persistence boundary ==='
-          cat /tmp/pathfinder-firestore.log
+          if [[ "$RUN_PROOFS" == "true" ]]; then
+            npm run test:deep-proofs > /tmp/pathfinder-deep-proofs.log 2>&1 &
+            proofs_pid=$!
+          else
+            echo "deep_proofs=skipped" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ "$RUN_FIRESTORE" == "true" ]]; then
+            npx --yes firebase-tools@15.28.2               emulators:exec --only firestore               --project demo-pathfinder-fingerprint-boundary               "npm run test:firestore-level-fingerprint-boundary"               > /tmp/pathfinder-firestore.log 2>&1 &
+            firestore_pid=$!
+          else
+            echo "firestore=skipped" >> "$GITHUB_OUTPUT"
+          fi
 
-          if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
+          if [[ -n "$build_pid" ]]; then
+            wait "$build_pid"; build_status=$?
+            [[ "$build_status" -eq 0 ]] && echo "build=success" >> "$GITHUB_OUTPUT" || echo "build=failure" >> "$GITHUB_OUTPUT"
+            echo '=== production build ==='
+            cat /tmp/pathfinder-build.log
+          fi
+          if [[ -n "$proofs_pid" ]]; then
+            wait "$proofs_pid"; proofs_status=$?
+            [[ "$proofs_status" -eq 0 ]] && echo "deep_proofs=success" >> "$GITHUB_OUTPUT" || echo "deep_proofs=failure" >> "$GITHUB_OUTPUT"
+            echo '=== heavyweight solver proofs ==='
+            cat /tmp/pathfinder-deep-proofs.log
+          fi
+          if [[ -n "$firestore_pid" ]]; then
+            wait "$firestore_pid"; firestore_status=$?
+            [[ "$firestore_status" -eq 0 ]] && echo "firestore=success" >> "$GITHUB_OUTPUT" || echo "firestore=failure" >> "$GITHUB_OUTPUT"
+            echo '=== Firestore persistence boundary ==='
+            cat /tmp/pathfinder-firestore.log
+          fi
+          if [[ "$build_status" -ne 0 || "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
             exit 1
           fi
+      - name: Save exact runtime-hint projection after successful build
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true') && steps.deep_services.outputs.build == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
       - name: Save Firestore emulator binary after successful cold fetch
-        if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && steps.firestore-emulator-cache.outputs.cache-hit != 'true' && steps.deep_services.outputs.firestore == 'success'
+        if: (steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true') && steps.firestore-emulator-cache.outputs.cache-hit != 'true' && steps.deep_services.outputs.firestore == 'success'
         uses: actions/cache/save@v5
         with:
           path: ~/.cache/firebase/emulators
           key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
-      - name: Summarize and enforce deep-verification
+      - name: Summarize and enforce deep-services
         if: always()
         shell: bash
         env:
-          RUN_DEEP: ${{ steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true' }}
-          COVERAGE: ${{ steps.coverage.outcome }}
+          RUN_SERVICES: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.deep_services_job_required == 'true' }}
+          RUN_BUILD: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_build == 'true' }}
+          BUILD: ${{ steps.deep_services.outputs.build }}
+          RUN_PROOFS: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_deep_proofs == 'true' }}
+          RUN_FIRESTORE: ${{ steps.services-impact.outcome != 'success' || steps.services-impact.outputs.needs_firestore == 'true' }}
           DEEP_PROOFS: ${{ steps.deep_services.outputs.deep_proofs }}
           FIRESTORE: ${{ steps.deep_services.outputs.firestore }}
         run: |
-          if [[ "$RUN_DEEP" != "true" ]]; then
-            echo "## CI deep verification" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$RUN_SERVICES" != "true" ]]; then
+            echo "## CI deep services" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Deep verification not selected by the canonical local impact plan." >> "$GITHUB_STEP_SUMMARY"
+            echo "Deep services not selected by the canonical local impact plan." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          build_status="${BUILD:-skipped}"
+          proofs_status="${DEEP_PROOFS:-skipped}"
+          firestore_status="${FIRESTORE:-skipped}"
+          [[ "$RUN_BUILD" == "true" ]] || build_status="skipped"
+          [[ "$RUN_PROOFS" == "true" ]] || proofs_status="skipped"
+          [[ "$RUN_FIRESTORE" == "true" ]] || firestore_status="skipped"
+
           failed=0
           {
-            echo '## CI deep verification'
+            echo '## CI deep services'
             echo
-            echo '| Validation group | Outcome |'
-            echo '| --- | --- |'
-            printf '| Covered ordinary implementation tests | `%s` |\n' "$COVERAGE"
-            printf '| Heavyweight solver proofs | `%s` |\n' "$DEEP_PROOFS"
-            printf '| Firestore persistence boundary | `%s` |\n' "$FIRESTORE"
-            echo
+            echo '| Validation group | Selected | Outcome |'
+            echo '| --- | --- | --- |'
+            printf '| Production build | `%s` | `%s` |\n' "$RUN_BUILD" "$build_status"
+            printf '| Heavyweight solver proofs | `%s` | `%s` |\n' "$RUN_PROOFS" "$proofs_status"
+            printf '| Firestore persistence boundary | `%s` | `%s` |\n' "$RUN_FIRESTORE" "$firestore_status"
           } >> "$GITHUB_STEP_SUMMARY"
-          for name in COVERAGE DEEP_PROOFS FIRESTORE; do
-            status="${!name}"
-            printf '%-12s %s\n' "$name" "$status"
-            if [[ "$status" != "success" ]]; then
-              failed=1
-              echo "::error::CI deep-verification group $name finished with $status."
-            fi
-          done
-          if [[ "$failed" == 0 ]]; then
-            echo 'All deep-verification groups passed.' >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo 'One or more deep-verification groups failed. The table above identifies the failed semantic stage(s).' >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$RUN_BUILD" == "true" && "$build_status" != "success" ]]; then
+            failed=1
+            echo "::error::CI deep-services build finished with $build_status."
+          fi
+          if [[ "$RUN_PROOFS" == "true" && "$proofs_status" != "success" ]]; then
+            failed=1
+            echo "::error::CI deep-services proofs finished with $proofs_status."
+          fi
+          if [[ "$RUN_FIRESTORE" == "true" && "$firestore_status" != "success" ]]; then
+            failed=1
+            echo "::error::CI deep-services Firestore finished with $firestore_status."
           fi
           exit "$failed"

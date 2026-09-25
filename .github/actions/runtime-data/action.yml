@@ -1,0 +1,84 @@
+name: Restore runtime data
+description: Restore exact or recent runtime data and overlay only Git-object changes.
+
+inputs:
+  materialize:
+    description: Reconcile cache contents to HEAD. Set false on a full checkout used only to seed an exact cache.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Derive exact runtime-data key
+      id: key
+      shell: bash
+      run: node scripts/ci-runtime-data-cache.mjs key
+
+    - name: Restore exact or recent runtime-data tree
+      if: inputs.materialize == 'true'
+      id: runtime_data
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          data/levels.json
+          data/level-heatmaps.json
+          data/themes.json
+          data/hints
+          data/stress/stress-levels.json
+          data/stress/stress-levels-random.json
+          data/stress/stress-levels-envelope.json
+          data/stress/hints
+          data/stress/hints-random
+          data/stress/hints-envelope
+          .ci-cache/runtime-data-manifest.tsv
+        key: runtime-data-v2-${{ steps.key.outputs.key }}
+        restore-keys: |
+          runtime-data-v2-
+
+    - name: Restore exact runtime-data tree for seed-only caller
+      if: inputs.materialize != 'true'
+      id: seed_restore
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          data/levels.json
+          data/level-heatmaps.json
+          data/themes.json
+          data/hints
+          data/stress/stress-levels.json
+          data/stress/stress-levels-random.json
+          data/stress/stress-levels-envelope.json
+          data/stress/hints
+          data/stress/hints-random
+          data/stress/hints-envelope
+          .ci-cache/runtime-data-manifest.tsv
+        key: runtime-data-v2-${{ steps.key.outputs.key }}
+
+    - name: Reconcile restored runtime data to HEAD
+      if: inputs.materialize == 'true' && steps.runtime_data.outputs.cache-hit != 'true'
+      shell: bash
+      run: node scripts/ci-runtime-data-cache.mjs reconcile
+
+    - name: Seed exact manifest from full checkout
+      if: inputs.materialize != 'true' && steps.seed_restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: node scripts/ci-runtime-data-cache.mjs seed-manifest
+
+    - name: Save exact runtime-data tree
+      if: (inputs.materialize == 'true' && steps.runtime_data.outputs.cache-hit != 'true') || (inputs.materialize != 'true' && steps.seed_restore.outputs.cache-hit != 'true')
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          data/levels.json
+          data/level-heatmaps.json
+          data/themes.json
+          data/hints
+          data/stress/stress-levels.json
+          data/stress/stress-levels-random.json
+          data/stress/stress-levels-envelope.json
+          data/stress/hints
+          data/stress/hints-random
+          data/stress/hints-envelope
+          .ci-cache/runtime-data-manifest.tsv
+        key: runtime-data-v2-${{ steps.key.outputs.key }}

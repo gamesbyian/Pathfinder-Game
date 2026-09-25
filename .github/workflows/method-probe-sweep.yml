@@ -46,7 +46,7 @@ on:
       max_parallel:
         description: 'Outer GitHub Actions jobs running concurrently. This bounds account/job footprint independently of shard_count.'
         required: false
-        default: '20'
+        default: '15'
       workers:
         description: 'Disjoint method-probe processes inside each runner. Default 4 matches current standard public ubuntu-latest vCPU count.'
         required: false

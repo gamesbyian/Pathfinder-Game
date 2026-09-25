@@ -51,7 +51,7 @@ on:
       max_parallel:
         description: 'Maximum concurrent shard jobs. Keep below shard_count for queue-based tail balancing.'
         required: false
-        default: '20'
+        default: '15'
       backfill_run_id:
         description: >-
           Set this (and leave every other input at its default) to run ONLY the backfill job:

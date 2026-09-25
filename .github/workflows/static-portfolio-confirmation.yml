@@ -68,6 +68,10 @@ on:
         description: 'Cross-cell worker processes per shard (GH-hosted ubuntu-latest runners have 4 vCPUs).'
         required: false
         default: '4'
+      max_parallel:
+        description: 'Maximum concurrent shard jobs. Default 15 reserves five hosted slots for PR CI; set 20 explicitly when monopolizing the full runner pool is acceptable.'
+        required: false
+        default: '15'
 
 concurrency:
   group: static-portfolio-confirmation
@@ -170,7 +174,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
-      max-parallel: 20
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix:
         shard: ${{ fromJson(needs.build-plan.outputs.shard_list) }}
     steps:

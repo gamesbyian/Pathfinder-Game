@@ -57,10 +57,10 @@ function writeGithubOutputs(result, plan, execution) {
     `needs_build=${bool(capability('build'))}`,
     `needs_coverage=${bool(capability('unit-coverage'))}`,
     `needs_deep_proofs=${bool(capability('deep-proofs'))}`,
-    `needs_solver_canary=${bool(capability('solver-canary'))}`,
     `needs_firestore=${bool(capability('firestore-boundary'))}`,
     `fast_job_required=${bool(execution.jobs['fast-gate']?.required)}`,
     `deep_job_required=${bool(execution.jobs['deep-verification']?.required)}`,
+    `deep_services_job_required=${bool(execution.jobs['deep-services']?.required)}`,
   ];
   fs.appendFileSync(output, `${lines.join('\n')}\n`);
 }
@@ -85,9 +85,10 @@ function writeSummary(result, plan, execution) {
     `**Always/package scripts:** ${plan.packageScripts.join(', ') || '(none)'}`,
     `**Capabilities:** ${plan.capabilities.join(', ') || '(none)'}`,
     `**Fast lane:** ${execution.jobs['fast-gate']?.required ? 'required' : 'skip candidate'}`,
-    `**Deep lane:** ${execution.jobs['deep-verification']?.required ? 'required' : 'skip candidate'}`,
+    `**Coverage lane:** ${execution.jobs['deep-verification']?.required ? 'required' : 'skip candidate'}`,
+    `**Deep-services lane:** ${execution.jobs['deep-services']?.required ? 'required' : 'skip candidate'}`,
     packageLine,
-    'This is shadow-only. The existing full CI gate remains authoritative and no validation is skipped.',
+    'The separate impact job records this plan as evidence; Fast Gate and the Node-contract workflow independently compute the same plan locally for validator and Node-test selection, and each fails safe to its full owned authority if routing fails.',
     '',
     ...(rows.length ? ['| Changed path | Ownership rule | Surfaces |', '|---|---|---|', ...rows] : []),
     '',

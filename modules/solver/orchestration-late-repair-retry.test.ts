@@ -139,6 +139,7 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
         timeBudgetMs: 1000,
         ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
         disableExtraBudgetPasses: true,
+        attemptSearchForTesting: exhaustingDispatch,
     });
     assert.equal(eliteSuppressed.attempts.some(a => a.stageId === 'repair-elite-prefix-dfs-retry'), false);
 
@@ -146,6 +147,7 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
         timeBudgetMs: 1000,
         ablation: { STRATEGY_MC_NEIGHBOR_BUDGET_RETRY: true },
         disableExtraBudgetPasses: true,
+        attemptSearchForTesting: exhaustingDispatch,
     });
     assert.equal(mcSuppressed.attempts.some(a => a.stageId === 'must-cross-neighbor-prune-disabled-retry'), false);
 
@@ -154,6 +156,7 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
         ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
         disableExtraBudgetPasses: true,
         repairElitePrefixDfsRetryBudgetFractionOverride: 1,
+        attemptSearchForTesting: exhaustingDispatch,
     });
     assert.ok(eliteOverridden.attempts.some(a => a.stageId === 'repair-elite-prefix-dfs-retry'));
 
@@ -162,6 +165,7 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
         ablation: { STRATEGY_REPAIR_LATE_PROBE: true },
         disableExtraBudgetPasses: true,
         repairLateProbeNodeBudgetOverride: 100,
+        attemptSearchForTesting: exhaustingDispatch,
     });
     assert.ok(lateProbeOverridden.attempts.some(a => a.stageId === 'late-repair-search'));
 });

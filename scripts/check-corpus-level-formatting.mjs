@@ -15,7 +15,7 @@ import { stringifyCorpusJson } from './level-json-format.mjs';
 import { listHintFiles } from './level-data-io.mjs';
 import { expectedHintArtifactFileNames } from '../modules/hint-artifact-layout.mjs';
 import { prChangedFiles, readRepositoryText } from './repository-file-view.mjs';
-import { discoverHintStoreDirs } from './hint-store-roots.mjs';
+import { assertCompleteHintStoreDirs, CANONICAL_TRACKED_HINT_STORE_DIRS, discoverHintStoreDirs } from './hint-store-roots.mjs';
 
 const ROOT = process.cwd();
 
@@ -27,8 +27,7 @@ const CORPORA = [
 ];
 
 const CORPUS_BY_PATH = new Map(CORPORA.map(row => [row.relative, row]));
-const HINT_DIRS = discoverHintStoreDirs(ROOT);
-const HINT_PREFIXES = HINT_DIRS.map(dir => `${dir}/`);
+const HINT_PREFIXES = CANONICAL_TRACKED_HINT_STORE_DIRS.map(dir => `${dir}/`);
 
 export function corpusFormattingKind(relativePath) {
   const normalized = relativePath.split(path.sep).join('/');
@@ -83,7 +82,11 @@ function fullScanPaths() {
     }
     rows.push(corpus.relative);
   }
-  for (const hintDir of HINT_DIRS) {
+  const hintDirs = assertCompleteHintStoreDirs(
+    discoverHintStoreDirs(ROOT),
+    'full corpus/hint formatting scan',
+  );
+  for (const hintDir of hintDirs) {
     const absolute = path.join(ROOT, hintDir);
     for (const name of fs.readdirSync(absolute).sort()) {
       if (!name.endsWith('.json') || name.startsWith('_')) continue;

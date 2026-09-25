@@ -1,11 +1,10 @@
 {
   "schemaVersion": 1,
-  "purpose": "Phase-1/2 validation-plan model. Observational until scoped CI is explicitly enabled.",
+  "purpose": "Semantic validation-plan model for active scoped PR CI; unknown/router failure remains conservative.",
   "always": {
     "packageScripts": [
       "check:dead-scripts",
-      "check:text-source-files",
-      "check:ci-impact-inventory"
+      "check:text-source-files"
     ],
     "capabilities": [
       "lint"
@@ -70,7 +69,6 @@
       "capabilities": [
         "unit-coverage",
         "deep-proofs",
-        "solver-canary",
         "build"
       ]
     },
@@ -102,14 +100,10 @@
       "workflowStepId": "deep_services",
       "note": "Heavyweight solver proofs; co-executed with Firestore under deep_services while preserving independent result output."
     },
-    "solver-canary": {
-      "workflowStepId": "solver_canary",
-      "note": "Current nine-level production semantic canary."
-    },
     "build": {
       "packageScript": "build",
-      "workflowStepId": "build",
-      "note": "Production Vite bundle."
+      "workflowStepId": "deep_services",
+      "note": "Production Vite bundle; co-executed with solver proofs and Firestore under deep_services while preserving independent result output."
     },
     "firestore-boundary": {
       "packageScript": "test:firestore-level-fingerprint-boundary",

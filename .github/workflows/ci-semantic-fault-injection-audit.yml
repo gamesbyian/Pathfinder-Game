@@ -2,24 +2,6 @@ name: CI semantic fault-injection audit
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '.github/workflows/ci-semantic-fault-injection-audit.yml'
-      - 'scripts/ci-semantic-fault-injection-audit.mjs'
-      - 'scripts/ci-impact-classifier.mjs'
-      - 'scripts/ci-impact-rules.json'
-      - 'scripts/ci-validation-plan.mjs'
-      - 'scripts/ci-validation-plan.json'
-      - 'scripts/ci-validation-plan-node-test.mjs'
-      - 'modules/app.ts'
-      - 'modules/app.test.ts'
-      - 'modules/persistence.ts'
-      - 'modules/persistence.test.ts'
-      - 'modules/solver/orchestration.ts'
-      - 'modules/solver/orchestration-core.test.ts'
-      - 'modules/solver/routing-regime.test.ts'
-      - 'modules/solver/production-default-equivalence.test.ts'
-      - 'package-lock.json'
 
 permissions:
   contents: read

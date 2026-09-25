@@ -10,6 +10,7 @@ import { test } from 'vitest';
 // modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { createSolver } from '../solver.js';
+import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import {
     pathSignature, mergeUniqueHints, knownHintCount, hintButtonLabel,
@@ -28,6 +29,53 @@ function portalLevel() {
         blocks: [], geese: [], falseGoals: [], mustPass: [], mustCross: [],
         filters: [], flippingFilters: [], landmarks: [], hints: [],
     });
+}
+
+function lineLevel() {
+    return normalizeRawLevel({
+        grid: { w: 3, h: 1 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 3, y: 1 },
+        reqLen: 2, reqInt: 0,
+        blocks: [], geese: [], falseGoals: [], mustPass: [], mustCross: [],
+        filters: [], flippingFilters: [], portals: [], landmarks: [], hints: [],
+    });
+}
+
+const LINE_PATH = [PACK(0, 0), PACK(1, 0), PACK(2, 0)];
+
+function makeSessionSolver({
+    admissibleOrder = false,
+    solveAfterFirst = false,
+    respectYield = false,
+}: {
+    admissibleOrder?: boolean;
+    solveAfterFirst?: boolean;
+    respectYield?: boolean;
+} = {}) {
+    let calls = 0;
+    return {
+        prepareLevelForSolver: solverApi.prepareLevelForSolver,
+        validateCandidatePath: solverApi.validateCandidatePath,
+        solveLevel: async (_level: any, opts: any = {}) => {
+            calls++;
+            if (respectYield) await opts.yieldFn?.();
+            if (calls > 1 && !solveAfterFirst) {
+                return { ok: false, solution: null, attempts: [], workSpent: 1 };
+            }
+            return {
+                ok: true,
+                solution: LINE_PATH,
+                workSpent: 1,
+                attempts: [{
+                    ok: true,
+                    stageId: admissibleOrder ? 'admissible-order-fallback' : 'main-search',
+                    scoringProfileId: 'default',
+                    admissibleOrder,
+                }],
+            };
+        },
+    };
 }
 
 let portalHarvestPromise: Promise<{
@@ -92,55 +140,54 @@ deepTest('a full session run finds novel validated hints across phases and compl
     assert.equal(report.haltedByCancel, false);
 });
 
-deepTest('already-known hints are not re-reported as novel', async () => {
-    const level = portalLevel();
-    // Reuse the independently asserted full harvest above as this test's prerequisite, then a
-    // fresh second session with those existing hints must not repeat them.
-    const firstRun = await portalHarvest();
-    assert.ok(firstRun.novel.length > 0);
-    const second = createDiversificationSession(level, firstRun.novel, { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const secondRun = await second.runUntil(() => 500_000_000, {});
-    const firstSigs = new Set(firstRun.novel.map(pathSignature));
-    for (const h of secondRun.novel) {
-        assert.equal(firstSigs.has(pathSignature(h)), false, 'no re-reported hint');
-    }
+test('already-known hints are not re-reported as novel', async () => {
+    const level = lineLevel();
+    const sessionSolver = makeSessionSolver();
+    const second = createDiversificationSession(level, [LINE_PATH], {
+        solverApi: sessionSolver, attemptBudgetMs: 1, baselineBudgetMs: 1,
+    });
+    const secondRun = await second.runUntil(() => 100, {});
+    assert.deepEqual(secondRun.novel, []);
+    assert.ok(secondRun.rediscovered.length > 0, 'known valid path is recorded as rediscovered, never novel');
 });
 
-deepTest('an exhausted work ceiling halts the session early and marks it resumable (not complete)', async () => {
-    const level = portalLevel();
-    const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 500, baselineBudgetMs: 500 });
-    // runUntil takes a session-local work ceiling (measured from this session's own zero baseline,
-    // not a Date.now() deadline or an absolute realm-global workMeter.units checkpoint) — the bound
-    // decides which hints are found, so it must not depend on host speed or unrelated concurrent
-    // solver activity in the same realm. See work-meter.ts and diversification.ts's ctx.sessionWork.
+test('an exhausted work ceiling halts the session early and marks it resumable (not complete)', async () => {
+    const level = lineLevel();
+    const session = createDiversificationSession(level, [], {
+        solverApi: makeSessionSolver(), attemptBudgetMs: 1, baselineBudgetMs: 1,
+    });
+    // This assertion is about session-local accounting/resume state, not search effectiveness.
     const res = await session.runUntil(() => -1, {});
     assert.equal(res.isComplete, false);
     assert.equal(session.isComplete, false);
     assert.equal(res.report.haltedByWorkBudget, true);
     assert.equal(res.report.haltedByWallClock, true, 'legacy alias mirrors the work-budget field');
 
-    // Resuming with a real ceiling picks up where it stopped and completes.
-    const resumed = await session.runUntil(() => 500_000_000, {});
+    const resumed = await session.runUntil(() => 100, {});
     assert.equal(resumed.isComplete, true);
 });
 
 test('maxHints caps the harvest and reports the halt', async () => {
-    const level = portalLevel();
-    const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const res = await session.runUntil(() => 500_000_000, { maxHints: 1 });
-    assert.ok(res.novel.length <= 1);
-    if (res.novel.length === 1) {
-        assert.equal(res.report.haltedByMaxHints, true);
-        assert.equal(res.isComplete, false, 'capped run leaves the session resumable');
-    }
+    const level = lineLevel();
+    const session = createDiversificationSession(level, [], {
+        solverApi: makeSessionSolver(), attemptBudgetMs: 1, baselineBudgetMs: 1,
+    });
+    const res = await session.runUntil(() => 100, { maxHints: 1 });
+    assert.deepEqual(res.novel, [LINE_PATH]);
+    assert.equal(res.report.haltedByMaxHints, true);
+    assert.equal(res.isComplete, false, 'capped run leaves the session resumable');
 });
 
 test('cancellation is observed and reported without an error entry', async () => {
-    const level = portalLevel();
-    const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
+    const level = lineLevel();
+    const session = createDiversificationSession(level, [], {
+        solverApi: makeSessionSolver({ solveAfterFirst: true, respectYield: true }),
+        attemptBudgetMs: 1,
+        baselineBudgetMs: 1,
+    });
     let calls = 0;
     const res = await session.runUntil(
-        () => 500_000_000,
+        () => 100,
         { isCancelled: () => ++calls > 3 },
     );
     assert.equal(res.report.haltedByCancel, true);
@@ -153,27 +200,19 @@ test('cancellation is observed and reported without an error entry', async () =>
 // admissibleOrder field nothing downstream ever read, so it was silently dropped before reaching
 // persisted provenance. Uses a mock solverApi for the same reason that file's test does — the real
 // solver only reaches admissible-order-search on levels everything else already fails.
-deepTest('a baseline win with admissibleOrder: true gets a distinguishing phase in its provenance event', async () => {
-    const realRun = await portalHarvest();
-    assert.ok(realRun.novel.length > 0, 'sanity check on the fixture');
-    const validPath = realRun.novel[0];
-
-    const mockSolver = {
-        prepareLevelForSolver: solverApi.prepareLevelForSolver,
-        validateCandidatePath: solverApi.validateCandidatePath,
-        solveLevel: async () => ({
-            ok: true,
-            solution: validPath,
-            attempts: [{ ok: true, stageId: 'admissible-order-fallback', scoringProfileId: 'default', admissibleOrder: true }],
-        }),
-    };
-    const mockedLevel = portalLevel();
-    const mocked = createDiversificationSession(mockedLevel, [], { solverApi: mockSolver, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
+test('a baseline win with admissibleOrder: true gets a distinguishing phase in its provenance event', async () => {
+    const mockedLevel = lineLevel();
+    const mocked = createDiversificationSession(mockedLevel, [], {
+        solverApi: makeSessionSolver({ admissibleOrder: true }),
+        attemptBudgetMs: 1,
+        baselineBudgetMs: 1,
+    });
     const provenanceEvents: any[] = [];
-    const res = await mocked.runUntil(() => 500_000_000, {
+    const res = await mocked.runUntil(() => 100, {
+        maxHints: 1,
         onProgress: (e: any) => { if (e.type === 'hint-found') provenanceEvents.push(e.provenance); },
     });
-    assert.ok(res.novel.length > 0);
+    assert.deepEqual(res.novel, [LINE_PATH]);
     assert.equal(provenanceEvents[0].phase, 'baseline-admissible-order', 'the phase must reflect the admissible-order-search win, not collapse to the plain baseline label');
     assert.equal(provenanceEvents[0].scoringProfileId, 'default');
 });

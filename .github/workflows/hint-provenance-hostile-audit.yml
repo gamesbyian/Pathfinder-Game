@@ -1,20 +1,7 @@
 name: Hint/provenance hostile audit
 
 on:
-  pull_request:
-    paths:
-      - 'scripts/**'
-      - 'modules/**'
-      - 'data/**'
-      - '.github/workflows/**'
-      - 'docs/**hint**'
-      - 'docs/**provenance**'
-      - 'docs/solver-workflow-lifecycle.json'
-      - 'docs/solver-protocol-schema-contraction.json'
-      - 'docs/solver-request-semantics-inventory.json'
-      - 'reports/**hint**'
-      - 'package.json'
-      - 'package-lock.json'
+  workflow_dispatch:
 
 permissions:
   contents: read

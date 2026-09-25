@@ -91,7 +91,7 @@ on:
       max_parallel:
         description: 'Shard jobs (across both arms) running concurrently.'
         required: false
-        default: '20'
+        default: '15'
       enable_flags:
         description: 'Comma-separated ablation flags to turn ON for the treatment arm only.'
         required: false
@@ -101,7 +101,7 @@ on:
         required: false
         default: ''
       repair_late_probe_node_budget:
-        description: 'Optional STRATEGY_REPAIR_LATE_PROBE node cap override for the treatment arm only (production default 2000000, stage-budget.ts REPAIR_LATE_PROBE_NODE_BUDGET).'
+        description: 'Optional STRATEGY_REPAIR_LATE_PROBE node cap override for the treatment arm only (production default 1500000, stage-budget.ts REPAIR_LATE_PROBE_NODE_BUDGET).'
         required: false
         default: ''
       deterministic:

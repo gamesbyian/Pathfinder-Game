@@ -22,7 +22,7 @@ expect(
 
 expect(
   ['modules/solver/search.ts'],
-  ['research', 'solver'],
+  ['solver'],
 );
 
 expect(
@@ -47,6 +47,12 @@ expect(
 
 expect(
   ['package.json'],
+  ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver'],
+  { full: true },
+);
+
+expect(
+  ['vitest.node-contract.config.mjs'],
   ['data', 'game', 'persistence', 'repo', 'research', 'shared', 'solver'],
   { full: true },
 );
@@ -172,7 +178,7 @@ assert.deepEqual(
 
 const deletedSolver = classifyChanges([{ status: 'D', path: 'modules/solver/search.ts' }]);
 assert.equal(deletedSolver.full, false);
-assert.deepEqual(deletedSolver.surfaces, ['research', 'solver']);
+assert.deepEqual(deletedSolver.surfaces, ['solver']);
 
 const renamedAcrossBoundary = classifyChanges([{
   status: 'R',

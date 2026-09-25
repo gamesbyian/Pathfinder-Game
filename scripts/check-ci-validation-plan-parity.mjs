@@ -9,10 +9,12 @@ const registry = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'validati
 const executionPlan = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'ci-execution-plan.json'), 'utf8'));
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
+const productionCapabilityWorkflows = workflow;
 const activationWorkflowPath = executionPlan.activationWorkflow;
 const activationWorkflow = typeof activationWorkflowPath === 'string'
   ? fs.readFileSync(path.join(root, activationWorkflowPath), 'utf8')
   : '';
+const activationCapabilityWorkflows = activationWorkflow;
 const failures = [];
 
 function escapeRegex(value) {
@@ -51,14 +53,14 @@ for (const [name, capability] of Object.entries(plan.capabilities ?? {})) {
       failures.push(`${name}: missing package script ${capability.packageScript}`);
     }
     const escaped = escapeRegex(capability.packageScript);
-    if (!new RegExp(`npm run ${escaped}(?=\\s|["']|$)`, 'mu').test(workflow)) {
-      failures.push(`${name}: ci.yml no longer runs npm run ${capability.packageScript}`);
+    if (!new RegExp(`npm run ${escaped}(?=\\s|["']|$)`, 'mu').test(productionCapabilityWorkflows)) {
+      failures.push(`${name}: production CI no longer runs npm run ${capability.packageScript}`);
     }
   }
   if (capability.workflowStepId) {
     const escapedId = escapeRegex(capability.workflowStepId);
-    if (!new RegExp(`^\\s*id:\\s*${escapedId}\\s*$`, 'mu').test(workflow)) {
-      failures.push(`${name}: ci.yml no longer exposes step id ${capability.workflowStepId}`);
+    if (!new RegExp(`^\\s*id:\\s*${escapedId}\\s*$`, 'mu').test(productionCapabilityWorkflows)) {
+      failures.push(`${name}: production CI no longer exposes step id ${capability.workflowStepId}`);
     }
   } else {
     failures.push(`${name}: missing workflowStepId`);
@@ -125,6 +127,9 @@ for (const dependency of finalStatus?.needs ?? []) {
 if (!(finalStatus?.acceptedResults?.['deep-verification'] ?? []).includes('skipped')) {
   failures.push('final status must explicitly allow deep-verification=skipped for scoped PRs');
 }
+if (!(finalStatus?.acceptedResults?.['deep-services'] ?? []).includes('skipped')) {
+  failures.push('final status must explicitly allow deep-services=skipped for scoped PRs');
+}
 if ((finalStatus?.acceptedResults?.['impact-shadow'] ?? []).includes('skipped')) {
   failures.push('final status must not accept a skipped impact-shadow router');
 }
@@ -147,8 +152,8 @@ if (!activationWorkflowPath) {
     const stepId = capability.workflowStepId;
     if (!stepId) continue;
     const escapedId = escapeRegex(stepId);
-    if (!new RegExp(`^\\s*id:\\s*${escapedId}\\s*$`, 'mu').test(activationWorkflow)) {
-      failures.push(`${activationWorkflowPath}: capability ${name} is missing step id ${stepId}`);
+    if (!new RegExp(`^\\s*id:\\s*${escapedId}\\s*$`, 'mu').test(activationCapabilityWorkflows)) {
+      failures.push(`${activationWorkflowPath}: capability ${name} is missing step id ${stepId} across activation workflows`);
     }
   }
   if (!/validation-groups\.mjs\s+validators\b/u.test(activationWorkflow)) {

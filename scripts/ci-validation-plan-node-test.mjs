@@ -11,7 +11,7 @@ assert.deepEqual(researchOnly.capabilities, ['lint']);
 const solver = planValidation(['repo', 'research', 'solver']);
 assert.deepEqual(solver.validatorGroups, ['repo', 'research', 'solver']);
 assert.deepEqual(solver.nodeTestGroups, ['repo', 'research', 'solver']);
-assert.deepEqual(solver.capabilities, ['build', 'deep-proofs', 'lint', 'solver-canary', 'unit-coverage']);
+assert.deepEqual(solver.capabilities, ['build', 'deep-proofs', 'lint', 'unit-coverage']);
 
 const persistence = planValidation(['game', 'persistence', 'repo']);
 assert.deepEqual(persistence.validatorGroups, ['game', 'repo']);
@@ -21,12 +21,10 @@ assert.deepEqual(persistence.capabilities, ['build', 'firestore-boundary', 'lint
 assert.throws(() => planValidation(['banana']), /unknown validation surface banana/u);
 
 
-assert.equal(researchOnly.capabilities.includes('solver-canary'), false);
 assert.equal(researchOnly.capabilities.includes('deep-proofs'), false);
 assert.equal(researchOnly.capabilities.includes('firestore-boundary'), false);
 
 const gameOnly = planValidation(['game']);
-assert.equal(gameOnly.capabilities.includes('solver-canary'), false);
 assert.equal(gameOnly.capabilities.includes('deep-proofs'), false);
 assert.equal(gameOnly.capabilities.includes('firestore-boundary'), false);
 
@@ -41,7 +39,7 @@ assert.deepEqual(
 );
 assert.deepEqual(
   full.capabilities,
-  ['build', 'deep-proofs', 'firestore-boundary', 'lint', 'solver-canary', 'unit-coverage'],
+  ['build', 'deep-proofs', 'firestore-boundary', 'lint', 'unit-coverage'],
 );
 
 console.log('CI validation plan tests passed.');

@@ -3,14 +3,19 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import process from 'node:process';
 
-function list(family, ...surfaces) {
+function listWithArgs(family, surfaces, extra = []) {
   const stdout = execFileSync(process.execPath, [
     'scripts/validation-groups.mjs',
     family,
     ...surfaces,
+    ...extra,
     '--list',
   ], { cwd: process.cwd(), encoding: 'utf8' });
   return JSON.parse(stdout);
+}
+
+function list(family, ...surfaces) {
+  return listWithArgs(family, surfaces);
 }
 
 const research = list('nodeTests', 'research');
@@ -23,7 +28,7 @@ const solver = list('nodeTests', 'solver');
 assert.ok(solver.selected.includes('test:portfolio-solve-sweep-lib'));
 assert.ok(solver.selected.includes('test:divergence-lib'));
 assert.ok(!solver.selected.includes('test:signature-collision-analysis'));
-assert.ok(!solver.selected.includes('test:sweep-publish'));
+assert.ok(solver.selected.includes('test:sweep-publish'));
 
 const data = list('nodeTests', 'data');
 assert.ok(data.selected.includes('test:collect-known-solution-prefix-survival-cli'));
@@ -71,5 +76,16 @@ assert.equal(shared.selected.length, 55);
 
 const combined = list('nodeTests', 'solver', 'research');
 assert.equal(new Set(combined.selected).size, combined.selected.length, 'multi-surface selection must dedupe commands');
+
+const allSurfaces = ['repo', 'game', 'persistence', 'solver', 'research', 'data', 'shared'];
+const all = listWithArgs('nodeTests', allSurfaces).selected;
+const shardA = listWithArgs('nodeTests', allSurfaces, ['--owner-groups=research,solver,game,persistence']).selected;
+const shardB = listWithArgs('nodeTests', allSurfaces, ['--owner-groups=shared,data,repo']).selected;
+assert.equal(shardA.some(member => shardB.includes(member)), false, 'execution-owner shards must be disjoint');
+assert.deepEqual(
+  [...new Set([...shardA, ...shardB])].sort(),
+  [...all].sort(),
+  'execution-owner shards must exactly cover the full Node/CLI authority',
+);
 
 console.log('validation-groups semantic surface selection: all tests passed');

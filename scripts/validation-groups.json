@@ -58,12 +58,15 @@
       "test:documentation-index",
       "test:investigation-report-metadata",
       "test:workflow-actions",
+      "test:eslint-rules-contract",
       "test:cli-option-contracts",
       "test:workflow-lifecycle",
       "test:repository-file-view",
       "test:ci-impact-classifier",
       "test:ci-validation-plan",
       "test:ci-execution-plan",
+      "test:ci-runtime-data-cache",
+      "test:ci-runtime-hint-projection-cache",
       "test:validation-groups",
       "test:run-scripts-parallel"
     ],
@@ -76,18 +79,20 @@
       "test:publish-solver-sweep-result",
       "test:validate-solver-sweep-integrity",
       "test:ablation-toolchain",
+      "test:solver-parallel-contract",
+      "test:solver-deep-integrations",
       "test:effective-config-agreement",
       "test:append-solver-health-record",
       "test:select-routing-regime-sample-cli",
       "test:early-repair-search-badness-report",
       "test:race-stage-parity",
-      "test:combine-solver-sweep-reports",
       "test:req-length-sweep-lib",
       "test:winning-attempt-family",
-      "test:prune-gap-contract",
       "test:plan-routing-regime-ab-shards",
       "test:attempt-config-key",
-      "test:solver-request-semantics-inventory"
+      "test:solver-request-semantics-inventory",
+      "test:combine-solver-sweep-reports",
+      "test:prune-gap-contract"
     ],
     "data": [
       "test:combine-method-probe-shards",
@@ -117,6 +122,8 @@
       "test:merge-variant-family-dataset-shards",
       "test:combine-static-portfolio-shards",
       "test:data-asset-runtime-smoke",
+      "test:data-assets-contract",
+      "test:level-codec-maintained-corpus-contract",
       "test:hint-termination-semantics",
       "test:hint-discovery-process-cli",
       "test:hint-harvest-selection-manifest",
@@ -152,8 +159,6 @@
       "test:research-question-authority-audit",
       "test:lane-a-c0-population-derivation",
       "test:lane-a-c2-accounting",
-      "test:ws6-dependency-interface-observer",
-      "test:ws2-class3-shared-acquisition",
       "test:research-relations",
       "test:research-queryability-audit",
       "test:research-query",
@@ -163,8 +168,6 @@
       "test:research-system-inventory",
       "test:research-system-query",
       "test:git-ref-worktree",
-      "test:research-portfolio-retrospective",
-      "test:research-system-consolidation-closeout",
       "test:experiment-result-contract-audit",
       "test:research-transaction",
       "test:ws2-failure-response-reconnaissance",
@@ -189,7 +192,6 @@
       "test:level-blind-capability-sweep-cli",
       "test:derive-timeout-recovery-population",
       "test:lifecycle-failure-map",
-      "test:research-index",
       "test:family-census-combine",
       "test:research-analysis-lib",
       "test:experiment-manifest",
@@ -199,7 +201,6 @@
       "test:analyze-technique-census",
       "test:analyze-technique-relative-advantage",
       "test:analyze-technique-census-temporal-stability",
-      "test:technique-census-cell",
       "test:write-solver-experiment-contract",
       "test:combine-paired-arm-integrity",
       "test:failure-response-query",
@@ -219,6 +220,9 @@
       "test:action-selection-legal-signals",
       "test:apply-action-selection-legal-signal-model",
       "test:reconcile-broad-solver-evidence",
+      "test:ws6-dependency-interface-observer",
+      "test:research-index",
+      "test:technique-census-cell",
       "test:plan-quality"
     ],
     "shared": [
@@ -292,7 +296,8 @@
         "research"
       ],
       "test:sweep-publish": [
-        "research"
+        "research",
+        "solver"
       ],
       "test:known-prefix-oracle-set-manifest": [
         "solver",
@@ -387,6 +392,227 @@
       "test:class3-dose-expectations": [
         "solver",
         "research"
+      ],
+      "test:combine-static-portfolio-shards": [
+        "data",
+        "solver"
+      ],
+      "test:corpus-query": [
+        "data",
+        "solver"
+      ],
+      "test:data-asset-runtime-smoke": [
+        "data",
+        "solver"
+      ],
+      "test:family-boundary": [
+        "data",
+        "solver"
+      ],
+      "test:family-index": [
+        "data",
+        "solver"
+      ],
+      "test:family-run-manifest-producer": [
+        "data",
+        "solver"
+      ],
+      "test:hint-discovery-process-cli": [
+        "data",
+        "solver"
+      ],
+      "test:hint-query-lib": [
+        "data",
+        "solver"
+      ],
+      "test:hint-store-index": [
+        "data",
+        "solver"
+      ],
+      "test:stress-topology-generator": [
+        "data",
+        "solver"
+      ],
+      "test:loader": [
+        "game",
+        "solver"
+      ],
+      "test:analyze-technique-census": [
+        "research",
+        "solver"
+      ],
+      "test:analyze-technique-census-temporal-stability": [
+        "research",
+        "solver"
+      ],
+      "test:cut-bridge-incidence": [
+        "research",
+        "solver"
+      ],
+      "test:experiment-manifest": [
+        "research",
+        "solver"
+      ],
+      "test:hint-discovery-process-evidence": [
+        "research",
+        "solver"
+      ],
+      "test:hint-failure-process-join": [
+        "research",
+        "solver"
+      ],
+      "test:level-blind-capability-sweep-cli": [
+        "research",
+        "solver"
+      ],
+      "test:lifecycle-failure-map": [
+        "research",
+        "solver"
+      ],
+      "test:paired-beam-width-frontier": [
+        "research",
+        "solver"
+      ],
+      "test:persist-decision-bearing-evidence": [
+        "research",
+        "solver"
+      ],
+      "test:research-consumption-link": [
+        "research",
+        "solver"
+      ],
+      "test:research-index": [
+        "data",
+        "research",
+        "solver"
+      ],
+      "test:research-integration-audit": [
+        "research",
+        "solver"
+      ],
+      "test:research-query": [
+        "research",
+        "solver"
+      ],
+      "test:research-queryability-audit": [
+        "research",
+        "solver"
+      ],
+      "test:research-question-dossier": [
+        "research",
+        "solver"
+      ],
+      "test:research-relations": [
+        "research",
+        "solver"
+      ],
+      "test:research-system-inventory": [
+        "research",
+        "solver"
+      ],
+      "test:research-system-query": [
+        "research",
+        "solver"
+      ],
+      "test:research-transaction": [
+        "research",
+        "solver"
+      ],
+      "test:response-guided-orientation-contrast": [
+        "research",
+        "solver"
+      ],
+      "test:response-guided-parity-contrast": [
+        "research",
+        "solver"
+      ],
+      "test:solver-experiment-contract": [
+        "research",
+        "solver"
+      ],
+      "test:solver-failure-response": [
+        "research",
+        "solver"
+      ],
+      "test:solver-search-loss-evidence": [
+        "research",
+        "solver"
+      ],
+      "test:technique-census-cell": [
+        "data",
+        "research",
+        "solver"
+      ],
+      "test:technique-census-result-lib": [
+        "research",
+        "solver"
+      ],
+      "test:validate-reconciliation-sources": [
+        "research",
+        "solver"
+      ],
+      "test:write-solver-experiment-contract": [
+        "research",
+        "solver"
+      ],
+      "test:ws2-experiment-readiness": [
+        "research",
+        "solver"
+      ],
+      "test:ws2-failure-response-reconnaissance": [
+        "research",
+        "solver"
+      ],
+      "test:ws6-dependency-interface-observer": [
+        "data",
+        "research",
+        "solver"
+      ],
+      "test:hint-discovery-replayability": [
+        "solver"
+      ],
+      "test:hint-reconstructability-report": [
+        "solver"
+      ],
+      "test:solver-parallel-contract": [
+        "solver",
+        "research"
+      ],
+      "test:eslint-rules-contract": [
+        "repo"
+      ],
+      "test:data-assets-contract": [
+        "data"
+      ],
+      "test:level-codec-maintained-corpus-contract": [
+        "data",
+        "game",
+        "solver",
+        "research"
+      ],
+      "test:validate-all-hint-stores": [
+        "data",
+        "game",
+        "solver",
+        "research"
+      ],
+      "test:combine-solver-sweep-reports": [
+        "data",
+        "solver",
+        "research"
+      ],
+      "test:prune-gap-contract": [
+        "data",
+        "solver"
+      ],
+      "test:solver-deep-integrations": [
+        "solver"
+      ]
+    },
+    "validators": {
+      "check:research-integration": [
+        "research",
+        "solver"
       ]
     }
   },
@@ -424,14 +650,6 @@
         "repoPaths": [
           "docs/solver-workflow-lifecycle.json",
           ".github/workflows/**"
-        ]
-      },
-      "test:ws2-class3-shared-acquisition": {
-        "filesystemScope": "repo-inputs",
-        "repoPaths": [
-          "reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json",
-          "reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json",
-          "reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json"
         ]
       },
       "test:workflow-actions": {
@@ -495,6 +713,54 @@
           "docs/solver-workflow-lifecycle.json",
           "docs/hint-evidence-consolidation-inventory.json",
           ".github/workflows/**"
+        ]
+      },
+      "test:data-assets-contract": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json",
+          "data/themes.json",
+          "data/hints/**"
+        ]
+      },
+      "test:level-codec-maintained-corpus-contract": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json",
+          "data/stress/stress-levels.json",
+          "data/stress/stress-levels-random.json",
+          "modules/domain/level-codec.ts",
+          "modules/domain/level-fingerprint.ts"
+        ]
+      },
+      "test:combine-solver-sweep-reports": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/stress/stress-levels-random.json"
+        ]
+      },
+      "test:prune-gap-contract": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json"
+        ]
+      },
+      "test:ws6-dependency-interface-observer": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/stress/stress-levels-random.json"
+        ]
+      },
+      "test:research-index": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/stress/stress-levels.json"
+        ]
+      },
+      "test:technique-census-cell": {
+        "filesystemScope": "repo-inputs",
+        "repoPaths": [
+          "data/levels.json"
         ]
       }
     }

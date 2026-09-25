@@ -20,9 +20,29 @@ import { test } from 'vitest';
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { createSolver } from '../solver.js';
 import { pathSignature } from '../domain/hint-novelty.js';
+import { PACK } from './encoding.js';
 import { createHintAblationGenerator } from './hint-ablation-generator.js';
 
 const solverApi = createSolver();
+const FORCED_PORTAL_PATH = [PACK(0, 1), PACK(1, 1), PACK(2, 0), PACK(2, 1)];
+
+function makeAblationStub({ admissibleOrder = false } = {}) {
+    return {
+        prepareLevelForSolver: solverApi.prepareLevelForSolver,
+        validateCandidatePath: solverApi.validateCandidatePath,
+        solveLevel: async () => ({
+            ok: true,
+            solution: FORCED_PORTAL_PATH,
+            workSpent: 1,
+            attempts: [{
+                ok: true,
+                stageId: admissibleOrder ? 'admissible-order-fallback' : 'main-search',
+                scoringProfileId: 'default',
+                admissibleOrder,
+            }],
+        }),
+    };
+}
 
 // 3x3 grid; x=2 column is blocked at y=1 and y=3, leaving the portal cell (2,2) as the
 // only connector between the gate's column (x=1) and the goal's column (x=3).
@@ -44,21 +64,12 @@ const PHASES_ALL = { baseline: true, cascade: true, swap: true, portalCascade: t
 const BUDGETS = { attemptBudgetMs: 400, baselineBudgetMs: 2000, workBudget: 67_000_000 };
 
 let fullHarvestPromise: ReturnType<typeof createHintAblationGenerator> | null = null;
-let baselineHarvestPromise: ReturnType<typeof createHintAblationGenerator> | null = null;
 
 function fullHarvest() {
     fullHarvestPromise ??= createHintAblationGenerator(rawForcedPortalLevel(), 1, {
         solverApi, ...BUDGETS, phases: PHASES_ALL,
     });
     return fullHarvestPromise;
-}
-
-function baselineHarvest() {
-    baselineHarvestPromise ??= createHintAblationGenerator(rawForcedPortalLevel(), 1, {
-        solverApi, ...BUDGETS,
-        phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
-    });
-    return baselineHarvestPromise;
 }
 
 // Full-run integration tests: real solver search across real ablation phases is the point.
@@ -102,21 +113,22 @@ deepTest('a full run finds novel validated hints across phases, all of which use
     for (const h of result.novel) assert.ok(result.discoveries.has(pathSignature(h)));
 });
 
-deepTest('already-known hints are not re-reported as novel on a second run', async () => {
-    const first = await fullHarvest();
-    assert.ok(first.novel.length > 0);
-
-    const second = await createHintAblationGenerator(rawForcedPortalLevel(first.novel), 1, { solverApi, ...BUDGETS, phases: PHASES_ALL });
-    const firstSigs = new Set(first.novel.map(pathSignature));
-    for (const h of second.novel) {
-        assert.equal(firstSigs.has(pathSignature(h)), false, 'no re-reported hint');
-    }
+test('already-known hints are not re-reported as novel on a second run', async () => {
+    const second = await createHintAblationGenerator(rawForcedPortalLevel([FORCED_PORTAL_PATH]), 1, {
+        solverApi: makeAblationStub(),
+        attemptBudgetMs: 1,
+        baselineBudgetMs: 1,
+        workBudget: 100,
+        phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
+    });
+    assert.deepEqual(second.novel, []);
+    assert.ok(second.rediscovered.length > 0, 'known valid path is recorded as rediscovered, never novel');
 });
 
 test('phase toggles are honored: disabling all but baseline runs only baseline', async () => {
     const raw = rawForcedPortalLevel();
     const result = await createHintAblationGenerator(raw, 1, {
-        solverApi, ...BUDGETS,
+        solverApi: makeAblationStub(), attemptBudgetMs: 1, baselineBudgetMs: 1, workBudget: 100,
         phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
     });
     assert.deepEqual(result.report.phasesRun, ['baseline']);
@@ -128,20 +140,16 @@ test('phase toggles are honored: disabling all but baseline runs only baseline',
 test('combined-only phase set finds zero triples without prior evidence, but succeeds given a seeded hint', async () => {
     const raw = rawForcedPortalLevel();
     const noEvidence = await createHintAblationGenerator(raw, 1, {
-        solverApi, ...BUDGETS,
+        solverApi: makeAblationStub(), attemptBudgetMs: 1, baselineBudgetMs: 1, workBudget: 100,
         phases: { baseline: false, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: true, swapCombined: true },
     });
     assert.equal(noEvidence.report.combosTried.combined, 0, 'no gate-portal triples proven without any hint evidence');
     assert.equal(noEvidence.novel.length, 0);
 
-    // Seed evidence via a baseline-only run (the fixture forces every solution through the
-    // portal), then re-run combined-only with that path as the level's existing hints — the
-    // evidence-bounded triple must now be found and exercised.
-    const forward = await baselineHarvest();
-    assert.ok(forward.novel.length > 0, 'baseline should find the (forced-portal) solution');
-
-    const withEvidence = await createHintAblationGenerator(rawForcedPortalLevel(forward.novel), 1, {
-        solverApi, ...BUDGETS,
+    // Seed with the fixture's known referee-valid portal path. This test owns evidence-bounded
+    // phase routing, not solver discovery quality.
+    const withEvidence = await createHintAblationGenerator(rawForcedPortalLevel([FORCED_PORTAL_PATH]), 1, {
+        solverApi: makeAblationStub(), attemptBudgetMs: 1, baselineBudgetMs: 1, workBudget: 100,
         phases: { baseline: false, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: true, swapCombined: true },
     });
     assert.deepEqual(withEvidence.report.errors, []);
@@ -182,25 +190,11 @@ test('an exhausted work budget halts the run early with no errors', async () => 
 
 test('a baseline win with admissibleOrder: true gets a distinguishing phase, not the plain "baseline" label', async () => {
     const raw = rawForcedPortalLevel();
-    const realSolver = createSolver();
-    // Reuse the independently exercised baseline-only harvest as the valid-path prerequisite for
-    // the provenance mock; the mock itself still runs in a fresh generator instance below.
-    const real = await baselineHarvest();
-    assert.ok(real.novel.length > 0, 'sanity check on the fixture');
-    const validPath = real.novel[0];
-
-    const mockSolver = {
-        prepareLevelForSolver: realSolver.prepareLevelForSolver,
-        validateCandidatePath: realSolver.validateCandidatePath,
-        solveLevel: async () => ({
-            ok: true,
-            solution: validPath,
-            attempts: [{ ok: true, stageId: 'admissible-order-fallback', scoringProfileId: 'default', admissibleOrder: true }],
-        }),
-    };
-
     const mocked = await createHintAblationGenerator(raw, 1, {
-        solverApi: mockSolver, ...BUDGETS,
+        solverApi: makeAblationStub({ admissibleOrder: true }),
+        attemptBudgetMs: 1,
+        baselineBudgetMs: 1,
+        workBudget: 100,
         phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
     });
     assert.equal(mocked.candidates.length, 1);

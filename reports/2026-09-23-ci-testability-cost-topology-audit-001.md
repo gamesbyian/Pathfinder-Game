@@ -1380,6 +1380,26 @@ Recommended policy:
 Stopping rule for this audit cycle: do **not** bulk-annotate the ~150 filesystem-bearing contracts. The prototype demonstrates that the authority seam works. Future declarations should be demand-driven by measured CI cost or routing value.
 
 
+## Methodology correction: optimize only after claim ownership
+
+The later R02560, solver-canary, frozen-retrospective, and semantic Fast Gate audits change how this report should be used.
+
+This audit correctly identified expensive process boundaries, repeated repository discovery, fixture scale, and topology waste. But the initial 35-second phase treated the then-current full validation population as fixed. That was intentionally conservative and prevented arbitrary protection deletion, yet it also meant some engineering effort optimized checks whose correct disposition was later found to be research characterization or explicit historical audit rather than PR merge validation.
+
+Future testability work must therefore consume the cadence/value decision first:
+
+1. identify the concrete bad merge and current contract;
+2. identify the repository process that owns the claim;
+3. establish that PR CI is the correct authority/cadence;
+4. establish semantic invalidation ownership;
+5. only then optimize the test/process boundary.
+
+The successful thin-CLI/model-reuse rule remains valid, but apply it to the **selected surviving contracts**, not blindly to the longest command in the old universal aggregate.
+
+Timing priorities must also be refreshed after routing changes. Rank by selected critical-path burden (frequency × wall contribution × tail/setup effects), not historical raw command duration. A previously hot research harness may cease to matter once research-only ownership is activated.
+
+Negative topology experiments remain evidence for the exact workload and runner substrate measured. Reopen them only when a named premise changes enough to create a genuinely different experiment: selected population, longest-child tail, setup topology, or runner capacity.
+
 ## Critical-path compression phase: ≤35 seconds full CI
 
 The testability/cost audit is reopened under a hard wall-time target:

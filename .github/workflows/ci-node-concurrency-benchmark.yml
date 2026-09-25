@@ -18,12 +18,6 @@ on:
         required: true
         default: '4'
         type: string
-  pull_request:
-    paths:
-      - '.github/workflows/ci-node-concurrency-benchmark.yml'
-      - 'scripts/ci-node-concurrency-benchmark.mjs'
-      - 'scripts/run-scripts-parallel.mjs'
-      - 'package.json'
 
 permissions:
   contents: read

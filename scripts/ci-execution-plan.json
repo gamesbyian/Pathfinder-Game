@@ -1,26 +1,36 @@
 {
   "schemaVersion": 1,
-  "purpose": "Shadow/future execution packing for semantic CI obligations. Does not itself authorize skipping.",
+  "purpose": "Active execution packing for semantic CI obligations; production and scoped rehearsal must preserve this capability ownership.",
   "jobs": {
     "fast-gate": {
       "alwaysMaterialized": true,
       "validatorGroups": "selected",
-      "nodeTestGroups": "selected",
       "capabilities": [
-        "lint",
-        "solver-canary",
-        "build"
+        "lint"
       ],
-      "note": "Primary installed-dependency lane. Always exists initially because lint remains universal and selected validator/Node groups run here."
+      "note": "Always-materialized static/validator/lint lane. Node contracts execute independently; build is packed with deep services."
     },
     "deep-verification": {
       "alwaysMaterialized": false,
       "capabilities": [
-        "unit-coverage",
+        "unit-coverage"
+      ],
+      "note": "Coverage-only implementation lane; expensive services are independently packed so they do not serialize behind covered Vitest."
+    },
+    "deep-services": {
+      "alwaysMaterialized": false,
+      "capabilities": [
+        "build",
         "deep-proofs",
         "firestore-boundary"
       ],
-      "note": "Expensive implementation/persistence lane. Future scoped CI may skip the whole job when none of these capabilities are selected."
+      "note": "Impact-scoped build / solver-soundness / persistence lane. Build runs serially with service setup; proofs and Firestore remain concurrent. This packing reduces hosted-runner allocation without weakening any capability."
+    },
+    "node-contracts": {
+      "alwaysMaterialized": true,
+      "nodeTestGroups": "selected",
+      "capabilities": [],
+      "note": "Two-runner Node/CLI matrix. Semantic selection is preserved; execution-owner filters partition the selected commands exactly once across research+solver+game+persistence and shared+data+repo."
     }
   },
   "finalStatus": {
@@ -28,7 +38,9 @@
     "needs": [
       "impact-shadow",
       "fast-gate",
-      "deep-verification"
+      "node-contracts",
+      "deep-verification",
+      "deep-services"
     ],
     "if": "always()",
     "acceptedResults": {
@@ -41,9 +53,16 @@
       "deep-verification": [
         "success",
         "skipped"
+      ],
+      "deep-services": [
+        "success",
+        "skipped"
+      ],
+      "node-contracts": [
+        "success"
       ]
     },
-    "note": "Single stable required status. A skipped deep lane is acceptable only because routing decides it was unnecessary; router and fast gate must succeed."
+    "note": "Router, Fast Gate and Node matrix must succeed; coverage and combined build/deep-services may skip only when semantic routing selects none of their capabilities."
   },
   "activationWorkflow": ".github/workflows/ci-scoped-dry-run.yml"
 }
