@@ -36,7 +36,7 @@ function makeAblationStub({ admissibleOrder = false } = {}) {
             workSpent: 1,
             attempts: [{
                 ok: true,
-                stageId: admissibleOrder ? 'admissible-order-fallback' : 'dfs',
+                stageId: admissibleOrder ? 'admissible-order-fallback' : 'main-search',
                 scoringProfileId: 'default',
                 admissibleOrder,
             }],
