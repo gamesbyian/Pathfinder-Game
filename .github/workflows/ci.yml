@@ -22,7 +22,7 @@ concurrency:
 jobs:
   # Every production lane computes the same semantic plan locally so validation does not
   # serialize behind a routing runner. Fast Gate also publishes its plan for observability.
-  fast-gate:  fast-gate:
+  fast-gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -217,7 +217,7 @@ jobs:
           fi
           exit "$failed"
 
-  # Node/CLI contracts run in a reusable two-shard execution-owner workflow.  # Node/CLI contracts run in a reusable two-shard execution-owner workflow. Keeping its
+  # Node/CLI contracts run in a reusable two-shard execution-owner workflow. Keeping its
   # bootstrap out of this file preserves the main CI workflow's size/testability boundary.
   node-contracts:
     uses: ./.github/workflows/ci-node-contract-shards.yml
