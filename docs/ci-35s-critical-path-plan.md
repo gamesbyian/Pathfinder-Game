@@ -1024,7 +1024,7 @@ The new runtime-data cache model is a **single rolling exact cache with Git-blob
 
 This preserves one cache restore on the warm path. It deliberately replaces the six-component experiment before measurement because six serialized `actions/cache` restores risked increasing every warm run.
 
-The shared local action `.github/actions/runtime-data/action.yml` now owns this behavior for Fast Gate, coverage, Node shards, scoped rehearsal, and default-branch cache seeding. `scripts/ci-runtime-data-cache-node-test.mjs` owns the one-file-overlay regression.
+The shared local action `.github/actions/runtime-data/action.yml` now owns this behavior for Fast Gate, Node shards, scoped rehearsals that require repository data, and default-branch cache seeding. Coverage no longer consumes the runtime-data tree after its remaining real-data integrity contracts moved to the data-owned Node shard. `scripts/ci-runtime-data-cache-node-test.mjs` owns the one-file-overlay regression.
 
 Decision gate:
 - exact-hit warm path must remain comparable to the old one-cache restore;
@@ -1221,15 +1221,50 @@ The canonical post-harvest producer and PR Fast Gate share this cache identity. 
 
 The implementation head will necessarily pay one clean v2 generation because the projection authority itself changed. Subsequent same-authority source churn is the decision evidence for the overlay path.
 
+## Post-v2 margin work: projection overlay and data-free coverage
+
+Subsequent exact-head evidence materially advanced both remaining setup targets.
+
+### Runtime-Hint projection v2 overlay
+
+Run **36183559372** exercised a same-authority fallback cache after the source key changed from `6005b8…` to `76ad22…`.
+
+- the prior ~6 MB compressed projection cache restored successfully;
+- the Git-blob planner identified **80 changed/added Hint artifacts, 0 deleted**;
+- the production build ran in incremental reconcile mode instead of regenerating all ~573 MB of source Hint data;
+- build/projection completed in only a few seconds rather than the earlier ~26 s full-regeneration miss.
+
+This validates the core p90 premise of projection v2: source churn no longer implies a full projection rebuild.
+
+### Coverage no longer needs runtime-data materialization
+
+A dependency audit found two repository-data integration obligations inside the covered Vitest population:
+
+- committed data-asset integrity;
+- representative maintained-corpus codec/fingerprint round-trip behavior.
+
+Both remain permanent merge-safety contracts, but now run in the data-owned Node shard. The codec contract is semantically invalidated by `data + game + solver + research`, matching the repository's shared-domain classifier rather than inventing a forbidden semantic `shared` surface. Their repository inputs are declared in `validation-groups.json`.
+
+Coverage itself now runs with no runtime-data cache/materialization step. The first repaired sample was semantically green:
+
+- **139 passed / 4 skipped files**;
+- **1546 passed / 11 skipped tests**;
+- Vitest useful wall **24.98 s**;
+- total coverage runner wall **~35.2 s**.
+
+That sample proves the data-free topology but is not latency-qualifying: useful Vitest work expanded enough on that shared runner to consume the setup savings. The result strengthens the conclusion that the remaining tail is primarily hosted-runner CPU/useful-work variance, not avoidable data bootstrap.
+
+The same sample also proved the moved data contracts themselves green on Node shard B. A metric-boundary inventory failure was a bookkeeping consequence of extracting the codec integration into a new file; that file is now explicitly classified as a reviewed raw/wire-boundary consumer.
+
 ## Current forward work order
 
-1. **Validate rolling runtime-Hint projection v2:** first exact-head run may perform the intentional clean v2 generation; require green projection/cache contracts. Then capture an exact-hit or same-authority source-overlay sample and compare Fast Gate wall against the 26 s full-regeneration miss.
-2. **Resume bounded p50/p90 confirmation:** retain run 36179322147 as qualifying sample 1 and run 36180519546 as a diagnosed non-qualifying projection-cache miss. Collect comparable full-impact samples after v2 cache seeding rather than mixing old/new cache architectures.
-3. **Validate rolling runtime-data stale-overlay timing:** sample 2 exercised it successfully across 12 changed blobs; record additional natural overlay samples for tail confidence, but no redesign is currently indicated.
-4. **Validate the implemented solver→research narrowing:** semantic fault injection is green; retain the historical #1722-equivalent route oracle / scoped timing gate before calling the 59-consumer explicit routing fully settled.
-5. **Main/default-branch confirmation after merge:** broad main-push validation and producer cache seeding must remain green before the program can be closed.
-6. **Only if post-v2 confirmation still misses:** distinguish useful-work regression from shared-runner/bootstrap variance. Resume targeted software/testability work only for a measured software tail; use reserved/larger compute if infrastructure variance is the limiting factor.
-7. **Deferred audits:** deadlock proof machinery, Firestore bootstrap, refreshed Node/coverage censuses, and larger-runner rehearsals remain documented fallbacks rather than automatic next work.
+1. **Get the repaired data-free coverage head fully green:** require Fast Gate, both Node shards, coverage, deep services, topology, semantic-fault, and solver-evidence guards on one exact head. The remaining known failures from the extraction were registry/metric-inventory bookkeeping and have been repaired.
+2. **Resume bounded p50/p90 confirmation:** retain run 36179322147 as qualifying sample 1; treat run 36180519546 as the diagnosed pre-v2 projection miss. Use only post-v2/data-free-coverage comparable heads for the new confirmation window.
+3. **Rehearse Node shard A without runtime-data materialization:** explicit dependency metadata places every declared `data/**` Node consumer in shard B. Run a no-data shard-A rehearsal before changing production; promote only if the full owner-A population is green.
+4. **Firestore/deep-services margin:** proofs already finish before Firestore once started. Do not split proofs merely to add a runner. If more p50 margin is needed, measure emulator startup versus repository-operation time and optimize the Firestore boundary/setup itself without weakening its semantic breadth.
+5. **Validate the implemented solver→research narrowing:** semantic fault injection is green; retain the historical #1722-equivalent route oracle / scoped timing gate before calling the 59-consumer explicit routing fully settled.
+6. **Main/default-branch confirmation after merge:** broad main-push validation and producer cache seeding must remain green before the program can be closed.
+7. **If post-v2 confirmation still misses because of shared-runner useful-work variance:** move to reserved/larger compute rather than deleting further merge-safety validation.
 
 Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence. Negative experiments stay documented so later agents do not repeat them.
 
