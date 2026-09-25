@@ -6,10 +6,13 @@ on:
       - 'scripts/**'
       - 'modules/**'
       - 'data/**'
-      - 'docs/hint-evidence-**'
-      - 'reports/**hint-evidence**'
-      - '.github/workflows/harvest-solver-evidence.yml'
-      - '.github/workflows/hint-consolidation-closeout.yml'
+      - 'docs/**hint**'
+      - 'docs/**provenance**'
+      - 'docs/solver-workflow-lifecycle.json'
+      - 'docs/solver-protocol-schema-contraction.json'
+      - 'reports/**hint**'
+      - '.github/workflows/**'
+      - 'package.json'
 
 permissions:
   contents: read
