@@ -132,20 +132,18 @@ The Phase-0 registry is intentionally coarse. A test belongs to exactly one exec
 
 Do not optimize the registry by name alone. Names were sufficient for inventory triage, not final proof ownership.
 
-## Active coarse-edge audit: production solver → whole research surface
+## Production solver downstream routing — explicit-consumer activation
 
 The current source-impact rule maps `modules/solver/**` to both `solver` and `research` because research tooling consumes production solver behavior downstream. After semantic Fast Gate activation, that conservative edge has become economically visible: it selects the entire research validator/Node group for every solver implementation change.
 
 The router already supports a better representation: a source path can select `solver`, while individual downstream contracts declare solver invalidation through `contractSurfaces` (and explicit non-import dependency metadata where needed).
 
-Do not narrow this edge from naming intuition. The dependency-local topology audit now emits an exact lower-bound `solverImplementationConsumers` list from resolved imports and declared subprocess entrypoints. Before changing the rule:
+Topology run 36103663827 emitted 59 exact lower-bound consumers from resolved imports and declared subprocess entrypoints. Those consumers are now explicitly tagged with `solver` invalidation and the production solver source rule selects only `solver`. Before declaring this settled:
 
-- inspect the emitted research-owned consumers;
-- account for filesystem/generated/env dependencies not visible in static imports;
-- add explicit solver surfaces only to genuine downstream consumers;
-- replay the known #1722 solver-semantic unique-catch case;
 - rerun the representative solver fault injection;
-- compare a solver-scoped rehearsal against the current `solver + research` population;
+- replay the known #1722 solver-semantic unique-catch case or equivalent route oracle;
+- compare a solver-scoped rehearsal against the prior `solver + research` population;
+- inspect any broad-oracle miss for filesystem/generated/env dependencies not represented by static imports;
 - retain conservative full fallback for routing authority/unknown impact and a broad oracle.
 
 If these gates pass, change the production-solver source rule to `solver` only and let contract ownership carry downstream research invalidation. This is semantic precision, not a blanket research-test demotion.
