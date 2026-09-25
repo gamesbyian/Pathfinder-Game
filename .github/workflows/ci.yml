@@ -37,6 +37,8 @@ jobs:
       needs_deep_proofs: ${{ steps.impact.outputs.needs_deep_proofs }}
       needs_firestore: ${{ steps.impact.outputs.needs_firestore }}
       fast_job_required: ${{ steps.impact.outputs.fast_job_required }}
+      build_job_required: ${{ steps.impact.outputs.build_job_required }}
+      planner_outcome: ${{ steps.impact.outcome }}
       deep_job_required: ${{ steps.impact.outputs.deep_job_required }}
       deep_services_job_required: ${{ steps.impact.outputs.deep_services_job_required }}
     steps:
@@ -91,10 +93,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Static checks need source/docs plus four runtime level documents. Hint source files are
-          # restored only if the runtime-Hint projection cache misses. This checkout
-          # is also sufficient for lint, Node/CLI contracts, and the production build, so those
-          # validations can share one runner and one dependency installation.
+          # Static checks need source/docs plus four runtime corpus documents. Production build
+          # runs independently so Fast Gate never needs runtime Hint sources or build-only assets.
           # fetch-depth 2 exposes the PR merge ref's base parent for incremental hygiene checks.
           fetch-depth: 2
           sparse-checkout: |
@@ -127,8 +127,6 @@ jobs:
           mkdir -p data/stress
           for file in \
             data/levels.json \
-            data/level-heatmaps.json \
-            data/themes.json \
             data/stress/stress-levels.json \
             data/stress/stress-levels-random.json \
             data/stress/stress-levels-envelope.json
@@ -242,42 +240,6 @@ jobs:
         id: lint
         continue-on-error: true
         run: npm run check:lint
-      - name: Derive runtime-hint projection cache identity
-        if: steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true'
-        id: runtime-hint-projection-key
-        shell: bash
-        run: node scripts/ci-runtime-hint-projection-cache.mjs key
-      - name: Restore exact or recent runtime-hint projection
-        if: steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true'
-        id: runtime-hint-projection-cache
-        uses: actions/cache/restore@v5
-        with:
-          path: .cache/runtime-hint-projection
-          key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
-          restore-keys: |
-            runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-
-      - name: Restore runtime Hint sources for projection miss
-        if: (steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true') && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/runtime-data
-
-      - name: Plan runtime-hint projection overlay
-        if: (steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true') && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: node scripts/ci-runtime-hint-projection-cache.mjs plan
-      - name: Build production bundle
-        if: steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true'
-        id: build
-        continue-on-error: true
-        env:
-          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
-          PATHFINDER_RUNTIME_HINT_PROJECTION_RECONCILE: ${{ steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && '1' || '0' }}
-        run: npm run build
-      - name: Save exact runtime-hint projection after successful build
-        if: (steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true') && steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
-        with:
-          path: .cache/runtime-hint-projection
-          key: runtime-hint-projection-v2-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.authority_key }}-${{ steps.runtime-hint-projection-key.outputs.source_key }}
       - name: Summarize and enforce fast-gate
         if: always()
         shell: bash
@@ -286,11 +248,8 @@ jobs:
           TEXT_SOURCE: ${{ steps.text_source.outcome }}
           VALIDATORS: ${{ steps.validators.outcome }}
           LINT: ${{ steps.lint.outcome }}
-          RUN_BUILD: ${{ steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true' }}
-          BUILD: ${{ steps.build.outcome }}
         run: |
           failed=0
-          if [[ "$RUN_BUILD" != "true" ]]; then BUILD="skipped"; fi
           {
             echo '## CI fast gate'
             echo
@@ -300,7 +259,6 @@ jobs:
             printf '| Textual source invariants | `%s` |\n' "$TEXT_SOURCE"
             printf '| Repository/domain validators | `%s` |\n' "$VALIDATORS"
             printf '| Lint | `%s` |\n' "$LINT"
-            printf '| Production build | `%s` |\n' "$BUILD"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
           for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT; do
@@ -311,16 +269,21 @@ jobs:
               echo "::error::CI fast-gate group $name finished with $status."
             fi
           done
-          if [[ "$RUN_BUILD" == "true" && "$BUILD" != "success" ]]; then
-            failed=1
-            echo "::error::CI fast-gate group BUILD finished with $BUILD."
-          fi
           if [[ "$failed" == "0" ]]; then
             echo 'All fast-gate validation groups passed.' >> "$GITHUB_STEP_SUMMARY"
           else
             echo 'One or more fast-gate groups failed. The table above is the first inspection surface; open only the failed group steps for detail.' >> "$GITHUB_STEP_SUMMARY"
           fi
           exit "$failed"
+
+  # Build is semantically independent from validators/lint. It starts after the tiny impact
+  # planner so unrelated PRs do not allocate another runner; planner failure still fails safe.
+  production-build:
+    needs: impact-shadow
+    if: always() && (needs.impact-shadow.outputs.planner_outcome != 'success' || needs.impact-shadow.outputs.build_job_required == 'true')
+    uses: ./.github/workflows/ci-production-build.yml
+    with:
+      ref: ${{ github.sha }}
 
   # Node/CLI contracts run in a reusable two-shard execution-owner workflow. Keeping its
   # bootstrap out of this file preserves the main CI workflow's size/testability boundary.
