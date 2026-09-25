@@ -44,6 +44,8 @@ Workflow plumbing has failure modes that ordinary source tests cannot fully mode
 
 Prioritize **plausible false success** over loud failure: a workflow that silently drops inputs and publishes a credible negative/incomplete research result is more dangerous than one that crashes.
 
+For PR-incremental validators, also inspect **cost topology**, not only selected-file count. A changed-file optimization is not cheap if each sparse path launches its own Git/process/network operation. Bulk migrations are the adversarial cardinality case: prefer one batched repository/object read (or a small bounded number of batches), preserve the exact semantic population, and keep a many-file regression fixture for shared repository-view helpers. PR #2072 is the canonical cautionary example: the text invariant itself was trivial, but per-file sparse blob subprocesses expanded one Fast Gate step to 6m47s.
+
 ## Guardrail-to-guidance map
 
 When touching these surfaces, follow the authoring rule before relying on the corresponding validator to teach it after push.
