@@ -121,6 +121,7 @@
       "test:merge-variant-family-dataset-shards",
       "test:combine-static-portfolio-shards",
       "test:data-asset-runtime-smoke",
+      "test:data-assets-contract",
       "test:hint-termination-semantics",
       "test:hint-discovery-process-cli",
       "test:hint-harvest-selection-manifest",
@@ -573,6 +574,9 @@
       ],
       "test:eslint-rules-contract": [
         "repo"
+      ],
+      "test:data-assets-contract": [
+        "data"
       ]
     },
     "validators": {
