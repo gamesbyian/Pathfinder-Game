@@ -251,4 +251,5 @@ This plan is complete only when:
 1. Add a static research-workflow bootstrap/topology audit.
 2. Produce the current starting census.
 3. Reconcile the solver queue with this supporting program and post-September-22 architecture.
-4. Use the census to choose the first exact-runtime rehearsal and bootstrap measurement; do not bulk-edit every workflow before evidence.
+4. Use hosted historical timing to prioritize short planner/canary/combine jobs: exact runtime identity first, then sparse/input materialization, then exact dependency-tree reuse. Long solve shards stay measurement-gated.
+5. Do not bulk-edit every workflow before representative parity evidence.
