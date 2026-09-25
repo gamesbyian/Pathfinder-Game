@@ -109,8 +109,23 @@ already established.
 
 ## Protocol (for dispatch time, not dispatched here)
 
-- Source: `research:generate-levels -- --method=random`, the same witness-first source as both prior
-  stages, for direct comparability.
+- Source/generation command, frozen exactly:
+
+  ```sh
+  npm run research:generate-levels -- \
+    --method=random \
+    --count=160 \
+    --master-seed=2026092501 \
+    --question-id=WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE \
+    --evidence-role=confirmation \
+    --block-id=ws1-late-continuation-single-001 \
+    --id-prefix=U \
+    --out=tmp/ws1-late-continuation-single-001/corpus.json \
+    --manifest=tmp/ws1-late-continuation-single-001/generation-manifest.json
+  ```
+
+  This is the same witness-first random source as both prior stages. Do not add `--overwrite`,
+  envelope caps, passthrough generator flags, or substitute another source.
 - Count: **160** independent fresh parents.
 - Master seed: **`2026092501`**, frozen in this plan. Repo search on 2026-09-25 found no existing use
   of this seed. Do not substitute another seed at dispatch time.
@@ -135,6 +150,21 @@ already established.
   model + integrity/reporting deterministically. Reuse existing generation, portfolio-sweep, combiner,
   experiment-contract and publication primitives; do not create a second solver implementation or
   alternate row schema. The one-shot workflow is retired after the result is durably recorded.
+
+## Plan-quality closure
+
+Sibling machine closure contract:
+`reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.quality.json`.
+
+Before workflow implementation, require:
+
+```sh
+npm run plan:quality -- --plan=reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md
+```
+
+The quality contract owns the exact generation/population proof, portfolio-producer identity,
+complete 160-row solve contract, frozen-model criteria, splash-zone reconciliation, and one-shot
+workflow retirement proof.
 
 ## What this plan does not authorize
 
