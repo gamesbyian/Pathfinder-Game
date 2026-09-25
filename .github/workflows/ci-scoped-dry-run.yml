@@ -212,9 +212,6 @@ jobs:
             !/reports/
             !/data/
           sparse-checkout-cone-mode: false
-      - name: Restore component runtime data
-        uses: ./.github/actions/runtime-data
-
       - name: Derive exact dependency-tree cache key
         id: dependency-tree-key
         shell: bash
