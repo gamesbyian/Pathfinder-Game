@@ -162,12 +162,18 @@ export function provenanceDependencyStratum(entry) {
         return match ? `variant-family:${match[1]}:parent:${match[2]}` : 'variant-family:unknown';
     }
     if (origin !== 'pathfinder-solver') return origin;
+    const capabilityContext = entry?.context?.isolatedTechnique === true
+        ? 'isolated'
+        : !hasExplicitCapabilityContext(entry)
+            ? 'unknown-context'
+            : entry?.context?.hintGuided === true || entry?.context?.usedExistingHints === true
+                ? 'hint-context'
+                : 'cold-context';
     return [
         origin,
         entry?.solver?.version || 'unknown-version',
         provenanceTechniqueKey(entry),
-        entry?.context?.isolatedTechnique === true ? 'isolated' : 'ladder',
-        entry?.context?.hintGuided === true || entry?.context?.usedExistingHints === true ? 'hint-context' : 'cold-context',
+        capabilityContext,
     ].join('|');
 }
 
