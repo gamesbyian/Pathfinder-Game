@@ -47,66 +47,9 @@ jobs:
             /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
             !/data/
           sparse-checkout-cone-mode: false
-      - name: Derive runtime-data cache key
-        id: runtime-data-key
-        shell: bash
-        run: |
-          {
-            git rev-parse HEAD:data/levels.json
-            git rev-parse HEAD:data/level-heatmaps.json
-            git rev-parse HEAD:data/themes.json
-            git rev-parse HEAD:data/hints
-            git rev-parse HEAD:data/stress/stress-levels.json
-            git rev-parse HEAD:data/stress/stress-levels-random.json
-            git rev-parse HEAD:data/stress/stress-levels-envelope.json
-            git rev-parse HEAD:data/stress/hints
-            git rev-parse HEAD:data/stress/hints-random
-            git rev-parse HEAD:data/stress/hints-envelope
-          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
-      - name: Restore exact runtime-data tree
-        id: runtime-data-cache
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            data/levels.json
-            data/level-heatmaps.json
-            data/themes.json
-            data/hints
-            data/stress/stress-levels.json
-            data/stress/stress-levels-random.json
-            data/stress/stress-levels-envelope.json
-            data/stress/hints
-            data/stress/hints-random
-            data/stress/hints-envelope
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
-      - name: Materialize runtime data on cache miss
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 2
-          sparse-checkout: |
-            /*
-            !/logs/*
-            /logs/artifact-metadata.json
-            /logs/solver-canary-baseline.json
-            /logs/*.md
-            /logs/**/*.md
-            !/reports/*
-            /reports/*.md
-            /reports/*.json
-            /reports/**/*.md
-            /reports/stress/experiment-evidence/**/manifest.json
-            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
-            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
-            /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
-            /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
-            /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
-            /reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json
-            /reports/stress/lane-e-multi-pick-bisection-2026-09-17.json
-            /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
-            /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
-            /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
-          sparse-checkout-cone-mode: false
+      - name: Restore component runtime data
+        uses: ./.github/actions/runtime-data
+
       - name: Derive exact dependency-tree cache key
         id: dependency-tree-key
         shell: bash
