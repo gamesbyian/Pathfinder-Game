@@ -48,9 +48,7 @@ const workflowRuns = [...workflow.matchAll(/^\s*run:\s*npm run ([A-Za-z0-9:_-]+)
 const expectedWorkflowInvocations = [
   'check:dead-scripts',
   'check:text-source-files',
-  'check:validators',
   'check:lint',
-  'test:node',
   'build',
   'test:coverage',
   'test:deep-proofs',
@@ -69,6 +67,15 @@ for (const actual of workflowRuns) {
   }
 }
 
+for (const [family, fallback] of [['validators', 'check:validators'], ['nodeTests', 'test:node']]) {
+  if (!new RegExp(`validation-groups\\.mjs\\s+${family}\\s+\\$groups`, 'u').test(workflow)) {
+    errors.push(`ci.yml no longer executes selected ${family} through validation-groups.mjs`);
+  }
+  if (!workflow.includes(`npm run ${fallback}`)) {
+    errors.push(`ci.yml no longer fails safe to the full ${fallback} aggregate when routing fails`);
+  }
+}
+
 if (!/SOLVER_DEADLOCK_PROOF_SKIP:\s*['"]1['"]/.test(workflow)) {
   errors.push('ci.yml coverage step no longer records SOLVER_DEADLOCK_PROOF_SKIP=1');
 }
@@ -77,9 +84,10 @@ if (!/SOLVER_R02560_PROOF_SKIP:\s*['"]1['"]/.test(workflow)) {
 }
 
 // The local finish lines intentionally add the production build after the package-level
-// ci/ci:fast commands. The Actions deep lane partitions four heavyweight proof files out of
-// coverage and runs them explicitly, while local `ci` runs the unpartitioned coverage population.
-// Keep these two documented equivalences explicit so a new deterministic Actions command cannot
+// ci/ci:fast commands. Actions may select semantic validator/Node subsets for a PR, while the
+// package-level local commands remain conservative full aggregates. The Actions deep lane
+// partitions explicit heavyweight soundness proofs out of coverage and runs them separately.
+// Keep these documented equivalences explicit so a new deterministic Actions command cannot
 // quietly become a GitHub-only rule.
 const preflight = fs.readFileSync(path.join(root, 'docs', 'ci-preflight.md'), 'utf8');
 if (!preflight.includes('npm run ci:fast && npm run build')) {
