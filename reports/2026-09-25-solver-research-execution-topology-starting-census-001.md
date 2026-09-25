@@ -1,9 +1,9 @@
 # Research workflow execution-topology starting census — 2026-09-25
 
-> **Status:** active
+> **Status:** activation in progress
 > **Last evidence:** 2026-09-25 — exact-runtime parity run 36190221008 and full-vs-sparse targeted-planner rehearsal runs 36187498364 / 36190221143.
-> **Decision:** targeted-planner sparse input contract and exact Node 22.23.2 semantic parity are earned; do not blanket-optimize long solve shards.
-> **Remaining gate:** pin the earned exact research runtime and transplant the earned sparse boundary into short orchestration, then measure exact dependency-tree reuse.
+> **Decision:** exact Node 22.23.2 is activated for the seven maintained workflows built on the rehearsed level-blind/history-aware producers; targeted-sweep planning now uses the earned sparse input boundary without narrowing caller-selected corpus/ID semantics.
+> **Remaining gate:** classify the four non-producer helper/integrity workflows that still float Node 20, then measure exact dependency-tree reuse where bootstrap economics are material.
 
 ## Purpose
 
@@ -132,3 +132,23 @@ Decision: **sparse materialization is earned for this targeted planner/canary bo
 Run `36190221008` compared exact **Node 20.20.2** with CI-proven **Node 22.23.2** after fixing the rehearsal's explicit level-selector contract. Both arms successfully ran the real bundled level-blind and history-aware portfolio producers. After removing only the intentionally different runtime identity field, the semantic fingerprints were byte-identical.
 
 Decision: **Node 22.23.2 is semantically cleared as the candidate exact research runtime for these primary producers.** Production research workflow pinning remains an activation step, not something inferred from a major-version selector.
+
+
+## Activation update — 2026-09-25
+
+The first production activation deliberately follows the rehearsal boundary rather than chasing superficial uniformity.
+
+Pinned to exact Node **22.23.2** at every setup site:
+- `solver-level-blind-targeted-sweep.yml`;
+- `solver-stress-refresh.yml`;
+- `solver-broad-confirmation.yml`;
+- `solver-residual-confirmation.yml`;
+- `solver-routing-regime-sample-ab.yml`;
+- `solver-highbudget-unsolved-sweep.yml`;
+- `solver-production-replay-baseline.yml`.
+
+Those workflows execute the two producer families exercised by runtime parity run 36190221008. The remaining maintained workflow census members are orchestration/harvest/diagnostic/integrity surfaces and are not silently declared scientifically covered by that producer parity result.
+
+The targeted-sweep `plan` job now uses the rehearsed sparse materialization contract. It explicitly retains package manifests, scripts, modules, default Corpus-2, and runtime telemetry. A caller-selected `corpus` is materialized from `HEAD:<path>` before planning/canary execution, and a caller-selected `ids_file` is read from the same immutable dispatched commit rather than requiring the blob to have been physically present in the sparse worktree. This preserves the workflow's existing dispatch semantics while avoiding whole-tree materialization.
+
+The production workflow was also reduced in size during activation rather than raising its grandfathered no-growth ceiling.
