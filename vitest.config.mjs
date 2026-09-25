@@ -44,7 +44,7 @@ export default defineConfig({
                 'modules/**/types.ts',
                 'modules/solver/testing-api.ts',
             ],
-            thresholds: process.env.PATHFINDER_COVERAGE_SHARD === '1' ? undefined : {
+            thresholds: {
                 statements: 82,
                 branches: 72,
                 functions: 90,
