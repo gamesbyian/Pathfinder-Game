@@ -74,7 +74,7 @@ on:
       max_parallel:
         description: 'Solve jobs running concurrently, within each phase.'
         required: false
-        default: '20'
+        default: '15'
       deterministic:
         description: 'true forces a 24h non-binding deadline for reproducible (bit-identical) nodes/work. Keep true for a decision-bearing confirmation.'
         required: false
