@@ -12,8 +12,8 @@
       "workflow": "ci-deep-concurrency-benchmark.yml",
       "role": "operational",
       "status": "maintained",
-      "currentConsumer": "evidence-only CI deep same-runner concurrency measurement",
-      "retirementTrigger": "retire after the <=35s critical-path program settles deep execution topology and this standalone rehearsal no longer adds decision value"
+      "currentConsumer": "manual evidence-only CI deep same-runner concurrency measurement",
+      "retirementTrigger": "retire after the <=35s critical-path program settles deep execution topology and this manual rehearsal no longer adds decision value"
     },
     {
       "workflow": "ci-node-concurrency-benchmark.yml",
@@ -117,15 +117,15 @@
       "workflow": "hint-consolidation-closeout.yml",
       "role": "operational",
       "status": "maintained",
-      "currentConsumer": "pull-request gate re-running post-enrichment Hint evidence oracles (determinism, reconstructability, referee, codec/v4 migration dry-run) on hint-evidence-consolidation-relevant changes",
-      "retirementTrigger": "retire when the hint-evidence-consolidation plan closes out and its oracles fold into a permanently maintained validation surface"
+      "currentConsumer": "manual forensic closeout/reproducibility audit for the completed Hint evidence consolidation",
+      "retirementTrigger": "delete when no further post-closeout forensic reruns are useful; it is no longer an automatic PR gate"
     },
     {
       "workflow": "hint-provenance-hostile-audit.yml",
       "role": "operational",
       "status": "maintained",
-      "currentConsumer": "pull-request hostile completion audit for Hint/provenance physical-reader, central-persistence and semantic-consumer invariants",
-      "retirementTrigger": "retire only after its fail-closed physical-reader/persistence invariants are absorbed into permanent ordinary validation"
+      "currentConsumer": "manual hostile Hint/provenance forensic audit; durable physical-reader/persistence/consumer invariants are owned by ordinary validation",
+      "retirementTrigger": "delete when the standalone hostile audit no longer adds forensic value beyond ordinary validation"
     },
     {
       "workflow": "main-push-validation.yml",
