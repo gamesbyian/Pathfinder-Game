@@ -1,6 +1,6 @@
 # Hint evidence consolidation — Phase 3 closeout: PSC-029 retirement + stage-identity decision — 001
 
-> **Status:** historical closeout claim; superseded by PR #2072 hostile audit
+> **Status:** superseded
 > **Last evidence:** 2026-09-24 — the hostile completion audit found that this closeout covered distinct semantic events on one path but did not cover the same semantic event acquired in a new run/attempt.
 > **Decision:** Preserve this report as evidence of the first Phase-3 closure, but do not use its original completion claim as current authority. PR #2072 corrected local Firestore occurrence persistence so same-event/new-occurrence acquisitions survive and exact retries remain idempotent.
 > **Remaining gate:** current authority is `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`; whole-program closure still requires its exact-head Firestore/emulator and closeout gates.
