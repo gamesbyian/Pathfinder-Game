@@ -7,7 +7,16 @@ const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 const lifecycle = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/solver-workflow-lifecycle.json'), 'utf8'));
 const exceptionLedger = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/hint-workflow-persistence-audit.json'), 'utf8'));
 const maintained = new Set((lifecycle.workflows ?? []).filter(row => row.status === 'maintained').map(row => row.workflow));
-const exceptions = new Map((exceptionLedger.entries ?? []).map(entry => [entry.workflow, entry]));
+const exceptions = new Map();
+for (const entry of exceptionLedger.entries ?? []) {
+    if (exceptions.has(entry.workflow)) {
+        throw new Error(`${entry.workflow}: duplicate Hint workflow persistence exception`);
+    }
+    if (entry.disposition !== 'family-research-direct-persistence') {
+        throw new Error(`${entry.workflow}: unknown Hint workflow persistence disposition ${JSON.stringify(entry.disposition)}`);
+    }
+    exceptions.set(entry.workflow, entry);
+}
 
 function executableLines(text) {
     return text.split(/\r?\n/u)
