@@ -368,26 +368,6 @@ jobs:
         id: lint
         continue-on-error: true
         run: npm run check:lint
-      - name: Run selected Node and CLI contract tests
-        id: node_tests
-        continue-on-error: true
-        shell: bash
-        env:
-          NODE_TEST_GROUPS: ${{ steps.validation_selection.outputs.node_test_groups }}
-          ROUTER_OUTCOME: ${{ steps.validation_selection.outcome }}
-          PATHFINDER_PARALLEL_JOBS: '4'
-          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
-          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
-        run: |
-          if [[ "$ROUTER_OUTCOME" != "success" ]]; then
-            echo "Local impact routing failed; running the full Node/CLI aggregate."
-            npm run test:node
-          elif [[ -z "$NODE_TEST_GROUPS" ]]; then
-            echo "No Node/CLI contract groups selected."
-          else
-            groups="${NODE_TEST_GROUPS//,/ }"
-            node scripts/validation-groups.mjs nodeTests $groups
-          fi
       - name: Derive runtime-hint projection cache key
         if: steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true'
         id: runtime-hint-projection-key
@@ -430,7 +410,6 @@ jobs:
           TEXT_SOURCE: ${{ steps.text_source.outcome }}
           VALIDATORS: ${{ steps.validators.outcome }}
           LINT: ${{ steps.lint.outcome }}
-          NODE_TESTS: ${{ steps.node_tests.outcome }}
           RUN_BUILD: ${{ steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true' }}
           BUILD: ${{ steps.build.outcome }}
         run: |
@@ -445,11 +424,10 @@ jobs:
             printf '| Textual source invariants | `%s` |\n' "$TEXT_SOURCE"
             printf '| Repository/domain validators | `%s` |\n' "$VALIDATORS"
             printf '| Lint | `%s` |\n' "$LINT"
-            printf '| Node + CLI contracts | `%s` |\n' "$NODE_TESTS"
             printf '| Production build | `%s` |\n' "$BUILD"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
-          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS; do
+          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT; do
             status="${!name}"
             printf '%-14s %s\n' "$name" "$status"
             if [[ "$status" != "success" ]]; then
@@ -467,6 +445,176 @@ jobs:
             echo 'One or more fast-gate groups failed. The table above is the first inspection surface; open only the failed group steps for detail.' >> "$GITHUB_STEP_SUMMARY"
           fi
           exit "$failed"
+
+  # Node/CLI contracts are split by disjoint registry execution ownership. Both runners compute
+  # the same semantic plan locally so this speedup does not serialize behind impact-shadow.
+  node-contracts:
+    name: node-contracts-${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: a
+            owner_groups: research,solver,game,persistence
+          - shard: b
+            owner_groups: shared,data,repo
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/*
+            /logs/artifact-metadata.json
+            /logs/solver-canary-baseline.json
+            /logs/*.md
+            /logs/**/*.md
+            !/reports/*
+            /reports/*.md
+            /reports/*.json
+            /reports/**/*.md
+            /reports/stress/experiment-evidence/**/manifest.json
+            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
+            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
+            /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
+            /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
+            /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
+            /reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json
+            /reports/stress/lane-e-multi-pick-bisection-2026-09-17.json
+            /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
+            /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
+            /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
+            !/data/
+          sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore exact runtime-data tree
+        id: runtime-data-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+      - name: Materialize runtime data on cache miss
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            /*
+            !/logs/*
+            /logs/artifact-metadata.json
+            /logs/solver-canary-baseline.json
+            /logs/*.md
+            /logs/**/*.md
+            !/reports/*
+            /reports/*.md
+            /reports/*.json
+            /reports/**/*.md
+            /reports/stress/experiment-evidence/**/manifest.json
+            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/bundle.json
+            /reports/stress/experiment-evidence/35467098808__run-35467098808__attempt-1/evidence/primary/result.json
+            /reports/stress/failure-evidence/class3-dose-expectations-2026-09-19.json
+            /reports/stress/lane-a-c0-exact-label-projection-2026-09-20.json
+            /reports/stress/lane-a-frozen-prefix-population-2026-09-18.json
+            /reports/stress/class5-separator-decomposition-census-2026-09-18-with-geometry.json
+            /reports/stress/lane-e-multi-pick-bisection-2026-09-17.json
+            /reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json
+            /reports/stress/failure-evidence/ws2-class3-shared-acquisition-population-2026-09-20.json
+            /reports/stress/failure-evidence/ws2-reconnaissance-solved-control-sample-2026-09-19.json
+          sparse-checkout-cone-mode: false
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Set up Node on warm dependency-tree path
+        if: steps.dependency-tree-cache.outputs.cache-hit == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Set up Node with npm cache on dependency-tree miss
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Install dependencies from the npm cache
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Compute local Node validation selection
+        id: node-selection
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            node scripts/ci-impact-shadow-plan.mjs --git-diff HEAD^1 HEAD --out=tmp/ci-node-${{ matrix.shard }}-plan.json
+          else
+            node scripts/ci-impact-shadow-plan.mjs --full --out=tmp/ci-node-${{ matrix.shard }}-plan.json
+          fi
+      - name: Run selected Node and CLI contract shard
+        id: node_tests
+        continue-on-error: true
+        shell: bash
+        env:
+          NODE_TEST_GROUPS: ${{ steps.node-selection.outputs.node_test_groups }}
+          ROUTER_OUTCOME: ${{ steps.node-selection.outcome }}
+          OWNER_GROUPS: ${{ matrix.owner_groups }}
+          PATHFINDER_PARALLEL_JOBS: '4'
+          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
+        run: |
+          if [[ "$ROUTER_OUTCOME" != "success" ]]; then
+            echo "Local impact routing failed; running this shard's full execution-owner partition."
+            groups="repo game persistence solver research data shared"
+          elif [[ -z "$NODE_TEST_GROUPS" ]]; then
+            echo "No Node/CLI contract groups selected."
+            exit 0
+          else
+            groups="${NODE_TEST_GROUPS//,/ }"
+          fi
+          node scripts/validation-groups.mjs nodeTests $groups --owner-groups="$OWNER_GROUPS"
+      - name: Enforce Node shard
+        if: always()
+        shell: bash
+        env:
+          NODE_TESTS: ${{ steps.node_tests.outcome }}
+        run: |
+          echo "Node contract shard ${{ matrix.shard }}: $NODE_TESTS" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$NODE_TESTS" != "success" ]]; then
+            echo "::error::CI Node shard ${{ matrix.shard }} finished with $NODE_TESTS."
+            exit 1
+          fi
 
   # Coverage, heavyweight implementation proofs, and Firestore share one runner/install.
   # This lane is impact-scoped for PRs. Solver/game/persistence/shared and conservative full-impact
