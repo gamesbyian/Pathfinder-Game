@@ -53,19 +53,19 @@ This variability is now itself evidence. Shared hosted runners vary materially n
 
 The current biggest permanent-speed opportunities, in order of expected leverage, are:
 
-1. **Same-runner deep overlap:** rehearse ordinary covered Vitest concurrently with the already-overlapped heavyweight proofs + Firestore boundary. This preserves all obligations and could remove most of the current 14–15 s serial tail if 4-core contention is tolerable.
-2. **Node/CLI contract testability:** refresh per-contract timings, then attack structural tails: import-time corpus scans, repeated large-corpus parsing, avoidable subprocess/CLI wrappers, repository-wide discovery in synthetic tests, redundant fixture construction, and tests that invoke real solver/search work for bookkeeping-only assertions. Do not resume shared-runner shard-count tuning.
-3. **Covered Vitest testability:** refresh the slow-file/slow-test census from the JSON reporter and make expensive assertions cheaper without weakening coverage or converting real integration semantics into mocks. Preserve balanced coverage sharding as a proven topology for larger/reserved compute.
-4. **Heavy proof witnesses:** inspect the longest proof fixtures for smaller deterministic witnesses, tighter work budgets, or reusable setup while preserving the same property. Internal parallelism is already near the current 4-core limit.
-5. **Firestore boundary:** split emulator/bootstrap cost from rule-test cost; remove duplicated initialization/materialization if present; preserve the full rules proof.
-6. **Residual bootstrap/cache critical path:** audit serialized exact-cache restores, setup-node, TypeScript state, validator/lint sequencing, and duplicate repository discovery. Treat each as a measured small-opportunity audit, not a reason to weaken validation.
-7. **Larger/reserved compute:** benchmark the already-proven balanced Node and coverage topologies on more predictable compute after software costs are slimmed. At least 16 logical CPUs remains the initial capacity target.
-8. **Cadence/impact routing:** continue using the separate historical-value/impact-routing program to avoid irrelevant work. Do not use cadence demotion as a substitute for making the fullest selected form fast.
+1. **Node/CLI contract testability:** use the new machine-readable per-contract timing profiles, then attack structural tails: import-time corpus scans, repeated large-corpus parsing, avoidable subprocess/CLI wrappers, repository-wide discovery in synthetic tests, redundant fixture construction, and tests that invoke real solver/search work for bookkeeping-only assertions. Do not resume shared-runner shard-count tuning.
+2. **Covered Vitest testability:** refresh the slow-file/slow-test census from the JSON reporter and make expensive assertions cheaper without weakening coverage or converting real integration semantics into mocks. Preserve balanced coverage sharding as a proven topology for larger/reserved compute.
+3. **Heavy proof witnesses:** inspect the longest proof fixtures for smaller deterministic witnesses, tighter work budgets, or reusable setup while preserving the same property. Internal parallelism is already near the current 4-core limit.
+4. **Firestore boundary:** split emulator/bootstrap cost from rule-test cost; remove duplicated initialization/materialization if present; preserve the full rules proof.
+5. **Residual bootstrap/cache critical path:** audit serialized exact-cache restores, setup-node, TypeScript state, validator/lint sequencing, and duplicate repository discovery. Treat each as a measured small-opportunity audit, not a reason to weaken validation.
+6. **Larger/reserved compute:** benchmark the already-proven balanced Node and coverage topologies on more predictable compute after software costs are slimmed. Re-test internal deep overlap there because the 4-core negative result is contention-specific. At least 16 logical CPUs remains the initial capacity target.
+7. **Cadence/impact routing:** continue using the separate historical-value/impact-routing program to avoid irrelevant work. Do not use cadence demotion as a substitute for making the fullest selected form fast.
 
 Closed or currently low-value directions:
 
 - **bulk text invariant:** closed by #2107 with a permanent 1,500-file sparse regression;
 - **same-runner Node fan-out tuning:** direct 4-worker execution is preferred; npm mediation is worse;
+- **three-way deep overlap on a standard 4-core runner:** run 36090175972 stayed semantically green but stretched coverage/proofs/Firestore to 43.0/21.0/29.0 s and only reduced the serial sibling window by roughly 3 s;
 - **more shared-hosted Node/coverage shards:** semantically proven but p90 margin is inadequate because of hosted variance;
 - **solver canary, lint, warm build:** now ~1–2 s each and no longer priority targets;
 - **coverage threshold reduction, proof deletion, fixture deletion solely for speed:** prohibited by the protected validation contract.
@@ -472,46 +472,24 @@ The earlier five-shared-runner candidate is **superseded**. D1 and D2 proved tha
 
 Forward topology work is now:
 
-1. test **same-runner deep overlap** first, because it removes serial work without adding runner assignment;
-2. keep the proven two-way Node and balanced coverage partitions as ready-to-use building blocks for larger/reserved compute;
-3. do not add a separate aggregation runner to the production critical path;
-4. after testability reductions, benchmark a larger/reserved runner with internal parallelism and measure p50/p90 across comparable full-impact runs.
+1. keep the proven two-way Node and balanced coverage partitions as ready-to-use building blocks for larger/reserved compute;
+2. do not add a separate aggregation runner to the production critical path;
+3. do not promote three-way deep overlap on the standard 4-core runner: run 36090175972 measured a **43.018 s** concurrent validation window despite all semantics passing;
+4. after testability reductions, benchmark a larger/reserved runner with internal parallelism and measure p50/p90 across comparable full-impact runs. The 4-core overlap result does not veto overlap on materially larger compute.
 
-### D1. Two-way Node/CLI sharding — current rehearsal
+### D1 final result: shared-runner Node sharding closes negative
 
-The current Node/CLI registry has grown to **204 contracts**, so the old 176-contract timing projection is obsolete.
+The current registry had grown to 204 contracts when the decisive two-way partition was measured. After #2091 removed the non-hermetic tracked-hint mutation race, run **36068242014** measured:
 
-Corrected warm full-control run in #2088 measured:
-
-- full Node/CLI population: **32 s useful step / 48 s runner wall**;
-- summed child time: **99.3 s**.
-
-A timing profile rebuilt directly from that run balances the current registry at:
-
-- shard 1: **49.6 child-seconds / 136 contracts**;
-- shard 2: **49.7 child-seconds / 68 contracts**.
-
-Hosted rehearsal 36066406943:
-
-| lane | useful Node step | runner wall | result |
+| lane | useful Node work | runner wall | result |
 | --- | ---: | ---: | --- |
-| full warm control | 32 s | 48 s | green |
-| shard 1 | 16 s | 29 s | red: one shared-state test race |
-| shard 2 | 13 s | 24 s | green |
+| full warm control | 31 s | 50 s | green |
+| shard 1 | **17 s** | **27 s** | green |
+| shard 2 | **14 s** | **38 s** | green |
 
-First shard runner start to both shard completions was **29 s**, inside the 35-second full-gate objective with ~6 s margin.
+The partition is semantically valid and useful work balances well, but one ordinary shard still reached 38 s because bootstrap/effective-runner variance consumed the target margin. Later direct four-worker runs ranging from roughly 20 s to 36 s reinforce that shared-runner effective capacity is itself variable.
 
-The shard-1 failure is not a timing-profile or selection failure. `test:harvest-solver-diagnostics-reports` deliberately rewrote the tracked `data/hints/P00001.json` while the Node-contract runner executed other corpus readers concurrently. One reader observed the file between truncate/write operations and failed with `SyntaxError: Unexpected end of JSON input`.
-
-This exposes a hidden non-hermetic test boundary that the monolithic four-worker schedule happened not to trigger in that run. The repair is to make the diagnostics harvester accept an injected corpus path and run the regression against a private one-level temporary corpus, preserving the real P00001 level/hint semantics without mutating repository state.
-
-Decision gate:
-
-1. land the hermetic diagnostics-harvest regression;
-2. rerun the exact current two-way shard rehearsal;
-3. if both shard runner walls remain ≤27–30 s and first-shard-start → both-complete remains ≤35 s, two-way standard-runner Node sharding remains viable;
-4. if timing then fails, stop shard-count tuning and move to the larger/reserved-runner fallback already defined in Phase E.
-
+Decision: **do not tune or promote more shared-hosted Node shards**. Preserve measured partition machinery for larger/reserved compute and pursue current per-contract testability instead.
 
 ### D2 final result: shared-runner coverage sharding closes negative
 
@@ -532,21 +510,22 @@ All tests and unchanged production coverage thresholds remained green. The remai
 
 Decision: stop shared-runner coverage topology tuning. D1 and D2 independently show the same pattern: useful validation work fits, but standard hosted-runner bootstrap/variance exhausts the hard ≤35 s budget. Future sharding evidence remains useful for a larger/reserved runner, but production should not add shared hosted lanes merely to move work around.
 
-### B6. Full same-runner deep concurrency rehearsal
+### B6 result: three-way same-runner deep concurrency closes negative on 4 cores
 
-After B3, the warm deep path is roughly **12 s bootstrap + 21 s coverage + 12 s concurrent proofs/Firestore**.
+Evidence-only workflow run **36090175972** launched the unchanged covered ordinary Vitest population, heavyweight solver proofs, and Firestore persistence boundary together on one standard hosted runner. Every semantic obligation passed with unchanged coverage thresholds.
 
-The last single-runner packing experiment launches all three unchanged deep obligations together after one warm bootstrap:
+Measured child wall:
 
-- ordinary covered implementation population with existing thresholds;
-- heavyweight solver proofs;
-- Firestore persistence boundary.
+| obligation | concurrent child wall |
+| --- | ---: |
+| covered ordinary Vitest | **43.014 s** |
+| heavyweight solver proofs | **21.039 s** |
+| Firestore boundary | **29.013 s** |
+| total concurrent validation window | **43.018 s** |
 
-All child exit codes and logs remain independent.
+The sibling production deep lane on the same PR ran the current serial shape at roughly **30 s coverage + 16 s proofs/Firestore**. Three-way overlap therefore saved only about **3 s** while substantially slowing every child through CPU/contention pressure.
 
-Decision:
-- if the combined validation window stays around **20–22 s**, production deep can plausibly approach the 35 s target without coverage sharding;
-- if CPU contention pushes the window materially higher, the 4-core single-runner deep path is exhausted and further work must reduce the proof population itself or change compute infrastructure.
+Decision: **do not promote three-way deep overlap on the standard 4-core runner**. The 4-core single-runner packing path is exhausted. Keep the workflow as evidence infrastructure until the larger/reserved-runner experiment, where materially more cores may change the result.
 
 ### Phase E: hosted-runner variance decision
 
@@ -580,14 +559,13 @@ This fallback is preferable to removing validation solely because shared hosted-
 
 ## Current forward work order
 
-1. **Deep same-runner concurrency rehearsal:** run ordinary covered Vitest concurrently with unchanged heavyweight proofs and Firestore; preserve independent logs/exit codes and unchanged coverage thresholds.
-2. **Fresh Node/CLI census:** regenerate current per-contract timings and pursue structural testability wins in descending child-cost order.
-3. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
-4. **Proof witness audit:** reduce the longest deterministic witnesses where equivalence can be demonstrated.
-5. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
-6. **Final bootstrap/cache serial audit:** look for redundant restores/discovery/setup and small overlap opportunities; stop if savings are noise-sized.
-7. **Reserved/larger runner rehearsal:** apply the already-proven Node/coverage partitions and internal deep overlap on at least 16 logical CPUs.
-8. **Bounded p50/p90 window:** declare success only from comparable full-impact runs meeting the stop conditions below.
+1. **Fresh Node/CLI census:** use the machine-readable benchmark profiles and pursue structural testability wins in descending child-cost order.
+2. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
+3. **Proof witness audit:** reduce the longest deterministic witnesses where equivalence can be demonstrated.
+4. **Firestore setup audit:** separate emulator/bootstrap from test execution and remove duplicated initialization if measurable.
+5. **Final bootstrap/cache serial audit:** look for redundant restores/discovery/setup and small overlap opportunities; stop if savings are noise-sized.
+6. **Reserved/larger runner rehearsal:** apply the already-proven Node/coverage partitions on at least 16 logical CPUs and re-test deep internal overlap with the larger CPU budget.
+7. **Bounded p50/p90 window:** declare success only from comparable full-impact runs meeting the stop conditions below.
 
 Each production activation gets its own PR or tightly scoped reconciled batch with before/after timing evidence. Negative experiments stay documented so later agents do not repeat them.
 
