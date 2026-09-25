@@ -52,12 +52,12 @@
     },
     {
       "candidate": "docs/plan-quality-standard.md",
-      "disposition": "extend-after-pilot",
+      "disposition": "extend",
       "reason": "CP-6 should modify the plan standard only if bounded phase-local hostile sampling demonstrates useful signal without ceremony."
     },
     {
       "candidate": "Hint/provenance consolidation and CI exact-generation cache ownership",
-      "disposition": "reuse-as-pattern",
+      "disposition": "reuse",
       "reason": "Prior art for CP-3 proof ownership and CP-4 canonical derived-resource generation ownership."
     }
   ],
@@ -110,7 +110,7 @@
     ]
   },
   "solverQueueImpact": {
-    "classification": "supporting",
+    "classification": "observation-surface",
     "authoritiesChecked": [
       "docs/solver-optimization-workstreams.md",
       "docs/solver-research-execution-efficiency-plan.md"
@@ -252,7 +252,9 @@
         "researchSystem",
         "solverQueueImpact"
       ],
-      "exitProofIds": []
+      "exitProofIds": [
+        "dod-splash-zone"
+      ]
     },
     {
       "id": "phase-1",
@@ -385,6 +387,12 @@
   "hostileCloseout": {
     "independentReconstruction": true,
     "inventories": [
+      "producers",
+      "consumers",
+      "workflows",
+      "persistence",
+      "compatibility-history",
+      "current-authorities",
       "recurring-workflows",
       "scientific-evidence-families",
       "proof-owners",
@@ -392,8 +400,7 @@
       "governance-guards",
       "plan-quality-process",
       "research-cost-reuse",
-      "ci-structural-work",
-      "current-authorities"
+      "ci-structural-work"
     ],
     "proofIds": [
       "dod-hostile-closeout"
