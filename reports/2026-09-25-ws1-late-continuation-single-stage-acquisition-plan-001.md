@@ -1,8 +1,8 @@
 # WS1 late-continuation single-stage acquisition plan 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-25 — plan-quality reconciliation against the prior Stage-A result and the plan's own historical rate found two dispatch-blocking ambiguities: the N=160 sizing argument targeted a <2% false-stop probability for a `>=3` breadth floor while the success criteria separately required `>=8`, and the protocol named two non-identical solve producers. Exact binomial sizing and prior Stage-A row semantics resolve both here.
-> **Decision:** keep one N=160 confirmation block, freeze master seed `2026092501`, require `>=3` independently nominated parents, and preserve the Stage-A `portfolio-solve-sweep.mjs --scheduler-mode=production` producer/row semantics. No alternate producer or threshold remains open at dispatch time.
+> **Last evidence:** 2026-09-25 — after the statistical/producer correction merged, recovery of un-PR'd branch `claude/solver-optimization-queue-ybpl88` revealed that seed `2026092501` had already generated a 160-parent corpus before final precommitment. No solver was run on that block, but it is no longer an unseen confirmation seed. This revision quarantines that block and freezes replacement seed `2026092591` before any generation.
+> **Decision:** keep one N=160 confirmation block, freeze replacement master seed `2026092591`, require `>=3` independently nominated parents, and preserve the Stage-A `portfolio-solve-sweep.mjs --scheduler-mode=production` producer/row semantics. The previously generated `2026092501` corpus is quarantined from decision-bearing use.
 > **Remaining gate:** implement/dispatch this exact single-block protocol and apply the frozen model unchanged.
 > **Evidence role:** design
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
@@ -107,6 +107,21 @@ Failure of any gate stops this line of inquiry under this exact plan. Do not res
 retuning signatures, bins, thresholds, seed, or source — per the same discipline the prior stages
 already established.
 
+## Precommitment recovery: quarantined generated block
+
+Before this corrected plan was finalized on main, un-PR'd branch `claude/solver-optimization-queue-ybpl88` generated a 160-parent block with seed `2026092501` at commit `49a8773262f3889350766482920038d7fd49e761`.
+
+Important facts:
+
+- generation used the same unchanged random generator implementation that current main still carries;
+- the block has the intended question id, confirmation evidence role, block id and U00001–U00160 namespace;
+- **no solver run was executed** on that block;
+- nevertheless, the population existed before the final precommitment and could in principle have been inspected.
+
+Therefore that generated block is **not** the decision-bearing confirmation population. It remains quarantined historical/recovery evidence only. Do not merge its corpus/IDs into the confirmation execution path and do not use any of its structural contents to alter thresholds, routing, model membership or protocol.
+
+Replacement seed `2026092591` was selected after this recovery. Default-branch code search and repository commit search found no existing use before this revision. The one-shot workflow must generate the replacement block only after this plan/quality revision is merged.
+
 ## Protocol (for dispatch time, not dispatched here)
 
 - Source/generation command, frozen exactly:
@@ -115,7 +130,7 @@ already established.
   npm run research:generate-levels -- \
     --method=random \
     --count=160 \
-    --master-seed=2026092501 \
+    --master-seed=2026092591 \
     --question-id=WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE \
     --evidence-role=confirmation \
     --block-id=ws1-late-continuation-single-001 \
@@ -127,8 +142,7 @@ already established.
   This is the same witness-first random source as both prior stages. Do not add `--overwrite`,
   envelope caps, passthrough generator flags, or substitute another source.
 - Count: **160** independent fresh parents.
-- Master seed: **`2026092501`**, frozen in this plan. Repo search on 2026-09-25 found no existing use
-  of this seed. Do not substitute another seed at dispatch time.
+- Master seed: **`2026092591`**, frozen in this recovery revision after discovery that `2026092501` had already generated an un-PR'd corpus. Default-branch code search and repository commit search found no prior use of `2026092591` before this revision. Do not substitute another seed at dispatch time.
 - Evidence role: `confirmation` (this block directly answers the confirmation question; there is no
   separate development/opportunity stage in this design).
 - Block id: `ws1-late-continuation-single-001`.
