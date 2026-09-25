@@ -1453,6 +1453,17 @@
           "docs/hint-workflow-persistence-audit.json"
         ],
         "finding": "The family direct-persistence exception accepted ancestor staging scopes as well as descendants, so data/families/ implicitly authorized git staging of data/. Exceptions now authorize only the exact reviewed prefix or descendants; adversarial fixtures reject data/ and data/stress/."
+      },
+      {
+        "id": "HPA-031",
+        "kind": "stale-workflow-review-approval",
+        "paths": [
+          "scripts/central-hint-persistence-guard.mjs",
+          "scripts/hint-ingestion-workflow-completeness-node-test.mjs",
+          "docs/hint-workflow-persistence-audit.json",
+          "docs/hint-evidence-consolidation-inventory.json"
+        ],
+        "finding": "Workflow persistence exceptions and ingestion dispositions could remain after the behavior that justified them disappeared. Both controls now fail stale approvals: exceptions must be exercised at their reviewed scope, and ingestion rows must still belong to the mechanically derived review-candidate population."
       }
     ]
   }
