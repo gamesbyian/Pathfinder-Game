@@ -23,7 +23,7 @@ As of main `7d94df87fde1ab35f46900950188f402f3fe67dc`:
 - the maintained solver workflow inventory currently contains 11 `solver-*.yml` / `harvest-solver-evidence.yml` workflows;
 - all 11 still specify floating `node-version: '20'` at their Node setup sites;
 - none currently uses the exact `node_modules` generation restore proven in production CI;
-- only `solver-routing-regime-sample-ab.yml` currently uses sparse checkout;
+- sparse checkout is now active in `solver-routing-regime-sample-ab.yml` and in the targeted-sweep short plan/canary boundary; the latter preserves arbitrary caller-selected corpus/ID blobs via immutable `git show` materialization;
 - several matrix workflows repeat checkout + setup-node + `npm ci` independently in planner/generator, solve-shard, and combine/freeze jobs;
 - `solver-highbudget-unsolved-sweep.yml` already has telemetry-weighted dynamic sharding and the workflow README explicitly treats worker/lane counts as throughput defaults rather than laws, so generic shard-count tuning is **not** an initial priority.
 
@@ -99,11 +99,11 @@ The first static audit does **not** pretend YAML occurrence counts equal runtime
 
 ### Premise
 
-The research system now binds solver request, corpus/population and provenance identity tightly, but `node-version: '20'` allows the execution runtime patch to drift between two dispatches of the same solver commit.
+The research system binds solver request, corpus/population and provenance identity tightly. The former major-only `node-version: '20'` gap is now closed: maintained workflows use exact runtimes, so runtime patch drift no longer contaminates repeated dispatches of the same solver commit.
 
 ### Work
 
-1. record exact runtime identity in experiment/run metadata where not already captured. **Started:** the level-blind capability and history-aware portfolio producers now emit actual Node version, platform, and architecture in their report summaries; workflow/runtime pinning remains unactivated.
+1. record exact runtime identity in experiment/run metadata where not already captured. **Activated:** the level-blind capability and history-aware portfolio producers emit actual Node version, platform, and architecture in their report summaries; all maintained research workflows now pin exact Node versions, with diagnostics conservatively fixed at 20.20.2 pending its own cross-major parity.
 2. rehearse a representative cross-section under an exact runtime:
    - planner/combine-only path;
    - level-blind solver path;
@@ -114,7 +114,7 @@ The research system now binds solver request, corpus/population and provenance i
 
 ### Exit
 
-- maintained scientific workflows in rehearsed producer families no longer float a major-only Node version; remaining maintained workflow exceptions are explicitly classified rather than silently floating;
+- maintained research workflows no longer float a major-only Node version. Rehearsed scientific producer workflows and deterministic helper/harvest/integrity workflows use exact Node 22.23.2; solver diagnostics is the explicit exact-20.20.2 exception because it still executes real solver analysis without a cross-major parity rehearsal; its direct solver report now records Node/platform/arch and diagnostics preserves that tuple into durable audit evidence;
 - runtime identity is inspectable in produced evidence;
 - migration evidence demonstrates no unexplained solved-set/config/provenance drift.
 
@@ -164,20 +164,23 @@ CI's sparse Git-ref work cut large snapshot costs but also exposed an undeclared
 
 ## Phase 5 — harness/search separation on live gates
 
-### Initial scope
+### Current scope
 
-Audit the harnesses serving the *current* queue rather than historical tests indiscriminately:
+Audit the harnesses serving the *current* queue rather than historical tests indiscriminately. The scope was refreshed after the September-25 queue reconciliation so closed experiments do not keep consuming optimization attention.
 
-- WS2 repair deadline matched-work A/B;
-- WS2 admissible-order reserve design;
-- WS2 capability-invention first-loss / operational-divergence sampling;
-- WS2 BC1 later-disposition shadow;
-- WS2 forced-work phase census;
-- WS1 24-parent development canary / 96-parent confirmation;
-- WS1A 20-level intra-solve bridge;
-- WS6 independent-parent replication/speed profiling.
+Current live surfaces:
 
-For each, classify work as:
+- WS2 repair-deadline **production-scale matched-work confirmation**, using the generic level-blind targeted-sweep path unless the promotion design earns a different harness;
+- WS2 capability-invention **promotion decision / any explicitly justified broader safety sample** for CID-0027 and CID-0028; do not manufacture another acquisition round merely to exercise this phase;
+- WS2 BC1 later-disposition shadow, still production-inert and bounded-compute;
+- WS1 **single-stage N=160 late-continuation confirmation**, replacing the closed underpowered 24/96-parent two-stage structure;
+- WS6 independent-parent replication/speed profiling when it becomes the immediate queue gate.
+
+Removed from the Phase-5 optimization scope because their scientific forms are closed: admissible-order reserve 0.35, forced-work capture economics, and the WS1A remaining-length bridge. Historical harnesses remain reproducible, but they are not current optimization targets.
+
+Initial live-harness audit: [search/plumbing audit](../reports/2026-09-25-live-solver-harness-search-plumbing-audit-001.md). The generic targeted sweep does not currently reproduce CI's strongest fixture-generation defect: real search is confined to the execution-family canary and scientific solve/recovery shards, while combine/integrity/contract/publication and WS1 frozen-model scoring are deterministic. Continue auditing BC1/WS6 only when they become immediate gates.
+
+For each live surface, classify work as:
 
 - scientific search that must remain real;
 - harness/config/plumbing proof;
@@ -254,5 +257,6 @@ This plan is complete only when:
 4. **ACTIVATED:** run 36190221008 proved byte-identical semantics for exact Node 20.20.2 vs 22.23.2 across the primary level-blind and history-aware producers. The seven maintained workflows whose scientific execution uses `level-blind-capability-sweep.mjs` or `portfolio-solve-sweep.mjs` now pin exact Node **22.23.2** at every setup site. Helper/harvest/integrity workflows outside those rehearsed producer families are deliberately not swept into this activation merely for uniformity.
 5. **ACTIVATED:** run 36187498364 proved byte-identical full-tree vs sparse-tree semantics for the live targeted-sweep planner + one real level-blind canary. The production targeted planner now sparse-checks out package manifests, scripts, modules, the default Corpus-2 file, and runtime telemetry. Caller-selected `corpus` and `ids_file` remain authoritative: the planner materializes those exact blobs from the dispatched immutable commit with `git show`, so sparse activation does not narrow the workflow's input contract.
 6. **ACTIVATED FOR ONE SHORT ORCHESTRATOR:** the targeted-sweep plan job now restores the exact CI-proven `node_modules` generation keyed by runner OS/arch + Node 22.23.2 + npm 10.9.8 + lockfile hash, skips npm-cache restore/`npm ci` on a hit, and preserves `npm ci` plus exact-cache save on a miss. Historical short-orchestration evidence showed roughly a minute of checkout/runtime/install before useful planner/canary work; the next real targeted dispatch supplies production hit/miss economics without changing solver semantics.
-7. **NEXT:** inspect the first real targeted-sweep hit/miss timing, then extend exact dependency-tree reuse only to other short planner/generator/combine jobs where bootstrap remains material. Long solve shards stay measurement-gated.
-8. Do not bulk-optimize helper workflows or long solver shards before their own semantics/economics justify it.
+7. **DONE — runtime classification:** the remaining helper workflows are no longer major-only. Harvester, cross-run combine, and evidence-integrity guard pin 22.23.2 because their deterministic transforms are already covered by permanent CI contracts on that runtime; solver diagnostics pins exact 20.20.2 because it executes real solver analysis and has not earned the cross-major move.
+8. **NEXT:** inspect the first real targeted-sweep hit/miss timing, then extend exact dependency-tree reuse only to other short planner/generator/combine jobs where bootstrap remains material. Long solve shards stay measurement-gated.
+9. Do not bulk-optimize long solver shards before their own semantics/economics justify it.

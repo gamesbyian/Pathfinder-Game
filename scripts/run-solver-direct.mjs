@@ -117,6 +117,11 @@ const buildReport = () => ({
     corpus: 'data/levels.json',
     timestamp: new Date().toISOString(),
     commitSha: getCommitSha(),
+    executionRuntime: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+    },
     budgetMs,
     workBudget: workBudget ?? null,
     levelFilter: levelFilter ? [...levelFilter].sort((a,b) => a-b) : 'all',

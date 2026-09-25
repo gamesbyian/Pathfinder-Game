@@ -30,15 +30,15 @@ Retained evidence now covers **1,802 parents / 56,906 attempts**; generic compac
 The September 23–25 CI optimization cycle exposed reusable research-execution methods: exact-generation reuse, sparse input materialization, hermetic real-data fixtures, deterministic bookkeeping witnesses, callable semantic seams with retained executable smokes, and shadow-before-authority routing. The solver batch system already has mature weighted sharding, so generic shard-count tuning is not queued.
 
 Current execution facts from the audit:
-- maintained solver/evidence workflows still use floating `node-version: '20'`; primary level-blind and history-aware producers now record actual Node/platform/arch identity;
-- production CI's exact dependency-tree reuse is not yet active in solver research workflows;
+- maintained solver/evidence workflows now use exact Node runtimes: 22.23.2 for parity-rehearsed scientific producers and deterministic helper/harvest/integrity workflows, with solver diagnostics pinned to exact 20.20.2 pending a diagnostics-specific cross-major parity;
+- exact dependency-tree reuse is active in the short targeted-sweep plan/canary job with a safe `npm ci` miss path; broader research reuse remains measurement-gated;
 - full-tree checkout measured about 54 s on representative September-22 solver jobs, versus about 3 s in the first sparse targeted-planner rehearsal; setup-node was ~5 s and `npm ci` ~8 s;
 - the first full-vs-sparse targeted-planner + real-canary rehearsal is semantically identical when the exact corpus and `logs/solver-stress-refresh/corpus2-runtime-telemetry.json` dependency are retained;
 - canonical Hint persistence remains owned by `harvest-solver-evidence.yml`; source workflows must not recreate canonical writers.
 
 Plan: [solver research execution efficiency](solver-research-execution-efficiency-plan.md). Starting evidence: [execution-topology census](../reports/2026-09-25-solver-research-execution-topology-starting-census-001.md).
 
-Immediate infrastructure gate: finish exact-runtime parity, then activate only earned sparse/runtime changes for short orchestration jobs; exact dependency-tree reuse follows on a fixed runtime generation. Live WS2/WS1 harnesses remain the first search-vs-plumbing audit surface.
+Immediate infrastructure gate: exact-runtime and targeted-planner sparse activations are complete, and the targeted planner now has exact dependency-tree reuse with a safe `npm ci` miss path. The first live WS2/WS1 search-vs-plumbing audit found no accidental solver-as-fixture defect in the generic targeted sweep or WS1 frozen-model scoring; preserve real search where it is the scientific payload. Next gate is production economics from a real targeted dispatch before extending reuse to other short planner/generator/combine jobs. [harness audit](../reports/2026-09-25-live-solver-harness-search-plumbing-audit-001.md)
 
 ### 1. Workstream 2: residual capability + premise acquisition
 

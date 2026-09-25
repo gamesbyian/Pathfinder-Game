@@ -96,6 +96,7 @@ Workflow `run-name` values also include the inputs most useful for distinguishin
 - `solver-level-blind-targeted-sweep.yml` — targeted level-blind sweep using the weighted planner.
 - `solver-research-runtime-rehearsal.yml` — manual exact-runtime parity rehearsal comparing Node 20.20.2 with CI-proven Node 22.23.2 on real bundled level-blind and history-aware portfolio producers; evidence-only, never changes production solver policy.
 - `solver-research-input-materialization-rehearsal.yml` — manual full-tree vs sparse-tree parity rehearsal for the live targeted-sweep planner plus one real level-blind canary. Its sparse arm declares the exact corpus/runtime-telemetry inputs; missing hidden dependencies should make the rehearsal red rather than silently alter planning.
+- Runtime policy: maintained research workflows use exact Node versions. Rehearsed level-blind/history-aware scientific workflows plus deterministic harvest/combine/integrity helpers use **22.23.2**. `solver-diagnostics.yml` remains on exact **20.20.2** because it executes real solver analysis and has not yet passed a diagnostics-specific cross-major parity rehearsal.
 
 ## Sample A/B
 
