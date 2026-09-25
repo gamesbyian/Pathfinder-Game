@@ -794,7 +794,7 @@ The PR-level workflow layer itself was audited before interpreting new timing ru
 
 This is a cadence correction, not deletion of evidence. The workflows remain dispatchable for deliberate forensic/measurement use. Their ordinary validation invariants remain where applicable.
 
-The audit did **not** broadly disable every auxiliary PR workflow. `ci-testability-topology-audit.yml`, `ci-semantic-fault-injection-audit.yml`, and `solver-evidence-integrity-guard.yml` have materially narrower authority/input triggers and remain automatic where their owning surfaces change. `ci-node-concurrency-benchmark.yml` remains narrow to its own harness/package wiring for now, but should be reconsidered once the Node concurrency policy fully settles.
+The audit did **not** broadly disable every auxiliary PR workflow. `ci-testability-topology-audit.yml`, `ci-semantic-fault-injection-audit.yml`, and `solver-evidence-integrity-guard.yml` have materially narrower authority/input triggers and remain automatic where their owning surfaces change. `ci-node-concurrency-benchmark.yml` is now manual-only as well. It was lifecycle-described as manual measurement but still auto-triggered on `package.json`; dispatch it only when worker-count/execution-mode assumptions actually need remeasurement.
 
 ## Current forward work order
 
