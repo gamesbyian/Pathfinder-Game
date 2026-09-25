@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-action-selection-frozen-model-challenge",
+  "modelPath": "reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json",
+  "inputMetadata": [
+    {
+      "source": "logs/ws1-stage-a/opportunity-001.json",
+      "timestamp": null,
+      "commitSha": null,
+      "configurationHash": null,
+      "solved": null,
+      "observedLevels": 24,
+      "actionBoundaryDigest": "sha256:5c62e027b90019f9e7ba1881fe0196f7c7e2c092bc0684da907e31f3cf4691c4"
+    }
+  ],
+  "actionBoundaryDigest": "sha256:5c62e027b90019f9e7ba1881fe0196f7c7e2c092bc0684da907e31f3cf4691c4",
+  "combined": {
+    "schemaVersion": 1,
+    "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+    "model": {
+      "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+      "family": "prior-response+work+next-stage",
+      "minDevelopmentSupport": 100,
+      "signatureCount": 15,
+      "source": {
+        "workflowRunId": 35066677597,
+        "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+        "role": "development split of frozen C2 production boundary"
+      }
+    },
+    "validationSolvedLevels": 1,
+    "validationRows": 237,
+    "preWinnerWork": 0,
+    "nominatedPreWinnerWork": 0,
+    "capturedPreWinnerWorkShare": null,
+    "endangeredWinnerLevels": 0,
+    "endangeredWinnerRate": 0,
+    "diagnostics": {
+      "nominatedSameStageContinuationWork": 0,
+      "nominatedSameStageContinuationWorkShare": null,
+      "baselineSameStageContinuationWorkShare": null,
+      "nominatedByPriorOutcome": [],
+      "baselineByPriorOutcome": [],
+      "nominatedByNextStage": []
+    },
+    "interpretation": {
+      "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+      "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+    }
+  },
+  "bySource": {
+    "logs/ws1-stage-a/opportunity-001.json": {
+      "schemaVersion": 1,
+      "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+      "model": {
+        "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+        "family": "prior-response+work+next-stage",
+        "minDevelopmentSupport": 100,
+        "signatureCount": 15,
+        "source": {
+          "workflowRunId": 35066677597,
+          "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+          "role": "development split of frozen C2 production boundary"
+        }
+      },
+      "validationSolvedLevels": 1,
+      "validationRows": 237,
+      "preWinnerWork": 0,
+      "nominatedPreWinnerWork": 0,
+      "capturedPreWinnerWorkShare": null,
+      "endangeredWinnerLevels": 0,
+      "endangeredWinnerRate": 0,
+      "diagnostics": {
+        "nominatedSameStageContinuationWork": 0,
+        "nominatedSameStageContinuationWorkShare": null,
+        "baselineSameStageContinuationWorkShare": null,
+        "nominatedByPriorOutcome": [],
+        "baselineByPriorOutcome": [],
+        "nominatedByNextStage": []
+      },
+      "interpretation": {
+        "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+        "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+      },
+      "actionBoundaryDigest": "sha256:5c62e027b90019f9e7ba1881fe0196f7c7e2c092bc0684da907e31f3cf4691c4"
+    }
+  }
+}

@@ -1,0 +1,3690 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-forced-work-prevalence",
+  "evidenceRole": "development",
+  "premiseUse": "oracle-ceiling-and-prevalence-only",
+  "protocol": {
+    "corpusFiles": [
+      "data/stress/stress-levels-random.json"
+    ],
+    "levelIds": [
+      "R00044",
+      "R00118",
+      "R00479",
+      "R00512",
+      "R00555",
+      "R00565",
+      "R00646",
+      "R00647",
+      "R00923",
+      "R00963",
+      "R01011",
+      "R01132",
+      "R01269",
+      "R01290",
+      "R01516",
+      "R01551",
+      "R01625",
+      "R02030",
+      "R02072",
+      "R02091",
+      "R02118",
+      "R02154",
+      "R02187",
+      "R02199",
+      "R02203",
+      "R02280",
+      "R02317",
+      "R02334",
+      "R02395",
+      "R02403",
+      "R02408",
+      "R02432",
+      "R02437",
+      "R02470",
+      "R02472",
+      "R02498",
+      "R02541",
+      "R02545",
+      "R02588",
+      "R02621",
+      "R02625",
+      "R02666",
+      "R02693",
+      "R02697",
+      "R02733",
+      "R02744",
+      "R02747",
+      "R02751",
+      "R02768",
+      "R02904",
+      "R02951",
+      "R02954",
+      "R03021",
+      "R03088",
+      "R03092",
+      "R03159",
+      "R03199",
+      "R03213",
+      "R03251",
+      "R03278",
+      "R03280",
+      "R03296",
+      "R03334",
+      "R03346"
+    ],
+    "profile": "objectiveFirst",
+    "width": 5000,
+    "workBudget": 5000000,
+    "budgetMs": 600000
+  },
+  "summary": {
+    "runs": 64,
+    "expandedParents": 19260501,
+    "oneSuccessorParents": 7617557,
+    "oneSuccessorParentRate": 0.3955014981178319,
+    "totalExpansionWork": 90572067,
+    "forcedExpansionWork": 22944663,
+    "forcedExpansionWorkShare": 0.25333045562491135,
+    "grossForcedWorkReservoir": {
+      "expansionWorkAtOneSuccessorParents": 22944663,
+      "expansionWorkShareAtOneSuccessorParents": 0.25333045562491135
+    },
+    "phaseEconomics": {
+      "resolvedPhases": 5502,
+      "singletonOutcomePhases": 14,
+      "singletonOutcomePhaseRate": 0.002544529262086514,
+      "singletonToSingletonPhases": 11,
+      "singletonToSingletonPhaseRate": 0.0019992729916394037,
+      "allParentsForcedPhases": 48,
+      "allParentsForcedPhaseRate": 0.008724100327153763,
+      "singletonOutcomeDiscoveryWork": 1234
+    }
+  },
+  "parents": [
+    {
+      "levelId": "R00044",
+      "gates": [
+        {
+          "gateKey": 327681,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 859574,
+          "workOvershoot": 0,
+          "nodesExpanded": 98121,
+          "elapsedMs": 2511,
+          "observedGeneratedRecords": 87,
+          "summary": {
+            "expandedParents": 98121,
+            "totalExpansionWork": 484473,
+            "zeroSuccessorParents": 20850,
+            "oneSuccessorParents": 41525,
+            "branchingParents": 35746,
+            "oneSuccessorParentRate": 0.42320196492086304,
+            "forcedExpansionWork": 103692,
+            "forcedExpansionWorkShare": 0.21403050324785902,
+            "deadEndExpansionWork": 242941,
+            "branchingExpansionWork": 137840,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 103692,
+              "expansionWorkShareAtOneSuccessorParents": 0.21403050324785902
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 87,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 8,
+              "allParentsForcedPhaseRate": 0.09195402298850575,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 24517,
+              "meanLength": 1.6937227230085248,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 11,
+              "maxWorkSpent": 117,
+              "terminations": {
+                "branch": 10077,
+                "dead-end": 6633,
+                "forced-child-not-retained": 7807
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00118",
+      "gates": [
+        {
+          "gateKey": 589829,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2760418,
+          "workOvershoot": 0,
+          "nodesExpanded": 276801,
+          "elapsedMs": 8764,
+          "observedGeneratedRecords": 103,
+          "summary": {
+            "expandedParents": 276801,
+            "totalExpansionWork": 1416591,
+            "zeroSuccessorParents": 56605,
+            "oneSuccessorParents": 120304,
+            "branchingParents": 99892,
+            "oneSuccessorParentRate": 0.4346227072879072,
+            "forcedExpansionWork": 329081,
+            "forcedExpansionWorkShare": 0.23230487840174052,
+            "deadEndExpansionWork": 603763,
+            "branchingExpansionWork": 483747,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 329081,
+              "expansionWorkShareAtOneSuccessorParents": 0.23230487840174052
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 103,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.009708737864077669,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 71959,
+              "meanLength": 1.6718409094067455,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 14,
+              "maxWorkSpent": 135,
+              "terminations": {
+                "branch": 31661,
+                "dead-end": 19737,
+                "forced-child-not-retained": 20561
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00479",
+      "gates": [
+        {
+          "gateKey": 589828,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1748520,
+          "workOvershoot": 0,
+          "nodesExpanded": 215890,
+          "elapsedMs": 5150,
+          "observedGeneratedRecords": 61,
+          "summary": {
+            "expandedParents": 215890,
+            "totalExpansionWork": 892812,
+            "zeroSuccessorParents": 30240,
+            "oneSuccessorParents": 89106,
+            "branchingParents": 96544,
+            "oneSuccessorParentRate": 0.41273796840983834,
+            "forcedExpansionWork": 214598,
+            "forcedExpansionWorkShare": 0.24036191269830604,
+            "deadEndExpansionWork": 194813,
+            "branchingExpansionWork": 483401,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 214598,
+              "expansionWorkShareAtOneSuccessorParents": 0.24036191269830604
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 61,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 64805,
+              "meanLength": 1.3749864979554047,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 9,
+              "maxWorkSpent": 53,
+              "terminations": {
+                "branch": 33011,
+                "dead-end": 10785,
+                "forced-child-not-retained": 21009
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00512",
+      "gates": [
+        {
+          "gateKey": 6,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2191291,
+          "workOvershoot": 0,
+          "nodesExpanded": 262815,
+          "elapsedMs": 7218,
+          "observedGeneratedRecords": 75,
+          "summary": {
+            "expandedParents": 262815,
+            "totalExpansionWork": 972133,
+            "zeroSuccessorParents": 43100,
+            "oneSuccessorParents": 98935,
+            "branchingParents": 120780,
+            "oneSuccessorParentRate": 0.37644350588817227,
+            "forcedExpansionWork": 251232,
+            "forcedExpansionWorkShare": 0.25843377397948636,
+            "deadEndExpansionWork": 30871,
+            "branchingExpansionWork": 690030,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 251232,
+              "expansionWorkShareAtOneSuccessorParents": 0.25843377397948636
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 75,
+              "singletonOutcomePhases": 2,
+              "singletonOutcomePhaseRate": 0.02666666666666667,
+              "singletonToSingletonPhases": 2,
+              "singletonToSingletonPhaseRate": 0.02666666666666667,
+              "allParentsForcedPhases": 3,
+              "allParentsForcedPhaseRate": 0.04,
+              "singletonOutcomeDiscoveryWork": 2,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 68569,
+              "meanLength": 1.4428531843836137,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 9,
+              "maxWorkSpent": 42,
+              "terminations": {
+                "branch": 31658,
+                "dead-end": 15120,
+                "forced-child-not-retained": 21791
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00555",
+      "gates": [
+        {
+          "gateKey": 524301,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3869564,
+          "workOvershoot": 0,
+          "nodesExpanded": 418899,
+          "elapsedMs": 18744,
+          "observedGeneratedRecords": 123,
+          "summary": {
+            "expandedParents": 418899,
+            "totalExpansionWork": 1749862,
+            "zeroSuccessorParents": 66721,
+            "oneSuccessorParents": 165126,
+            "branchingParents": 187052,
+            "oneSuccessorParentRate": 0.39419048505725723,
+            "forcedExpansionWork": 466131,
+            "forcedExpansionWorkShare": 0.26638157751868435,
+            "deadEndExpansionWork": 358990,
+            "branchingExpansionWork": 924741,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 466131,
+              "expansionWorkShareAtOneSuccessorParents": 0.26638157751868435
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 123,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 106176,
+              "meanLength": 1.5552102169981916,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 15,
+              "maxWorkSpent": 111,
+              "terminations": {
+                "branch": 44300,
+                "dead-end": 22378,
+                "forced-child-not-retained": 39498
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00565",
+      "gates": [
+        {
+          "gateKey": 131072,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2275629,
+          "workOvershoot": 0,
+          "nodesExpanded": 229643,
+          "elapsedMs": 6929,
+          "observedGeneratedRecords": 77,
+          "summary": {
+            "expandedParents": 229643,
+            "totalExpansionWork": 1149812,
+            "zeroSuccessorParents": 43255,
+            "oneSuccessorParents": 110750,
+            "branchingParents": 75638,
+            "oneSuccessorParentRate": 0.48227030651924946,
+            "forcedExpansionWork": 326556,
+            "forcedExpansionWorkShare": 0.2840081682918599,
+            "deadEndExpansionWork": 419437,
+            "branchingExpansionWork": 403819,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 326556,
+              "expansionWorkShareAtOneSuccessorParents": 0.2840081682918599
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 77,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 55827,
+              "meanLength": 1.9838071184194028,
+              "p50Length": 2,
+              "p90Length": 3,
+              "maxLength": 12,
+              "maxWorkSpent": 69,
+              "terminations": {
+                "branch": 27310,
+                "dead-end": 14950,
+                "forced-child-not-retained": 13567
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00646",
+      "gates": [
+        {
+          "gateKey": 589836,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 4487029,
+          "workOvershoot": 0,
+          "nodesExpanded": 546548,
+          "elapsedMs": 23128,
+          "observedGeneratedRecords": 134,
+          "summary": {
+            "expandedParents": 546548,
+            "totalExpansionWork": 2353275,
+            "zeroSuccessorParents": 55926,
+            "oneSuccessorParents": 205017,
+            "branchingParents": 285605,
+            "oneSuccessorParentRate": 0.37511252442603393,
+            "forcedExpansionWork": 519255,
+            "forcedExpansionWorkShare": 0.2206520699875705,
+            "deadEndExpansionWork": 108722,
+            "branchingExpansionWork": 1725298,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 519255,
+              "expansionWorkShareAtOneSuccessorParents": 0.2206520699875705
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 134,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 2,
+              "allParentsForcedPhaseRate": 0.014925373134328358,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 140928,
+              "meanLength": 1.454764134877384,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 13,
+              "maxWorkSpent": 55,
+              "terminations": {
+                "branch": 61998,
+                "dead-end": 22923,
+                "forced-child-not-retained": 56007
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00647",
+      "gates": [
+        {
+          "gateKey": 65548,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3326544,
+          "workOvershoot": 0,
+          "nodesExpanded": 359635,
+          "elapsedMs": 15315,
+          "observedGeneratedRecords": 91,
+          "summary": {
+            "expandedParents": 359635,
+            "totalExpansionWork": 1699172,
+            "zeroSuccessorParents": 31929,
+            "oneSuccessorParents": 151187,
+            "branchingParents": 176519,
+            "oneSuccessorParentRate": 0.4203901177582827,
+            "forcedExpansionWork": 434995,
+            "forcedExpansionWorkShare": 0.2560041008208704,
+            "deadEndExpansionWork": 288259,
+            "branchingExpansionWork": 975918,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 434995,
+              "expansionWorkShareAtOneSuccessorParents": 0.2560041008208704
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 91,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 93928,
+              "meanLength": 1.609605229537518,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 7,
+              "maxWorkSpent": 52,
+              "terminations": {
+                "branch": 45975,
+                "dead-end": 10189,
+                "forced-child-not-retained": 37764
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00923",
+      "gates": [
+        {
+          "gateKey": 1,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3036458,
+          "workOvershoot": 0,
+          "nodesExpanded": 239457,
+          "elapsedMs": 8551,
+          "observedGeneratedRecords": 62,
+          "summary": {
+            "expandedParents": 239457,
+            "totalExpansionWork": 2084086,
+            "zeroSuccessorParents": 28797,
+            "oneSuccessorParents": 104614,
+            "branchingParents": 106046,
+            "oneSuccessorParentRate": 0.4368801079108149,
+            "forcedExpansionWork": 579154,
+            "forcedExpansionWorkShare": 0.27789352262814493,
+            "deadEndExpansionWork": 357096,
+            "branchingExpansionWork": 1147836,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 579154,
+              "expansionWorkShareAtOneSuccessorParents": 0.27789352262814493
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 62,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 73300,
+              "meanLength": 1.4272032742155525,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 11,
+              "maxWorkSpent": 95,
+              "terminations": {
+                "branch": 38929,
+                "dead-end": 8403,
+                "forced-child-not-retained": 25968
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R00963",
+      "gates": [
+        {
+          "gateKey": 458754,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2664687,
+          "workOvershoot": 0,
+          "nodesExpanded": 291425,
+          "elapsedMs": 11288,
+          "observedGeneratedRecords": 77,
+          "summary": {
+            "expandedParents": 291425,
+            "totalExpansionWork": 1563404,
+            "zeroSuccessorParents": 34026,
+            "oneSuccessorParents": 109102,
+            "branchingParents": 148297,
+            "oneSuccessorParentRate": 0.374374195762203,
+            "forcedExpansionWork": 279173,
+            "forcedExpansionWorkShare": 0.17856740804040414,
+            "deadEndExpansionWork": 380083,
+            "branchingExpansionWork": 904148,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 279173,
+              "expansionWorkShareAtOneSuccessorParents": 0.17856740804040414
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 77,
+              "singletonOutcomePhases": 2,
+              "singletonOutcomePhaseRate": 0.025974025974025976,
+              "singletonToSingletonPhases": 2,
+              "singletonToSingletonPhaseRate": 0.025974025974025976,
+              "allParentsForcedPhases": 2,
+              "allParentsForcedPhaseRate": 0.025974025974025976,
+              "singletonOutcomeDiscoveryWork": 2,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 80842,
+              "meanLength": 1.3495707676702704,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 9,
+              "maxWorkSpent": 41,
+              "terminations": {
+                "branch": 34718,
+                "dead-end": 13104,
+                "forced-child-not-retained": 33020
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R01011",
+      "gates": [
+        {
+          "gateKey": 589825,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1521144,
+          "workOvershoot": 0,
+          "nodesExpanded": 167220,
+          "elapsedMs": 4116,
+          "observedGeneratedRecords": 67,
+          "summary": {
+            "expandedParents": 167220,
+            "totalExpansionWork": 813022,
+            "zeroSuccessorParents": 32557,
+            "oneSuccessorParents": 65977,
+            "branchingParents": 68686,
+            "oneSuccessorParentRate": 0.39455208707092454,
+            "forcedExpansionWork": 145524,
+            "forcedExpansionWorkShare": 0.1789914664055831,
+            "deadEndExpansionWork": 422874,
+            "branchingExpansionWork": 244624,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 145524,
+              "expansionWorkShareAtOneSuccessorParents": 0.1789914664055831
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 67,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.014925373134328358,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 44426,
+              "meanLength": 1.4850988160086436,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 12,
+              "maxWorkSpent": 47,
+              "terminations": {
+                "branch": 24711,
+                "dead-end": 9808,
+                "forced-child-not-retained": 9907
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R01132",
+      "gates": [
+        {
+          "gateKey": 131074,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2206389,
+          "workOvershoot": 0,
+          "nodesExpanded": 208567,
+          "elapsedMs": 6040,
+          "observedGeneratedRecords": 70,
+          "summary": {
+            "expandedParents": 208567,
+            "totalExpansionWork": 969554,
+            "zeroSuccessorParents": 29555,
+            "oneSuccessorParents": 106311,
+            "branchingParents": 72701,
+            "oneSuccessorParentRate": 0.5097210968178092,
+            "forcedExpansionWork": 346335,
+            "forcedExpansionWorkShare": 0.35721063499299677,
+            "deadEndExpansionWork": 264563,
+            "branchingExpansionWork": 358656,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 346335,
+              "expansionWorkShareAtOneSuccessorParents": 0.35721063499299677
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 70,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 3,
+              "allParentsForcedPhaseRate": 0.04285714285714286,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 47986,
+              "meanLength": 2.2154586754470054,
+              "p50Length": 2,
+              "p90Length": 5,
+              "maxLength": 12,
+              "maxWorkSpent": 101,
+              "terminations": {
+                "branch": 24533,
+                "dead-end": 9502,
+                "forced-child-not-retained": 13951
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R01269",
+      "gates": [
+        {
+          "gateKey": 524288,
+          "status": "work-budget-phase-boundary",
+          "workBudget": 5000000,
+          "workSpent": 5015648,
+          "workOvershoot": 15648,
+          "nodesExpanded": 0,
+          "elapsedMs": 24864,
+          "observedGeneratedRecords": 130,
+          "summary": {
+            "expandedParents": 577253,
+            "totalExpansionWork": 2375662,
+            "zeroSuccessorParents": 45080,
+            "oneSuccessorParents": 281010,
+            "branchingParents": 251163,
+            "oneSuccessorParentRate": 0.4868056120972953,
+            "forcedExpansionWork": 796761,
+            "forcedExpansionWorkShare": 0.335384831680601,
+            "deadEndExpansionWork": 51784,
+            "branchingExpansionWork": 1527117,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 796761,
+              "expansionWorkShareAtOneSuccessorParents": 0.335384831680601
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 130,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 163644,
+              "meanLength": 1.7172031971841315,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 13,
+              "maxWorkSpent": 52,
+              "terminations": {
+                "branch": 74340,
+                "dead-end": 13548,
+                "forced-child-not-retained": 75756
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R01290",
+      "gates": [
+        {
+          "gateKey": 196613,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3190450,
+          "workOvershoot": 0,
+          "nodesExpanded": 353100,
+          "elapsedMs": 13025,
+          "observedGeneratedRecords": 99,
+          "summary": {
+            "expandedParents": 353100,
+            "totalExpansionWork": 1415238,
+            "zeroSuccessorParents": 55289,
+            "oneSuccessorParents": 157872,
+            "branchingParents": 139939,
+            "oneSuccessorParentRate": 0.44710280373831773,
+            "forcedExpansionWork": 437887,
+            "forcedExpansionWorkShare": 0.30940873549183956,
+            "deadEndExpansionWork": 190592,
+            "branchingExpansionWork": 786759,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 437887,
+              "expansionWorkShareAtOneSuccessorParents": 0.30940873549183956
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 99,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 2,
+              "allParentsForcedPhaseRate": 0.020202020202020204,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 89396,
+              "meanLength": 1.7659850552597431,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 12,
+              "maxWorkSpent": 53,
+              "terminations": {
+                "branch": 42884,
+                "dead-end": 15128,
+                "forced-child-not-retained": 31384
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R01516",
+      "gates": [
+        {
+          "gateKey": 524298,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3734630,
+          "workOvershoot": 0,
+          "nodesExpanded": 390815,
+          "elapsedMs": 14175,
+          "observedGeneratedRecords": 111,
+          "summary": {
+            "expandedParents": 390815,
+            "totalExpansionWork": 1934618,
+            "zeroSuccessorParents": 58095,
+            "oneSuccessorParents": 99732,
+            "branchingParents": 232988,
+            "oneSuccessorParentRate": 0.2551897956833796,
+            "forcedExpansionWork": 334882,
+            "forcedExpansionWorkShare": 0.17309980574976558,
+            "deadEndExpansionWork": 279892,
+            "branchingExpansionWork": 1319844,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 334882,
+              "expansionWorkShareAtOneSuccessorParents": 0.17309980574976558
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 111,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.009009009009009009,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 77345,
+              "meanLength": 1.289443402934902,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 12,
+              "maxWorkSpent": 144,
+              "terminations": {
+                "branch": 33953,
+                "dead-end": 12080,
+                "forced-child-not-retained": 31312
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R01551",
+      "gates": [
+        {
+          "gateKey": 131082,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2082479,
+          "workOvershoot": 0,
+          "nodesExpanded": 215663,
+          "elapsedMs": 6313,
+          "observedGeneratedRecords": 73,
+          "summary": {
+            "expandedParents": 215663,
+            "totalExpansionWork": 1107824,
+            "zeroSuccessorParents": 32058,
+            "oneSuccessorParents": 79558,
+            "branchingParents": 104047,
+            "oneSuccessorParentRate": 0.3688996258050755,
+            "forcedExpansionWork": 334838,
+            "forcedExpansionWorkShare": 0.30224837158248963,
+            "deadEndExpansionWork": 182650,
+            "branchingExpansionWork": 590336,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 334838,
+              "expansionWorkShareAtOneSuccessorParents": 0.30224837158248963
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 73,
+              "singletonOutcomePhases": 4,
+              "singletonOutcomePhaseRate": 0.0547945205479452,
+              "singletonToSingletonPhases": 4,
+              "singletonToSingletonPhaseRate": 0.0547945205479452,
+              "allParentsForcedPhases": 4,
+              "allParentsForcedPhaseRate": 0.0547945205479452,
+              "singletonOutcomeDiscoveryWork": 4,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 49034,
+              "meanLength": 1.6225068319941265,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 14,
+              "maxWorkSpent": 196,
+              "terminations": {
+                "branch": 20533,
+                "dead-end": 9905,
+                "forced-child-not-retained": 18596
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R01625",
+      "gates": [
+        {
+          "gateKey": 2,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2664102,
+          "workOvershoot": 0,
+          "nodesExpanded": 310219,
+          "elapsedMs": 8329,
+          "observedGeneratedRecords": 84,
+          "summary": {
+            "expandedParents": 310219,
+            "totalExpansionWork": 1432539,
+            "zeroSuccessorParents": 49034,
+            "oneSuccessorParents": 108686,
+            "branchingParents": 152499,
+            "oneSuccessorParentRate": 0.3503524929162946,
+            "forcedExpansionWork": 320805,
+            "forcedExpansionWorkShare": 0.22394154714112496,
+            "deadEndExpansionWork": 361510,
+            "branchingExpansionWork": 750224,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 320805,
+              "expansionWorkShareAtOneSuccessorParents": 0.22394154714112496
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 84,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 77655,
+              "meanLength": 1.3996007984031935,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 8,
+              "maxWorkSpent": 157,
+              "terminations": {
+                "branch": 35423,
+                "dead-end": 16638,
+                "forced-child-not-retained": 25594
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02030",
+      "gates": [
+        {
+          "gateKey": 131080,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2005305,
+          "workOvershoot": 0,
+          "nodesExpanded": 218544,
+          "elapsedMs": 6323,
+          "observedGeneratedRecords": 61,
+          "summary": {
+            "expandedParents": 218544,
+            "totalExpansionWork": 1004575,
+            "zeroSuccessorParents": 15922,
+            "oneSuccessorParents": 102704,
+            "branchingParents": 99918,
+            "oneSuccessorParentRate": 0.469946555384728,
+            "forcedExpansionWork": 291675,
+            "forcedExpansionWorkShare": 0.29034666401214443,
+            "deadEndExpansionWork": 182695,
+            "branchingExpansionWork": 530205,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 291675,
+              "expansionWorkShareAtOneSuccessorParents": 0.29034666401214443
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 61,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.01639344262295082,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 62071,
+              "meanLength": 1.6546213207455978,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 7,
+              "maxWorkSpent": 54,
+              "terminations": {
+                "branch": 31810,
+                "dead-end": 5896,
+                "forced-child-not-retained": 24365
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02072",
+      "gates": [
+        {
+          "gateKey": 196611,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2912532,
+          "workOvershoot": 0,
+          "nodesExpanded": 279419,
+          "elapsedMs": 8066,
+          "observedGeneratedRecords": 75,
+          "summary": {
+            "expandedParents": 279419,
+            "totalExpansionWork": 1602336,
+            "zeroSuccessorParents": 26365,
+            "oneSuccessorParents": 132726,
+            "branchingParents": 120328,
+            "oneSuccessorParentRate": 0.47500706823802247,
+            "forcedExpansionWork": 665908,
+            "forcedExpansionWorkShare": 0.41558574481257365,
+            "deadEndExpansionWork": 95659,
+            "branchingExpansionWork": 840769,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 665908,
+              "expansionWorkShareAtOneSuccessorParents": 0.41558574481257365
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 75,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 87656,
+              "meanLength": 1.514169024367984,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 12,
+              "maxWorkSpent": 170,
+              "terminations": {
+                "branch": 47493,
+                "dead-end": 12459,
+                "forced-child-not-retained": 27704
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02091",
+      "gates": [
+        {
+          "gateKey": 589830,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3538880,
+          "workOvershoot": 0,
+          "nodesExpanded": 388080,
+          "elapsedMs": 16065,
+          "observedGeneratedRecords": 105,
+          "summary": {
+            "expandedParents": 388080,
+            "totalExpansionWork": 1820212,
+            "zeroSuccessorParents": 57975,
+            "oneSuccessorParents": 116865,
+            "branchingParents": 213240,
+            "oneSuccessorParentRate": 0.30113636363636365,
+            "forcedExpansionWork": 274025,
+            "forcedExpansionWorkShare": 0.15054565072639892,
+            "deadEndExpansionWork": 440507,
+            "branchingExpansionWork": 1105680,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 274025,
+              "expansionWorkShareAtOneSuccessorParents": 0.15054565072639892
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 105,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.009523809523809525,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 88227,
+              "meanLength": 1.3245945118841171,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 8,
+              "maxWorkSpent": 46,
+              "terminations": {
+                "branch": 38003,
+                "dead-end": 17381,
+                "forced-child-not-retained": 32843
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02118",
+      "gates": [
+        {
+          "gateKey": 589824,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1910934,
+          "workOvershoot": 0,
+          "nodesExpanded": 187526,
+          "elapsedMs": 5540,
+          "observedGeneratedRecords": 68,
+          "summary": {
+            "expandedParents": 187526,
+            "totalExpansionWork": 1048889,
+            "zeroSuccessorParents": 32867,
+            "oneSuccessorParents": 78959,
+            "branchingParents": 75700,
+            "oneSuccessorParentRate": 0.42105628019581287,
+            "forcedExpansionWork": 235498,
+            "forcedExpansionWorkShare": 0.22452137452104085,
+            "deadEndExpansionWork": 461264,
+            "branchingExpansionWork": 352127,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 235498,
+              "expansionWorkShareAtOneSuccessorParents": 0.22452137452104085
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 68,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 4,
+              "allParentsForcedPhaseRate": 0.058823529411764705,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 54016,
+              "meanLength": 1.461770586492891,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 8,
+              "maxWorkSpent": 122,
+              "terminations": {
+                "branch": 28393,
+                "dead-end": 12400,
+                "forced-child-not-retained": 13223
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02154",
+      "gates": [
+        {
+          "gateKey": 327683,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3810275,
+          "workOvershoot": 0,
+          "nodesExpanded": 453578,
+          "elapsedMs": 18516,
+          "observedGeneratedRecords": 108,
+          "summary": {
+            "expandedParents": 453578,
+            "totalExpansionWork": 2030870,
+            "zeroSuccessorParents": 40002,
+            "oneSuccessorParents": 128896,
+            "branchingParents": 284680,
+            "oneSuccessorParentRate": 0.2841760402841408,
+            "forcedExpansionWork": 324401,
+            "forcedExpansionWorkShare": 0.1597349904228237,
+            "deadEndExpansionWork": 48831,
+            "branchingExpansionWork": 1657638,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 324401,
+              "expansionWorkShareAtOneSuccessorParents": 0.1597349904228237
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 108,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 107052,
+              "meanLength": 1.204050368045436,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 9,
+              "maxWorkSpent": 41,
+              "terminations": {
+                "branch": 56235,
+                "forced-child-not-retained": 43231,
+                "dead-end": 7586
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02187",
+      "gates": [
+        {
+          "gateKey": 262149,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1597963,
+          "workOvershoot": 0,
+          "nodesExpanded": 178537,
+          "elapsedMs": 4845,
+          "observedGeneratedRecords": 71,
+          "summary": {
+            "expandedParents": 178537,
+            "totalExpansionWork": 668837,
+            "zeroSuccessorParents": 34156,
+            "oneSuccessorParents": 80390,
+            "branchingParents": 63991,
+            "oneSuccessorParentRate": 0.4502708122125946,
+            "forcedExpansionWork": 182199,
+            "forcedExpansionWorkShare": 0.27241166382840665,
+            "deadEndExpansionWork": 210669,
+            "branchingExpansionWork": 275969,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 182199,
+              "expansionWorkShareAtOneSuccessorParents": 0.27241166382840665
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 71,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.014084507042253521,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 45988,
+              "meanLength": 1.7480647125337045,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 10,
+              "maxWorkSpent": 45,
+              "terminations": {
+                "branch": 21540,
+                "dead-end": 15182,
+                "forced-child-not-retained": 9266
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02199",
+      "gates": [
+        {
+          "gateKey": 262148,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2984017,
+          "workOvershoot": 0,
+          "nodesExpanded": 321770,
+          "elapsedMs": 10976,
+          "observedGeneratedRecords": 77,
+          "summary": {
+            "expandedParents": 321770,
+            "totalExpansionWork": 1616219,
+            "zeroSuccessorParents": 36448,
+            "oneSuccessorParents": 139841,
+            "branchingParents": 145481,
+            "oneSuccessorParentRate": 0.4345992479099978,
+            "forcedExpansionWork": 320703,
+            "forcedExpansionWorkShare": 0.19842793581810386,
+            "deadEndExpansionWork": 534078,
+            "branchingExpansionWork": 761438,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 320703,
+              "expansionWorkShareAtOneSuccessorParents": 0.19842793581810386
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 77,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 88426,
+              "meanLength": 1.5814466333431343,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 10,
+              "maxWorkSpent": 55,
+              "terminations": {
+                "branch": 46997,
+                "dead-end": 10065,
+                "forced-child-not-retained": 31364
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02203",
+      "gates": [
+        {
+          "gateKey": 196619,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2978705,
+          "workOvershoot": 0,
+          "nodesExpanded": 297339,
+          "elapsedMs": 10299,
+          "observedGeneratedRecords": 96,
+          "summary": {
+            "expandedParents": 297339,
+            "totalExpansionWork": 1361833,
+            "zeroSuccessorParents": 48948,
+            "oneSuccessorParents": 136947,
+            "branchingParents": 111444,
+            "oneSuccessorParentRate": 0.4605753029370516,
+            "forcedExpansionWork": 450107,
+            "forcedExpansionWorkShare": 0.33051556248086217,
+            "deadEndExpansionWork": 319715,
+            "branchingExpansionWork": 592011,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 450107,
+              "expansionWorkShareAtOneSuccessorParents": 0.33051556248086217
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 96,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 75690,
+              "meanLength": 1.8093143083630598,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 15,
+              "maxWorkSpent": 157,
+              "terminations": {
+                "branch": 32728,
+                "dead-end": 18224,
+                "forced-child-not-retained": 24738
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02280",
+      "gates": [
+        {
+          "gateKey": 262145,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2709141,
+          "workOvershoot": 0,
+          "nodesExpanded": 281109,
+          "elapsedMs": 9628,
+          "observedGeneratedRecords": 76,
+          "summary": {
+            "expandedParents": 281109,
+            "totalExpansionWork": 1162292,
+            "zeroSuccessorParents": 40253,
+            "oneSuccessorParents": 134500,
+            "branchingParents": 106356,
+            "oneSuccessorParentRate": 0.47846209121728583,
+            "forcedExpansionWork": 337707,
+            "forcedExpansionWorkShare": 0.29055263221290345,
+            "deadEndExpansionWork": 288607,
+            "branchingExpansionWork": 535978,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 337707,
+              "expansionWorkShareAtOneSuccessorParents": 0.29055263221290345
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 76,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 69218,
+              "meanLength": 1.943136178450692,
+              "p50Length": 2,
+              "p90Length": 3,
+              "maxLength": 9,
+              "maxWorkSpent": 40,
+              "terminations": {
+                "branch": 35813,
+                "dead-end": 10844,
+                "forced-child-not-retained": 22561
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02317",
+      "gates": [
+        {
+          "gateKey": 589826,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2945808,
+          "workOvershoot": 0,
+          "nodesExpanded": 319357,
+          "elapsedMs": 10118,
+          "observedGeneratedRecords": 83,
+          "summary": {
+            "expandedParents": 319357,
+            "totalExpansionWork": 1280793,
+            "zeroSuccessorParents": 51473,
+            "oneSuccessorParents": 129977,
+            "branchingParents": 137907,
+            "oneSuccessorParentRate": 0.4069959324517703,
+            "forcedExpansionWork": 340528,
+            "forcedExpansionWorkShare": 0.265872783502096,
+            "deadEndExpansionWork": 302832,
+            "branchingExpansionWork": 637433,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 340528,
+              "expansionWorkShareAtOneSuccessorParents": 0.265872783502096
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 83,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.012048192771084338,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 80555,
+              "meanLength": 1.613518713922165,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 10,
+              "maxWorkSpent": 53,
+              "terminations": {
+                "branch": 43288,
+                "dead-end": 16560,
+                "forced-child-not-retained": 20707
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02334",
+      "gates": [
+        {
+          "gateKey": 720909,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3661990,
+          "workOvershoot": 0,
+          "nodesExpanded": 399190,
+          "elapsedMs": 15240,
+          "observedGeneratedRecords": 92,
+          "summary": {
+            "expandedParents": 399190,
+            "totalExpansionWork": 2024387,
+            "zeroSuccessorParents": 47919,
+            "oneSuccessorParents": 161969,
+            "branchingParents": 189302,
+            "oneSuccessorParentRate": 0.40574413186703073,
+            "forcedExpansionWork": 422994,
+            "forcedExpansionWorkShare": 0.20894917819567108,
+            "deadEndExpansionWork": 559485,
+            "branchingExpansionWork": 1041908,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 422994,
+              "expansionWorkShareAtOneSuccessorParents": 0.20894917819567108
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 92,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 113124,
+              "meanLength": 1.43178282238959,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 10,
+              "maxWorkSpent": 52,
+              "terminations": {
+                "branch": 56060,
+                "dead-end": 12598,
+                "forced-child-not-retained": 44466
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02395",
+      "gates": [
+        {
+          "gateKey": 524295,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2025777,
+          "workOvershoot": 0,
+          "nodesExpanded": 197744,
+          "elapsedMs": 5111,
+          "observedGeneratedRecords": 86,
+          "summary": {
+            "expandedParents": 197744,
+            "totalExpansionWork": 1101092,
+            "zeroSuccessorParents": 44653,
+            "oneSuccessorParents": 71346,
+            "branchingParents": 81745,
+            "oneSuccessorParentRate": 0.36079982199207056,
+            "forcedExpansionWork": 331958,
+            "forcedExpansionWorkShare": 0.3014807118751203,
+            "deadEndExpansionWork": 352459,
+            "branchingExpansionWork": 416675,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 331958,
+              "expansionWorkShareAtOneSuccessorParents": 0.3014807118751203
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 86,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 41328,
+              "meanLength": 1.7263356562137049,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 11,
+              "maxWorkSpent": 183,
+              "terminations": {
+                "branch": 16223,
+                "dead-end": 14197,
+                "forced-child-not-retained": 10908
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02403",
+      "gates": [
+        {
+          "gateKey": 655360,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2364394,
+          "workOvershoot": 0,
+          "nodesExpanded": 268648,
+          "elapsedMs": 11203,
+          "observedGeneratedRecords": 79,
+          "summary": {
+            "expandedParents": 268648,
+            "totalExpansionWork": 1307173,
+            "zeroSuccessorParents": 44066,
+            "oneSuccessorParents": 67224,
+            "branchingParents": 157358,
+            "oneSuccessorParentRate": 0.2502307852654775,
+            "forcedExpansionWork": 230081,
+            "forcedExpansionWorkShare": 0.1760141924596056,
+            "deadEndExpansionWork": 409559,
+            "branchingExpansionWork": 667533,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 230081,
+              "expansionWorkShareAtOneSuccessorParents": 0.1760141924596056
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 79,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 53484,
+              "meanLength": 1.2568992595916535,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 7,
+              "maxWorkSpent": 44,
+              "terminations": {
+                "branch": 22668,
+                "dead-end": 11020,
+                "forced-child-not-retained": 19796
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02408",
+      "gates": [
+        {
+          "gateKey": 524299,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3854429,
+          "workOvershoot": 0,
+          "nodesExpanded": 373223,
+          "elapsedMs": 15533,
+          "observedGeneratedRecords": 91,
+          "summary": {
+            "expandedParents": 373223,
+            "totalExpansionWork": 1844865,
+            "zeroSuccessorParents": 56477,
+            "oneSuccessorParents": 177644,
+            "branchingParents": 139102,
+            "oneSuccessorParentRate": 0.47597280982147405,
+            "forcedExpansionWork": 860550,
+            "forcedExpansionWorkShare": 0.46645689521997546,
+            "deadEndExpansionWork": 64408,
+            "branchingExpansionWork": 919907,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 860550,
+              "expansionWorkShareAtOneSuccessorParents": 0.46645689521997546
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 91,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 92650,
+              "meanLength": 1.9173664328116569,
+              "p50Length": 1,
+              "p90Length": 4,
+              "maxLength": 12,
+              "maxWorkSpent": 143,
+              "terminations": {
+                "branch": 45014,
+                "dead-end": 22742,
+                "forced-child-not-retained": 24894
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02432",
+      "gates": [
+        {
+          "gateKey": 393223,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3243954,
+          "workOvershoot": 0,
+          "nodesExpanded": 302581,
+          "elapsedMs": 13161,
+          "observedGeneratedRecords": 87,
+          "summary": {
+            "expandedParents": 302581,
+            "totalExpansionWork": 1706883,
+            "zeroSuccessorParents": 41246,
+            "oneSuccessorParents": 131262,
+            "branchingParents": 130073,
+            "oneSuccessorParentRate": 0.43380780683519454,
+            "forcedExpansionWork": 551744,
+            "forcedExpansionWorkShare": 0.3232465259774689,
+            "deadEndExpansionWork": 265930,
+            "branchingExpansionWork": 889209,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 551744,
+              "expansionWorkShareAtOneSuccessorParents": 0.3232465259774689
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 87,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.011494252873563218,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 81979,
+              "meanLength": 1.6011661523072982,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 12,
+              "maxWorkSpent": 164,
+              "terminations": {
+                "branch": 35038,
+                "forced-child-not-retained": 31508,
+                "dead-end": 15433
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02437",
+      "gates": [
+        {
+          "gateKey": 786432,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2919302,
+          "workOvershoot": 0,
+          "nodesExpanded": 320472,
+          "elapsedMs": 13969,
+          "observedGeneratedRecords": 87,
+          "summary": {
+            "expandedParents": 320472,
+            "totalExpansionWork": 1609723,
+            "zeroSuccessorParents": 15697,
+            "oneSuccessorParents": 101244,
+            "branchingParents": 203531,
+            "oneSuccessorParentRate": 0.31592151576424776,
+            "forcedExpansionWork": 299107,
+            "forcedExpansionWorkShare": 0.18581271436141497,
+            "deadEndExpansionWork": 29447,
+            "branchingExpansionWork": 1281169,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 299107,
+              "expansionWorkShareAtOneSuccessorParents": 0.18581271436141497
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 87,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 87757,
+              "meanLength": 1.1536857458664267,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 6,
+              "maxWorkSpent": 40,
+              "terminations": {
+                "branch": 49183,
+                "dead-end": 5987,
+                "forced-child-not-retained": 32587
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02470",
+      "gates": [
+        {
+          "gateKey": 720904,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2913193,
+          "workOvershoot": 0,
+          "nodesExpanded": 345273,
+          "elapsedMs": 10863,
+          "observedGeneratedRecords": 82,
+          "summary": {
+            "expandedParents": 345273,
+            "totalExpansionWork": 1406112,
+            "zeroSuccessorParents": 41706,
+            "oneSuccessorParents": 134585,
+            "branchingParents": 168982,
+            "oneSuccessorParentRate": 0.3897930043762472,
+            "forcedExpansionWork": 336753,
+            "forcedExpansionWorkShare": 0.2394923021779204,
+            "deadEndExpansionWork": 105054,
+            "branchingExpansionWork": 964305,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 336753,
+              "expansionWorkShareAtOneSuccessorParents": 0.2394923021779204
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 82,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 115214,
+              "meanLength": 1.1681306091273629,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 6,
+              "maxWorkSpent": 44,
+              "terminations": {
+                "branch": 63405,
+                "dead-end": 12932,
+                "forced-child-not-retained": 38877
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02472",
+      "gates": [
+        {
+          "gateKey": 196620,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 4320484,
+          "workOvershoot": 0,
+          "nodesExpanded": 474053,
+          "elapsedMs": 19557,
+          "observedGeneratedRecords": 135,
+          "summary": {
+            "expandedParents": 474053,
+            "totalExpansionWork": 2043264,
+            "zeroSuccessorParents": 73182,
+            "oneSuccessorParents": 175472,
+            "branchingParents": 225399,
+            "oneSuccessorParentRate": 0.37015270444443976,
+            "forcedExpansionWork": 427659,
+            "forcedExpansionWorkShare": 0.20930188169517008,
+            "deadEndExpansionWork": 363013,
+            "branchingExpansionWork": 1252592,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 427659,
+              "expansionWorkShareAtOneSuccessorParents": 0.20930188169517008
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 135,
+              "singletonOutcomePhases": 2,
+              "singletonOutcomePhaseRate": 0.014814814814814815,
+              "singletonToSingletonPhases": 1,
+              "singletonToSingletonPhaseRate": 0.007407407407407408,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.007407407407407408,
+              "singletonOutcomeDiscoveryWork": 243,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 119739,
+              "meanLength": 1.4654540291801335,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 13,
+              "maxWorkSpent": 66,
+              "terminations": {
+                "branch": 48558,
+                "dead-end": 22680,
+                "forced-child-not-retained": 48501
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02498",
+      "gates": [
+        {
+          "gateKey": 655363,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2121042,
+          "workOvershoot": 0,
+          "nodesExpanded": 246638,
+          "elapsedMs": 6870,
+          "observedGeneratedRecords": 69,
+          "summary": {
+            "expandedParents": 246638,
+            "totalExpansionWork": 1112096,
+            "zeroSuccessorParents": 36393,
+            "oneSuccessorParents": 101554,
+            "branchingParents": 108691,
+            "oneSuccessorParentRate": 0.4117532578110429,
+            "forcedExpansionWork": 260233,
+            "forcedExpansionWorkShare": 0.23400228037867235,
+            "deadEndExpansionWork": 277559,
+            "branchingExpansionWork": 574304,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 260233,
+              "expansionWorkShareAtOneSuccessorParents": 0.23400228037867235
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 69,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 68503,
+              "meanLength": 1.4824752200633549,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 9,
+              "maxWorkSpent": 54,
+              "terminations": {
+                "branch": 37526,
+                "forced-child-not-retained": 19083,
+                "dead-end": 11894
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02541",
+      "gates": [
+        {
+          "gateKey": 65538,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1924343,
+          "workOvershoot": 0,
+          "nodesExpanded": 223164,
+          "elapsedMs": 7624,
+          "observedGeneratedRecords": 69,
+          "summary": {
+            "expandedParents": 223164,
+            "totalExpansionWork": 1071203,
+            "zeroSuccessorParents": 24896,
+            "oneSuccessorParents": 49651,
+            "branchingParents": 148617,
+            "oneSuccessorParentRate": 0.22248660178164936,
+            "forcedExpansionWork": 165646,
+            "forcedExpansionWorkShare": 0.15463548925833853,
+            "deadEndExpansionWork": 92441,
+            "branchingExpansionWork": 813116,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 165646,
+              "expansionWorkShareAtOneSuccessorParents": 0.15463548925833853
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 69,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 37659,
+              "meanLength": 1.3184364959239492,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 14,
+              "maxWorkSpent": 82,
+              "terminations": {
+                "branch": 15916,
+                "dead-end": 6423,
+                "forced-child-not-retained": 15320
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02545",
+      "gates": [
+        {
+          "gateKey": 393218,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 905992,
+          "workOvershoot": 0,
+          "nodesExpanded": 92132,
+          "elapsedMs": 2213,
+          "observedGeneratedRecords": 32,
+          "summary": {
+            "expandedParents": 92132,
+            "totalExpansionWork": 539339,
+            "zeroSuccessorParents": 15146,
+            "oneSuccessorParents": 25131,
+            "branchingParents": 51855,
+            "oneSuccessorParentRate": 0.2727716754222203,
+            "forcedExpansionWork": 63011,
+            "forcedExpansionWorkShare": 0.11683004566701091,
+            "deadEndExpansionWork": 283101,
+            "branchingExpansionWork": 193227,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 63011,
+              "expansionWorkShareAtOneSuccessorParents": 0.11683004566701091
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 32,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 17574,
+              "meanLength": 1.4300102424035508,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 6,
+              "maxWorkSpent": 42,
+              "terminations": {
+                "dead-end": 1027,
+                "branch": 9441,
+                "forced-child-not-retained": 7106
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02588",
+      "gates": [
+        {
+          "gateKey": 720903,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2946882,
+          "workOvershoot": 0,
+          "nodesExpanded": 351938,
+          "elapsedMs": 11424,
+          "observedGeneratedRecords": 97,
+          "summary": {
+            "expandedParents": 351938,
+            "totalExpansionWork": 1436169,
+            "zeroSuccessorParents": 55500,
+            "oneSuccessorParents": 136060,
+            "branchingParents": 160378,
+            "oneSuccessorParentRate": 0.3866021856122385,
+            "forcedExpansionWork": 378928,
+            "forcedExpansionWorkShare": 0.2638463857665776,
+            "deadEndExpansionWork": 204568,
+            "branchingExpansionWork": 852673,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 378928,
+              "expansionWorkShareAtOneSuccessorParents": 0.2638463857665776
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 97,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 93424,
+              "meanLength": 1.4563709539304674,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 10,
+              "maxWorkSpent": 130,
+              "terminations": {
+                "branch": 44827,
+                "dead-end": 15957,
+                "forced-child-not-retained": 32640
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02621",
+      "gates": [
+        {
+          "gateKey": 65548,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2611230,
+          "workOvershoot": 0,
+          "nodesExpanded": 307976,
+          "elapsedMs": 9348,
+          "observedGeneratedRecords": 84,
+          "summary": {
+            "expandedParents": 307976,
+            "totalExpansionWork": 1267279,
+            "zeroSuccessorParents": 34138,
+            "oneSuccessorParents": 128073,
+            "branchingParents": 145765,
+            "oneSuccessorParentRate": 0.4158538327661896,
+            "forcedExpansionWork": 328380,
+            "forcedExpansionWorkShare": 0.25912210334109537,
+            "deadEndExpansionWork": 93091,
+            "branchingExpansionWork": 845808,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 328380,
+              "expansionWorkShareAtOneSuccessorParents": 0.25912210334109537
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 84,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.011904761904761904,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 86887,
+              "meanLength": 1.4740179773729096,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 7,
+              "maxWorkSpent": 53,
+              "terminations": {
+                "branch": 44279,
+                "dead-end": 10468,
+                "forced-child-not-retained": 32140
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02625",
+      "gates": [
+        {
+          "gateKey": 524288,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2550395,
+          "workOvershoot": 0,
+          "nodesExpanded": 305398,
+          "elapsedMs": 7480,
+          "observedGeneratedRecords": 79,
+          "summary": {
+            "expandedParents": 305398,
+            "totalExpansionWork": 1380218,
+            "zeroSuccessorParents": 54631,
+            "oneSuccessorParents": 89207,
+            "branchingParents": 161560,
+            "oneSuccessorParentRate": 0.29210079961230917,
+            "forcedExpansionWork": 245865,
+            "forcedExpansionWorkShare": 0.17813490332686577,
+            "deadEndExpansionWork": 182256,
+            "branchingExpansionWork": 952097,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 245865,
+              "expansionWorkShareAtOneSuccessorParents": 0.17813490332686577
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 79,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.012658227848101266,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 68687,
+              "meanLength": 1.2987464876905381,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 6,
+              "maxWorkSpent": 80,
+              "terminations": {
+                "branch": 31286,
+                "dead-end": 17953,
+                "forced-child-not-retained": 19448
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02666",
+      "gates": [
+        {
+          "gateKey": 655364,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2601859,
+          "workOvershoot": 0,
+          "nodesExpanded": 255548,
+          "elapsedMs": 6595,
+          "observedGeneratedRecords": 102,
+          "summary": {
+            "expandedParents": 255548,
+            "totalExpansionWork": 1173120,
+            "zeroSuccessorParents": 46274,
+            "oneSuccessorParents": 109977,
+            "branchingParents": 99297,
+            "oneSuccessorParentRate": 0.4303575062219231,
+            "forcedExpansionWork": 239969,
+            "forcedExpansionWorkShare": 0.204556226132024,
+            "deadEndExpansionWork": 570448,
+            "branchingExpansionWork": 362703,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 239969,
+              "expansionWorkShareAtOneSuccessorParents": 0.204556226132024
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 102,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.00980392156862745,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 62956,
+              "meanLength": 1.7468867145307834,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 11,
+              "maxWorkSpent": 96,
+              "terminations": {
+                "branch": 27404,
+                "dead-end": 16276,
+                "forced-child-not-retained": 19276
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02693",
+      "gates": [
+        {
+          "gateKey": 589838,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3959730,
+          "workOvershoot": 0,
+          "nodesExpanded": 436395,
+          "elapsedMs": 13943,
+          "observedGeneratedRecords": 107,
+          "summary": {
+            "expandedParents": 436395,
+            "totalExpansionWork": 1655414,
+            "zeroSuccessorParents": 62289,
+            "oneSuccessorParents": 169131,
+            "branchingParents": 204975,
+            "oneSuccessorParentRate": 0.38756401883614616,
+            "forcedExpansionWork": 469988,
+            "forcedExpansionWorkShare": 0.283909644354826,
+            "deadEndExpansionWork": 131584,
+            "branchingExpansionWork": 1053842,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 469988,
+              "expansionWorkShareAtOneSuccessorParents": 0.283909644354826
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 107,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 105072,
+              "meanLength": 1.6096676564641388,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 10,
+              "maxWorkSpent": 48,
+              "terminations": {
+                "branch": 54866,
+                "dead-end": 22277,
+                "forced-child-not-retained": 27929
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02697",
+      "gates": [
+        {
+          "gateKey": 393222,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1689466,
+          "workOvershoot": 0,
+          "nodesExpanded": 199571,
+          "elapsedMs": 5385,
+          "observedGeneratedRecords": 62,
+          "summary": {
+            "expandedParents": 199571,
+            "totalExpansionWork": 939521,
+            "zeroSuccessorParents": 30474,
+            "oneSuccessorParents": 50905,
+            "branchingParents": 118192,
+            "oneSuccessorParentRate": 0.2550721297182456,
+            "forcedExpansionWork": 118054,
+            "forcedExpansionWorkShare": 0.12565339146224513,
+            "deadEndExpansionWork": 288194,
+            "branchingExpansionWork": 533273,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 118054,
+              "expansionWorkShareAtOneSuccessorParents": 0.12565339146224513
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 62,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 38823,
+              "meanLength": 1.3112072740385854,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 10,
+              "maxWorkSpent": 78,
+              "terminations": {
+                "branch": 14479,
+                "dead-end": 10417,
+                "forced-child-not-retained": 13927
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02733",
+      "gates": [
+        {
+          "gateKey": 589833,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1943151,
+          "workOvershoot": 0,
+          "nodesExpanded": 203553,
+          "elapsedMs": 5315,
+          "observedGeneratedRecords": 65,
+          "summary": {
+            "expandedParents": 203553,
+            "totalExpansionWork": 813625,
+            "zeroSuccessorParents": 31554,
+            "oneSuccessorParents": 112332,
+            "branchingParents": 59667,
+            "oneSuccessorParentRate": 0.5518562733047413,
+            "forcedExpansionWork": 283794,
+            "forcedExpansionWorkShare": 0.3488019665079121,
+            "deadEndExpansionWork": 238991,
+            "branchingExpansionWork": 290840,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 283794,
+              "expansionWorkShareAtOneSuccessorParents": 0.3488019665079121
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 65,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 51843,
+              "meanLength": 2.166772756206238,
+              "p50Length": 1,
+              "p90Length": 4,
+              "maxLength": 15,
+              "maxWorkSpent": 93,
+              "terminations": {
+                "branch": 24892,
+                "dead-end": 13348,
+                "forced-child-not-retained": 13603
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02744",
+      "gates": [
+        {
+          "gateKey": 589827,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1860937,
+          "workOvershoot": 0,
+          "nodesExpanded": 217975,
+          "elapsedMs": 6111,
+          "observedGeneratedRecords": 65,
+          "summary": {
+            "expandedParents": 217975,
+            "totalExpansionWork": 955050,
+            "zeroSuccessorParents": 37323,
+            "oneSuccessorParents": 68095,
+            "branchingParents": 112557,
+            "oneSuccessorParentRate": 0.31239821080399127,
+            "forcedExpansionWork": 178319,
+            "forcedExpansionWorkShare": 0.18671169048740904,
+            "deadEndExpansionWork": 260555,
+            "branchingExpansionWork": 516176,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 178319,
+              "expansionWorkShareAtOneSuccessorParents": 0.18671169048740904
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 65,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.015384615384615385,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 51328,
+              "meanLength": 1.3266638092269327,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 10,
+              "maxWorkSpent": 105,
+              "terminations": {
+                "branch": 22073,
+                "dead-end": 11804,
+                "forced-child-not-retained": 17451
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02747",
+      "gates": [
+        {
+          "gateKey": 786435,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3390783,
+          "workOvershoot": 0,
+          "nodesExpanded": 379019,
+          "elapsedMs": 13886,
+          "observedGeneratedRecords": 100,
+          "summary": {
+            "expandedParents": 379019,
+            "totalExpansionWork": 1671350,
+            "zeroSuccessorParents": 45673,
+            "oneSuccessorParents": 171633,
+            "branchingParents": 161713,
+            "oneSuccessorParentRate": 0.45283481830726163,
+            "forcedExpansionWork": 446557,
+            "forcedExpansionWorkShare": 0.26718341460496003,
+            "deadEndExpansionWork": 447489,
+            "branchingExpansionWork": 777304,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 446557,
+              "expansionWorkShareAtOneSuccessorParents": 0.26718341460496003
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 100,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.01,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 99935,
+              "meanLength": 1.7174463401210787,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 14,
+              "maxWorkSpent": 58,
+              "terminations": {
+                "branch": 39909,
+                "dead-end": 13896,
+                "forced-child-not-retained": 46130
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02751",
+      "gates": [
+        {
+          "gateKey": 262151,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2819952,
+          "workOvershoot": 0,
+          "nodesExpanded": 263131,
+          "elapsedMs": 8167,
+          "observedGeneratedRecords": 65,
+          "summary": {
+            "expandedParents": 263131,
+            "totalExpansionWork": 1883827,
+            "zeroSuccessorParents": 18372,
+            "oneSuccessorParents": 69246,
+            "branchingParents": 175513,
+            "oneSuccessorParentRate": 0.2631616951252418,
+            "forcedExpansionWork": 364164,
+            "forcedExpansionWorkShare": 0.19331074456412398,
+            "deadEndExpansionWork": 87137,
+            "branchingExpansionWork": 1432526,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 364164,
+              "expansionWorkShareAtOneSuccessorParents": 0.19331074456412398
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 65,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.015384615384615385,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 59835,
+              "meanLength": 1.15728252694911,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 7,
+              "maxWorkSpent": 98,
+              "terminations": {
+                "branch": 31062,
+                "dead-end": 7012,
+                "forced-child-not-retained": 21761
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02768",
+      "gates": [
+        {
+          "gateKey": 458755,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1773218,
+          "workOvershoot": 0,
+          "nodesExpanded": 212009,
+          "elapsedMs": 5378,
+          "observedGeneratedRecords": 79,
+          "summary": {
+            "expandedParents": 212009,
+            "totalExpansionWork": 864247,
+            "zeroSuccessorParents": 46586,
+            "oneSuccessorParents": 65014,
+            "branchingParents": 100409,
+            "oneSuccessorParentRate": 0.3066567928720007,
+            "forcedExpansionWork": 152364,
+            "forcedExpansionWorkShare": 0.1762968225518862,
+            "deadEndExpansionWork": 310209,
+            "branchingExpansionWork": 401674,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 152364,
+              "expansionWorkShareAtOneSuccessorParents": 0.1762968225518862
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 79,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 46202,
+              "meanLength": 1.4071685208432536,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 10,
+              "maxWorkSpent": 172,
+              "terminations": {
+                "branch": 21658,
+                "dead-end": 12443,
+                "forced-child-not-retained": 12101
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02904",
+      "gates": [
+        {
+          "gateKey": 524294,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1942617,
+          "workOvershoot": 0,
+          "nodesExpanded": 221110,
+          "elapsedMs": 6051,
+          "observedGeneratedRecords": 86,
+          "summary": {
+            "expandedParents": 221110,
+            "totalExpansionWork": 1061927,
+            "zeroSuccessorParents": 35121,
+            "oneSuccessorParents": 83761,
+            "branchingParents": 102228,
+            "oneSuccessorParentRate": 0.37882049658540995,
+            "forcedExpansionWork": 186597,
+            "forcedExpansionWorkShare": 0.1757154682007332,
+            "deadEndExpansionWork": 479445,
+            "branchingExpansionWork": 395885,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 186597,
+              "expansionWorkShareAtOneSuccessorParents": 0.1757154682007332
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 86,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.011627906976744186,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 51481,
+              "meanLength": 1.6270274470192887,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 10,
+              "maxWorkSpent": 72,
+              "terminations": {
+                "branch": 18086,
+                "dead-end": 11974,
+                "forced-child-not-retained": 21421
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02951",
+      "gates": [
+        {
+          "gateKey": 720905,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 4650281,
+          "workOvershoot": 0,
+          "nodesExpanded": 441973,
+          "elapsedMs": 14799,
+          "observedGeneratedRecords": 115,
+          "summary": {
+            "expandedParents": 441973,
+            "totalExpansionWork": 2503037,
+            "zeroSuccessorParents": 72200,
+            "oneSuccessorParents": 124442,
+            "branchingParents": 245331,
+            "oneSuccessorParentRate": 0.2815601858032052,
+            "forcedExpansionWork": 669016,
+            "forcedExpansionWorkShare": 0.26728170618332847,
+            "deadEndExpansionWork": 361445,
+            "branchingExpansionWork": 1472576,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 669016,
+              "expansionWorkShareAtOneSuccessorParents": 0.26728170618332847
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 115,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 93201,
+              "meanLength": 1.3352002660915656,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 10,
+              "maxWorkSpent": 195,
+              "terminations": {
+                "branch": 41435,
+                "dead-end": 18725,
+                "forced-child-not-retained": 33041
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R02954",
+      "gates": [
+        {
+          "gateKey": 655367,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2871181,
+          "workOvershoot": 0,
+          "nodesExpanded": 299192,
+          "elapsedMs": 10314,
+          "observedGeneratedRecords": 90,
+          "summary": {
+            "expandedParents": 299192,
+            "totalExpansionWork": 1206019,
+            "zeroSuccessorParents": 40095,
+            "oneSuccessorParents": 136170,
+            "branchingParents": 122927,
+            "oneSuccessorParentRate": 0.45512580550282095,
+            "forcedExpansionWork": 358904,
+            "forcedExpansionWorkShare": 0.29759398483771815,
+            "deadEndExpansionWork": 235724,
+            "branchingExpansionWork": 611391,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 358904,
+              "expansionWorkShareAtOneSuccessorParents": 0.29759398483771815
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 90,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.011111111111111112,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 80678,
+              "meanLength": 1.687820719403059,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 15,
+              "maxWorkSpent": 46,
+              "terminations": {
+                "branch": 38529,
+                "dead-end": 14103,
+                "forced-child-not-retained": 28046
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03021",
+      "gates": [
+        {
+          "gateKey": 589833,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2437303,
+          "workOvershoot": 0,
+          "nodesExpanded": 296371,
+          "elapsedMs": 8618,
+          "observedGeneratedRecords": 84,
+          "summary": {
+            "expandedParents": 296371,
+            "totalExpansionWork": 1202483,
+            "zeroSuccessorParents": 42059,
+            "oneSuccessorParents": 120009,
+            "branchingParents": 134303,
+            "oneSuccessorParentRate": 0.4049282824567856,
+            "forcedExpansionWork": 290668,
+            "forcedExpansionWorkShare": 0.2417231678119358,
+            "deadEndExpansionWork": 223648,
+            "branchingExpansionWork": 688167,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 290668,
+              "expansionWorkShareAtOneSuccessorParents": 0.2417231678119358
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 84,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 84674,
+              "meanLength": 1.4173063750383825,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 7,
+              "maxWorkSpent": 43,
+              "terminations": {
+                "branch": 45796,
+                "dead-end": 18470,
+                "forced-child-not-retained": 20408
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03088",
+      "gates": [
+        {
+          "gateKey": 589828,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2054708,
+          "workOvershoot": 0,
+          "nodesExpanded": 225785,
+          "elapsedMs": 5591,
+          "observedGeneratedRecords": 72,
+          "summary": {
+            "expandedParents": 225785,
+            "totalExpansionWork": 947054,
+            "zeroSuccessorParents": 29315,
+            "oneSuccessorParents": 113586,
+            "branchingParents": 82884,
+            "oneSuccessorParentRate": 0.5030715060787918,
+            "forcedExpansionWork": 322892,
+            "forcedExpansionWorkShare": 0.3409435998369681,
+            "deadEndExpansionWork": 196856,
+            "branchingExpansionWork": 427306,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 322892,
+              "expansionWorkShareAtOneSuccessorParents": 0.3409435998369681
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 72,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.013888888888888888,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 61545,
+              "meanLength": 1.8455764075067025,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 9,
+              "maxWorkSpent": 43,
+              "terminations": {
+                "branch": 30540,
+                "dead-end": 11730,
+                "forced-child-not-retained": 19275
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03092",
+      "gates": [
+        {
+          "gateKey": 262148,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 1608803,
+          "workOvershoot": 0,
+          "nodesExpanded": 195298,
+          "elapsedMs": 4494,
+          "observedGeneratedRecords": 58,
+          "summary": {
+            "expandedParents": 195298,
+            "totalExpansionWork": 833453,
+            "zeroSuccessorParents": 23357,
+            "oneSuccessorParents": 83455,
+            "branchingParents": 88486,
+            "oneSuccessorParentRate": 0.42732132433511866,
+            "forcedExpansionWork": 179404,
+            "forcedExpansionWorkShare": 0.21525388954146185,
+            "deadEndExpansionWork": 180593,
+            "branchingExpansionWork": 473456,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 179404,
+              "expansionWorkShareAtOneSuccessorParents": 0.21525388954146185
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 58,
+              "singletonOutcomePhases": 2,
+              "singletonOutcomePhaseRate": 0.034482758620689655,
+              "singletonToSingletonPhases": 1,
+              "singletonToSingletonPhaseRate": 0.017241379310344827,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.017241379310344827,
+              "singletonOutcomeDiscoveryWork": 954,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 61784,
+              "meanLength": 1.3507542405800854,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 6,
+              "maxWorkSpent": 53,
+              "terminations": {
+                "branch": 31483,
+                "dead-end": 7513,
+                "forced-child-not-retained": 22788
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03159",
+      "gates": [
+        {
+          "gateKey": 655364,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 4549430,
+          "workOvershoot": 0,
+          "nodesExpanded": 477356,
+          "elapsedMs": 18470,
+          "observedGeneratedRecords": 117,
+          "summary": {
+            "expandedParents": 477356,
+            "totalExpansionWork": 2170410,
+            "zeroSuccessorParents": 67257,
+            "oneSuccessorParents": 152731,
+            "branchingParents": 257368,
+            "oneSuccessorParentRate": 0.3199519855202407,
+            "forcedExpansionWork": 416548,
+            "forcedExpansionWorkShare": 0.1919213420505803,
+            "deadEndExpansionWork": 420572,
+            "branchingExpansionWork": 1333290,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 416548,
+              "expansionWorkShareAtOneSuccessorParents": 0.1919213420505803
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 117,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 108806,
+              "meanLength": 1.4037001635939195,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 13,
+              "maxWorkSpent": 54,
+              "terminations": {
+                "branch": 45223,
+                "dead-end": 20469,
+                "forced-child-not-retained": 43114
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03199",
+      "gates": [
+        {
+          "gateKey": 524298,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2794785,
+          "workOvershoot": 0,
+          "nodesExpanded": 318329,
+          "elapsedMs": 9664,
+          "observedGeneratedRecords": 75,
+          "summary": {
+            "expandedParents": 318329,
+            "totalExpansionWork": 1409551,
+            "zeroSuccessorParents": 39559,
+            "oneSuccessorParents": 114102,
+            "branchingParents": 164668,
+            "oneSuccessorParentRate": 0.3584404813887519,
+            "forcedExpansionWork": 288482,
+            "forcedExpansionWorkShare": 0.20466233573669915,
+            "deadEndExpansionWork": 174361,
+            "branchingExpansionWork": 946708,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 288482,
+              "expansionWorkShareAtOneSuccessorParents": 0.20466233573669915
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 75,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 85863,
+              "meanLength": 1.3288843855909995,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 10,
+              "maxWorkSpent": 55,
+              "terminations": {
+                "branch": 51692,
+                "dead-end": 12865,
+                "forced-child-not-retained": 21306
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03213",
+      "gates": [
+        {
+          "gateKey": 720909,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 4045536,
+          "workOvershoot": 0,
+          "nodesExpanded": 393034,
+          "elapsedMs": 15829,
+          "observedGeneratedRecords": 97,
+          "summary": {
+            "expandedParents": 393034,
+            "totalExpansionWork": 2152198,
+            "zeroSuccessorParents": 52615,
+            "oneSuccessorParents": 184705,
+            "branchingParents": 155714,
+            "oneSuccessorParentRate": 0.46994662039416435,
+            "forcedExpansionWork": 702658,
+            "forcedExpansionWorkShare": 0.32648390157411167,
+            "deadEndExpansionWork": 231854,
+            "branchingExpansionWork": 1217686,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 702658,
+              "expansionWorkShareAtOneSuccessorParents": 0.32648390157411167
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 97,
+              "singletonOutcomePhases": 1,
+              "singletonOutcomePhaseRate": 0.010309278350515464,
+              "singletonToSingletonPhases": 1,
+              "singletonToSingletonPhaseRate": 0.010309278350515464,
+              "allParentsForcedPhases": 1,
+              "allParentsForcedPhaseRate": 0.010309278350515464,
+              "singletonOutcomeDiscoveryWork": 2,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 111473,
+              "meanLength": 1.6569483193239618,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 11,
+              "maxWorkSpent": 91,
+              "terminations": {
+                "branch": 56142,
+                "dead-end": 21325,
+                "forced-child-not-retained": 34006
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03251",
+      "gates": [
+        {
+          "gateKey": 4,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 4021406,
+          "workOvershoot": 0,
+          "nodesExpanded": 366421,
+          "elapsedMs": 12857,
+          "observedGeneratedRecords": 93,
+          "summary": {
+            "expandedParents": 366421,
+            "totalExpansionWork": 2280565,
+            "zeroSuccessorParents": 40512,
+            "oneSuccessorParents": 172188,
+            "branchingParents": 153721,
+            "oneSuccessorParentRate": 0.46991848174640644,
+            "forcedExpansionWork": 769668,
+            "forcedExpansionWorkShare": 0.3374900518073372,
+            "deadEndExpansionWork": 304754,
+            "branchingExpansionWork": 1206143,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 769668,
+              "expansionWorkShareAtOneSuccessorParents": 0.3374900518073372
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 93,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 105631,
+              "meanLength": 1.6300896517120922,
+              "p50Length": 1,
+              "p90Length": 3,
+              "maxLength": 14,
+              "maxWorkSpent": 111,
+              "terminations": {
+                "branch": 52564,
+                "forced-child-not-retained": 36165,
+                "dead-end": 16902
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03278",
+      "gates": [
+        {
+          "gateKey": 655363,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2209995,
+          "workOvershoot": 0,
+          "nodesExpanded": 225398,
+          "elapsedMs": 7137,
+          "observedGeneratedRecords": 79,
+          "summary": {
+            "expandedParents": 225398,
+            "totalExpansionWork": 957326,
+            "zeroSuccessorParents": 28013,
+            "oneSuccessorParents": 132759,
+            "branchingParents": 64626,
+            "oneSuccessorParentRate": 0.5889981277562356,
+            "forcedExpansionWork": 373477,
+            "forcedExpansionWorkShare": 0.39012520290893593,
+            "deadEndExpansionWork": 260785,
+            "branchingExpansionWork": 323064,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 373477,
+              "expansionWorkShareAtOneSuccessorParents": 0.39012520290893593
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 79,
+              "singletonOutcomePhases": 1,
+              "singletonOutcomePhaseRate": 0.012658227848101266,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 27,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 62906,
+              "meanLength": 2.110434616729724,
+              "p50Length": 2,
+              "p90Length": 4,
+              "maxLength": 19,
+              "maxWorkSpent": 146,
+              "terminations": {
+                "branch": 24384,
+                "dead-end": 15890,
+                "forced-child-not-retained": 22632
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03280",
+      "gates": [
+        {
+          "gateKey": 262146,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3082724,
+          "workOvershoot": 0,
+          "nodesExpanded": 341864,
+          "elapsedMs": 11171,
+          "observedGeneratedRecords": 86,
+          "summary": {
+            "expandedParents": 341864,
+            "totalExpansionWork": 1650628,
+            "zeroSuccessorParents": 29665,
+            "oneSuccessorParents": 129607,
+            "branchingParents": 182592,
+            "oneSuccessorParentRate": 0.37911859686893035,
+            "forcedExpansionWork": 419938,
+            "forcedExpansionWorkShare": 0.25441104840097223,
+            "deadEndExpansionWork": 148169,
+            "branchingExpansionWork": 1082521,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 419938,
+              "expansionWorkShareAtOneSuccessorParents": 0.25441104840097223
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 86,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 89828,
+              "meanLength": 1.4428351961526473,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 8,
+              "maxWorkSpent": 81,
+              "terminations": {
+                "branch": 45915,
+                "dead-end": 7760,
+                "forced-child-not-retained": 36153
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03296",
+      "gates": [
+        {
+          "gateKey": 458765,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 4092170,
+          "workOvershoot": 0,
+          "nodesExpanded": 447053,
+          "elapsedMs": 18245,
+          "observedGeneratedRecords": 110,
+          "summary": {
+            "expandedParents": 447053,
+            "totalExpansionWork": 1988485,
+            "zeroSuccessorParents": 55082,
+            "oneSuccessorParents": 127106,
+            "branchingParents": 264865,
+            "oneSuccessorParentRate": 0.2843197562705093,
+            "forcedExpansionWork": 424417,
+            "forcedExpansionWorkShare": 0.21343736563262986,
+            "deadEndExpansionWork": 207710,
+            "branchingExpansionWork": 1356358,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 424417,
+              "expansionWorkShareAtOneSuccessorParents": 0.21343736563262986
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 110,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 101535,
+              "meanLength": 1.251844191658049,
+              "p50Length": 1,
+              "p90Length": 2,
+              "maxLength": 5,
+              "maxWorkSpent": 42,
+              "terminations": {
+                "branch": 54186,
+                "dead-end": 15837,
+                "forced-child-not-retained": 31512
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03334",
+      "gates": [
+        {
+          "gateKey": 589831,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 2412415,
+          "workOvershoot": 0,
+          "nodesExpanded": 252249,
+          "elapsedMs": 7353,
+          "observedGeneratedRecords": 90,
+          "summary": {
+            "expandedParents": 252249,
+            "totalExpansionWork": 1108141,
+            "zeroSuccessorParents": 25700,
+            "oneSuccessorParents": 132542,
+            "branchingParents": 94007,
+            "oneSuccessorParentRate": 0.5254411315803036,
+            "forcedExpansionWork": 330683,
+            "forcedExpansionWorkShare": 0.298412386149416,
+            "deadEndExpansionWork": 345921,
+            "branchingExpansionWork": 431537,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 330683,
+              "expansionWorkShareAtOneSuccessorParents": 0.298412386149416
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 90,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 76710,
+              "meanLength": 1.727832094902881,
+              "p50Length": 2,
+              "p90Length": 3,
+              "maxLength": 14,
+              "maxWorkSpent": 47,
+              "terminations": {
+                "branch": 37968,
+                "dead-end": 11603,
+                "forced-child-not-retained": 27139
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "levelId": "R03346",
+      "gates": [
+        {
+          "gateKey": 524292,
+          "status": "exhausted",
+          "workBudget": 5000000,
+          "workSpent": 3071507,
+          "workOvershoot": 0,
+          "nodesExpanded": 296107,
+          "elapsedMs": 7898,
+          "observedGeneratedRecords": 92,
+          "summary": {
+            "expandedParents": 296107,
+            "totalExpansionWork": 1283900,
+            "zeroSuccessorParents": 39465,
+            "oneSuccessorParents": 167022,
+            "branchingParents": 89620,
+            "oneSuccessorParentRate": 0.5640596135856295,
+            "forcedExpansionWork": 411543,
+            "forcedExpansionWorkShare": 0.3205413194174001,
+            "deadEndExpansionWork": 499968,
+            "branchingExpansionWork": 372389,
+            "grossForcedWorkReservoir": {
+              "interpretation": "prevalence reservoir, not post-prune removable work: ordinary parent expansion and hard pruning have already occurred by the time one-successor status is knowable at this observation seam",
+              "expansionWorkAtOneSuccessorParents": 411543,
+              "expansionWorkShareAtOneSuccessorParents": 0.3205413194174001
+            },
+            "phaseEconomics": {
+              "resolvedPhases": 92,
+              "singletonOutcomePhases": 0,
+              "singletonOutcomePhaseRate": 0,
+              "singletonToSingletonPhases": 0,
+              "singletonToSingletonPhaseRate": 0,
+              "allParentsForcedPhases": 0,
+              "allParentsForcedPhaseRate": 0,
+              "singletonOutcomeDiscoveryWork": 0,
+              "interpretation": "singleton-outcome discovery work has already been spent; these counts nominate replay/retention/bookkeeping-safe islands and earlier-recognition questions, not retroactive canonical-work savings"
+            },
+            "chains": {
+              "count": 73163,
+              "meanLength": 2.2828752238153163,
+              "p50Length": 2,
+              "p90Length": 5,
+              "maxLength": 15,
+              "maxWorkSpent": 44,
+              "terminations": {
+                "branch": 35283,
+                "dead-end": 17246,
+                "forced-child-not-retained": 20634
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
