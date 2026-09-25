@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "purpose": "Phase-1/2 validation-plan model. Observational until scoped CI is explicitly enabled.",
+  "purpose": "Semantic validation-plan model for active scoped PR CI; unknown/router failure remains conservative.",
   "always": {
     "packageScripts": [
       "check:dead-scripts",
