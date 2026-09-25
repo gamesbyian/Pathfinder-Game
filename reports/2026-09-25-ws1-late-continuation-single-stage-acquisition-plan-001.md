@@ -1,9 +1,9 @@
 # WS1 late-continuation single-stage acquisition plan 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-25 — power analysis of `reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md`'s own numbers found the prior Stage A canary (n=24) was under-sized relative to its own advance-rule floor; this report is a design-only replacement plan, not dispatched here.
-> **Decision:** design (not dispatch) a single, properly-sized fresh-acquisition draw, replacing the two-stage Stage A/Stage B structure with one block sized so the historical capture rate would clear a confirmation-grade floor with high probability if the mechanism transfers.
-> **Remaining gate:** dispatch this plan's single block, unchanged, and apply the frozen model exactly as before.
+> **Last evidence:** 2026-09-25 — plan-quality reconciliation against the prior Stage-A result and the plan's own historical rate found two dispatch-blocking ambiguities: the N=160 sizing argument targeted a <2% false-stop probability for a `>=3` breadth floor while the success criteria separately required `>=8`, and the protocol named two non-identical solve producers. Exact binomial sizing and prior Stage-A row semantics resolve both here.
+> **Decision:** keep one N=160 confirmation block, freeze master seed `2026092501`, require `>=3` independently nominated parents, and preserve the Stage-A `portfolio-solve-sweep.mjs --scheduler-mode=production` producer/row semantics. No alternate producer or threshold remains open at dispatch time.
+> **Remaining gate:** implement/dispatch this exact single-block protocol and apply the frozen model unchanged.
 > **Evidence role:** design
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
 > **Production effect:** none. Design only; no acquisition run yet.
@@ -52,13 +52,21 @@ rate" to "N parents needed for a >=3/>=12 floor" was not carried through.)
 
 ## Sizing this plan
 
-Target: choose `N` so that, if the mechanism transfers at the historical rate, the expected nominated
-count comfortably clears a real confirmation floor even under Poisson variance — not just in
-expectation.
+Target: choose `N` so that, if the mechanism transfers at the historical rate, the precommitted
+breadth floor has <2% false-stop probability from sampling variance alone.
 
-Using the same rate (`0.0516 × N`) and requiring `E[nominated] ≈ 8` (chosen so `P(X < 3) ≈ 1.4%` under
-a Poisson(8) approximation, i.e. a <2% false-stop risk purely from sampling variance if the mechanism
-is real):
+Using the same per-parent nomination probability `p ≈ 0.0516`, the exact model for a fresh `N=160`
+block is `X ~ Binomial(160, 0.0516)`, with `E[X] = 8.256`. Exact lower-tail probabilities are:
+
+- `P(X < 3) ≈ 0.99%`;
+- `P(X < 4) ≈ 3.23%`.
+
+Therefore **`>=3` nominated independent parents is the largest integer breadth floor that satisfies
+the plan's stated <2% sampling-variance false-stop target**. The earlier `>=8` wording incorrectly
+used the expected count itself as a pass threshold; at this `N`, that would pass only about 58.7% of
+draws even if the historical rate transferred exactly.
+
+The original expectation calculation still motivates the block size:
 
 ```
 N ≈ 8 / 0.0516 ≈ 155
@@ -86,15 +94,10 @@ kept as-is where it was not:
 2. Aggregate captured canonical pre-winner work share **>= 5%** among scoreable solved rows (unchanged
    from the original Stage B floor — this is a rate, not a count, and does not need rescaling for a
    different `N`).
-3. Frozen-model nominations on **>= 8 independent parents** (rescaled from Stage B's `>= 12` at
-   `N=96` to preserve the same nominated-rate bar: `12/96 ≈ 12.5%` of `N`; `12.5% × 160 = 20` would be
-   the literal rescale, but that assumes Stage B's own floor was itself well-calibrated to the
-   historical 25% capture rate, which section above shows it was not — using the historical-rate
-   expectation (`E[nominated] ≈ 8`) directly as the floor is the more defensible number: it asks
-   "does this draw show at least the expected effect," not "does it show an arbitrarily higher bar
-   inherited from an uncalibrated prior number." If reviewers prefer the more conservative literal
-   rescale (`>= 20`), that is a stricter, equally defensible alternative — pick one before dispatch,
-   not after seeing the result.
+3. Frozen-model nominations on **>=3 independent parents**. This is the precommitted lower-tail breadth
+   gate implied by the plan's own historical rate: at `N=160`, exact binomial `P(X<3)≈0.99%`, while
+   `P(X<4)≈3.23%`. The count gate is deliberately a breadth/sampling guard, not the effect-size gate;
+   criterion 2's `>=5%` captured canonical pre-winner work share carries the magnitude requirement.
 4. No single parent contributes **>35%** of nominated work (unchanged rate-based bound).
 5. Nominated work remains predominantly same-stage late continuation, matching the historical pattern
    (unchanged).
@@ -109,33 +112,37 @@ already established.
 - Source: `research:generate-levels -- --method=random`, the same witness-first source as both prior
   stages, for direct comparability.
 - Count: **160** independent fresh parents.
-- Master seed: a **new** seed distinct from `2026092201`/`2026092202` (both already consumed by the
-  closed Stage A attempt and the never-generated Stage B block) — e.g. `2026092501`, chosen fresh at
-  dispatch time and frozen before any solve.
+- Master seed: **`2026092501`**, frozen in this plan. Repo search on 2026-09-25 found no existing use
+  of this seed. Do not substitute another seed at dispatch time.
 - Evidence role: `confirmation` (this block directly answers the confirmation question; there is no
   separate development/opportunity stage in this design).
 - Block id: `ws1-late-continuation-single-001`.
 - Suggested ID prefix: `U` (both `W`/Stage A and `V`/Stage B are already reserved in the prior
   preflight).
-- Production solve protocol: unchanged from both prior stages —
+- Production solve protocol: unchanged from Stage A and **producer-locked** —
   `scripts/portfolio-solve-sweep.mjs --scheduler-mode=production`, node budget 50,000,000, canonical
   work budget 67,000,000, non-binding wall deadline, no baseline/prime-winner/attempt-cache/hints,
-  level-blind.
+  level-blind. The frozen-model scorer consumes this producer's per-attempt production-ladder rows;
+  `solver-level-blind-targeted-sweep.yml` is not an interchangeable execution surface unless a separate
+  row-semantics parity proof is added before dispatch.
 - Analysis: `scripts/apply-action-selection-legal-signal-model.mjs` against the same frozen model
   (`reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json`), unmodified, no
   refit — identical to both prior stages.
-- At 160 levels and the same 50M-node/67M-work budget as the 24-parent canary (which took a fully
-  local run), this may be sized better for a sharded GHA dispatch (`solver-level-blind-targeted-
-  sweep.yml` with an `ids_file`, or `research:generate-levels` + a dedicated workflow) than a local
-  run, depending on measured per-level cost at dispatch time — not decided here.
+- Execution topology: use a **thin dedicated one-shot GHA wrapper** for this confirmation rather than
+  overloading the generic targeted sweep. The wrapper must (1) generate/freeze the exact 160-parent
+  corpus from the preregistered command/seed, (2) shard only the real `portfolio-solve-sweep.mjs`
+  production solve over that immutable corpus, (3) combine the produced rows, and (4) run the frozen
+  model + integrity/reporting deterministically. Reuse existing generation, portfolio-sweep, combiner,
+  experiment-contract and publication primitives; do not create a second solver implementation or
+  alternate row schema. The one-shot workflow is retired after the result is durably recorded.
 
 ## What this plan does not authorize
 
 - No acquisition run — this is a design document only.
-- No claim that `N=160` is the unique correct size; it is the smallest size that gets the historical
-  point-estimate expectation comfortably clear of a `>=3`-style floor's sampling-variance failure
-  mode, using the retained evidence's own numbers. A reviewer preferring a different confidence
-  target (e.g. 99% instead of ~98.6%) would get a similar but not identical `N`.
+- No claim that `N=160` is mathematically unique. It is the frozen size for this plan because, under
+  the retained historical rate, it gives `E[X]=8.256` and an exact `P(X<3)≈0.99%`, satisfying the
+  precommitted <2% false-stop target for the `>=3` breadth gate. Changing `N` or the floor requires a
+  new plan before dispatch, not reviewer preference after seeing results.
 - No change to the frozen model, split function, or thresholds.
 - No claim about whether the historical 25%/68.8% rates will actually recur on fresh parents under
   current code — that is exactly what this plan is designed to test, not something it assumes.
