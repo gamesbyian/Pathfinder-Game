@@ -86,6 +86,9 @@ assert.notEqual(report.summary.solverRequestIdentity, report.summary.effectiveCo
 
 // Execution backend/reproducibility class (modules/solver/reproducibility-mode.mjs): this tool has no
 // --race-pool-size flag, so `direct`/`deterministic-work` is a certain fact here, not a guess.
+assert.equal(report.summary.executionRuntime?.nodeVersion, process.version);
+assert.equal(report.summary.executionRuntime?.platform, process.platform);
+assert.equal(report.summary.executionRuntime?.arch, process.arch);
 assert.equal(report.summary.backend, 'direct');
 assert.equal(report.summary.reproducibilityMode, 'deterministic-work');
 
