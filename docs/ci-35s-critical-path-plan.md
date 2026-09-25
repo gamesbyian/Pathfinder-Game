@@ -1,5 +1,7 @@
 # CI ≤35-second critical-path plan
 
+Cross-program follow-through from the September 20–25 retrospective is tracked in [cross-program convergence backlog](cross-program-convergence-backlog.md). This plan remains the latency authority; CP-8 only reopens structural CI work when the bounded timing distribution earns it.
+
 > **Status:** active audit / implementation plan.  
 > **Target:** a full-impact PR completes its entire required validation contract in **≤35 seconds wall-clock** without deleting meaningful protection.
 

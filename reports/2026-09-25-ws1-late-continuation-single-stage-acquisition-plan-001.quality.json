@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "plan": "reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md",
   "status": "active",
-  "reconciledMainRef": "ced149b80ddebda2723be4668220ff3f2c8ac105",
+  "reconciledMainRef": "a0c7fbe8f16cb9e27596b2f00850c33c8f7f0bc3",
   "premises": [
     {
       "question": "Is a single N=160 fresh block large enough to test transfer of the frozen late-continuation signal without repeating the underpowered Stage-A failure mode?",
@@ -41,6 +41,19 @@
         "Compose existing owners in a thin one-shot workflow."
       ],
       "discriminator": "Reuse existing owners; create only orchestration needed to move the immutable generated corpus through solve, combine, scoring and publication."
+    },
+    {
+      "question": "Can the already-generated 2026092501 block remain the decision-bearing confirmation population after recovery of its un-PR'd branch?",
+      "evidence": [
+        "claude/solver-optimization-queue-ybpl88 commit 49a8773262f3889350766482920038d7fd49e761 generated 160 confirmation parents with seed 2026092501 before the final corrected precommitment merged.",
+        "No solver run was executed on that block, and the random generator implementation is byte-identical between Claude's base and current main.",
+        "Because the population existed before final precommitment, its structural contents were in principle inspectable even though no outcome evidence exists."
+      ],
+      "alternatives": [
+        "Reuse the already-generated population because no solver outcome exists.",
+        "Quarantine the population and freeze a replacement unseen seed before any generation."
+      ],
+      "discriminator": "Use replacement seed 2026092591 for the decision-bearing block and quarantine the 2026092501 population from execution/threshold/model decisions."
     }
   ],
   "repositoryPriorArt": [
@@ -72,7 +85,7 @@
   ],
   "impactDomains": {
     "definitionsSchemas": [
-      "Frozen WS1 confirmation parameters: N=160, seed=2026092501, block id ws1-late-continuation-single-001, ID prefix U, >=3 nominated-parent breadth floor."
+      "Frozen WS1 confirmation parameters: N=160, seed=2026092591, block id ws1-late-continuation-single-001, ID prefix U, >=3 nominated-parent breadth floor."
     ],
     "producersWriters": [
       "scripts/research-level-generation.mjs",
@@ -87,7 +100,8 @@
       "WS1 result interpretation and solver queue"
     ],
     "persistenceStores": [
-      "Generated confirmation corpus/result artifacts remain immutable experiment evidence; no production hints/defaults are written."
+      "Generated confirmation corpus/result artifacts remain immutable experiment evidence; no production hints/defaults are written.",
+      "Central harvest-solver-evidence persistence retains the decision-bearing standard result with Hint harvesting disabled for this workflow."
     ],
     "cliPackage": [
       "research:generate-levels",
@@ -95,7 +109,8 @@
       "research:apply-action-selection-legal-signal-model"
     ],
     "workflowsTriggers": [
-      "One-shot WS1 confirmation workflow, workflow lifecycle registry, workflow README"
+      ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml — one-shot manual workflow with no scientific dispatch inputs",
+      "docs/solver-workflow-lifecycle.json — temporary maintained registration until durable closeout"
     ],
     "generatedArtifacts": [
       "tmp/ws1-late-continuation-single-001/generation-manifest.json",
@@ -113,7 +128,8 @@
       "plan-quality check"
     ],
     "compatibilityHistory": [
-      "Stage-A report remains historical and unchanged; new block uses distinct U namespace/seed/block id."
+      "Stage-A report remains historical and unchanged; new block uses distinct U namespace/seed/block id.",
+      "Un-PR'd Claude block 49a8773262f3889350766482920038d7fd49e761 / seed 2026092501 is quarantined precommitment-overlap evidence; no solver run occurred and it is not consumed by the confirmation workflow."
     ],
     "currentDocsAuthorities": [
       "docs/solver-optimization-workstreams.md",
@@ -121,7 +137,8 @@
       ".github/workflows/README.md"
     ],
     "registriesCatalogues": [
-      "docs/solver-workflow-lifecycle.json for temporary workflow lifecycle/retirement"
+      "docs/solver-workflow-lifecycle.json for temporary workflow lifecycle/retirement",
+      "docs/solver-failure-evidence-disposition.json — standard compact failure-response + automatic-harvest disposition"
     ],
     "researchSystem": [
       "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE evidence role, block identity, experiment contract, result publication and durable evidence links."
@@ -142,12 +159,12 @@
   "definitionsOfDone": [
     {
       "id": "dod-plan-frozen",
-      "claim": "The WS1 confirmation has one frozen sample size, seed, breadth floor, producer and model with no dispatch-time alternatives.",
+      "claim": "The WS1 confirmation has one frozen sample size, unseen replacement seed, breadth floor, producer and model with no dispatch-time alternatives; the pre-existing 2026092501 block is quarantined.",
       "proofs": [
         {
           "type": "command",
           "locator": "npm run plan:quality -- --plan=reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md",
-          "expected": "Quality manifest validates and plan prose contains N=160, seed 2026092501, >=3 breadth floor and portfolio-solve-sweep producer lock."
+          "expected": "Quality manifest validates and plan prose contains N=160, replacement seed 2026092591, >=3 breadth floor, portfolio-solve-sweep producer lock, and explicit quarantine of Claude commit 49a8773262f3889350766482920038d7fd49e761 / seed 2026092501."
         }
       ]
     },
@@ -158,7 +175,12 @@
         {
           "type": "artifact",
           "locator": "tmp/ws1-late-continuation-single-001/generation-manifest.json + tmp/ws1-late-continuation-single-001/corpus.json in the one-shot workflow artifact",
-          "expected": "method=random, count=160, masterSeed=2026092501, evidenceRole=confirmation, blockId=ws1-late-continuation-single-001, idPrefix=U, actualParentCount=160 and a stable population identity; generation uses no overwrite/envelope/passthrough override."
+          "expected": "method=random, count=160, masterSeed=2026092591, evidenceRole=confirmation, blockId=ws1-late-continuation-single-001, idPrefix=U, actualParentCount=160 and a stable population identity; generation uses no overwrite/envelope/passthrough override."
+        },
+        {
+          "type": "workflow",
+          "locator": ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml plan job",
+          "expected": "workflow has no scientific inputs and invokes the exact seed-2026092591 generation command only after plan-quality validation"
         }
       ]
     },
@@ -168,8 +190,8 @@
       "proofs": [
         {
           "type": "workflow",
-          "locator": "WS1 one-shot solve jobs + published experiment contract",
-          "expected": "entrypoint scripts/portfolio-solve-sweep.mjs, schedulerMode=production, node ceiling 50000000, base work budget 67000000, non-binding 86400000ms wall deadline, no baseline/prime-winner/attempt-cache/hints, all 160 expected IDs observed exactly once."
+          "locator": ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml + published experiment contract",
+          "expected": "entrypoint scripts/portfolio-solve-sweep.mjs, canonical producer metadata levelBlind=false/historyAware=true, historicalInputs=[], schedulerMode=production, node ceiling 50000000, base work budget 67000000, non-binding 86400000ms wall deadline, no baseline/prime-winner/attempt-cache inputs, saveHints=false, all 160 expected IDs observed exactly once, and every solved row referee-valid"
         }
       ]
     },
@@ -181,6 +203,11 @@
           "type": "artifact",
           "locator": "Frozen-model scoring result",
           "expected": "model path reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json; zero winner endangerment; captured canonical pre-winner work share >=5%; >=3 independently nominated parents; no parent >35% of nominated work; same-stage late continuation remains predominant; integrity fields complete."
+        },
+        {
+          "type": "artifact",
+          "locator": "logs/solver-sweep-result/manifest.json from the one-shot workflow",
+          "expected": "decisionBearing=true; researchQuestion.questionId=WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE; researchOutcome is completed-positive or completed-negative and is bound to the exact population, solver SHA, and combined-result content bytes"
         }
       ]
     },
@@ -250,9 +277,10 @@
         "dod-plan-frozen is satisfied before implementation."
       ],
       "outputs": [
-        "Thin one-shot workflow reusing generation/portfolio/scoring owners",
+        ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml",
         "Lifecycle registration",
-        "Integrity/publication wiring"
+        "Integrity/publication wiring",
+        "Deterministic WS1 confirmation evaluator"
       ],
       "affectedDomains": [
         "workflowsTriggers",
@@ -320,12 +348,13 @@
       ".github/workflows/README.md"
     ],
     "workflows": [
-      "WS1 one-shot confirmation wrapper",
-      "Any reused portfolio/combine/publication workflow contracts"
+      ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml",
+      "Reused portfolio/combine/publication workflow contracts"
     ],
     "registriesSchemas": [
       "docs/solver-workflow-lifecycle.json",
-      "Experiment/result contract surfaces if the wrapper adds no new schema"
+      "Experiment/result contract surfaces if the wrapper adds no new schema",
+      "docs/solver-failure-evidence-disposition.json"
     ],
     "generatedData": [
       "Frozen 160-parent confirmation corpus and generation manifest from tmp/ws1-late-continuation-single-001/",
@@ -335,7 +364,8 @@
       "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE state/next gate"
     ],
     "researchSystem": [
-      "Question/evidence role, block identity, source-run/result publication links"
+      "Question/evidence role, block identity, source-run/result publication links",
+      "Decision-bearing positive/negative research outcome retained by the central harvester without Hint ingestion"
     ],
     "retireOrArchive": [
       "Retire the one-shot wrapper after durable evidence and queue closeout unless a concrete repeated consumer is identified."
@@ -343,6 +373,9 @@
     "proofIds": [
       "dod-splash-zone",
       "dod-hostile-closeout"
+    ],
+    "compatibilityHistory": [
+      "Quarantined Claude population seed 2026092501 / commit 49a8773262f3889350766482920038d7fd49e761 must remain excluded from decision-bearing confirmation."
     ]
   },
   "hostileCloseout": {

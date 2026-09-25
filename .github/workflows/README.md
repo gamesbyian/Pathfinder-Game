@@ -98,6 +98,11 @@ Workflow `run-name` values also include the inputs most useful for distinguishin
 - `solver-research-input-materialization-rehearsal.yml` — manual full-tree vs sparse-tree parity rehearsal for the live targeted-sweep planner plus one real level-blind canary. Its sparse arm declares the exact corpus/runtime-telemetry inputs; missing hidden dependencies should make the rehearsal red rather than silently alter planning.
 - Runtime policy: maintained research workflows use exact Node versions. Rehearsed level-blind/history-aware scientific workflows plus deterministic harvest/combine/integrity helpers use **22.23.2**. `solver-diagnostics.yml` remains on exact **20.20.2** because it executes real solver analysis and has not yet passed a diagnostics-specific cross-major parity rehearsal.
 
+## WS1 one-shot confirmation
+
+- `ws1-late-continuation-single-stage-confirmation.yml` — temporary, fixed-shape N=160 confirmation for `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`. It has no scientific dispatch inputs: it generates seed **2026092591** only after the revised precommitment, solves through `portfolio-solve-sweep.mjs --scheduler-mode=production` in 40 fixed four-parent shards, requires exact 160-row/referee-valid producer integrity, then applies the frozen legal-signal model and preregistered verdict gates deterministically. A scientific negative remains a successful workflow run. Retire the wrapper after durable result/queue closeout.
+- Seed **2026092501** is explicitly quarantined: un-PR'd Claude commit `49a8773262f3889350766482920038d7fd49e761` generated that population before final precommitment. No solver ran on it, but it is not eligible for the decision-bearing confirmation. See `reports/2026-09-25-ws1-precommitment-overlap-recovery-001.md`.
+
 ## Sample A/B
 
 - `solver-routing-regime-sample-ab.yml` — 60 shards / 20 lanes / 4 workers. One coordinated dispatch seals the exact C1 + published + sampled-C2 level contents at `baseline_ref` and requires `treatment_ref` to reproduce the same content hash before solve shards launch; shared level IDs alone are not treated as proof of an identical cross-SHA population.

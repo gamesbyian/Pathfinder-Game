@@ -3,98 +3,184 @@
 > **Status:** canonical live authority for solver research priority, state, and next gates.
 > **Reconciled:** 2026-09-25.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
+> **Historical snapshot:** [pre-compaction queue](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md).
 
-Method: [`operating model`](solver-research-operating-model.md) · [`scheduling`](solver-scheduling-policy.md) · [`evidence`](solver-evaluation-evidence.md) · [`atlas`](solver-reasoning-capability-atlas.md) · [`invention`](solver-capability-invention-program.md) · [`stops`](solver-capability-gap-stop-condition-reconciliation.md).
+Method: [operating model](solver-research-operating-model.md) · [scheduling](solver-scheduling-policy.md) · [evidence](solver-evaluation-evidence.md) · [atlas](solver-reasoning-capability-atlas.md) · [invention](solver-capability-invention-program.md) · [future work](solver-future-work.md).
 
 ## Data guardrail
 
 C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedures may derive board facts, never historical outcomes/identity/hints. Negatives close only tested claims.
 
-## Portfolio
-
-**HARVEST** redeploys existing reasoning; **ACQUISITION** seeks missing operations. [Rules/register](solver-capability-invention-program.md): `data/stress/capability-invention-demand.json`.
-
-Seed: **26 = 22 HARVEST / 1 EXTENSION / 3 UNKNOWN / 0 INVENTION**; not prevalence. Beam UNKNOWNs need freshness replay; R03147 needs independent-parent replication. [`census`](../reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md) · [`freshness`](../reports/2026-09-20-capability-invention-beam-freshness-preflight-001.md)
 ## Current execution priority
 
-### Broad evidence refresh closed
+### 1. WS2 repair-deadline allocation
 
-Canonical refresh `35687363645` and technique census `35687337464` are scientifically complete on solver ref `39d14d49023aa09cb680053b975ef786eeae9b01`; do not rerun them. Production remains **101/102 C1 + 1,169/1,700 C2** with zero solved-set churn. The census completed **120/120 shards / 80,538 cells**. [refresh](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md) · [census](../reports/2026-09-22-technique-census-broad-evidence-closeout-001.md)
+**State:** ACTIVE / promotion confirmation next.
 
-Retained evidence now covers **1,802 parents / 56,906 attempts**; generic compact failure response is exhausted as a broad discriminator. T1 isolated techniques rescue **83/532** production misses (**47 singleton-supported**), while **449** misses have no T1 solve and **140/1,430** production-solved levels have no T1 isolated solve at 50M, so isolated coverage is not a safety oracle. Keep T1/T3/T4 at **50M nodes** and the bounded **60-level × 10M-work EW1** tranche. Hint/evidence consolidation has closed the previously outstanding standard-result/source-run provenance hardening.
+The frozen 53-parent matched-work A/B produced **7 treatment-only gains and 0 losses** for the repair-node-cap candidate. This is nomination evidence, not a production change.
 
-### Supporting infrastructure — research execution efficiency
+Next gate:
+- ordinary production-scale matched-work confirmation;
+- preserve exact treatment/control work semantics;
+- no post-result cap retuning.
 
-**State:** ACTIVE support program; scientific ordering remains owned by this queue.
+Question: `WS2-REPAIR-DEADLINE-ALLOCATION`.
 
-The September 23–25 CI optimization cycle exposed reusable research-execution methods: exact-generation reuse, sparse input materialization, hermetic real-data fixtures, deterministic bookkeeping witnesses, callable semantic seams with retained executable smokes, and shadow-before-authority routing. The solver batch system already has mature weighted sharding, so generic shard-count tuning is not queued.
+Evidence: [result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [preflight](../reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md).
 
-Current execution facts from the audit:
-- maintained solver/evidence workflows now use exact Node runtimes: 22.23.2 for parity-rehearsed scientific producers and deterministic helper/harvest/integrity workflows, with solver diagnostics pinned to exact 20.20.2 pending a diagnostics-specific cross-major parity;
-- exact dependency-tree reuse is active in the short targeted-sweep plan/canary job with a safe `npm ci` miss path; broader research reuse remains measurement-gated;
-- full-tree checkout measured about 54 s on representative September-22 solver jobs, versus about 3 s in the first sparse targeted-planner rehearsal; setup-node was ~5 s and `npm ci` ~8 s;
-- the first full-vs-sparse targeted-planner + real-canary rehearsal is semantically identical when the exact corpus and `logs/solver-stress-refresh/corpus2-runtime-telemetry.json` dependency are retained;
-- canonical Hint persistence remains owned by `harvest-solver-evidence.yml`; source workflows must not recreate canonical writers.
+### 2. WS2 capability-invention promotion
 
-Plan: [solver research execution efficiency](solver-research-execution-efficiency-plan.md). Starting evidence: [execution-topology census](../reports/2026-09-25-solver-research-execution-topology-starting-census-001.md).
+**State:** ACTIVE / reasoned promotion-safety decision.
 
-Immediate infrastructure gate: exact-runtime and targeted-planner sparse activations are complete, and the targeted planner now has exact dependency-tree reuse with a safe `npm ci` miss path. The first live WS2/WS1 search-vs-plumbing audit found no accidental solver-as-fixture defect in the generic targeted sweep or WS1 frozen-model scoring; preserve real search where it is the scientific payload. Next gate is production economics from a real targeted dispatch before extending reuse to other short planner/generator/combine jobs. [harness audit](../reports/2026-09-25-live-solver-harness-search-plumbing-audit-001.md)
+CID-0027 and CID-0028 each cleared pilot + confirmation:
+- target row moved from node-budget-limited unsolved to referee-valid solved;
+- combined **0 regressions across 52 solved-control levels per branch**;
+- default remains OFF.
 
-### 1. Workstream 2: residual capability + premise acquisition
+Next gate:
+- decide whether current evidence is sufficient for promotion;
+- buy broader sampling only if that decision identifies a concrete unresolved safety/generalization question;
+- do not run more generic compact telemetry merely to enlarge the sample.
 
-**State:** ACTIVE / two-front portfolio. Production boundary remains **101/102 C1 + 1,169/1,700 C2** (residual 531). Class 1 has no menu headroom; class 3 dose is resolved; class 4 portal coarse-state retry is promoted; class 5 topology remains research-only. [boundary](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md) · [class-3](../reports/2026-09-20-class3-dose-exposure-resolved-result-001.md) · [class-4](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
+Question: `WS2-CAPABILITY-INVENTION-DEMAND`.
 
-### Premise-acquisition lanes
+Evidence: [confirmation](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md) · [pilot](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md).
 
-Frozen-map Lanes A–G are resolved in their tested forms and did not earn a shared runtime substrate. Preserve their specific reopen conditions rather than retesting:
-- **A separator/decomposition:** closed negative at C2; representation repetition below the frozen compactness floor. [result](../reports/2026-09-20-lane-a-c2-global-accounting-result-001.md)
-- **B exact LIVE/DEAD:** sibling handoff closed; DEAD-core size-1 clean negative, with the multi-pick sampling limitation retained. [sibling](../reports/2026-09-17-production-search-sibling-construction-result-001.md) · [core](../reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md)
-- **C typed reuse:** phase-0 negative; reopen only on recurring typed reason/state evidence. [result](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md)
-- **D relational feasibility:** D1 premise positive but tested ranking consumer closed; constrained-event and commutativity results remain narrow, not production classifiers. [D1](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
-- **E causal revision:** negative. [result](../reports/2026-09-17-lane-e-multi-pick-bisection-result-001.md)
-- **F exposure/representation:** class-3 dose resolved; Card-E mixed; F3 qualified-positive with no reliable decision-bearing consumer. [F3](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md)
-- **G independent search objects:** complete-path LNS closed at 2M/16M; backward/bidirectional remains deferred pending a compact sound signature. [G1](../reports/2026-09-19-lane-g-real-frontier-completion-dose-pilot-result-001.md)
-- **H parity:** phase-distance and checkerboard-capacity shadows are now closed negative; reopen only with materially different opportunity structure/formulation. [result](../reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md)
-- **I exact projections:** BC1 remains live only as a production-inert later-disposition safety/economics consumer. [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md)
+### 3. WS1 automatic action selection
 
-**Current WS2 gate:** repair node-cap A/B is positive (**7 gains / 0 losses** on the frozen 53-parent population) and advances to ordinary matched-work promotion confirmation. Admissible-order reserve fraction 0.35 is closed negative on the same population. Capability-invention exposure pilots/confirmation are positive for both target rows with zero observed solved-control regressions, but promotion remains a separate decision. Forced-work global compression and the remaining post-recognition numerators are closed negative; the 25.33% per-parent reservoir remains local-forcedness evidence, not removable global work. [repair/reserve result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [capability confirmation](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md) · [forced-work result](../reports/2026-09-25-forced-work-capture-economics-per-parent-consumer-oracle-result-001.md)
+**State:** CONFIRMATION READY AFTER #2122.
 
-### 2. Workstream 1: automatic solver action selection
+The frozen legal-signal model is positive across multiple retained C2 regimes and fresh canonical refresh evidence, with zero observed winner losses, but independent-population confirmation is still missing.
 
-**State:** LATE-CONTINUATION SIGNAL POSITIVE / CONFIRMATION NEXT. Exact frozen model is positive across three distinct scoreable retained C2 attempt regimes: 6.93%, 6.99%, and 9.91% validation pre-winner-work capture with zero observed winner losses; C1 remains 0%. The fresh canonical refresh reproduces the signal without refit at **9.75%** combined pre-winner-work capture, **0 endangered winner levels**, 96.48% same-stage continuation, and 85.94% following censored work. This strengthens temporal/portfolio robustness but is still not independent-population confirmation. [`result`](../reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md) · [`fresh challenge`](../reports/2026-09-22-broad-capability-refresh-failure-evidence-reconciliation-001.md)
+The confirmation is fully frozen:
+- N=160 fresh random parents;
+- replacement seed `2026092591`;
+- block `ws1-late-continuation-single-001`;
+- IDs `U00001`–`U00160`;
+- Stage-A-compatible `portfolio-solve-sweep.mjs --scheduler-mode=production`;
+- breadth floor **>=3** independent nominated parents;
+- captured pre-winner work **>=5%**;
+- zero winner endangerment;
+- no parent >35% of nominated work;
+- same-stage late continuation remains predominant.
+
+Recovered Claude seed `2026092501` is quarantined because that population existed before final precommitment, though no solver ran on it.
+
+Next gate:
+- exact-head CI green on PR #2122;
+- merge #2122;
+- dispatch the one-shot confirmation exactly once from merged main;
+- accept positive or negative frozen verdict without rescue edits;
+- write durable result, hostile closeout, queue update, then retire the one-shot workflow.
+
+Question: `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`.
+
+Evidence: [plan](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md) · [recovery](../reports/2026-09-25-ws1-precommitment-overlap-recovery-001.md) · [quality contract](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.quality.json) · [Stage A](../reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md).
+
+### 4. BC1 later-disposition shadow
+
+**State:** SUPPORTING / bounded-compute.
+
+BC1 remains live only as a production-inert later-disposition safety/economics consumer after ordinary hard-prune survival. Record proof cost, work-at-proof, later reject/cull/descendant work, and valid/reference safety. No hot-path prune yet.
+
+Question: `WS2-CUT-BALANCE-PROJECTION`.
+
+Evidence: [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
+
+### 5. WS6 repair reachability / speed
+
+**State:** SUPPORTING.
+
+Use independent-parent interface replication / fresh speed profiling only when it becomes the immediate queue gate.
+
+Question: `WS6-DEPENDENCY-CONDITIONED-REPAIR`.
+
+## Supporting infrastructure — research execution efficiency
+
+Scientific priority remains owned by this queue.
+
+Current facts:
+- maintained research workflows use exact Node runtimes;
+- parity-rehearsed scientific producers and deterministic helper/harvest/integrity workflows use 22.23.2;
+- solver diagnostics remains on exact 20.20.2 pending diagnostics-specific cross-major parity;
+- targeted-sweep planning uses sparse materialization plus exact dependency-tree reuse with safe `npm ci` fallback;
+- canonical Hint persistence remains owned by `harvest-solver-evidence.yml`;
+- live search-vs-plumbing audit found no accidental solver-as-fixture defect in generic targeted sweep or WS1 frozen scoring.
+
+Next infrastructure gate:
+- obtain real production hit/miss timing from a targeted dispatch;
+- extend dependency-tree reuse only to short jobs where bootstrap is material;
+- audit BC1/WS6 search-vs-plumbing only when either becomes immediate;
+- do not optimize closed historical harnesses.
+
+Plan: [execution efficiency](solver-research-execution-efficiency-plan.md) · [handoff](../reports/2026-09-25-research-execution-efficiency-session-handoff-001.md) · [topology census](../reports/2026-09-25-solver-research-execution-topology-starting-census-001.md).
+
+## Cross-program convergence follow-through
+
+The September 20–25 retrospective found several lessons not yet fully propagated across CI/research/evidence systems. They are now tracked in the [cross-program convergence backlog](cross-program-convergence-backlog.md), with a machine-readable quality contract.
+
+Near-term order:
+1. finish #2122 / WS1 confirmation;
+2. keep live WS2 gates moving;
+3. then execute the highest-leverage convergence audits without creating a second scientific queue.
+
+Backlog themes:
+- research evidence cadence/claim ownership;
+- semantic freshness/invalidation pilots;
+- proof-owner / duplicate-proof census;
+- derived-resource generation ownership;
+- governance-check historical value;
+- bounded phase-local hostile sampling;
+- factual cost-of-knowing queryability;
+- evidence-gated remaining CI structural work.
+
+## Closed / reopen-only summary
+
+These tested forms are closed and should not consume execution priority unless their named premise changes:
+- admissible-order reserve fraction 0.35;
+- forced-work global compression and remaining post-recognition numerators;
+- parity phase-distance static form;
+- checkerboard-capacity static form;
+- parity response static form;
+- remaining-length intra-solve bridge;
+- separator/decomposition frozen forms;
+- typed reuse phase-0;
+- tested relational-feasibility ranking consumer;
+- causal-revision form;
+- complete-path LNS at tested doses;
+- class-3 dose form.
+
+Detailed closeout evidence and reopen conditions are preserved in the [pre-compaction queue snapshot](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md) and [solver future work](solver-future-work.md).
 
 ## Workstream state
 
 | ID | Workstream | Execution state | Gate class | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|---|
-| 2 | Residual capability + premise acquisition | `active` | `bounded-compute` | **A/B POSITIVE: CONFIRMATION NEXT** | GHA A/B on the frozen 53-parent population (treatment caps 21M/38M): **7 treatment-only gains, 0 losses** (`R00306`,`R01086`,`R02138`,`R02892`,`R03109`,`R03251`,`R03323`). Nomination evidence for the two node-cap constants; next gate is ordinary matched-work confirmation at production scale, not a production change. [result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [preflight](../reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md) | `WS2-REPAIR-DEADLINE-ALLOCATION` |
-| 2A | Admissible-order reserve repricing | `closed` | `reopen-only` | **A/B CLOSE NEGATIVE** | Same GHA A/B, same population, `admissibleOrderNodeReserveFractionOverride=0.35`: solved set byte-identical to control (same 30/53 levels, 0 gains, 0 losses), including on both rows the fraction was sized for. Closes 0.35 on this population; reopen only with a materially different premise, not a retest. [result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [design](../reports/2026-09-25-ws2-admissible-order-reserve-repricing-matched-work-ab-design-001.md) | `WS2-ADMISSIBLE-ORDER-RESERVE-STARVATION` |
-| 2I | Capability invention demand | `active` | `bounded-compute` | **PILOT + CONFIRMATION BOTH POSITIVE (2/2 target gains, 0/104 regressions)** | Both opt-in exposure flags (`STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE` for R00118/CID-0027, `STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE` for R02696/CID-0028) cleared both the 13-level pilot and a 40-level confirmation round cleanly: each target row moved from node-budget-limited unsolved (control) to referee-valid solved (treatment); combined 0 regressions across 52 solved-control levels per branch (26.5%/15.5% branch coverage), byte-identical control/treatment solved sets in every round. Not yet full-branch coverage; a promotion decision (`OPT_IN_FEATURES` default change) is a separate reasoned next step, not automatic from this evidence. Do not buy more generic compact telemetry: the separately-blocked full **83 T1-rescuable / 47 singleton-supported** cohort still needs the technique-census combine artifact (GHA-artifact-host network policy). [confirmation result](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md) · [pilot result](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md) · [exposure design](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-test-design-001.md) · [EW1 routing-gap sample](../reports/2026-09-25-capability-invention-demand-ew1-routing-gap-sample-001.md) · [census closeout](../reports/2026-09-22-technique-census-broad-evidence-closeout-001.md) | `WS2-CAPABILITY-INVENTION-DEMAND` |
-| 2P | Parity phase distance | `closed` | `reopen-only` | **SHADOW CLOSED NEGATIVE** | 0.0187% incremental incidence across 226M real evaluations on the frozen 60-level EW1 population, resolution-ready (all 8 observability axes satisfied). Reopen only with a materially different opportunity structure, not a retry of this static form. [result](../reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md) | `WS2-PARITY-PHASE-DISTANCE` |
-| 2C | Checkerboard capacity | `closed` | `reopen-only` | **SHADOW CLOSED NEGATIVE** | 1.29% incremental incidence, 83.6% concentrated in one parent (4/18 eligible levels contribute anything), resolution-ready. Reopen only for a twist-bearing extension or a materially different formulation. [result](../reports/2026-09-25-parity-phase-checkerboard-capacity-combined-shadow-result-001.md) | `WS2-CHECKERBOARD-CAPACITY` |
-| 2R | Parity response signature | `on-demand` | `reopen-only` | **STATIC FORM CLOSED / REOPEN ONLY** | Reopen only on a materially different parity mechanism from success-path or prospective seam evidence | `WS2-PARITY-RESPONSE-SIGNATURE` |
-| 2X | Small exact projections | `supporting` | `bounded-compute` | **BC1 CONSUMER EARNED** | Beam-hosted later-disposition shadow after ordinary hard-prune survival; record proof cost, work-at-proof, later reject/cull/descendant work, and valid/reference safety. No hot-path prune yet. [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md) | `WS2-CUT-BALANCE-PROJECTION` |
-| 2F | Forced-work capture economics | `closed` | `reopen-only` | **BOTH REMAINING NUMERATORS CLOSED NEGATIVE** | Global singleton/singleton->singleton beam-phase collapse is rare (0.25%/0.20% of 5,502 resolved phases) with negligible discovery work (1,234/90.6M canonical work units): closed. 25.33% remains valid per-parent reservoir evidence, confirmed as local forcedness inside a still-branching beam, not global collapse. A same-day follow-up closed the two numerators the phase census left open by code trace + a cheap local rerun (no acquisition): per-parent post-recognition bookkeeping has no skippable operation (every downstream per-candidate step costs the same flat amount regardless of parent arity); earlier recognition via raw neighbor count is negative even for the cheapest case (79.4% of forced parents are free-to-know raw-degree-1 dead ends, but still need their one candidate's hard-pruning verdict evaluated). Reopen only for a materially different sound recognizer, not a retest of raw neighbor count or a re-run of either closed form. [consumer-oracle result](../reports/2026-09-25-forced-work-capture-economics-per-parent-consumer-oracle-result-001.md) · [phase census](../reports/2026-09-25-forced-work-capture-economics-phase-census-result-001.md) · [seam audit](../reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md) | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
-| 1 | Automatic action selection | `supporting` | `implementation` | **SINGLE-STAGE PLAN CORRECTED / WRAPPER NEXT** | Fresh 24-parent Stage A (seed 2026092201) remains a valid closed result, but its original two-stage design was underpowered relative to its own breadth floor. The replacement is now fully frozen: N=160 fresh random parents, seed `2026092501`, block `ws1-late-continuation-single-001`, ID prefix U, Stage-A-compatible `portfolio-solve-sweep.mjs --scheduler-mode=production` row semantics, and a >=3 independent-parent breadth floor. Exact Binomial(160,0.0516) gives P(X<3)≈0.99%; the prior >=8 wording would have passed only ~58.7% of draws at the historical rate and is retired. Next gate is a thin one-shot GHA wrapper that reuses canonical generation/portfolio/scoring owners; no dispatch until the plan-quality closure is green. [single-stage plan](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md) · [quality contract](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.quality.json) · [Stage A result](../reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md) | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
-| 1A | Remaining-length allocation | `closed` | `reopen-only` | **STAGE A BRIDGE-NEGATIVE** | Frozen 20-level direct A/B: 0 treatment-only solves, 0 control-only losses, treatment work 0.82% higher than control (not lower); mechanism genuinely exercised (1,617 triggers across 19/20 levels). Closes this tested intra-solve transport of the cross-row H3/Card-E effect; does not affect H3/Card-E itself. Reopen only for a materially different transport mechanism, not a retune of this ordering key/cap combination. [result](../reports/2026-09-25-ws1-remaining-length-intrasolve-bridge-stage-a-result-001.md) · [preflight](../reports/2026-09-22-ws1-remaining-length-intrasolve-bridge-preflight-001.md) | `WS1-REMAINING-LENGTH-INTRA-SOLVE-BRIDGE` |
-| 6/7 | Repair reachability / speed | `supporting` | `bounded-compute` | **SUPPORTING** | WS6 independent-parent interface replication / fresh speed profiling | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
-| 3 | Generalization | `method-complete` | `method` | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
-| 8 | Isolated capability | `subsumed` | `subsumed` | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
-| 0/4 | Restart/randomization / beam retention | `closed` | `reopen-only` | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence | — |
-| 5 | Exact/reference model | `on-demand` | `service` | **ON DEMAND / BUSIER** | Truth/query service for microscopes | — |
+| 2 | Repair-deadline allocation | `active` | `bounded-compute` | 7 treatment-only gains / 0 losses on frozen 53-parent nomination A/B | production-scale matched-work confirmation | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2I | Capability invention | `active` | `bounded-compute` | CID-0027/CID-0028 pilot + confirmation positive; 0 observed solved-control regressions | promotion/safety decision; broader sampling only if that decision requires it | `WS2-CAPABILITY-INVENTION-DEMAND` |
+| 1 | Automatic action selection | `active` | `implementation` | independent-population confirmation frozen; seed 2026092501 quarantined, replacement 2026092591 | #2122 green -> merge -> one frozen N=160 dispatch | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
+| 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 production-inert later-disposition economics/safety consumer | beam-hosted later-disposition shadow when immediate | `WS2-CUT-BALANCE-PROJECTION` |
+| 2F | Forced-work capture economics | `closed` | `reopen-only` | tested global-compression/post-recognition forms closed; broader question identity retained | reopen only for a materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
+| 2R | Parity response signature | `on-demand` | `reopen-only` | static parity form closed; dormant conditional lane retained for materially different mechanism evidence | reopen only on materially different parity opportunity structure | `WS2-PARITY-RESPONSE-SIGNATURE` |
+| 6/7 | Repair reachability / speed | `supporting` | `bounded-compute` | independent-parent replication/speed support lane | replication/speed profiling when immediate | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
+| 5 | Exact/reference service | `on-demand` | `service` | exact/reference truth service for microscopes | use only when a live discriminator requires it | — |
+| 3 | Generalization method | `method-complete` | `method` | independent-unit / selection-pressure methodology established | preserve method in future confirmations | — |
 
-`Gate class` is the immediate operational route, not a claim about the question's scientific lifecycle or population-acquisition need. Use `existing-data` when retained evidence can directly answer the next discriminator, `instrument-only` when only new production-inert observation/persistence is needed, `bounded-compute` when fresh solver/reference execution is required, `design` or `implementation` for pre-execution work, `blocked` when the discriminator is not currently identifiable, and `reopen-only`/`method`/`subsumed`/`service` for non-execution lanes. Update this field whenever the immediate gate changes.
+All other tested forms are closed/reopen-only/subsumed. See the historical snapshot and future-work authority for exact reopen conditions.
 
 ## Standing research rules
 
-- Compare techniques with `workSpent`; nodes are within-technique diagnostics. New actions/configs compete inside total work.
-- Cold routing cannot consume IDs, historical outcomes, hints, family labels, or stored answers. Current-input exact derivation is legal only if sound/economical.
-- Separate semantic premise from tested form before transporting a negative. Offline/exact evidence may nominate/falsify a production premise; it cannot license runtime behavior.
-- Match protocol identity, not nominal reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes generate premises, never production exceptions.
-- Prefer cheapest information-value tests. Hold out independent units; scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not proofs.
-- Classify proposed solver work as **HARVEST / EXTENSION / INVENTION** before implementation; a new strategy flag or retry shell is not automatically a new capability.
-- No generic blackboard/exact solver/CEGAR/LNS/decomposition engine/per-level compiler from an open gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
+- Compare techniques with `workSpent`; nodes are within-technique diagnostics.
+- Cold routing cannot consume IDs, historical outcomes, hints, family labels, or stored answers.
+- Separate semantic premise from tested form before transporting a negative.
+- Match protocol identity, not nominal reach; timeout/errors are indeterminate.
+- Single-level microscopes generate premises, never production exceptions.
+- Prefer cheapest information-value tests and hold out independent units.
+- Hard consumers require soundness; correlation/signatures are not proofs.
+- Classify proposed solver work as **HARVEST / EXTENSION / INVENTION** before implementation.
+- No generic engine from an open gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
+- Keep execution/infrastructure work subordinate to the live scientific queue.
 
 ## Cheap evidence routing
 
-Prefer indexed retained evidence before bespoke work. Measurements go in dated reports; deferred forms/reopen triggers in [`solver-future-work.md`](solver-future-work.md).
+Prefer indexed retained evidence before bespoke acquisition. Measurements belong in dated reports; deferred forms and exact reopen triggers belong in [solver future work](solver-future-work.md).

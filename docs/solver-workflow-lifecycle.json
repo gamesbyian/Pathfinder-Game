@@ -254,6 +254,13 @@
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
     },
     {
+      "workflow": "ws1-late-continuation-single-stage-confirmation.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE one-shot N=160 independent-population confirmation",
+      "retirementTrigger": "retire immediately after the seed-2026092591 confirmation result is durably recorded, the live queue is reconciled, and hostile closeout finds no remaining consumer"
+    },
+    {
       "workflow": "ws1-remaining-length-intrasolve-stage-a-one-shot.yml",
       "role": "evidence-producing",
       "status": "maintained",

@@ -1,0 +1,389 @@
+name: WS1 late-continuation single-stage confirmation
+
+run-name: WS1 late continuation · N=160 · seed 2026092591 · ${{ github.sha }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ws1-late-continuation-single-stage-confirmation
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Freeze population and shard plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      shard_count: ${{ steps.plan.outputs.shard_count }}
+    steps:
+      - name: Check out dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup exact Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Require frozen plan-quality contract
+        run: >-
+          npm run plan:quality --
+          --plan=reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md
+
+      - name: Generate the frozen confirmation population
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run research:generate-levels --             --method=random             --count=160             --master-seed=2026092591             --question-id=WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE             --evidence-role=confirmation             --block-id=ws1-late-continuation-single-001             --id-prefix=U             --out=tmp/ws1-late-continuation-single-001/corpus.json             --manifest=tmp/ws1-late-continuation-single-001/generation-manifest.json
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const corpusPath='tmp/ws1-late-continuation-single-001/corpus.json';
+          const manifestPath='tmp/ws1-late-continuation-single-001/generation-manifest.json';
+          const corpus=JSON.parse(fs.readFileSync(corpusPath,'utf8'));
+          const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+          const levels=corpus.levels ?? [];
+          if (levels.length !== 160) throw new Error(`expected 160 parents, observed ${levels.length}`);
+          if (corpus.masterSeed !== 2026092591) throw new Error('master seed drifted');
+          if (corpus.researchBlock?.blockId !== 'ws1-late-continuation-single-001') throw new Error('block id drifted');
+          if (corpus.researchBlock?.questionId !== 'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE') throw new Error('question id drifted');
+          if (corpus.researchBlock?.evidenceRole !== 'confirmation') throw new Error('evidence role drifted');
+          const expected=Array.from({length:160},(_,i)=>`U${String(i+1).padStart(5,'0')}`);
+          const ids=levels.map(level=>level.id);
+          if (JSON.stringify(ids) !== JSON.stringify(expected)) throw new Error('U00001-U00160 population identity drifted');
+          if (manifest.masterSeed !== 2026092591 || manifest.requestedParentsPerMethod !== 160) throw new Error('generation manifest drifted');
+          fs.writeFileSync('tmp/ws1-late-continuation-single-001/ids.txt', ids.join('\n')+'\n');
+          NODE
+
+      - name: Plan fixed four-parent solve shards
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/plan-highbudget-shards.mjs             --ids-file=tmp/ws1-late-continuation-single-001/ids.txt             --corpus2=tmp/ws1-late-continuation-single-001/corpus.json             --node-budget=50000000             --workers=4             --fixed-group-size=4             --min-timeout-minutes=300             --max-shards=100             --seed=ws1-late-continuation-single-001             --out=tmp/ws1-late-continuation-single-001/shard-plan.json
+          count=$(jq '.shard | length' tmp/ws1-late-continuation-single-001/shard-plan.json)
+          [ "$count" -eq 40 ] || { echo "::error::expected exactly 40 four-parent shards, got $count"; exit 1; }
+          echo "shards=$(jq -c '{shard: .shard}' tmp/ws1-late-continuation-single-001/shard-plan.json)" >> "$GITHUB_OUTPUT"
+          echo "shard_count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Upload sealed population and plan
+        uses: actions/upload-artifact@v7
+        with:
+          name: ws1-late-continuation-plan
+          path: tmp/ws1-late-continuation-single-001/
+          if-no-files-found: error
+          retention-days: 90
+
+  solve-shards:
+    name: Solve shard ${{ matrix.shard.idx }}/${{ needs.plan.outputs.shard_count }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.shard.jobTimeoutMinutes }}
+    strategy:
+      fail-fast: false
+      max-parallel: 15
+      matrix: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - name: Check out dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup exact Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Download sealed population
+        uses: actions/download-artifact@v8
+        with:
+          name: ws1-late-continuation-plan
+          path: tmp/ws1-late-continuation-single-001
+
+      - name: Run frozen production portfolio solve
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/ws1-late-continuation-single-001
+          corpus=tmp/ws1-late-continuation-single-001/corpus.json
+          timeout -k 30s --preserve-status "${{ matrix.shard.jobTimeoutMinutes }}m"             node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs --               --corpus="$corpus"               --levels="${{ matrix.shard.levels }}"               --scheduler-mode=production               --node-budget=50000000               --work-budget=67000000               --budget-ms=86400000               --workers=4               --out="logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}.json"               --summary-out="logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}-summary.md"
+
+      - name: Upload shard evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ws1-late-continuation-shard-${{ matrix.shard.idx }}
+          path: |
+            logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}.json
+            logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}-summary.md
+          if-no-files-found: warn
+          retention-days: 90
+
+  combine-score:
+    name: Combine, score, and apply frozen verdict
+    if: always() && needs.plan.result == 'success'
+    needs: [plan, solve-shards]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup exact Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Download sealed population and plan
+        uses: actions/download-artifact@v8
+        with:
+          name: ws1-late-continuation-plan
+          path: tmp/ws1-late-continuation-single-001
+
+      - name: Download every solve shard
+        uses: actions/download-artifact@v8
+        with:
+          pattern: ws1-late-continuation-shard-*
+          path: artifact-staging/shards
+          merge-multiple: true
+
+      - name: Combine and require exact 160-parent population
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/ws1-late-continuation-single-001
+          mapfile -t files < <(find artifact-staging/shards -type f -name 'batch-*.json' | sort)
+          [ "${#files[@]}" -gt 0 ] || { echo "::error::no shard reports were downloaded"; exit 1; }
+          joined=$(IFS=,; echo "${files[*]}")
+          node scripts/combine-solver-sweep-reports.mjs             --in="$joined"             --expected-ids=tmp/ws1-late-continuation-single-001/ids.txt             --out=logs/ws1-late-continuation-single-001/combined.json
+          node scripts/validate-solver-sweep-integrity.mjs             --expected-ids=tmp/ws1-late-continuation-single-001/ids.txt             --result=logs/ws1-late-continuation-single-001/combined.json             --integrity-out=logs/ws1-late-continuation-single-001/population-integrity.json
+
+      - name: Verify frozen producer/result contract
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p='logs/ws1-late-continuation-single-001/combined.json';
+          const d=JSON.parse(fs.readFileSync(p,'utf8'));
+          if (!Array.isArray(d.levels) || d.levels.length !== 160) throw new Error('combined result must contain exactly 160 rows');
+          if (d.summary?.producer !== 'portfolio-solve-sweep') throw new Error(`producer drifted: ${d.summary?.producer}`);
+          if (d.summary?.schedulerMode !== 'production') throw new Error(`scheduler mode drifted: ${d.summary?.schedulerMode}`);
+          if (d.summary?.levelBlind !== false || d.summary?.historyAware !== true) {
+            throw new Error(`portfolio producer metadata drifted: levelBlind=${d.summary?.levelBlind} historyAware=${d.summary?.historyAware}`);
+          }
+          if (d.summary?.baseline != null) throw new Error('baseline historical input must remain absent');
+          if (d.summary?.primeWinner != null) throw new Error('prime-winner historical input must remain absent');
+          if (d.summary?.attemptCache != null) throw new Error('attempt-cache historical input must remain absent');
+          if (d.summary?.saveHints !== false) throw new Error('confirmation must remain report-only with saveHints=false');
+          if (d.summary?.nodeBudget !== 50000000) throw new Error(`node budget drifted: ${d.summary?.nodeBudget}`);
+          if (d.summary?.workBudget !== 67000000) throw new Error(`work budget drifted: ${d.summary?.workBudget}`);
+          if (d.summary?.budgetMs !== 86400000) throw new Error(`wall safety deadline drifted: ${d.summary?.budgetMs}`);
+          const request=d.summary?.solverRequestProjection;
+          if (!request || request.scheduler?.mode !== 'production') throw new Error('canonical solver request is missing production scheduler identity');
+          if (request.resourceEnvelope?.nodeBudget !== 50000000) throw new Error('canonical request node budget drifted');
+          if (request.resourceEnvelope?.baseWorkBudget !== 67000000) throw new Error('canonical request work budget drifted');
+          if (request.resourceEnvelope?.timeBudgetMs !== 86400000) throw new Error('canonical request wall deadline drifted');
+          const solved=d.levels.filter(row=>row?.ok === true || row?.status === 'success' || row?.outcome === 'success');
+          const invalid=solved.filter(row=>row?.refereeValid !== true);
+          if (invalid.length) throw new Error(`${invalid.length} solved row(s) are not referee-valid: ${invalid.slice(0,8).map(row=>row.id ?? row.levelId ?? row.level).join(', ')}`);
+          NODE
+
+      - name: Apply frozen model and preregistered verdict gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/apply-action-selection-legal-signal-model.mjs             --inputs=logs/ws1-late-continuation-single-001/combined.json             --model=reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json             --out=logs/ws1-late-continuation-single-001/scoring.json
+          node scripts/evaluate-ws1-late-continuation-confirmation.mjs             --input=logs/ws1-late-continuation-single-001/scoring.json             --out=logs/ws1-late-continuation-single-001/verdict.json
+
+      - name: Write decision-grade experiment contract and research outcome
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { createHash } from 'node:crypto';
+          import fs from 'node:fs';
+          import { writeResearchWorkflowOutcome } from './scripts/research-workflow-outcome.mjs';
+
+          const root='logs/ws1-late-continuation-single-001';
+          const combinedPath=`${root}/combined.json`;
+          const combined=JSON.parse(fs.readFileSync(combinedPath,'utf8'));
+          const corpus=JSON.parse(fs.readFileSync('tmp/ws1-late-continuation-single-001/corpus.json','utf8'));
+          const integrity=JSON.parse(fs.readFileSync(`${root}/population-integrity.json`,'utf8'));
+          const verdict=JSON.parse(fs.readFileSync(`${root}/verdict.json`,'utf8'));
+
+          const spec={
+            configuration:{
+              masterSeed:2026092591,
+              parentCount:160,
+              schedulerMode:'production',
+              nodeBudget:50000000,
+              workBudget:67000000,
+              budgetMs:86400000,
+              workersPerShard:4,
+            },
+            configurationHash:combined.summary.configurationHash,
+            workflowFamily:'ws1-late-continuation-single-stage-confirmation',
+            producer:'ws1-late-continuation-single-stage-confirmation.yml',
+            entrypoint:'scripts/portfolio-solve-sweep.mjs',
+            researchQuestion:{
+              questionId:'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE',
+              liveAmbiguity:'Whether the frozen late-continuation signal transfers to fresh independent current-production parents with material pre-winner work capture and no recorded winner endangerment.',
+              discriminatingObservable:'On the frozen 160-parent block, apply the unchanged legal-signal model and measure winner endangerment, captured pre-winner work share, independent nominated-parent breadth, per-parent nominated-work concentration, and same-stage continuation share.',
+              outcomeInterpretation:{
+                positive:'All frozen safety, magnitude, breadth, concentration, same-stage, and integrity criteria pass.',
+                negative:'Any frozen scientific criterion fails after complete decision-valid execution; do not retune the seed, model, threshold, source, or producer to rescue the result.',
+              },
+            },
+            population:{
+              kind:'generated-frozen-confirmation-cohort',
+              identityBasis:'research-block-and-stable-level-id',
+              corpusIdentity:corpus.populationIdentity,
+              researchBlock:corpus.researchBlock,
+              independentUnit:corpus.researchBlock?.independentUnit ?? 'parent-level',
+            },
+            execution:{
+              // Canonical portfolio producer metadata names this family history-aware even when this
+              // invocation consumes zero historical inputs. Preserve that producer-family truth and
+              // prove coldness separately via historicalInputs=[] plus the explicit baseline/prime/
+              // attempt-cache/saveHints assertions above.
+              levelBlind:false,
+              historyAware:true,
+              historicalInputs:[],
+              reproducibilityExpected:true,
+              producerFamily:'portfolio-solve-sweep',
+              schedulerMode:'production',
+            },
+            limits:{
+              cumulativeNodeCeiling:50000000,
+              initialWorkAllocation:67000000,
+              totalWorkCeiling:null,
+              wallSafetyDeadlineMs:86400000,
+              wallDeadlineBinding:false,
+            },
+            sideEffects:{
+              hints:'none',
+              canonicalBaseline:'none',
+              telemetry:'compact',
+              reports:'artifact-only',
+            },
+          };
+          fs.writeFileSync(`${root}/contract-spec.json`,JSON.stringify(spec,null,2)+'\n');
+
+          const resultHash=`sha256:${createHash('sha256').update(fs.readFileSync(combinedPath)).digest('hex')}`;
+          const outcome=verdict.verdict === 'positive' ? 'completed-positive' : 'completed-negative';
+          const reason=verdict.verdict === 'positive'
+            ? 'Frozen WS1 late-continuation confirmation passed every preregistered criterion.'
+            : 'Frozen WS1 late-continuation confirmation failed one or more preregistered criteria.';
+          writeResearchWorkflowOutcome(`${root}/research-outcome.json`,{
+            outcome,
+            reason,
+            binding:{
+              populationIdentityHash:integrity.populationIdentityHash,
+              resultResolvedShas:[combined.summary.commit],
+              resultContentHashes:[resultHash],
+            },
+          });
+          NODE
+          node scripts/write-solver-experiment-contract.mjs             --spec=logs/ws1-late-continuation-single-001/contract-spec.json             --out=logs/ws1-late-continuation-single-001/experiment-contract.json
+
+      - name: Publish standard solver result
+        if: always()
+        shell: bash
+        run: |
+          if [ -f logs/ws1-late-continuation-single-001/combined.json ]; then
+            node scripts/sweep-publish.mjs --failure-in=p               --primary=logs/ws1-late-continuation-single-001/combined.json               --include=logs/ws1-late-continuation-single-001/scoring.json               --include=logs/ws1-late-continuation-single-001/verdict.json               --include=tmp/ws1-late-continuation-single-001/generation-manifest.json               --include=tmp/ws1-late-continuation-single-001/shard-plan.json               --integrity-file=logs/ws1-late-continuation-single-001/population-integrity.json               --contract-file=logs/ws1-late-continuation-single-001/experiment-contract.json               --outcome-file=logs/ws1-late-continuation-single-001/research-outcome.json               --shards-expected="${{ needs.plan.outputs.shard_count }}"               --shards-observed="$(find artifact-staging/shards -type f -name 'batch-*.json' | wc -l | tr -d ' ')"               --shards-basis="40 fixed four-parent shards; exact 160-parent population validated separately"               --source-artifact="ws1-late-continuation-single-stage-confirmation"
+          fi
+
+      - name: Require decision-bearing published evidence
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p='logs/solver-sweep-result/manifest.json';
+          const d=JSON.parse(fs.readFileSync(p,'utf8'));
+          if (d.decisionBearing !== true) {
+            throw new Error(`published result is not decision-bearing: ${JSON.stringify(d.decisionContractIssues ?? [])}`);
+          }
+          if (!['completed-positive','completed-negative'].includes(d.researchOutcome?.outcome)) {
+            throw new Error(`published research outcome is not completed: ${d.researchOutcome?.outcome}`);
+          }
+          if (d.researchQuestion?.questionId !== 'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE') {
+            throw new Error('published result lost the canonical WS1 research-question binding');
+          }
+          NODE
+
+      - name: Upload complete confirmation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ws1-late-continuation-single-stage-confirmation
+          path: |
+            tmp/ws1-late-continuation-single-001/corpus.json
+            tmp/ws1-late-continuation-single-001/generation-manifest.json
+            tmp/ws1-late-continuation-single-001/ids.txt
+            tmp/ws1-late-continuation-single-001/shard-plan.json
+            logs/ws1-late-continuation-single-001/combined.json
+            logs/ws1-late-continuation-single-001/population-integrity.json
+            logs/ws1-late-continuation-single-001/scoring.json
+            logs/ws1-late-continuation-single-001/verdict.json
+            logs/ws1-late-continuation-single-001/experiment-contract.json
+            logs/ws1-late-continuation-single-001/research-outcome.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Summarize scientific result
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const verdictPath='logs/ws1-late-continuation-single-001/verdict.json';
+          const combinedPath='logs/ws1-late-continuation-single-001/combined.json';
+          const lines=['# WS1 late-continuation single-stage confirmation',''];
+          if (fs.existsSync(combinedPath)) {
+            const combined=JSON.parse(fs.readFileSync(combinedPath,'utf8'));
+            lines.push(`- observed parents: ${combined.levels?.length ?? 'unknown'}/160`);
+            lines.push(`- solved parents: ${combined.levels?.filter(row=>row.ok).length ?? 'unknown'}`);
+          }
+          if (fs.existsSync(verdictPath)) {
+            const verdict=JSON.parse(fs.readFileSync(verdictPath,'utf8'));
+            lines.push(`- frozen verdict: **${verdict.verdict}**`);
+            for (const criterion of verdict.criteria ?? []) {
+              lines.push(`- ${criterion.pass ? 'PASS' : 'FAIL'} · ${criterion.description}: ${criterion.observed}`);
+            }
+            lines.push('');
+            lines.push('A negative frozen verdict is a valid scientific outcome and does not by itself make the workflow fail.');
+          } else {
+            lines.push('- verdict unavailable because execution or integrity did not complete');
+          }
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n')+'\n');
+          NODE

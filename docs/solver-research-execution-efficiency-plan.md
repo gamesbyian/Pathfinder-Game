@@ -1,5 +1,7 @@
 # Solver research execution-efficiency plan
 
+Current continuation/handoff: [2026-09-25 research execution-efficiency session handoff](../reports/2026-09-25-research-execution-efficiency-session-handoff-001.md). Cross-program follow-through: [cross-program convergence backlog](cross-program-convergence-backlog.md).
+
 > **Status:** active / implementation started.
 > **Created:** 2026-09-25.
 > **Authority boundary:** `docs/solver-optimization-workstreams.md` remains the scientific priority/next-gate authority. This plan owns research-execution cost, reproducibility, input topology, and harness-economics work that supports those gates without changing scientific priority.
@@ -161,6 +163,10 @@ CI's sparse Git-ref work cut large snapshot costs but also exposed an undeclared
 - sparse activation only for jobs with an explicit input contract and parity evidence;
 - any hidden dependency discovered becomes a declared dependency or an architectural correction;
 - cold level-blind jobs do not carry research/history assets they cannot consume unless a concrete build/runtime dependency requires them.
+
+## WS1 precommitment recovery note
+
+Recovered branch `claude/solver-optimization-queue-ybpl88` contains a pre-finalization 160-parent generation under seed `2026092501` but no solver execution. Because that population existed before the corrected plan was final, it is quarantined from decision-bearing use. The live confirmation seed is `2026092591`; do not optimize or dispatch against the quarantined corpus.
 
 ## Phase 5 — harness/search separation on live gates
 

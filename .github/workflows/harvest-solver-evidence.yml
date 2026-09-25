@@ -16,6 +16,7 @@ on:
       - 'Static portfolio confirmation A/B'
       - 'Solver combine sweep runs (cross-run reconciliation)'
       - 'Solver diagnostics and hint capture'
+      - 'WS1 late-continuation single-stage confirmation'
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -124,7 +125,8 @@ jobs:
             'Solver broad confirmation cohort'|\
             'Solver two-phase residual confirmation'|\
             'Static portfolio confirmation A/B'|\
-            'Solver combine sweep runs (cross-run reconciliation)')
+            'Solver combine sweep runs (cross-run reconciliation)'|\
+            'WS1 late-continuation single-stage confirmation')
               HARVEST_HINTS=0
               ;;
           esac

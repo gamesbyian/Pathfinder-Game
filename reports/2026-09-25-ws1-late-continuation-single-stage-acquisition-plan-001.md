@@ -1,8 +1,8 @@
 # WS1 late-continuation single-stage acquisition plan 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-25 — plan-quality reconciliation against the prior Stage-A result and the plan's own historical rate found two dispatch-blocking ambiguities: the N=160 sizing argument targeted a <2% false-stop probability for a `>=3` breadth floor while the success criteria separately required `>=8`, and the protocol named two non-identical solve producers. Exact binomial sizing and prior Stage-A row semantics resolve both here.
-> **Decision:** keep one N=160 confirmation block, freeze master seed `2026092501`, require `>=3` independently nominated parents, and preserve the Stage-A `portfolio-solve-sweep.mjs --scheduler-mode=production` producer/row semantics. No alternate producer or threshold remains open at dispatch time.
+> **Last evidence:** 2026-09-25 — after the statistical/producer correction merged, recovery of un-PR'd branch `claude/solver-optimization-queue-ybpl88` revealed that seed `2026092501` had already generated a 160-parent corpus before final precommitment. No solver was run on that block, but it is no longer an unseen confirmation seed. This revision quarantines that block and freezes replacement seed `2026092591` before any generation.
+> **Decision:** keep one N=160 confirmation block, freeze replacement master seed `2026092591`, require `>=3` independently nominated parents, and preserve the Stage-A `portfolio-solve-sweep.mjs --scheduler-mode=production` producer/row semantics. The previously generated `2026092501` corpus is quarantined from decision-bearing use.
 > **Remaining gate:** implement/dispatch this exact single-block protocol and apply the frozen model unchanged.
 > **Evidence role:** design
 > **Research question:** `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`
@@ -107,6 +107,21 @@ Failure of any gate stops this line of inquiry under this exact plan. Do not res
 retuning signatures, bins, thresholds, seed, or source — per the same discipline the prior stages
 already established.
 
+## Precommitment recovery: quarantined generated block
+
+Before this corrected plan was finalized on main, un-PR'd branch `claude/solver-optimization-queue-ybpl88` generated a 160-parent block with seed `2026092501` at commit `49a8773262f3889350766482920038d7fd49e761`.
+
+Important facts:
+
+- generation used the same unchanged random generator implementation that current main still carries;
+- the block has the intended question id, confirmation evidence role, block id and U00001–U00160 namespace;
+- **no solver run was executed** on that block;
+- nevertheless, the population existed before the final precommitment and could in principle have been inspected.
+
+Therefore that generated block is **not** the decision-bearing confirmation population. It remains quarantined historical/recovery evidence only. Do not merge its corpus/IDs into the confirmation execution path and do not use any of its structural contents to alter thresholds, routing, model membership or protocol.
+
+Replacement seed `2026092591` was selected after this recovery. Default-branch code search and repository commit search found no existing use before this revision. The one-shot workflow must generate the replacement block only after this plan/quality revision is merged.
+
 ## Protocol (for dispatch time, not dispatched here)
 
 - Source/generation command, frozen exactly:
@@ -115,7 +130,7 @@ already established.
   npm run research:generate-levels -- \
     --method=random \
     --count=160 \
-    --master-seed=2026092501 \
+    --master-seed=2026092591 \
     --question-id=WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE \
     --evidence-role=confirmation \
     --block-id=ws1-late-continuation-single-001 \
@@ -127,8 +142,7 @@ already established.
   This is the same witness-first random source as both prior stages. Do not add `--overwrite`,
   envelope caps, passthrough generator flags, or substitute another source.
 - Count: **160** independent fresh parents.
-- Master seed: **`2026092501`**, frozen in this plan. Repo search on 2026-09-25 found no existing use
-  of this seed. Do not substitute another seed at dispatch time.
+- Master seed: **`2026092591`**, frozen in this recovery revision after discovery that `2026092501` had already generated an un-PR'd corpus. Default-branch code search and repository commit search found no prior use of `2026092591` before this revision. Do not substitute another seed at dispatch time.
 - Evidence role: `confirmation` (this block directly answers the confirmation question; there is no
   separate development/opportunity stage in this design).
 - Block id: `ws1-late-continuation-single-001`.
@@ -136,20 +150,25 @@ already established.
   preflight).
 - Production solve protocol: unchanged from Stage A and **producer-locked** —
   `scripts/portfolio-solve-sweep.mjs --scheduler-mode=production`, node budget 50,000,000, canonical
-  work budget 67,000,000, non-binding wall deadline, no baseline/prime-winner/attempt-cache/hints,
-  level-blind. The frozen-model scorer consumes this producer's per-attempt production-ladder rows;
+  work budget 67,000,000, non-binding wall deadline, no baseline/prime-winner/attempt-cache inputs,
+  and no Hint persistence. Canonical portfolio-producer metadata remains `levelBlind:false` /
+  `historyAware:true`; this confirmation's coldness claim is narrower and explicit: the invocation
+  consumes **zero historical inputs**. The frozen-model scorer consumes this producer's per-attempt
+  production-ladder rows;
   `solver-level-blind-targeted-sweep.yml` is not an interchangeable execution surface unless a separate
   row-semantics parity proof is added before dispatch.
 - Analysis: `scripts/apply-action-selection-legal-signal-model.mjs` against the same frozen model
   (`reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json`), unmodified, no
   refit — identical to both prior stages.
-- Execution topology: use a **thin dedicated one-shot GHA wrapper** for this confirmation rather than
+- Execution topology: use the dedicated one-shot GHA wrapper **`.github/workflows/ws1-late-continuation-single-stage-confirmation.yml`** for this confirmation rather than
   overloading the generic targeted sweep. The wrapper must (1) generate/freeze the exact 160-parent
   corpus from the preregistered command/seed, (2) shard only the real `portfolio-solve-sweep.mjs`
   production solve over that immutable corpus, (3) combine the produced rows, and (4) run the frozen
   model + integrity/reporting deterministically. Reuse existing generation, portfolio-sweep, combiner,
   experiment-contract and publication primitives; do not create a second solver implementation or
-  alternate row schema. The one-shot workflow is retired after the result is durably recorded.
+  alternate row schema. Publication must carry the canonical WS1 research-question contract, an exact
+  positive/negative research-outcome binding, and a decision-bearing standard result that the central
+  harvester retains durably without canonicalizing discovered paths as Hints. The one-shot workflow is retired after the result is durably recorded. Its scientific protocol has no dispatch-time parameters; workflow dispatch selects only the repository ref/commit.
 
 ## Plan-quality closure
 
@@ -176,6 +195,10 @@ workflow retirement proof.
 - No change to the frozen model, split function, or thresholds.
 - No claim about whether the historical 25%/68.8% rates will actually recur on fresh parents under
   current code — that is exactly what this plan is designed to test, not something it assumes.
+
+## Recovery record
+
+- `reports/2026-09-25-ws1-precommitment-overlap-recovery-001.md` records the recovered Claude generation, the false seed-freshness assumption, and the quarantine/replacement decision.
 
 ## Artifacts
 
