@@ -125,6 +125,9 @@ for (const dependency of finalStatus?.needs ?? []) {
 if (!(finalStatus?.acceptedResults?.['deep-verification'] ?? []).includes('skipped')) {
   failures.push('final status must explicitly allow deep-verification=skipped for scoped PRs');
 }
+if (!(finalStatus?.acceptedResults?.['deep-services'] ?? []).includes('skipped')) {
+  failures.push('final status must explicitly allow deep-services=skipped for scoped PRs');
+}
 if ((finalStatus?.acceptedResults?.['impact-shadow'] ?? []).includes('skipped')) {
   failures.push('final status must not accept a skipped impact-shadow router');
 }
