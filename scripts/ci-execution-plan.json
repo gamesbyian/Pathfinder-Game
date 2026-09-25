@@ -8,14 +8,7 @@
       "capabilities": [
         "lint"
       ],
-      "note": "Always-materialized static/validator/lint lane. Node contracts and production build execute independently."
-    },
-    "production-build": {
-      "alwaysMaterialized": false,
-      "capabilities": [
-        "build"
-      ],
-      "note": "Impact-scoped production bundle lane; independent from validators/lint so build/projection work does not serialize Fast Gate."
+      "note": "Always-materialized static/validator/lint lane. Node contracts execute independently; build is packed with deep services."
     },
     "deep-verification": {
       "alwaysMaterialized": false,
@@ -27,10 +20,11 @@
     "deep-services": {
       "alwaysMaterialized": false,
       "capabilities": [
+        "build",
         "deep-proofs",
         "firestore-boundary"
       ],
-      "note": "Independent solver-soundness / persistence lane; selected proofs and Firestore execute concurrently and do not require canonical runtime data."
+      "note": "Impact-scoped build / solver-soundness / persistence lane. Build runs serially with service setup; proofs and Firestore remain concurrent. This packing reduces hosted-runner allocation without weakening any capability."
     },
     "node-contracts": {
       "alwaysMaterialized": true,
@@ -44,7 +38,6 @@
     "needs": [
       "impact-shadow",
       "fast-gate",
-      "production-build",
       "node-contracts",
       "deep-verification",
       "deep-services"
@@ -67,13 +60,9 @@
       ],
       "node-contracts": [
         "success"
-      ],
-      "production-build": [
-        "success",
-        "skipped"
       ]
     },
-    "note": "Router, Fast Gate and Node matrix must succeed; production build, coverage and deep-services may skip only when semantic routing does not select their capabilities."
+    "note": "Router, Fast Gate and Node matrix must succeed; coverage and combined build/deep-services may skip only when semantic routing selects none of their capabilities."
   },
   "activationWorkflow": ".github/workflows/ci-scoped-dry-run.yml"
 }
