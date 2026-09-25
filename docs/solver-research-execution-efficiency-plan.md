@@ -178,6 +178,8 @@ Current live surfaces:
 
 Removed from the Phase-5 optimization scope because their scientific forms are closed: admissible-order reserve 0.35, forced-work capture economics, and the WS1A remaining-length bridge. Historical harnesses remain reproducible, but they are not current optimization targets.
 
+Initial live-harness audit: [search/plumbing audit](../reports/2026-09-25-live-solver-harness-search-plumbing-audit-001.md). The generic targeted sweep does not currently reproduce CI's strongest fixture-generation defect: real search is confined to the execution-family canary and scientific solve/recovery shards, while combine/integrity/contract/publication and WS1 frozen-model scoring are deterministic. Continue auditing BC1/WS6 only when they become immediate gates.
+
 For each live surface, classify work as:
 
 - scientific search that must remain real;
