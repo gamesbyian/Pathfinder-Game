@@ -144,7 +144,7 @@ for (const entry of selected) {
     try {
         result = await Solver.solveLevel(level, {
             timeBudgetMs: budgetMs,
-            workBudget,
+            baseWorkBudget: workBudget,
             strictTotalWorkBudget: true,
             parityCapacityObserver: capacityObserver,
             parityPhaseDistanceObserver: phaseObserver,
