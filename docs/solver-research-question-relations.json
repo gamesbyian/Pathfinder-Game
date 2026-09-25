@@ -816,7 +816,7 @@
         "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
         "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
       ],
-      "result": "Stage-1 40-parent probe concluded (2026-09-20): 2/40 independent parents show a genuine reserve-starvation opportunity (R01154 at 179.0M nodes, R03270 at 172.7M nodes, both between the 75M reserve and 300M total envelope). Clears the prespecified >=2-opportunity recurrence bar. Nominates, does not authorize, the smallest matched-total-work admissibleOrderNodeReserveFractionOverride A/B; candidate fractions must be predeclared from the observed cost curve, not fit to these two rows.",
+      "result": "Stage-1 40-parent probe concluded (2026-09-20): 2/40 independent parents show a genuine reserve-starvation opportunity (R01154 at 179.0M nodes, R03270 at 172.7M nodes, both between the 75M reserve and 300M total envelope). Clears the prespecified >=2-opportunity recurrence bar. Nominates, does not authorize, the smallest matched-total-work admissibleOrderNodeReserveFractionOverride A/B; candidate fractions must be predeclared from the observed cost curve, not fit to these two rows. The 2026-09-25 A/B design freezes that fraction from a different, better-scale-matched source: the same class3-dose-expectations file used for WS2-REPAIR-DEADLINE-ALLOCATION carries 5 admissible-order-rescued residual rows directly at normal 50M production scale (14.3M-48.2M isolated cost, uniformly capped at the current 12.5M/0.25-fraction dose). Predeclared treatment fraction 0.35 targets only the two cheapest rows (R02219 28.6%, R03354 32.2%); the three expensive rows (62.5-96.5%) are explicitly out of scope for this first step. Reuses the existing 53-parent shared-acquisition population verbatim; no implementation seam needed (the CLI override already exists).",
       "triggeredBy": [
         "WS2-WORK-LADDER-ECONOMICS"
       ],
@@ -826,14 +826,17 @@
         "reports/2026-09-19-admissible-order-reserve-starvation-asset-audit-001.md",
         "reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md",
         "reports/2026-09-20-admissible-order-reserve-starvation-canary-reconciliation-001.md",
-        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md"
+        "reports/2026-09-20-admissible-order-reserve-starvation-probe-result-001.md",
+        "reports/2026-09-25-ws2-admissible-order-reserve-repricing-matched-work-ab-design-001.md"
       ],
       "constrains": [
         "Do not reopen the closed-negative broad 4x escalation economics question from one allocation-order example.",
         "First size recurrence from existing/prospective compact attempt response: later-stage participation, allocated ceiling/work, censoring, and any comparable higher-budget or alternate-allocation evidence.",
-        "Only if recurrent within-total-budget starvation is non-trivial should a matched-total-work A/B vary the existing admissibleOrderNodeReserveFractionOverride."
+        "Only if recurrent within-total-budget starvation is non-trivial should a matched-total-work A/B vary the existing admissibleOrderNodeReserveFractionOverride.",
+        "Do not size the treatment fraction from the isolated 300M-scale probe's R01154/R03270 exemplars; use the 50M-scale dose-expectations rows instead.",
+        "Do not escalate toward the expensive band (0.625-0.965 fraction territory) without a new, separately-justified design; run the execution-family canary before dispatching the full 53-parent matrix."
       ],
-      "reopensOn": "Design the smallest matched-total-work reserve-fraction A/B with predeclared candidate fractions and explicit earlier-stage loss controls, per reports/2026-09-19-admissible-order-reserve-starvation-prospective-preflight-001.md.",
+      "reopensOn": null,
       "premiseRefs": [],
       "measurementOpportunities": [
         "MO-004"
