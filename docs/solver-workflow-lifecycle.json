@@ -9,6 +9,13 @@
       "retirementTrigger": "retire when the historical audit is complete and any recurring CI-value telemetry has moved into an intentionally maintained surface"
     },
     {
+      "workflow": "ci-deep-concurrency-benchmark.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "evidence-only CI deep same-runner concurrency measurement",
+      "retirementTrigger": "retire after the <=35s critical-path program settles deep execution topology and this standalone rehearsal no longer adds decision value"
+    },
+    {
       "workflow": "ci-node-concurrency-benchmark.yml",
       "role": "operational",
       "status": "maintained",

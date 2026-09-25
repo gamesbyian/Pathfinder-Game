@@ -21,10 +21,12 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
+import { buildBundle } from './run-bundled.mjs';
 import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
 
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const DIRECT_SOLVER_BUNDLE = buildBundle('scripts/run-solver-direct.mjs');
 
 const dir = await mkdtemp(path.join(os.tmpdir(), 'run-solver-direct-cli-'));
 const outputFile = path.join(dir, 'out.json');
@@ -33,7 +35,7 @@ const outputFile = path.join(dir, 'out.json');
 // other real-CLI test in this program. --work-budget is the regression this test exists to catch:
 // before the fix, this exact invocation reported an 'error' status for the level instead of solving it.
 await execFile(process.execPath, [
-    'scripts/run-bundled.mjs', 'scripts/run-solver-direct.mjs',
+    DIRECT_SOLVER_BUNDLE,
     '--levels=pos:1', '--budget-ms=5000', '--work-budget=5000000', `--output=${outputFile}`,
 ], { cwd: ROOT });
 
@@ -76,7 +78,7 @@ const partialOutput = path.join(dir, 'partial.json');
 let injectedFailure = null;
 try {
     await execFile(process.execPath, [
-        'scripts/run-bundled.mjs', 'scripts/run-solver-direct.mjs',
+        DIRECT_SOLVER_BUNDLE,
         '--levels=pos:1-2', '--budget-ms=1000', '--work-budget=500000', `--output=${partialOutput}`,
     ], {
         cwd: ROOT,

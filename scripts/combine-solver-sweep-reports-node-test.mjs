@@ -14,11 +14,12 @@ import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validateSweepIntegrity, diffPopulation } from './validate-solver-sweep-integrity.mjs';
 import { analyzeOpportunity, opportunitySampleSizeForAtLeastOne } from './experiment-opportunity-audit.mjs';
-import { simulateMakespan, packByMakespan, classifyTelemetry } from './plan-highbudget-shards.mjs';
+import { simulateMakespan, packByMakespan, classifyTelemetry, planHighbudgetShards } from './plan-highbudget-shards.mjs';
 import { calibrateMultipliers } from './backtest-shard-runtime-policy.mjs';
 import { hashConfiguration } from './solver-experiment-contract.mjs';
 import { normalizeSolverSweepReportInput } from './solver-sweep-report-input.mjs';
 import { solverRequestIdentityFromProjection } from './solver-request-identity-lib.mjs';
+import { combineSolverSweepReports } from './combine-solver-sweep-reports.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -68,11 +69,19 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
     );
 }
 
-function run(args) {
+async function run(args) {
+    combineSolverSweepReports(args, { root: ROOT });
+}
+
+function runCli(args) {
     return execFile('node', ['scripts/combine-solver-sweep-reports.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
 }
 
-function runPlanner(args) {
+async function runPlanner(args) {
+    planHighbudgetShards(args, { root: ROOT });
+}
+
+function runPlannerCli(args) {
     return execFile('node', ['scripts/plan-highbudget-shards.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
 }
 
@@ -97,7 +106,7 @@ async function main() {
             levels: [{ level: 2, id: 'R00002', ok: false, status: 'timeout', totalMs: 8000, elapsedMs: 8000, attempts: [], attemptCount: 0, failedStrategies: [] }],
         })));
 
-        await run([`--in=${batch1},${batch2}`, `--out=${outFile}`]);
+        await runCli([`--in=${batch1},${batch2}`, `--out=${outFile}`]);
         const combined = JSON.parse(await readFile(outFile, 'utf8'));
         assert.equal(combined.summary.budgetMs, 8000, 'budgetMs lives in the canonical summary envelope');
         assert.equal(combined.summary.corpus, 'data/stress/stress-levels-random.json');
@@ -274,7 +283,7 @@ async function main() {
                 [plannerIds[1]]: { emaMsPerGiganode: 300000, samples: 2 },
             },
         }));
-        await runPlanner([
+        await runPlannerCli([
             `--ids-file=${plannerIdsFile}`,
             '--corpus2=data/stress/stress-levels-random.json',
             `--telemetry=${plannerTelemetry}`,

@@ -162,6 +162,7 @@
       "test:research-integration-audit",
       "test:research-system-inventory",
       "test:research-system-query",
+      "test:git-ref-worktree",
       "test:research-portfolio-retrospective",
       "test:research-system-consolidation-closeout",
       "test:experiment-result-contract-audit",
@@ -217,7 +218,8 @@
       "test:solver-capability-evidence",
       "test:action-selection-legal-signals",
       "test:apply-action-selection-legal-signal-model",
-      "test:reconcile-broad-solver-evidence"
+      "test:reconcile-broad-solver-evidence",
+      "test:plan-quality"
     ],
     "shared": [
       "test:signature-collision-analysis",

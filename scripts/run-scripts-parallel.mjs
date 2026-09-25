@@ -33,6 +33,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const requestedNames = process.argv.slice(2);
+const runStarted = Date.now();
 if (requestedNames.length === 0) {
   console.error('usage: node scripts/run-scripts-parallel.mjs <script> [<script> ...]');
   process.exit(2);
@@ -44,6 +45,7 @@ const packageScripts = directPackageScripts
   ? JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')).scripts ?? {}
   : null;
 const successOutputMode = process.env.PATHFINDER_PARALLEL_SUCCESS_OUTPUT?.trim() || 'all';
+const timingJsonPath = process.env.PATHFINDER_PARALLEL_TIMING_JSON?.trim() || null;
 if (!['all', 'summary'].includes(successOutputMode)) {
   console.error('PATHFINDER_PARALLEL_SUCCESS_OUTPUT must be "all" or "summary"');
   process.exit(2);
@@ -142,6 +144,25 @@ console.log(
 );
 for (const { name, code, seconds } of results) {
   console.log(`${code === 0 ? 'PASS' : 'FAIL'}  ${name} (${seconds}s)`);
+}
+
+if (timingJsonPath) {
+  const absoluteTimingPath = path.resolve(process.cwd(), timingJsonPath);
+  fs.mkdirSync(path.dirname(absoluteTimingPath), { recursive: true });
+  const payload = {
+    schemaVersion: 1,
+    mode: directPackageScripts ? 'direct' : 'npm',
+    successOutputMode,
+    jobs,
+    requestedCount: names.length,
+    wallSeconds: Number(((Date.now() - runStarted) / 1000).toFixed(3)),
+    results: results.map(({ name, code, seconds }) => ({
+      name,
+      code,
+      seconds: Number(seconds),
+    })),
+  };
+  fs.writeFileSync(absoluteTimingPath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
 process.exit(results.every(({ code }) => code === 0) ? 0 : 1);

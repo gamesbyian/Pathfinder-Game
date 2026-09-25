@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 
 /** Tracked repository paths. Local checks may include untracked files where useful. */
 export function listRepositoryFiles(root, { includeUntracked = false } = {}) {
@@ -48,6 +48,60 @@ export function readRepositoryText(root, relativePath) {
     ? Math.max(1024 * 1024, blobBytes + 1024 * 1024)
     : 64 * 1024 * 1024;
   return execFileSync('git', ['show', object], { cwd: root, encoding: 'utf8', maxBuffer });
+}
+
+/**
+ * Return tracked text paths containing NUL bytes while preserving working-tree semantics for
+ * materialized files. Sparse-checkout misses are fetched through one `git cat-file --batch`
+ * process, and their raw bytes are inspected in place so bulk migrations do not duplicate large
+ * Hint/report blobs into decoded strings.
+ */
+export function repositoryTextFilesContainingNul(root, relativePaths) {
+  const invalid = [];
+  const missing = [];
+
+  for (const relativePath of relativePaths) {
+    const full = path.resolve(root, relativePath);
+    if (fs.existsSync(full) && fs.statSync(full).isFile()) {
+      if (fs.readFileSync(full).includes(0)) invalid.push(relativePath);
+    } else {
+      missing.push(relativePath);
+    }
+  }
+
+  if (missing.length === 0) return invalid;
+
+  const input = Buffer.from(missing.map(relativePath => `HEAD:${relativePath}\n`).join(''));
+  const result = spawnSync('git', ['cat-file', '--batch'], {
+    cwd: root,
+    input,
+    maxBuffer: 1024 * 1024 * 1024,
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`git cat-file --batch failed: ${result.stderr?.toString('utf8').trim() || `exit ${result.status}`}`);
+  }
+
+  const output = result.stdout;
+  let offset = 0;
+  for (const relativePath of missing) {
+    const headerEnd = output.indexOf(0x0a, offset);
+    if (headerEnd < 0) throw new Error(`Malformed git cat-file header for ${relativePath}`);
+    const header = output.subarray(offset, headerEnd).toString('utf8');
+    const match = /^([0-9a-f]+) blob (\d+)$/.exec(header);
+    if (!match) throw new Error(`Unable to read HEAD:${relativePath} via git cat-file --batch: ${header}`);
+
+    const size = Number.parseInt(match[2], 10);
+    const contentStart = headerEnd + 1;
+    const contentEnd = contentStart + size;
+    if (contentEnd >= output.length || output[contentEnd] !== 0x0a) {
+      throw new Error(`Malformed git cat-file payload for ${relativePath}`);
+    }
+    if (output.subarray(contentStart, contentEnd).includes(0)) invalid.push(relativePath);
+    offset = contentEnd + 1;
+  }
+
+  return invalid;
 }
 
 /** File/directory existence that remains correct under sparse checkout. */

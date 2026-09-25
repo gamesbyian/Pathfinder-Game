@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-harvest-selection-manifest",
+  "source": {
+    "harvester": "harvest-level-blind-report-hints",
+    "runId": "36177860900",
+    "runAttempt": "1",
+    "workflow": "Targeted sweep · inline IDs · enable=none · disable=none",
+    "reportsSeen": 5,
+    "reportsHarvested": 5,
+    "sourceRowsSeen": 26
+  },
+  "selection": {
+    "policy": "unique eligible level-blind reports -> solved rows with complete paths -> current corpus/revision compatibility -> canonical referee acceptance -> semantic hint/provenance merge",
+    "corpusScope": [
+      "data/stress/stress-levels-random.json",
+      "data/stress/stress-levels.json"
+    ],
+    "solvedCandidateRowsSeen": 24,
+    "refereeAcceptedRows": 24,
+    "persistedRecordChanges": 24,
+    "acceptedButAlreadyRepresented": 0,
+    "quarantinedRows": 0,
+    "quarantineReasons": {}
+  },
+  "semantics": {
+    "scope": "level-blind report harvester only; sibling hint importers in the same source run have separate selection semantics",
+    "denominator": "success-selected candidate rows observed by the level-blind report harvester",
+    "notAttemptedPopulation": true,
+    "selectionInterpretation": "describes hint-harvest retention/acceptance only; cannot estimate solve rate or technique performance",
+    "persistedChange": "new path or new semantic provenance event appended to an existing path",
+    "acceptedButAlreadyRepresented": "referee-valid exact solved row produced no persistence change, typically because equivalent evidence was already present"
+  }
+}

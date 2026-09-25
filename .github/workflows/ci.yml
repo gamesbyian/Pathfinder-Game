@@ -564,6 +564,13 @@ jobs:
         with:
           path: ~/.npm/_npx
           key: firebase-cli-${{ runner.os }}-node22.23.2-firebase-tools-15.28.2-v1
+      - name: Restore Firestore emulator binary
+        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
+        id: firestore-emulator-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
       - uses: actions/setup-java@v5
         if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         with:
@@ -607,6 +614,12 @@ jobs:
           if [[ "$proofs_status" -ne 0 || "$firestore_status" -ne 0 ]]; then
             exit 1
           fi
+      - name: Save Firestore emulator binary after successful cold fetch
+        if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && steps.firestore-emulator-cache.outputs.cache-hit != 'true' && steps.deep_services.outputs.firestore == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firestore-emulator-${{ runner.os }}-firebase-tools-15.28.2-v1.22.0-v1
       - name: Summarize and enforce deep-verification
         if: always()
         shell: bash

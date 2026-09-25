@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-ingestion-receipt",
+  "source": {
+    "producer": "harvest-portfolio-solve-sweep-reports",
+    "runId": "36177860900",
+    "runAttempt": "1",
+    "workflow": "Targeted sweep · inline IDs · enable=none · disable=none",
+    "artifact": null
+  },
+  "scope": {
+    "corpus": [
+      "data/stress/stress-levels-random.json",
+      "data/stress/stress-levels.json"
+    ]
+  },
+  "funnel": {
+    "candidateObservations": 0,
+    "eligibleObservations": 0,
+    "refereeAcceptedObservations": 0,
+    "acceptedAlreadyRepresented": 0,
+    "quarantinedObservations": 0,
+    "quarantineReasons": {}
+  },
+  "additions": {
+    "semanticRecordChanges": 0,
+    "paths": 0,
+    "provenanceEvents": 0,
+    "occurrences": 0
+  },
+  "physical": {
+    "filesChanged": 0
+  },
+  "semantics": {
+    "successSelected": true,
+    "notAttemptedPopulation": true,
+    "candidateObservation": "a success-bearing row/artifact presented to this ingestion boundary",
+    "eligibleObservation": "a candidate with enough identity/path information to undergo canonical referee/merge handling",
+    "refereeAcceptedObservation": "an eligible observation whose exact path is valid against the target level revision",
+    "acceptedAlreadyRepresented": "referee-valid observation that produced no semantic store change",
+    "semanticRecordChange": "coarse producer-observed change when the current mutation API cannot distinguish path/event/occurrence units",
+    "nullAdditionUnit": "this producer cannot measure that addition unit exactly; null is unknown/not-observed, never zero",
+    "notes": "history-aware policy reconstruction from portfolio-solve-sweep report; solver execution itself is not hint-guided and same-path results are retained as rediscovery evidence"
+  }
+}
