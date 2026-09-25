@@ -345,22 +345,6 @@ jobs:
           PATHFINDER_PARALLEL_JOBS: '4'
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
           PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
-          # Keep the current multi-second contracts off the four-worker tail. This only changes
-          # launch order; run-scripts-parallel still executes every requested contract exactly once.
-          # Refresh from exact-head timing evidence when the dominant contracts materially change.
-          PATHFINDER_PARALLEL_PRIORITY: >-
-            test:research-query
-            test:harvest-cpsat-discovery-reports
-            test:experiment-manifest
-            test:hint-workbench
-            test:research-system-query
-            test:research-queryability-audit
-            test:portfolio-solve-sweep-worker
-            test:run-solver-direct-cli
-            test:research-question-dossier
-            test:harvest-solver-diagnostics-reports
-            test:research-relations
-            test:harvest-level-blind-report-hints
         run: npm run test:node
       - name: Solver capability canary
         id: solver_canary
