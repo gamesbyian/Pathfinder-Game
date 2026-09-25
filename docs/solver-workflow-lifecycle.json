@@ -266,6 +266,20 @@
       "status": "maintained",
       "currentConsumer": "WS1 remaining-length intra-solve Stage A bridge",
       "retirementTrigger": "retire after the frozen Stage A result is reconciled and no successor requires this exact one-shot execution surface"
+    },
+    {
+      "workflow": "solver-research-input-materialization-rehearsal.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "solver research execution-efficiency sparse/full input-boundary parity audit",
+      "retirementTrigger": "retire after short-job sparse input contracts are settled and equivalent dependency/input-boundary protection is permanently owned elsewhere"
+    },
+    {
+      "workflow": "solver-research-runtime-rehearsal.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "solver research execution-efficiency exact-runtime parity audit",
+      "retirementTrigger": "retire after the maintained research runtime is pinned and equivalent runtime identity/parity protection is owned by ordinary workflow contracts"
     }
   ],
   "retiredWorkflows": [

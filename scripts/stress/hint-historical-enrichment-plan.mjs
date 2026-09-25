@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Read-only Phase-7 planner for the rescued September-9 determinism-collision authority.
+ * Read-only historical-enrichment planner for the rescued September-9 determinism-collision authority.
  *
  * It never mutates Hint evidence. It uses exact path hash + immutable solver ref + persisted winning
  * attempt/work facts to identify whether one current semantic provenance event is the unique target
@@ -92,7 +92,7 @@ export function classifyRescuedObservation({ run, row, level }) {
         deliberatelyUnresolved: {
             solverRequestIdentity: 'not reconstructed by this planner',
             protocolHash: 'not reconstructed by this planner',
-            solverStagePersistence: 'stage exists in rescued winning action but canonical storage policy remains a Phase-3 decision',
+            solverStagePersistence: 'stage exists in rescued winning action but is intentionally not intrinsic to Hint provenance; consumers requiring it must use an exact sibling-evidence/source-run join',
         },
     };
 }

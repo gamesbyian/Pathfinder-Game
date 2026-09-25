@@ -1377,6 +1377,245 @@ Decision gate:
 5. production-build runner itself stays comfortably below 35 s on exact-hit projection/dependency caches;
 6. if the extra runner becomes the new p90 tail, revert the split rather than preserving topology for aesthetics.
 
+## Reconciled historical testability evidence from #2118
+
+#### Four-worker launch-order experiment — closed negative
+
+Exact-head run **36097915898** exposed a plausible scheduler-tail hypothesis: the permanent Node harness used a bounded four-worker pool but consumed all 212 requested contracts strictly in package-list order, while several 3–5 s contracts sat late in that list.
+
+A scoped experiment added an explicit `PATHFINDER_PARALLEL_PRIORITY` launch-order hint and placed the twelve current ~3.1–5.2 s contracts first without changing commands, contract count, process isolation, output attribution, or failure semantics. Exact-head PR run **36098410201** was fully green, but the Node/CLI step moved from roughly **32.3 s** on 36097915898 to roughly **33.7 s**. Child costs remained in the same range; the supposed drain-tail saving did not survive ordinary hosted-runner variance.
+
+Decision: **close static launch-order prioritization negative and revert the scheduling machinery.** The acceptance bar was a repeatable multi-second Node wall reduction; the first production measurement instead regressed by ~1.4 s. Do not carry a hand-maintained priority list or runner complexity for a benefit below the noise floor. Revisit scheduling only if a future stable timing profile demonstrates a materially larger drain imbalance, preferably on larger/reserved compute where effective CPU is less volatile.
+
+#### CP-SAT harvester fixture isolation — closed successful
+
+Current exact-head Node timing puts `test:harvest-cpsat-discovery-reports` at **5.1–5.9 s**. Its real-row regression still loaded the full published corpus and temporarily rewrote tracked `data/hints/P00002.json`, even though the sibling diagnostics harvester regression has already demonstrated a stronger hermetic pattern: copy one real published level and its real persisted Hint into a private temporary corpus, then exercise the real adapter/referee/merge boundary there.
+
+The scoped experiment adds only a corpus-path injection seam for the logical published corpus and moves the CP-SAT real-row fixture to a private one-level copy. Artifact identity remains canonical, and the test still uses a real P00002 path, real stored level revision, real fingerprint check, real referee validation, provenance reconstruction, occurrence lineage, and persisted Hint merge.
+
+Exact-head run **36098786863** is green. `test:harvest-cpsat-discovery-reports` measured **2.2 s**, down from **5.1 s** on 36097915898 and **5.9 s** on 36098410201. The full Node/CLI step measured about **30.6 s** on this sample. The scoped contract therefore removed roughly **57–63%** of its own wall while preserving the real adapter/referee/merge boundary and eliminating shared tracked-file mutation.
+
+Decision: **close successful and keep the private fixture seam.** This is the preferred testability pattern for semantic harvesters whose production corpus size is incidental to the asserted adapter behavior: retain a real published level/path/revision and real persistence semantics, but inject a minimal private corpus instead of scanning or mutating the shared repository corpus.
+
+#### Diagnostics empty-receipt fixture isolation — active experiment
+
+The sibling `test:harvest-solver-diagnostics-reports` remains **3.9 s** on run 36098786863. Its real-row regression is already hermetic, but the separate empty-staging receipt check still launches the adapter with its default `data/levels.json` corpus. Unlike the CP-SAT adapter, diagnostics eagerly loads that corpus before scanning the staging directory, so a zero-observation receipt test pays full published-corpus I/O that is irrelevant to the asserted zero counts/source metadata.
+
+The scoped follow-up passes an empty private corpus only to that empty-staging CLI invocation. The real-row block remains unchanged and continues to prove real P00001 revision/referee/provenance/persistence semantics. Keep the change if exact-head CI stays green and the diagnostics contract falls materially below its current ~3.7–4.0 s range.
+
+#### Level-blind harvester fixture isolation — active experiment
+
+`test:harvest-level-blind-report-hints` remains about **3.1–3.4 s** and still rewrites a tracked `data/stress/hints/<id>.json` file around its real-row regression. Mirror the CP-SAT isolation pattern: retain one real published stress level, one real persisted known path, the canonical logical corpus identity, corpus-hash compatibility checking, referee validation, provenance reconstruction, occurrence lineage, and persistence; point the physical primary stress corpus at a private one-level copy.
+
+Decision gate: retain if exact-head CI is green, the contract is materially cheaper, and no tracked stress Hint mutation remains. This is primarily a hermeticity/testability correction with expected timing benefit from avoiding full stress-corpus load/write.
+
+
+### Covered Vitest
+
+Fresh production evidence from run **36090943840** / deep job **107933055611** validates the #2109 repair-search reuse change:
+
+- covered ordinary population: **~18 s**, down from the immediately preceding ~30 s sample;
+- `repair-search.test.ts`: **3.8 s**, down from **8.6 s**;
+- `diversification.test.ts`: **6.0 s**, now the largest covered file;
+- all remaining files are materially smaller.
+
+The repair-search change removed six redundant soundness-only real searches and moved validity assertions onto the already-fresh determinism pairs. All 31 remaining repair-search tests are green. This is a demonstrated same-proof-cheaper-testability win, not merely a standalone microbenchmark.
+
+Diversification remains deliberately real solver integration. Its three dominant tests measure about **2.1 s**, **1.9 s**, and **1.9 s** in the current production run. Its reusable prerequisite harvest is already shared; the remaining expensive sessions assert distinct stateful behavior and should not be conflated merely for speed.
+
+Current covered-test audit lenses:
+
+- bookkeeping tests invoking real search/solver work;
+- repeated expensive beforeEach/setup or corpus/model construction;
+- duplicate parsing/bundling across files;
+- deterministic work budgets far above the minimum robust envelope;
+- redundant real executions where one fresh result can satisfy multiple assertions without sharing mutable state;
+- fixture cardinality larger than the asserted property needs;
+- Vitest pool/worker configuration only where a controlled rehearsal shows lower full-suite wall without semantic changes.
+
+Real solver integrations stay real unless an equivalent cheaper witness proves the same contract. Coverage thresholds remain unchanged. The measured-balanced two-shard coverage topology is preserved for larger/reserved compute, not promoted on shared hosted runners.
+
+### Heavy proofs
+
+Four explicit proof files already overlap internally and finish in ~11 s wall. The long tails are approximately:
+
+- R02560 disabled: 10.4 s;
+- deadlock root 0: 9.1 s;
+- deadlock root 1: 6.8 s;
+- R02560 enabled: 0.36 s.
+
+Further speed here requires cheaper witnesses or execution on independent compute; simply adding more Vitest workers cannot beat the longest individual proof.
+
+Current production evidence from run **36090175881** shows the deep-proof wall is set by three genuine expensive witnesses running in parallel: deadlock root 0 **9.27 s**, deadlock root 1 **9.25 s**, R02560-disabled **10.90 s**, while R02560-enabled is only **0.25 s**. The R02560 shared ceiling is intentionally **900,000 nodes** because historical characterization places the enabled solve at 803,000 and the disabled control exhausts the 900,000-node regression ceiling. Lowering that ceiling merely for CI would weaken the proof and is not an acceptable speed optimization. Deadlock exact-reference memoization remains a possible implementation optimization only if a complete state-equivalence key can be independently justified; do not add an ad-hoc cache to the proof oracle.
+
+
+### Solver canary
+
+L140 caused ~9.4 s of the ~9.7 s nine-level canary at the current 5,000,000 work budget.
+
+Follow-up hosted probe:
+
+- L140 at 250k work: ~0.7 s;
+- 500k: ~1.1 s;
+- 1M: ~1.8 s;
+- 2M: ~3.6 s;
+- 3M: ~5.6 s;
+- all runs still solved.
+
+Five structurally overlapping alternative fixtures also solved in ~0.1 s total, so preserving multi-mechanic representation does not inherently require the current canary cost.
+
+The original nine-level population has now been probed at **250,000 work** and all **9/9 solve in ~1.5 s total / 1.30 M nodes**. Keep the exact fixture set and regenerate its baseline at 250k work; replacement is unnecessary unless future semantics change.
+
+## Implementation status
+
+| Work | Status | Current evidence / next gate |
+| --- | --- | --- |
+| CI health: diagnostics audit ownership | **merged / guarded** | #2051 routes compact failure-response scratch to `tmp/`, narrows staging to canonical latest/timestamp history, removes the forbidden tracked transient, and makes `check:audit-artifacts` guard the ownership contract. |
+| A1 deep runtime-data checkout | **merged / measured green on hit** | #2045: source checkout **2 s** + exact runtime-data restore **2 s**; all deep obligations green; deep job **56 s**. |
+| A1b fast runtime-data cache-miss recovery | **merged / measured green** | Differential recovery restores the exact cached `HEAD^1` generation, overlays only changed runtime-data blobs, and saves the current generation. Decisive rehearsal: **2 s base restore + 1 s one-file overlay + 2 s save**. |
+| B1 lifecycle deterministic dispatch | **merged / measured green** | #2044: `orchestration-work-budget.test.ts` **~8.2 s → 195 ms**; covered-suite wall **~29.5 s → 26.48 s**; all test slots preserved. |
+| A3 main-seeded ESLint cache | **merged / measured green** | #2054 main-push seeded the default-branch generation after a 15 s cold lint; unrelated #2059 restored that generation and lint fell to **1 s** (from 16 s cold on #2054). |
+| A4 250k solver canary | **merged / measured green** | #2056: original exact 9-level fixture set retained; repaired-stack PR run solved **9/9 in 1.7 s / 1,303,532 nodes** at 250k with no work-budget mismatch. |
+| A2 exact Node 22.23.2 | **merged / measured green** | Production PR/main/scoped workflows are pinned to exact 22.23.2 with a separate Node-22 Firebase CLI cache generation; full-contract rehearsals were green with setup-node ~0–3 s. |
+| C exact dependency-tree restore | **merged / measured green** | #2069 production rollout restores the exact OS+arch+Node+npm+lockfile generation. Hit rehearsal restored `node_modules` in **2 s** in both fast and deep and skipped `npm ci` with the full contract green. |
+| A5 remove planner dependency edge | **merged / measured green** | Ordinary PR deep starts concurrently and runs the canonical planner locally. Full-impact obligations stayed green; non-deep rehearsal exited in **7 s** before runtime-data/dependency/test/Firestore setup. |
+| B5 runtime-hint projection cache | **merged; producer-ownership repair in progress** | Warm exact restores remain ~2 s, but #2111 run 36096284051 paid ~25 s cold because report-only diagnostics seeded the pre-harvest key. Publication is moving to `harvest-solver-evidence.yml` post-persistence HEAD, the producer that actually changes canonical Hint trees. |
+| D1 two-way Node sharding | **closed negative on shared hosted runners** | Post-hermetic rehearsals are semantically green and cut useful Node work to ~14–17 s/shard, but runner walls varied to **31–35 s** and **27–38 s** across confirmations. Shared bootstrap variance consumes the 35 s budget; stop shard-count tuning. |
+| B3 proofs + Firestore overlap | **merged / measured green** | #2100 full-impact run kept coverage green and ran unchanged proofs + Firestore concurrently in **15 s**, with independent success outputs. Prior serialized shape was ~23 s; #2100 is merged to `main`. |
+| B6 bulk-change text-invariant batching | **closed / exact-head green with PR-scale regression** | #2072 CI run 36082154314 exposed a scaling regression: `check:text-source-files` took **6m47s** on a 1,474-file migration because each sparse changed file triggered separate `git cat-file -s` + `git show` processes. #2107 batches sparse HEAD blob reads through one `git cat-file --batch` process without changing the checked population or invariant. Exact-head CI run 36084034066 kept the direct text-invariant step below timestamp resolution and passed the permanent real-checker regression against **1,500 unmaterialized changed text blobs** inside a **20 s total Node/CLI step**. |
+| D2 coverage sharding | **technical success; shared-runner margin insufficient** | D2b run 36068829982 balanced 146 files to 17.091/17.090 test-s and produced authoritative merged coverage with unchanged thresholds in **34 s from shard start**. Only ~1 s headroom remains; D1 already demonstrated ordinary hosted setup variance can exceed that. |
+
+### A1c. Publish runtime-data cache from the canonical Hint harvester
+
+**Correction after #2111 evidence:** the original #2061 ownership model was wrong.
+
+`solver-diagnostics.yml` is intentionally report-only. It may push audit-history logs, but it does **not** mutate canonical Hint files. The later `harvest-solver-evidence.yml` workflow consumes that report, semantically merges accepted observations, commits the canonical Hint changes, and pushes the tree that actually changes the runtime-data key.
+
+Run **36095878551** demonstrated the defect concretely:
+
+- diagnostics derived/restored `runtime-data-2240ada3…` after its audit-history push;
+- the central harvester then committed Hint changes as `aecc858d…`;
+- #2111 CI run **36096284051** needed `runtime-data-730d97f4…`, missed both current and base generations, and paid roughly **21 s** for the whole-tree correctness fallback.
+
+Correct ownership:
+
+1. after `harvest-solver-evidence.yml` successfully persists its semantic merge, local `HEAD` is the exact commit just pushed to `main`;
+2. derive the runtime-data key from that post-persistence `HEAD`;
+3. restore that exact generation if it already exists;
+4. otherwise save the fully materialized canonical runtime-data tree already present in the harvester checkout;
+5. source/report workflows such as solver diagnostics must not claim canonical Hint-cache authority.
+
+A focused workflow guard mechanically requires the cache-publication steps in the central harvester and forbids them in report-only solver diagnostics.
+### A1d. Seed every main generation from full main-push checkout
+
+Main-push `validate` already checks out the complete repository, including the canonical runtime-data tree. Publish that already-materialized tree under the same exact Git-object key PR CI uses.
+
+This closes the base-cache authority gap exposed by A1b: every ordinary merged main commit gets an exact default-branch runtime-data cache generation without additional Git materialization. A1c separately handles central-harvester Hint persistence commits that are created after the source workflow and therefore do not inherit the source workflow's cache generation.
+
+Together:
+- A1d covers ordinary merges;
+- A1c covers central-harvester canonical Hint commits;
+- A1b can recover a PR exact miss by restoring the cached base-parent generation and overlaying only changed runtime-data files.
+
+### A1b. Differential runtime-data miss recovery — measured green
+
+Whole-tree materialization during PR CI is rejected in every tested shape (**52-56 s**), and `git archive` from the partial clone is also rejected (**~102 s** for one file).
+
+The production design is differential:
+
+1. exact current runtime-data cache lookup;
+2. on miss, derive and restore the exact cached `HEAD^1` generation;
+3. identify runtime-data files changed by the tested merge from tree metadata;
+4. fetch only each changed blob through GitHub's blob API and overlay it on the cached base tree;
+5. remove deleted runtime-data files;
+6. save the exact current generation;
+7. only if the base cache is absent, use the known-slow whole-tree checkout as a correctness fallback.
+
+Decisive hosted rehearsal 35964508083, with a forced exact-current miss and forced one-file overlay:
+- base-parent cache restore: **2 s**;
+- one changed blob overlay: **1 s**;
+- whole-tree fallback: skipped;
+- exact current cache save: **2 s**;
+- fast gate remained green.
+
+A1c now seeds canonical central-harvester Hint generations from the actual post-persistence HEAD. A1d (#2063) seeds every ordinary main generation. Together they make the expensive fallback exceptional rather than normal.
+
+### B1b. Right-size repair-search determinism test budgets
+
+Post-B1 coverage profiling identified `repair-search.test.ts` as the remaining dominant covered file at **~9.0 s**.
+
+Measurement-only rehearsal on the exact 37-test file:
+
+| determinism budget | default-equivalence budget | file tests | Vitest duration |
+| ---: | ---: | ---: | ---: |
+| 250k | 125k | 37/37 green | **1.43 s tests / 1.97 s total** |
+| 100k | 50k | 37/37 green | 1.54 s / 2.03 s |
+| 50k | 25k | 37/37 green | 1.49 s / 2.07 s |
+
+Lower budgets do not buy additional wall time, so production uses **250k / 125k** for more work-envelope headroom. Paired determinism/default-equivalence tests are also strengthened to require identical node counts and nonzero repair work, preventing trivial null/null success from weakening the invariant.
+
+The 250k/125k budgets are **implemented**, but later covered-suite evidence shows the file still at **8.6 s** under production coverage instrumentation. The old standalone 1.43 s measurement therefore did not translate into the full covered environment. Treat budget right-sizing as complete; #2109’s next repair-search change instead removes six redundant soundness-only real searches while preserving validity on the fresh determinism pairs.
+
+### B1c. Completed: remove hint-occurrence unit-test import side effect
+
+Post-hint-consolidation Node/CLI profiling exposed a new dominant contract:
+
+- `test:hint-occurrence-acceptance`: **15.8 s**;
+- next-largest current Node contracts are materially smaller.
+
+Root cause is structural, not intrinsic audit cost. The synthetic node test imports `auditHintOccurrenceSemantics` from the CLI module, and that module executes `buildHintOccurrenceAcceptanceReport()` at top level. Importing one pure function therefore scans all three persisted hint corpora before the synthetic assertions run.
+
+Implemented state:
+
+1. `hint-occurrence-acceptance-lib.mjs` owns the side-effect-free semantic function;
+2. the CLI invokes corpus scanning only from its direct-execution path;
+3. the synthetic Node contract imports the pure library directly;
+4. corpus-scale CLI behavior remains unchanged when the CLI itself is invoked.
+
+The checked-in rehearsal timing profile records this contract at effectively zero child seconds. This work is closed; do not repeat the extraction.
+
+The corpus-scale acceptance proof remains independently maintained by `.github/workflows/hint-consolidation-closeout.yml`, which directly invokes `hint-occurrence-acceptance-audit.mjs`. The optimization therefore separates unit import cost from corpus authority rather than removing the full audit.
+
+### B5. Cache deterministic runtime-hint build projection
+
+Fast-gate profiling separated the production build into two costs:
+
+- Vite bundle compilation: **~0.7 s**;
+- runtime-hint projection in `closeBundle()`: **~24 s**, converting roughly **572 MB canonical source hints → 150 MB path-only runtime hints**.
+
+The projection is deterministic derived data. Rehearsal #2081 bound an exact cache to:
+
+- Git tree IDs for `data/hints`, `data/stress/hints`, and `data/stress/hints-random`;
+- `scripts/runtime-hint-projection-lib.mjs`;
+- `modules/domain/hint-runtime.mjs`;
+- `modules/canonical-json.mjs`;
+- `vite.config.ts`.
+
+Same-key hosted run **36063620245** measured:
+
+- exact projection restore: **1 s**;
+- production build step: **2 s** total;
+- Vite compile: **690 ms**;
+- cache save skipped on hit.
+
+This clears the ≤6 s acceptance target with substantial margin.
+
+Production rollout:
+
+1. local/default builds remain unchanged unless `PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT` is explicitly set;
+2. PR fast-gate restores the exact generation, builds from it or generates it on miss, then saves only after successful cold build;
+3. main-push does the same and therefore seeds default-branch generations reusable by later PRs;
+4. scoped rehearsal mirrors the same exact authority;
+5. the canonical central harvester derives both cache keys from its post-persistence local `HEAD` after a successful semantic merge/push and seeds the exact generations created by that Hint commit; report-only solver diagnostics does not seed canonical Hint generations.
+
+No restore prefix is allowed. A stale projection must never be reused across source/code generations.
+
+## Implementation sequence
+
+### Phase A: remove avoidable bootstrap and serial tax
+
+These are independent, low-risk changes and should be activated separately so their effects remain attributable.
+
 ## Current forward work order
 
 1. **Validate the independent production-build lane:** require exact-head green CI/oracles, materially lower Fast Gate wall, and a build runner comfortably below 35 s. Revert if another hosted-runner tail outweighs the serial savings.

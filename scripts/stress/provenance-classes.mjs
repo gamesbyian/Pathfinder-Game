@@ -4,8 +4,9 @@
 // re-derived by hand at least twice, and got a different (wrong) answer each time - most recently
 // by counting `hintGuided === false` alone as cold, which overstated corpus 1's cold share by 13
 // points because a further 36,381 entries set `usedExistingHints` without `hintGuided`. The
-// predicate is subtle enough, and load-bearing enough (CLAUDE.md's Provenance section forbids
-// using the corpus as a capability measure without it), that it belongs in one tested place.
+// predicate is subtle enough, and load-bearing enough (DEVELOPER_REFERENCE.md plus the audited
+// research-resource contract forbid using the corpus as a capability measure without it), that it
+// belongs in one tested place.
 //
 // This module answers one narrow admissibility question: "is this discovery evidence that the
 // production Pathfinder solver can find the level cold?" Discovery origin and search/run facets
@@ -63,10 +64,16 @@ export function classifyProvenanceClass(entry, { standard = 'strict' } = {}) {
     if (!COLD_EVIDENCE_STANDARDS.includes(standard)) throw new Error(`unknown cold-evidence standard: ${standard}`);
     if (isInheritedWitness(entry)) return 'inherited-witness';
     if (entry.solver?.id !== SOLVER_ID) return 'unknown';
-    const context = entry.context ?? {};
+    const context = entry.context;
+    if (!context) return 'unknown';
     if (context.isolatedTechnique === true) return 'isolated-technique';
+    if (!Object.hasOwn(context, 'isolatedTechnique')) return 'unknown';
     if (context.hintGuided === true) return 'hint-guided';
-    if (standard === 'strict' && context.usedExistingHints === true) return 'hint-guided';
+    if (!Object.hasOwn(context, 'hintGuided')) return 'unknown';
+    if (standard === 'strict') {
+        if (context.usedExistingHints === true) return 'hint-guided';
+        if (!Object.hasOwn(context, 'usedExistingHints')) return 'unknown';
+    }
     return 'cold-capability';
 }
 
@@ -86,7 +93,7 @@ export function hintProvenanceClasses(hint, options) {
     return new Set(entries.map(entry => classifyProvenanceClass(entry, options)));
 }
 
-/** True iff at least one of the hint's discovery events was cold. */
+/** True iff at least one discovery event has enough observed context to establish the requested cold standard. */
 export function hasColdCapabilityEvidence(hint, options) {
     return (hint?.provenance ?? []).some(entry => isColdCapabilityEvidence(entry, options));
 }

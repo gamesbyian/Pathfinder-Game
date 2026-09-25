@@ -115,12 +115,22 @@ test('current capability requires an explicit matching regime and strict cold co
     assert.equal(isProductionContextEvidence(ambiguousLegacy), false);
     assert.equal(classifyEvidenceApplicability(ambiguousLegacy, 'current-production-capability', {
         currentSolverVersion: 'v2',
-    }).reason, 'legacy-context-ambiguity');
+    }).reason, 'not-strict-cold-production-pathfinder',
+    'strict provenance classification rejects this incomplete legacy context before legacy ambiguity can qualify as cold capability');
     const unknownVersion = { ...cold, solver: { ...cold.solver, version: null } };
     assert.equal(isProductionContextEvidence(unknownVersion), false);
     assert.equal(classifyEvidenceApplicability(unknownVersion, 'current-production-capability', {
         currentSolverVersion: 'v2',
     }).reason, 'unknown-solver-regime');
+});
+
+test('dependency strata do not relabel missing capability context as cold', () => {
+    const knownCold = entry({ solver: { version: 'v2' } });
+    assert.match(provenanceDependencyStratum(knownCold), /\|cold-context$/);
+
+    const ambiguous = { ...knownCold, context: { hintGuided: false, usedExistingHints: false } };
+    assert.equal(hasExplicitCapabilityContext(ambiguous), false);
+    assert.match(provenanceDependencyStratum(ambiguous), /\|unknown-context$/);
 });
 
 test('technique performance requires isolated Pathfinder work evidence', () => {

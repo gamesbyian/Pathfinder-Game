@@ -91,6 +91,17 @@ const repairLateProbeNodeBudget = argMap.has('--repair-late-probe-node-budget')
 // flags above; experiment-only, not a permanent ablation flag.
 const repairLateProbeMultiSeedRetrySeedCount = argMap.has('--repair-late-probe-multi-seed-retry-seed-count')
     ? Number(argMap.get('--repair-late-probe-multi-seed-retry-seed-count')) : undefined;
+// 2026-09-25 (WS2-REPAIR-DEADLINE-ALLOCATION, reports/2026-09-20-class3-dose-exposure-resolved-
+// result-001.md): lets a matched sweep raise the early-repair-search probe's ordinary/biased node
+// caps toward the T1-isolated rescuer cost for a frozen population, without editing
+// modules/solver/orchestration-early-repair.ts. Deliberately two separate flags, never one shared
+// knob — the 2,000,000/6,000,000 production values were independently calibrated (see that file's
+// header comment) and a sweep must be able to move one without silently moving the other. Same
+// optional/omitted-means-production-default shape as the flags above.
+const earlyRepairSearchOrdinaryNodeBudget = argMap.has('--early-repair-search-ordinary-node-budget')
+    ? Number(argMap.get('--early-repair-search-ordinary-node-budget')) : undefined;
+const earlyRepairSearchBiasedNodeBudget = argMap.has('--early-repair-search-biased-node-budget')
+    ? Number(argMap.get('--early-repair-search-biased-node-budget')) : undefined;
 
 if (admissibleOrderNodeReserveFraction !== undefined &&
     (!Number.isFinite(admissibleOrderNodeReserveFraction) || admissibleOrderNodeReserveFraction < 0 || admissibleOrderNodeReserveFraction > 1)) {
@@ -108,6 +119,16 @@ if (repairLateProbeMultiSeedRetrySeedCount !== undefined &&
     (!Number.isInteger(repairLateProbeMultiSeedRetrySeedCount) || repairLateProbeMultiSeedRetrySeedCount < 0
         || repairLateProbeMultiSeedRetrySeedCount > REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length)) {
     console.error(`--repair-late-probe-multi-seed-retry-seed-count must be an integer in [0, ${REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length}].`);
+    process.exit(2);
+}
+
+if (earlyRepairSearchOrdinaryNodeBudget !== undefined && (!Number.isFinite(earlyRepairSearchOrdinaryNodeBudget) || earlyRepairSearchOrdinaryNodeBudget < 0)) {
+    console.error('--early-repair-search-ordinary-node-budget must be >= 0.');
+    process.exit(2);
+}
+
+if (earlyRepairSearchBiasedNodeBudget !== undefined && (!Number.isFinite(earlyRepairSearchBiasedNodeBudget) || earlyRepairSearchBiasedNodeBudget < 0)) {
+    console.error('--early-repair-search-biased-node-budget must be >= 0.');
     process.exit(2);
 }
 
@@ -189,6 +210,8 @@ if (Number.isFinite(earlyRepairSearchAdaptiveBadnessGate)) solveOpts.earlyRepair
 if (Number.isFinite(earlyRepairSearchAdaptiveMinScale)) solveOpts.earlyRepairSearchAdaptiveBiasedMinScaleOverride = earlyRepairSearchAdaptiveMinScale;
 if (Number.isFinite(repairLateProbeNodeBudget)) solveOpts.repairLateProbeNodeBudgetOverride = repairLateProbeNodeBudget;
 if (Number.isInteger(repairLateProbeMultiSeedRetrySeedCount)) solveOpts.repairLateProbeMultiSeedRetrySeedCountOverride = repairLateProbeMultiSeedRetrySeedCount;
+if (Number.isFinite(earlyRepairSearchOrdinaryNodeBudget)) solveOpts.earlyRepairSearchOrdinaryNodeBudgetOverride = earlyRepairSearchOrdinaryNodeBudget;
+if (Number.isFinite(earlyRepairSearchBiasedNodeBudget)) solveOpts.earlyRepairSearchBiasedNodeBudgetOverride = earlyRepairSearchBiasedNodeBudget;
 if (ablation) solveOpts.ablation = ablation;
 
 // Canonical run-wide solver-request identity (docs/hint-evidence-execution-identity-storage-
@@ -281,6 +304,7 @@ function writeReport() {
         artifactCompletedAt: new Date().toISOString(),
         effectiveConfig, effectiveConfigDigest,
         solverRequestProjection, solverRequestIdentity,
+        executionRuntime: { nodeVersion: process.version, platform: process.platform, arch: process.arch },
         backend, reproducibilityMode,
     };
     mkdirSync(path.dirname(outFile), { recursive: true });

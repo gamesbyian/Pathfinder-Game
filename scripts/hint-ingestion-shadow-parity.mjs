@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase-6 shadow/reharvest parity gate for specialist central-ingestion receipts.
+ * Steady-state shadow/reharvest regression gate for specialist central-ingestion receipts.
  *
  * This deliberately does not compare candidate denominators with merge-hint-artifacts: captured
  * canonical files may contain a wider historical path/event set than the specialist report. The

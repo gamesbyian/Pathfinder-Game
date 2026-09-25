@@ -18,7 +18,10 @@ import { runLegacyLatencyPortfolioExperiment } from './orchestration-legacy-port
 import { runStaticPortfolio } from './orchestration-static-portfolio.js';
 import { runAdditiveRetryTiers } from './orchestration-additive-retry-tiers.js';
 import { attemptConfigKey, normalizeAblationConfig, getActiveGates, hasAttemptError, classifyAttemptTier, MIN_ATTEMPT_WORK } from './orchestration-contracts.js';
-import { EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration-early-repair.js';
+import {
+    EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
+    EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET, EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET,
+} from './orchestration-early-repair.js';
 import type { Attempt, ShrunkBiasedTier, SolveOpts, SolveResult } from './orchestration-contracts.js';
 
 // Re-exported for compatibility with every existing './orchestration.js' import path.
@@ -27,7 +30,7 @@ export { classifyAttemptTier, classifyHistoricalAttemptTier, attemptConfigKey, n
 export { runAttempt } from './orchestration-run-attempt.js';
 export { attemptBudgetShare } from './orchestration-main-search.js';
 export {
-    EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP, EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET,
+    EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP, EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET, EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET,
     EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
 } from './orchestration-early-repair.js';
 
@@ -367,7 +370,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // 'strictTotalWorkBudget installs one remaining-work cap across every additive path' test.
         const probe = await runEarlyRepairSearch(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainSearchEarlyNodeBudget,
             opts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
-            opts.earlyRepairSearchAdaptiveBiasedMinScaleOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
+            opts.earlyRepairSearchAdaptiveBiasedMinScaleOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
+            opts.earlyRepairSearchOrdinaryNodeBudgetOverride ?? EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET,
+            opts.earlyRepairSearchBiasedNodeBudgetOverride ?? EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET);
         probeAttempts.push(...probe.attempts);
         shrunkBiasedTiers = probe.shrunkBiased ?? [];
         if (probe.solution) {

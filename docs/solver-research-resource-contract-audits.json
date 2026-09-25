@@ -6,7 +6,8 @@
     "hint-provenance",
     "variant-family-data",
     "solution-space-profiles",
-    "stress-corpora"
+    "stress-corpora",
+    "hint-ingestion-receipts"
   ],
   "auditedResources": [
     {
@@ -21,6 +22,7 @@
         "semantic provenance event",
         "bounded execution identity (modern Pathfinder events when observed)",
         "physical acquisition occurrence lineage (excluded from semantic event identity)",
+        "canonical source-run / execution-protocol join spine for modern acquisitions",
         "producer/origin plus orthogonal facets",
         "provenance dependency stratum"
       ],
@@ -49,7 +51,7 @@
         "missing producer/config/run/work context is unknown and cannot be upgraded into current-capability or performance evidence",
         "absence of a provenance event does not establish solver failure",
         "migration-derived foundAt timestamps from the 2026-07-11 schema-v1 hintMetadata migration are not historical discovery times; the mechanically reconstructed cohort is 662 events across 102 stress-1 files in the 2026-07-11T01:44:17.863Z..18.004Z normalization window, stable in the September-11 store and the current store",
-        "current canonical Hint provenance usually lacks canonical solver-request identity and canonical solver-stage identity; full effective-input reconstruction must therefore report those dimensions missing rather than infer them from technique names or current defaults",
+        "historical and producer-limited Hint provenance may lack canonical solver-request identity and solver-stage identity; modern consolidated producers persist bounded execution identity and occurrence/source-run lineage when observed, while solver-stage reconstruction still requires an exact sibling-evidence/source-run join where it is not intrinsic to Hint",
         "pre-2026-09-23 hint-discovery-process protocolHash values duplicated configurationHash and cannot independently prove execution-protocol equality without the owning experiment contract",
         "modern Pathfinder producers may record execution.solverRequestIdentity and occurrence lineage; absence on historical rows or producers without a real signal remains unknown/not-observed, never an implied default",
         "occurrence run identity is acquisition lineage and must not be promoted into semantic discovery-event equality",
@@ -65,7 +67,7 @@
         "many legacy events lack enough execution context to prove current-production comparability",
         "dependency strata conservatively group dependence but cannot reconstruct independent experimental units that were never recorded",
         "schema-v1 stress hintMetadata did not retain original discovery time; the 2026-07-11 migration stamped normalization time into foundAt for those observations, so original chronology is irrecoverable unless another independent source proves it",
-        "many legacy/current hint events cannot yet be joined to one exact canonical solver-request identity or solver-stage identity from Hint storage alone",
+        "legacy Hint events often cannot be joined to one exact canonical solver-request or solver-stage identity because those dimensions were never retained; this is historical information loss, not an unfinished modern persistence contract",
         "pre-2026-09-23 discovery-process evidence did not preserve an independently-derived protocol hash; protocol equality for those documents must be recomputed from the owning experiment contract when available"
       ],
       "consumerInventory": [
@@ -86,15 +88,17 @@
       ],
       "auditAuthorities": [
         "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md",
-        "reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md"
+        "reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md",
+        "docs/hint-evidence-execution-identity-storage-consolidation-plan.md",
+        "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md"
       ],
       "prospectiveProducerFixes": [
-        "where practical, reference the originating experiment/run manifest so attempted denominator, failures, protocol identity and work semantics can be recovered",
-        "preserve discovery-time missingness explicitly; compatibility adapters must not synthesize read/migration time as foundAt",
-        "preserve exact modern occurrence join keys sufficient to bind a stored path discovery to its owning experiment/run contract and, when present, hint-discovery-process evidence without copying attempt sequences into Hint",
-        "treat execution/occurrence capsules as a durable cross-resource join spine: level revision + exact path signature + immutable solver/protocol/configuration/run identity must fail closed rather than be reconstructed from filenames, timestamps or approximate configuration similarity",
+        "keep originating experiment/run bindings durable enough to recover attempted denominator, failures, protocol identity and work semantics for performance claims",
+        "preserve discovery-time and capability-context missingness explicitly; compatibility adapters must never synthesize historical unknown into a persistable modern default",
+        "keep exact modern occurrence join keys and canonical source-run/execution identity on current Pathfinder discoveries without copying attempt sequences into Hint",
+        "treat execution/occurrence capsules as the durable cross-resource join spine and fail closed on missing identity rather than reconstructing it from filenames, timestamps or approximate configuration similarity",
         "keep richer successful-process, failure-response and search-loss payloads at their existing natural grains; expand Hint only for semantics intrinsic to the accepted path observation",
-        "persist or durably exact-join canonical solver-request identity and canonical solver-stage/action identity for modern Pathfinder discoveries so effective-input reconstruction does not depend on inference from current code",
+        "retain solver stage/action as a separate exact-join dimension where it is not intrinsic to persisted Hint provenance; never infer it from technique names or current code defaults",
         "reuse the canonical source-run binding for run/protocol/solver/population lineage rather than hand-assembling overlapping envelope fields in each evidence family"
       ],
       "knownIrreversibleInformationLoss": [
@@ -102,16 +106,14 @@
         "for legacy capability-context fields whose absence was later persisted as false by read-normalize-write cycles, current storage alone cannot reconstruct whether false was originally observed or synthesized; source-generation cohort semantics must supply unknown where the historical producer did not retain the field"
       ],
       "prospectiveProducerGaps": [
-        "preserve semantic missingness through read/write round trips; compatibility adapters must never turn historical unknown capability context into a persistable modern false",
-        "preserve discovery-time missingness explicitly; compatibility adapters must not synthesize read/migration time as foundAt",
-        "retain semantic discovery identity separately from physical occurrence/source-run lineage so retries/reharvests dedupe without losing repeat-run provenance",
-        "sibling evidence producers should migrate overlapping run/config/protocol/solver/population projections to the canonical source-run binding",
-        "solver stage/action identity remains an explicit reconstructability gap unless durably supplied by an exact sibling-evidence join or a future bounded schema extension",
-        "occurrence persistence still needs byte-aware bounded-growth/overflow semantics before Firestore/GHA storage can be considered Phase-3 complete"
+        "historical rows remain legitimately sparse: preserve semantic missingness through every read/write round trip",
+        "solver stage/action identity remains unavailable from Hint alone for some events and must come from an exact sibling-evidence/source-run join when a consumer requires full effective-input reconstruction",
+        "new evidence producers must use the consolidated semantic-event / occurrence-lineage / source-run identity owners rather than introducing another persistence or identity dialect"
       ],
       "auditEvidence": [
         "docs/hint-evidence-consolidation-inventory.json",
-        "reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md"
+        "reports/2026-09-22-hint-evidence-consolidation-preimplementation-audit-001.md",
+        "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md"
       ]
     },
     {
@@ -332,6 +334,84 @@
         "record selection/conditioning events separately from generation ancestry, including which side/outcome conditioned membership",
         "record which descendant decisions consumed a managed population when that affects later confirmation status",
         "preserve per-generation-run statistics rather than hybrid cumulative/latest wrapper fields"
+      ]
+    },
+    {
+      "assetId": "hint-ingestion-receipts",
+      "independentUnit": [
+        "one source-run × canonical ingestion producer receipt is the accounting unit",
+        "path/event/occurrence additions inside a receipt are semantic units, not independent experimental observations"
+      ],
+      "identityLayers": [
+        "source runId/runAttempt",
+        "source workflow",
+        "ingestion producer/harvester",
+        "success-ingestion funnel",
+        "semantic path addition",
+        "semantic provenance-event addition",
+        "physical acquisition occurrence addition"
+      ],
+      "producerAuthority": [
+        "scripts/hint-ingestion-receipt-lib.mjs",
+        "scripts/hint-ingestion-receipt-query.mjs",
+        ".github/workflows/harvest-solver-evidence.yml"
+      ],
+      "selectionConditioning": [
+        "receipts begin from success-bearing observations presented to an ingestion boundary",
+        "candidate/eligible/referee-accepted/already-represented/quarantined counts describe persistence selection, not solver attempt selection",
+        "producer-specific source artifacts can differ while the receipt vocabulary remains shared"
+      ],
+      "admissibleEvidencePurposes": [
+        "selection-audit: distinguish accepted, duplicate/already-represented and quarantined success observations",
+        "ingestion-accounting: separate new paths, semantic events and physical occurrences where measured",
+        "longitudinal-process: explain Hint-store growth without attributing all growth to new semantic solver discoveries",
+        "forensic: identify the source run/workflow/producer responsible for a persistence outcome"
+      ],
+      "dependenceModel": "Receipt counts summarize one acquisition/persistence funnel. Occurrence additions are reacquisition lineage and must not be counted as independent scientific support; solve-rate/performance inference requires the originating attempted population.",
+      "missingnessSemantics": [
+        "null path/event/occurrence addition counts mean the producer cannot measure that unit exactly, never zero",
+        "absence of a receipt for a historical run is unavailable ingestion accounting, not proof that no Hint evidence was persisted",
+        "already-represented observations are successful accepted evidence that caused no new semantic-store mutation, not solver failures",
+        "quarantine/rejection reasons apply to ingestion eligibility/persistence and must not be relabeled as search failure"
+      ],
+      "freshnessRevisionContract": [
+        "interpret receipts under the versioned receipt schema and the ingestion implementation that emitted them",
+        "join to Hint state through source-run/workflow/producer identity and canonical semantic identities rather than file timestamp proximity",
+        "historical level-blind selection manifests remain a producer-specific compatibility resource, not a substitute for canonical current receipts"
+      ],
+      "knownInformationLoss": [
+        "some producers cannot distinguish exact path/event/occurrence additions and therefore retain only coarse semanticRecordChanges",
+        "success-ingestion receipts do not contain the originating attempted population or failed attempts"
+      ],
+      "consumerInventory": [
+        "scripts/hint-ingestion-receipt-query.mjs",
+        "scripts/research-asset-query.mjs",
+        "docs/solver-research-data-assets.json",
+        "longitudinal Hint/provenance and harvest-selection audits"
+      ],
+      "historicalClaimBlastRadius": [
+        "docs/hint-evidence-execution-identity-storage-consolidation-plan.md",
+        "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md"
+      ],
+      "auditAuthorities": [
+        "docs/hint-evidence-execution-identity-storage-consolidation-plan.md",
+        "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md"
+      ],
+      "prospectiveProducerFixes": [
+        "new canonical ingestion lanes must emit the shared receipt vocabulary rather than a producer-local accounting schema",
+        "measure exact path/event/occurrence additions when the mutation boundary exposes them; otherwise preserve null",
+        "keep source-run acquisition identity separate from semantic discovery-event identity"
+      ],
+      "knownIrreversibleInformationLoss": [
+        "historical runs that predate receipts may not permit exact reconstruction of duplicate/quarantine/path-event-occurrence persistence outcomes"
+      ],
+      "prospectiveProducerGaps": [
+        "specialist future ingestion lanes must be registered and receipt-covered before becoming canonical persistence authorities",
+        "producer-local coarse semanticRecordChanges may be refined only when exact mutation-unit measurement is available without inference"
+      ],
+      "auditEvidence": [
+        "docs/hint-evidence-consolidation-inventory.json",
+        "reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md"
       ]
     }
   ]

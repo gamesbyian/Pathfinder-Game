@@ -4,8 +4,10 @@
 // uses the child-process pool for real CPU parallelism.
 //
 // Shards are read-only with respect to corpora/hints because a level may appear in multiple shards.
-// New referee-valid solves stay in shard output; combine-technique-census-shards.mjs is the sole
-// post-run writer. Results are persisted between cells and on termination signals.
+// New referee-valid solves stay in shard output. The maintained GHA workflow combines that evidence
+// without mutating canonical Hint stores; central harvest-solver-evidence owns canonical GHA
+// persistence. combine-technique-census-shards.mjs retains an explicit local/manual --save-hints
+// mode for non-workflow use. Results are persisted between cells and on termination signals.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import path from 'node:path';

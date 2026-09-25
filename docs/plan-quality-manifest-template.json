@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "plan": "docs/example-plan.md",
+  "status": "draft",
+  "reconciledMainRef": "<full-or-resolvable-main-ref>",
+  "premises": [
+    {
+      "question": "What underlying claim makes this work necessary?",
+      "evidence": ["<current implementation / report / query>"],
+      "alternatives": ["<plausible alternate framing>"],
+      "discriminator": "<smallest test/query that could redirect the plan>"
+    }
+  ],
+  "repositoryPriorArt": [
+    {
+      "candidate": "<existing owner/pattern/tool>",
+      "disposition": "reuse|extend|parallel-with-distinction|not-applicable",
+      "reason": "<why>"
+    }
+  ],
+  "impactDomains": {
+    "definitionsSchemas": [],
+    "producersWriters": [],
+    "transportsWorkers": [],
+    "consumersReaders": [],
+    "persistenceStores": [],
+    "cliPackage": [],
+    "workflowsTriggers": [],
+    "generatedArtifacts": [],
+    "testsValidatorsGuards": [],
+    "compatibilityHistory": [],
+    "currentDocsAuthorities": [],
+    "registriesCatalogues": [],
+    "researchSystem": []
+  },
+  "solverQueueImpact": {
+    "classification": "none|blocks|unblocks|evidence-quality|acquisition-cost|observation-surface|retires-workaround|invalidates-evidence|mechanism-only",
+    "authoritiesChecked": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-future-work.md"
+    ],
+    "items": [],
+    "notes": "<required explanation, including why none when classification=none>"
+  },
+  "phases": [
+    {
+      "id": "P1",
+      "name": "<phase>",
+      "entry": ["<assumption/gate>"],
+      "outputs": ["<concrete implementation result>"],
+      "affectedDomains": ["producersWriters"],
+      "exitProofIds": ["DOD-1"]
+    }
+  ],
+  "definitionsOfDone": [
+    {
+      "id": "DOD-1",
+      "claim": "<completion claim>",
+      "proofs": [
+        {
+          "type": "command",
+          "locator": "<command/test/guard/query/workflow/artifact>",
+          "expected": "<machine-checkable or bounded expected result>"
+        }
+      ]
+    }
+  ],
+  "splashZone": {
+    "currentAuthorities": [],
+    "workflows": [],
+    "registriesSchemas": [],
+    "generatedData": [],
+    "solverQueue": [],
+    "researchSystem": [],
+    "retireOrArchive": [],
+    "proofIds": []
+  },
+  "hostileCloseout": {
+    "independentReconstruction": true,
+    "inventories": [
+      "producers",
+      "consumers",
+      "workflows",
+      "persistence",
+      "compatibility-history",
+      "current-authorities"
+    ],
+    "proofIds": []
+  }
+}

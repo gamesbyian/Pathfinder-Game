@@ -33,6 +33,8 @@ import {
 import {
     EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
     EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
+    EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET,
+    EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET,
 } from './orchestration-early-repair.js';
 import { STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS } from './orchestration-static-portfolio.js';
 import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from './legacy-latency-portfolio-experiment.js';
@@ -79,6 +81,8 @@ export const SOLVER_REQUEST_SEMANTIC_FIELDS = Object.freeze([
     'mainSearchLateReserveConfigCountOverride',
     'earlyRepairSearchAdaptiveBiasedBadnessGateOverride',
     'earlyRepairSearchAdaptiveBiasedMinScaleOverride',
+    'earlyRepairSearchOrdinaryNodeBudgetOverride',
+    'earlyRepairSearchBiasedNodeBudgetOverride',
     'disableExtraBudgetPasses',
 ] as const);
 
@@ -270,6 +274,10 @@ export function buildCanonicalSolverRequestProjection(opts: SolveOpts = {}) {
                 opts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
             earlyRepairSearchAdaptiveBiasedMinScale:
                 opts.earlyRepairSearchAdaptiveBiasedMinScaleOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
+            earlyRepairSearchOrdinaryNodeBudget:
+                opts.earlyRepairSearchOrdinaryNodeBudgetOverride ?? EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET,
+            earlyRepairSearchBiasedNodeBudget:
+                opts.earlyRepairSearchBiasedNodeBudgetOverride ?? EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET,
             disableExtraBudgetPasses: disabled,
         },
     };

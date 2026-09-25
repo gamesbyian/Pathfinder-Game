@@ -172,7 +172,7 @@ jobs:
               # History-aware portfolio workflows use baseline/prime/cache inputs but the
               # solver itself does not consume persisted Hint paths. Their self-describing reports now
               # retain exact accepted path, level revision, discovery time, attempts and per-level
-              # work budget, so reconstruct them centrally during the Phase-6 dual-path window.
+              # work budget, so reconstruct them centrally through the canonical persistence lane.
               node scripts/run-bundled.mjs scripts/harvest-portfolio-solve-sweep-reports.mjs -- \
                 --staging-dir=artifact-staging \
                 --source-run-id="$SOURCE_RUN_ID" \

@@ -1140,6 +1140,13 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 path: _researchParentPath,
                 workSpent: prep._workMeter.units - _researchExpansionWorkStart,
                 generatedCandidates: _childIdx,
+                // Neighbor count offered to hard pruning, before any candidate is evaluated —
+                // added for WS2-FORCED-WORK-CAPTURE-ECONOMICS's "earlier recognition" numerator
+                // (reports/2026-09-21-forced-work-capture-economics-seam-audit-001.md): lets a
+                // reducer tell a trivially-free forced parent (rawNeighborCount === 1, a structural
+                // dead end — no pruning needed to know it) apart from one hard pruning narrowed down
+                // to a single survivor from several raw options.
+                rawNeighborCount: _beamNeighborCount,
             });
         }
         if (_BEAM_DEBUG) _dbgCandCount += cands.length;

@@ -6,7 +6,7 @@ import { test } from 'vitest';
 // modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { PACK } from './encoding.js';
-import { solveLevel, EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP, EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
+import { solveLevel, EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP, EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET, EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
 import { makeRepairGatedInfeasibleLevel, exhaustingDispatch } from './orchestration-test-support.js';
 
@@ -217,6 +217,103 @@ test('earlyRepairSearchAdaptiveBiasedBadnessGateOverride/MinScaleOverride undefi
     const expectedScaled = Math.floor(EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET * scale);
     assert.equal(biasedNodeBudgets.length, 1);
     assert.equal(biasedNodeBudgets[0], expectedScaled);
+});
+
+// 2026-09-25 (WS2-REPAIR-DEADLINE-ALLOCATION, reports/2026-09-20-class3-dose-exposure-resolved-
+// result-001.md): earlyRepairSearchOrdinaryNodeBudgetOverride/earlyRepairSearchBiasedNodeBudgetOverride
+// let a matched batch-tooling sweep raise the probe's node caps toward the T1-isolated rescuer cost
+// without editing the production constants, deliberately as two separate fields (see
+// orchestration-contracts.ts's own comment on why they must never move together).
+test('earlyRepairSearchOrdinaryNodeBudgetOverride changes the ordinary-tier probe node cap', async () => {
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: exhaustingDispatch,
+        earlyRepairSearchOrdinaryNodeBudgetOverride: 500_000,
+    });
+    assert.equal(result.ok, false);
+    const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP);
+    assert.ok(probeAttempts.length > 0);
+    assert.equal(probeAttempts.every(a => a.nodesExpanded === 500_000), true);
+});
+
+test('earlyRepairSearchOrdinaryNodeBudgetOverride undefined preserves EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET exactly', async () => {
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50, attemptSearchForTesting: exhaustingDispatch });
+    assert.equal(result.ok, false);
+    const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP);
+    assert.ok(probeAttempts.length > 0);
+    assert.equal(probeAttempts.every(a => a.nodesExpanded === EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET), true);
+});
+
+test('earlyRepairSearchBiasedNodeBudgetOverride changes the biased-tier probe node cap before the adaptive scale is applied', async () => {
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 2; // promising: scale stays 1, a strict no-op on the override
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: dispatch,
+        earlyRepairSearchBiasedNodeBudgetOverride: 9_000_000,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], 9_000_000);
+});
+
+test('earlyRepairSearchBiasedNodeBudgetOverride still interacts with the adaptive shrink', async () => {
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 100; // poor: shrinks to MIN_SCALE
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: dispatch,
+        earlyRepairSearchBiasedNodeBudgetOverride: 9_000_000,
+    });
+    assert.equal(result.ok, false);
+    const expectedScaled = Math.floor(9_000_000 * EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], expectedScaled);
+});
+
+test('earlyRepairSearchBiasedNodeBudgetOverride undefined preserves EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET exactly', async () => {
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 2;
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET);
 });
 
 // BUG FIXED 2026-08-12 (reports/2026-08-12-worker-count-sensitivity-early-repair-search-wallclock.md):
