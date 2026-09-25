@@ -102,8 +102,8 @@
     },
     "build": {
       "packageScript": "build",
-      "workflowStepId": "build",
-      "note": "Production Vite bundle."
+      "workflowStepId": "deep_services",
+      "note": "Production Vite bundle; co-executed with solver proofs and Firestore under deep_services while preserving independent result output."
     },
     "firestore-boundary": {
       "packageScript": "test:firestore-level-fingerprint-boundary",
