@@ -1,6 +1,6 @@
 # Hint evidence: remaining mechanical migration audit 001
 
-> **Status:** historical/reconciled audit; superseded for current completion state
+> **Status:** superseded
 > **Last evidence:** 2026-09-24 — PR #2072 hostile closeout reconstructed the maintained producer/consumer/store surface after schema-v4 migration and found additional bypasses not visible in this 2026-09-23 snapshot.
 > **Decision:** Preserve this report as a dated mechanical migration map only. For current architecture, remaining work and completion status, use the consolidation plan plus `reports/2026-09-24-hint-evidence-hostile-completion-audit-001.md`.
 > **Remaining gate:** none for this historical report itself; it must not be cited as current proof of completeness.
