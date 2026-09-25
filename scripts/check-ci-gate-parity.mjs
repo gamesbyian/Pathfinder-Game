@@ -130,8 +130,9 @@ if (!workflow.includes('uses: ./.github/workflows/ci-node-contract-shards.yml'))
   errors.push('ci.yml no longer invokes the reusable Node contract shard workflow');
 }
 if (!/^  deep-services:\s*$/mu.test(workflow)
-    || !/deep-services:[\s\S]*id:\s*build\s*$/mu.test(workflow)) {
-  errors.push('ci.yml no longer packs production build into deep-services');
+    || !/deep-services:[\s\S]*id:\s*deep_services\s*$/mu.test(workflow)
+    || !/deep-services:[\s\S]*npm run build/u.test(workflow)) {
+  errors.push('ci.yml no longer packs production build into the deep_services execution step');
 }
 if (!/Materialize build runtime JSON[\s\S]*services-impact\.outputs\.needs_build == 'true'/u.test(workflow)) {
   errors.push('ci.yml deep-services no longer scopes build work through needs_build');
