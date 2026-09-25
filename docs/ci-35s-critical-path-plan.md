@@ -951,6 +951,8 @@ The diversification audit found repeated real-solver work being used for session
 
 This follows the testing doctrine already stated in `docs/testing.md`: stub search when the assertion is scheduling/routing/budget/provenance behavior rather than search capability. Do not count this as a speed win until exact-head coverage timings show the file and total lane actually fall.
 
+The same integration-owner rule was applied to `hint-ablation-generator.test.ts`: the seven-phase forced-portal run remains a real-solver integration test, while deduplication, phase toggles, evidence-seeded combined routing, budget shims, and admissible-order provenance now use a known referee-valid portal path plus a deterministic solver stub. This preserves one executable full-pipeline boundary instead of repeatedly invoking production search to manufacture inputs for state-machine assertions.
+
 Repair-search audit found two different budget classes and they must not be conflated:
 
 - enabled prototype determinism tests may need enough work to reach their actual mechanism (plateau/relink/turn mechanisms are stagnation-triggered at 6,000 restarts; beam seeding has its own 3,000-node prepass), so their 250k budget is not being cut without activation evidence;
