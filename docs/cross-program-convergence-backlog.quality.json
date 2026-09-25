@@ -1,0 +1,402 @@
+{
+  "schemaVersion": 1,
+  "plan": "docs/cross-program-convergence-backlog.md",
+  "status": "active",
+  "reconciledMainRef": "a0c7fbe8f16cb9e27596b2f00850c33c8f7f0bc3",
+  "premises": [
+    {
+      "question": "Do the September 20-25 programs expose repeated structural lessons that remain only partially transferred across CI, solver research, evidence infrastructure, and plan quality?",
+      "evidence": [
+        "CI historical-value/cadence work separated proof value from per-PR cadence.",
+        "CI impact routing made semantic invalidation explicit while research result freshness remains coarser.",
+        "Hint consolidation and CI cache work repeatedly converged on one canonical producer/publication owner.",
+        "The research execution-efficiency audit already transferred exact runtime, sparse materialization, dependency reuse, and search-vs-plumbing separation, but not the broader cadence/freshness/proof-ownership lessons."
+      ],
+      "alternatives": [
+        "Treat each program as domain-specific and close the retrospective with no cross-program backlog.",
+        "Create one giant generalized dependency/evidence framework immediately.",
+        "Record bounded cross-program pilots with concrete triggers and let repeated evidence earn generalization."
+      ],
+      "discriminator": "Use bounded concrete pilots (CP-1 through CP-8) and preserve live scientific priority; generalize only after repeated structure is demonstrated."
+    },
+    {
+      "question": "Should remaining convergence work preempt current WS1/WS2 scientific gates?",
+      "evidence": [
+        "The solver queue already has decision-ready or near-decision-ready WS1 and WS2 gates.",
+        "Several convergence items are infrastructure audits whose value depends on representative live consumers.",
+        "Past repo history shows infrastructure programs can expand if not tied to a live discriminator."
+      ],
+      "alternatives": [
+        "Pause science and complete the infrastructure backlog first.",
+        "Ignore convergence work until all solver research closes.",
+        "Finish immediate WS1/WS2 gates, then run the highest-leverage convergence audits without creating a parallel scientific queue."
+      ],
+      "discriminator": "Keep solver-optimization-workstreams.md as priority authority and gate convergence work behind immediate scientific commitments."
+    }
+  ],
+  "repositoryPriorArt": [
+    {
+      "candidate": "docs/ci-historical-value-audit-plan.md",
+      "disposition": "reuse",
+      "reason": "Methodological prior art for CP-1 research cadence/ownership and CP-5 governance historical-value auditing."
+    },
+    {
+      "candidate": "docs/ci-impact-routing-plan.md",
+      "disposition": "reuse",
+      "reason": "Concrete semantic invalidation/consumer-ownership model for CP-2 research freshness pilots."
+    },
+    {
+      "candidate": "docs/solver-research-execution-efficiency-plan.md",
+      "disposition": "extend",
+      "reason": "Already owns runtime/materialization/bootstrap/search-vs-plumbing work; convergence backlog should not duplicate that execution queue."
+    },
+    {
+      "candidate": "docs/plan-quality-standard.md",
+      "disposition": "extend-after-pilot",
+      "reason": "CP-6 should modify the plan standard only if bounded phase-local hostile sampling demonstrates useful signal without ceremony."
+    },
+    {
+      "candidate": "Hint/provenance consolidation and CI exact-generation cache ownership",
+      "disposition": "reuse-as-pattern",
+      "reason": "Prior art for CP-3 proof ownership and CP-4 canonical derived-resource generation ownership."
+    }
+  ],
+  "impactDomains": {
+    "definitionsSchemas": [
+      "Cross-program backlog item IDs CP-1 through CP-8 and their trigger/exit semantics."
+    ],
+    "producersWriters": [
+      "Future audit/report producers created under CP-1 through CP-7; no new universal framework is authorized by this backlog alone."
+    ],
+    "transportsWorkers": [
+      "Recurring research workflows and CI validation/workflow surfaces inspected by CP-1, CP-5 and CP-8."
+    ],
+    "consumersReaders": [
+      "Solver research agents, CI agents, plan authors, research-system query consumers."
+    ],
+    "persistenceStores": [
+      "Research evidence/resource registries, derived resources, query/index products inspected under CP-4 and CP-7."
+    ],
+    "cliPackage": [
+      "Potential future audit/query commands only when a concrete CP item earns implementation."
+    ],
+    "workflowsTriggers": [
+      "Recurring research/evidence workflows under CP-1.",
+      "CI workflow cadence/structural work under CP-5/CP-8 only when evidence reopens it."
+    ],
+    "generatedArtifacts": [
+      "Cadence/ownership audit evidence, freshness contracts, proof-owner map, derived-resource ownership report, governance-value report, cost-of-knowing query evidence."
+    ],
+    "testsValidatorsGuards": [
+      "Existing validation remains authoritative until a specific CP item proves a safe move/removal.",
+      "Plan-quality standard may gain bounded phase-local hostile sampling only after CP-6 pilot."
+    ],
+    "compatibilityHistory": [
+      "Do not erase historical workflows/guards merely because current cadence changes; preserve forensic/history context where needed."
+    ],
+    "currentDocsAuthorities": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-research-execution-efficiency-plan.md",
+      "docs/ci-35s-critical-path-plan.md",
+      "docs/ci-historical-value-audit-plan.md",
+      "docs/ci-impact-routing-plan.md",
+      "docs/plan-quality-standard.md"
+    ],
+    "registriesCatalogues": [
+      "Research resource/evidence registries and workflow lifecycle/disposition registries as concrete CP items require."
+    ],
+    "researchSystem": [
+      "Question/evidence/run/population/consumption lineage for CP-1, CP-2 and CP-7."
+    ]
+  },
+  "solverQueueImpact": {
+    "classification": "supporting",
+    "authoritiesChecked": [
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-research-execution-efficiency-plan.md"
+    ],
+    "items": [
+      "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+      "WS2-REPAIR-DEADLINE-ALLOCATION",
+      "WS2 capability-invention promotion/safety gates",
+      "BC1 later-disposition supporting shadow",
+      "WS6 replication/speed when immediate"
+    ],
+    "notes": "The backlog explicitly must not reorder live solver science. CP work supports the queue and starts when its trigger is met."
+  },
+  "definitionsOfDone": [
+    {
+      "id": "dod-cp1",
+      "claim": "Recurring research/evidence work has explicit claim ownership and justified cadence.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "CP-1 audit output",
+          "expected": "Every in-scope recurring workflow names claim owner, invalidating inputs, current cadence, recommended cadence and retained proof/disposition."
+        }
+      ]
+    },
+    {
+      "id": "dod-cp2",
+      "claim": "Research semantic freshness is demonstrated on concrete expensive evidence families before any shared framework.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "CP-2 pilot report/contracts",
+          "expected": "Three evidence families have explicit invalidation contracts and at least one demonstrated coarse-freshness false positive or false negative."
+        }
+      ]
+    },
+    {
+      "id": "dod-cp3",
+      "claim": "Important invariants have one strongest canonical proof with weaker duplicates explicitly classified.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "CP-3 proof-owner map",
+          "expected": "Candidate invariants list canonical proof plus complementary/early-failure/migration/obsolete duplicate disposition; safe redundancies are removed or narrowed."
+        }
+      ]
+    },
+    {
+      "id": "dod-cp4",
+      "claim": "Derived resources publish from authoritative generation owners with exact generation identity.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "CP-4 derived-resource ownership audit",
+          "expected": "Each audited resource names source generation, producer, publication point, reuse identity, consumers and stale-generation failure mode; adjacent-consumer defects are repaired."
+        }
+      ]
+    },
+    {
+      "id": "dod-cp5",
+      "claim": "Permanent governance checks retain demonstrated current value or are moved/retired with retained forensic coverage.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "CP-5 governance historical-value audit",
+          "expected": "Each audited guard names bad state, current reachability, invalidating paths, overlap/unique catches and durable-vs-migration disposition."
+        }
+      ]
+    },
+    {
+      "id": "dod-cp6",
+      "claim": "Phase-local hostile sampling is either integrated into plan quality with bounded evidence or closed negative.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "CP-6 pilot and plan-quality reconciliation",
+          "expected": "Pilot measures signal/ceremony; plan-quality standard/template are updated only if earned, otherwise negative conclusion is retained."
+        }
+      ]
+    },
+    {
+      "id": "dod-cp7",
+      "claim": "Research cost/reuse facts are queryable without introducing a global ROI score.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "CP-7 minimal query/report",
+          "expected": "Joins question, acquisition/work cost, evidence and downstream reuse for at least two historical examples and records whether further persistent cost metadata is justified."
+        }
+      ]
+    },
+    {
+      "id": "dod-cp8",
+      "claim": "Additional CI structural work opens only from repeatable bounded-window timing evidence.",
+      "proofs": [
+        {
+          "type": "artifact",
+          "locator": "docs/ci-35s-critical-path-plan.md timing evidence",
+          "expected": "New Vitest/materialization/compute work names a repeatable limiting mechanism; otherwise CP-8 stays closed/no-action."
+        }
+      ]
+    },
+    {
+      "id": "dod-splash-zone",
+      "claim": "Cross-program closeouts reconcile this backlog and each affected domain authority.",
+      "proofs": [
+        {
+          "type": "command",
+          "locator": "npm run check:documentation-links",
+          "expected": "Backlog and authority links remain valid after closeouts."
+        }
+      ]
+    },
+    {
+      "id": "dod-hostile-closeout",
+      "claim": "A fresh reconstruction can tell which CP items are implemented, closed negative, superseded, or explicitly deprioritized without trusting conversational history.",
+      "proofs": [
+        {
+          "type": "manual-evidence",
+          "locator": "Final cross-program convergence closeout note",
+          "expected": "Every CP-1..CP-8 item has an evidence-backed disposition and affected authority reconciliation.",
+          "reason": "Cross-domain equivalence and absence of orphaned obligations require bounded independent reconstruction."
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-0",
+      "name": "Immediate scientific commitments",
+      "entry": [
+        "PR #2122/current WS1 confirmation preparation is live."
+      ],
+      "outputs": [
+        "WS1 confirmation closeout",
+        "Current WS2 gates continue"
+      ],
+      "affectedDomains": [
+        "researchSystem",
+        "solverQueueImpact"
+      ],
+      "exitProofIds": []
+    },
+    {
+      "id": "phase-1",
+      "name": "Cadence, freshness, and proof ownership",
+      "entry": [
+        "Immediate WS1 confirmation closeout completed or a blocking defect makes a CP item urgent."
+      ],
+      "outputs": [
+        "CP-1 audit",
+        "CP-2 three-family pilot",
+        "CP-3 proof-owner map",
+        "CP-4 ownership audit"
+      ],
+      "affectedDomains": [
+        "workflowsTriggers",
+        "persistenceStores",
+        "testsValidatorsGuards",
+        "researchSystem"
+      ],
+      "exitProofIds": [
+        "dod-cp1",
+        "dod-cp2",
+        "dod-cp3",
+        "dod-cp4"
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Governance and plan-process transfer",
+      "entry": [
+        "Phase-1 findings identify durable governance/process opportunities."
+      ],
+      "outputs": [
+        "CP-5 governance audit",
+        "CP-6 bounded hostile-sampling pilot"
+      ],
+      "affectedDomains": [
+        "testsValidatorsGuards",
+        "currentDocsAuthorities"
+      ],
+      "exitProofIds": [
+        "dod-cp5",
+        "dod-cp6"
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Research economics queryability and evidence-gated CI follow-through",
+      "entry": [
+        "Enough retained execution/evidence data exists for factual joins; CI timing distribution either reopens or closes structural work."
+      ],
+      "outputs": [
+        "CP-7 minimal cost-of-knowing query/report",
+        "CP-8 evidence-backed disposition"
+      ],
+      "affectedDomains": [
+        "researchSystem",
+        "generatedArtifacts",
+        "workflowsTriggers"
+      ],
+      "exitProofIds": [
+        "dod-cp7",
+        "dod-cp8"
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Cross-program closeout",
+      "entry": [
+        "Every CP item has an implementation/negative/superseded/deprioritized disposition."
+      ],
+      "outputs": [
+        "Reconciled domain authorities",
+        "Independent closeout note"
+      ],
+      "affectedDomains": [
+        "currentDocsAuthorities",
+        "registriesCatalogues",
+        "solverQueueImpact"
+      ],
+      "exitProofIds": [
+        "dod-splash-zone",
+        "dod-hostile-closeout"
+      ]
+    }
+  ],
+  "splashZone": {
+    "currentAuthorities": [
+      "docs/cross-program-convergence-backlog.md",
+      "docs/solver-optimization-workstreams.md",
+      "docs/solver-research-execution-efficiency-plan.md",
+      "docs/ci-35s-critical-path-plan.md",
+      "docs/ci-historical-value-audit-plan.md",
+      "docs/ci-impact-routing-plan.md",
+      "docs/plan-quality-standard.md"
+    ],
+    "workflows": [
+      "Recurring research/evidence workflows classified by CP-1",
+      "CI workflows/guards affected by CP-5 and evidence-gated CP-8"
+    ],
+    "registriesSchemas": [
+      "Research resource/evidence registries as concrete CP items require",
+      "Workflow lifecycle/failure disposition only when cadence/ownership moves"
+    ],
+    "generatedData": [
+      "CP audit reports/maps/query outputs"
+    ],
+    "solverQueue": [
+      "No CP item may silently reorder live scientific queue gates."
+    ],
+    "researchSystem": [
+      "Question/evidence/run/population/consumption joins for CP-1/CP-2/CP-7."
+    ],
+    "retireOrArchive": [
+      "Retire or manualize only after stronger owner/retained forensic proof is named."
+    ],
+    "proofIds": [
+      "dod-cp1",
+      "dod-cp2",
+      "dod-cp3",
+      "dod-cp4",
+      "dod-cp5",
+      "dod-cp6",
+      "dod-cp7",
+      "dod-cp8",
+      "dod-splash-zone",
+      "dod-hostile-closeout"
+    ]
+  },
+  "hostileCloseout": {
+    "independentReconstruction": true,
+    "inventories": [
+      "recurring-workflows",
+      "scientific-evidence-families",
+      "proof-owners",
+      "derived-resources",
+      "governance-guards",
+      "plan-quality-process",
+      "research-cost-reuse",
+      "ci-structural-work",
+      "current-authorities"
+    ],
+    "proofIds": [
+      "dod-hostile-closeout"
+    ]
+  }
+}
