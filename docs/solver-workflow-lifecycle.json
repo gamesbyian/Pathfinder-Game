@@ -23,13 +23,6 @@
       "retirementTrigger": "retire when bounded-concurrency policy is settled and this manual benchmark no longer adds decision value"
     },
     {
-      "workflow": "ci-production-build.yml",
-      "role": "operational",
-      "status": "maintained",
-      "currentConsumer": "reusable impact-scoped production bundle lane called by ci.yml and scoped CI rehearsal",
-      "retirementTrigger": "retire only when production-build validation is repacked into an equivalent maintained CI lane"
-    },
-    {
       "workflow": "ci-node-contract-shards.yml",
       "role": "operational",
       "status": "maintained",
