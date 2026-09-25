@@ -20,6 +20,9 @@ const REPAIR_DETERMINISM_NODE_BUDGET = 250_000;
  // The feature is disabled in both arms, so a long search cannot exercise the feature and adds no
  // evidence. Keep a deterministic nontrivial work sample only.
 const REPAIR_DEFAULT_EQ_NODE_BUDGET = 10_000;
+// Beam seeding has a fixed 3,000-node prepass before restart 1. Its determinism/arrival contracts
+// are established immediately there, so these tests need only a small post-seed margin.
+const REPAIR_BEAM_SEED_TEST_NODE_BUDGET = 5_000;
 
 function assertSameNonzeroRepairWork(prepA: any, prepB: any): void {
     assert.equal(prepA._metrics.nodesExpanded, prepB._metrics.nodesExpanded,
@@ -323,10 +326,10 @@ test('repairSearchFromGate with enableBeamSeed=true is deterministic', async () 
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_DETERMINISM_NODE_BUDGET, null, 0, false, false, false, false, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_BEAM_SEED_TEST_NODE_BUDGET, null, 0, false, false, false, false, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_DETERMINISM_NODE_BUDGET, null, 0, false, false, false, false, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, REPAIR_BEAM_SEED_TEST_NODE_BUDGET, null, 0, false, false, false, false, false, true);
     assert.deepEqual(pathA, pathB);
     if (pathA) assert.equal(replayAndValidate(pathA, level, prepA), true, 'deterministic result must be a valid solution');
     assertSameNonzeroRepairWork(prepA, prepB);
@@ -350,7 +353,7 @@ test('enableBeamSeed=true actually seeds the elite pool from a beam survivor bef
     prep._metrics = { nodesExpanded: 0 };
     const arrivals: { producer: 'repair'; path: number[]; badness: number; arrivalNodes: number; restart: number }[] = [];
     prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
-    await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, 50_000, null, 0, false, false, false, false, false, true);
+    await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, REPAIR_BEAM_SEED_TEST_NODE_BUDGET, null, 0, false, false, false, false, false, true);
     // At least one elite must have arrived at restart 0 -- i.e. before the restart loop's first
     // increment (restartCount++ is the loop's very first statement) -- proving the seed step ran
     // and inserted through considerElite BEFORE ordinary restart-driven discovery had a chance to.
