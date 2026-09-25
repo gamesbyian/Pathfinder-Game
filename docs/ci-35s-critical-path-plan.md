@@ -147,7 +147,9 @@ This is now the primary Node software target. Audit showed that all three domina
 
 Preliminary coarse-cone benchmark evidence from run **36093286575** is already positive on the three target contracts: `research-query` fell from ~9.2 s to roughly **5.7–7.2 s**, queryability from ~8.9 s to **5.2–6.4 s**, and system-query from ~8.8 s to **4.6–5.0 s**. That run was red only because the new `test:git-ref-worktree` contract had not yet been added to the permanent research validation group; the contract itself and all three research-query contracts passed. The registry defect is fixed in #2109.
 
-The exact-pattern implementation should reduce materialized data further and remains the decision authority once a green Node-22 benchmark completes.
+The exact-pattern implementation produced a much larger speedup on run **36093695768**: `research-query` measured about **3.7–3.9 s**, queryability **3.1–3.3 s**, and system-query **3.9–4.2 s**. Fast Gate's full Node/CLI step on sibling run **36093695712** completed in **20 s**. Query/queryability passed, while system-query failed only its HEAD snapshot parity assertion.
+
+The parity diff localized the omission to `sharedFailureModes`, whose dependency closure follows local imports from research package-script entrypoints into `modules/`. The file-pattern system snapshot had retained package/scripts/workflows but omitted modules. #2109 now restores only `/modules/` to the system snapshot pattern; query/queryability remain on the narrower payload. A green exact-head parity run is required before calling the optimization complete.
 
 Decision gate: keep the sparse path only if all existing real-repository HEAD parity/queryability assertions stay green and the corrected Node-22 benchmark shows a repeatable reduction in the top-three contracts or total direct wall. If not, revert it rather than adding broader shared-fixture coupling.
 
