@@ -7,13 +7,6 @@ on:
         description: Optional CI historical value audit run ID to join detector/runtime evidence
         required: false
         type: string
-  pull_request:
-    paths:
-      - '.github/workflows/ci-testability-topology-audit.yml'
-      - 'scripts/ci-testability-topology-audit.mjs'
-      - 'scripts/ci-dependency-local-routing-audit.mjs'
-      - 'scripts/validation-groups.json'
-      - 'package.json'
 
 permissions:
   contents: read
