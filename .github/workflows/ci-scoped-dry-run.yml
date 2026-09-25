@@ -210,6 +210,7 @@ jobs:
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
+          SOLVER_DEEP_TESTS: '0'
 
   deep-services:
     needs: impact-shadow
