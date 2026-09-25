@@ -199,3 +199,6 @@ The conservative diagnostics exception is now visible in produced evidence, not 
 - the existing real bundled direct-solver CLI contract asserts the persisted tuple matches the executing Node process.
 
 Therefore a diagnostics run pinned to exact Node 20.20.2 carries its runtime identity with the observation rows it generated. A later cross-major rehearsal can compare evidence explicitly instead of reconstructing the runtime from workflow history.
+
+
+The topology contract also runs against the actual repository workflow tree. It requires zero maintained major-only Node selectors and explicitly requires every `solver-diagnostics.yml` setup site to remain exact 20.20.2 until diagnostics-specific cross-major parity is earned. Exact-runtime policy is therefore an enforced repository invariant, not only a census observation.
