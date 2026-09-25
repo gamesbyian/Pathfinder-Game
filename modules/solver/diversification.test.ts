@@ -10,6 +10,7 @@ import { test } from 'vitest';
 // modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { createSolver } from '../solver.js';
+import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import {
     pathSignature, mergeUniqueHints, knownHintCount, hintButtonLabel,
@@ -41,7 +42,7 @@ function lineLevel() {
     });
 }
 
-const LINE_PATH = [0, 1, 2];
+const LINE_PATH = [PACK(0, 0), PACK(1, 0), PACK(2, 0)];
 
 function makeSessionSolver({
     admissibleOrder = false,
