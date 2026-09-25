@@ -19,6 +19,7 @@ export default defineConfig({
             // They remain in ordinary unit runs; only covered PR execution is de-duplicated.
             'scripts/solver-parallel-unit-tests.mjs',
             'scripts/eslint-rules-unit-tests.mjs',
+            'scripts/data-assets-unit-tests.mjs',
         ],
         // Solver suites can solve/exhaustively enumerate real or synthetic states; hosted-runner
         // variance has exceeded 60s for the deadlock-soundness property.
