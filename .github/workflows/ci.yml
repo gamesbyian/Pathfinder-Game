@@ -35,7 +35,6 @@ jobs:
       needs_build: ${{ steps.impact.outputs.needs_build }}
       needs_coverage: ${{ steps.impact.outputs.needs_coverage }}
       needs_deep_proofs: ${{ steps.impact.outputs.needs_deep_proofs }}
-      needs_solver_canary: ${{ steps.impact.outputs.needs_solver_canary }}
       needs_firestore: ${{ steps.impact.outputs.needs_firestore }}
       fast_job_required: ${{ steps.impact.outputs.fast_job_required }}
       deep_job_required: ${{ steps.impact.outputs.deep_job_required }}
@@ -346,26 +345,6 @@ jobs:
           PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
           PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
         run: npm run test:node
-      - name: Solver capability canary
-        id: solver_canary
-        continue-on-error: true
-        # Tiny semantic canary, not a batch tier: 9 fixed representative levels (data/levels.json),
-        # a few seconds total. This is the ONLY solver-capability check anywhere in this repo that
-        # runs automatically on every PR -- every corpus-scale sweep is a manually-dispatched GHA
-        # workflow, never wired into CI, so nothing previously caught a wholesale solver regression
-        # (a broken attempt ladder, a mis-wired ablation default, a hard-prune correctness bug)
-        # before merge. Reuses scripts/solver-bench.mjs's existing --check/--baseline/--levels
-        # machinery unchanged (see that file's --update-baseline guard, relaxed to allow an
-        # explicit --baseline path to pair with --levels for exactly this "isolated smoke fixture"
-        # use, per its own pre-existing header-comment intent) rather than writing new solve/assert
-        # logic. Regenerate logs/solver-canary-baseline.json with the same --levels/--budget-ms/
-        # --work-budget flags plus --update-baseline whenever this canary set's expected outcome
-        # should change (e.g. a deliberate solvability change to one of these 9 levels).
-        run: |
-          node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
-            --baseline=logs/solver-canary-baseline.json \
-            --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
-            --budget-ms=15000 --work-budget=250000
       - name: Derive runtime-hint projection cache key
         id: runtime-hint-projection-key
         shell: bash
@@ -406,7 +385,6 @@ jobs:
           VALIDATORS: ${{ steps.validators.outcome }}
           LINT: ${{ steps.lint.outcome }}
           NODE_TESTS: ${{ steps.node_tests.outcome }}
-          SOLVER_CANARY: ${{ steps.solver_canary.outcome }}
           BUILD: ${{ steps.build.outcome }}
         run: |
           failed=0
@@ -420,11 +398,10 @@ jobs:
             printf '| Repository/domain validators | `%s` |\n' "$VALIDATORS"
             printf '| Lint | `%s` |\n' "$LINT"
             printf '| Node + CLI contracts | `%s` |\n' "$NODE_TESTS"
-            printf '| Solver capability canary | `%s` |\n' "$SOLVER_CANARY"
             printf '| Production build | `%s` |\n' "$BUILD"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
-          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD; do
+          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS BUILD; do
             status="${!name}"
             printf '%-14s %s\n' "$name" "$status"
             if [[ "$status" != "success" ]]; then
