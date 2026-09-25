@@ -224,7 +224,6 @@ jobs:
           retention-days: 30
 
   node-shards-cacheless:
-    if: github.event_name == 'workflow_dispatch'
     name: node-shard-cacheless-${{ matrix.shard }}
     runs-on: ubuntu-latest
     strategy:
@@ -291,20 +290,21 @@ jobs:
             data/stress/hints-envelope
           key: runtime-data-${{ steps.shard-runtime-data-key.outputs.key }}
           fail-on-cache-miss: true
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22.23.2'
       - name: Derive exact dependency-tree cache key
         id: shard-dependency-tree-key
         shell: bash
         run: |
-          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
       - name: Require warm exact dependency tree
         uses: actions/cache/restore@v5
         with:
           path: node_modules
           key: ${{ steps.shard-dependency-tree-key.outputs.key }}
           fail-on-cache-miss: true
+      - name: Set up Node without redundant npm-cache restore
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
       - name: Run measured Node shard
         shell: bash
         env:
