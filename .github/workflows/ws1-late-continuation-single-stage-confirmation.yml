@@ -283,7 +283,7 @@ jobs:
             sideEffects:{
               hints:'none',
               canonicalBaseline:'none',
-              telemetry:'none',
+              telemetry:'compact',
               reports:'artifact-only',
             },
           };
