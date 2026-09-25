@@ -150,7 +150,7 @@ When optimizing test runtime, profile the actual suite/subcommand before deletin
 
 ## Static checks
 
-`npm run check` covers architecture lint, types, security/secrets/dependencies/CSP, modal accessibility, CSS/canvas-theme checks, `check:no-solver-level-numbers`, runtime level/hint validity, level provenance/corpus formatting, documentation/workflow discovery, and the maintained GitHub Action runtime-major policy. `check:dead-scripts` also rejects missing local Node entrypoints and explicit Vitest file arguments in `package.json`, so a renamed proof cannot silently disappear from an otherwise-green multi-file Vitest command. `check:validators` is the parallel non-lint validator fan-out; `check:nonlint` adds the two structural prechecks and exists so Actions can run that half independently of `check:lint`. These scripts partition execution only; `check` remains the authoritative local composition.
+`npm run check` covers architecture lint, types, security/secrets/dependencies/CSP, modal accessibility, CSS/canvas-theme checks, `check:no-solver-level-numbers`, runtime level structural validity, level provenance/corpus formatting, documentation/workflow discovery, and the maintained GitHub Action runtime-major policy. Canonical Hint artifact ownership/decode/PLAY-referee validity is owned once by `test:validate-all-hint-stores` in the Node contract graph rather than duplicated inside Fast Gate. `check:dead-scripts` also rejects missing local Node entrypoints and explicit Vitest file arguments in `package.json`, so a renamed proof cannot silently disappear from an otherwise-green multi-file Vitest command. `check:validators` is the parallel non-lint validator fan-out; `check:nonlint` adds the two structural prechecks and exists so Actions can run that half independently of `check:lint`. These scripts partition execution only; `check` remains the authoritative local composition.
 
 A PLAY-valid stored hint proves a solution, not cold solver capability; use shared provenance classification for capability claims.
 
@@ -168,7 +168,7 @@ npx vitest run solver
 npx vitest run -t "portal"
 ```
 
-Coverage uses `@vitest/coverage-v8`; thresholds live only in `vitest.config.mjs`. Prefer `scripts/test-lib/fixtures.mjs` (`makeRawLevel`, `createFakeScheduler`) before new generic fakes.
+Coverage uses `@vitest/coverage-v8`; thresholds live only in `vitest.config.mjs`. Real repository-data integration checks that do not own coverage targets may live in the data-owned Node lane; coverage itself should not materialize the runtime-data tree merely to reconfirm those contracts. Prefer `scripts/test-lib/fixtures.mjs` (`makeRawLevel`, `createFakeScheduler`) before new generic fakes.
 
 ## Browser and visual
 
