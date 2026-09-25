@@ -261,7 +261,28 @@ jobs:
             data/stress/hints-random
             data/stress/hints-envelope
           key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
-      - uses: actions/setup-node@v7
+      # Restore the exact dependency tree before setup-node. Node/npm are pinned, so the key
+      # can be computed without a runtime probe. On the normal hit path this avoids restoring
+      # npm's download cache even though npm ci will never run.
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Set up Node on warm dependency-tree path
+        if: steps.dependency-tree-cache.outputs.cache-hit == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+      - name: Set up Node with npm cache on dependency-tree miss
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
           cache: npm
@@ -274,23 +295,9 @@ jobs:
           key: eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-${{ github.sha }}
           restore-keys: |
             eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-
-      - name: Derive exact dependency-tree cache key
-        id: dependency-tree-key
-        shell: bash
-        run: |
-          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
-      - name: Restore exact dependency tree
-        id: dependency-tree-cache
-        uses: actions/cache/restore@v5
-        with:
-          path: node_modules
-          key: ${{ steps.dependency-tree-key.outputs.key }}
       - name: Install dependencies from the npm cache
         id: install-dependencies
         if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
-        # setup-node already restores npm's content cache. Prefer it over registry freshness checks;
-        # npm-audit output was informational here, not a CI gate, and security checks have their own
-        # explicit repository commands.
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Save exact dependency tree after successful install
         if: steps.dependency-tree-cache.outputs.cache-hit != 'true' && steps.install-dependencies.outcome == 'success'
@@ -479,10 +486,10 @@ jobs:
             !/reports/
             !/data/
           sparse-checkout-cone-mode: false
+      # The planner needs Node before deep selection, but not npm's download cache.
       - uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
-          cache: npm
       - name: Compute local deep validation plan
         id: deep-impact
         continue-on-error: true
@@ -559,7 +566,7 @@ jobs:
         id: dependency-tree-key
         shell: bash
         run: |
-          echo "key=node-modules-${RUNNER_OS}-$(node -p 'process.arch')-node$(node --version)-npm$(npm --version)-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
       - name: Restore exact dependency tree
         if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: dependency-tree-cache
@@ -567,6 +574,12 @@ jobs:
         with:
           path: node_modules
           key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Restore npm cache only on dependency-tree miss
+        if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
       - name: Install dependencies from the npm cache
         if: (steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true') && (steps.dependency-tree-cache.outputs.cache-hit != 'true')
         run: npm ci --prefer-offline --no-audit --fund=false
