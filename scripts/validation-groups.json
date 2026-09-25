@@ -80,6 +80,7 @@
       "test:validate-solver-sweep-integrity",
       "test:ablation-toolchain",
       "test:solver-parallel-contract",
+      "test:solver-deep-integrations",
       "test:effective-config-agreement",
       "test:append-solver-health-record",
       "test:select-routing-regime-sample-cli",
@@ -602,6 +603,9 @@
       ],
       "test:prune-gap-contract": [
         "data",
+        "solver"
+      ],
+      "test:solver-deep-integrations": [
         "solver"
       ]
     },
