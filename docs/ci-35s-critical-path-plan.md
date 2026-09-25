@@ -829,6 +829,10 @@ Remove the temporary automatic shard rehearsal after the decision is recorded.
 
 **First D1c attempt — run 36105650628:** shard 1 was green and ran its 120-contract population in ~15 s useful wall, reaching test completion about **30 s after job start**. Shard 2 stopped on `test:ci-impact-classifier`, not a sharding/concurrency defect: the solver-consumer metadata patch had accidentally overwritten pre-existing research/data surfaces on shared-owned contracts. The classifier correctly exposed that semantic metadata regression. The registry now unions the prior surfaces with `solver`; D1c remains **inconclusive pending the automatic rerun**.
 
+**Clean D1c confirmation — run 36105868439:** both shards green. They started at **07:04:59** and both finished their measured Node populations at **07:05:22**, about **23 s to validation completion**. Shard 1 useful Node wall was ~10 s and shard 2 ~12 s after cache-first bootstrap. Job cleanup completed shortly afterward.
+
+**Decision: D1c is revived as a production candidate.** This is materially inside the ≤30 s strong-revival threshold and directly resolves the old D1 failure mode, where useful 14–17 s shards were drowned by a setup-node outlier. Keep the temporary two-way Node rehearsal for one further comparable sample while production packing is designed; do not claim p90 success from one clean paired run.
+
 
 ## D2c: reopen balanced coverage sharding after bootstrap premise change
 
@@ -865,6 +869,10 @@ The rehearsal lives temporarily in `ci-testability-topology-audit.yml` so changi
 
 **First D2c result — run 36105650628:** semantically green. Both shard populations passed and the native merged report passed the unchanged production coverage thresholds. Worker useful coverage ran ~17 s; coordinator useful coverage ~11 s; coordinator waited ~4 s for the worker and merged/enforced thresholds in ~2 s. First shard runner start **07:02:21** → merged authoritative threshold result **07:02:49** = about **28 s**. This clears the preregistered strong-revival threshold for one sample. Require at least one comparable confirmation before production promotion because the old D2 failure mode was shared-runner tail variance.
 
+**Confirmation D2c result — run 36105868439:** semantically green again, but the old tail problem returned. Worker coverage ran ~19 s useful and coordinator coverage ~17 s; both paid ~11–12 s of checkout/runtime-data/dependency/setup before coverage. First shard runner start **07:05:00** → merged authoritative thresholds **07:05:36** = about **36 s**. That exceeds the preregistered hard threshold.
+
+**Decision: D2c closes negative again on standard shared-hosted runners.** The cache-first setup fix materially improved one sample (28 s versus the old 38 s), but did not create reliable ≤35 s margin. Do not tune shard membership or repeat shared-hosted coverage sharding under the same cache/runtime-data topology. The temporary shard jobs, threshold seam, and 146-file rehearsal profile are removed. Next coverage work returns to same-proof-cheaper testability or a materially different compute/bootstrap premise.
+
 
 ## F1: independent Firestore boundary rehearsal
 
@@ -897,6 +905,10 @@ Preregistered interpretation:
 This experiment is complementary to D2c. If two-way coverage and independent Firestore both fit comfortably under 35 s, the deep architecture can stop serializing unrelated obligations.
 
 **First independent Firestore result — run 36105650628:** the unchanged Firebase-CLI boundary was green. Job start **07:02:22** → boundary step complete **07:02:44** = about **22 s authoritative wall** (job cleanup completed immediately afterward). This is comfortably inside the ≤30 s strong-candidate threshold and proves Firestore does not need to sit behind coverage or runtime-data materialization.
+
+**Confirmation — run 36105868439:** green again. Job start **07:04:58** → unchanged boundary complete **07:05:16** = about **18 s authoritative wall**, with job cleanup complete at ~19 s. Two independent samples now place this lane comfortably below 30 s.
+
+**Decision: independent Firestore is ready for production packing**, subject to preserving the existing proof+Firestore concurrency semantics and final-status/fail-safe ownership. It no longer belongs serialized behind covered Vitest.
 
 The sibling direct-JAR experiment was also semantically green but slower: start **07:02:22** → boundary complete **07:02:47** ≈ **25 s**, versus ≈22 s through Firebase Tools. Avoiding the 42 MB CLI cache did not offset the direct emulator startup/readiness cost. **Close direct-JAR launch negative** and retain the maintained Firebase Tools path.
 
