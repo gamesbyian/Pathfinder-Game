@@ -315,8 +315,9 @@ jobs:
   # This lane is impact-scoped for PRs. Solver/game/persistence/shared and conservative full-impact
   # changes retain their deep protections; unrelated repo/research/data-only PRs may skip it.
   # Planner failure or manual dispatch always runs the lane.
-  # Coverage remains independent because it needs canonical runtime data and is the longest
-  # implementation-test obligation. Proofs/Firestore are packed separately below.
+  # Coverage remains independent as the longest instrumented implementation-test obligation.
+  # Committed-data integrity lives in the data-owned Node lane, so coverage needs no runtime-data tree.
+  # Proofs/Firestore are packed separately below.
   deep-verification:
     runs-on: ubuntu-latest
     steps:
@@ -354,10 +355,6 @@ jobs:
           if [[ "$PLANNER_OUTCOME" != "success" ]]; then
             echo "Planner failure fails safe: coverage will run." >> "$GITHUB_STEP_SUMMARY"
           fi
-      - name: Restore component runtime data
-        if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
-        uses: ./.github/actions/runtime-data
-
       - name: Derive exact dependency-tree cache key
         if: steps.deep-impact.outcome != 'success' || steps.deep-impact.outputs.deep_job_required == 'true'
         id: dependency-tree-key
