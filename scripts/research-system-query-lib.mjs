@@ -118,6 +118,15 @@ export function buildResearchSystemFindingSnapshot(index) {
     };
 }
 
+const RESEARCH_GIT_REF_SPARSE_DIRECTORIES = [
+    'docs',
+    'reports',
+    'scripts',
+    'modules',
+    '.github/workflows',
+    'data/stress',
+];
+
 export function buildResearchSystemFindingSnapshotFromGitRef(root, ref) {
     return withDetachedGitWorktree(root, ref, worktree =>
         buildResearchSystemFindingSnapshot(buildResearchSystemFindingIndex(worktree, {
