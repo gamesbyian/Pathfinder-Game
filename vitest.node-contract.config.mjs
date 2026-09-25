@@ -8,6 +8,7 @@ export default defineConfig({
         include: [
             'scripts/solver-parallel-unit-tests.mjs',
             'scripts/eslint-rules-unit-tests.mjs',
+            'scripts/data-assets-unit-tests.mjs',
         ],
         testTimeout: 90000,
         hookTimeout: 60000,
