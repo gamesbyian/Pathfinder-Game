@@ -217,6 +217,7 @@ jobs:
             if [ -z "$(git status --porcelain -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ reports/stress/hint-harvest-selection/ reports/stress/hint-ingestion-receipts/ reports/stress/hint-cost-drift-published.json 2>/dev/null)" ]; then
               echo 'No new canonical hint/provenance, ingestion-receipt, selection, pending, or decision-bearing experiment evidence to persist.'
               echo 'HARVEST_RESULT=no-new-evidence' >> "$GITHUB_ENV"
+              echo 'result=no-new-evidence' >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -239,15 +240,111 @@ jobs:
             git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
             if git push origin HEAD:main; then
               echo 'HARVEST_RESULT=persisted' >> "$GITHUB_ENV"
+              echo 'result=persisted' >> "$GITHUB_OUTPUT"
               echo "HARVEST_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+              echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             sleep $((attempt * 5))
           done
 
           echo 'HARVEST_RESULT=persist-failed' >> "$GITHUB_ENV"
+          echo 'result=persist-failed' >> "$GITHUB_OUTPUT"
           echo 'Failed to persist solver evidence after four semantic-merge retries.' >&2
           exit 1
+
+      # This workflow is the canonical Hint writer. Cache generations tied to canonical Hint
+      # trees must be published from this post-persistence HEAD, not from report-only source
+      # workflows that run before the semantic harvest creates its commit.
+      - name: Derive persisted runtime-data cache key
+        if: steps.merge.outputs.result == 'persisted'
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+
+      - name: Restore persisted runtime-data cache if already published
+        if: steps.merge.outputs.result == 'persisted'
+        id: runtime-data-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+
+      - name: Publish persisted runtime-data cache for later PRs
+        if: steps.merge.outputs.result == 'persisted' && steps.runtime-data-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
+            data/stress/hints
+            data/stress/hints-random
+            data/stress/hints-envelope
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+
+      - name: Derive persisted runtime-hint projection key
+        if: steps.merge.outputs.result == 'persisted'
+        id: runtime-hint-projection-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+            git hash-object scripts/runtime-hint-projection-lib.mjs
+            git hash-object modules/domain/hint-runtime.mjs
+            git hash-object modules/canonical-json.mjs
+            git hash-object vite.config.ts
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+
+      - name: Restore persisted runtime-hint projection if already published
+        if: steps.merge.outputs.result == 'persisted'
+        id: runtime-hint-projection-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
+
+      - name: Generate persisted runtime-hint projection on cache miss
+        if: steps.merge.outputs.result == 'persisted' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        id: runtime-hint-projection-build
+        env:
+          PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
+        run: npm run build
+
+      - name: Publish persisted runtime-hint projection for later PRs
+        if: steps.merge.outputs.result == 'persisted' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true' && steps.runtime-hint-projection-build.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: .cache/runtime-hint-projection
+          key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
 
       - name: Summarize solver evidence harvest
         if: always()

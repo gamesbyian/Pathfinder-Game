@@ -468,7 +468,8 @@
     "check:all-hint-store-referee": "tsx scripts/validate-all-hint-stores.mjs",
     "check:hint-store-census": "node scripts/hint-store-census.mjs",
     "plan:quality": "node scripts/check-plan-quality.mjs",
-    "test:plan-quality": "node scripts/check-plan-quality-node-test.mjs"
+    "test:plan-quality": "node scripts/check-plan-quality-node-test.mjs",
+    "research:workflow-topology": "node scripts/solver-research-workflow-topology-audit.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

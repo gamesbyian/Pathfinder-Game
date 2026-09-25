@@ -304,6 +304,7 @@ function writeReport() {
         artifactCompletedAt: new Date().toISOString(),
         effectiveConfig, effectiveConfigDigest,
         solverRequestProjection, solverRequestIdentity,
+        executionRuntime: { nodeVersion: process.version, platform: process.platform, arch: process.arch },
         backend, reproducibilityMode,
     };
     mkdirSync(path.dirname(outFile), { recursive: true });

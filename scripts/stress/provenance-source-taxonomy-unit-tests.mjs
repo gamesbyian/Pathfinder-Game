@@ -115,7 +115,8 @@ test('current capability requires an explicit matching regime and strict cold co
     assert.equal(isProductionContextEvidence(ambiguousLegacy), false);
     assert.equal(classifyEvidenceApplicability(ambiguousLegacy, 'current-production-capability', {
         currentSolverVersion: 'v2',
-    }).reason, 'legacy-context-ambiguity');
+    }).reason, 'not-strict-cold-production-pathfinder',
+    'strict provenance classification rejects this incomplete legacy context before legacy ambiguity can qualify as cold capability');
     const unknownVersion = { ...cold, solver: { ...cold.solver, version: null } };
     assert.equal(isProductionContextEvidence(unknownVersion), false);
     assert.equal(classifyEvidenceApplicability(unknownVersion, 'current-production-capability', {
