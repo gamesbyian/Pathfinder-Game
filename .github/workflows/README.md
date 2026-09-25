@@ -10,6 +10,8 @@ For node/work-bounded native-solver sweeps on standard public `ubuntu-latest` ru
 - More shards than concurrent lanes, usually 60 shards behind **15 lanes**, so completed lanes pull queued work instead of idling behind a coarse-shard straggler while five hosted slots remain available for the five-runner PR CI gate.
 - Workflows that expose `max_parallel` may still be dispatched explicitly at **20** when monopolizing the hosted runner pool is acceptable and PR latency is not a concern.
 - Immutable dispatched-SHA checkout for evidence-producing runs.
+- Exact Node **22.23.2** is the current scientific runtime for maintained workflows whose execution uses the parity-rehearsed level-blind or history-aware portfolio producers. Do not reintroduce major-only `node-version: '20'` there; helper/harvest/integrity exceptions remain separately classified until their own migration evidence is recorded.
+- `solver-level-blind-targeted-sweep.yml` uses the rehearsed sparse planner boundary and exact dependency-tree reuse only in its short plan/canary job. Caller-selected corpus/ID blobs are materialized from the immutable dispatched commit, and solve shards remain unchanged apart from exact runtime pinning.
 
 These are throughput defaults, not universal laws. Binding wall-clock deadlines can change solved sets under different contention, so worker count there must be measured rather than mechanically raised. CP-SAT's `num_search_workers` is also a search-portfolio parameter, not merely a CPU-count setting.
 
