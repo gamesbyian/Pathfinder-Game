@@ -1256,6 +1256,29 @@ That sample proves the data-free topology but is not latency-qualifying: useful 
 
 The same sample also proved the moved data contracts themselves green on Node shard B. A metric-boundary inventory failure was a bookkeeping consequence of extracting the codec integration into a new file; that file is now explicitly classified as a reviewed raw/wire-boundary consumer.
 
+## N1: Node shard A without runtime-data materialization
+
+The current production Node matrix restores the runtime-data tree in **both** execution-owner shards. Dependency metadata now shows every explicitly declared `data/**` Node/CLI consumer in shard B (`shared,data,repo`); shard A (`research,solver,game,persistence`) has **zero declared repo-input filesystem dependencies**.
+
+That is a strong premise but not sufficient proof because legacy/dynamic reads may be undeclared.
+
+Temporary rehearsal `node-a-no-runtime-data` in `ci-testability-topology-audit.yml` mirrors production shard A exactly except for one variable:
+
+- same sparse checkout;
+- same exact dependency-tree bootstrap;
+- same four-worker direct execution;
+- same full-impact semantic surface request;
+- same execution owners: `research,solver,game,persistence`;
+- **no runtime-data action**.
+
+Preregistered interpretation:
+
+1. green full owner-A population proves runtime-data materialization is unnecessary for shard A and supports removing that setup from production;
+2. a missing-data failure identifies undeclared dependency debt; classify the contract and decide whether it belongs in shard B or genuinely requires data in A before repeating;
+3. non-data functional failures reject promotion until understood;
+4. do not add synthetic data merely to make the rehearsal green;
+5. after the decision, remove the temporary rehearsal job and record the result here.
+
 ## Current forward work order
 
 1. **Get the repaired data-free coverage head fully green:** require Fast Gate, both Node shards, coverage, deep services, topology, semantic-fault, and solver-evidence guards on one exact head. The remaining known failures from the extraction were registry/metric-inventory bookkeeping and have been repaired.
