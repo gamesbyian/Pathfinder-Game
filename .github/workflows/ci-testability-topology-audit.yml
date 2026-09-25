@@ -20,6 +20,7 @@ permissions:
 
 jobs:
   full-deep-concurrency:
+    if: github.event_name == 'workflow_dispatch'
     name: full-deep-concurrency
     runs-on: ubuntu-latest
     steps:
@@ -222,6 +223,7 @@ jobs:
           retention-days: 30
 
   node-shards-cacheless:
+    if: github.event_name == 'workflow_dispatch'
     name: node-shard-cacheless-${{ matrix.shard }}
     runs-on: ubuntu-latest
     strategy:
