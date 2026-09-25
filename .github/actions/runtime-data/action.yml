@@ -1,0 +1,131 @@
+name: Restore runtime data
+description: Restore exact runtime-data components and materialize only cache misses from the existing sparse checkout.
+
+runs:
+  using: composite
+  steps:
+    - name: Derive runtime-data component keys
+      id: keys
+      shell: bash
+      run: node scripts/ci-runtime-data-components.mjs HEAD
+
+    - name: Restore runtime-data core
+      id: core
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          data/levels.json
+          data/level-heatmaps.json
+          data/themes.json
+        key: runtime-data-core-${{ steps.keys.outputs.core_key }}
+
+    - name: Restore published hints
+      id: published-hints
+      uses: actions/cache/restore@v5
+      with:
+        path: data/hints
+        key: runtime-data-published-hints-${{ steps.keys.outputs.published_hints_key }}
+
+    - name: Restore stress levels
+      id: stress-levels
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          data/stress/stress-levels.json
+          data/stress/stress-levels-random.json
+          data/stress/stress-levels-envelope.json
+        key: runtime-data-stress-levels-${{ steps.keys.outputs.stress_levels_key }}
+
+    - name: Restore stress hints
+      id: stress-hints
+      uses: actions/cache/restore@v5
+      with:
+        path: data/stress/hints
+        key: runtime-data-stress-hints-${{ steps.keys.outputs.stress_hints_key }}
+
+    - name: Restore random stress hints
+      id: stress-hints-random
+      uses: actions/cache/restore@v5
+      with:
+        path: data/stress/hints-random
+        key: runtime-data-stress-hints-random-${{ steps.keys.outputs.stress_hints_random_key }}
+
+    - name: Restore envelope stress hints
+      id: stress-hints-envelope
+      uses: actions/cache/restore@v5
+      with:
+        path: data/stress/hints-envelope
+        key: runtime-data-stress-hints-envelope-${{ steps.keys.outputs.stress_hints_envelope_key }}
+
+    - name: Materialize missing runtime-data components
+      shell: bash
+      env:
+        CORE_HIT: ${{ steps.core.outputs.cache-hit }}
+        PUBLISHED_HINTS_HIT: ${{ steps.published-hints.outputs.cache-hit }}
+        STRESS_LEVELS_HIT: ${{ steps.stress-levels.outputs.cache-hit }}
+        STRESS_HINTS_HIT: ${{ steps.stress-hints.outputs.cache-hit }}
+        STRESS_HINTS_RANDOM_HIT: ${{ steps.stress-hints-random.outputs.cache-hit }}
+        STRESS_HINTS_ENVELOPE_HIT: ${{ steps.stress-hints-envelope.outputs.cache-hit }}
+      run: |
+        patterns=()
+        [[ "$CORE_HIT" == "true" ]] || patterns+=(/data/levels.json /data/level-heatmaps.json /data/themes.json)
+        [[ "$PUBLISHED_HINTS_HIT" == "true" ]] || patterns+=(/data/hints/)
+        [[ "$STRESS_LEVELS_HIT" == "true" ]] || patterns+=(/data/stress/stress-levels.json /data/stress/stress-levels-random.json /data/stress/stress-levels-envelope.json)
+        [[ "$STRESS_HINTS_HIT" == "true" ]] || patterns+=(/data/stress/hints/)
+        [[ "$STRESS_HINTS_RANDOM_HIT" == "true" ]] || patterns+=(/data/stress/hints-random/)
+        [[ "$STRESS_HINTS_ENVELOPE_HIT" == "true" ]] || patterns+=(/data/stress/hints-envelope/)
+        if (( ${#patterns[@]} == 0 )); then
+          echo "All runtime-data components restored from exact caches."
+          exit 0
+        fi
+        printf 'Materializing %d sparse runtime-data patterns from the existing checkout.\n' "${#patterns[@]}"
+        git sparse-checkout add --no-cone "${patterns[@]}"
+        git checkout --quiet HEAD -- "${patterns[@]#/}"
+
+    - name: Save runtime-data core
+      if: steps.core.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          data/levels.json
+          data/level-heatmaps.json
+          data/themes.json
+        key: runtime-data-core-${{ steps.keys.outputs.core_key }}
+
+    - name: Save published hints
+      if: steps.published-hints.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: data/hints
+        key: runtime-data-published-hints-${{ steps.keys.outputs.published_hints_key }}
+
+    - name: Save stress levels
+      if: steps.stress-levels.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          data/stress/stress-levels.json
+          data/stress/stress-levels-random.json
+          data/stress/stress-levels-envelope.json
+        key: runtime-data-stress-levels-${{ steps.keys.outputs.stress_levels_key }}
+
+    - name: Save stress hints
+      if: steps.stress-hints.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: data/stress/hints
+        key: runtime-data-stress-hints-${{ steps.keys.outputs.stress_hints_key }}
+
+    - name: Save random stress hints
+      if: steps.stress-hints-random.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: data/stress/hints-random
+        key: runtime-data-stress-hints-random-${{ steps.keys.outputs.stress_hints_random_key }}
+
+    - name: Save envelope stress hints
+      if: steps.stress-hints-envelope.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: data/stress/hints-envelope
+        key: runtime-data-stress-hints-envelope-${{ steps.keys.outputs.stress_hints_envelope_key }}
