@@ -635,16 +635,14 @@ Use three dispositions:
 2. **Repository/process integrity** — keep as change-scoped governance, not universal work. Examples: CI-plan parity, workflow lifecycle/disposition registries, documentation authority/link integrity, file-size/context-budget ratchets, no-level-identity policy, metric-boundary ownership.
 3. **Frozen evidence/process-result reconfirmation** — remove from ordinary PR CI. Dated reports and historical research outcomes are evidence, not compatibility APIs. Test analyzers with synthetic fixtures; validate historical artifacts only when intentionally auditing/regenerating them.
 
-Concrete findings:
-- `test:research-system-consolidation-closeout` re-derives a frozen 2026-09-12..19 retrospective, deep-compares the frozen window, and regex-checks dated report prose. This is a direct violation of the frozen-evidence rule and should leave ordinary CI.
-- `test:research-portfolio-retrospective` reconstructs that same historical window from current authorities and checks a dated snapshot. Keep synthetic/library behavior tests, but historical-window continuity is audit/regeneration work.
-- `test:research-system-inventory` mixes real structural integration assertions with many exact current-queue/current-report/current-plan expectations. Split synthetic structural contracts from repository-state acceptance checks; the latter belong to research-system change scope, not every PR.
-- `check:current-level-facts` recomputes a generated documentation block from canonical corpora. This is useful freshness enforcement when level data or that generated authority changes, but it is not universal correctness.
-- `check:solver-sweep-results`, `check:failure-evidence-disposition`, and the research-resource portion of `check:audit-artifacts` enforce experimental/workflow governance. They protect the research process, not the game runtime; run them when workflows/contracts/registries change.
-- `check:no-solver-level-numbers`, `check:level-metric-boundaries`, file-size/context-budget ratchets, documentation navigation checks, and CI-plan/gate parity are architectural/maintenance policy. Retain them, but scope them to relevant source/authority changes.
-- coverage thresholds are quality policy rather than a correctness proof. Keep them for implementation surfaces where they are intended to prevent untested code growth; do not treat coverage itself as evidence that behavior is correct.
+Concrete findings and disposition:
+- **Implemented:** `test:research-system-consolidation-closeout` and `test:research-portfolio-retrospective` are no longer members of the permanent `test:node`/validation-group population. Their package aliases remain available as explicit historical/reproducibility audits.
+- **Implemented:** production Fast Gate now computes the semantic merge-diff plan locally and executes only selected validator and Node/CLI groups. Router failure fails safe to the full `check:validators` and `test:node` aggregates. The independent impact-shadow job remains an inspectable routing record and deep-lane authority, so Fast Gate does not wait for another hosted runner before starting.
+- **Scoped by the activation above:** `test:research-system-inventory` still mixes structural integration assertions with current research-state acceptance, but it now runs only when the research surface is selected rather than on unrelated game/data work. A future fixture-quality cleanup may split those concerns, but that is no longer on the universal critical path.
+- **Scoped by the activation above:** `check:current-level-facts`, solver-sweep/failure-evidence workflow governance, research-resource/artifact metadata governance, documentation authority checks, no-level-identity policy, level-metric ownership, CI parity, and maintenance ratchets now run only when their semantic group is selected (subject to conservative multi-surface/shared declarations).
+- Coverage thresholds remain quality policy rather than correctness evidence. Keep them for implementation surfaces where they prevent untested-code growth; do not treat coverage itself as proof of solver/game effectiveness.
 
-The next Fast Gate redesign should activate the already-authored validator/Node-test group routing instead of executing the entire governance/research contract on every PR.
+This closes the major "reconfirm unrelated repository process on every PR" defect. Remaining CI optimization should audit whether individual group ownership is still too broad, not revert to universal aggregates.
 
 ## Current forward work order
 
