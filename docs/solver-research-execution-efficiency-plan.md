@@ -164,20 +164,21 @@ CI's sparse Git-ref work cut large snapshot costs but also exposed an undeclared
 
 ## Phase 5 — harness/search separation on live gates
 
-### Initial scope
+### Current scope
 
-Audit the harnesses serving the *current* queue rather than historical tests indiscriminately:
+Audit the harnesses serving the *current* queue rather than historical tests indiscriminately. The scope was refreshed after the September-25 queue reconciliation so closed experiments do not keep consuming optimization attention.
 
-- WS2 repair deadline matched-work A/B;
-- WS2 admissible-order reserve design;
-- WS2 capability-invention first-loss / operational-divergence sampling;
-- WS2 BC1 later-disposition shadow;
-- WS2 forced-work phase census;
-- WS1 24-parent development canary / 96-parent confirmation;
-- WS1A 20-level intra-solve bridge;
-- WS6 independent-parent replication/speed profiling.
+Current live surfaces:
 
-For each, classify work as:
+- WS2 repair-deadline **production-scale matched-work confirmation**, using the generic level-blind targeted-sweep path unless the promotion design earns a different harness;
+- WS2 capability-invention **promotion decision / any explicitly justified broader safety sample** for CID-0027 and CID-0028; do not manufacture another acquisition round merely to exercise this phase;
+- WS2 BC1 later-disposition shadow, still production-inert and bounded-compute;
+- WS1 **single-stage N=160 late-continuation confirmation**, replacing the closed underpowered 24/96-parent two-stage structure;
+- WS6 independent-parent replication/speed profiling when it becomes the immediate queue gate.
+
+Removed from the Phase-5 optimization scope because their scientific forms are closed: admissible-order reserve 0.35, forced-work capture economics, and the WS1A remaining-length bridge. Historical harnesses remain reproducible, but they are not current optimization targets.
+
+For each live surface, classify work as:
 
 - scientific search that must remain real;
 - harness/config/plumbing proof;
