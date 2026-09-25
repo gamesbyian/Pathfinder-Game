@@ -31,6 +31,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 import { buildPopulationIntegrity, hashConfiguration, hashPopulation, isImmutableCommitSha, parseIdentityLines } from './solver-experiment-contract.mjs';
 import { encodeResearchScopedIdentity } from './research-population-identity-lib.mjs';
 import { normalizeSolverSweepReportInput } from './solver-sweep-report-input.mjs';
@@ -190,9 +191,9 @@ function consistentMetadata(reports, fields) {
     return result;
 }
 
-function main() {
-    const ROOT = process.cwd();
-    const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
+export function combineSolverSweepReports(argv = process.argv.slice(2), { root = process.cwd() } = {}) {
+    const ROOT = root;
+    const args = new Map(argv.filter(a => a.startsWith('--')).map(a => {
         const [k, ...v] = a.split('=');
         return [k, v.join('=')];
     }));
@@ -390,4 +391,6 @@ function main() {
     console.log(`Combined ${reports.length} report(s), ${levels.length} level(s) (${solved} solved) → ${outFile}`);
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+    combineSolverSweepReports();
+}
