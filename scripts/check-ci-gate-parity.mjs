@@ -107,6 +107,16 @@ for (const [member, dependency] of Object.entries(validationGroups.contractDepen
     }
   }
 }
+if (!workflow.includes('Materialize Fast Gate level documents')) {
+  errors.push('ci.yml no longer materializes the minimal Fast Gate level-document set');
+}
+if (!workflow.includes('Restore runtime Hint sources for projection miss')) {
+  errors.push('ci.yml no longer defers full runtime Hint sources until a projection-cache miss');
+}
+if (!/Restore runtime Hint sources for projection miss[\s\S]*runtime-hint-projection-cache\.outputs\.cache-hit != 'true'/u.test(workflow)) {
+  errors.push('ci.yml runtime Hint sources are no longer gated on a runtime-Hint projection cache miss');
+}
+
 if (!workflow.includes('runtime-hint-projection-v2-')) {
   errors.push('ci.yml no longer uses the rolling runtime-Hint projection cache generation');
 }
