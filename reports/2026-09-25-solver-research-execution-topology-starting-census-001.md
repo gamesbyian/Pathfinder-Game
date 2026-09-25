@@ -1,6 +1,6 @@
 # Research workflow execution-topology starting census — 2026-09-25
 
-> **Status:** activation in progress
+> **Status:** active
 > **Last evidence:** 2026-09-25 — exact-runtime parity run 36190221008 and full-vs-sparse targeted-planner rehearsal runs 36187498364 / 36190221143.
 > **Decision:** exact Node 22.23.2 is activated for the seven maintained workflows built on the rehearsed level-blind/history-aware producers; targeted-sweep planning now uses the earned sparse input boundary without narrowing caller-selected corpus/ID semantics.
 > **Remaining gate:** classify the four non-producer helper/integrity workflows that still float Node 20, then measure exact dependency-tree reuse where bootstrap economics are material.
