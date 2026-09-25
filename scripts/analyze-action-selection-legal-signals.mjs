@@ -110,6 +110,7 @@ export function applyFrozenLegalSignalModel(dataset, model) {
   const preWinnerRows=val.filter(r=>r.offlinePreWinner);
   const nominated=val.filter(r=>allowed.has(keyOf(fn(r))));
   const nominatedPreWinner=nominated.filter(r=>r.offlinePreWinner);
+  const nominatedPreWinnerLevels=new Set(nominatedPreWinner.map(r=>r.levelId));
   const endangeredLevels=new Set(nominated.filter(r=>r.offlineIsWinner).map(r=>r.levelId));
   const validationSolvedLevels=new Set(val.filter(r=>r.levelSolved).map(r=>r.levelId));
   const preWinnerWork=preWinnerRows.reduce((sum,r)=>sum+r.nextAttemptWork,0);
@@ -136,6 +137,10 @@ export function applyFrozenLegalSignalModel(dataset, model) {
   const baselineSameStageWork=preWinnerRows
     .filter(r=>r.priorStage===r.nextStage)
     .reduce((sum,r)=>sum+r.nextAttemptWork,0);
+  const nominatedByLevel=workBreakdown(nominatedPreWinner,r=>r.levelId,nominatedPreWinnerWork);
+  const maxNominatedParentWorkShare=nominatedByLevel.length
+    ? Math.max(...nominatedByLevel.map(row=>Number(row.workShare) || 0))
+    : null;
 
   return {
     schemaVersion:1,
@@ -151,6 +156,7 @@ export function applyFrozenLegalSignalModel(dataset, model) {
     validationRows:val.length,
     preWinnerWork,
     nominatedPreWinnerWork,
+    nominatedPreWinnerLevels:nominatedPreWinnerLevels.size,
     capturedPreWinnerWorkShare:ratio(nominatedPreWinnerWork,preWinnerWork),
     endangeredWinnerLevels:endangeredLevels.size,
     endangeredWinnerRate:ratio(endangeredLevels.size,validationSolvedLevels.size),
@@ -158,6 +164,8 @@ export function applyFrozenLegalSignalModel(dataset, model) {
       nominatedSameStageContinuationWork:sameStageWork,
       nominatedSameStageContinuationWorkShare:ratio(sameStageWork,nominatedPreWinnerWork),
       baselineSameStageContinuationWorkShare:ratio(baselineSameStageWork,preWinnerWork),
+      maxNominatedParentWorkShare,
+      nominatedByLevel,
       nominatedByPriorOutcome:workBreakdown(nominatedPreWinner,r=>r.priorOutcome,nominatedPreWinnerWork),
       baselineByPriorOutcome:workBreakdown(preWinnerRows,r=>r.priorOutcome,preWinnerWork),
       nominatedByNextStage:workBreakdown(nominatedPreWinner,r=>r.nextStage,nominatedPreWinnerWork),
