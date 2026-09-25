@@ -986,6 +986,22 @@ The earlier D1c rehearsal had already produced two clean two-runner Node samples
 
 Fast Gate now owns package/script reachability, textual invariants, selected validators, lint, and conditional build only. The next exact-head run must establish the actual production matrix wall and verify the predicted low-to-mid-20-second Node critical path.
 
+## First production Node-shard run: integration failures, topology retained
+
+CI run **36115818251** failed after the first production Node-matrix promotion, but the failures did not contradict the measured sharding economics:
+
+- shard A executed 104 contracts and reached its summary in ~16 s useful wall before failing one contract;
+- shard B executed 105 contracts and reached its summary in ~17 s useful wall before failing one contract;
+- the failure set was architectural integration debt, not a Node-capability miss or a gross runner-tail regression.
+
+Three concrete defects were exposed and repaired:
+
+1. **Execution-plan self-test typo.** The new test compared the packed job's `nodeTestGroups` against a nonexistent root field. Expectations now assert the actual selected groups directly.
+2. **Concurrent Git-worktree metadata mutation.** Research/queryability contracts can materialize historical refs in parallel. Git's sparse-worktree initialization mutates shared `.git` metadata and two simultaneous calls raced on `.git/config.lock`. `git-ref-worktree-lib.mjs` now serializes only worktree add/remove metadata mutations with a repository-local lock; callbacks/worktree reads remain parallel. A two-process regression test owns this concurrency contract.
+3. **Workflow authority/layout coupling.** Inlining the matrix grew `ci.yml` to ~44.8 KB and tripped the 40 KB ratchet. The matrix is now the maintained reusable `ci-node-contract-shards.yml`; `ci.yml` is ~37.2 KB and invokes it as the `node-contracts` lane. Gate-parity checks read both production workflow files rather than assuming every command must be textually in `ci.yml`.
+
+The reusable shard workflow is registered in the workflow lifecycle inventory and README. Do not grandfather the old oversized `ci.yml`; the extraction is the intended structural fix.
+
 ## Current forward work order
 
 1. **Validate the three-lane production packing:** require green exact-head full-impact evidence for Fast Gate, coverage-only deep-verification, and deep-services; record first-runner→last-required completion and each lane wall.
