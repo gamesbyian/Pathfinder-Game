@@ -49,7 +49,7 @@ const levelBlind = await run('scripts/level-blind-capability-sweep.mjs', [
   '--budget-ms=5000',
   '--work-budget=100000',
   '--strict-total-work-budget',
-  '--levels=1',
+  '--levels=pos:1',
 ], 'level-blind');
 
 const portfolio = await run('scripts/portfolio-solve-sweep.mjs', [
