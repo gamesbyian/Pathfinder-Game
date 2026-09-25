@@ -816,6 +816,7 @@ function writeReport() {
         effectiveConfigDigest,
         solverRequestProjection,
         solverRequestIdentity,
+        executionRuntime: { nodeVersion: process.version, platform: process.platform, arch: process.arch },
         backend,
         reproducibilityMode,
         staticPortfolioArm: staticPortfolioArmName,
