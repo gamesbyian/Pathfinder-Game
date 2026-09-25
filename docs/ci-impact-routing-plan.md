@@ -173,7 +173,7 @@ The program succeeds when common research-only work avoids unrelated game/solver
 
 Current production behavior:
 
-- `fast-gate` remains an always-materialized runner, but computes the semantic merge-diff plan locally and executes only selected validator/Node-test groups; routing failure falls back to the full aggregates;
+- `fast-gate` remains an always-materialized runner, but computes the semantic merge-diff plan locally, executes only selected validator/Node-test groups, and runs the production build only when game/solver impact selects it; routing failure falls back to the full aggregates and build;
 - the historical solver capability canary is no longer an ordinary PR capability; solver effectiveness is owned by the experiment/promotion system;
 - `deep-verification` is impact-scoped under the semantic execution plan and independently selects coverage, hard-prune soundness proofs, and Firestore;
 - planner failure fails safe by running deep verification;
