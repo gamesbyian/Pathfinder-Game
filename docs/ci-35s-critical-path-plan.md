@@ -131,14 +131,30 @@ Current Node testability audit lenses:
 
 ### Covered Vitest
 
-The covered population remains around **30–31 s** on recent ordinary runs, although a 18 s sample also exists. The old lifecycle telemetry outlier and repair-search budget tail have already received deterministic-work/testability reductions. Therefore the next action is a **fresh** slow-file and slow-test census from `tmp/vitest-timings.json`, not continued optimization against historical names.
+Fresh uncontended production evidence from run **36090175881** / deep job **107930730496** measured **1595 tests across 162 files** with a ~30 s covered-suite step. Current file tails are:
 
-Worthwhile lenses:
+| file | wall |
+| --- | ---: |
+| `modules/solver/repair-search.test.ts` | **8.6 s** |
+| `modules/solver/diversification.test.ts` | **7.4 s** |
+| `modules/solver/hint-ablation-generator.test.ts` | **2.7 s** |
+| `modules/solver/restart-continuation-harness.test.ts` | **2.6 s** |
+| `scripts/solver-parallel-unit-tests.mjs` | **2.3 s** |
+| `modules/solver/orchestration-early-repair.test.ts` | **2.1 s** |
+
+Everything else is below ~1.5 s. This sharply narrows software testability work.
+
+The repair-search 250k/125k deterministic/default-equivalence budgets **are already landed**. The file remains expensive because several feature groups separately ran one real search for soundness and two more fresh real searches for determinism, plus another pair for default equivalence. PR #2109 therefore removes the redundant soundness-only invocation for six feature groups and asserts solution validity on the already-fresh deterministic pair instead. This preserves fresh-state determinism, identical nonzero work, and validity while deleting one real repair search per feature. Measure the full covered-suite effect before pursuing further repair-search restructuring.
+
+Diversification remains deliberately real solver integration. Its three dominant tests currently measure ~2.7 s, 2.4 s, and 2.3 s. Do not replace them with mocks merely to improve CI; inspect fixture/work ceilings and reusable setup only where the same integration contract remains intact.
+
+Current covered-test audit lenses:
 
 - bookkeeping tests invoking real search/solver work;
 - repeated expensive beforeEach/setup or corpus/model construction;
 - duplicate parsing/bundling across files;
 - deterministic work budgets far above the minimum robust envelope;
+- redundant real executions where one fresh result can satisfy multiple assertions without sharing mutable state;
 - fixture cardinality larger than the asserted property needs;
 - Vitest pool/worker configuration only where a controlled rehearsal shows lower full-suite wall without semantic changes.
 
