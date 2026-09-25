@@ -380,6 +380,7 @@ jobs:
             node scripts/validation-groups.mjs nodeTests $groups
           fi
       - name: Derive runtime-hint projection cache key
+        if: steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true'
         id: runtime-hint-projection-key
         shell: bash
         run: |
@@ -393,19 +394,21 @@ jobs:
             git hash-object vite.config.ts
           } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
       - name: Restore exact runtime-hint projection
+        if: steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true'
         id: runtime-hint-projection-cache
         uses: actions/cache/restore@v5
         with:
           path: .cache/runtime-hint-projection
           key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
       - name: Build production bundle
+        if: steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true'
         id: build
         continue-on-error: true
         env:
           PATHFINDER_RUNTIME_HINT_PROJECTION_CACHE_ROOT: .cache/runtime-hint-projection
         run: npm run build
       - name: Save exact runtime-hint projection after successful cold build
-        if: steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
+        if: (steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true') && steps.build.outcome == 'success' && steps.runtime-hint-projection-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: .cache/runtime-hint-projection
@@ -419,6 +422,7 @@ jobs:
           VALIDATORS: ${{ steps.validators.outcome }}
           LINT: ${{ steps.lint.outcome }}
           NODE_TESTS: ${{ steps.node_tests.outcome }}
+          RUN_BUILD: ${{ steps.validation_selection.outcome != 'success' || steps.validation_selection.outputs.needs_build == 'true' }}
           BUILD: ${{ steps.build.outcome }}
         run: |
           failed=0
@@ -435,7 +439,8 @@ jobs:
             printf '| Production build | `%s` |\n' "$BUILD"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
-          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS BUILD; do
+          if [[ "$RUN_BUILD" != "true" ]]; then BUILD="skipped"; fi
+          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS; do
             status="${!name}"
             printf '%-14s %s\n' "$name" "$status"
             if [[ "$status" != "success" ]]; then
