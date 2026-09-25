@@ -1,7 +1,36 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+
+const sleepArray = new Int32Array(new SharedArrayBuffer(4));
+
+function withGitWorktreeMetadataLock(gitRoot, callback) {
+    const commonDirRaw = execFileSync('git', ['rev-parse', '--git-common-dir'], {
+        cwd: gitRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+    const commonDir = path.resolve(gitRoot, commonDirRaw);
+    const lockDir = path.join(commonDir, 'pathfinder-worktree-metadata.lock');
+    const deadline = Date.now() + 15000;
+    while (true) {
+        try {
+            mkdirSync(lockDir);
+            break;
+        } catch (error) {
+            if (error?.code !== 'EEXIST') throw error;
+            if (Date.now() >= deadline) throw new Error('timed out waiting for Pathfinder git-worktree metadata lock');
+            Atomics.wait(sleepArray, 0, 0, 25);
+        }
+    }
+    try {
+        return callback();
+    } finally {
+        rmSync(lockDir, { recursive: true, force: true });
+    }
+}
+
 
 export function withDetachedGitWorktree(root, ref, callback, { sparseDirectories = [], sparsePatterns = [] } = {}) {
     const gitRef = String(ref ?? '').trim();
@@ -22,10 +51,10 @@ export function withDetachedGitWorktree(root, ref, callback, { sparseDirectories
         const addArgs = ['worktree', 'add', '--detach', '--quiet'];
         if (sparseDirectories.length || sparsePatterns.length) addArgs.push('--no-checkout');
         addArgs.push(worktree, gitRef);
-        execFileSync('git', addArgs, {
+        withGitWorktreeMetadataLock(gitRoot, () => execFileSync('git', addArgs, {
             cwd: gitRoot,
             stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        }));
         added = true;
         if (sparseDirectories.length || sparsePatterns.length) {
             const sparseArgs = sparsePatterns.length
@@ -47,10 +76,10 @@ export function withDetachedGitWorktree(root, ref, callback, { sparseDirectories
     } finally {
         if (added) {
             try {
-                execFileSync('git', ['worktree', 'remove', '--force', worktree], {
+                withGitWorktreeMetadataLock(gitRoot, () => execFileSync('git', ['worktree', 'remove', '--force', worktree], {
                     cwd: gitRoot,
                     stdio: ['ignore', 'pipe', 'pipe'],
-                });
+                }));
             } catch {
                 try {
                     execFileSync('git', ['worktree', 'prune'], {
