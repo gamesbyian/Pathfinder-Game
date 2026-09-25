@@ -2,10 +2,9 @@
 /**
  * Semantic validation-group registry runner and parity checker.
  *
- * Phase 0 deliberately does not change the universal CI gate. package.json's
- * check:validators and test:node remain authoritative while this script proves
- * that scripts/validation-groups.json is an exact, non-duplicating ownership
- * partition of those existing members.
+ * package.json's check:validators and test:node remain the conservative full
+ * aggregates and parity authorities. Production CI selects semantic subsets
+ * through this registry, falling back to those full aggregates if routing fails.
  *
  * Usage:
  *   node scripts/validation-groups.mjs --check
