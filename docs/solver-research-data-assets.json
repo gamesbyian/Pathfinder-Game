@@ -1115,7 +1115,7 @@
     },
     {
       "id": "experiment-manifests",
-      "name": "Experiment and family-run manifests",
+      "name": "Experiment contracts, standard results, and family-run manifests",
       "status": "generated-interface",
       "grain": [
         "experiment arm",
@@ -1129,19 +1129,26 @@
         }
       ],
       "authorities": [
+        "scripts/solver-experiment-contract.mjs",
+        "scripts/publish-solver-sweep-result.mjs",
+        "docs/solver-experiment-result.schema.json",
         "scripts/experiment-manifest-lib.mjs",
         "scripts/solver-experiment-preflight.mjs",
         "docs/investigation-report-conventions.md"
       ],
       "queryEntryPoints": [
         "npm run solver:experiment-preflight",
-        "validateExperimentManifest(...)"
+        "validateExperimentManifest(...)",
+        "sourceRunBindingFromContract(...)",
+        "standard solver-sweep-result manifest/sourceRunBinding"
       ],
       "joinKeys": [
         "experimentId",
-        "runId",
-        "solverRef/commit",
-        "levelSelectionHash",
+        "sourceRunBinding.runId/runAttempt",
+        "sourceRunBinding.solverRef",
+        "sourceRunBinding.protocolHash",
+        "sourceRunBinding.configurationHash",
+        "sourceRunBinding.populationIdentity/corpusIdentity",
         "arm",
         "output artifact paths"
       ],
@@ -1157,12 +1164,14 @@
         "solver-determinism-fingerprints",
         "raw-logs-and-baselines",
         "solver-capability-evidence",
-        "hint-discovery-process"
+        "hint-discovery-process",
+        "hint-ingestion-receipts"
       ],
       "affordances": [
         "Recover exactly what code, population, flags, workflow inputs, seeds, budgets, and output produced a result.",
+        "Use the canonical source-run binding as bounded cross-resource identity glue for run, immutable solver revision, protocol/configuration, population/corpus, arm and constituent source-run lineage.",
         "Detect invalid A/B comparisons where non-treatment dimensions changed.",
-        "Join family observations to solver/data provenance without reconstructing invocation history from filenames."
+        "Join family, Hint, failure/process and solver-result observations without reconstructing invocation identity from filenames or timestamps."
       ],
       "caveats": [
         "Older artifacts may predate current manifest schemas and must remain explicitly historical/unknown where fields are absent.",
