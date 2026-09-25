@@ -9,6 +9,11 @@
  * while preserving full output for failures plus the final timing/status summary.
  * The default remains verbose for local use.
  *
+ * PATHFINDER_PARALLEL_PRIORITY may name a whitespace/comma-separated subset of
+ * requested scripts to launch first, in the listed order. Results remain reported
+ * in the caller's original order. This is a scheduling hint only: it never skips,
+ * duplicates, or changes a child command.
+ *
  * Used by `check` and `test:node` to fan out their own independent
  * sub-checks/sub-validators (replacing `run-p`, which gives none of that
  * timing/output attribution — see the "parallel run summary" each produces).
@@ -40,6 +45,25 @@ if (requestedNames.length === 0) {
 }
 
 const names = requestedNames;
+const priorityNames = (process.env.PATHFINDER_PARALLEL_PRIORITY ?? '')
+  .split(/[\s,]+/u)
+  .map(name => name.trim())
+  .filter(Boolean);
+const priorityRank = new Map();
+for (const name of priorityNames) {
+  if (!priorityRank.has(name)) priorityRank.set(name, priorityRank.size);
+}
+const executionIndices = names
+  .map((name, index) => ({ name, index }))
+  .sort((a, b) => {
+    const aRank = priorityRank.get(a.name);
+    const bRank = priorityRank.get(b.name);
+    if (aRank == null && bRank == null) return a.index - b.index;
+    if (aRank == null) return 1;
+    if (bRank == null) return -1;
+    return aRank - bRank || a.index - b.index;
+  })
+  .map(({ index }) => index);
 const directPackageScripts = process.env.PATHFINDER_DIRECT_PACKAGE_SCRIPTS === '1';
 const packageScripts = directPackageScripts
   ? JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')).scripts ?? {}
@@ -129,9 +153,10 @@ let nextIndex = 0;
 
 async function worker() {
   while (true) {
-    const index = nextIndex;
+    const queueIndex = nextIndex;
     nextIndex += 1;
-    if (index >= names.length) return;
+    if (queueIndex >= executionIndices.length) return;
+    const index = executionIndices[queueIndex];
     results[index] = await runScript(names[index]);
   }
 }
@@ -140,7 +165,7 @@ await Promise.all(Array.from({ length: jobs }, () => worker()));
 
 console.log(
   `\n--- parallel run summary (mode=${directPackageScripts ? 'direct' : 'npm'}, `
-  + `success-output=${successOutputMode}, jobs=${jobs}/${names.length}) ---`,
+  + `success-output=${successOutputMode}, jobs=${jobs}/${names.length}, priority=${priorityNames.length}) ---`,
 );
 for (const { name, code, seconds } of results) {
   console.log(`${code === 0 ? 'PASS' : 'FAIL'}  ${name} (${seconds}s)`);
