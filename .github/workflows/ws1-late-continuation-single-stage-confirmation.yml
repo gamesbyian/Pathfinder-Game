@@ -80,11 +80,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ws1-late-continuation-plan
-          path: |
-            tmp/ws1-late-continuation-single-001/corpus.json
-            tmp/ws1-late-continuation-single-001/generation-manifest.json
-            tmp/ws1-late-continuation-single-001/ids.txt
-            tmp/ws1-late-continuation-single-001/shard-plan.json
+          path: tmp/ws1-late-continuation-single-001/
           if-no-files-found: error
           retention-days: 90
 
@@ -116,14 +112,14 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: ws1-late-continuation-plan
-          path: artifact-staging/plan
+          path: tmp/ws1-late-continuation-single-001
 
       - name: Run frozen production portfolio solve
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p logs/ws1-late-continuation-single-001
-          corpus=artifact-staging/plan/tmp/ws1-late-continuation-single-001/corpus.json
+          corpus=tmp/ws1-late-continuation-single-001/corpus.json
           timeout -k 30s --preserve-status "${{ matrix.shard.jobTimeoutMinutes }}m"             node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs --               --corpus="$corpus"               --levels="${{ matrix.shard.levels }}"               --scheduler-mode=production               --node-budget=50000000               --work-budget=67000000               --budget-ms=86400000               --workers=4               --out="logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}.json"               --summary-out="logs/ws1-late-continuation-single-001/batch-${{ matrix.shard.idx }}-summary.md"
 
       - name: Upload shard evidence
@@ -162,7 +158,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: ws1-late-continuation-plan
-          path: artifact-staging/plan
+          path: tmp/ws1-late-continuation-single-001
 
       - name: Download every solve shard
         uses: actions/download-artifact@v8
@@ -179,8 +175,8 @@ jobs:
           mapfile -t files < <(find artifact-staging/shards -type f -name 'batch-*.json' | sort)
           [ "${#files[@]}" -gt 0 ] || { echo "::error::no shard reports were downloaded"; exit 1; }
           joined=$(IFS=,; echo "${files[*]}")
-          node scripts/combine-solver-sweep-reports.mjs             --in="$joined"             --expected-ids=artifact-staging/plan/tmp/ws1-late-continuation-single-001/ids.txt             --out=logs/ws1-late-continuation-single-001/combined.json
-          node scripts/validate-solver-sweep-integrity.mjs             --expected-ids=artifact-staging/plan/tmp/ws1-late-continuation-single-001/ids.txt             --result=logs/ws1-late-continuation-single-001/combined.json             --integrity-out=logs/ws1-late-continuation-single-001/population-integrity.json
+          node scripts/combine-solver-sweep-reports.mjs             --in="$joined"             --expected-ids=tmp/ws1-late-continuation-single-001/ids.txt             --out=logs/ws1-late-continuation-single-001/combined.json
+          node scripts/validate-solver-sweep-integrity.mjs             --expected-ids=tmp/ws1-late-continuation-single-001/ids.txt             --result=logs/ws1-late-continuation-single-001/combined.json             --integrity-out=logs/ws1-late-continuation-single-001/population-integrity.json
 
       - name: Verify frozen producer/result contract
         shell: bash
@@ -265,7 +261,7 @@ jobs:
         shell: bash
         run: |
           if [ -f logs/ws1-late-continuation-single-001/combined.json ]; then
-            node scripts/sweep-publish.mjs --failure-in=p               --primary=logs/ws1-late-continuation-single-001/combined.json               --include=logs/ws1-late-continuation-single-001/scoring.json               --include=logs/ws1-late-continuation-single-001/verdict.json               --include=artifact-staging/plan/tmp/ws1-late-continuation-single-001/generation-manifest.json               --include=artifact-staging/plan/tmp/ws1-late-continuation-single-001/shard-plan.json               --integrity-file=logs/ws1-late-continuation-single-001/population-integrity.json               --contract-file=logs/ws1-late-continuation-single-001/experiment-contract.json               --shards-expected="${{ needs.plan.outputs.shard_count }}"               --shards-observed="$(find artifact-staging/shards -type f -name 'batch-*.json' | wc -l | tr -d ' ')"               --shards-basis="40 fixed four-parent shards; exact 160-parent population validated separately"               --source-artifact="ws1-late-continuation-single-stage-confirmation"
+            node scripts/sweep-publish.mjs --failure-in=p               --primary=logs/ws1-late-continuation-single-001/combined.json               --include=logs/ws1-late-continuation-single-001/scoring.json               --include=logs/ws1-late-continuation-single-001/verdict.json               --include=tmp/ws1-late-continuation-single-001/generation-manifest.json               --include=tmp/ws1-late-continuation-single-001/shard-plan.json               --integrity-file=logs/ws1-late-continuation-single-001/population-integrity.json               --contract-file=logs/ws1-late-continuation-single-001/experiment-contract.json               --shards-expected="${{ needs.plan.outputs.shard_count }}"               --shards-observed="$(find artifact-staging/shards -type f -name 'batch-*.json' | wc -l | tr -d ' ')"               --shards-basis="40 fixed four-parent shards; exact 160-parent population validated separately"               --source-artifact="ws1-late-continuation-single-stage-confirmation"
           fi
 
       - name: Upload complete confirmation evidence
@@ -274,10 +270,10 @@ jobs:
         with:
           name: ws1-late-continuation-single-stage-confirmation
           path: |
-            artifact-staging/plan/tmp/ws1-late-continuation-single-001/corpus.json
-            artifact-staging/plan/tmp/ws1-late-continuation-single-001/generation-manifest.json
-            artifact-staging/plan/tmp/ws1-late-continuation-single-001/ids.txt
-            artifact-staging/plan/tmp/ws1-late-continuation-single-001/shard-plan.json
+            tmp/ws1-late-continuation-single-001/corpus.json
+            tmp/ws1-late-continuation-single-001/generation-manifest.json
+            tmp/ws1-late-continuation-single-001/ids.txt
+            tmp/ws1-late-continuation-single-001/shard-plan.json
             logs/ws1-late-continuation-single-001/combined.json
             logs/ws1-late-continuation-single-001/population-integrity.json
             logs/ws1-late-continuation-single-001/scoring.json
