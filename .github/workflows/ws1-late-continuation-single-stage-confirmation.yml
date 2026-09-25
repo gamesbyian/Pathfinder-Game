@@ -314,6 +314,24 @@ jobs:
             node scripts/sweep-publish.mjs --failure-in=p               --primary=logs/ws1-late-continuation-single-001/combined.json               --include=logs/ws1-late-continuation-single-001/scoring.json               --include=logs/ws1-late-continuation-single-001/verdict.json               --include=tmp/ws1-late-continuation-single-001/generation-manifest.json               --include=tmp/ws1-late-continuation-single-001/shard-plan.json               --integrity-file=logs/ws1-late-continuation-single-001/population-integrity.json               --contract-file=logs/ws1-late-continuation-single-001/experiment-contract.json               --outcome-file=logs/ws1-late-continuation-single-001/research-outcome.json               --shards-expected="${{ needs.plan.outputs.shard_count }}"               --shards-observed="$(find artifact-staging/shards -type f -name 'batch-*.json' | wc -l | tr -d ' ')"               --shards-basis="40 fixed four-parent shards; exact 160-parent population validated separately"               --source-artifact="ws1-late-continuation-single-stage-confirmation"
           fi
 
+      - name: Require decision-bearing published evidence
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p='logs/solver-sweep-result/manifest.json';
+          const d=JSON.parse(fs.readFileSync(p,'utf8'));
+          if (d.decisionBearing !== true) {
+            throw new Error(`published result is not decision-bearing: ${JSON.stringify(d.decisionContractIssues ?? [])}`);
+          }
+          if (!['completed-positive','completed-negative'].includes(d.researchOutcome?.outcome)) {
+            throw new Error(`published research outcome is not completed: ${d.researchOutcome?.outcome}`);
+          }
+          if (d.researchQuestion?.questionId !== 'WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE') {
+            throw new Error('published result lost the canonical WS1 research-question binding');
+          }
+          NODE
+
       - name: Upload complete confirmation evidence
         if: always()
         uses: actions/upload-artifact@v7
