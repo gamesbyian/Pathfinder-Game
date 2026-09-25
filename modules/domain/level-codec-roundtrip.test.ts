@@ -4,7 +4,6 @@
  * independent, correctly-scoped copies; parseRawLevelDetailed must reject bad wire data.
  */
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'vitest';
 import { PACK } from './cell-key.js';
 import {
