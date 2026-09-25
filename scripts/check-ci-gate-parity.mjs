@@ -76,6 +76,13 @@ for (const [family, fallback] of [['validators', 'check:validators'], ['nodeTest
   }
 }
 
+if (!/steps\.validation_selection\.outputs\.needs_build\s*==\s*['"]true['"]/u.test(workflow)) {
+  errors.push('ci.yml no longer scopes production build through needs_build');
+}
+if (!/RUN_BUILD[^\n]*[\s\S]*BUILD[^\n]*!=\s*["']success["']/u.test(workflow)) {
+  errors.push('ci.yml no longer makes a selected production-build failure block Fast Gate');
+}
+
 if (!/SOLVER_DEADLOCK_PROOF_SKIP:\s*['"]1['"]/.test(workflow)) {
   errors.push('ci.yml coverage step no longer records SOLVER_DEADLOCK_PROOF_SKIP=1');
 }
