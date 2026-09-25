@@ -469,8 +469,8 @@
     "check:all-hint-store-referee": "tsx scripts/validate-all-hint-stores.mjs",
     "check:hint-store-census": "node scripts/hint-store-census.mjs",
     "test:ci-runtime-data-cache": "node scripts/ci-runtime-data-cache-node-test.mjs",
-    "test:solver-parallel-contract": "vitest run scripts/solver-parallel-unit-tests.mjs",
-    "test:eslint-rules-contract": "vitest run scripts/eslint-rules-unit-tests.mjs"
+    "test:solver-parallel-contract": "vitest run --config vitest.node-contract.config.mjs scripts/solver-parallel-unit-tests.mjs",
+    "test:eslint-rules-contract": "vitest run --config vitest.node-contract.config.mjs scripts/eslint-rules-unit-tests.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
