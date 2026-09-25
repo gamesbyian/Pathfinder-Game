@@ -1,5 +1,7 @@
 # CI impact routing and validation architecture plan
 
+The research analogue of semantic invalidation/freshness and the repo-wide proof-ownership follow-through are tracked in [cross-program convergence backlog](cross-program-convergence-backlog.md), especially CP-2 and CP-3.
+
 > **Status:** Phase 3 activated for semantic validator/Node groups and deep capabilities; Fast Gate remains always-materialized but its contract population is impact-scoped.
 > **Started:** 2026-09-21.
 > **Goal:** make validation proportional to the repository surfaces a change can invalidate, while preserving conservative correctness and a full-validation oracle.
