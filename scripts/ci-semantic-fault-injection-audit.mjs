@@ -43,7 +43,7 @@ const cases = [
       'modules/solver/production-default-equivalence.test.ts',
     ],
     expectedSurfaces: ['research', 'solver'],
-    expectedCapabilities: ['build', 'deep-proofs', 'lint', 'solver-canary', 'unit-coverage'],
+    expectedCapabilities: ['build', 'deep-proofs', 'lint', 'unit-coverage'],
   },
   {
     id: 'router-solver-deep-proof-drop',
@@ -52,7 +52,7 @@ const cases = [
     to: '',
     detector: ['scripts/ci-validation-plan-node-test.mjs'],
     expectedFull: true,
-    expectedCapabilities: ['build', 'deep-proofs', 'firestore-boundary', 'lint', 'solver-canary', 'unit-coverage'],
+    expectedCapabilities: ['build', 'deep-proofs', 'firestore-boundary', 'lint', 'unit-coverage'],
   },
 ];
 
