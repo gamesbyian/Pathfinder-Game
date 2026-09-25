@@ -48,6 +48,22 @@ try {
   assert.match(verbosePass.stdout, /PASS_STDOUT/u);
   assert.match(verbosePass.stdout, /success-output=all/u);
 
+  const timingPath = path.join(temp, 'timings', 'parallel.json');
+  const timedPass = run(['pass'], {
+    PATHFINDER_PARALLEL_SUCCESS_OUTPUT: 'summary',
+    PATHFINDER_PARALLEL_TIMING_JSON: timingPath,
+  });
+  assert.equal(timedPass.status, 0);
+  const timing = JSON.parse(fs.readFileSync(timingPath, 'utf8'));
+  assert.equal(timing.schemaVersion, 1);
+  assert.equal(timing.mode, 'direct');
+  assert.equal(timing.requestedCount, 1);
+  assert.equal(timing.results.length, 1);
+  assert.equal(timing.results[0].name, 'pass');
+  assert.equal(timing.results[0].code, 0);
+  assert.equal(typeof timing.results[0].seconds, 'number');
+  assert.equal(typeof timing.wallSeconds, 'number');
+
   const npmFallbackPass = run(['pass'], {
     PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '0',
     PATHFINDER_PARALLEL_SUCCESS_OUTPUT: 'summary',
