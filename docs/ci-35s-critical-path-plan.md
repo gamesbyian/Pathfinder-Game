@@ -940,6 +940,19 @@ Why this topology, specifically:
 
 The old combined deep lane remains historical evidence only. Exact-head production CI must now prove the three-lane packing is semantically green and establish its wall-clock effect before this activation is called settled.
 
+## Coverage testability pass — diversification integration owner
+
+Full-impact run 36106449568 measured coverage at **26.33 s useful wall** and about **38 s runner-start → coverage completion**. The two largest files were:
+
+- `modules/solver/repair-search.test.ts`: ~7.8 s;
+- `modules/solver/diversification.test.ts`: ~7.3 s.
+
+The diversification audit found repeated real-solver work being used for session bookkeeping assertions. The file now preserves **one** real portal/full-session integration owner proving that production search actually traverses diversification phases, discovers referee-valid unique hints, emits progress, and completes. Deduplication, work-budget resumability, max-hints, cancellation, and admissible-order provenance now use a three-cell synthetic level plus a deterministic solver stub.
+
+This follows the testing doctrine already stated in `docs/testing.md`: stub search when the assertion is scheduling/routing/budget/provenance behavior rather than search capability. Do not count this as a speed win until exact-head coverage timings show the file and total lane actually fall.
+
+Next coverage target is `repair-search.test.ts`, where several deterministic/default-equivalence assertions currently execute 125k–250k node searches each. Audit those budgets/fixtures before changing them; the invariant is deterministic/equivalent behavior, not a particular amount of search work.
+
 ## Current forward work order
 
 1. **Validate the three-lane production packing:** require green exact-head full-impact evidence for Fast Gate, coverage-only deep-verification, and deep-services; record first-runner→last-required completion and each lane wall.
