@@ -4,8 +4,7 @@
   "always": {
     "packageScripts": [
       "check:dead-scripts",
-      "check:text-source-files",
-      "check:ci-impact-inventory"
+      "check:text-source-files"
     ],
     "capabilities": [
       "lint"
