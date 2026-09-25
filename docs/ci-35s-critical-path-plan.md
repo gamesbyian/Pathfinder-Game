@@ -1297,6 +1297,38 @@ Decision gate:
 3. full-impact timing should show the former ~30 s duplicate pass collapse to structural-level parsing cost;
 4. if the Node proof does not cover a concrete invariant formerly unique to `check:level-data-validity`, restore that invariant explicitly rather than restoring the whole duplicate pass.
 
+## Latest qualifying production samples
+
+Two recent exact-head production runs materially improve the current evidence base:
+
+### Run 36184412331 — single-owner Hint referee
+
+After removing the duplicate runtime-Hint referee pass from Fast Gate:
+
+- Fast Gate: **~29.8 s**;
+- Node A: **~26.1 s**;
+- Node B: **~30.4 s**;
+- coverage: **~32.0 s**;
+- deep services: **~21.4 s**;
+- first required runner → last required completion: **~32.6 s**.
+
+`check:level-data-validity` fell from ~30.6 s to **~2.4 s** while `test:validate-all-hint-stores` remained green at ~0.5 s.
+
+### Run 36184890190 — minimal shard-A runtime data
+
+After retaining original solver/research execution ownership but replacing shard A's full runtime-data restore with direct materialization of only three required level documents:
+
+- Fast Gate: **22 s**;
+- Node A: **24 s**;
+- Node B: **34 s**;
+- coverage: **34 s**;
+- deep services: **25 s**;
+- first required runner → last required completion: **35.0 s**.
+
+The mirrored temporary rehearsal passed the full **105-command** owner-A population and was removed. A competing experiment that moved the five data-reading contracts into shard B pushed Node B to ~37 s and was rejected.
+
+These are qualifying hard-ceiling samples, but the p50≤30/p90≤35 declaration still requires a bounded comparable window. Current tails are Node B and coverage, not Fast Gate/deep services.
+
 ## Current forward work order
 
 1. **Get the repaired data-free coverage head fully green:** require Fast Gate, both Node shards, coverage, deep services, topology, semantic-fault, and solver-evidence guards on one exact head. The remaining known failures from the extraction were registry/metric-inventory bookkeeping and have been repaired.
