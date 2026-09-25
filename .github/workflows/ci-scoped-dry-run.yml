@@ -30,7 +30,6 @@ jobs:
       fast_job_required: ${{ steps.plan.outputs.fast_job_required }}
       deep_job_required: ${{ steps.plan.outputs.deep_job_required }}
       deep_services_job_required: ${{ steps.plan.outputs.deep_services_job_required }}
-      deep_services_job_required: ${{ steps.plan.outputs.deep_services_job_required }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -115,17 +114,6 @@ jobs:
       - name: Run lint
         id: lint
         run: npm run check:lint
-      - name: Run selected Node and CLI contract tests
-        if: needs.impact-shadow.outputs.node_test_groups != ''
-        shell: bash
-        env:
-          NODE_TEST_GROUPS: ${{ needs.impact-shadow.outputs.node_test_groups }}
-          PATHFINDER_PARALLEL_JOBS: '4'
-          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
-          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
-        run: |
-          groups="${NODE_TEST_GROUPS//,/ }"
-          node scripts/validation-groups.mjs nodeTests $groups
       - name: Derive runtime-hint projection cache key
         id: runtime-hint-projection-key
         if: needs.impact-shadow.outputs.needs_build == 'true'
@@ -159,6 +147,56 @@ jobs:
         with:
           path: .cache/runtime-hint-projection
           key: runtime-hint-projection-${{ runner.os }}-${{ steps.runtime-hint-projection-key.outputs.key }}
+
+  node-contracts:
+    needs: impact-shadow
+    name: node-contracts-${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: a
+            owner_groups: research,solver,game,persistence
+          - shard: b
+            owner_groups: shared,data,repo
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.head_ref }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Derive exact dependency-tree cache key
+        id: dependency-tree-key
+        shell: bash
+        run: |
+          echo "key=node-modules-${RUNNER_OS}-x64-nodev22.23.2-npm10.9.8-${{ hashFiles('package-lock.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore exact dependency tree
+        id: dependency-tree-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ steps.dependency-tree-key.outputs.key }}
+      - name: Install dependencies from the npm cache
+        if: steps.dependency-tree-cache.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Run selected Node and CLI contract shard
+        shell: bash
+        env:
+          NODE_TEST_GROUPS: ${{ needs.impact-shadow.outputs.node_test_groups }}
+          OWNER_GROUPS: ${{ matrix.owner_groups }}
+          PATHFINDER_PARALLEL_JOBS: '4'
+          PATHFINDER_PARALLEL_SUCCESS_OUTPUT: summary
+          PATHFINDER_DIRECT_PACKAGE_SCRIPTS: '1'
+        run: |
+          if [[ -z "$NODE_TEST_GROUPS" ]]; then
+            echo "No Node/CLI contract groups selected."
+            exit 0
+          fi
+          groups="${NODE_TEST_GROUPS//,/ }"
+          node scripts/validation-groups.mjs nodeTests $groups --owner-groups="$OWNER_GROUPS"
 
   deep-verification:
     needs: impact-shadow
@@ -338,6 +376,7 @@ jobs:
     needs:
       - impact-shadow
       - fast-gate
+      - node-contracts
       - deep-verification
       - deep-services
     if: always()
@@ -348,14 +387,17 @@ jobs:
         env:
           ROUTE_RESULT: ${{ needs.impact-shadow.result }}
           FAST_RESULT: ${{ needs.fast-gate.result }}
+          NODE_RESULT: ${{ needs.node-contracts.result }}
           DEEP_RESULT: ${{ needs.deep-verification.result }}
           SERVICES_RESULT: ${{ needs.deep-services.result }}
         run: |
           printf '%-18s %s\n' route "$ROUTE_RESULT"
           printf '%-18s %s\n' fast-gate "$FAST_RESULT"
+          printf '%-18s %s\n' node-contracts "$NODE_RESULT"
           printf '%-18s %s\n' deep-verification "$DEEP_RESULT"
           printf '%-18s %s\n' deep-services "$SERVICES_RESULT"
           [[ "$ROUTE_RESULT" == "success" ]]
           [[ "$FAST_RESULT" == "success" ]]
+          [[ "$NODE_RESULT" == "success" ]]
           [[ "$DEEP_RESULT" == "success" || "$DEEP_RESULT" == "skipped" ]]
           [[ "$SERVICES_RESULT" == "success" || "$SERVICES_RESULT" == "skipped" ]]
