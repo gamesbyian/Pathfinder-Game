@@ -25,6 +25,10 @@ function executableLines(text) {
         .join('\n');
 }
 
+function logicalShellText(text) {
+    return executableLines(text).replace(/\\[ \t]*\r?\n[ \t]*/gu, ' ');
+}
+
 function normalizeScopeToken(token) {
     return token.trim()
         .replace(/^['"]|['"]$/gu, '')
@@ -77,7 +81,7 @@ function scopeAllowedByException(scope, entry) {
 }
 
 function persistenceIssues(workflow, rawText) {
-    const text = executableLines(rawText);
+    const text = logicalShellText(rawText);
     const variables = discoverPathVariables(text);
     const issues = [];
     const exception = exceptions.get(workflow) ?? null;
@@ -98,7 +102,7 @@ function persistenceIssues(workflow, rawText) {
 function workflowExercisesException(workflow, rawText) {
     const entry = exceptions.get(workflow);
     if (!entry) return false;
-    const text = executableLines(rawText);
+    const text = logicalShellText(rawText);
     const variables = discoverPathVariables(text);
     for (const line of text.split('\n')) {
         if (!/\bgit\s+(?:add|status)\b/u.test(line)) continue;
@@ -145,6 +149,12 @@ if (persistenceIssues('fixture.yml', 'HINT_DIR=data/hints\n- run: git add "$HINT
 }
 if (persistenceIssues('fixture.yml', 'env:\n  HINT_DIR: data/stress/hints-random\nsteps:\n  - run: git status --short "$HINT_DIR"').length !== 1) {
     throw new Error('central Hint persistence guard self-test missed YAML-env-derived Hint staging');
+}
+if (persistenceIssues('fixture.yml', 'steps:\n  - run: |\n      git add \\\n        data/hints/P00001.json').length !== 1) {
+    throw new Error('central Hint persistence guard self-test missed backslash-continued Hint staging');
+}
+if (persistenceIssues('fixture.yml', 'steps:\n  - run: |\n      git status --short \\\n        data/stress/hints-envelope/').length !== 1) {
+    throw new Error('central Hint persistence guard self-test missed backslash-continued Hint status scope');
 }
 if (persistenceIssues('collect-variant-family-dataset.yml', '- run: git add data/families/').length !== 0) {
     throw new Error('reviewed family workflow persistence exception is not honored');
