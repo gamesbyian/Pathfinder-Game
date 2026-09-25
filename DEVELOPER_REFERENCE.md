@@ -125,14 +125,15 @@ Hint and level provenance are independent append-only schemas and do not affect 
 
 ### Hint provenance
 
-- Canonical `Hint = { path: number[]; provenance: HintProvenanceEntry[] }`; rediscovery appends another event to the same path.
+- Canonical semantic `Hint = { path: number[]; provenance: HintProvenanceEntry[] }`. A genuinely different discovery appends a semantic provenance event to the same path; reacquiring the same semantic event from another physical run extends its `occurrences[]` lineage instead. Re-harvesting the same run/attempt is idempotent.
 - Same-technique repeats may matter when version/config/forcing/cost differs. 2026-07-29 cleanup removed 47 same-run duplicate appends, 0.05% of then 88,451 entries; requiring identical `elapsedMs` would find only 24/47.
 - After dedupe, differing fields included `nodesExpanded` (11,061), `solver.forcing` (2,290), `solver.version` (287). Non-redundant ≠ useful.
 - Coverage is measured, not assumed. 2026-08-12: 253,491 hints / 477,925 entries; both stress corpora 100%; published 89.5%, with 6,093/58,179 uncovered. Regenerate via `npm run stress:provenance-coverage`.
 - Cold evidence is stricter than `hintGuided === false`. Snapshot: prefix-anchored touched 28.6% corpus1, 7.6% corpus2, 2.8% published; strict-cold shares 63.0%, 88.0%, 86.8%. Another 36,381 entries set `usedExistingHints`; checking only `hintGuided` overstated corpus1 cold share by 13 points. Use `isColdCapabilityEvidence`.
 - Valid hint corpus ≠ cold capability. Witness/human/prefix/guided paths may be valid without being cold `solveLevel()` results. `check:level-data-validity` proves PLAY validity only.
-- Path-only `.hints`/`.foundHintsSinceLoad` coexist with canonical `.hintRecords`/`foundHintsSinceLoadRecords`; reconcile only via `reconcileHints`/`mergeHints`.
-- All corpora use schemaVersion 3 through `scripts/level-data-io.mjs`: `data/hints/<id>.json`, `data/stress/hints/<id>.json`, `data/stress/hints-random/<id>.json`.
+- Path-only `.hints`/`.foundHintsSinceLoad` coexist as derived/runtime projections beside canonical semantic `.hintRecords`/`foundHintsSinceLoadRecords`; reconcile only through the shared Hint semantic helpers, never by hand-writing the physical artifact.
+- Canonical physical Hint artifacts are schema v4, encoded as `sparse-inline` or `interned` through `modules/domain/hint-runtime.mjs` and `scripts/level-data-io.mjs`. Readers deliberately retain v1-v3 and transitional `hintMetadata` compatibility, but v4 is the only current write format across published/stress Hint stores.
+- Modern Pathfinder provenance can carry bounded `execution` identity plus `occurrences[]` source-run lineage. Semantic event identity deliberately excludes occurrence lineage, so retries/reharvests do not masquerade as independent discoveries. Use the reconstructability/determinism tools rather than inferring missing execution dimensions from current defaults.
 - Attempt provenance may include `beamWidth`, `mechanicBucketRetention`, winner `gateKey`, `seedSalt`, `repairMustTurnBiased`/`repairTurnBiased`; historical hints may still use legacy `diverseBeam` or lack later fields.
 - Provenance can be lost before persistence. A 2026-07-25 admissible-order bug did so. Trace additions through `makeProvenanceEntry`/`hintProvenanceEntryForEvent`; technique suffixes mean consumers may need prefix matching.
 - Published supplemental hints also live in Firestore and merge through `data.getHints`; see [`docs/security.md#supplemental-published-level-hints`](docs/security.md#supplemental-published-level-hints).
