@@ -271,9 +271,9 @@ Measurement-only rehearsal on the exact 37-test file:
 
 Lower budgets do not buy additional wall time, so production uses **250k / 125k** for more work-envelope headroom. Paired determinism/default-equivalence tests are also strengthened to require identical node counts and nonzero repair work, preventing trivial null/null success from weakening the invariant.
 
-Expected file saving: roughly **7.5 s** versus the current covered-suite profile. Full-suite wall saving must be measured separately because Vitest overlaps files.
+The 250k/125k budgets are **implemented**, but later covered-suite evidence shows the file still at **8.6 s** under production coverage instrumentation. The old standalone 1.43 s measurement therefore did not translate into the full covered environment. Treat budget right-sizing as complete; #2109’s next repair-search change instead removes six redundant soundness-only real searches while preserving validity on the fresh determinism pairs.
 
-### B1c. Remove hint-occurrence unit-test import side effect
+### B1c. Completed: remove hint-occurrence unit-test import side effect
 
 Post-hint-consolidation Node/CLI profiling exposed a new dominant contract:
 
@@ -282,14 +282,14 @@ Post-hint-consolidation Node/CLI profiling exposed a new dominant contract:
 
 Root cause is structural, not intrinsic audit cost. The synthetic node test imports `auditHintOccurrenceSemantics` from the CLI module, and that module executes `buildHintOccurrenceAcceptanceReport()` at top level. Importing one pure function therefore scans all three persisted hint corpora before the synthetic assertions run.
 
-Production/testability fix:
+Implemented state:
 
-1. extract `auditHintOccurrenceSemantics` and its private occurrence-key helper into a side-effect-free library;
-2. keep the CLI importing/re-exporting that function so external API compatibility is preserved;
-3. make the synthetic Node contract import the pure library directly;
-4. leave the corpus-scale CLI behavior unchanged when the CLI itself is invoked.
+1. `hint-occurrence-acceptance-lib.mjs` owns the side-effect-free semantic function;
+2. the CLI invokes corpus scanning only from its direct-execution path;
+3. the synthetic Node contract imports the pure library directly;
+4. corpus-scale CLI behavior remains unchanged when the CLI itself is invoked.
 
-Expected contract-level saving is roughly the full **15.8 s** observed import cost. Because Node contracts execute in a four-worker pool, the actual Node-population wall reduction must be measured separately.
+The checked-in rehearsal timing profile records this contract at effectively zero child seconds. This work is closed; do not repeat the extraction.
 
 The corpus-scale acceptance proof remains independently maintained by `.github/workflows/hint-consolidation-closeout.yml`, which directly invokes `hint-occurrence-acceptance-audit.mjs`. The optimization therefore separates unit import cost from corpus authority rather than removing the full audit.
 
@@ -548,7 +548,7 @@ Decision: **do not promote three-way deep overlap on the standard 4-core runner*
 
 ### Phase E: hosted-runner variance decision
 
-Run at least 10 comparable full-impact rehearsal executions after the candidate topology is green.
+Run at least 10 comparable full-impact rehearsal executions after a larger/reserved-runner candidate topology is green. No shared-hosted topology currently qualifies for this promotion window.
 
 Promote standard-runner topology only if:
 
