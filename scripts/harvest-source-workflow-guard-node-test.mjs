@@ -63,8 +63,13 @@ assert.ok(sources.length > 0, 'central harvester must declare at least one sourc
 }
 assert.match(
     harvestText,
-    /if: env\.HARVEST_RESULT == 'persisted'/u,
-    'canonical cache publication must be conditional on a persisted semantic merge',
+    /if: steps\.merge\.outputs\.result == 'persisted'/u,
+    'canonical cache publication must be conditional on the merge step reporting a persisted semantic merge',
+);
+assert.match(
+    harvestText,
+    /echo 'result=persisted' >> "\$GITHUB_OUTPUT"/u,
+    'semantic merge step must expose persisted status as a workflow step output for cache gating',
 );
 assert.doesNotMatch(
     diagnosticsText,
