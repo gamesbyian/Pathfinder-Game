@@ -1063,9 +1063,43 @@ They remain in ordinary local/main unit runs, but are excluded from the covered 
 
 Decision gate: keep this move only if the exact-head coverage thresholds remain green and the coverage runner wall drops materially below 35 s without pushing either Node shard beyond the target.
 
+## D2d: reopen balanced coverage sharding after workload reduction
+
+The previous D2c negative remains valid for its workload: useful shard work was roughly 17–19 s and the confirmation reached ~36 s authoritative wall. The current coverage population is materially different after same-proof-cheaper fixture work and moving the solver-parallel/ESLint executable contracts to the Node lane.
+
+Exact-head green run **36177382414** establishes the new production baseline:
+
+- full first-required-runner → last-required-completion: **~36.3 s**;
+- Fast Gate: **~33.0 s**;
+- Node A: **~28.4 s**;
+- Node B: **~29.9 s**;
+- deep services: **~22.1 s**;
+- coverage: **~35.7 s**, with Vitest useful wall **23.95 s**.
+
+Everything except coverage is now inside 35 s. The current 140 measured coverage-file rows sum to ~23.57 s and greedy-balance to **11.785 s / 11.782 s**. This is a named workload-premise change from D2c, not another rerun of the same experiment.
+
+Temporary rehearsal `coverage-shard-worker` + `coverage-shard-coordinator` in `ci-testability-topology-audit.yml`:
+
+- uses `vitest list --filesOnly` as the live population authority;
+- uses the latest measured heavy-file timings only as a balancing seed; currently unmeasured files are still assigned and executed;
+- runs explicit file populations with coverage + Vitest blob reporter;
+- suppresses thresholds only inside shard children via `PATHFINDER_COVERAGE_SHARD=1`;
+- uploads the worker blob;
+- keeps the coordinator runner warm, waits for that artifact, downloads it, and runs native `--merge-reports --coverage` under the ordinary config and unchanged thresholds;
+- uses the production rolling runtime-data action and exact dependency-tree hot path.
+
+Preregistered interpretation:
+
+1. any population omission, test failure, artifact/merge failure, or unchanged-threshold failure rejects the candidate until repaired;
+2. **≤30 s** first shard-runner start → merged authoritative threshold result is strong production-promotion evidence;
+3. **30–35 s** is timing-positive but requires a comparable confirmation before promotion;
+4. **>35 s** closes shared-hosted coverage sharding negative again;
+5. do not tune shard membership after a miss unless measured imbalance, rather than runner/bootstrap variance, is the cause;
+6. remove the temporary planner/rehearsal/threshold seam immediately after the decision is recorded.
+
 ## Current forward work order
 
-1. **Validate the three-lane production packing:** require green exact-head full-impact evidence for Fast Gate, coverage-only deep-verification, and deep-services; record first-runner→last-required completion and each lane wall.
+1. **Resolve the final coverage tail:** D2d is the only active topology experiment. Decide it against the preregistered ≤30 / 30–35 / >35 s thresholds, then remove its temporary scaffolding.
 2. **Validate the implemented solver→research narrowing:** fault injection, historical #1722-equivalent route oracle, and solver-scoped timing must pass before calling the 59-consumer explicit routing settled.
 3. **Refresh the selected-population timing census:** regenerate Node/CLI timings after routing/cadence removals and rank by selected critical-path burden, not the obsolete universal population.
 4. **Fresh covered-Vitest census:** use the existing slow-test reporter and pursue same-proof-cheaper-fixture/work-budget/setup wins.
