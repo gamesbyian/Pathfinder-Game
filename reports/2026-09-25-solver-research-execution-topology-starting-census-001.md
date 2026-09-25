@@ -164,3 +164,6 @@ The targeted-sweep plan job now reuses the same exact dependency-tree generation
 - scientific planner/canary commands and inputs are unchanged.
 
 This activation is limited to the short targeted planner because historical hosted evidence already showed setup/materialization dominating a large share of its pre-science wall. It is not evidence for blanket dependency-tree caching of long solver shards. The first real targeted dispatch after this change is the production economics measurement.
+
+
+The static topology audit is now schema v3 and reports both exact-22.23.2 setup counts/workflow names and remaining major-only runtime workflow names. Runtime migration scope is therefore mechanically inspectable rather than inferred from this report's prose.
