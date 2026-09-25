@@ -59,7 +59,6 @@ function writeGithubOutputs(result, plan, execution) {
     `needs_deep_proofs=${bool(capability('deep-proofs'))}`,
     `needs_firestore=${bool(capability('firestore-boundary'))}`,
     `fast_job_required=${bool(execution.jobs['fast-gate']?.required)}`,
-    `build_job_required=${bool(execution.jobs['production-build']?.required)}`,
     `deep_job_required=${bool(execution.jobs['deep-verification']?.required)}`,
     `deep_services_job_required=${bool(execution.jobs['deep-services']?.required)}`,
   ];
@@ -86,7 +85,6 @@ function writeSummary(result, plan, execution) {
     `**Always/package scripts:** ${plan.packageScripts.join(', ') || '(none)'}`,
     `**Capabilities:** ${plan.capabilities.join(', ') || '(none)'}`,
     `**Fast lane:** ${execution.jobs['fast-gate']?.required ? 'required' : 'skip candidate'}`,
-    `**Build lane:** ${execution.jobs['production-build']?.required ? 'required' : 'skip candidate'}`,
     `**Coverage lane:** ${execution.jobs['deep-verification']?.required ? 'required' : 'skip candidate'}`,
     `**Deep-services lane:** ${execution.jobs['deep-services']?.required ? 'required' : 'skip candidate'}`,
     packageLine,
