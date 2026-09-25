@@ -56,7 +56,7 @@ The current biggest permanent-speed opportunities, in order of expected leverage
 1. **Node/CLI contract testability:** use the new machine-readable per-contract timing profiles, then attack structural tails: import-time corpus scans, repeated large-corpus parsing, avoidable subprocess/CLI wrappers, repository-wide discovery in synthetic tests, redundant fixture construction, and tests that invoke real solver/search work for bookkeeping-only assertions. Do not resume shared-runner shard-count tuning.
 2. **Covered Vitest testability:** refresh the slow-file/slow-test census from the JSON reporter and make expensive assertions cheaper without weakening coverage or converting real integration semantics into mocks. Preserve balanced coverage sharding as a proven topology for larger/reserved compute.
 3. **Heavy proof witnesses:** inspect the longest proof fixtures for smaller deterministic witnesses, tighter work budgets, or reusable setup while preserving the same property. Internal parallelism is already near the current 4-core limit.
-4. **Firestore boundary:** split emulator/bootstrap cost from rule-test cost; remove duplicated initialization/materialization if present; preserve the full rules proof.
+4. **Firestore boundary:** production logs show Firebase downloading `cloud-firestore-emulator-v1.22.0.jar` on every Deep run despite the CLI cache. #2109 now restores/saves `~/.cache/firebase/emulators` under an exact Firebase Tools/emulator-version key; measure warm-hit savings before looking for test-code reductions.
 5. **Residual bootstrap/cache critical path:** audit serialized exact-cache restores, setup-node, TypeScript state, validator/lint sequencing, and duplicate repository discovery. Treat each as a measured small-opportunity audit, not a reason to weaken validation.
 6. **Larger/reserved compute:** benchmark the already-proven balanced Node and coverage topologies on more predictable compute after software costs are slimmed. Re-test internal deep overlap there because the 4-core negative result is contention-specific. At least 16 logical CPUs remains the initial capacity target.
 7. **Cadence/impact routing:** continue using the separate historical-value/impact-routing program to avoid irrelevant work. Do not use cadence demotion as a substitute for making the fullest selected form fast.
@@ -170,6 +170,9 @@ Four explicit proof files already overlap internally and finish in ~11 s wall. T
 - R02560 enabled: 0.36 s.
 
 Further speed here requires cheaper witnesses or execution on independent compute; simply adding more Vitest workers cannot beat the longest individual proof.
+
+Current production evidence from run **36090175881** shows the deep-proof wall is set by three genuine expensive witnesses running in parallel: deadlock root 0 **9.27 s**, deadlock root 1 **9.25 s**, R02560-disabled **10.90 s**, while R02560-enabled is only **0.25 s**. The R02560 shared ceiling is intentionally **900,000 nodes** because historical characterization places the enabled solve at 803,000 and the disabled control exhausts the 900,000-node regression ceiling. Lowering that ceiling merely for CI would weaken the proof and is not an acceptable speed optimization. Deadlock exact-reference memoization remains a possible implementation optimization only if a complete state-equivalence key can be independently justified; do not add an ad-hoc cache to the proof oracle.
+
 
 ### Solver canary
 
