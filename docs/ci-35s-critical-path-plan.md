@@ -1353,29 +1353,20 @@ Production Fast Gate now:
 
 This preserves projection-miss correctness while removing another multi-second cache restore from ordinary exact-hit Fast Gate execution. Gate parity now protects the minimal-data warm-path shape.
 
-## Independent production-build lane
+## Independent production-build lane — closed negative / repacked
 
-Recent qualifying full-impact samples showed that after the major validation reductions, Fast Gate still serialized roughly **5–6 s** of runtime-Hint projection restore + production build after validators/lint. That work is semantically independent from static validation.
+The standalone production-build lane was activated and exercised, but the extra hosted runner did not earn durable critical-path margin relative to its allocation/setup variance. The terminal packing decision is commit `fd644391`: production build is owned by the impact-scoped `deep-services` lane alongside solver soundness proofs and Firestore.
 
-The production build capability is now packed into an independent impact-scoped lane:
+Current ownership:
 
-- `fast-gate` owns package/script reachability, textual invariants, selected validators, and lint;
-- `production-build` owns `npm run build`, dependency bootstrap, minimal runtime JSON materialization, rolling runtime-Hint projection cache, and projection-miss source reconciliation;
-- `production-build` is selected only when the canonical plan includes the `build` capability;
-- planner failure remains fail-safe and runs the build lane;
-- the scoped rehearsal and execution-plan/final-status contract mirror the same ownership;
-- local finish lines remain `npm run ci:fast && npm run build` / `npm run ci && npm run build`; only Actions packing changed.
+- `fast-gate`: package/script reachability, textual invariants, selected validators, lint;
+- `node-contracts`: two disjoint semantic-owner Node/CLI runners;
+- `deep-verification`: covered Vitest only;
+- `deep-services`: production build + heavyweight solver proofs + Firestore boundary.
 
-This is a topology change, not validation demotion. It is worthwhile only if the extra hosted runner reduces end-to-end wall rather than creating another runner-lottery tail.
+Build runs serially with deep-services setup; proofs and Firestore remain concurrent. Planner failure fails safe to build/proofs/Firestore, and the scoped rehearsal/final-status contract mirrors this packing.
 
-Decision gate:
-
-1. exact-head CI, topology, semantic-fault, and evidence guards all green;
-2. selected production-build failure blocks the scoped final-status contract;
-3. build-skipped PRs may skip the lane only when semantic routing does not select `build`;
-4. full-impact Fast Gate wall falls materially because build no longer serializes behind validators;
-5. production-build runner itself stays comfortably below 35 s on exact-hit projection/dependency caches;
-6. if the extra runner becomes the new p90 tail, revert the split rather than preserving topology for aesthetics.
+The retired `ci-production-build.yml` workflow and standalone `build_job_required` routing surface were removed. Do not recreate a dedicated build runner without new evidence that its saved serialization exceeds the added hosted-runner tail.
 
 ## Reconciled historical testability evidence from #2118
 
@@ -1618,8 +1609,8 @@ These are independent, low-risk changes and should be activated separately so th
 
 ## Current forward work order
 
-1. **Validate the independent production-build lane:** require exact-head green CI/oracles, materially lower Fast Gate wall, and a build runner comfortably below 35 s. Revert if another hosted-runner tail outweighs the serial savings.
-2. **Resume bounded p50/p90 confirmation:** use comparable post-v2/data-free/minimal-data/build-split full-impact heads; record every lane wall, first-required-runner→last-required completion, cache state, and base-churn context.
+1. **Validate the reconciled packed topology:** require exact-head green CI/oracles after the #2118 merge-forward and parity/scoped-rehearsal repair; use that head as the new comparable timing baseline.
+2. **Resume bounded p50/p90 confirmation:** use comparable post-v2/data-free/minimal-data/build-packed full-impact heads; record every lane wall, first-required-runner→last-required completion, cache state, and base-churn context.
 3. **Watch Node B, Node A, and coverage tails:** resume testability work only for repeatable useful-work tails rather than one noisy runner sample.
 4. **Firestore/deep-services margin:** proofs already finish before Firestore once started. Optimize emulator/bootstrap only if the confirmation window identifies it as a recurring tail.
 5. **Validate solver→research narrowing:** semantic fault injection is green; retain the historical #1722-equivalent route/scoped timing oracle before calling the 59-consumer routing fully settled.
