@@ -108,7 +108,8 @@
       "research:apply-action-selection-legal-signal-model"
     ],
     "workflowsTriggers": [
-      "One-shot WS1 confirmation workflow, workflow lifecycle registry, workflow README"
+      ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml — one-shot manual workflow with no scientific dispatch inputs",
+      "docs/solver-workflow-lifecycle.json — temporary maintained registration until durable closeout"
     ],
     "generatedArtifacts": [
       "tmp/ws1-late-continuation-single-001/generation-manifest.json",
@@ -173,6 +174,11 @@
           "type": "artifact",
           "locator": "tmp/ws1-late-continuation-single-001/generation-manifest.json + tmp/ws1-late-continuation-single-001/corpus.json in the one-shot workflow artifact",
           "expected": "method=random, count=160, masterSeed=2026092591, evidenceRole=confirmation, blockId=ws1-late-continuation-single-001, idPrefix=U, actualParentCount=160 and a stable population identity; generation uses no overwrite/envelope/passthrough override."
+        },
+        {
+          "type": "workflow",
+          "locator": ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml plan job",
+          "expected": "workflow has no scientific inputs and invokes the exact seed-2026092591 generation command only after plan-quality validation"
         }
       ]
     },
@@ -182,7 +188,7 @@
       "proofs": [
         {
           "type": "workflow",
-          "locator": "WS1 one-shot solve jobs + published experiment contract",
+          "locator": ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml + published experiment contract",
           "expected": "entrypoint scripts/portfolio-solve-sweep.mjs, schedulerMode=production, node ceiling 50000000, base work budget 67000000, non-binding 86400000ms wall deadline, no baseline/prime-winner/attempt-cache/hints, all 160 expected IDs observed exactly once."
         }
       ]
@@ -264,9 +270,10 @@
         "dod-plan-frozen is satisfied before implementation."
       ],
       "outputs": [
-        "Thin one-shot workflow reusing generation/portfolio/scoring owners",
+        ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml",
         "Lifecycle registration",
-        "Integrity/publication wiring"
+        "Integrity/publication wiring",
+        "Deterministic WS1 confirmation evaluator"
       ],
       "affectedDomains": [
         "workflowsTriggers",
@@ -334,8 +341,8 @@
       ".github/workflows/README.md"
     ],
     "workflows": [
-      "WS1 one-shot confirmation wrapper",
-      "Any reused portfolio/combine/publication workflow contracts"
+      ".github/workflows/ws1-late-continuation-single-stage-confirmation.yml",
+      "Reused portfolio/combine/publication workflow contracts"
     ],
     "registriesSchemas": [
       "docs/solver-workflow-lifecycle.json",
