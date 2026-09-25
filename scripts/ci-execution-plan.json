@@ -8,7 +8,6 @@
       "nodeTestGroups": "selected",
       "capabilities": [
         "lint",
-        "solver-canary",
         "build"
       ],
       "note": "Primary installed-dependency lane. Always exists initially because lint remains universal and selected validator/Node groups run here."
