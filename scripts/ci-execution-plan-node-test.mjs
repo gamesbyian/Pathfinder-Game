@@ -11,7 +11,7 @@ assert.deepEqual(research.jobs['fast-gate'].capabilities, ['lint']);
 const solver = packSurfaces(['repo', 'research', 'solver']);
 assert.equal(solver.jobs['fast-gate'].required, true);
 assert.equal(solver.jobs['deep-verification'].required, true);
-assert.deepEqual(solver.jobs['fast-gate'].capabilities, ['lint', 'solver-canary', 'build']);
+assert.deepEqual(solver.jobs['fast-gate'].capabilities, ['lint', 'build']);
 assert.deepEqual(solver.jobs['deep-verification'].capabilities, ['unit-coverage', 'deep-proofs']);
 
 const persistence = packSurfaces(['repo', 'game', 'persistence']);
