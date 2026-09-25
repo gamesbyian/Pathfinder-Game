@@ -481,6 +481,28 @@
       "artifactSufficientForFutureSemanticHint": "not applicable: this one-shot research workflow is not a canonical Hint discovery producer",
       "hintIngestionDisposition": "non-hint-evidence",
       "rationale": "Maintained evidence-producing workflow, explicitly classified so its exclusion from Hint ingestion is reviewable."
+    },
+    {
+      "workflow": "ws1-late-continuation-single-stage-confirmation.yml",
+      "currentHintMode": "explicitly excluded from canonical hint harvest",
+      "centralHarvester": true,
+      "target": "remain decision-bearing experiment evidence only",
+      "partialFailureEvidence": true,
+      "executionClass": "single-stage fresh-independent-parent WS1 confirmation",
+      "artifactSufficientForFutureSemanticHint": "intentionally irrelevant",
+      "migrationTarget": "remain experiment-only; durable result retained by central harvester",
+      "producerEntrypoint": "scripts/portfolio-solve-sweep.mjs",
+      "levelBlind": false,
+      "historyAware": true,
+      "currentHintPersistence": "experiment evidence only; harvester explicitly skips hints",
+      "exactSuccessfulPath": "yes in portfolio report rows but intentionally not canonicalized",
+      "winningAttemptConfig": "yes",
+      "levelRevision": "sealed generated confirmation population",
+      "effectiveExecutionConfig": "decision-grade experiment contract with zero historical inputs",
+      "sourceRunLineage": "source run + frozen research block",
+      "partialFailureUpload": true,
+      "hintIngestionDisposition": "experiment-only-no-hint-ingestion",
+      "rationale": "Canonical portfolio producer metadata remains historyAware=true, but this invocation asserts baseline/prime/attempt-cache absent and saveHints=false; central harvest persists decision-bearing experiment evidence only."
     }
   ],
   "provenanceMissingness": [
