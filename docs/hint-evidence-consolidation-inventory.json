@@ -1526,9 +1526,10 @@
         "kind": "partial-persistence-retry-acceptance-gap",
         "paths": [
           "modules/persistence/review-repository.test.ts",
-          "modules/persistence/review-repository.ts"
+          "modules/persistence/review-repository.ts",
+          "scripts/firestore-level-fingerprint-boundary-test.mjs"
         ],
-        "finding": "The plan requires partial persistence, capacity refusal and retry-after-refusal coverage. Implementation supported the transition but tests only covered isolated aggregate outcomes. A two-pass regression now proves already-saved evidence dedupes while the formerly refused event persists on retry."
+        "finding": "The plan requires partial persistence, capacity refusal and retry-after-refusal coverage. Implementation supported the transition but tests only covered isolated aggregate outcomes. A two-pass unit regression now proves dedupe/retry semantics, and the real Firestore emulator proves a partially refused review submission remains queued until the retry persists remaining evidence and then deletes it."
       }
     ]
   }
