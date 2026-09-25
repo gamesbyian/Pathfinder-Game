@@ -1,4 +1,11 @@
 #!/usr/bin/env node
+/**
+ * Historical/preimplementation Hint-consolidation census.
+ *
+ * Kept runnable for forensic comparison and to reproduce the 2026-09-22 baseline. Its field/gap
+ * vocabulary is not current architecture authority; use the completed consolidation plan, hostile
+ * closeout, current research-resource contracts, and maintained Hint audit ledgers for current state.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
