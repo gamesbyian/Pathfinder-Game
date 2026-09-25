@@ -24,6 +24,7 @@ This program changes the question from "which of three CI workflows should run?"
 4. **Producer changes propagate downstream; consumer changes do not propagate upstream.** Production solver changes may require research-consumer contracts; research-analyzer changes do not imply production solver behavior changed.
 5. **Execution topology and proof obligation are separate.** A semantic group may be required without getting its own hosted runner. Preserve the repo's hard-earned lesson that excessive runner fan-out increases tail latency.
 6. **Periodic full validation audits the router.** Scoped PR validation is paired with recurring full-main validation so missed dependency edges become classifier defects rather than latent assumptions.
+7. **Producer ownership is not downstream invalidation.** Prefer source rules that identify the changed producer's own surface. Encode specific downstream consumers with `contractSurfaces` / dependency metadata rather than escalating an entire consumer domain because some members depend on the producer.
 
 ## Validation surfaces
 
@@ -148,6 +149,8 @@ Do not narrow this edge from naming intuition. The dependency-local topology aud
 - retain conservative full fallback for routing authority/unknown impact and a broad oracle.
 
 If these gates pass, change the production-solver source rule to `solver` only and let contract ownership carry downstream research invalidation. This is semantic precision, not a blanket research-test demotion.
+
+Treat this as the pilot for a general coarse-edge audit. Runtime data currently selects `data + game + solver + research`, and shared domain code selects `game + solver + research`. Those may be justified for some consumers, but the correct proof is contract invalidation, not an assumption that every contract in every downstream administrative surface must run.
 
 ## Measurement and success criteria
 
