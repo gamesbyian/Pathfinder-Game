@@ -391,6 +391,16 @@
         "object",
         "null"
       ]
+    },
+    "sourceRunBinding": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/sourceRunBinding"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "$defs": {
@@ -474,6 +484,104 @@
         }
       },
       "additionalProperties": true
+    },
+    "sourceRunBinding": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "kind",
+        "runId",
+        "runAttempt",
+        "contractRef",
+        "workflowFamily",
+        "producer",
+        "entrypoint",
+        "solverRef",
+        "configurationHash",
+        "protocolHash",
+        "populationIdentity",
+        "corpusIdentity",
+        "arm",
+        "sourceRuns"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "kind": {
+          "const": "pathfinder-solver-source-run-binding"
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runAttempt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contractRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workflowFamily": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "producer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entrypoint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "solverRef": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "configurationHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "protocolHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "populationIdentity": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "corpusIdentity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "arm": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceRuns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": true
