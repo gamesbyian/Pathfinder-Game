@@ -48,6 +48,11 @@ assert.equal(out.workBudget, 5000000);
 assert.equal(out.kind, 'pathfinder-direct-solver-report');
 assert.equal(out.producer, 'run-solver-direct');
 assert.equal(out.corpus, 'data/levels.json');
+assert.deepEqual(out.executionRuntime, {
+    nodeVersion: process.version,
+    platform: process.platform,
+    arch: process.arch,
+}, 'direct solver reports must bind their actual execution runtime');
 if (out.levels[0].ok === true) {
     assert.ok(Array.isArray(out.levels[0].solution) && out.levels[0].solution.length > 0,
         'a successful direct observation must persist its exact accepted path for central replay');
