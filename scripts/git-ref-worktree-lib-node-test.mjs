@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { withDetachedGitWorktree } from './git-ref-worktree-lib.mjs';
 
@@ -47,6 +48,29 @@ try {
   assert.equal(patternObserved.root, true, 'explicit root-file pattern is materialized');
   assert.equal(patternObserved.kept, true, 'explicit nested-file pattern is materialized');
   assert.equal(patternObserved.excluded, false, 'unmatched file-pattern path is excluded');
+
+  // Regression for CI execution-owner sharding: independent Node contracts may materialize
+  // historical refs concurrently from the same checkout. Git's first sparse worktree setup can
+  // mutate shared .git/config, so the helper must serialize only that shared metadata boundary.
+  const helperUrl = new URL('./git-ref-worktree-lib.mjs', import.meta.url).href;
+  const childSource = `
+    import { withDetachedGitWorktree } from ${JSON.stringify(helperUrl)};
+    const [root] = process.argv.slice(1);
+    withDetachedGitWorktree(root, 'HEAD', () => {
+      const until = Date.now() + 100;
+      while (Date.now() < until) {}
+    }, { sparsePatterns: ['/root.txt'] });
+  `;
+  const runChild = () => new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, ['--input-type=module', '-e', childSource, root], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stderr = '';
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => code === 0 ? resolve(null) : reject(new Error(stderr || `child exited ${code}`)));
+  });
+  await Promise.all([runChild(), runChild()]);
 
   assert.throws(
     () => withDetachedGitWorktree(root, 'HEAD', () => null, {
