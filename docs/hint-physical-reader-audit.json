@@ -5,29 +5,14 @@
   "purpose": "Explicit review ledger for maintained files broadly suspected of opening physical Hint artifacts. New suspects fail the hostile audit until classified.",
   "entries": [
     {
-      "path": "scripts/family-generate-node-test.mjs",
-      "disposition": "shared-decoder",
-      "rationale": "Generated physical Hint files are decoded with decodeHintArtifact before semantic assertions."
-    },
-    {
       "path": "scripts/family-generate.mjs",
       "disposition": "false-positive-non-hint-json",
       "rationale": "Direct JSON.parse reads block/manifest documents; canonical parent/output Hint state is loaded and written through level-data-io."
     },
     {
-      "path": "scripts/family-parent-hint-replay-node-test.mjs",
-      "disposition": "shared-decoder",
-      "rationale": "Physical replay output is decoded with decodeHintArtifact before semantic assertions."
-    },
-    {
       "path": "scripts/hint-artifact-v4-migration-node-test.mjs",
       "disposition": "codec-migration-test",
       "rationale": "Intentionally asserts physical v4 representation/migration behavior; semantic equality is separately checked through decodeHintArtifact."
-    },
-    {
-      "path": "scripts/hint-determinism-audit.mjs",
-      "disposition": "shared-decoder",
-      "rationale": "Reads physical files only to pass parsed content immediately through decodeHintArtifact before determinism analysis."
     },
     {
       "path": "scripts/hint-provenance-surface-audit.mjs",
@@ -40,14 +25,14 @@
       "rationale": "Physical Hint fixtures are decoded through decodeHintArtifact; other JSON reads are workbench reports/patches."
     },
     {
-      "path": "scripts/hint-workbench-parallel.mjs",
-      "disposition": "false-positive-non-hint-json",
-      "rationale": "Direct JSON.parse reads shard reports/patches; corpus Hint state is hydrated through readLevelCorpusDocumentWithHints."
-    },
-    {
       "path": "scripts/level-data-io.mjs",
       "disposition": "physical-io-owner",
       "rationale": "Canonical Node physical Hint I/O owner; parseHintFileContents delegates to decodeHintArtifact and stringifyHints delegates to encodeHintArtifact."
+    },
+    {
+      "path": "scripts/validate-all-hint-stores.mjs",
+      "disposition": "shared-decoder",
+      "rationale": "Whole-store referee validator opens canonical physical Hint artifacts only to decode them immediately through decodeHintArtifact before semantic path validation."
     }
   ]
 }
