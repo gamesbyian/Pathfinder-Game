@@ -569,7 +569,21 @@ of evidence, so a direct canonical staging route could evade the guard.
 joining backslash-newline continuations. Permanent adversarial fixtures cover continued `git add`
 and `git status` commands against published/stress Hint stores.
 
-## Exact-head validation fallout during Findings 25-39
+### 40. The closeout canary did not trigger on its full authority surface
+
+The closeout workflow's `pull_request.paths` filter covered source/data changes and only two workflow
+files plus a narrow `docs/hint-evidence-**` pattern. The implemented architecture now depends on
+additional workflow and control-plane authorities, including the workflow lifecycle, Hint persistence
+exception ledger, reader/writer ledgers and other producer workflows. A workflow-only persistence
+regression or ledger-only policy change could therefore alter a Definition-of-Done claim without
+causing the closeout canary to run on that head.
+
+**Correction:** closeout invalidation now follows the same broad Hint/provenance control-plane surface
+as the hostile audit: all workflows, Hint/provenance docs and reports, lifecycle/schema-contraction
+authorities, source/modules/data and package scripts. A skipped closeout can no longer masquerade as
+same-head closure merely because the changed authority fell outside an obsolete path filter.
+
+## Exact-head validation fallout during Findings 25-40
 
 The first remote PR validation on head `06294be...` was valuable precisely because it did not stay
 green:
