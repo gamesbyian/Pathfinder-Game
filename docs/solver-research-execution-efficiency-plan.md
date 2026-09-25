@@ -1,6 +1,6 @@
 # Solver research execution-efficiency plan
 
-Current continuation/handoff: [2026-09-25 research execution-efficiency session handoff](../reports/2026-09-25-research-execution-efficiency-session-handoff-001.md).
+Current continuation/handoff: [2026-09-25 research execution-efficiency session handoff](../reports/2026-09-25-research-execution-efficiency-session-handoff-001.md). Cross-program follow-through: [cross-program convergence backlog](cross-program-convergence-backlog.md).
 
 > **Status:** active / implementation started.
 > **Created:** 2026-09-25.
