@@ -1,8 +1,9 @@
 # Research execution-efficiency session handoff 001
 
-> **Status:** active handoff
+> **Status:** active
 > **Last evidence:** 2026-09-25 — PR #2122 exact-head recovery after CI feedback; un-PR'd Claude and stalled ChatGPT branches reconciled.
 > **Decision:** finish #2122 before dispatching WS1. After merge, the highest-value next action is the single frozen WS1 confirmation dispatch, not more wrapper redesign.
+> **Remaining gate:** exact-head CI for #2122, then merge and dispatch the frozen WS1 confirmation once from merged main.
 > **Production effect:** none until a later scientific result separately earns a solver-policy change.
 
 ## Completed in this session
