@@ -88,6 +88,8 @@ jobs:
             fi
             node scripts/ci-history-failure-signatures.mjs "${args[@]}"
             node scripts/ci-history-failure-groups.mjs
+            node scripts/ci-history-detector-implications-node-test.mjs
+            node scripts/ci-history-detector-implications.mjs
           fi
 
       - name: Summarize recovered audit corpus
