@@ -18,11 +18,8 @@ assert.equal(ws2Live.questionState, 'active-candidate');
 assert.equal(ws2Live.questionExecutionRelation, 'active-question');
 assert.equal(ws2Live.questionReopensOn, null);
 const inventionLive = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2I');
-assert.ok(inventionLive, 'capability-invention acquisition front must remain visible at the research front door');
-assert.equal(inventionLive.questionRef, 'WS2-CAPABILITY-INVENTION-DEMAND');
-assert.equal(inventionLive.executionState, 'closed');
-assert.equal(inventionLive.gateClass, 'reopen-only');
-assert.equal(inventionLive.questionExecutionRelation, 'terminal-question');
+assert.equal(inventionLive, undefined,
+    'closed capability-invention work must not remain in the live research front door');
 assert.equal(inventory.findings.authority.some(row =>
     row.kind === 'active-workstream-references-terminal-question' && String(row.workstreamId) === '2'), false);
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
