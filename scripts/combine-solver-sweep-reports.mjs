@@ -256,7 +256,7 @@ export function combineSolverSweepReports(argv = process.argv.slice(2), { root =
     }
     const executionConfig = collectExecutionConfig(reports);
     const effectiveConfig = collectEffectiveConfig(reports, { allowMixedCorpora });
-    const producerMetadata = consistentMetadata(reports, ['producer', 'entrypoint', 'workflowFamily', 'levelBlind', 'historyAware', 'schedulerMode']);
+    const producerMetadata = consistentMetadata(reports, ['producer', 'entrypoint', 'workflowFamily', 'levelBlind', 'historyAware', 'schedulerMode', 'saveHints']);
 
     const scopedIdentity = (corpus, subjectId) => allowMixedCorpora
         ? encodeResearchScopedIdentity(String(corpus), String(subjectId))
@@ -369,6 +369,7 @@ export function combineSolverSweepReports(argv = process.argv.slice(2), { root =
         total: integrity.expectedCount,
         levelBlind: producerMetadata.levelBlind ?? executionConfig.levelBlind ?? null,
         historyAware: producerMetadata.historyAware ?? null,
+        saveHints: producerMetadata.saveHints ?? null,
         schedulerMode: producerMetadata.schedulerMode ?? first.schedulerMode ?? null,
         configurationHash: effectiveConfig
             ? hashConfiguration(effectiveConfig.value)
