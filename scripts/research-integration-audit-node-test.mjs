@@ -20,12 +20,16 @@ assert.ok(result.semanticJoinCoverage.authoredAssetRelationships >= 16);
 assert.ok(result.semanticJoinCoverage.questionsWithPremiseRefs >= 5);
 assert.ok(result.semanticJoinCoverage.questionsWithMeasurementOpportunities >= 4);
 assert.ok(result.errorCount === 0);
+// executionState: 'active' is forced here (rather than relying on an existing live queue row
+// happening to be active) because closed/promoted workstreams do not stay active forever -- this
+// exercises the audit's own active-workstream-references-terminal-question rule independent of
+// whichever rows the live docs currently carry.
 const withQueueRef = questionRef => ({
     ...prebuiltModel,
     relations: {
         ...prebuiltModel.relations,
         queue: prebuiltModel.relations.queue.map(row =>
-            String(row.workstreamId) === '2' ? { ...row, questionRef } : row),
+            String(row.workstreamId) === '2' ? { ...row, executionState: 'active', questionRef } : row),
     },
 });
 const terminalQueue = audit(withQueueRef('WS2-WORK-LADDER-ECONOMICS'));

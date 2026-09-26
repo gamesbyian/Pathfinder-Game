@@ -433,11 +433,11 @@ unlinkSync(paraphrasePath);
 
 const repositoryIndex = buildResearchStatusIndex(process.cwd());
 assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must remain visible through the research-status queue relation');
-assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'active'),
-    'WS2 active gate must remain discoverable through the research-status queue relation');
+assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'rejected'),
+    'WS2 closed/promoted gate must remain discoverable through the research-status queue relation');
 assert.equal(repositoryIndex.queue.find(row => String(row.workstreamId) === '2')?.questionRef,
     'WS2-REPAIR-DEADLINE-ALLOCATION',
-    'active WS2 gate must carry the stable question reference');
+    'closed WS2 gate must still carry the stable question reference');
 assert.ok(repositoryIndex.queue.some(row => row.workstreamId === '6/7'),
     'composite workstream identities must survive indexing without numeric coercion');
 const mustTurnExperiment = repositoryIndex.experiments.find(row =>
