@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-25.
+> **Reconciled:** 2026-09-26.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 > **Historical snapshot:** [pre-compaction queue](../reports/2026-09-25-solver-optimization-workstreams-precompaction-snapshot-001.md).
 
@@ -13,19 +13,15 @@ C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedur
 
 ## Current execution priority
 
-### 1. WS2 repair-deadline allocation
+### 1. WS2 repair-deadline allocation — CLOSED, PROMOTED
 
-**State:** ACTIVE / blocked on a wall-clock safety interaction, not on evidence.
+**State:** CONCLUDED-POSITIVE. Production constants raised.
 
-The frozen 53-parent matched-work A/B produced **7 treatment-only gains and 0 losses**. A follow-up disjoint 150-level solved-control confirmation (180/180 combined, zero regressions) closed the regression-safety leg cleanly, and economics/concentration are already closed positive. Attempting to flip the production constants (`EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET` 2M->21M, `EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET` 6M->38M) surfaced a real, previously-unchecked interaction: `EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP` (a 20-minute per-attempt wall-clock trip-wire, sized for the *old* 6M worst case) would truncate an attempt under real host contention well before the new 21M/38M budgets are reached, silently reintroducing the exact bug class that trip-wire exists to prevent.
+The frozen 53-parent matched-work A/B produced **7 treatment-only gains and 0 losses**. A follow-up disjoint 150-level solved-control confirmation (180/180 combined, zero regressions) closed the regression-safety leg cleanly, and economics/concentration are already closed positive. Flipping the production constants (`EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET` 2M->21M, `EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET` 6M->38M) surfaced a real, previously-unchecked interaction: `EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP` (a 20-minute per-attempt wall-clock trip-wire, sized for the *old* 6M worst case) would need to cover a much larger worst case at the same conservative contended-throughput floor. Tracing the full resolution path (`disableExtraBudgetPasses: true`, set by both interactive production callers, zeroes `repairAdditiveBudgetMultiplier`, which makes the probe's own call-site gate false) showed the interactive path never runs this probe regardless of MS_CAP's value — only the batch/research path (the same population this promotion's evidence was measured against) can ever hit it. MS_CAP raised proportionally (1.2M->7.6M ms) to preserve the original safety margin, with no interactive-UX cost and no caller-differentiated cap needed.
 
-Next gate:
-- resolve the MS_CAP interaction (proportional scale-up with an explicit interactive-UX tradeoff, a caller-differentiated cap for batch-research vs. interactive paths, or a smaller re-scoped dose with its own matched-work evidence);
-- no further population-scale regression evidence is needed for the 21M/38M dose specifically once this is resolved.
+Question: `WS2-REPAIR-DEADLINE-ALLOCATION` — closed.
 
-Question: `WS2-REPAIR-DEADLINE-ALLOCATION`.
-
-Evidence: [confirmation result](../reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md) · [nomination result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [preflight](../reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md).
+Evidence: [promotion result](../reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md) · [confirmation result](../reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md) · [nomination result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [preflight](../reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md).
 
 ### 2. WS2 capability-invention promotion — CLOSED, PROMOTED
 
@@ -94,8 +90,8 @@ The September 20–25 retrospective found several lessons not yet fully propagat
 
 Near-term order:
 1. ~~finish #2122 / WS1 confirmation~~ — done 2026-09-26, concluded-negative;
-2. keep live WS2 gates moving;
-3. then execute the highest-leverage convergence audits without creating a second scientific queue.
+2. ~~keep live WS2 gates moving~~ — repair-deadline allocation promoted 2026-09-26, closed; capability-invention already closed;
+3. execute the highest-leverage convergence audits without creating a second scientific queue.
 
 Backlog themes:
 - research evidence cadence/claim ownership;
@@ -129,7 +125,7 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 
 | ID | Workstream | Execution state | Gate class | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|---|
-| 2 | Repair-deadline allocation | `active` | `implementation` | 7 gains/0 losses nomination + 180/180 zero-regression confirmation both positive; blocked on `EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP` wall-clock interaction, not evidence | resolve MS_CAP interaction (scale, differentiate interactive/batch, or re-scope dose), then promote | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2 | Repair-deadline allocation | `closed` | `reopen-only` | PROMOTED 2026-09-26: 7 gains/0 losses nomination + 180/180 zero-regression confirmation both positive; MS_CAP interaction resolved (interactive path never runs the probe regardless of its value) | none; reopen only for a materially different dose/premise | `WS2-REPAIR-DEADLINE-ALLOCATION` |
 | 2I | Capability invention | `closed` | `reopen-only` | PROMOTED 2026-09-26: both flags default-ON, 10 referee-valid solves (8 new), 0 regressions across every tested branch row | none; reopen only for a materially different exposure form | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 1 | Automatic action selection | `closed` | `reopen-only` | CONCLUDED-NEGATIVE: N=160 confirmation found 0/44 nominated validation levels, well below the well-powered expectation | reopen only with a materially different signal/model design | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
 | 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 production-inert later-disposition economics/safety consumer | beam-hosted later-disposition shadow when immediate | `WS2-CUT-BALANCE-PROJECTION` |

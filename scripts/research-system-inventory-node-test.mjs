@@ -9,17 +9,20 @@ assert.equal(inventory.authority.kind, 'derived-read-only');
 assert.equal(inventory.authority.priorityAuthority, 'docs/solver-optimization-workstreams.md');
 assert.ok(inventory.currentState.queueEntries > 0, 'inventory must expose current workstream state');
 assert.ok(inventory.currentState.questions > 0, 'inventory must expose research-question state');
-const ws2Live = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2');
-assert.ok(ws2Live);
-assert.equal(ws2Live.executionState, 'active');
-assert.equal(ws2Live.gateClass, 'implementation');
-assert.equal(ws2Live.questionRef, 'WS2-REPAIR-DEADLINE-ALLOCATION');
-assert.equal(ws2Live.questionState, 'active-candidate');
-assert.equal(ws2Live.questionExecutionRelation, 'active-question');
-assert.equal(ws2Live.questionReopensOn, null);
+const repairDeadlineLive = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2');
+assert.equal(repairDeadlineLive, undefined,
+    'closed/promoted repair-deadline allocation work must not remain in the live research front door');
 const inventionLive = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '2I');
 assert.equal(inventionLive, undefined,
     'closed capability-invention work must not remain in the live research front door');
+const repairSupportLive = inventory.frontDoorInputs.liveQueue.find(row => String(row.workstreamId) === '6/7');
+assert.ok(repairSupportLive);
+assert.equal(repairSupportLive.executionState, 'supporting');
+assert.equal(repairSupportLive.gateClass, 'bounded-compute');
+assert.equal(repairSupportLive.questionRef, 'WS6-DEPENDENCY-CONDITIONED-REPAIR');
+assert.equal(repairSupportLive.questionState, 'active-candidate');
+assert.equal(repairSupportLive.questionExecutionRelation, 'active-question');
+assert.ok(typeof repairSupportLive.questionReopensOn === 'string' && repairSupportLive.questionReopensOn.length > 0);
 assert.equal(inventory.findings.authority.some(row =>
     row.kind === 'active-workstream-references-terminal-question' && String(row.workstreamId) === '2'), false);
 assert.ok(inventory.frontDoorInputs.deferredReopenQuestions.length > 0);
@@ -177,7 +180,7 @@ assert.ok(inventory.planLifecycle.some(row =>
 const brief = renderResearchSystemBrief(inventory);
 assert.match(brief, /^# Solver research brief$/m);
 assert.match(brief, /^## Live queue$/m);
-assert.match(brief, /WS2-REPAIR-DEADLINE-ALLOCATION[\s\S]*route: implementation[\s\S]*active-question/u);
+assert.match(brief, /WS6-DEPENDENCY-CONDITIONED-REPAIR[\s\S]*route: bounded-compute[\s\S]*active-question/u);
 assert.match(brief, /^## Recent structured closeouts$/m);
 assert.match(brief, /^## Unfinished execution references$/m);
 assert.match(brief, /acquisition: telemetry-or-economics|acquisition: fresh-independent-parents/u);

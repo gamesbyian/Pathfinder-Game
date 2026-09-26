@@ -14,14 +14,15 @@ test('repair probe retries the ordinary tier across EARLY_REPAIR_SEARCH_ORDINARY
     // timeBudgetMs is tiny on purpose: the probe ignores it entirely (its own node budgets
     // decide its cost — see runEarlyRepairSearch's own comment). The dispatch is stubbed to report
     // exhausting whatever node budget each round grants (see exhaustingDispatch above) instead of
-    // actually running 5 seeds x 2,000,000 real search nodes — this test is about the probe's own
-    // scheduling (attempt count, recorded seedSalt values), not about real search cost.
+    // actually running 5 seeds x EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET real search nodes — this
+    // test is about the probe's own scheduling (attempt count, recorded seedSalt values), not about
+    // real search cost.
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50, attemptSearchForTesting: exhaustingDispatch });
     assert.equal(result.ok, false);
     const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP);
     assert.equal(probeAttempts.length, 2);
     assert.deepEqual(probeAttempts.map(a => a.seedSalt ?? 0), [0, 1]);
-    assert.equal(probeAttempts.every(a => a.nodesExpanded === 2_000_000), true);
+    assert.equal(probeAttempts.every(a => a.nodesExpanded === EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET), true);
 });
 
 test('STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED: false restricts the probe to a single seed', async () => {
@@ -329,7 +330,7 @@ test('earlyRepairSearchBiasedNodeBudgetOverride undefined preserves EARLY_REPAIR
 // contended rate, not just above nominal uncontended throughput — the exact assumption that broke.
 test('EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP survives real contention, not just an idle host', () => {
     const CONSERVATIVE_CONTENDED_NODES_PER_SEC = 10_000; // well under the ~37k-43k measured contended rate
-    const WORST_CASE_NODE_BUDGET = 6_000_000; // EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, a single un-split gate
+    const WORST_CASE_NODE_BUDGET = EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET; // a single un-split gate
     const minimumSafeMs = (WORST_CASE_NODE_BUDGET / CONSERVATIVE_CONTENDED_NODES_PER_SEC) * 1000;
     assert.ok(
         EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP >= minimumSafeMs,

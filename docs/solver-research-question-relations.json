@@ -938,12 +938,12 @@
       "id": "WS2-REPAIR-DEADLINE-ALLOCATION",
       "question": "Can a bounded increase in repair-family per-attempt deadline recover already-demonstrated Class-3 capability at matched total work without displacing production winners?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "concluded-positive",
       "aliases": [
         "repair deadline allocation",
         "repair-family per-attempt deadline"
       ],
-      "result": "The 21M/38M matched-work dose is evidence-complete on regression safety: the 53-parent nomination produced 7 treatment-only referee-valid gains / 0 losses, and the disjoint solved-control confirmation brought combined solved-control exposure to 180/180 with zero regressions. Promotion is blocked only by a newly surfaced implementation/safety interaction: the shared EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP is 1,200,000ms, which no longer conservatively covers the proposed node caps under the repo's 10,000 nodes/sec contention floor. Resolve that wall-clock interaction before changing production constants; no further population-scale regression confirmation is required for the tested 21M/38M dose.",
+      "result": "PROMOTED 2026-09-26. The 21M/38M matched-work dose is evidence-complete on regression safety: the 53-parent nomination produced 7 treatment-only referee-valid gains / 0 losses, and the disjoint solved-control confirmation brought combined solved-control exposure to 180/180 with zero regressions. The MS_CAP interaction the confirmation surfaced (the shared EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP no longer conservatively covering the raised node caps under the repo's 10,000 nodes/sec contention floor) is resolved: tracing repairAdditiveBudgetMultiplier's resolution (stage-budget-core.ts's disableExtraBudgetPasses handling, orchestration.ts's call-site gate) shows both interactive production callers (solver-controller.ts, review-controller.ts) already set disableExtraBudgetPasses: true, which zeroes the multiplier and skips the probe entirely regardless of MS_CAP's value -- only the batch/research path this evidence was measured against can ever hit the cap. EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET/EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET/EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP are now production constants (21,000,000 / 38,000,000 / 7,600,000ms).",
       "triggeredBy": [
         "WS2-CLASS3-DOSE-EXPOSURE",
         "WS2-FAILURE-RESPONSE-RECONNAISSANCE"
@@ -954,15 +954,15 @@
         "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md",
         "reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md",
         "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md",
-        "reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md"
+        "reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md",
+        "reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md"
       ],
       "constrains": [
         "Treat this as HARVEST: no missing semantic capability was inferred or is implied by the positive result.",
         "The tested 21M/38M dose has completed its population-scale regression-safety confirmation; do not buy another generic confirmation round for that same dose.",
-        "Do not promote the 21M/38M node caps while the shared 1,200,000ms EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP can bind first under the repository's conservative contention floor.",
-        "The next gate is implementation/safety design at the MS_CAP seam: scale the cap with explicit interactive-UX consequences, differentiate interactive and batch callers, or test a smaller re-scoped dose."
+        "The interactive-path MS_CAP bypass relies on disableExtraBudgetPasses: true on both interactive callers; if either caller is ever changed to stop setting that flag, EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP's interactive safety must be re-derived from scratch, not assumed."
       ],
-      "reopensOn": null,
+      "reopensOn": "A materially different node-cap dose (beyond the tested 21M/38M), or a change that makes an interactive caller stop passing disableExtraBudgetPasses: true (which would reopen the MS_CAP interactive-safety analysis).",
       "premiseRefs": [
         "P123",
         "P206"
@@ -973,7 +973,8 @@
       "acquisitionNeed": "telemetry-or-economics",
       "answeredBy": [
         "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md",
-        "reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md"
+        "reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md",
+        "reports/2026-09-26-ws2-repair-deadline-ms-cap-resolution-and-promotion-result-001.md"
       ]
     },
     {

@@ -77,15 +77,25 @@ import type { Attempt, SearchResult, ShrunkBiasedTier, YieldFn } from './orchest
  *  caught later by the full REPAIR_ADDITIVE_BUDGET_MULTIPLIER fallback loop today, same as before
  *  this change) — 6,000,000 clears S043 with a large margin while staying safely below S033's
  *  true cost, preserving which level falls through to the full fallback vs. gets caught early.
+ *
+ *  PROMOTED to 21,000,000 (ordinary) / 38,000,000 (biased) on 2026-09-26 per the WS2 node-cap
+ *  matched-work A/B (reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md)
+ *  and its disjoint solved-control regression confirmation
+ *  (reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md: 180/180
+ *  independent solved-control observations, zero regressions, byte-identical solved sets at the
+ *  new doses). That confirmation also surfaced and this promotion resolves an
+ *  EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP interaction — see that constant's own comment below for why
+ *  raising it proportionally is safe for both the batch and interactive paths.
+ *
  *  Re-measure (repairSearchFromGate called directly per the recipe above, NOT the full
  *  2000-level stress corpus — too slow for this kind of per-level direct-replay measurement)
  *  before changing either value. */
 // Exported for SolveOpts.earlyRepairSearchOrdinaryNodeBudgetOverride's default and for batch-tooling
 // tests/sweeps that need the production value without duplicating it.
-export const EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET = 2_000_000;
+export const EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET = 21_000_000;
 // Exported for orchestration.test.ts's STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET regression
 // tests, which assert the exact scaled node budget a mocked biased-tier attempt is called with.
-export const EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET = 6_000_000;
+export const EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET = 38_000_000;
 
 /** Per-attempt wall-clock trip-wire for `runEarlyRepairSearch` (see its own call site's comment): meant
  *  to catch only a genuinely pathological per-node cost or host distress, never to be the actual
@@ -96,17 +106,33 @@ export const EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET = 6_000_000;
  *  throughput to ~37,000-43,000 nodes/sec, well under the old cap's implicit floor, silently
  *  truncating the attempt below its intended node budget and changing which levels solved purely
  *  as a function of how contended the host happened to be — see
- *  reports/2026-08-12-worker-count-sensitivity-early-repair-search-wallclock.md. A flat constant (rather
- *  than one derived per-attempt from `gateNodeBudget`) is sufficient here because `gateNodeBudget`
- *  is always <= EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET (6,000,000): 20 minutes for that many nodes needs
- *  only ~5,000 nodes/sec sustained, roughly 7-8x below the measured contended rate above and
- *  >100x below nominal uncontended throughput (~650,000 nodes/sec, measured on the same host) —
- *  generous enough to survive materially worse contention than what was measured, while staying a
- *  genuinely bounded backstop. Safe for the ~30s interactive latency promise (Play's "Find a
- *  Hint", Review's approval solve): both pass `repairAdditiveBudgetMultiplierOverride: 0`, which skips the
- *  probe outright (see its call site's own `repairAdditiveBudgetMultiplier !== 0` gate) rather than relying
- *  on this cap to bound it. */
-export const EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP = 1_200_000;
+ *  reports/2026-08-12-worker-count-sensitivity-early-repair-search-wallclock.md.
+ *
+ *  PROMOTED to 7,600,000ms (2026-09-26) alongside EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET /
+ *  EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET's own promotion to 21,000,000 / 38,000,000 (see their
+ *  comment above) — see reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md
+ *  for the interaction this raise resolves: at the raised doses, the OLD 1,200,000ms cap no longer
+ *  safely covers the new worst case (38,000,000 nodes) at this constant's own conservative
+ *  10,000-nodes/sec contended floor (38,000,000 / 10,000 * 1000 = 3,800,000ms minimum). A flat
+ *  constant (rather than one derived per-attempt from `gateNodeBudget`) is sufficient here because
+ *  `gateNodeBudget` is always <= EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET (38,000,000): 7,600,000ms
+ *  for that many nodes needs only ~5,000 nodes/sec sustained — preserving the exact same ~2x margin
+ *  below the conservative 10,000 nodes/sec floor (and correspondingly larger margin below the
+ *  measured 37,000-43,000 nodes/sec contended rate, and further still below nominal uncontended
+ *  throughput, ~650,000 nodes/sec on the measurement host) that the original 1,200,000ms/6,000,000-node
+ *  pairing held, rather than eroding it.
+ *
+ *  This 7,600,000ms (~2h6m) worst-case batch-path stall is NOT a regression to the ~30s interactive
+ *  latency promise (Play's "Find a Hint", Review's approval solve): both interactive callers
+ *  (`modules/input/solver-controller.ts`, `modules/input/review-controller.ts`) pass
+ *  `disableExtraBudgetPasses: true`, which resolves `repairAdditiveBudgetMultiplierOverride` to 0
+ *  (stage-budget-core.ts) and therefore makes `repairAdditiveBudgetMultiplier !== 0` false at this
+ *  probe's own call-site gate (orchestration.ts) — the early-repair-search probe never runs at all
+ *  on the interactive path, regardless of this cap's value. Only the batch/research path (workers=4,
+ *  non-binding 24h wall deadline, no user waiting) can ever actually hit this trip-wire. Re-derive
+ *  this value (not just scale it) if EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET changes again, or if an
+ *  interactive caller is ever made to stop setting `disableExtraBudgetPasses: true`. */
+export const EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP = 7_600_000;
 
 /** How much of EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET the heuristically-PREDICTED technique gets when both
  *  biased tiers are present (attempts.ts's predictLikelyBiasedRepairTechnique, under
