@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-hint-ingestion-receipt",
+  "source": {
+    "producer": "harvest-solver-diagnostics-reports",
+    "runId": "36224038359",
+    "runAttempt": "1",
+    "workflow": "Solver diagnostics and hint capture",
+    "artifact": null
+  },
+  "scope": {
+    "corpus": "data/levels.json"
+  },
+  "funnel": {
+    "candidateObservations": 1440,
+    "eligibleObservations": 1440,
+    "refereeAcceptedObservations": 1440,
+    "acceptedAlreadyRepresented": 0,
+    "quarantinedObservations": 0,
+    "quarantineReasons": {}
+  },
+  "additions": {
+    "semanticRecordChanges": 1440,
+    "paths": 0,
+    "provenanceEvents": 160,
+    "occurrences": 1440
+  },
+  "physical": {
+    "filesChanged": 160
+  },
+  "semantics": {
+    "successSelected": true,
+    "notAttemptedPopulation": true,
+    "candidateObservation": "a success-bearing row/artifact presented to this ingestion boundary",
+    "eligibleObservation": "a candidate with enough identity/path information to undergo canonical referee/merge handling",
+    "refereeAcceptedObservation": "an eligible observation whose exact path is valid against the target level revision",
+    "acceptedAlreadyRepresented": "referee-valid observation that produced no semantic store change",
+    "semanticRecordChange": "coarse producer-observed change when the current mutation API cannot distinguish path/event/occurrence units",
+    "nullAdditionUnit": "this producer cannot measure that addition unit exactly; null is unknown/not-observed, never zero",
+    "notes": "native Pathfinder diagnostics successful-discovery projection reconstructed from the durable diagnostics artifact; canonical Hint mutation is owned by central harvest-solver-evidence ingestion"
+  }
+}
