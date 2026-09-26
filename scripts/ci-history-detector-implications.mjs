@@ -11,6 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 function parseArgs(argv) {
   const out = {
@@ -212,20 +213,23 @@ export function analyzeDetectorImplications(signatures, registry, { minEpisodes 
   };
 }
 
-const options = parseArgs(process.argv.slice(2));
-const signatures = JSON.parse(fs.readFileSync(options.signatures, 'utf8'));
-const registry = JSON.parse(fs.readFileSync(options.registry, 'utf8'));
-const output = analyzeDetectorImplications(signatures, registry, { minEpisodes: options.minEpisodes });
-
-fs.mkdirSync(path.dirname(options.output), { recursive: true });
-fs.writeFileSync(options.output, `${JSON.stringify(output, null, 2)}\n`);
-
-console.log(JSON.stringify({
-  episodesRequested: output.episodesRequested,
-  episodesWithSignatures: output.episodesWithSignatures,
-  retrievalGapCount: output.retrievalGapCount,
-  currentDetectorsObserved: output.detectors.length,
-  implicationCandidates: output.implicationCandidates.slice(0, 20),
-  exactCoFailureCandidates: output.exactCoFailureCandidates.slice(0, 20),
-  noUniqueEpisodeDetectors: output.noUniqueEpisodeDetectors.slice(0, 20),
-}, null, 2));
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  const options = parseArgs(process.argv.slice(2));
+  const signatures = JSON.parse(fs.readFileSync(options.signatures, 'utf8'));
+  const registry = JSON.parse(fs.readFileSync(options.registry, 'utf8'));
+  const output = analyzeDetectorImplications(signatures, registry, { minEpisodes: options.minEpisodes });
+  
+  fs.mkdirSync(path.dirname(options.output), { recursive: true });
+  fs.writeFileSync(options.output, `${JSON.stringify(output, null, 2)}\n`);
+  
+  console.log(JSON.stringify({
+    episodesRequested: output.episodesRequested,
+    episodesWithSignatures: output.episodesWithSignatures,
+    retrievalGapCount: output.retrievalGapCount,
+    currentDetectorsObserved: output.detectors.length,
+    implicationCandidates: output.implicationCandidates.slice(0, 20),
+    exactCoFailureCandidates: output.exactCoFailureCandidates.slice(0, 20),
+    noUniqueEpisodeDetectors: output.noUniqueEpisodeDetectors.slice(0, 20),
+  }, null, 2));
+  
+}
