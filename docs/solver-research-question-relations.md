@@ -35,6 +35,12 @@ Update the relation registry only for material edges. A negative treatment can t
 
 Question-ID relation fields are mechanically checked for dangling targets where their values are question identities (`implies`, `triggeredBy`, `negativeControlFor`, `calibratedBy`, `calibrates`, `supersedes`, `duplicateOf`). `constrainedBy` remains intentionally mixed because some constraints are stable questions while others are dated reports or authority documents.
 
+## Lifecycle reconciliation rule
+
+Question lifecycle is an owning authority, not descriptive fallout from the queue. Whenever evidence changes a workstream from active compute/design into implementation, closure, promotion, defer/reopen, or another materially different gate, reconsider the matching question record in the same change.
+
+Check `state`, `result`, `answeredBy`, `constrainedBy`, `constrains`, `decisionSupport` when present, and `reopensOn`. A closed/reopen-only queue row must not silently retain an `active-candidate` question, and an active/supporting execution row must not silently point at a terminal question unless the row is explicitly satisfying a documented reopen trigger. The existing research-question authority audit is the mechanical backstop; prose and machine state should agree before closeout.
+
 ## State semantics
 
 The machine-owned state vocabulary is:

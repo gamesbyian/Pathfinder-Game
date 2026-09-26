@@ -162,6 +162,12 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 
 All other tested forms are closed/reopen-only/subsumed. See the historical snapshot and future-work authority for exact reopen conditions.
 
+## Queue-transition closure
+
+Research-state changes are transactional across their owning authorities. If a result changes a row's `Execution state`, `Gate class`, `Next gate`, stable-question disposition, or a treatment's production/default disposition, reconcile every affected owner in the same change rather than treating the queue edit as sufficient.
+
+At minimum, inspect the corresponding record in `solver-research-question-relations.json`, the dated result/closeout, `solver-opt-in-experiment-ledger.md` when promotion/default-OFF status changed, and `solver-future-work.md` when reopen/deferred routing changed. Also update or retire contract tests that intentionally encode the old state. Run the existing research authority/query contracts before calling the transition complete; do not add bespoke CI jobs for individual transitions.
+
 ## Standing research rules
 
 - Compare techniques with `workSpent`; nodes are within-technique diagnostics.

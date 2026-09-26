@@ -299,6 +299,8 @@ Audit:
 - current generated artifacts and receipts;
 - compatibility/historical interpretation docs;
 - solver queue and future-work entries;
+- stable research-question lifecycle/relations when a queue item's question state or immediate gate changed;
+- opt-in/promotion ledger state when a treatment's production/default disposition changed;
 - research-system contracts and evidence doctrine;
 - tests/guards that still encode the old model;
 - one-shot or campaign scaffolding that should now retire;
@@ -348,6 +350,8 @@ Treat these as hostile-audit prompts.
 - Branch authority ambiguity: stacked/superseded branches make completion unreconstructable.
 - One-lucky-run completion: timing/performance plans close from a favorable sample rather than bounded repeat evidence.
 - Negative-result amnesia: rejected design branches remain live candidates and get rediscovered.
+
+For solver/research plans, `solverQueueImpact.authoritiesChecked` should name the separate owners actually capable of becoming stale. The normal starting set is the live workstream authority, future-work routing, stable question relations, and the opt-in/promotion ledger when treatment disposition is in scope. Listing one owner does not imply the others are derived from it.
 
 ## 11. Quality manifest contract
 
