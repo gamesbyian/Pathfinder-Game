@@ -15,36 +15,30 @@ C1 is not cross-generator transfer; C2 is a mixed development lab. Cold procedur
 
 ### 1. WS2 repair-deadline allocation
 
-**State:** ACTIVE / promotion confirmation next.
+**State:** ACTIVE / blocked on a wall-clock safety interaction, not on evidence.
 
-The frozen 53-parent matched-work A/B produced **7 treatment-only gains and 0 losses** for the repair-node-cap candidate. This is nomination evidence, not a production change.
+The frozen 53-parent matched-work A/B produced **7 treatment-only gains and 0 losses**. A follow-up disjoint 150-level solved-control confirmation (180/180 combined, zero regressions) closed the regression-safety leg cleanly, and economics/concentration are already closed positive. Attempting to flip the production constants (`EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET` 2M->21M, `EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET` 6M->38M) surfaced a real, previously-unchecked interaction: `EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP` (a 20-minute per-attempt wall-clock trip-wire, sized for the *old* 6M worst case) would truncate an attempt under real host contention well before the new 21M/38M budgets are reached, silently reintroducing the exact bug class that trip-wire exists to prevent.
 
 Next gate:
-- ordinary production-scale matched-work confirmation;
-- preserve exact treatment/control work semantics;
-- no post-result cap retuning.
+- resolve the MS_CAP interaction (proportional scale-up with an explicit interactive-UX tradeoff, a caller-differentiated cap for batch-research vs. interactive paths, or a smaller re-scoped dose with its own matched-work evidence);
+- no further population-scale regression evidence is needed for the 21M/38M dose specifically once this is resolved.
 
 Question: `WS2-REPAIR-DEADLINE-ALLOCATION`.
 
-Evidence: [result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [preflight](../reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md).
+Evidence: [confirmation result](../reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md) · [nomination result](../reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md) · [preflight](../reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md).
 
-### 2. WS2 capability-invention promotion
+### 2. WS2 capability-invention promotion — CLOSED, PROMOTED
 
-**State:** ACTIVE / reasoned promotion-safety decision.
+**State:** CONCLUDED-POSITIVE. Both flags default-ON.
 
-CID-0027 and CID-0028 each cleared pilot + confirmation:
-- target row moved from node-budget-limited unsolved to referee-valid solved;
-- combined **0 regressions across 52 solved-control levels per branch**;
-- default remains OFF.
+CID-0027 (`STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE`) and CID-0028 (`STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE`) cleared pilot + confirmation + a full residual-unsolved sweep of both branches:
+- 7 referee-valid solves for CID-0027 (target `R00118` + 6 new), 3 for CID-0028 (target `R02696` + 2 new) — 10 total, 8 new;
+- 0 regressions across every tested row in both branches (156/196 = 79.6% and 148/335 = 44.2% branch coverage; the untested CID-0028 remainder is exclusively already-solved regression-safety exposure, since every unsolved branch row was tested);
+- promoted to production default-ON 2026-09-26 (removed from `OPT_IN_FEATURES`); both `attempts.ts` read sites also fixed from `cfg && cfg.FLAG === true` to `!cfg || cfg.FLAG === true` (the same silent-no-op gotcha every other default-on flag promotion in this ledger has needed).
 
-Next gate:
-- decide whether current evidence is sufficient for promotion;
-- buy broader sampling only if that decision identifies a concrete unresolved safety/generalization question;
-- do not run more generic compact telemetry merely to enlarge the sample.
+Question: `WS2-CAPABILITY-INVENTION-DEMAND` — closed.
 
-Question: `WS2-CAPABILITY-INVENTION-DEMAND`.
-
-Evidence: [confirmation](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md) · [pilot](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md).
+Evidence: [residual-unsolved result](../reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md) · [confirmation](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md) · [pilot](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md).
 
 ### 3. WS1 automatic action selection
 
@@ -156,8 +150,8 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 
 | ID | Workstream | Execution state | Gate class | State / context | Next gate | Stable question ref |
 |---:|---|---|---|---|---|---|
-| 2 | Repair-deadline allocation | `active` | `bounded-compute` | 7 treatment-only gains / 0 losses on frozen 53-parent nomination A/B | production-scale matched-work confirmation | `WS2-REPAIR-DEADLINE-ALLOCATION` |
-| 2I | Capability invention | `active` | `bounded-compute` | CID-0027/CID-0028 pilot + confirmation positive; 0 observed solved-control regressions | promotion/safety decision; broader sampling only if that decision requires it | `WS2-CAPABILITY-INVENTION-DEMAND` |
+| 2 | Repair-deadline allocation | `active` | `implementation` | 7 gains/0 losses nomination + 180/180 zero-regression confirmation both positive; blocked on `EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP` wall-clock interaction, not evidence | resolve MS_CAP interaction (scale, differentiate interactive/batch, or re-scope dose), then promote | `WS2-REPAIR-DEADLINE-ALLOCATION` |
+| 2I | Capability invention | `closed` | `reopen-only` | PROMOTED 2026-09-26: both flags default-ON, 10 referee-valid solves (8 new), 0 regressions across every tested branch row | none; reopen only for a materially different exposure form | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 1 | Automatic action selection | `active` | `implementation` | independent-population confirmation frozen; seed 2026092501 quarantined, replacement 2026092591 | #2122 green -> merge -> one frozen N=160 dispatch | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
 | 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 production-inert later-disposition economics/safety consumer | beam-hosted later-disposition shadow when immediate | `WS2-CUT-BALANCE-PROJECTION` |
 | 2F | Forced-work capture economics | `closed` | `reopen-only` | tested global-compression/post-recognition forms closed; broader question identity retained | reopen only for a materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |

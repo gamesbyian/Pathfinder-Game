@@ -137,8 +137,14 @@ test('multi-portal levels lead with portal profiles, with beam configs trailing 
 
 test('high-intersection dense levels lead with beam configs', () => {
   const attempts = getAttemptConfigs(makeLevel({ requiredLength: 60, requiredIntersections: 7 }));
-  assert.deepEqual(attempts.slice(0, 2).map(c => [c.scoringProfileId, c.beamWidth]), [
+  // STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE (promoted default-ON) inserts
+  // harvestThenFinish/knotBuilder/mustCrossFirst@2000 immediately after the leading intersectionHarvest
+  // WIDE config, before objectiveFirst WIDE.
+  assert.deepEqual(attempts.slice(0, 5).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['intersectionHarvest', 5000],
+    ['harvestThenFinish', 2000],
+    ['knotBuilder', 2000],
+    ['mustCrossFirst', 2000],
     ['objectiveFirst', 5000],
   ]);
 });
@@ -147,8 +153,11 @@ test('high-intersection dense levels lead with beam configs', () => {
 test('STRATEGY_ROUTING_REGIME_SELECTION disabled forces the catch-all rule regardless of features', () => {
   const level = makeLevel({ requiredLength: 60, requiredIntersections: 7 });
   const routed = getAttemptConfigs(level);
-  assert.deepEqual(routed.slice(0, 2).map(c => [c.scoringProfileId, c.beamWidth]), [
+  assert.deepEqual(routed.slice(0, 5).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['intersectionHarvest', 5000],
+    ['harvestThenFinish', 2000],
+    ['knotBuilder', 2000],
+    ['mustCrossFirst', 2000],
     ['objectiveFirst', 5000],
   ]);
 
@@ -287,9 +296,14 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
     const onMain = on.filter(c => !c.repair && !c.admissibleOrder);
     assert.deepEqual(onMain.slice(-5).map(sig), offMain.slice(-5).map(sig),
       'all five main-search configs protected before treatment remain the final five main-search configs after treatment');
+    // Exact adjacency to the suffix isn't asserted directly: since STRATEGY_VERY_HIGH_INT_WIDTH2000_
+    // HARVEST_KNOT_MUSTCROSS_EXPOSURE was promoted to default-ON, its own always-present insert can
+    // sit between this candidate and the suffix in both off/on (both configs carry it). The
+    // stronger, position-independent invariant below (removing the candidate reproduces production
+    // order exactly) already proves the candidate is purely additive and never displaces the suffix.
     const candidateIndex = onMain.findIndex(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention);
-    assert.equal(candidateIndex, Math.max(0, offMain.length - 5),
-      'candidate is inserted immediately before the old protected main-search suffix');
+    assert.ok(candidateIndex >= 0 && candidateIndex <= offMain.length - 5,
+      'candidate is inserted somewhere before the old protected main-search suffix begins');
     assert.deepEqual(onMain.filter((_, index) => index !== candidateIndex).map(sig), offMain.map(sig),
       'removing the inserted action reproduces the production main-search config order exactly');
   };

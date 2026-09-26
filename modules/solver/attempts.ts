@@ -363,7 +363,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // above): before the protected suffix, not appended after it — see
             // STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE's own closed-negative
             // append-last result for why appending here would risk starving objectiveFirst WIDE.
-            ...(cfg && cfg.STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE === true
+            ...(!cfg || cfg.STRATEGY_VERY_HIGH_INT_WIDTH2000_HARVEST_KNOT_MUSTCROSS_EXPOSURE === true
                 ? [beam('harvestThenFinish', BEAM.STANDARD), beam('knotBuilder', BEAM.STANDARD), beam('mustCrossFirst', BEAM.STANDARD)]
                 : []),
             beam('objectiveFirst', BEAM.WIDE),
@@ -392,7 +392,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // below), not appended after it (see STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_
             // EXPOSURE's own closed-negative append-last result on a sibling rule for why appending
             // here would risk starving the protected suffix).
-            ...(cfg && cfg.STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE === true
+            ...(!cfg || cfg.STRATEGY_NEAR_HAMILTONIAN_INTERSECTION_HARVEST_MECHANIC_BUCKET_EXPOSURE === true
                 ? [beam('intersectionHarvest', BEAM.WIDE, null, { mechanicBucketRetention: true })]
                 : []),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),

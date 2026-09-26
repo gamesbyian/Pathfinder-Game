@@ -943,7 +943,7 @@
         "repair deadline allocation",
         "repair-family per-attempt deadline"
       ],
-      "result": "Nominated from 16 Class-3 censored rows with repair-family node caps well below known isolated solve cost. The node-cap seam (SolveOpts.earlyRepairSearchOrdinaryNodeBudgetOverride/earlyRepairSearchBiasedNodeBudgetOverride) and matched-work A/B design (treatment caps 21,000,000/38,000,000) were frozen 2026-09-25 and dispatched the same day on the frozen 53-parent shared-acquisition population via GHA (after fixing two real pre-existing bugs in solver-level-blind-targeted-sweep.yml that had silently broken every multi-level dispatch of that workflow): POSITIVE. 7 treatment-only referee-valid gains (R00306, R01086, R02138, R02892, R03109, R03251, R03323), 0 control-only losses -- meeting the preflight's own bridge-positive bar decisively. This is nomination evidence for the two node-cap constants on a shared-acquisition (not independent-confirmation) population, not a production change and not yet a concluded result -- per this repo's standard discovery/confirmation protocol (see WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE for the same pattern), the next gate is ordinary matched-work confirmation on a disjoint population at production scale before promotion.",
+      "result": "The 21M/38M matched-work dose is evidence-complete on regression safety: the 53-parent nomination produced 7 treatment-only referee-valid gains / 0 losses, and the disjoint solved-control confirmation brought combined solved-control exposure to 180/180 with zero regressions. Promotion is blocked only by a newly surfaced implementation/safety interaction: the shared EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP is 1,200,000ms, which no longer conservatively covers the proposed node caps under the repo's 10,000 nodes/sec contention floor. Resolve that wall-clock interaction before changing production constants; no further population-scale regression confirmation is required for the tested 21M/38M dose.",
       "triggeredBy": [
         "WS2-CLASS3-DOSE-EXPOSURE",
         "WS2-FAILURE-RESPONSE-RECONNAISSANCE"
@@ -953,13 +953,14 @@
         "reports/2026-09-20-class3-dose-exposure-resolved-result-001.md",
         "reports/2026-09-20-ws2-failure-response-reconnaissance-stage-a-final-result-001.md",
         "reports/2026-09-25-ws2-repair-deadline-allocation-node-cap-seam-and-ab-preflight-001.md",
-        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md"
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md",
+        "reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md"
       ],
       "constrains": [
-        "Treat this as HARVEST: no missing semantic capability was inferred or is implied by this positive result.",
-        "The node-cap seam is implemented; do not add a second, competing override shape for the same two constants.",
-        "This A/B result is nomination evidence for the two specific constants (21,000,000/38,000,000), not a production change and not authorization to reopen the closed-negative broad 4x work-ladder economics question.",
-        "Next gate is the ordinary matched-work confirmation/promotion path at production scale before any production default changes."
+        "Treat this as HARVEST: no missing semantic capability was inferred or is implied by the positive result.",
+        "The tested 21M/38M dose has completed its population-scale regression-safety confirmation; do not buy another generic confirmation round for that same dose.",
+        "Do not promote the 21M/38M node caps while the shared 1,200,000ms EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP can bind first under the repository's conservative contention floor.",
+        "The next gate is implementation/safety design at the MS_CAP seam: scale the cap with explicit interactive-UX consequences, differentiate interactive and batch callers, or test a smaller re-scoped dose."
       ],
       "reopensOn": null,
       "premiseRefs": [
@@ -969,22 +970,27 @@
       "measurementOpportunities": [
         "MO-004"
       ],
-      "acquisitionNeed": "telemetry-or-economics"
+      "acquisitionNeed": "telemetry-or-economics",
+      "answeredBy": [
+        "reports/2026-09-25-ws2-repair-deadline-admissible-order-matched-work-ab-result-001.md",
+        "reports/2026-09-26-ws2-repair-deadline-solved-control-confirmation-result-001.md"
+      ]
     },
     {
       "id": "WS2-CAPABILITY-INVENTION-DEMAND",
       "question": "What capabilities does the current residual actually demand after cheaper exposure, dose, and deployment explanations are ruled out?",
       "owner": "WS2",
-      "state": "active-candidate",
+      "state": "concluded-positive",
       "aliases": [
         "capability invention demand",
         "invention backlog",
         "first-loss demand sampling"
       ],
       "answeredBy": [
-        "reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md"
+        "reports/2026-09-20-capability-invention-retained-evidence-seed-census-001.md",
+        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md"
       ],
-      "result": "Seed census established the acquisition instrument but is selection-biased: 26 retained-evidence rows classify 22 HARVEST, 1 EXTENSION, 3 UNKNOWN, 0 INVENTION; 23/26 are Class-3 rows selected on known historical capability. The three UNKNOWN beam rows first require current-head isolated freshness replay. Broader prevalence remains open. The 2026-09-22 technique-census closeout then sharpened the residual picture from existing data: of 532 production-unsolved levels, 83 (15.6%) have a full-depth T1 isolated solve and 47 of those are singleton-supported by exactly one technique. Generic compact failure telemetry is now exhausted as a broad discriminator, so the earned next gate is existing-data sampling of first-loss/operational-divergence on the 83/47 T1-rescuable cohorts and cheap isolated/zero-production-win routing mismatches, not more fresh acquisition. That specific 83/47 cohort is currently BLOCKED: it requires the technique-census combine artifact (GHA run 35687337464), hosted on productionresultssa2.blob.core.windows.net, which this environment's network policy denies (confirmed 403 via download_workflow_run_artifact -> curl). A separate, fully local existing-data sample from the already-committed EW1 pricing/production-reach join (2026-09-25) found 2 exact-config F8 routing/deployment misses (CID-0027 R00118, CID-0028 R02696, one singleton-T1-supported) with zero production attempts on the winning action -- registered in data/stress/capability-invention-demand.json, HARVEST, not INVENTION. Both rows' smallestProbe was located and implemented as an opt-in exposure flag (2026-09-25): R02696 falls to attempts.ts's very-high-requiredIntersections non-portal rule (missing harvestThenFinish/knotBuilder/mustCrossFirst entirely). R00118 was originally misattributed to the catch-all intersection-heavy rule; direct getAttemptConfigs verification found it actually falls to the near-Hamiltonian rule (missing the mechanic-buckets retention variant of an already-offered beam) -- corrected the same day. A same-day 13-level matched-work pilot A/B for both flags (target row + 12 same-branch solved controls, production node budget, via solver-level-blind-targeted-sweep.yml) is a clean POSITIVE on both: R00118 and R02696 each moved from node-budget-limited unsolved (control) to referee-valid solved (treatment), with byte-identical 12-level solved-control sets in both branches (zero regressions). A same-day 40-level confirmation round (disjoint from the pilot's 12 solved controls) extended this: 40/40 solved in every one of the four runs, byte-identical control/treatment solved sets, zero regressions. Combined pilot+confirmation: 0 regressions across 52 solved-control levels per branch -- 26.5% of CID-0027's 196-level branch, 15.5% of CID-0028's 335-level branch. Still not full-branch coverage; both flags remain OPT_IN_FEATURES, default OFF, pending a separate reasoned promotion decision.",
+      "result": "The current EW1 routing/deployment demand sample concluded positively as HARVEST, not new semantic invention. CID-0027 and CID-0028 both cleared pilot, disjoint solved-control confirmation, and full residual-unsolved branch sweeps. The residual-unsolved round found 7 and 3 referee-valid treatment solves respectively (10 total, 8 beyond the original target rows), with zero observed regressions across all tested rows. Both exposure flags were promoted to production default-ON on 2026-09-26. This closes the current capability-invention-demand execution front for these exposure forms; it does not establish a prevalence estimate for the full residual.",
       "triggeredBy": [],
       "constrainedBy": [
         "docs/solver-capability-invention-program.md",
@@ -997,18 +1003,16 @@
         "reports/2026-09-25-capability-invention-demand-ew1-routing-gap-sample-001.md",
         "reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-test-design-001.md",
         "reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md",
-        "reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md"
+        "reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md",
+        "reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md"
       ],
       "constrains": [
-        "Do not infer invention prevalence from the harvest-enriched Class-3 seed.",
-        "Promote only recurrent decision-bearing semantic gaps after cheaper earlier first-loss classes are excluded.",
-        "The immediate beam-UNKNOWN gate is current-head isolated freshness, not a new beam architecture.",
-        "Do not buy more generic compact failure telemetry or another broad census; sample first-loss/operational-divergence from the existing 83/47 T1-rescuable cohorts first.",
-        "The 83/47 T1-rescuable cohort sampling is blocked on network access to the census artifact, not on missing local evidence; do not attempt to reconstruct it by guessing from hint-store diffs.",
-        "CID-0027/CID-0028 are a 2-row sample from a 60-level pricing population, not a prevalence claim; do not generalize their base rate to the full residual.",
-        "The combined 52-level-per-branch pilot+confirmation positive on both exposure flags is real evidence but not full-branch coverage (26.5%/15.5%); flipping either flag's OPT_IN_FEATURES default is a separate reasoned promotion decision, not automatic from this evidence."
+        "Do not infer invention prevalence from the harvest-enriched Class-3 seed or the two-row EW1 routing/deployment sample.",
+        "CID-0027/CID-0028 are concluded-positive HARVEST evidence for their exact exposure forms and are now production default-ON.",
+        "Do not buy more generic compact failure telemetry or another broad census merely to revisit these promoted forms.",
+        "Reopen only for a materially different exposure form or fresh residual evidence that identifies a new decision-bearing capability gap."
       ],
-      "reopensOn": null,
+      "reopensOn": "A materially different exposure form or fresh residual evidence that identifies a new decision-bearing capability gap.",
       "premiseRefs": [
         "P135"
       ],

@@ -153,11 +153,11 @@ assert.deepEqual(headSnapshot.gates, snapshot.gates,
 const earlier = structuredClone(snapshot);
 const ws2 = earlier.gates.find(row => row.workstreamId === 2);
 assert.ok(ws2);
-ws2.gateClass = 'implementation';
+ws2.gateClass = 'bounded-compute';
 const temporal = diffResearchQuerySnapshots(earlier, snapshot);
 assert.equal(temporal.gateClassComparison.comparable, true);
-assert.ok(temporal.newlyBoundedCompute.some(row => row.workstreamId === 2),
-  'snapshot diff should identify workstreams whose gate moved into requiring fresh solver compute');
+assert.ok(temporal.newlyNoFreshSolverExecution.some(row => row.workstreamId === 2),
+  'snapshot diff should identify workstreams whose gate moved from bounded compute into implementation');
 
 const preGateClass = structuredClone(snapshot);
 preGateClass.gates[0].gateClass = null;
