@@ -1055,7 +1055,7 @@
       "id": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
       "question": "Given only level-blind information available immediately before the next production action, can a cheap rule capture a material fraction of pre-winner work while protecting rare winning capability and beating simple fixed-order/tranche baselines?",
       "owner": "WS1",
-      "state": "active-candidate",
+      "state": "concluded-negative",
       "aliases": [
         "action-selection legal signal",
         "pre-winner work capture",
@@ -1067,9 +1067,10 @@
         "reports/2026-09-21-action-selection-legal-signal-capture-preflight-001.md",
         "reports/2026-09-22-ws1-independent-continuation-confirmation-preflight-001.md",
         "reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md",
-        "reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md"
+        "reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md",
+        "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
       ],
-      "result": "Retained-evidence development is narrowed-positive and historically robust across three distinct scoreable C2 attempt regimes. The exact frozen 15-signature prior-response+work+next-stage model captures 6.93%, 6.99%, and 9.91% of validation pre-winner work with 0/310, 0/318, and 0/356 recorded winner losses; C1 remains 0%. Across all scoreable regimes >95% of nominated work is same-stage continuation and >85% follows censored prior work. Two older full refreshes are telemetry-inapplicable because canonical workSpent was not retained, and one later pre-promotion refresh duplicates an earlier attempt regime. Treat this as a late continuation-value seam with temporal/portfolio robustness, not independent-population confirmation or broad scheduler evidence. Retained independent-population archaeology is exhausted: the durable family/variant assets use legacy attempt semantics without modern stageId/workSpent, and current-main published-parent families provide only 9 independent parents, so the next confirmation gate genuinely requires sample-independent/current-production acquisition. The 2026-09-22 preflight froze this as a bounded-compute confirmation gate: Stage A is a 24-parent development/opportunity canary (seed 2026092201) from the existing random research-generation source, advancing to a separate untouched 96-parent Stage B (seed 2026092202) only if Stage A's fixed opportunity gate passes. Stage A executed 2026-09-25: 16/24 fresh parents solved, but only 5/24 fell into the model's validation split (a fixed function of level ID) and only 1 of those solved, with zero pre-winner boundaries (the winner was that level's first attempt). 0 nominated parents is below the precommitted >=3 floor, so Stage A is opportunity-starved and Stage B was not generated/dispatched. This does not overturn the retained-evidence positive result; it closes this specific fresh-acquisition attempt. A same-day power analysis found Stage A's own floor was under-sized relative to the preflight's own historical rates (25% capture, 68.8% solve): the expected nominated count at n=24 was only ~1.24, giving roughly an 81% chance of failing the >=3 floor even if the mechanism transfers exactly at the historical rate -- the negative result is consistent with pure under-sizing, not necessarily an absent mechanism. A new single-stage plan (N=160, E[nominated]~8, ~98.6% power against a pure-variance false stop) is designed as the replacement acquisition, not yet dispatched.",
+      "result": "Retained-evidence development is narrowed-positive and historically robust across three distinct scoreable C2 attempt regimes. The exact frozen 15-signature prior-response+work+next-stage model captures 6.93%, 6.99%, and 9.91% of validation pre-winner work with 0/310, 0/318, and 0/356 recorded winner losses; C1 remains 0%. Across all scoreable regimes >95% of nominated work is same-stage continuation and >85% follows censored prior work. Two older full refreshes are telemetry-inapplicable because canonical workSpent was not retained, and one later pre-promotion refresh duplicates an earlier attempt regime. Treat this as a late continuation-value seam with temporal/portfolio robustness, not independent-population confirmation or broad scheduler evidence. Retained independent-population archaeology is exhausted: the durable family/variant assets use legacy attempt semantics without modern stageId/workSpent, and current-main published-parent families provide only 9 independent parents, so the next confirmation gate genuinely requires sample-independent/current-production acquisition. The 2026-09-22 preflight froze this as a bounded-compute confirmation gate: Stage A is a 24-parent development/opportunity canary (seed 2026092201) from the existing random research-generation source, advancing to a separate untouched 96-parent Stage B (seed 2026092202) only if Stage A's fixed opportunity gate passes. Stage A executed 2026-09-25: 16/24 fresh parents solved, but only 5/24 fell into the model's validation split (a fixed function of level ID) and only 1 of those solved, with zero pre-winner boundaries (the winner was that level's first attempt). 0 nominated parents is below the precommitted >=3 floor, so Stage A is opportunity-starved and Stage B was not generated/dispatched. This does not overturn the retained-evidence positive result; it closes this specific fresh-acquisition attempt. A same-day power analysis found Stage A's own floor was under-sized relative to the preflight's own historical rates (25% capture, 68.8% solve): the expected nominated count at n=24 was only ~1.24, giving roughly an 81% chance of failing the >=3 floor even if the mechanism transfers exactly at the historical rate -- the negative result is consistent with pure under-sizing, not necessarily an absent mechanism. A new single-stage plan (N=160, E[nominated]~8, ~98.6% power against a pure-variance false stop) was designed as the replacement acquisition and dispatched exactly once from merged main 2026-09-26 (seed 2026092591, after quarantining an earlier seed found to predate final precommitment): CONCLUDED NEGATIVE. 0 nominated pre-winner boundaries across all 44 solved validation-split levels (not a near-miss of the >=3 floor -- a clean zero, at a sizing where ~11 nominations were expected if the historical mechanism transferred). This closes the fresh-acquisition confirmation line for this exact frozen model; the historical-population retained-evidence result stands on its own population but is not production-consumable without transfer this model does not show.",
       "constrains": [
         "Do not treat pre-winner work as ex-ante redundant; predecessor attempts may provide information, preserve rare capability, or change later state/budget.",
         "Do not use level identity, future attempts, eventual winner identity, hints, census membership, stored solutions, or other historical outcome leakage as candidate policy inputs.",
@@ -1084,19 +1085,21 @@
         "Stage A's 2026-09-25 opportunity-starved outcome does not license widening the frozen model, changing the development/validation split function, or drawing a second random block under new seeds to retry exposure; any further fresh-population confirmation attempt needs a new, separately reasoned acquisition plan.",
         "The single-stage N=160 plan is designed, not dispatched; do not treat its existence as a result, and do not dispatch a differently-sized draw without redoing its power calculation."
       ],
-      "reopensOn": null,
+      "reopensOn": "A materially different legal-signal design (different signature family, model, or acquisition source) proposes fresh-population transfer; do not reopen by retesting this exact frozen 15-signature model at any sample size.",
       "premiseRefs": [],
       "measurementOpportunities": [],
       "acquisitionNeed": "fresh-independent-parents",
       "answeredBy": [
         "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md",
-        "reports/2026-09-21-ws1-legal-signal-continuation-temporal-challenge-001.md"
+        "reports/2026-09-21-ws1-legal-signal-continuation-temporal-challenge-001.md",
+        "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
       ],
       "decisionSupport": {
         "mode": "all",
         "refs": [
           "reports/2026-09-21-action-selection-legal-signal-retained-evidence-result-001.md",
-          "reports/2026-09-21-ws1-legal-signal-continuation-temporal-challenge-001.md"
+          "reports/2026-09-21-ws1-legal-signal-continuation-temporal-challenge-001.md",
+          "reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md"
         ]
       }
     },

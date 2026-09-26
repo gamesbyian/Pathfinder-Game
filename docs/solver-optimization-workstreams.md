@@ -40,36 +40,15 @@ Question: `WS2-CAPABILITY-INVENTION-DEMAND` — closed.
 
 Evidence: [residual-unsolved result](../reports/2026-09-26-capability-invention-demand-ew1-residual-unsolved-upside-round-result-001.md) · [confirmation](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-confirmation-ab-result-001.md) · [pilot](../reports/2026-09-25-capability-invention-demand-ew1-routing-exposure-pilot-ab-result-001.md).
 
-### 3. WS1 automatic action selection
+### 3. WS1 automatic action selection — CLOSED, CONFIRMATION NEGATIVE
 
-**State:** CONFIRMATION READY AFTER #2122.
+**State:** CONCLUDED-NEGATIVE.
 
-The frozen legal-signal model is positive across multiple retained C2 regimes and fresh canonical refresh evidence, with zero observed winner losses, but independent-population confirmation is still missing.
+The properly-powered N=160 single-stage confirmation (seed `2026092591`, dispatched exactly once from merged main after #2122/#2124 CI fixes) came back decisively negative: **0 nominated pre-winner boundaries across all 44 solved validation-split levels**, `preWinnerWork: 0` before any nomination filtering — not a near-miss of the `>=3` floor, a clean zero, at a sizing where ~11 nominations were expected if the historical mechanism transferred. This closes the fresh-acquisition confirmation line for the frozen 15-signature model in this tested form. The retained-evidence historical-population result (6.93-9.91% capture across three C2 regimes) is not overturned on its own population, but is not production-consumable without transfer this model does not show.
 
-The confirmation is fully frozen:
-- N=160 fresh random parents;
-- replacement seed `2026092591`;
-- block `ws1-late-continuation-single-001`;
-- IDs `U00001`–`U00160`;
-- Stage-A-compatible `portfolio-solve-sweep.mjs --scheduler-mode=production`;
-- breadth floor **>=3** independent nominated parents;
-- captured pre-winner work **>=5%**;
-- zero winner endangerment;
-- no parent >35% of nominated work;
-- same-stage late continuation remains predominant.
+Question: `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` — closed. Reopen only with a materially different signal/model design, not a retest of this exact frozen model at any size.
 
-Recovered Claude seed `2026092501` is quarantined because that population existed before final precommitment, though no solver ran on it.
-
-Next gate:
-- exact-head CI green on PR #2122;
-- merge #2122;
-- dispatch the one-shot confirmation exactly once from merged main;
-- accept positive or negative frozen verdict without rescue edits;
-- write durable result, hostile closeout, queue update, then retire the one-shot workflow.
-
-Question: `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE`.
-
-Evidence: [plan](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md) · [recovery](../reports/2026-09-25-ws1-precommitment-overlap-recovery-001.md) · [quality contract](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.quality.json) · [Stage A](../reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md).
+Evidence: [confirmation result](../reports/2026-09-26-ws1-late-continuation-single-stage-confirmation-result-001.md) · [plan](../reports/2026-09-25-ws1-late-continuation-single-stage-acquisition-plan-001.md) · [recovery](../reports/2026-09-25-ws1-precommitment-overlap-recovery-001.md) · [Stage A](../reports/2026-09-25-ws1-late-continuation-stage-a-opportunity-canary-result-001.md).
 
 ### 4. BC1 later-disposition shadow
 
@@ -114,7 +93,7 @@ Plan: [execution efficiency](solver-research-execution-efficiency-plan.md) · [h
 The September 20–25 retrospective found several lessons not yet fully propagated across CI/research/evidence systems. They are now tracked in the [cross-program convergence backlog](cross-program-convergence-backlog.md), with a machine-readable quality contract.
 
 Near-term order:
-1. finish #2122 / WS1 confirmation;
+1. ~~finish #2122 / WS1 confirmation~~ — done 2026-09-26, concluded-negative;
 2. keep live WS2 gates moving;
 3. then execute the highest-leverage convergence audits without creating a second scientific queue.
 
@@ -152,7 +131,7 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 |---:|---|---|---|---|---|---|
 | 2 | Repair-deadline allocation | `active` | `implementation` | 7 gains/0 losses nomination + 180/180 zero-regression confirmation both positive; blocked on `EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP` wall-clock interaction, not evidence | resolve MS_CAP interaction (scale, differentiate interactive/batch, or re-scope dose), then promote | `WS2-REPAIR-DEADLINE-ALLOCATION` |
 | 2I | Capability invention | `closed` | `reopen-only` | PROMOTED 2026-09-26: both flags default-ON, 10 referee-valid solves (8 new), 0 regressions across every tested branch row | none; reopen only for a materially different exposure form | `WS2-CAPABILITY-INVENTION-DEMAND` |
-| 1 | Automatic action selection | `active` | `implementation` | independent-population confirmation frozen; seed 2026092501 quarantined, replacement 2026092591 | #2122 green -> merge -> one frozen N=160 dispatch | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
+| 1 | Automatic action selection | `closed` | `reopen-only` | CONCLUDED-NEGATIVE: N=160 confirmation found 0/44 nominated validation levels, well below the well-powered expectation | reopen only with a materially different signal/model design | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
 | 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 production-inert later-disposition economics/safety consumer | beam-hosted later-disposition shadow when immediate | `WS2-CUT-BALANCE-PROJECTION` |
 | 2F | Forced-work capture economics | `closed` | `reopen-only` | tested global-compression/post-recognition forms closed; broader question identity retained | reopen only for a materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
 | 2R | Parity response signature | `on-demand` | `reopen-only` | static parity form closed; dormant conditional lane retained for materially different mechanism evidence | reopen only on materially different parity opportunity structure | `WS2-PARITY-RESPONSE-SIGNATURE` |
