@@ -248,3 +248,24 @@ Current critical-path conclusions that constrain cadence work:
 - cadence/ownership changes may remove obligations that never belonged to merge-safety CI; the ≤35 s target applies to the fullest **semantically justified merge-safety contract**, not to every historical check that happened to be present when the target was announced.
 
 The protected validation breadth and current timing evidence live in the critical-path plan. Any future cadence recommendation that changes the fullest selected contract must update both documents and name the retained protection for every moved obligation.
+
+
+## Detector implication / domination pass
+
+Phase 3 now has an explicit pairwise evidence surface in `scripts/ci-history-detector-implications.mjs`, produced by the existing manual historical-value workflow after representative failure signatures are recovered.
+
+For every pair of **current registered detectors**, record:
+
+- representative episodes for A and B;
+- co-failure episodes;
+- A-only and B-only episodes;
+- observed `P(B|A)` and `P(A|B)`;
+- whether the recoverable sample shows one-way implication or exact co-failure above a minimum episode floor;
+- whether either detector has ever appeared as the sole current detector in a representative episode;
+- sampled runtime exposure where available.
+
+Treat this as a shortlist generator, not a deletion oracle. An observed `A => B` can arise because one root cause breaks several consumers, because detector lineage changed, or because older logs are unavailable. Before retiring or demoting A, source inspection must show that A owns no independent current-state or detector-integrity contract, and a representative fault challenge must show that B catches the intended A failure class at the proposed cadence.
+
+This distinction is especially important for validator/self-test pairs. A repository-state validator and its mutation-fixture self-test may fail together when the detector changes, but they protect different failure directions: current-state invalidity versus detector regression.
+
+Current detailed findings and disposition are recorded in [the 2026-09-26 detector implication audit](../reports/2026-09-26-ci-detector-implication-audit-001.md).
