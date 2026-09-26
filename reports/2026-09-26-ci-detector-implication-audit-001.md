@@ -1,9 +1,9 @@
 # CI detector implication audit — first pass
 
-> **Status:** active, evidence-building
-> **Date:** 2026-09-26
-> **Purpose:** identify permanent CI checks whose marginal detection value may be dominated by another check, without treating ordinary co-failure as proof of redundancy.
-> **Current disposition:** no production check is removed or demoted by this pass. The major production lanes remain independently justified by current and historical evidence. A new pairwise implication analyzer has been added to the existing manual historical-value audit so the next reused-corpus run can identify source-level candidates with quantitative support.
+> **Status:** active
+> **Last evidence:** 2026-09-26 — source-level overlap review plus current/recent CI failure separation; pairwise implication analyzer added to the existing manual historical-value audit.
+> **Decision:** no production check is removed or demoted by this pass; use pairwise historical implication only to shortlist source-level/fault-injection candidates.
+> **Remaining gate:** run the analyzer against the retained historical audit corpus, inspect the strongest current-detector implication pairs, and fault-inject any candidate before retirement or cadence reduction.
 
 ## Question
 
