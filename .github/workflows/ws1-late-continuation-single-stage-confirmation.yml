@@ -61,7 +61,8 @@ jobs:
           const expected=Array.from({length:160},(_,i)=>`U${String(i+1).padStart(5,'0')}`);
           const ids=levels.map(level=>level.id);
           if (JSON.stringify(ids) !== JSON.stringify(expected)) throw new Error('U00001-U00160 population identity drifted');
-          if (manifest.masterSeed !== 2026092591 || manifest.requestedParentsPerMethod !== 160) throw new Error('generation manifest drifted');
+          const manifestSeedArg = manifest.invocations?.[0]?.args?.includes('--master-seed=2026092591');
+          if (!manifestSeedArg || manifest.requestedParentsPerMethod !== 160) throw new Error('generation manifest drifted');
           fs.writeFileSync('tmp/ws1-late-continuation-single-001/ids.txt', ids.join('\n')+'\n');
           NODE
 
