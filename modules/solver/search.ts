@@ -4,6 +4,7 @@ import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
+import { computeBc1ShadowConflicts } from './topology.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken, ScoringProfile, StructuralOrderingBias, SolverSearchState } from './types.js';
 
@@ -1081,6 +1082,16 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         hardPruneContexts!.push({ path: [..._reconstructBeamPath(diagnosticNode, [])], verdict,
                             cause: Object.keys(pruneDiagnostics!.rejected)[0] ?? (next === level.goalKey ? '_invalid-goal' : '_fundamental'),
                             diagnostics: pruneDiagnostics });
+                    } else if (research.observeBc1Candidate) {
+                        // WS2-CUT-BALANCE-PROJECTION shadow, only for candidates that already passed
+                        // the gauntlet above (`ok`). See computeBc1ShadowConflicts's own doc for why its
+                        // construction cost is snapshotted/restored rather than left in prep._workMeter.
+                        const shadow = computeBc1ShadowConflicts(next, ws, level, prep);
+                        if (shadow.conflicts.length > 0) research.observeBc1Candidate({
+                            depth: node.depth + 1, workBefore: prep._workMeter.units, workSpent: prep._workMeter.units,
+                            constructionWorkUnits: shadow.constructionWorkUnits, conflicts: shadow.conflicts,
+                            path: [..._reconstructBeamPath(diagnosticNode, [])],
+                        });
                     }
                 }
                 if (ok) {
