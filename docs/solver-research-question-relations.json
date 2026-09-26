@@ -1041,12 +1041,15 @@
         "docs/solver-small-exact-projections-program.md",
         "docs/solver-separator-dynamic-interface-contract-preflight.md",
         "reports/2026-09-20-lane-a-c2-global-accounting-result-001.md",
-        "reports/2026-09-21-cut-region-flow-stage0-audit-001.md"
+        "reports/2026-09-21-cut-region-flow-stage0-audit-001.md",
+        "reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md",
+        "reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md"
       ],
-      "result": "Stage-B incidence is positive (2026-09-21): BC1 conflicts occur on 22/24 eligible independent parents and 105/263 connectivity-passing sampled states. This earns the smallest production-inert safety/economics consumer; no hot-path prune or general k-cut/flow machinery is authorized.",
+      "result": "Stage-B incidence is positive (2026-09-21): BC1 conflicts occur on 22/24 eligible independent parents and 105/263 connectivity-passing sampled states. The production-inert beam later-disposition shadow (2026-09-26) confirmed this on a live, exhaustive 24-parent population: 100% parent recurrence (the two zero-incidence Stage-B parents flagged thousands of candidates once checked exhaustively), zero production-inertness or solution-safety alarms, full disposition closure (0% survive the observation window), and excellent per-catch construction economics (12 canonical work units versus a median 2,800-17,600 units of later work). Aggregate per-check economics are qualified: an unconditional-per-candidate shadow costs ~70% of total campaign canonical work, dominated by redundant isConnected() recomputation the ordinary gauntlet may already have paid for. This earns a construction-cost reduction (reuse the ordinary gauntlet's already-computed connectivity result) before any behavioral consumer; no hot-path prune or general k-cut/flow machinery is authorized.",
       "constrains": [
         "Do not reopen Lane A C0-C2 unchanged: recurring compact interface identity and per-state bridge conservation are different premises.",
-        "Do not build a hot-path prune or general min-cut/flow engine from incidence alone; the earned next gate is production-inert safety differential plus cost/work-saved measurement with later-disposition overlap.",
+        "Do not build a hot-path prune or general min-cut/flow engine from incidence alone; the earned next gate is a construction-cost reduction (reuse already-computed connectivity) followed by a matched-work behavioral consumer test.",
+        "Do not treat summed per-candidate work-distance as an additive saved-work estimate: flagged candidates' proof-to-disposition windows overlap within shared beam phases; only the per-parent median is a defensible per-catch statistic.",
         "Preserve transition-resource multiplicity: parallel cardinal and portal edges between the same cells are distinct multiedges.",
         "Other projection families remain candidates, not live experiments, until separately earned."
       ],

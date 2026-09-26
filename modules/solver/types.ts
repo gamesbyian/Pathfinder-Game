@@ -444,6 +444,24 @@ export interface BeamResearchRecord {
     attemptContext?: BeamResearchAttemptContext;
 }
 
+/**
+ * WS2-CUT-BALANCE-PROJECTION (BC1) shadow candidate: reported only for a beam candidate that
+ * already survived the ordinary hard-prune/connectivity gauntlet (`ok === true`) and for which the
+ * bridge-excursion theorem finds a conflict. `workBefore`/`workSpent` bracket the canonical
+ * `_workMeter` snapshot immediately around the shadow's own connectivity recomputation, so a
+ * consumer can charge the shadow's construction cost without it ever being folded into the
+ * canonical work meter search itself budgets against (see search.ts's own restore-after-measure
+ * comment at the call site).
+ */
+export interface Bc1ShadowCandidateInfo {
+    depth: number;
+    workBefore: number;
+    workSpent: number;
+    constructionWorkUnits: number;
+    path: number[];
+    conflicts: import('./topology.js').BridgeExcursionConflict[];
+}
+
 export interface BeamResearchObserver {
     observe(record: BeamResearchRecord): void;
     /**
@@ -452,6 +470,13 @@ export interface BeamResearchObserver {
      * default because reconstructing/retaining this per-parent context has research overhead.
      */
     includeParentExpansionWork?: boolean;
+    /**
+     * Opt-in BC1 (bridge-excursion) shadow: computed only for candidates that already survived the
+     * ordinary hard-prune/connectivity gauntlet, and never changes search behavior (see
+     * `WS2-CUT-BALANCE-PROJECTION` / `docs/solver-small-exact-projections-program.md`). Absent for
+     * every existing observer, so this remains a single optional-chained no-op check for them.
+     */
+    observeBc1Candidate?(info: Bc1ShadowCandidateInfo): void;
 }
 
 export interface RepairEliteResearchRecord {
