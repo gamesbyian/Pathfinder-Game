@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "kind": "research-level-generation-run",
+  "questionId": "WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+  "evidenceRole": "confirmation",
+  "evidenceRolesByMethod": {
+    "random": "confirmation"
+  },
+  "requestedParentsPerMethod": 160,
+  "suite": null,
+  "methods": [
+    "random"
+  ],
+  "pairwiseConstruction": [],
+  "invocations": [
+    {
+      "method": "random",
+      "script": "scripts/stress/generate-random.mjs",
+      "output": "tmp/ws1-late-continuation-single-001/corpus.json",
+      "requestedParentCount": 160,
+      "plannedParentCount": 160,
+      "sourceFamily": "witness-first-random",
+      "distributionClass": "witness-first",
+      "supportEnvelope": null,
+      "args": [
+        "--count=160",
+        "--master-seed=2026092591",
+        "--out=tmp/ws1-late-continuation-single-001/corpus.json",
+        "--id-prefix=U",
+        "--question-id=WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+        "--evidence-role=confirmation",
+        "--block-id=ws1-late-continuation-single-001"
+      ],
+      "command": [
+        "node",
+        "scripts/run-bundled.mjs",
+        "scripts/stress/generate-random.mjs",
+        "--",
+        "--count=160",
+        "--master-seed=2026092591",
+        "--out=tmp/ws1-late-continuation-single-001/corpus.json",
+        "--id-prefix=U",
+        "--question-id=WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE",
+        "--evidence-role=confirmation",
+        "--block-id=ws1-late-continuation-single-001"
+      ]
+    }
+  ],
+  "scientificBoundary": "Each producer remains a separate source block. This manifest coordinates acquisition but never pools independent-unit or evidence-role semantics.",
+  "completedAt": "2026-09-26T05:13:27.638Z",
+  "outputs": [
+    {
+      "method": "random",
+      "output": "tmp/ws1-late-continuation-single-001/corpus.json",
+      "actualParentCount": 160,
+      "blockId": "ws1-late-continuation-single-001",
+      "populationIdentity": "sha256:b78267bef2659e2d39f769772608dec9aa8110fd911d5804c73a0e65bdf0d220",
+      "sourceRegime": "random-uniform-v1",
+      "sourceRevision": "sha256:b5b5375e8606443302c6792e091d9dda7a6a0e180f3005075d50b8bf0c7ddd05"
+    }
+  ]
+}

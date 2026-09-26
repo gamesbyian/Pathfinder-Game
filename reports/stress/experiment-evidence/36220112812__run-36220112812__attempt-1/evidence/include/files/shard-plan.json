@@ -1,0 +1,1098 @@
+{
+  "planning": {
+    "telemetryPath": "logs/solver-stress-refresh/corpus2-runtime-telemetry.json",
+    "telemetryKnownIds": 0,
+    "telemetryRequestedIds": 160,
+    "fallbackMs": 1080000,
+    "uncertaintyPolicy": {
+      "configKey": "|",
+      "scaleTolerance": 3,
+      "scaleMismatchMultiplier": 8,
+      "noTelemetryOrConfigMismatchMultiplier": 11,
+      "maxUncertainGroupSize": 12,
+      "calibratedFrom": "data/stress/shard-runtime-backtest-cases.json (scripts/backtest-shard-runtime-policy.mjs)"
+    }
+  },
+  "shard": [
+    {
+      "idx": "001",
+      "ids": [
+        "U00071",
+        "U00113",
+        "U00021",
+        "U00134"
+      ],
+      "levels": "pos:71,pos:113,pos:21,pos:134",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00071",
+        "U00113",
+        "U00021",
+        "U00134"
+      ]
+    },
+    {
+      "idx": "002",
+      "ids": [
+        "U00080",
+        "U00117",
+        "U00011",
+        "U00124"
+      ],
+      "levels": "pos:80,pos:117,pos:11,pos:124",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00080",
+        "U00117",
+        "U00011",
+        "U00124"
+      ]
+    },
+    {
+      "idx": "003",
+      "ids": [
+        "U00107",
+        "U00013",
+        "U00041",
+        "U00056"
+      ],
+      "levels": "pos:107,pos:13,pos:41,pos:56",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00107",
+        "U00013",
+        "U00041",
+        "U00056"
+      ]
+    },
+    {
+      "idx": "004",
+      "ids": [
+        "U00106",
+        "U00069",
+        "U00055",
+        "U00126"
+      ],
+      "levels": "pos:106,pos:69,pos:55,pos:126",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00106",
+        "U00069",
+        "U00055",
+        "U00126"
+      ]
+    },
+    {
+      "idx": "005",
+      "ids": [
+        "U00064",
+        "U00138",
+        "U00133",
+        "U00127"
+      ],
+      "levels": "pos:64,pos:138,pos:133,pos:127",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00064",
+        "U00138",
+        "U00133",
+        "U00127"
+      ]
+    },
+    {
+      "idx": "006",
+      "ids": [
+        "U00155",
+        "U00010",
+        "U00119",
+        "U00116"
+      ],
+      "levels": "pos:155,pos:10,pos:119,pos:116",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00155",
+        "U00010",
+        "U00119",
+        "U00116"
+      ]
+    },
+    {
+      "idx": "007",
+      "ids": [
+        "U00060",
+        "U00105",
+        "U00101",
+        "U00065"
+      ],
+      "levels": "pos:60,pos:105,pos:101,pos:65",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00060",
+        "U00105",
+        "U00101",
+        "U00065"
+      ]
+    },
+    {
+      "idx": "008",
+      "ids": [
+        "U00049",
+        "U00031",
+        "U00132",
+        "U00025"
+      ],
+      "levels": "pos:49,pos:31,pos:132,pos:25",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00049",
+        "U00031",
+        "U00132",
+        "U00025"
+      ]
+    },
+    {
+      "idx": "009",
+      "ids": [
+        "U00036",
+        "U00122",
+        "U00023",
+        "U00017"
+      ],
+      "levels": "pos:36,pos:122,pos:23,pos:17",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00036",
+        "U00122",
+        "U00023",
+        "U00017"
+      ]
+    },
+    {
+      "idx": "010",
+      "ids": [
+        "U00029",
+        "U00059",
+        "U00153",
+        "U00001"
+      ],
+      "levels": "pos:29,pos:59,pos:153,pos:1",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00029",
+        "U00059",
+        "U00153",
+        "U00001"
+      ]
+    },
+    {
+      "idx": "011",
+      "ids": [
+        "U00009",
+        "U00077",
+        "U00157",
+        "U00131"
+      ],
+      "levels": "pos:9,pos:77,pos:157,pos:131",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00009",
+        "U00077",
+        "U00157",
+        "U00131"
+      ]
+    },
+    {
+      "idx": "012",
+      "ids": [
+        "U00045",
+        "U00104",
+        "U00076",
+        "U00145"
+      ],
+      "levels": "pos:45,pos:104,pos:76,pos:145",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00045",
+        "U00104",
+        "U00076",
+        "U00145"
+      ]
+    },
+    {
+      "idx": "013",
+      "ids": [
+        "U00030",
+        "U00096",
+        "U00081",
+        "U00075"
+      ],
+      "levels": "pos:30,pos:96,pos:81,pos:75",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00030",
+        "U00096",
+        "U00081",
+        "U00075"
+      ]
+    },
+    {
+      "idx": "014",
+      "ids": [
+        "U00121",
+        "U00147",
+        "U00128",
+        "U00142"
+      ],
+      "levels": "pos:121,pos:147,pos:128,pos:142",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00121",
+        "U00147",
+        "U00128",
+        "U00142"
+      ]
+    },
+    {
+      "idx": "015",
+      "ids": [
+        "U00154",
+        "U00078",
+        "U00037",
+        "U00083"
+      ],
+      "levels": "pos:154,pos:78,pos:37,pos:83",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00154",
+        "U00078",
+        "U00037",
+        "U00083"
+      ]
+    },
+    {
+      "idx": "016",
+      "ids": [
+        "U00159",
+        "U00112",
+        "U00089",
+        "U00097"
+      ],
+      "levels": "pos:159,pos:112,pos:89,pos:97",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00159",
+        "U00112",
+        "U00089",
+        "U00097"
+      ]
+    },
+    {
+      "idx": "017",
+      "ids": [
+        "U00151",
+        "U00098",
+        "U00047",
+        "U00050"
+      ],
+      "levels": "pos:151,pos:98,pos:47,pos:50",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00151",
+        "U00098",
+        "U00047",
+        "U00050"
+      ]
+    },
+    {
+      "idx": "018",
+      "ids": [
+        "U00052",
+        "U00018",
+        "U00040",
+        "U00148"
+      ],
+      "levels": "pos:52,pos:18,pos:40,pos:148",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00052",
+        "U00018",
+        "U00040",
+        "U00148"
+      ]
+    },
+    {
+      "idx": "019",
+      "ids": [
+        "U00054",
+        "U00020",
+        "U00061",
+        "U00042"
+      ],
+      "levels": "pos:54,pos:20,pos:61,pos:42",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00054",
+        "U00020",
+        "U00061",
+        "U00042"
+      ]
+    },
+    {
+      "idx": "020",
+      "ids": [
+        "U00026",
+        "U00053",
+        "U00004",
+        "U00057"
+      ],
+      "levels": "pos:26,pos:53,pos:4,pos:57",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00026",
+        "U00053",
+        "U00004",
+        "U00057"
+      ]
+    },
+    {
+      "idx": "021",
+      "ids": [
+        "U00019",
+        "U00070",
+        "U00005",
+        "U00114"
+      ],
+      "levels": "pos:19,pos:70,pos:5,pos:114",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00019",
+        "U00070",
+        "U00005",
+        "U00114"
+      ]
+    },
+    {
+      "idx": "022",
+      "ids": [
+        "U00044",
+        "U00129",
+        "U00032",
+        "U00123"
+      ],
+      "levels": "pos:44,pos:129,pos:32,pos:123",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00044",
+        "U00129",
+        "U00032",
+        "U00123"
+      ]
+    },
+    {
+      "idx": "023",
+      "ids": [
+        "U00072",
+        "U00158",
+        "U00034",
+        "U00160"
+      ],
+      "levels": "pos:72,pos:158,pos:34,pos:160",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00072",
+        "U00158",
+        "U00034",
+        "U00160"
+      ]
+    },
+    {
+      "idx": "024",
+      "ids": [
+        "U00015",
+        "U00038",
+        "U00079",
+        "U00048"
+      ],
+      "levels": "pos:15,pos:38,pos:79,pos:48",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00015",
+        "U00038",
+        "U00079",
+        "U00048"
+      ]
+    },
+    {
+      "idx": "025",
+      "ids": [
+        "U00002",
+        "U00003",
+        "U00068",
+        "U00146"
+      ],
+      "levels": "pos:2,pos:3,pos:68,pos:146",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00002",
+        "U00003",
+        "U00068",
+        "U00146"
+      ]
+    },
+    {
+      "idx": "026",
+      "ids": [
+        "U00115",
+        "U00125",
+        "U00136",
+        "U00035"
+      ],
+      "levels": "pos:115,pos:125,pos:136,pos:35",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00115",
+        "U00125",
+        "U00136",
+        "U00035"
+      ]
+    },
+    {
+      "idx": "027",
+      "ids": [
+        "U00095",
+        "U00073",
+        "U00051",
+        "U00022"
+      ],
+      "levels": "pos:95,pos:73,pos:51,pos:22",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00095",
+        "U00073",
+        "U00051",
+        "U00022"
+      ]
+    },
+    {
+      "idx": "028",
+      "ids": [
+        "U00140",
+        "U00094",
+        "U00058",
+        "U00120"
+      ],
+      "levels": "pos:140,pos:94,pos:58,pos:120",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00140",
+        "U00094",
+        "U00058",
+        "U00120"
+      ]
+    },
+    {
+      "idx": "029",
+      "ids": [
+        "U00066",
+        "U00110",
+        "U00118",
+        "U00091"
+      ],
+      "levels": "pos:66,pos:110,pos:118,pos:91",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00066",
+        "U00110",
+        "U00118",
+        "U00091"
+      ]
+    },
+    {
+      "idx": "030",
+      "ids": [
+        "U00090",
+        "U00152",
+        "U00082",
+        "U00139"
+      ],
+      "levels": "pos:90,pos:152,pos:82,pos:139",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00090",
+        "U00152",
+        "U00082",
+        "U00139"
+      ]
+    },
+    {
+      "idx": "031",
+      "ids": [
+        "U00143",
+        "U00099",
+        "U00008",
+        "U00033"
+      ],
+      "levels": "pos:143,pos:99,pos:8,pos:33",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00143",
+        "U00099",
+        "U00008",
+        "U00033"
+      ]
+    },
+    {
+      "idx": "032",
+      "ids": [
+        "U00086",
+        "U00093",
+        "U00088",
+        "U00100"
+      ],
+      "levels": "pos:86,pos:93,pos:88,pos:100",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00086",
+        "U00093",
+        "U00088",
+        "U00100"
+      ]
+    },
+    {
+      "idx": "033",
+      "ids": [
+        "U00144",
+        "U00150",
+        "U00085",
+        "U00012"
+      ],
+      "levels": "pos:144,pos:150,pos:85,pos:12",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00144",
+        "U00150",
+        "U00085",
+        "U00012"
+      ]
+    },
+    {
+      "idx": "034",
+      "ids": [
+        "U00024",
+        "U00109",
+        "U00130",
+        "U00102"
+      ],
+      "levels": "pos:24,pos:109,pos:130,pos:102",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00024",
+        "U00109",
+        "U00130",
+        "U00102"
+      ]
+    },
+    {
+      "idx": "035",
+      "ids": [
+        "U00149",
+        "U00016",
+        "U00156",
+        "U00087"
+      ],
+      "levels": "pos:149,pos:16,pos:156,pos:87",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00149",
+        "U00016",
+        "U00156",
+        "U00087"
+      ]
+    },
+    {
+      "idx": "036",
+      "ids": [
+        "U00062",
+        "U00063",
+        "U00141",
+        "U00028"
+      ],
+      "levels": "pos:62,pos:63,pos:141,pos:28",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00062",
+        "U00063",
+        "U00141",
+        "U00028"
+      ]
+    },
+    {
+      "idx": "037",
+      "ids": [
+        "U00084",
+        "U00046",
+        "U00135",
+        "U00111"
+      ],
+      "levels": "pos:84,pos:46,pos:135,pos:111",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00084",
+        "U00046",
+        "U00135",
+        "U00111"
+      ]
+    },
+    {
+      "idx": "038",
+      "ids": [
+        "U00092",
+        "U00027",
+        "U00067",
+        "U00043"
+      ],
+      "levels": "pos:92,pos:27,pos:67,pos:43",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00092",
+        "U00027",
+        "U00067",
+        "U00043"
+      ]
+    },
+    {
+      "idx": "039",
+      "ids": [
+        "U00074",
+        "U00103",
+        "U00137",
+        "U00014"
+      ],
+      "levels": "pos:74,pos:103,pos:137,pos:14",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00074",
+        "U00103",
+        "U00137",
+        "U00014"
+      ]
+    },
+    {
+      "idx": "040",
+      "ids": [
+        "U00006",
+        "U00039",
+        "U00108",
+        "U00007"
+      ],
+      "levels": "pos:6,pos:39,pos:108,pos:7",
+      "c1Id": null,
+      "c1Levels": null,
+      "c1TimeoutMinutes": 0,
+      "predictedWallMinutes": 300,
+      "timeoutMinutes": 300,
+      "jobTimeoutMinutes": 300,
+      "confidence": "bypassed",
+      "telemetryCoverage": {
+        "total": 4,
+        "note": "telemetry bypassed by --fixed-group-size"
+      },
+      "uncertainIds": [
+        "U00006",
+        "U00039",
+        "U00108",
+        "U00007"
+      ]
+    }
+  ]
+}

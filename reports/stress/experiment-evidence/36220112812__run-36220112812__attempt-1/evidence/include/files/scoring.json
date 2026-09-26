@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "kind": "pathfinder-action-selection-frozen-model-challenge",
+  "modelPath": "reports/stress/action-selection-legal-signal-frozen-model-2026-09-21.json",
+  "inputMetadata": [
+    {
+      "source": "logs/ws1-late-continuation-single-001/combined.json",
+      "timestamp": null,
+      "commitSha": null,
+      "configurationHash": null,
+      "solved": null,
+      "observedLevels": 160,
+      "actionBoundaryDigest": "sha256:8571bd85a69712f6bd01aeb15badf687b5bc8fb95bb9eec284d7b801227da2fa"
+    }
+  ],
+  "actionBoundaryDigest": "sha256:8571bd85a69712f6bd01aeb15badf687b5bc8fb95bb9eec284d7b801227da2fa",
+  "combined": {
+    "schemaVersion": 1,
+    "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+    "model": {
+      "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+      "family": "prior-response+work+next-stage",
+      "minDevelopmentSupport": 100,
+      "signatureCount": 15,
+      "source": {
+        "workflowRunId": 35066677597,
+        "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+        "role": "development split of frozen C2 production boundary"
+      }
+    },
+    "validationSolvedLevels": 44,
+    "validationRows": 1816,
+    "preWinnerWork": 0,
+    "nominatedPreWinnerWork": 0,
+    "nominatedPreWinnerLevels": 0,
+    "capturedPreWinnerWorkShare": null,
+    "endangeredWinnerLevels": 0,
+    "endangeredWinnerRate": 0,
+    "diagnostics": {
+      "nominatedSameStageContinuationWork": 0,
+      "nominatedSameStageContinuationWorkShare": null,
+      "baselineSameStageContinuationWorkShare": null,
+      "maxNominatedParentWorkShare": null,
+      "nominatedByLevel": [],
+      "nominatedByPriorOutcome": [],
+      "baselineByPriorOutcome": [
+        {
+          "key": "censored",
+          "work": 0,
+          "workShare": null,
+          "attempts": 449,
+          "levels": 32
+        },
+        {
+          "key": "exhausted",
+          "work": 0,
+          "workShare": null,
+          "attempts": 179,
+          "levels": 22
+        },
+        {
+          "key": "start",
+          "work": 0,
+          "workShare": null,
+          "attempts": 37,
+          "levels": 37
+        }
+      ],
+      "nominatedByNextStage": []
+    },
+    "interpretation": {
+      "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+      "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+    }
+  },
+  "bySource": {
+    "logs/ws1-late-continuation-single-001/combined.json": {
+      "schemaVersion": 1,
+      "kind": "pathfinder-action-selection-frozen-legal-signal-evaluation",
+      "model": {
+        "kind": "pathfinder-action-selection-legal-signal-frozen-model",
+        "family": "prior-response+work+next-stage",
+        "minDevelopmentSupport": 100,
+        "signatureCount": 15,
+        "source": {
+          "workflowRunId": 35066677597,
+          "solverRef": "16114b80e54233910f34ec2ea8e2c1a41a859eb4",
+          "role": "development split of frozen C2 production boundary"
+        }
+      },
+      "validationSolvedLevels": 44,
+      "validationRows": 1816,
+      "preWinnerWork": 0,
+      "nominatedPreWinnerWork": 0,
+      "nominatedPreWinnerLevels": 0,
+      "capturedPreWinnerWorkShare": null,
+      "endangeredWinnerLevels": 0,
+      "endangeredWinnerRate": 0,
+      "diagnostics": {
+        "nominatedSameStageContinuationWork": 0,
+        "nominatedSameStageContinuationWorkShare": null,
+        "baselineSameStageContinuationWorkShare": null,
+        "maxNominatedParentWorkShare": null,
+        "nominatedByLevel": [],
+        "nominatedByPriorOutcome": [],
+        "baselineByPriorOutcome": [
+          {
+            "key": "censored",
+            "work": 0,
+            "workShare": null,
+            "attempts": 449,
+            "levels": 32
+          },
+          {
+            "key": "exhausted",
+            "work": 0,
+            "workShare": null,
+            "attempts": 179,
+            "levels": 22
+          },
+          {
+            "key": "start",
+            "work": 0,
+            "workShare": null,
+            "attempts": 37,
+            "levels": 37
+          }
+        ],
+        "nominatedByNextStage": []
+      },
+      "interpretation": {
+        "allowed": "apply an already-frozen legal-signal membership rule unchanged to retained validation action boundaries",
+        "forbidden": "refit signature membership/support on this challenge population or infer live scheduler counterfactual savings"
+      },
+      "actionBoundaryDigest": "sha256:8571bd85a69712f6bd01aeb15badf687b5bc8fb95bb9eec284d7b801227da2fa"
+    }
+  }
+}
