@@ -17,6 +17,54 @@ const PATH_FIELDS = ['answeredBy', 'constrainedBy'];
 const pathLike = value => typeof value === 'string' && /^(?:docs|reports|scripts)\//u.test(value);
 
 
+const QUEUE_EXECUTION_STATES = new Set(['active', 'closed', 'supporting', 'on-demand', 'method-complete', 'subsumed']);
+
+const cleanTableCell = value => String(value ?? '').replace(/[`*_]/gu, '').trim();
+
+export function parseWorkstreamQuestionStates(source) {
+    const rows = [];
+    for (const line of String(source ?? '').split('\n')) {
+        if (!/^\s*\|/u.test(line)) continue;
+        const cells = line.split('|').slice(1, -1).map(cleanTableCell);
+        if (cells.length < 7) continue;
+        const executionState = cells[2];
+        if (!QUEUE_EXECUTION_STATES.has(executionState)) continue;
+        const questionRef = /^WS[0-9A-Z-]+$/u.test(cells[6]) ? cells[6] : null;
+        rows.push({
+            workstreamId: cells[0],
+            executionState,
+            gateClass: cells[3],
+            questionRef,
+        });
+    }
+    return rows;
+}
+
+export function queueQuestionLifecycleIssues(workstreamsSource, registry) {
+    const questions = new Map((registry?.questions ?? []).map(question => [String(question.id), question]));
+    const issues = [];
+    for (const row of parseWorkstreamQuestionStates(workstreamsSource)) {
+        if (!row.questionRef) continue;
+        const question = questions.get(row.questionRef);
+        if (!question) {
+            issues.push(`workstream ${row.workstreamId} references missing question ${row.questionRef}`);
+            continue;
+        }
+        const lifecycle = researchQuestionLifecycleClass(String(question.state ?? '').trim().toLowerCase());
+        const liveExecution = row.executionState === 'active' || row.executionState === 'supporting';
+        if (liveExecution && ['closed', 'concluded'].includes(lifecycle)) {
+            issues.push(`workstream ${row.workstreamId} is ${row.executionState} but ${row.questionRef} is terminal (${question.state})`);
+        }
+        if (row.executionState === 'closed' && lifecycle === 'active') {
+            issues.push(`workstream ${row.workstreamId} is closed but ${row.questionRef} is still active-candidate`);
+        }
+        if (row.gateClass === 'reopen-only' && lifecycle === 'active') {
+            issues.push(`workstream ${row.workstreamId} is reopen-only but ${row.questionRef} is still active-candidate`);
+        }
+    }
+    return issues;
+}
+
 export function summarizeQuestionGenealogyVsImplication(registry) {
     const implies = new Set();
     const triggered = new Set();
@@ -50,7 +98,9 @@ export function auditResearchQuestionAuthorities(root = process.cwd()) {
     const warnings = [];
 
     const workstreamsPath = path.join(root, 'docs/solver-optimization-workstreams.md');
-    const workstreamsText = existsSync(workstreamsPath) ? readFileSync(workstreamsPath, 'utf8').toLowerCase() : '';
+    const workstreamsSource = existsSync(workstreamsPath) ? readFileSync(workstreamsPath, 'utf8') : '';
+    const workstreamsText = workstreamsSource.toLowerCase();
+    errors.push(...queueQuestionLifecycleIssues(workstreamsSource, registry));
     const questionDocPath = path.join(root, 'docs/solver-research-question-relations.md');
     if (existsSync(questionDocPath)) {
         const questionDoc = readFileSync(questionDocPath, 'utf8');
