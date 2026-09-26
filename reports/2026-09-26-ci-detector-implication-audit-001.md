@@ -128,3 +128,89 @@ There is still plausible fine-grained redundancy, but the evidence does **not** 
 The highest-value next candidates are the historical correlated research/repository cluster, particularly checks that repeatedly rebuild the same research authority/index and checks with no unique representative episodes. The implication artifact should be used to choose a small source-audit/fault-injection shortlist, not to bulk-delete zero-hit or always-correlated tests.
 
 This continues the CI program's established order: challenge claim ownership and marginal detector value before optimizing execution, and do not create a new always-on guard merely to police the previous guards.
+
+
+## First retained-corpus implication results
+
+The retained historical audit artifact from run `35911214948` is still available and was inspected directly. It contains the full representative-signature corpus used by the September audit:
+
+- 865 mechanical repair episodes;
+- 296 episodes with parsed detector signatures;
+- 421 explicit retrieval gaps, concentrated in older history.
+
+The first pairwise implication pass over those signatures produced several superficially strong candidates. Source inspection changes their disposition as follows.
+
+### `check:types` → `check:types:tests`
+
+Observed history:
+
+- `check:types`: 17 representative episodes;
+- `check:types:tests`: 33;
+- every observed `check:types` failure co-occurred with `check:types:tests`;
+- `check:types:tests` had 16 additional representative failures.
+
+This is a perfect observed one-way implication in the recoverable sample, but **not semantic subsumption**.
+
+`tsconfig.test.json` extends the production config and includes all `modules/**/*.ts`, so ordinary production type defects usually propagate into both checks. However it also adds Node globals and omits `scripts/ablation-config.mjs`, while `tsconfig.json` intentionally validates production modules under the DOM/browser environment with `types: []` and includes that script.
+
+Disposition: **retain both**. The production check can uniquely catch accidental Node-environment dependence or an error in the extra production-typed script even though retained history has not yet exercised that distinction.
+
+### `test:persist-decision-bearing-evidence` ⇔ `test:validate-reconciliation-sources`
+
+Observed history:
+
+- four representative episodes for each;
+- all four co-failed;
+- no recoverable A-only or B-only episode.
+
+This is exact observed co-failure, but source inspection shows independent contracts.
+
+`test:persist-decision-bearing-evidence` protects durable evidence retention: shared decision-bearing eligibility, byte hashes, exact outcome bindings, simple population bindings, immutable run/attempt identity, idempotent re-harvest, compression/storage behavior, and refusal to overwrite different bytes under the same identity.
+
+`test:validate-reconciliation-sources` protects multi-run scientific reconciliation: declared run/attempt identity, non-relabeling of staged sources, protocol compatibility, preserved solver/configuration identity, canonical source-set hashing, no nested reconciliation ancestry loss, and construction of a recombine-only reconciliation contract.
+
+Disposition: **retain both**. Their historical exact co-failure is explained by shared evidence-system authoring incidents rather than duplicate semantics.
+
+### Research integration validator versus mutation harness
+
+Observed history:
+
+- `check:research-integration`: 33 representative episodes;
+- `test:research-integration-audit`: 32;
+- every observed Node-harness failure co-occurred with the permanent validator, while the validator had one additional representative failure.
+
+Source inspection again shows asymmetric ownership rather than duplication.
+
+The validator owns the autonomous current-repository integration proof. The Node harness intentionally reuses one immutable relation model and injects malformed queue/question/source/capability/consumption relations to prove the detector remains sensitive to specific bad states.
+
+Disposition: **retain both**. The current-state validator and detector mutation suite protect opposite failure directions.
+
+### Other strong historical implications
+
+The retained corpus also contains many high-confidence-looking implications inside the research/index/inventory/query cluster and between documentation/workflow metadata checks. These remain candidates for **shared-model/refactor consolidation**, not deletion, because the existing topology audit already established that several consumers re-derive overlapping repository authorities.
+
+The right optimization for this cluster is still:
+
+1. one canonical parsed/relation model where practical;
+2. consumer-specific assertions over that model;
+3. one current-state authority validator;
+4. mutation/self-tests only where they prove detector sensitivity;
+5. impact-scoped execution by semantic ownership.
+
+Do not infer semantic redundancy merely because a narrower consumer has never failed outside the broader authority check.
+
+## Current answer to the redundancy question
+
+The first real implication pass found **no current permanent check that is yet proven safe to delete solely because another check subsumes it**.
+
+That is itself useful evidence. The historical corpus contains several perfect implication/co-failure patterns, but the strongest inspected examples all dissolve under source-level semantic comparison. The remaining plausible savings are therefore more likely to come from:
+
+- shared repository-model construction;
+- narrower impact routing;
+- thinner executable-boundary smokes;
+- periodic/demand cadence for evidence-reconfirmation checks;
+- retiring checks whose underlying claim no longer belongs to merge-safety CI;
+
+rather than deleting pairs of still-live correctness contracts because they historically fail together.
+
+The implication analyzer should remain a periodic audit aid. Future deletion candidates should require both new historical domination evidence and a source/fault-injection demonstration that the candidate has no unique semantic failure class.
