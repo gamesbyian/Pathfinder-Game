@@ -168,26 +168,60 @@ Repeated workflow fragments plus near-limit workflow files are an extraction sig
 
 When a research line closes, reverse-sweep candidate-specific workflows/tests against current dispositions. Default-OFF code retained for reproducibility does not automatically justify a lifetime dedicated workflow. Durable evidence keyed by run/attempt/experiment identity should be append-only or idempotent: rerun/reharvest must not silently overwrite different bytes under the same identity.
 
-## 7. CI runtime, failure lessons, and structural bloat
+## 7. CI runtime, speed maintenance, failure lessons, and structural bloat
 
-Inspect recent CI over a meaningful window. Separate hosted-runner/network variance from repository-caused regression.
+Inspect recent CI over a meaningful window. Treat CI speed as a maintained repository property, not a one-time optimization campaign. Use [`testing.md`](testing.md), [`ci-impact-routing-plan.md`](ci-impact-routing-plan.md), [`ci-historical-value-audit-plan.md`](ci-historical-value-audit-plan.md), and the current state/closeout of [`ci-35s-critical-path-plan.md`](ci-35s-critical-path-plan.md) as drill-down authorities rather than copying their experiment history here.
+
+Separate hosted-runner/network/queue variance from repository-caused regression. Prefer a bounded comparable sample of full-impact and representative scoped runs over one lucky or unlucky run. Compare first-required-runner → last-required-completion, per-lane runner wall, and useful-work time where available. If the current CI authority still defines p50/p90 or other latency targets, check them; otherwise compare against the most recent accepted steady-state window and investigate material structural regression rather than demanding an arbitrary absolute number forever.
+
+Before optimizing a slow check, re-establish **why it is in PR CI**. For every expensive or newly universal obligation, use this order:
+
+1. name the concrete bad merge or current repository contract it detects;
+2. classify the claim: correctness, governance/process integrity, maintainability, generated freshness, solver/research effectiveness, historical reproducibility, or frozen evidence reconfirmation;
+3. identify the repository process that should own that claim and its appropriate cadence;
+4. decide whether PR merge-safety CI is actually the right authority;
+5. establish semantic invalidation ownership: which changes can make the claim false;
+6. assess its marginal detection value relative to existing checks;
+7. only then optimize testability, caching, concurrency, sharding, packing, or runner topology.
+
+Solver/research effectiveness, fixed historical experimental contrasts, solved-count preservation, and frozen research conclusions normally belong to matched-work experiment/promotion/audit processes unless they also encode a current merge-safety invariant. Conversely, a cheap current correctness contract should not be demoted merely because historical evidence around it exists.
+
+Audit **selected population**, not only execution speed. Check for source rules or ownership registries that have broadened so one common edit selects unrelated validator, Node/CLI, coverage, build, service, or proof work. Confirm router fail-safe behavior still expands safely, but do not let fail-safe population become the normal path unnoticed. When narrowing routing, require an explicit consumer/dependency chase and a fault/scoped rehearsal appropriate to the boundary rather than path intuition alone.
+
+Audit **workflow lifecycle and trigger cruft**. Closed-campaign hostile audits, timing rehearsals, closeout canaries, evidence-only benchmarks, and one-shot migrations should not silently remain automatic on ordinary PRs. If a durable invariant survives the campaign, re-home it under a current domain-owned check; otherwise move the workflow to deliberate/manual cadence or retire it. Cross-check lifecycle/discoverability registries and workflow indexes when triggers change.
+
+Audit **cache topology in both warm and cold paths**. Look for:
+- exact-key caches whose small source churn forces reconstruction of very large derived/runtime trees;
+- redundant download-cache/setup work immediately before an exact dependency-tree hit;
+- fallback caches that restore stale state without a precise delta/authority identity;
+- repeated sparse checkout or materialization in multiple lanes;
+- projection caches where source identity and transformation-authority identity should be separated;
+- cold misses that dominate p90 even though warm median looks healthy.
+
+Prefer rolling/fallback-plus-delta designs only when the changed/deleted overlay and authority invalidation are explicit and permanently tested. Do not preserve a fast warm path by making clean rebuild semantics ambiguous.
+
+Audit **cardinality scaling** of PR-incremental checks. A validator that is cheap for ten changed files can be disastrous for a 1,000-file migration if it launches a process, network request, checkout, parser bootstrap, or large decode per file. Use recent large migrations or a bounded synthetic bulk fixture as the adversarial case where justified. Batch repository/object reads and other repeated setup while preserving exactly the same validation population.
+
+Audit the critical-path tails inside parallel populations. Prefer making an expensive contract cheaper by exposing a callable/test seam, reusing one bundle/setup, using synthetic fixtures for bookkeeping semantics, or keeping one real integration owner instead of repeatedly paying production search/IO as fixture generation. Preserve at least the boundary/integration coverage that actually detects wiring failures. Do not lower scientifically or semantically meaningful budgets just to improve CI numbers.
+
+Treat topology experiments as premise-dependent. Do not repeatedly reopen rejected shard/packing/concurrency layouts from ordinary runner noise. Revisit them when something material changes, such as selected population, longest-child tail, bootstrap/cache topology, runner capacity, or independent-job setup cost. Require repeatable exact-head semantic green plus timing evidence before promoting a production topology change.
 
 Do a bounded retrospective over failed CI/workflow runs, emphasizing repeated deterministic failures, post-merge/main-only failures, workflow-platform contract failures, silent/incomplete data handling, and agent-caused procedural misses. Cluster by underlying cause rather than counting every red run. For each prominent class ask whether it reveals:
 - stale or missing agent guidance;
 - a deterministic check that should run earlier or locally;
 - an unenforced GitHub Actions/platform limit or semantic;
-- an edge layout/ordering case absent from tests;
+- an edge layout/ordering/cardinality case absent from tests;
 - cross-authority/lifecycle drift;
 - a brittle proxy assertion based on count, timing, alias, exact prose, or incidental representation;
 - a recurring edit surface that needs decomposition or a shared helper.
 
-Promote the lesson into the smallest appropriate owner: executable guard when cheap, `ci-preflight.md` / `change-recipes.md` when procedural, shared workflow/tooling infrastructure when structural, or provider-neutral `AGENTS.md` guidance only when it broadly belongs there. Do not turn this plan into an accumulating incident log.
+Promote the lesson into the smallest appropriate owner: executable guard when cheap, `ci-preflight.md` / `change-recipes.md` when procedural, shared workflow/tooling infrastructure when structural, or provider-neutral `AGENTS.md` guidance only when it broadly belongs there. A new CI guard is not automatically the answer to a CI-caused oversight: prefer fixing routing, ownership, authoring guidance, or existing self-tests when they prevent the miss more cheaply. Do not turn this plan into an accumulating incident log.
 
-Examine end-to-end and per-job duration, queue time, setup/install/cache cost, test/check/proof runtime, job count, repeated work, sparse-checkout/materialization volume, dependency growth, new validations, cancellation/concurrency, and slow tail tasks inside parallel populations.
+Examine end-to-end and per-job duration, queue time, setup/install/cache cost, test/check/proof runtime, job count, repeated work, sparse-checkout/materialization volume, dependency growth, new validations, cancellation/concurrency, selected-population growth, and slow tail tasks inside parallel populations.
 
-Look for repeated `npm ci` without enough benefit, ineffective caches, oversized materialization, broad runners that accumulated unrelated checks, duplicated validation, completed-campaign checks still universal, serial bottlenecks, excessive fragmentation, heavyweight proofs with safely narrowable triggers, and stale artifacts/setup.
+Look for repeated `npm ci` without enough benefit, ineffective caches, oversized materialization, broad runners that accumulated unrelated checks, duplicated validation, completed-campaign checks still universal, serial bottlenecks, excessive fragmentation, heavyweight proofs with safely narrowable triggers, frozen evidence being reconfirmed continuously, and stale artifacts/setup.
 
-A green workflow can still be wasteful. Do not weaken meaningful validation merely to reduce runtime.
+A green workflow can still be wasteful. A fast workflow can still be semantically under-protective. Preserve current contracts while removing work whose owner, cadence, routing, or execution shape no longer makes sense.
 
 ## 8. Tests, validators, ratchets, and completed-program scaffolding
 
@@ -298,6 +332,9 @@ Before declaring completion ask:
 - Did compatibility removal break a real consumer?
 - Did workflow/test retirement leave hardcoded consumers?
 - Did CI speed work reduce meaningful coverage?
+- Did a closed campaign, benchmark, rehearsal, or audit regain an automatic PR trigger without a current invariant that justifies it?
+- Did warm-path speed hide a pathological cold-cache or bulk-change path?
+- Did CI speed work leave an expensive claim in PR CI without rechecking its owner/cadence, or narrow routing without a consumer/fault proof?
 - Did a validator get weakened rather than modernized?
 - Do stale exemptions remain after their debt disappeared?
 - Can an agent actually reach the evidence needed to verify important workflow results?
