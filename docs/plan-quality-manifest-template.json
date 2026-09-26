@@ -6,8 +6,12 @@
   "premises": [
     {
       "question": "What underlying claim makes this work necessary?",
-      "evidence": ["<current implementation / report / query>"],
-      "alternatives": ["<plausible alternate framing>"],
+      "evidence": [
+        "<current implementation / report / query>"
+      ],
+      "alternatives": [
+        "<plausible alternate framing>"
+      ],
       "discriminator": "<smallest test/query that could redirect the plan>"
     }
   ],
@@ -37,19 +41,29 @@
     "classification": "none|blocks|unblocks|evidence-quality|acquisition-cost|observation-surface|retires-workaround|invalidates-evidence|mechanism-only",
     "authoritiesChecked": [
       "docs/solver-optimization-workstreams.md",
-      "docs/solver-future-work.md"
+      "docs/solver-future-work.md",
+      "docs/solver-research-question-relations.json",
+      "docs/solver-opt-in-experiment-ledger.md"
     ],
     "items": [],
-    "notes": "<required explanation, including why none when classification=none>"
+    "notes": "<required explanation, including why none when classification=none; omit/mark promotion ledger not applicable in plan prose when no treatment disposition changes>"
   },
   "phases": [
     {
       "id": "P1",
       "name": "<phase>",
-      "entry": ["<assumption/gate>"],
-      "outputs": ["<concrete implementation result>"],
-      "affectedDomains": ["producersWriters"],
-      "exitProofIds": ["DOD-1"]
+      "entry": [
+        "<assumption/gate>"
+      ],
+      "outputs": [
+        "<concrete implementation result>"
+      ],
+      "affectedDomains": [
+        "producersWriters"
+      ],
+      "exitProofIds": [
+        "DOD-1"
+      ]
     }
   ],
   "definitionsOfDone": [
