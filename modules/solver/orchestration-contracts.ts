@@ -236,7 +236,7 @@ export interface SolveOpts {
      *  256 nodes). So overshoot is bounded by ~one check interval (tens to a few hundred nodes),
      *  NOT by a whole attempt's or the repair probe's internal ceiling the way it was before this
      *  was threaded through beam/DFS. The one remaining coarse case: the repair probe still bounds
-     *  each seed-salt ROUND (up to EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, 6,000,000) rather than mid-round,
+     *  each seed-salt ROUND (up to EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, 38,000,000) rather than mid-round,
      *  so a budget below a single biased round's cost can still overshoot by up to that round. */
     nodeBudget?: number;
     /** Preferred name for the solver's base canonical WORK allocation (work-meter.ts's unit:
