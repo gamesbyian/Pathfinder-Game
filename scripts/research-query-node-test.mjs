@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 
 import { runResearchQueryCommand } from './research-query-cli-lib.mjs';
 import { buildResearchQueryGraph, queryResearchGraph, resolveResearchEntity } from './research-query-lib.mjs';
-import { buildResearchQueryView } from './research-query-views-lib.mjs';
+import { buildAnswerabilityView, buildResearchQueryView } from './research-query-views-lib.mjs';
 import { buildResearchQuerySnapshot, buildResearchQuerySnapshotFromGitRef, diffResearchQuerySnapshots } from './research-query-snapshot-lib.mjs';
 import { buildResearchSystemFindingIndex, buildResearchSystemFindingSnapshot } from './research-system-query-lib.mjs';
 
@@ -119,7 +119,18 @@ assert.ok(supportImpact.rows.some(row =>
   'authored decisionSupport should distinguish necessary support from answeredBy-only evidence');
 
 const answerability = buildResearchQueryView(graph, { view: 'answerability' });
-assert.ok(answerability.noFreshSolverExecution.some(row => row.workstreamId === 1),
+// noFreshSolverExecution ('existing-data'/'design'/'implementation' gate classes) is exercised on a
+// synthetic fixture rather than a live workstream row: every currently-live gate is closed/bounded-
+// compute/dormant (no workstream is mid-design/mid-implementation right now), so relying on a real
+// row would make this assertion only as durable as whichever workstream happens to be live.
+const designGateFixture = {
+  ...graph,
+  nodes: graph.nodes.map(node =>
+    node.type === 'queue' && node.row?.workstreamId === 1
+      ? { ...node, row: { ...node.row, gateClass: 'design' } }
+      : node),
+};
+assert.ok(buildAnswerabilityView(designGateFixture).noFreshSolverExecution.some(row => row.workstreamId === 1),
   'design gate should be visible as no-fresh-solver-execution work');
 assert.ok(answerability.boundedCompute.some(row => row.workstreamId === '2X'),
   'small exact projections BC1 consumer gate should be explicitly classified as bounded compute');
@@ -150,11 +161,18 @@ const snapshot = buildResearchQuerySnapshot(graph);
 const headSnapshot = buildResearchQuerySnapshotFromGitRef(process.cwd(), 'HEAD');
 assert.deepEqual(headSnapshot.gates, snapshot.gates,
   'Git-ref reconstruction of HEAD should preserve current workstream gate state');
+// Both sides of this gate-class transition are constructed synthetically (rather than relying on
+// WS2's real current gateClass) because WS2 is now closed/reopen-only in the live docs -- the diff
+// utility's own noFreshSolverExecution transition detection should be verified independent of
+// whichever workstream happens to be live/implementation-stage right now.
 const earlier = structuredClone(snapshot);
-const ws2 = earlier.gates.find(row => row.workstreamId === 2);
-assert.ok(ws2);
-ws2.gateClass = 'bounded-compute';
-const temporal = diffResearchQuerySnapshots(earlier, snapshot);
+const later = structuredClone(snapshot);
+const ws2Before = earlier.gates.find(row => row.workstreamId === 2);
+const ws2After = later.gates.find(row => row.workstreamId === 2);
+assert.ok(ws2Before && ws2After);
+ws2Before.gateClass = 'bounded-compute';
+ws2After.gateClass = 'implementation';
+const temporal = diffResearchQuerySnapshots(earlier, later);
 assert.equal(temporal.gateClassComparison.comparable, true);
 assert.ok(temporal.newlyNoFreshSolverExecution.some(row => row.workstreamId === 2),
   'snapshot diff should identify workstreams whose gate moved from bounded compute into implementation');
