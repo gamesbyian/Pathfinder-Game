@@ -24,6 +24,7 @@ const beamWidth = Number(args.get('--beam-width') ?? 5000);
 const nodeBudget = Number(args.get('--node-budget') ?? 20000000);
 const budgetMs = Number(args.get('--budget-ms') ?? 120000);
 const outFile = args.get('--out') ?? 'reports/stress/collect-bc1-shadow-disposition.json';
+const sampleResolved = Number(args.get('--sample-resolved') ?? 25);
 const requestedLevelIds = (args.get('--level-ids') ?? '').split(',').map(x => x.trim()).filter(Boolean);
 const runId = args.get('--run-id') ?? `bc1-shadow-disposition-${new Date().toISOString()}`;
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
@@ -84,7 +85,12 @@ for (const rawId of requestedLevelIds) {
         totalWorkDistance: workDistances.reduce((a, b) => a + b, 0),
         medianWorkDistance: workDistances.length ? workDistances.slice().sort((a, b) => a - b)[Math.floor(workDistances.length / 2)] : null,
         everExpandedCount: resolved.filter(r => r.everExpanded).length,
-        resolved,
+        // Full per-candidate `resolved` (one entry per flagged prefix, each carrying its own path
+        // array) is not retained: flagged counts run into the tens of thousands per level, and
+        // JSON.stringify-ing every one across a multi-parent run can exceed V8's max string length.
+        // A bounded sample is kept for manual inspection/reproducibility; aggregate economics above
+        // are already computed over the FULL resolved population, not just this sample.
+        resolvedSample: resolved.slice(0, sampleResolved),
     });
     console.error(`${rawId}: flagged=${summary.flaggedCount} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded} overlap=${JSON.stringify(overlapCounts)}`);
 }
