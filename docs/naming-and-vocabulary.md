@@ -1,6 +1,6 @@
 # Naming and vocabulary
 
-This is the permanent naming authority for Pathfinder. Use it for new names and during rename migrations. The active repository-wide migration sequence and compatibility details live in [`naming-cleanup-plan.md`](naming-cleanup-plan.md); execution status lives in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json).
+This is the permanent naming authority for Pathfinder. Use it for new names and future rename migrations. The repository-wide Phase 0–15 naming cleanup is complete; [`naming-cleanup-plan.md`](naming-cleanup-plan.md) and [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) are retained implementation evidence, not active execution authorities.
 
 ## Naming contract
 
