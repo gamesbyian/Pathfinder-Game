@@ -39,6 +39,9 @@ if (new Set(requestedLevelIds).size !== requestedLevelIds.length) throw new Erro
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
+const { defaultConfig } = await import('../../modules/solver/ablation-config.ts');
+// The BC1 prune is default-ON in production; the shadow must observe the UNPRUNED search, so pin it OFF in both arms.
+const shadowCfg = () => ({ ...defaultConfig(), STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE: false });
 const Solver = createSolver();
 const rawLevels = readLevelCorpusDocumentWithHints(levelsFile).levels;
 const byId = new Map(rawLevels.map(level => [String(level.id), level]));
@@ -51,12 +54,12 @@ for (const rawId of requestedLevelIds) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const gateKey = level.gateKeys[0];
 
-    const offPrep = api.prepLevel(level); offPrep._cfg = null; offPrep._metrics = { nodesExpanded: 0 };
+    const offPrep = api.prepLevel(level); offPrep._cfg = shadowCfg(); offPrep._metrics = { nodesExpanded: 0 };
     const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.SCORING_PROFILES.default,
         budgetMs, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
 
     const observer = new api.Bc1ShadowDispositionObserver({ lineageAware, freshOnly });
-    const onPrep = api.prepLevel(level); onPrep._cfg = null; onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
+    const onPrep = api.prepLevel(level); onPrep._cfg = shadowCfg(); onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
     const onPath = await api.beamSearchFromGate(gateKey, level, onPrep, api.SCORING_PROFILES.default,
         budgetMs, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
 

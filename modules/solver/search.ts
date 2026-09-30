@@ -1092,9 +1092,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                             node.depth + 1, () => [..._reconstructBeamPath(diagnosticNode, [])]);
                     }
                 }
-                // STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE (opt-in consumer; see bc1-beam-shadow.ts).
-                const bc1Pruned = ok && !!cfg && cfg.STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE === true && runConnectivity
-                    && !!cfg.PRUNE_CONNECTIVITY && bc1FreshConnectivityPrunes(next, ws, level, prep);
+                // STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE (default-ON; see bc1-beam-shadow.ts).
+                const bc1Pruned = ok && (!cfg || cfg.STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE === true) && runConnectivity
+                    && (!cfg || !!cfg.PRUNE_CONNECTIVITY) && bc1FreshConnectivityPrunes(next, ws, level, prep);
                 if (bc1Pruned) countFlow('hard-pruned', 1);
                 if (ok && !bc1Pruned) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, orderingBias, curCtx);

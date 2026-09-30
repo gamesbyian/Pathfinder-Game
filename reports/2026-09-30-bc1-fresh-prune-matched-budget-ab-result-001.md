@@ -1,9 +1,9 @@
 # BC1 fresh-connectivity prune: matched-budget beam A/B result
 
-> **Status:** active
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-30 — 24-parent and disjoint 300-level raw-beam A/B, control vs STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE.
 > **Decision:** the opt-in beam consumer `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` (theorem BC1, evaluated only where ordinary connectivity was just computed, so zero canonical flood work) converts **20 control-unsolved levels to solved with 1 loss** on a disjoint 300-level seeded population, and 1 gain / 0 loss on the 24 Stage-B parents. Earns a production-ladder (full-solver) A/B on the gain/loss levels before any default change.
-> **Remaining gate:** production-ladder (full-solver) A/B on gain/loss ids, then solved-control regression set; no default change before that.
+> **Remaining gate:** published-corpus regression gate + ci, then promote to default-ON.
 > **Evidence role:** development.
 > **Owner:** `WS2-CUT-BALANCE-PROJECTION`.
 
@@ -46,3 +46,16 @@ Treatment solved 149/150; the single loss `R02401` (node-budget-reached). A flag
 Local paired repro (`level-blind-capability-sweep`, `pos:732`): control solves at its 39th attempt, `must-cross-neighbor-prune-disabled-retry` width 5000, **255,489 nodes** (total 100.3M nodes / 216.4M work, 667 s). Treatment's stages up to that point are node-identical (early-repair 31,875,004; repair-fallback 4,781,263; admissible-order 12,499,968 ...), but its `must-cross-neighbor-prune-disabled-retry` stage runs 11 attempts / 41.1M nodes without solving and it then spends another 40.9M in `guidance-goal-distance-retry` before the node cap fires (182.0M nodes). Mechanism: **trajectory perturbation of one narrow winning beam attempt**, not displacement of earlier budget -- BC1 pruning frees beam slots, which changes which states a width-5000 beam keeps; this particular beam no longer reaches the solution. It is the same mechanism that produces the gains.
 
 Net on the two production populations so far: +1 cold solve (R00180) / -1 (R02401) across 171 distinct levels with 16% lower work on the benefit-enriched 21. This is not a clean promotion case; a representative-sample production A/B (same 300 ids as the raw-beam A/B, `data/stress/bc1-prune-ab-001-ids.txt`) is the next gate.
+
+## Representative production A/B: random 300 (GHA runs 36772811676 control / 36772815197 treatment, commit a9bda144, 50M default budget)
+
+Pre-specified seeded random sample (seed 2026093001, disjoint from the 24 Stage-B parents; no outcome selection), both arms dispatched on every id, exact population validated by the workflow.
+
+| | control | treatment |
+|---|---:|---:|
+| solved | 206/300 | **225/300** |
+| unsolved (all node-budget-reached) | 94 | 75 |
+
+**23 gains / 4 losses, net +19 new cold solves (+6.3 pp of the population; 24.5% of control-unsolved).** Gains: R00046 R00180 R00440 R02084 R02274 R02422 R02425 R02431 R02440 R02590 R02629 R02666 R02676 R02703 R02748 R02956 R03024 R03115 R03117 R03121 R03152 R03261 R03301. Losses: R01273 R02333 R02874 R03242 (trajectory perturbations of the same kind as R02401; BC1 is sound so none can be caused by pruning a valid completion). Exact sign test 23 vs 4 is p~3e-4. Combined with the solved-control 150 (1 loss, R02401), the flag is net strongly positive on every production population tested: +1/-0 beyond the raw-beam nominations is not needed to see it.
+
+Earns: promotion to default-ON subject to the published-corpus regression gate and `npm run ci`. Loss rate on already-solved levels is small but non-zero (~1.4% across both controls), accepted as the usual trajectory-perturbation cost given 6x more gains than losses.
