@@ -1112,7 +1112,17 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         }
                     }
                 }
-                if (ok) {
+                // STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE (opt-in): theorem BC1 prune, evaluated only where the
+                // ordinary gauntlet's connectivity flood just ran for this exact (next, ws) so the reuse is free.
+                // A pruned candidate is never retained, so deadness needs no lineage inheritance here.
+                let bc1Pruned = false;
+                if (ok && cfg && cfg.STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE === true && runConnectivity && cfg.PRUNE_CONNECTIVITY) {
+                    if (computeBc1ShadowConflicts(next, ws, level, prep, true).conflicts.length > 0) {
+                        bc1Pruned = true;
+                        countFlow('hard-pruned', 1);
+                    }
+                }
+                if (ok && !bc1Pruned) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, orderingBias, curCtx);
                     // Constraint-state fields snapshotted from ws right after this candidate's move —
                     // used by beamStateKey (coarse-state merge) and _mechanicBucketSelect below. Stored as

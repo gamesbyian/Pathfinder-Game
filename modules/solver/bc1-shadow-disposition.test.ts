@@ -78,7 +78,7 @@ describe('BC1 shadow later-disposition observer', () => {
         expect(observer.bc1LineageAware).toBe(true);
         expect(new Bc1ShadowDispositionObserver().bc1LineageAware).toBe(false);
         const summary = observer.summary();
-        expect(summary.lineageCounts).toEqual({ inherited: 1, 'first-flag': 1, clear: 1 });
+        expect(summary.lineageCounts).toEqual({ inherited: 1, 'first-flag': 1, clear: 1, skipped: 0 });
         expect(summary.shadowTotalCost).toBe(8);
     });
 });
