@@ -91,6 +91,16 @@ test('computeBc1ShadowConflicts reuses an already-fresh connectivity result at z
     assert.deepEqual(reused.conflicts, fresh.conflicts, 'reuse must not change the result');
 });
 
+test('computeBc1ShadowConflicts skips all flood/graph work when no mandatory cell is outstanding', () => {
+    const open = makeLevel();
+    const prep = prepLevel(open);
+    const state = stateAt(open, prep, [K(1, 1)]);
+    const workBefore = prep._workMeter.units;
+    const result = computeBc1ShadowConflicts(K(1, 1), state, open, prep, false);
+    assert.deepEqual(result, { conflicts: [], constructionWorkUnits: 0 });
+    assert.equal(prep._workMeter.units, workBefore, 'no obligations means no flood fill is ever attempted');
+});
+
 test('connectivity research snapshot preserves parallel cardinal and portal resources', () => {
     const level = makeLevel({
         grid: { w: 4, h: 1 },

@@ -1114,6 +1114,13 @@ export function computeBc1ShadowConflicts(
     prep: PrepLevel,
     connectivityAlreadyFresh = false,
 ): { conflicts: BridgeExcursionConflict[]; constructionWorkUnits: number } {
+    // BC1 can only ever reject when some mandatory cell is still outstanding (a bridge that strands
+    // nothing is not a conflict — see findBridgeExcursionConflicts's own farPendingIds gate), so
+    // skip the flood/graph work entirely once every must-pass/must-cross obligation is satisfied.
+    // This is a pure early exit: it can never change the result, only whether this function pays to
+    // compute it.
+    const hasPendingMandatory = state.mustCrossMask !== 0 || popcount(state.mpVisitedMask) < level.mustPassKeys.length;
+    if (!hasPendingMandatory) return { conflicts: [], constructionWorkUnits: 0 };
     const workBefore = prep._workMeter.units;
     const globalWorkBefore = workMeter.units;
     const snapshot = connectivityResearchSnapshot(pos, state, level, prep, connectivityAlreadyFresh);
