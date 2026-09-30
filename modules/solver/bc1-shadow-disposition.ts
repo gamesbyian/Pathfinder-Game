@@ -71,21 +71,25 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
     /** Feature histograms over live-lineage checks (first-flag/clear), keyed `pending:<n>` and `rem:<bucket>`:
      *  [checks, flags, costUnits]. Offline pre-filter policy evaluation (2026-09-30 lineage result's next gate). */
     private readonly featureHist = new Map<string, [number, number, number]>();
-    private readonly lineageCounts = { inherited: 0, 'first-flag': 0, clear: 0 };
+    private readonly lineageCounts = { inherited: 0, 'first-flag': 0, clear: 0, skipped: 0 };
     /** Lineage-aware mode: descendants of a flagged node are not re-checked (see BeamResearchObserver.bc1LineageAware). */
     readonly bc1LineageAware: boolean;
+    readonly bc1FreshOnly: boolean;
+    private shadowWallMs = 0;
 
-    constructor(options: { lineageAware?: boolean } = {}) {
+    constructor(options: { lineageAware?: boolean; freshOnly?: boolean } = {}) {
+        this.bc1FreshOnly = options.freshOnly === true;
         this.bc1LineageAware = options.lineageAware === true;
     }
 
     /** Aggregate cost across every candidate the shadow evaluates, flagged or not -- see this
      *  file's own doc and the 2026-09-30 cost-reduction result on why `observeBc1Candidate` alone
      *  (flagged-only) cannot answer what an unconditional per-candidate deployment would cost. */
-    observeBc1ShadowCost(constructionWorkUnits: number, lineage: 'inherited' | 'first-flag' | 'clear' = 'clear',
-        features?: { pending: number; remainingSteps: number; depth: number }): void {
+    observeBc1ShadowCost(constructionWorkUnits: number, lineage: 'inherited' | 'first-flag' | 'clear' | 'skipped' = 'clear',
+        features?: { pending: number; remainingSteps: number; depth: number; wallMs?: number }): void {
         this.lineageCounts[lineage]++;
-        if (features && lineage !== 'inherited') {
+        if (features?.wallMs) this.shadowWallMs += features.wallMs;
+        if (features && lineage !== 'inherited' && lineage !== 'skipped') {
             const rem = features.remainingSteps;
             const remBucket = rem <= 20 ? String(rem) : `${Math.floor(rem / 20) * 20}+`;
             for (const key of [`pending:${features.pending}`, `rem:${remBucket}`, `pending:${features.pending}|rem:${remBucket}`]) {
@@ -164,9 +168,9 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
         return { alarm: violating.length > 0, violatingPrefixes: violating };
     }
 
-    summary(): { flaggedCount: number; resolved: Bc1DispositionRecord[]; shadowInvocations: number; shadowTotalCost: number; lineageCounts: { inherited: number; 'first-flag': number; clear: number }; featureHist: Record<string, [number, number, number]> } {
+    summary(): { flaggedCount: number; resolved: Bc1DispositionRecord[]; shadowInvocations: number; shadowTotalCost: number; lineageCounts: { inherited: number; 'first-flag': number; clear: number; skipped: number }; shadowWallMs: number; featureHist: Record<string, [number, number, number]> } {
         this.finalize();
         return { flaggedCount: this.states.length, resolved: this.states.map(s => s.disposition!),
-            shadowInvocations: this.shadowInvocations, shadowTotalCost: this.shadowTotalCost, lineageCounts: { ...this.lineageCounts }, featureHist: Object.fromEntries(this.featureHist) };
+            shadowInvocations: this.shadowInvocations, shadowTotalCost: this.shadowTotalCost, lineageCounts: { ...this.lineageCounts }, shadowWallMs: this.shadowWallMs, featureHist: Object.fromEntries(this.featureHist) };
     }
 }

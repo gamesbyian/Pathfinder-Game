@@ -27,6 +27,7 @@ const outFile = args.get('--out') ?? 'reports/stress/collect-bc1-shadow-disposit
 const sampleResolved = Number(args.get('--sample-resolved') ?? 25);
 const requestedLevelIds = (args.get('--level-ids') ?? '').split(',').map(x => x.trim()).filter(Boolean);
 const lineageAware = args.get('--lineage-aware') === 'true';
+const freshOnly = args.get('--fresh-only') === 'true';
 const runId = args.get('--run-id') ?? `bc1-shadow-disposition-${new Date().toISOString()}`;
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 
@@ -54,7 +55,7 @@ for (const rawId of requestedLevelIds) {
     const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.SCORING_PROFILES.default,
         budgetMs, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
 
-    const observer = new api.Bc1ShadowDispositionObserver({ lineageAware });
+    const observer = new api.Bc1ShadowDispositionObserver({ lineageAware, freshOnly });
     const onPrep = api.prepLevel(level); onPrep._cfg = null; onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
     const onPath = await api.beamSearchFromGate(gateKey, level, onPrep, api.SCORING_PROFILES.default,
         budgetMs, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
@@ -91,7 +92,7 @@ for (const rawId of requestedLevelIds) {
         // deployment cost figure totalConstructionWorkUnits (flagged-only) cannot supply, per the
         // 2026-09-30 cost-reduction result.
         shadowInvocations: summary.shadowInvocations, shadowTotalCost: summary.shadowTotalCost,
-        lineageAware, lineageCounts: summary.lineageCounts, featureHist: summary.featureHist,
+        lineageAware, freshOnly, shadowWallMs: summary.shadowWallMs, lineageCounts: summary.lineageCounts, featureHist: summary.featureHist,
         // Full per-candidate `resolved` (one entry per flagged prefix, each carrying its own path
         // array) is not retained: flagged counts run into the tens of thousands per level, and
         // JSON.stringify-ing every one across a multi-parent run can exceed V8's max string length.
@@ -116,7 +117,8 @@ const document = {
         totalShadowInvocations: rows.reduce((n, x) => n + x.shadowInvocations, 0),
         totalShadowCost: rows.reduce((n, x) => n + x.shadowTotalCost, 0),
         lineageAware,
-        lineageCounts: rows.reduce((a, x) => { for (const k of Object.keys(a)) a[k] += x.lineageCounts[k]; return a; }, { inherited: 0, 'first-flag': 0, clear: 0 }),
+        lineageCounts: rows.reduce((a, x) => { for (const k of Object.keys(a)) a[k] += x.lineageCounts[k]; return a; }, { inherited: 0, 'first-flag': 0, clear: 0, skipped: 0 }),
+        freshOnly, shadowWallMs: rows.reduce((n, x) => n + x.shadowWallMs, 0),
         totalCampaignWorkSpent: rows.reduce((n, x) => n + x.workSpent, 0),
         overlapCounts: rows.reduce((acc, x) => {
             for (const [k, v] of Object.entries(x.overlapCounts)) acc[k] = (acc[k] ?? 0) + v;

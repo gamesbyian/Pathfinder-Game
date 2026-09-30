@@ -1096,10 +1096,13 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                             // whole completion set), so a first-flag-pruning consumer never sees it.
                             bc1InheritedDead = true;
                             research.observeBc1ShadowCost?.(0, 'inherited');
+                        } else if (research.bc1FreshOnly && !connectivityAlreadyFresh) {
+                            research.observeBc1ShadowCost?.(0, 'skipped');
                         } else {
+                        const _bc1T0 = performance.now();
                         const shadow = computeBc1ShadowConflicts(next, ws, level, prep, connectivityAlreadyFresh);
                         research.observeBc1ShadowCost?.(shadow.constructionWorkUnits, shadow.conflicts.length > 0 ? 'first-flag' : 'clear',
-                            { pending: level.mustPassKeys.length - popcount(ws.mpVisitedMask) + popcount(ws.mustCrossMask), remainingSteps: rSteps, depth: node.depth + 1 });
+                            { pending: level.mustPassKeys.length - popcount(ws.mpVisitedMask) + popcount(ws.mustCrossMask), remainingSteps: rSteps, depth: node.depth + 1, wallMs: performance.now() - _bc1T0 });
                         if (shadow.conflicts.length > 0) bc1InheritedDead = true;
                         if (shadow.conflicts.length > 0) research.observeBc1Candidate?.({
                             depth: node.depth + 1, workBefore: prep._workMeter.units, workSpent: prep._workMeter.units,
