@@ -85,6 +85,11 @@ for (const rawId of requestedLevelIds) {
         totalWorkDistance: workDistances.reduce((a, b) => a + b, 0),
         medianWorkDistance: workDistances.length ? workDistances.slice().sort((a, b) => a - b)[Math.floor(workDistances.length / 2)] : null,
         everExpandedCount: resolved.filter(r => r.everExpanded).length,
+        // shadowInvocations/shadowTotalCost cover EVERY candidate the shadow evaluated, flagged or
+        // not (including the zero-cost pending-mandatory early exit) -- the honest aggregate-
+        // deployment cost figure totalConstructionWorkUnits (flagged-only) cannot supply, per the
+        // 2026-09-30 cost-reduction result.
+        shadowInvocations: summary.shadowInvocations, shadowTotalCost: summary.shadowTotalCost,
         // Full per-candidate `resolved` (one entry per flagged prefix, each carrying its own path
         // array) is not retained: flagged counts run into the tens of thousands per level, and
         // JSON.stringify-ing every one across a multi-parent run can exceed V8's max string length.
@@ -92,7 +97,7 @@ for (const rawId of requestedLevelIds) {
         // are already computed over the FULL resolved population, not just this sample.
         resolvedSample: resolved.slice(0, sampleResolved),
     });
-    console.error(`${rawId}: flagged=${summary.flaggedCount} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded} overlap=${JSON.stringify(overlapCounts)}`);
+    console.error(`${rawId}: flagged=${summary.flaggedCount} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded} shadowInvocations=${summary.shadowInvocations} shadowTotalCost=${summary.shadowTotalCost} overlap=${JSON.stringify(overlapCounts)}`);
 }
 
 const document = {
@@ -106,6 +111,9 @@ const document = {
         solutionSafetyAlarms: rows.filter(x => x.solutionSafetyAlarm).length,
         totalFlagged: rows.reduce((n, x) => n + x.flaggedCount, 0),
         parentsWithAnyFlag: rows.filter(x => x.flaggedCount > 0).length,
+        totalShadowInvocations: rows.reduce((n, x) => n + x.shadowInvocations, 0),
+        totalShadowCost: rows.reduce((n, x) => n + x.shadowTotalCost, 0),
+        totalCampaignWorkSpent: rows.reduce((n, x) => n + x.workSpent, 0),
         overlapCounts: rows.reduce((acc, x) => {
             for (const [k, v] of Object.entries(x.overlapCounts)) acc[k] = (acc[k] ?? 0) + v;
             return acc;

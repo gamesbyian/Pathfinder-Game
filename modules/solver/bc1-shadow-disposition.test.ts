@@ -51,6 +51,18 @@ describe('BC1 shadow later-disposition observer', () => {
         expect(observer.summary().resolved[0].workAtProof).toBe(5);
     });
 
+    test('tracks aggregate shadow cost across every evaluated candidate, flagged or not', () => {
+        const observer = new Bc1ShadowDispositionObserver();
+        observer.observeBc1ShadowCost(12);
+        observer.observeBc1ShadowCost(0); // pending-mandatory early exit
+        observer.observeBc1ShadowCost(12);
+        observer.observeBc1Candidate({ depth: 1, workBefore: 0, workSpent: 5, constructionWorkUnits: 12, path: [1, 2], conflicts: conflict() });
+        const summary = observer.summary();
+        expect(summary.shadowInvocations).toBe(3);
+        expect(summary.shadowTotalCost).toBe(24);
+        expect(summary.flaggedCount).toBe(1); // independent of the unconditional cost counter
+    });
+
     test('solution-safety alarm fires only when a real solution passes through a flagged prefix', () => {
         const observer = new Bc1ShadowDispositionObserver();
         observer.observeBc1Candidate({ depth: 1, workBefore: 0, workSpent: 5, constructionWorkUnits: 5, path: [1, 2], conflicts: conflict() });

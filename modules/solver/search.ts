@@ -1082,14 +1082,15 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         hardPruneContexts!.push({ path: [..._reconstructBeamPath(diagnosticNode, [])], verdict,
                             cause: Object.keys(pruneDiagnostics!.rejected)[0] ?? (next === level.goalKey ? '_invalid-goal' : '_fundamental'),
                             diagnostics: pruneDiagnostics });
-                    } else if (research.observeBc1Candidate) {
+                    } else if (research.observeBc1Candidate || research.observeBc1ShadowCost) {
                         // WS2-CUT-BALANCE-PROJECTION shadow, only for candidates that already passed
                         // the gauntlet above (`ok`). See computeBc1ShadowConflicts's own doc for why its
                         // construction cost is snapshotted/restored rather than left in prep._workMeter,
                         // and for connectivityAlreadyFresh's cost-reduction rationale.
                         const connectivityAlreadyFresh = !!(runConnectivity && (!cfg || cfg.PRUNE_CONNECTIVITY));
                         const shadow = computeBc1ShadowConflicts(next, ws, level, prep, connectivityAlreadyFresh);
-                        if (shadow.conflicts.length > 0) research.observeBc1Candidate({
+                        research.observeBc1ShadowCost?.(shadow.constructionWorkUnits);
+                        if (shadow.conflicts.length > 0) research.observeBc1Candidate?.({
                             depth: node.depth + 1, workBefore: prep._workMeter.units, workSpent: prep._workMeter.units,
                             constructionWorkUnits: shadow.constructionWorkUnits, conflicts: shadow.conflicts,
                             path: [..._reconstructBeamPath(diagnosticNode, [])],

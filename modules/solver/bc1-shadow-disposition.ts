@@ -66,6 +66,16 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
     private readonly flaggedKeys = new Set<string>();
     private readonly states: FlagState[] = [];
     private finalized = false;
+    private shadowInvocations = 0;
+    private shadowTotalCost = 0;
+
+    /** Aggregate cost across every candidate the shadow evaluates, flagged or not -- see this
+     *  file's own doc and the 2026-09-30 cost-reduction result on why `observeBc1Candidate` alone
+     *  (flagged-only) cannot answer what an unconditional per-candidate deployment would cost. */
+    observeBc1ShadowCost(constructionWorkUnits: number): void {
+        this.shadowInvocations++;
+        this.shadowTotalCost += constructionWorkUnits;
+    }
 
     observeBc1Candidate(info: Bc1ShadowCandidateInfo): void {
         const key = info.path.join(',');
@@ -133,8 +143,9 @@ export class Bc1ShadowDispositionObserver implements BeamResearchObserver {
         return { alarm: violating.length > 0, violatingPrefixes: violating };
     }
 
-    summary(): { flaggedCount: number; resolved: Bc1DispositionRecord[] } {
+    summary(): { flaggedCount: number; resolved: Bc1DispositionRecord[]; shadowInvocations: number; shadowTotalCost: number } {
         this.finalize();
-        return { flaggedCount: this.states.length, resolved: this.states.map(s => s.disposition!) };
+        return { flaggedCount: this.states.length, resolved: this.states.map(s => s.disposition!),
+            shadowInvocations: this.shadowInvocations, shadowTotalCost: this.shadowTotalCost };
     }
 }

@@ -477,6 +477,14 @@ export interface BeamResearchObserver {
      * every existing observer, so this remains a single optional-chained no-op check for them.
      */
     observeBc1Candidate?(info: Bc1ShadowCandidateInfo): void;
+    /**
+     * Opt-in BC1 aggregate-cost accounting: called once for every candidate the shadow evaluates
+     * (flagged or not, including the zero-cost pending-mandatory early exit), with that call's own
+     * `constructionWorkUnits`. `observeBc1Candidate` alone cannot answer "what would an unconditional
+     * per-candidate deployment cost in aggregate?" because it only ever fires for flagged candidates
+     * (2026-09-30 cost-reduction result's own finding) -- this is the seam that closes that gap.
+     */
+    observeBc1ShadowCost?(constructionWorkUnits: number): void;
 }
 
 export interface RepairEliteResearchRecord {
