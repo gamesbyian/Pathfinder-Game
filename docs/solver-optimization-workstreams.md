@@ -50,11 +50,11 @@ Evidence: [confirmation result](../reports/2026-09-26-ws1-late-continuation-sing
 
 **State:** SUPPORTING / bounded-compute.
 
-The production-inert beam later-disposition shadow is built and has run against a live 24-parent population: zero safety/inertness alarms, 100% parent recurrence, full disposition closure, excellent per-catch construction economics. Aggregate per-check economics are qualified (an unconditional-per-candidate shadow costs ~70% of total campaign work, dominated by redundant connectivity recomputation). Next gate: reuse the ordinary gauntlet's already-computed connectivity result before any behavioral consumer. No hot-path prune yet.
+The production-inert beam later-disposition shadow is built and piloted twice against a live 24-parent population: zero safety/inertness alarms, 100% parent recurrence, full disposition closure, excellent per-catch construction economics. A verified connectivity-reuse optimization cut flagged-candidate construction cost from ~70% to ~60% of campaign work; the collector still does not price unflagged checks, so the aggregate deployment-cost question remains open. Next gate: price every evaluated candidate (not only flagged ones), then a behavioral consumer at matched work. No hot-path prune yet.
 
 Question: `WS2-CUT-BALANCE-PROJECTION`.
 
-Evidence: [pilot result](../reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md) · [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
+Evidence: [cost-reduction result](../reports/2026-09-30-bc1-shadow-construction-cost-reduction-result-001.md) · [pilot result](../reports/2026-09-26-bc1-beam-later-disposition-shadow-pilot-result-001.md) · [seam audit](../reports/2026-09-21-bc1-removable-work-economics-seam-audit-001.md).
 
 ### 5. WS6 repair reachability / speed
 
@@ -128,7 +128,7 @@ Detailed closeout evidence and reopen conditions are preserved in the [pre-compa
 | 2 | Repair-deadline allocation | `closed` | `reopen-only` | PROMOTED 2026-09-26: 7 gains/0 losses nomination + 180/180 zero-regression confirmation both positive; MS_CAP interaction resolved (interactive path never runs the probe regardless of its value) | none; reopen only for a materially different dose/premise | `WS2-REPAIR-DEADLINE-ALLOCATION` |
 | 2I | Capability invention | `closed` | `reopen-only` | PROMOTED 2026-09-26: both flags default-ON, 10 referee-valid solves (8 new), 0 regressions across every tested branch row | none; reopen only for a materially different exposure form | `WS2-CAPABILITY-INVENTION-DEMAND` |
 | 1 | Automatic action selection | `closed` | `reopen-only` | CONCLUDED-NEGATIVE: N=160 confirmation found 0/44 nominated validation levels, well below the well-powered expectation | reopen only with a materially different signal/model design | `WS1-ACTION-SELECTION-LEGAL-SIGNAL-CAPTURE` |
-| 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 beam later-disposition shadow built and piloted (24 parents): zero safety alarms, 100% recurrence, qualified aggregate construction economics | reuse ordinary gauntlet's connectivity result, then behavioral consumer at matched work | `WS2-CUT-BALANCE-PROJECTION` |
+| 2X | Small exact projections | `supporting` | `bounded-compute` | BC1 beam later-disposition shadow built and piloted twice (24 parents): zero safety alarms, 100% recurrence, verified 70%->60% flagged-cost reduction; aggregate deployment cost still unpriced for unflagged checks | price every evaluated candidate, then behavioral consumer at matched work | `WS2-CUT-BALANCE-PROJECTION` |
 | 2F | Forced-work capture economics | `closed` | `reopen-only` | tested global-compression/post-recognition forms closed; broader question identity retained | reopen only for a materially different sound recognizer | `WS2-FORCED-WORK-CAPTURE-ECONOMICS` |
 | 2R | Parity response signature | `on-demand` | `reopen-only` | static parity form closed; dormant conditional lane retained for materially different mechanism evidence | reopen only on materially different parity opportunity structure | `WS2-PARITY-RESPONSE-SIGNATURE` |
 | 6/7 | Repair reachability / speed | `supporting` | `bounded-compute` | independent-parent replication/speed support lane | replication/speed profiling when immediate | `WS6-DEPENDENCY-CONDITIONED-REPAIR` |
