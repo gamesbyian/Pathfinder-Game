@@ -1,6 +1,6 @@
 # BC1 fresh-connectivity prune: matched-budget beam A/B result
 
-> **Status:** concluded-positive
+> **Status:** active
 > **Last evidence:** 2026-09-30 — 24-parent and disjoint 300-level raw-beam A/B, control vs STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE.
 > **Decision:** the opt-in beam consumer `STRATEGY_BC1_FRESH_CONNECTIVITY_PRUNE` (theorem BC1, evaluated only where ordinary connectivity was just computed, so zero canonical flood work) converts **20 control-unsolved levels to solved with 1 loss** on a disjoint 300-level seeded population, and 1 gain / 0 loss on the 24 Stage-B parents. Earns a production-ladder (full-solver) A/B on the gain/loss levels before any default change.
 > **Remaining gate:** production-ladder (full-solver) A/B on gain/loss ids, then solved-control regression set; no default change before that.
@@ -38,3 +38,11 @@ Level-blind targeted sweep (control vs `enable_flags=STRATEGY_BC1_FRESH_CONNECTI
 The single control-unsolved level (`R00180`, node-limited after exhausting the retry ladder) is solved by treatment: **1 new production cold solve**. The other 19 shared solves were already production-solved (the raw-beam "gains" are mostly already recovered by the wider ladder), but treatment reaches them with less work (earlier solves skip later retry tiers: goal-attraction-disabled-retry 21->9 attempts; coarse-near-tie / connectivity-axis / must-cross / guidance retries 13 attempts each -> 0). `R01210` (the raw-beam loss) is solved in both arms at production.
 
 Caveat: population is outcome-nominated (levels where raw beam flipped), so the work reduction is a benefit-enriched, not representative, figure; regression safety and representative work need the solved-control set and a representative sample (solved-control treatment run 36688582123 pending at time of writing).
+
+## Regression probe: solved-control 150 (GHA run 36688582123, flag on) and the R02401 loss
+
+Treatment solved 149/150; the single loss `R02401` (node-budget-reached). A flag-off control (GHA run 36699378024, and a local repro at the same 50M/67M envelope) **solves** `R02401`, so this is a real flag-attributable loss, not a pre-existing failure.
+
+Local paired repro (`level-blind-capability-sweep`, `pos:732`): control solves at its 39th attempt, `must-cross-neighbor-prune-disabled-retry` width 5000, **255,489 nodes** (total 100.3M nodes / 216.4M work, 667 s). Treatment's stages up to that point are node-identical (early-repair 31,875,004; repair-fallback 4,781,263; admissible-order 12,499,968 ...), but its `must-cross-neighbor-prune-disabled-retry` stage runs 11 attempts / 41.1M nodes without solving and it then spends another 40.9M in `guidance-goal-distance-retry` before the node cap fires (182.0M nodes). Mechanism: **trajectory perturbation of one narrow winning beam attempt**, not displacement of earlier budget -- BC1 pruning frees beam slots, which changes which states a width-5000 beam keeps; this particular beam no longer reaches the solution. It is the same mechanism that produces the gains.
+
+Net on the two production populations so far: +1 cold solve (R00180) / -1 (R02401) across 171 distinct levels with 16% lower work on the benefit-enriched 21. This is not a clean promotion case; a representative-sample production A/B (same 300 ids as the raw-beam A/B, `data/stress/bc1-prune-ab-001-ids.txt`) is the next gate.
